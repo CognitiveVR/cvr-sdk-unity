@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{0C2C4F06-2E87-7CF1-ECFE-84EDE6945632}") = "BubblePop", "Assembly-CSharp-firstpass.csproj", "{253F69E6-5136-64A1-6029-9174D3072EEC}"
+EndProject
+Project("{0C2C4F06-2E87-7CF1-ECFE-84EDE6945632}") = "BubblePop", "Assembly-CSharp.csproj", "{3C1C9C37-147B-EC1A-FE7B-D412D511210B}"
+EndProject
+Project("{0C2C4F06-2E87-7CF1-ECFE-84EDE6945632}") = "BubblePop", "Assembly-CSharp-Editor.csproj", "{4C939CA8-9DF0-E813-92B6-22615003EB7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{253F69E6-5136-64A1-6029-9174D3072EEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{253F69E6-5136-64A1-6029-9174D3072EEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{253F69E6-5136-64A1-6029-9174D3072EEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{253F69E6-5136-64A1-6029-9174D3072EEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C1C9C37-147B-EC1A-FE7B-D412D511210B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C1C9C37-147B-EC1A-FE7B-D412D511210B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C1C9C37-147B-EC1A-FE7B-D412D511210B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C1C9C37-147B-EC1A-FE7B-D412D511210B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C939CA8-9DF0-E813-92B6-22615003EB7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C939CA8-9DF0-E813-92B6-22615003EB7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C939CA8-9DF0-E813-92B6-22615003EB7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C939CA8-9DF0-E813-92B6-22615003EB7F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

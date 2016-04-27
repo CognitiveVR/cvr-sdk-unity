@@ -1,0 +1,6 @@
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.dll
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.pdb
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.dll
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.xml
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.dll
+D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.pdb

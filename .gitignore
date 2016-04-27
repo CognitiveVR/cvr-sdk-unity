@@ -1,0 +1,15 @@
+*.pidb
+*.userprefs
+*.dll
+doc/html
+SplytUnity/Assets/Samples/BubblePop/Library
+SplytUnity/Assets/Samples/BubblePop/Temp
+SplytUnity/Assets/Samples/BubblePop/.vs
+SplytUnity/Assets/Samples/BubblePop/export
+SplytUnity/Assets/Samples/BubblePop/Assets/Plugins
+SplytUnity/Library
+SplytUnity/Temp
+SplytUnity/.vs
+SplytUnity/Assets/Plugins/Splyt.dll.meta
+SplytUnity/UnityPlugin/bin
+SplytUnity/UnityPlugin/obj

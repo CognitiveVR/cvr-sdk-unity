@@ -1,0 +1,18 @@
+#!/bin/bash
+rm file.tmp
+awk '
+{
+  if ($0 == "#if !(TARGET_IPHONE_SIMULATOR)" && NR == 9) {
+    getline var1;
+    getline var2;
+    printf "%s\n%s\n%s\n", var2, $0, var1 >> "file.tmp"
+  } else if (length(newend)==0 && $0 ~ /mono_dl_register_symbol/) {
+     newend=NR
+     printf "#endif // !(TARGET_IPHONE_SIMULATOR)" >> "file.tmp"
+     printf "\n%s\n", $0 >> "file.tmp"
+  } else if (length(newend)>0 && $0 == "#endif // !(TARGET_IPHONE_SIMULATOR)") {
+  } else {
+    print $0 >> "file.tmp"
+  }
+}' "$1"/Libraries/RegisterMonoModules.cpp
+mv file.tmp "$1"/Libraries/RegisterMonoModules.cpp

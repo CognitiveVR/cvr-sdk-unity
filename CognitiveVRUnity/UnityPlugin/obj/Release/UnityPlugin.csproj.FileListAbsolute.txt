@@ -1,0 +1,13 @@
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\CognitiveVR.dll
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\CognitiveVR.pdb
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\UnityEngine.dll
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\UnityEngine.xml
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\UnityPlugin.csprojResolveAssemblyReference.cache
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.dll
+D:\sdk refactoring\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.pdb
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\CognitiveVR.dll
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\CognitiveVR.pdb
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\UnityEngine.dll
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\UnityEngine.xml
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.dll
+D:\Dropbox (Personal)\cognitiveVR SDKs\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.pdb
