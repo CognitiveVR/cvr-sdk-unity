@@ -1950,6 +1950,26 @@ Units is normalized time.</para>
       <param name="array"></param>
       <param name="index"></param>
     </member>
+    <member name="T:UnityEditor.AscentCalculationMode">
+      <summary>
+        <para>Method used for calculating a font's ascent.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.AscentCalculationMode.FaceAscender">
+      <summary>
+        <para>Ascender method.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.AscentCalculationMode.FaceBoundingBox">
+      <summary>
+        <para>Bounding box method.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.AscentCalculationMode.Legacy2x">
+      <summary>
+        <para>Legacy bounding box method.</para>
+      </summary>
+    </member>
     <member name="T:UnityEditor.AspectRatio">
       <summary>
         <para>Aspect ratio.</para>
@@ -2614,6 +2634,13 @@ Units is normalized time.</para>
       <summary>
         <para>Save asset importer settings if asset importer is dirty.</para>
       </summary>
+    </member>
+    <member name="M:UnityEditor.AssetImporter.SetAssetBundleNameAndVariant(System.String,System.String)">
+      <summary>
+        <para>Set the AssetBundle name and variant.</para>
+      </summary>
+      <param name="assetBundleName">AssetBundle name.</param>
+      <param name="assetBundleVariant">AssetBundle variant.</param>
     </member>
     <member name="T:UnityEditor.AssetModificationProcessor">
       <summary>
@@ -21047,6 +21074,11 @@ Values match the ProceduralMaterial::ProceduralLoadingBehavior enum.</param>
     <member name="T:UnityEditor.TrueTypeFontImporter">
       <summary>
         <para>AssetImporter for importing Fonts.</para>
+      </summary>
+    </member>
+    <member name="P:UnityEditor.TrueTypeFontImporter.ascentCalculationMode">
+      <summary>
+        <para>Calculation mode for determining font's ascent.</para>
       </summary>
     </member>
     <member name="P:UnityEditor.TrueTypeFontImporter.characterPadding">

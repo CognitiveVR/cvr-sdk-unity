@@ -42,7 +42,7 @@ public class BubblePop : MonoBehaviour
 	{
 	#endif
 		CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create(
-		"mmginc27715-cardboarddemo-test"								// (required) Customer ID from the CognitiveVR team.  If you don't have one, contact them.
+		"cvr-unity-test"								// (required) Customer ID from the CognitiveVR team.  If you don't have one, contact them.
 		//,userInfo: CognitiveVR.EntityInfo.createUserInfo("joe")		// (optional) Only necessary if user info is known at startup, otherwise use registerUser later
 		//,deviceInfo: CognitiveVR.EntityInfo.createDeviceInfo().setProperty("screenwidth", 1024)	// (optional) Only generally needed if device properties are sent at startup
 		//,requestTimeout: 1500									// (optional) Only necessary if the default is inadequate

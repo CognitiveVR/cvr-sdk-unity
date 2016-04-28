@@ -7183,6 +7183,11 @@ For this reason, we also provide the read-only property actualRenderingPath whic
         <para>Used to scale the entire canvas, while still making it fit the screen. Only applies with renderMode is Screen Space.</para>
       </summary>
     </member>
+    <member name="P:UnityEngine.Canvas.sortingGridNormalizedSize">
+      <summary>
+        <para>The normalized grid size that the canvas will split the renderable area into.</para>
+      </summary>
+    </member>
     <member name="P:UnityEngine.Canvas.sortingLayerID">
       <summary>
         <para>Unique ID of the Canvas' sorting layer.</para>

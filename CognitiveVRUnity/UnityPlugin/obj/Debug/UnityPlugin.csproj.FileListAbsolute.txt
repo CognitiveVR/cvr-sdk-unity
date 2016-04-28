@@ -4,3 +4,10 @@ D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\Unit
 D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.xml
 D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.dll
 D:\sdk refactoring\cognitivevr-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.pdb
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.pdb
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.xml
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\UnityPlugin.csprojResolveAssemblyReference.cache
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.pdb

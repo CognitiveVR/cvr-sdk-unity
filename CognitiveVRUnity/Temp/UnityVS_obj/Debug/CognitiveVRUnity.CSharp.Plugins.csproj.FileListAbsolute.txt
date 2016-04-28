@@ -1,0 +1,15 @@
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\Assembly-CSharp-firstpass.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\Assembly-CSharp-firstpass.pdb
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\CognitiveVR.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEditor.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.Networking.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.UI.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.xml
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.UI.xml
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEngine.Networking.xml
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\UnityEditor.xml
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_bin\Debug\CognitiveVR.pdb
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_obj\Debug\CognitiveVRUnity.CSharp.Plugins.csprojResolveAssemblyReference.cache
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_obj\Debug\Assembly-CSharp-firstpass.dll
+C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\Temp\UnityVS_obj\Debug\Assembly-CSharp-firstpass.pdb
