@@ -10,7 +10,7 @@ Last Updated: April 22, 2016
 _Note that the code examples below assume_ ```using CognitiveVR;``` _for brevity, but developers may prepend references with_ ```CognitiveVR.``` _as a matter of preference or for disambiguity._
 
 ## Initialization
-[![Unity Plugin Installation Tutorial](http://img.youtube.com/vi/1tKwxaoTalU/0.jpg)](https://www.youtube.com/watch?v=1tKwxaoTalU "Unity Plugin Installation Tutorial")
+[![Unity Plugin Installation Tutorial](doc/youtube_img.png)](https://www.youtube.com/watch?v=1tKwxaoTalU "Unity Plugin Installation Tutorial")
 
 CognitiveVR initialization should be completed as early as possible in the flow of an application. This allows
 telemetry reporting and the usage of CognitiveVR tuned variables throughout the application. Note that the
