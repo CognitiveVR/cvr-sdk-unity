@@ -10,6 +10,8 @@ Last Updated: April 22, 2016
 _Note that the code examples below assume_ ```using CognitiveVR;``` _for brevity, but developers may prepend references with_ ```CognitiveVR.``` _as a matter of preference or for disambiguity._
 
 ## Initialization
+[![Unity Plugin Installation Tutorial](http://img.youtube.com/vi/1tKwxaoTalU/0.jpg)](https://www.youtube.com/watch?v=1tKwxaoTalU "Unity Plugin Installation Tutorial")
+
 CognitiveVR initialization should be completed as early as possible in the flow of an application. This allows
 telemetry reporting and the usage of CognitiveVR tuned variables throughout the application. Note that the
 initialization call triggers a callback upon completion, after which point you can reliably use any of
@@ -18,9 +20,16 @@ the calls in the CognitiveVR SDK.
 Here's an example, passing ```[InitParams](@ref CognitiveVR::InitParams)``` to ```[Core.init](@ref CognitiveVR::Core::init)```:
 
 ```C#
+using CognitiveVR;
+```
+
+(...)
+
+```C#
+
 CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create(
     // customer id is the only required field
-    "my-customer-id"                   // contact CognitiveVR if you do not have a customer id yet
+    "my-customer-id" // contact CognitiveVR if you do not have a customer id yet
 
     // if you have additional information about your user or device to report at startup, you can
     //,userInfo: myUserInfo               // more below about user...
