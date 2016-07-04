@@ -2044,6 +2044,9 @@ Units is normalized time.</para>
         <para>Get the GUID for the asset at path.</para>
       </summary>
       <param name="path">Filesystem path for the asset.</param>
+      <returns>
+        <para>GUID</para>
+      </returns>
     </member>
     <member name="M:UnityEditor.AssetDatabase.ClearLabels(UnityEngine.Object)">
       <summary>
@@ -2163,6 +2166,15 @@ Units is normalized time.</para>
       </summary>
       <returns>
         <para>Array of asset bundle names.</para>
+      </returns>
+    </member>
+    <member name="M:UnityEditor.AssetDatabase.GetAssetDependencyHash(System.String)">
+      <summary>
+        <para>Returns the hash of all the dependencies of an asset.</para>
+      </summary>
+      <param name="path">Path to the asset.</param>
+      <returns>
+        <para>Aggregate hash.</para>
       </returns>
     </member>
     <member name="M:UnityEditor.AssetDatabase.GetAssetOrScenePath(UnityEngine.Object)">
@@ -2446,6 +2458,9 @@ Units is normalized time.</para>
       </summary>
       <param name="assetPath">Path of the asset to load.</param>
       <param name="type">Data type of the asset.</param>
+      <returns>
+        <para>The asset matching the parameters</para>
+      </returns>
     </member>
     <member name="M:UnityEditor.AssetDatabase.LoadMainAssetAtPath(System.String)">
       <summary>
@@ -2970,7 +2985,7 @@ Amount of compression. The value roughly corresponds to the ratio between the re
     </member>
     <member name="F:UnityEditor.BuildOptions.AcceptExternalModificationsToPlayer">
       <summary>
-        <para>Used when building Xcode (iPhone) or Eclipse (Android) projects.</para>
+        <para>Used when building Xcode (iOS) or Eclipse (Android) projects.</para>
       </summary>
     </member>
     <member name="F:UnityEditor.BuildOptions.AllowDebugging">
@@ -3411,11 +3426,6 @@ These will be used as asset names, which you can then pass to AssetBundle.Load t
         <para>Build a Wii U standalone.</para>
       </summary>
     </member>
-    <member name="F:UnityEditor.BuildTarget.WP8Player">
-      <summary>
-        <para>Build a Windows Phone 8 player.</para>
-      </summary>
-    </member>
     <member name="F:UnityEditor.BuildTarget.WSAPlayer">
       <summary>
         <para>Build an Windows Store Apps player.</para>
@@ -3514,11 +3524,6 @@ These will be used as asset names, which you can then pass to AssetBundle.Load t
     <member name="F:UnityEditor.BuildTargetGroup.WiiU">
       <summary>
         <para>Nintendo Wii U target.</para>
-      </summary>
-    </member>
-    <member name="F:UnityEditor.BuildTargetGroup.WP8">
-      <summary>
-        <para>Windows Phone 8 target.</para>
       </summary>
     </member>
     <member name="F:UnityEditor.BuildTargetGroup.WSA">
@@ -17206,6 +17211,11 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
         <para></para>
       </summary>
     </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.AppManagerLaunch">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
     <member name="F:UnityEditor.PlayerSettings.TizenCapability.Bluetooth">
       <summary>
         <para></para>
@@ -17232,6 +17242,11 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
       </summary>
     </member>
     <member name="F:UnityEditor.PlayerSettings.TizenCapability.CallHistoryWrite">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.Camera">
       <summary>
         <para></para>
       </summary>
@@ -17281,6 +17296,16 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
         <para></para>
       </summary>
     </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.Haptic">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.Internet">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
     <member name="F:UnityEditor.PlayerSettings.TizenCapability.KeyManager">
       <summary>
         <para></para>
@@ -17292,6 +17317,11 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
       </summary>
     </member>
     <member name="F:UnityEditor.PlayerSettings.TizenCapability.Location">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.MediaStorage">
       <summary>
         <para></para>
       </summary>
@@ -17361,6 +17391,11 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
         <para></para>
       </summary>
     </member>
+    <member name="F:UnityEditor.PlayerSettings.TizenCapability.SystemSettings">
+      <summary>
+        <para></para>
+      </summary>
+    </member>
     <member name="F:UnityEditor.PlayerSettings.TizenCapability.Telephony">
       <summary>
         <para></para>
@@ -17386,139 +17421,14 @@ To force a reload of the mask, simply set  ModelImporterClipAnimation.maskSource
         <para>tvOS specific player settings.</para>
       </summary>
     </member>
-    <member name="T:UnityEditor.PlayerSettings.WiiU">
+    <member name="P:UnityEditor.PlayerSettings.tvOS.sdkVersion">
       <summary>
-        <para>Wii U specific player settings.</para>
+        <para>Active tvOS SDK version used for build.</para>
       </summary>
     </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.accountBossSize">
+    <member name="P:UnityEditor.PlayerSettings.tvOS.targetOSVersion">
       <summary>
-        <para>Account's size in kiB for BOSS.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.accountSaveSize">
-      <summary>
-        <para>Account's size in kiB for SAVE.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.addOnUniqueIDs">
-      <summary>
-        <para>Unique IDs of Add-ons.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.allowScreenCapture">
-      <summary>
-        <para>Allow screen capture during gameplay.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.commonBossSize">
-      <summary>
-        <para>Common account's size in kiB for BOSS.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.commonSaveSize">
-      <summary>
-        <para>Common account's size in kiB for SAVE.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.controllerCount">
-      <summary>
-        <para>Max number of supported Wii controllers.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.gamePadMSAA">
-      <summary>
-        <para>GamePad's MSAA quality.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.gamePadStartupScreen">
-      <summary>
-        <para>Image displayed on GamePad during startup.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.groupID">
-      <summary>
-        <para>Group ID.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.joinGameId">
-      <summary>
-        <para>Join-in game ID (game server ID) provided by Nintendo.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.joinGameModeMask">
-      <summary>
-        <para>Join-in game mode mask.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.loaderThreadStackSize">
-      <summary>
-        <para>Stack size for the loader thread in kilobytes.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.mainThreadStackSize">
-      <summary>
-        <para>Stack size for the main thread in kilobytes.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.olvAccessKey">
-      <summary>
-        <para>OLV access key provided by Nintendo.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.profilerLibraryPath">
-      <summary>
-        <para>Path to CPU profiler library that should be passed to linker.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.supportsBalanceBoard">
-      <summary>
-        <para>Is Balance Board is supported?</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.supportsClassicController">
-      <summary>
-        <para>Is Classic Controller supported?</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.supportsMotionPlus">
-      <summary>
-        <para>Is Motion Plus extension controller supported?</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.supportsNunchuk">
-      <summary>
-        <para>Is Nunchuk extension supported?</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.supportsProController">
-      <summary>
-        <para>Is Pro Controller supported?</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.systemHeapSize">
-      <summary>
-        <para>System heap size in kilobytes.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.tinCode">
-      <summary>
-        <para>TIN (Title Identification Number) provided by Nintendo.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.titleID">
-      <summary>
-        <para>Title ID.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.tvResolution">
-      <summary>
-        <para>TV resolution.</para>
-      </summary>
-    </member>
-    <member name="P:UnityEditor.PlayerSettings.WiiU.tvStartupScreen">
-      <summary>
-        <para>Image displayed on TV during startup.</para>
+        <para>Deployment minimal version of tvOS.</para>
       </summary>
     </member>
     <member name="T:UnityEditor.PlayerSettings.WSACompilationOverrides">
@@ -21136,6 +21046,41 @@ Values match the ProceduralMaterial::ProceduralLoadingBehavior enum.</param>
         <para>Create an editable copy of the font asset at path.</para>
       </summary>
       <param name="path"></param>
+    </member>
+    <member name="T:UnityEditor.tvOSSdkVersion">
+      <summary>
+        <para>Supported tvOS SDK versions.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.tvOSSdkVersion.Device">
+      <summary>
+        <para>Device SDK.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.tvOSSdkVersion.Simulator">
+      <summary>
+        <para>Simulator SDK.</para>
+      </summary>
+    </member>
+    <member name="T:UnityEditor.tvOSTargetOSVersion">
+      <summary>
+        <para>Supported tvOS deployment versions.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.tvOSTargetOSVersion.tvOS_9_0">
+      <summary>
+        <para>Target tvOS 9.0.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.tvOSTargetOSVersion.tvOS_9_1">
+      <summary>
+        <para>Target tvOS 9.1.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEditor.tvOSTargetOSVersion.Unknown">
+      <summary>
+        <para>Unknown tvOS version, managed by user.</para>
+      </summary>
     </member>
     <member name="T:UnityEditor.UIOrientation">
       <summary>

@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-
 using CognitiveVR.External.MiniJSON; 
 
 namespace CognitiveVR
@@ -18,7 +17,7 @@ namespace CognitiveVR
 		/// <param name="transactionId">Transaction id, if applicable - this is only REQUIRED in situation where multiple transactions in the same category may exist (read: be concurrently begun)</param> 
 		public static Transaction Transaction(string category, string transactionId = null)
 		{
-			return new CognitiveVR.Transaction(category, transactionId);
+            return new CognitiveVR.Transaction(category, transactionId);
 		}
 
 		/// <summary>
