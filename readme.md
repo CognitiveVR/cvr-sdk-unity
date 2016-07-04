@@ -26,7 +26,7 @@ Assets/Plugins/CognitiveVR.dll
 ```
 
 ## CognitiveVR Settings window
-![cognitiveVR Settings Popup](doc/init_window.png)
+![cognitiveVR Settings Popup](doc/init_window.PNG)
 
 ### CustomerID
 This is required to send telemetry to your application. The format is : ```yourcompanyname1234-productname-test```. This is taken from the dashboard on your product page.
@@ -34,7 +34,7 @@ This is required to send telemetry to your application. The format is : ```yourc
 ![cognitiveVR Product Page](doc/13_cognitivevr_choose_product.png)
 
 
-![cognitiveVR Customer ID](doc/customer_id.png)
+![cognitiveVR Customer ID](doc/customer_id.PNG)
 
 ### Init Prefab
 This button will create a prefab that will automatically initialize the cognitiveVR analytics. We recommend only using this as a reference - you should move this code elsewhere into your project to fit with your existing startup flow.
