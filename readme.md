@@ -11,7 +11,7 @@ If you have not already done so, please register at
 [https://dashboard.cognitivevr.co](https://dashboard.cognitivevr.io).
 
 ## Download the SDK
-It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR.unitypackage)
+It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR_0_2.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR_0_2.unitypackage)
 
 ## Import SDK
 Follow the standard unity package import process. You can import a custom package from the Assets>Import Package>Custom Package... menu option.
