@@ -11,3 +11,10 @@ C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\Unity
 C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\UnityPlugin.csprojResolveAssemblyReference.cache
 C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.dll
 C:\Users\Nate\Desktop\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.pdb
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.dll
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\CognitiveVR.pdb
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.dll
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Debug\UnityEngine.xml
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\UnityPlugin.csprojResolveAssemblyReference.cache
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.dll
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Debug\CognitiveVR.pdb

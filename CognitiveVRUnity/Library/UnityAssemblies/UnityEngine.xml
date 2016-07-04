@@ -3653,7 +3653,7 @@ Default is false.</para>
       </summary>
       <param name="delegateMethod">Delegate method.</param>
       <returns>
-        <para>In case of error returns false and the delegate method will not be invoked.</para>
+        <para>Platforms that don't support Advertising Identifier return value is false and the delegate method is not invoked.</para>
       </returns>
     </member>
     <member name="M:UnityEngine.Application.RequestUserAuthorization(UnityEngine.UserAuthorization)">
@@ -4387,6 +4387,7 @@ See Also: WWW.assetBundle, WWW.LoadFromCacheOrDownload.</param>
       </summary>
       <param name="path">Path of the file on disk.</param>
       <param name="crc">An optional CRC-32 checksum of the uncompressed content. If this is non-zero, then the content will be compared against the checksum before loading it, and give an error if it does not match.</param>
+      <param name="offset">An optional byte offset. This value specifies where to start reading the AssetBundle from.</param>
       <returns>
         <para>Loaded AssetBundle object or null if failed.</para>
       </returns>
@@ -4397,6 +4398,7 @@ See Also: WWW.assetBundle, WWW.LoadFromCacheOrDownload.</param>
       </summary>
       <param name="path">Path of the file on disk.</param>
       <param name="crc">An optional CRC-32 checksum of the uncompressed content. If this is non-zero, then the content will be compared against the checksum before loading it, and give an error if it does not match.</param>
+      <param name="offset">An optional byte offset. This value specifies where to start reading the AssetBundle from.</param>
       <returns>
         <para>Asynchronous create request for an AssetBundle. Use AssetBundleCreateRequest.assetBundle property to get an AssetBundle once it is loaded.</para>
       </returns>
@@ -14844,10 +14846,23 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <param name="index">Index of the random write target in the shader.</param>
       <param name="uav">RenderTexture/ComputeBuffer to set as write target.</param>
     </member>
+    <member name="M:UnityEngine.Graphics.SetRenderTarget(UnityEngine.RenderTargetSetup)">
+      <summary>
+        <para>Sets current render target.</para>
+      </summary>
+      <param name="setup"></param>
+      <param name="rt"></param>
+      <param name="mipLevel"></param>
+      <param name="face"></param>
+      <param name="colorBuffer"></param>
+      <param name="depthBuffer"></param>
+      <param name="colorBuffers"></param>
+    </member>
     <member name="M:UnityEngine.Graphics.SetRenderTarget(UnityEngine.RenderTexture)">
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14859,6 +14874,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14870,6 +14886,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14881,6 +14898,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14892,6 +14910,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14903,6 +14922,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -14914,6 +14934,7 @@ If a string, the string will be converted to raw bytes via &lt;a href="http:msdn
       <summary>
         <para>Sets current render target.</para>
       </summary>
+      <param name="setup"></param>
       <param name="rt"></param>
       <param name="mipLevel"></param>
       <param name="face"></param>
@@ -20940,7 +20961,7 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPad5Gen">
       <summary>
-        <para>iPad Air (fifth generation).</para>
+        <para>iPad Air, fifth generation.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadAir1">
@@ -20960,7 +20981,7 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadMini2Gen">
       <summary>
-        <para>iPadMini Retina (second generation).</para>
+        <para>iPadMini Retina, second generation.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadMini3Gen">
@@ -20970,12 +20991,17 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadMini4Gen">
       <summary>
-        <para>iPadMini 4th Generation.</para>
+        <para>iPad Mini, fourth generation.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.iOS.DeviceGeneration.iPadPro10Inch1Gen">
+      <summary>
+        <para>iPad Pro 9.7", first generation.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadPro1Gen">
       <summary>
-        <para>iPadProGen1 value.</para>
+        <para>iPad Pro, first generation.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPadUnknown">
@@ -21035,12 +21061,17 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPhone6S">
       <summary>
-        <para>iPhone6S value.</para>
+        <para>iPhone 6S.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPhone6SPlus">
       <summary>
-        <para>iPhone6Plus value.</para>
+        <para>iPhone 6S Plus.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.iOS.DeviceGeneration.iPhoneSE1Gen">
+      <summary>
+        <para>iPhone SE, first generation.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPhoneUnknown">
@@ -21075,7 +21106,7 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPodTouchUnknown">
       <summary>
-        <para>Yet unknown iPodTouch.</para>
+        <para>Yet unknown iPod Touch.</para>
       </summary>
     </member>
     <member name="T:UnityEngine.iOS.LocalNotification">
@@ -36924,7 +36955,7 @@ Updating a probe's cubemap is a costly operation. Unity needs to render the enti
     </member>
     <member name="T:UnityEngine.Rendering.RenderBufferLoadAction">
       <summary>
-        <para>Handling of loading RenderBuffer contents on setting as active RenderTarget. It has effect only on some platforms.</para>
+        <para>Handling of loading RenderBuffer contents on setting as active RenderTarget.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.Rendering.RenderBufferLoadAction.DontCare">
@@ -36939,7 +36970,7 @@ Updating a probe's cubemap is a costly operation. Unity needs to render the enti
     </member>
     <member name="T:UnityEngine.Rendering.RenderBufferStoreAction">
       <summary>
-        <para>Handling of storing RenderBuffer contents after it was an active RenderTarget and another RenderTarget was set. It has effect only on some platforms.</para>
+        <para>Handling of storing RenderBuffer contents after it was an active RenderTarget and another RenderTarget was set.</para>
       </summary>
     </member>
     <member name="F:UnityEngine.Rendering.RenderBufferStoreAction.DontCare">
@@ -37306,6 +37337,111 @@ Updating a probe's cubemap is a costly operation. Unity needs to render the enti
       <summary>
         <para>The global skybox to use.</para>
       </summary>
+    </member>
+    <member name="T:UnityEngine.RenderTargetSetup">
+      <summary>
+        <para>Fully describes setup of RenderTarget.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.color">
+      <summary>
+        <para>Color Buffers to set.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.colorLoad">
+      <summary>
+        <para>Load Actions for Color Buffers. It will override any actions set on RenderBuffers themselves.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.colorStore">
+      <summary>
+        <para>Store Actions for Color Buffers. It will override any actions set on RenderBuffers themselves.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.cubemapFace">
+      <summary>
+        <para>Cubemap face to render to.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.depth">
+      <summary>
+        <para>Depth Buffer to set.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.depthLoad">
+      <summary>
+        <para>Load Action for Depth Buffer. It will override any actions set on RenderBuffer itself.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.depthStore">
+      <summary>
+        <para>Store Actions for Depth Buffer. It will override any actions set on RenderBuffer itself.</para>
+      </summary>
+    </member>
+    <member name="F:UnityEngine.RenderTargetSetup.mipLevel">
+      <summary>
+        <para>Mip Level to render to.</para>
+      </summary>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer,UnityEngine.RenderBuffer)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer,UnityEngine.RenderBuffer,System.Int32)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer,UnityEngine.RenderBuffer,System.Int32,UnityEngine.CubemapFace)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer[],UnityEngine.RenderBuffer)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer[],UnityEngine.RenderBuffer,System.Int32)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
+    </member>
+    <member name="M:UnityEngine.RenderTargetSetup.#ctor(UnityEngine.RenderBuffer[],UnityEngine.RenderBuffer,System.Int32,UnityEngine.CubemapFace)">
+      <summary>
+        <para>Constructs RenderTargetSetup.</para>
+      </summary>
+      <param name="color">Color Buffer(s) to set.</param>
+      <param name="depth">Depth Buffer to set.</param>
+      <param name="mipLevel">Mip Level to render to.</param>
+      <param name="face">Cubemap face to render to.</param>
+      <param name="mip"></param>
     </member>
     <member name="T:UnityEngine.RenderTexture">
       <summary>
@@ -38720,12 +38856,6 @@ Updating a probe's cubemap is a costly operation. Unity needs to render the enti
     <member name="F:UnityEngine.RuntimePlatform.WindowsWebPlayer">
       <summary>
         <para>In the web player on Windows.</para>
-      </summary>
-    </member>
-    <member name="F:UnityEngine.RuntimePlatform.WP8Player">
-      <summary>
-        <para>In the player on Windows Phone 8 device.
-</para>
       </summary>
     </member>
     <member name="F:UnityEngine.RuntimePlatform.WSAPlayerARM">

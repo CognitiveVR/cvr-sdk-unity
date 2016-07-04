@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblePop.CSharp.Plugins", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblePop.CSharp", "BubblePop.CSharp.csproj", "{38F3207C-3E61-52AC-AE60-EA0A57ACD1BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblePop.CSharp.Editor.Plugins", "BubblePop.CSharp.Editor.Plugins.csproj", "{E0A22491-E4E4-E577-4CB9-2E05776AFBE2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubblePop.CSharp.Editor", "BubblePop.CSharp.Editor.csproj", "{50658333-7C07-9654-8CE3-44EDA72AEC7F}"
 EndProject
 Global
@@ -21,6 +23,10 @@ Global
 		{38F3207C-3E61-52AC-AE60-EA0A57ACD1BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38F3207C-3E61-52AC-AE60-EA0A57ACD1BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38F3207C-3E61-52AC-AE60-EA0A57ACD1BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0A22491-E4E4-E577-4CB9-2E05776AFBE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0A22491-E4E4-E577-4CB9-2E05776AFBE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0A22491-E4E4-E577-4CB9-2E05776AFBE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0A22491-E4E4-E577-4CB9-2E05776AFBE2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{50658333-7C07-9654-8CE3-44EDA72AEC7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{50658333-7C07-9654-8CE3-44EDA72AEC7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50658333-7C07-9654-8CE3-44EDA72AEC7F}.Release|Any CPU.ActiveCfg = Release|Any CPU

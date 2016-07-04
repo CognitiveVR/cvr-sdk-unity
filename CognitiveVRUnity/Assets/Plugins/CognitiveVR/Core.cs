@@ -11,8 +11,9 @@ namespace CognitiveVR
     public class Core
     {
         private const string SDK_NAME_PREFIX = "unity";
-        private const string SDK_VERSION = "5.0.0";
-        internal const string HUB_OBJECT = "CognitiveVR";
+        private const string SDK_VERSION = "0.2";
+        public static string SDK_Version { get { return SDK_VERSION; } }
+        internal const string HUB_OBJECT = "CognitiveVRHTTPRequest";
 
         /// <summary>
         /// Gets the registered id for the currently active user
@@ -45,7 +46,7 @@ namespace CognitiveVR
         /// <param name="cb">Application defined callback which will occur on completion</param>
         public static void init(InitParams initParams, Callback cb)
         {
-            Debug.Log("Core.init()");
+            Debug.Log("CognitivrVR.Core.init()");
             // this should only be enabled during android development!!!
             //AndroidJNIHelper.debug = true;
 

@@ -42,13 +42,13 @@ public class BubblePop : MonoBehaviour
 	{
 	#endif
 		CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create(
-		"cvr-unity-test"								// (required) Customer ID from the CognitiveVR team.  If you don't have one, contact them.
-		//,userInfo: CognitiveVR.EntityInfo.createUserInfo("joe")		// (optional) Only necessary if user info is known at startup, otherwise use registerUser later
-		//,deviceInfo: CognitiveVR.EntityInfo.createDeviceInfo().setProperty("screenwidth", 1024)	// (optional) Only generally needed if device properties are sent at startup
-		//,requestTimeout: 1500									// (optional) Only necessary if the default is inadequate
-		//,logEnabled: true										// (optional) Typically only set to true during development
-        //,host: "http://localhost"								// (don't use) This is for CognitiveVR developers only
-		);
+            "cvr-unity-test"    // (required) Customer ID from the CognitiveVR team.  You can sign up from https://dashboard.cognitivevr.io
+                                //,userInfo: CognitiveVR.EntityInfo.createUserInfo("joe")		// (optional) Only necessary if user info is known at startup, otherwise use registerUser later
+                                //,deviceInfo: CognitiveVR.EntityInfo.createDeviceInfo().setProperty("screenwidth", 1024)	// (optional) Only generally needed if device properties are sent at startup
+                                //,requestTimeout: 1500									// (optional) Only necessary if the default is inadequate
+                                //,logEnabled: true										// (optional) Typically only set to true during development
+                                //,host: "http://localhost"								// (don't use) This is for CognitiveVR developers only
+        );
 		initParams.OnNotification = delegate(string message, bool wasLaunched)
 		{
 			Debug.Log("initParams.OnNotification: " + (wasLaunched ? "wasLaunched" : "!wasLaunched") + ": " + message);

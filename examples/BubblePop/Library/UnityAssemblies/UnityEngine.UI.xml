@@ -3627,7 +3627,8 @@ Used if the native representation has been destroyed.</para>
     </member>
     <member name="P:UnityEngine.UI.InputField.placeholder">
       <summary>
-        <para>Optional graphic to show when the InputField text is empty.
+        <para>This is an optional ‘empty’ graphic to show that InputField text field is empty. Note that this ‘empty' graphic still displays even when the InputField is selected (that is; when there is focus on it).
+
 A placeholder graphic can be used to show subtle hints or make it more obvious that the control is an InputField.</para>
       </summary>
     </member>

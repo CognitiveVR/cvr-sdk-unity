@@ -53,49 +53,7 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Clear();
 
             // Get the platform from the runtime
-            // Note that android/kindle, iOS, and WP8 go through a different path, so those platforms are not expected
-            switch (Application.platform)
-            {
-                case RuntimePlatform.BlackBerryPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "blackberry");
-                    break;
-                case RuntimePlatform.FlashPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "adobeflash");
-                    break;
-                case RuntimePlatform.LinuxPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "linux");
-                    break;
-                case RuntimePlatform.OSXPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "mac");
-                    break;
-                case RuntimePlatform.PS3:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "ps3");
-                    break;
-                /*
-                case RuntimePlatform.WiiPlayer:
-                    sDeviceAndAppInfo.Add("cognitivevr.unity.platform", "wii");
-                    break;
-                */
-                case RuntimePlatform.OSXEditor:
-                case RuntimePlatform.WindowsEditor:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "unityeditor");
-                    break;
-                case RuntimePlatform.WindowsPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "windows");
-                    break;
-                case RuntimePlatform.OSXWebPlayer:
-                case RuntimePlatform.WindowsWebPlayer:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "unitywebplayer");
-                    break;
-                case RuntimePlatform.XBOX360:
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "xbox360");
-                    break;
-                default:
-                    // Unknown/unexpected
-                    sDeviceAndAppInfo.Add("cvr.unity.platform", "unknown");
-                    break;
-
-            }
+            sDeviceAndAppInfo.Add("cvr.unity.platform", Application.platform);
 
             // Get the rest of the information about the device
             sDeviceAndAppInfo.Add("cvr.app.name", Application.productName);

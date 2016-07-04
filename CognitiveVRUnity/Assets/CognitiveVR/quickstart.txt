@@ -1,0 +1,15 @@
+cognitiveVR plugin for Unity - v0.2
+
+
+Quickstart:
+1. Sign up at http://dashboard.cognitivevr.io
+
+2. Login and retrieve your cogntiveVR Customer ID. See https://github.com/cognitiveVR/cvr-sdk-unity for details
+about where to find your cognitiveVR Customer ID
+
+3. Select your VR Unity Plugin from the CognitiveVR Settings Popup
+
+Add CognitiveVR/_Sample/CognitiveVR_BasicInit.prefab to your scene if you have not added it from the popup
+
+That's it! You are now tracking your user's basic data including GPU,CPU,OS,RAM. If you are using the SteamVR plugin,
+you will also recieve the current room size
