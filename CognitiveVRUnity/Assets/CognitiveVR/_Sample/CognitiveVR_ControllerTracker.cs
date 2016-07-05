@@ -18,6 +18,10 @@ public class CognitiveVR_ControllerTracker : MonoBehaviour
     void Start()
     {
         controller = GetComponent<SteamVR_TrackedController>();
+
+        if (controller == null)
+            controller = gameObject.AddComponent<SteamVR_TrackedController>();
+
         controller.TriggerClicked += new ClickedEventHandler(OnTriggerClicked);
         controller.TriggerUnclicked += new ClickedEventHandler(OnTriggerUnclicked);
         controller.Gripped += new ClickedEventHandler(OnGripped);

@@ -43,7 +43,7 @@ public class CognitiveVR_GazeObject : MonoBehaviour
         UpdateSendTime();
 
         //check distance to object
-        if (MaxDistance > 0 && Mathf.Pow(MaxDistance,2) > Vector3.SqrMagnitude(cameraTransform.position - myTransform.position))
+        if (MaxDistance > 0 && Mathf.Pow(MaxDistance,2) < Vector3.SqrMagnitude(cameraTransform.position - myTransform.position))
         {
             return;
         }
