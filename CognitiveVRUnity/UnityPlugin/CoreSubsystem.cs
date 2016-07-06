@@ -84,7 +84,8 @@ namespace CognitiveVR
                     {
                         foreach (var info in deviceAndAppInfo)
                         {
-                            deviceProperties.Add(info.Key, info.Value);
+                            if (!deviceProperties.ContainsKey(info.Key))
+                                deviceProperties.Add(info.Key, info.Value);
                         }
                     }
                     catch (ArgumentException)

@@ -151,7 +151,7 @@ namespace CognitiveVR
                     }
 
                     // Remove ourselves...
-                    GameObject.Destroy(gameObject);
+                    GameObject.Destroy(this);
 
                     // Move into the finished state while we wait to be destroyed
                     mState = State.Finished;

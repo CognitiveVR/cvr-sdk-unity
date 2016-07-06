@@ -52,9 +52,6 @@ namespace CognitiveVR
             // Clear out any previously set data
             sDeviceAndAppInfo.Clear();
 
-            // Get the platform from the runtime
-            sDeviceAndAppInfo.Add("cvr.unity.platform", Application.platform);
-
             // Get the rest of the information about the device
             sDeviceAndAppInfo.Add("cvr.app.name", Application.productName);
             sDeviceAndAppInfo.Add("cvr.app.version", Application.version);
