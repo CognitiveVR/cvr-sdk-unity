@@ -56,5 +56,22 @@ namespace CognitiveVR
 
 			return val;
 		}
-	}
+
+        /// <summary>
+        /// Get all the values of tuning variables from CognitiveVR.
+        /// 
+        /// <b>Note:</b> This is not an async or blocking operation. Tuning values are proactively cached by
+        /// the CognitiveVR Framework during CognitiveVR.Core.init, CognitiveVR.Core.registerUser, and CognitiveVR.Tuning.refresh
+        /// 
+        /// </summary>
+        /// <returns>The dynamic value of the variables</returns>
+        public static System.Collections.Generic.Dictionary<string,object> getAllVars()
+        {
+            System.Collections.Generic.Dictionary<string, object> ret;
+
+            ret = TuningSubsystem.getAllVars(CoreSubsystem.UserId, CoreSubsystem.DeviceId);
+
+            return ret;
+        }
+    }
 }

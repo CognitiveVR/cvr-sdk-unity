@@ -103,6 +103,28 @@ namespace CognitiveVR
             return sCacheVars.getValue(entityType, entityId, varName, defaultValue);
         }
 
+        /**
+         * Get all the value  from CognitiveVR.  If {@link CognitiveVR#cacheVariables cacheVariables} has not been called or has not finished, this function will return an empty dictionary<string,object>.
+         *
+         * @param userId        The user id, or null
+         * @param deviceId      The device id
+         *
+         * @return A Dictionary<string,object> of the variables
+         */
+        public static Dictionary<string,object> getAllVars(string userId, string deviceId)
+        {
+            string entityType = Constants.ENTITY_TYPE_DEVICE;
+            string entityId = deviceId;
+            if (null != userId)
+            {
+                entityType = Constants.ENTITY_TYPE_USER;
+                entityId = userId;
+            }
+
+            // Grab the value from the cache
+            return sCacheVars.getAllValues(entityType, entityId);
+        }
+
         public class Updater : TuningUpdater
         {
             private bool mDirty = false;
@@ -365,6 +387,48 @@ namespace CognitiveVR
                         }
                     }
                 }
+
+                return ret;
+            }
+
+            internal Dictionary<string,object> getAllValues(string type, string id)
+            {
+                Dictionary<string, object> ret = new Dictionary<string, object>();
+
+                if (Storage.ContainsKey(type))
+                {
+                    Dictionary<string, object> typeStorage = Storage[type];
+                    if ((null != id) && typeStorage.ContainsKey(id))
+                    {
+                        ret = (Dictionary<string, object>)typeStorage[id];
+                        /*if (entityData.ContainsKey(var))
+                        {
+                            try
+                            {
+                                if (typeof(T).IsEnum && entityData[var] is string)
+                                {
+                                    ret = (T)Enum.Parse(typeof(T), entityData[var] as string);
+                                }
+                                else
+                                {
+                                    ret = (T)Convert.ChangeType(entityData[var], typeof(T));
+                                }
+                            }
+                            catch { }
+                        }*/
+                    }
+                }
+
+                // TODO let the cognitivevr backend know that this request took place
+                /*double curTimeStamp = Util.Timestamp();
+                if (!Used.ContainsKey(var) || curTimeStamp > Used[var] + Constants.TIME_RECORDAGAIN)
+                {
+                    Used[var] = curTimeStamp;
+                    new CoreSubsystem.DataPointBuilder("tuner_recordUsed")
+                        .setArg(var)
+                        .setArg(defaultValue)
+                        .send();
+                }*/
 
                 return ret;
             }
