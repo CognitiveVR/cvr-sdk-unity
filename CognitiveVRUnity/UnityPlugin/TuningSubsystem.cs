@@ -401,34 +401,10 @@ namespace CognitiveVR
                     if ((null != id) && typeStorage.ContainsKey(id))
                     {
                         ret = (Dictionary<string, object>)typeStorage[id];
-                        /*if (entityData.ContainsKey(var))
-                        {
-                            try
-                            {
-                                if (typeof(T).IsEnum && entityData[var] is string)
-                                {
-                                    ret = (T)Enum.Parse(typeof(T), entityData[var] as string);
-                                }
-                                else
-                                {
-                                    ret = (T)Convert.ChangeType(entityData[var], typeof(T));
-                                }
-                            }
-                            catch { }
-                        }*/
                     }
                 }
 
                 // TODO let the cognitivevr backend know that this request took place
-                /*double curTimeStamp = Util.Timestamp();
-                if (!Used.ContainsKey(var) || curTimeStamp > Used[var] + Constants.TIME_RECORDAGAIN)
-                {
-                    Used[var] = curTimeStamp;
-                    new CoreSubsystem.DataPointBuilder("tuner_recordUsed")
-                        .setArg(var)
-                        .setArg(defaultValue)
-                        .send();
-                }*/
 
                 return ret;
             }
