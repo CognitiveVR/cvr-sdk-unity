@@ -52,24 +52,32 @@ namespace CognitiveVR
             device.properties.Add("cvr.vr.model", UnityEngine.VR.VRDevice.model);
             device.properties.Add("cvr.vr.name", UnityEngine.VR.VRSettings.loadedDeviceName);
 #endif
+            if (CognitiveVR_Preferences.Instance.ScreenResolution)
+            {
+                device.properties.Add("cvr.vr.screenresolution", string.Format("{0:0.0} x {1:0.0}", UnityEngine.Screen.width, UnityEngine.Screen.height));
+            }
 
+
+            if (CognitiveVR_Preferences.Instance.ChaperoneRoomSize)
+            {
 #if CVR_STEAMVR
-            float roomX = 0;
-            float roomY = 0;
-            if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
-            {
-                device.properties.Add("cvr.vr.roomscale", false);
-            }
-            else
-            {
-                bool seated = UnityEngine.Mathf.Approximately(roomX,1f) && roomX == roomY;
+                float roomX = 0;
+                float roomY = 0;
+                if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+                {
+                    device.properties.Add("cvr.vr.roomscale", false);
+                }
+                else
+                {
+                    bool seated = UnityEngine.Mathf.Approximately(roomX,1f) && roomX == roomY;
 
-                device.properties.Add("cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", roomX, roomY));
-                //device.properties.Add("cvr.vr.roomsize.x", roomX);
-                //device.properties.Add("cvr.vr.roomsize.y", roomY);
-                device.properties.Add("cvr.vr.roomscale", !seated);
-            }
+                    device.properties.Add("cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", roomX, roomY));
+                    //device.properties.Add("cvr.vr.roomsize.x", roomX);
+                    //device.properties.Add("cvr.vr.roomsize.y", roomY);
+                    device.properties.Add("cvr.vr.roomscale", !seated);
+                }
 #endif
+            }
 
                 return device;
 		}

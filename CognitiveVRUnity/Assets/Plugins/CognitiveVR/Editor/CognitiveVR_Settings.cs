@@ -114,13 +114,6 @@ public class CognitiveVR_Settings : EditorWindow
                     if (basicInit)
                     {
                         GameObject prefab = (GameObject)PrefabUtility.InstantiatePrefab(basicInit);
-                        var sampleType = Types.GetType("CognitiveVR_SampleInitialization", "Assembly-CSharp");
-                        if (sampleType != null)
-                        {
-                            var field = sampleType.GetField("CustomerID");
-                            if (field != null) { field.SetValue(prefab.GetComponent(sampleType), id); }
-                        }
-                        PrefabUtility.ReplacePrefab(prefab, basicInit);
                         addedBasicInitPrefab = true;
                     }
                     else
@@ -166,6 +159,9 @@ public class CognitiveVR_Settings : EditorWindow
                 string alldefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone) + ";" + option;
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, alldefines);
             }
+
+            CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR.CognitiveVR_EditorPrefs.GetPreferences();
+            prefs.CustomerID = id;
 
             Close();
         }

@@ -8,13 +8,13 @@ using CognitiveVR;
 
 public class CognitiveVR_SampleInitialization : MonoBehaviour
 {
-    public string CustomerID = "companyname1234-productname-test";
+    //public string CustomerID = "companyname1234-productname-test";
 
     void Start ()
     {
         CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
         (
-            customerId: CustomerID // contact CognitiveVR if you do not have a customer id yet
+            customerId: CognitiveVR_Preferences.Instance.CustomerID // contact CognitiveVR if you do not have a customer id yet
 
             //if you are using the SteamVR plugin, this will also automatically record the player's room size
 

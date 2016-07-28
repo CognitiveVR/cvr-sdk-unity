@@ -7,28 +7,17 @@ namespace CognitiveVR
     public class CognitiveVR_EditorPrefs
     {
         // Have we loaded the prefs yet
-        private static bool prefsLoaded = false;
+        //private static bool prefsLoaded = false;
 
         // other tracking options
-        private static bool trackTeleportDistance = true;
-        private static float objectSendInterval = 10;
+        //private static bool trackTeleportDistance = true;
+        //private static float objectSendInterval = 10;
 
 
         [PreferenceItem("cognitiveVR")]
         private static void CustomPreferencesGUI()
         {
-            if (!prefsLoaded)
-            {
-                CognitiveVR_Preferences prefs = GetPreferences();
-
-                //teleport
-                trackTeleportDistance = prefs.trackTeleportDistance;
-
-                //gaze object
-                objectSendInterval = prefs.objectSendInterval;
-
-                prefsLoaded = true;
-            }
+            CognitiveVR_Preferences prefs = GetPreferences();
 
             EditorGUILayout.LabelField("Version: " + Core.SDK_Version);
 
@@ -39,18 +28,11 @@ namespace CognitiveVR
 
             GUILayout.Space(20);
 
-            trackTeleportDistance = EditorGUILayout.Toggle(new GUIContent("Track Teleport Distance", "Track the distance of a player's teleport. Requires the CognitiveVR_TeleportTracker"), trackTeleportDistance);
-            objectSendInterval = EditorGUILayout.FloatField(new GUIContent("Gaze Object Send Interval", "How many seconds of gaze data are batched together when reporting CognitiveVR_GazeObject look durations"), objectSendInterval);
+            prefs.TrackTeleportDistance = EditorGUILayout.Toggle(new GUIContent("Track Teleport Distance", "Track the distance of a player's teleport. Requires the CognitiveVR_TeleportTracker"), prefs.TrackTeleportDistance);
+            prefs.GazeObjectSendInterval = EditorGUILayout.FloatField(new GUIContent("Gaze Object Send Interval", "How many seconds of gaze data are batched together when reporting CognitiveVR_GazeObject look durations"), prefs.GazeObjectSendInterval);
 
             if (GUI.changed)
             {
-                CognitiveVR_Preferences prefs = GetPreferences();
-
-                //teleport
-                prefs.trackTeleportDistance = trackTeleportDistance;
-                
-                //gaze object
-                prefs.objectSendInterval = objectSendInterval;
                 AssetDatabase.SaveAssets();
             }
         }
