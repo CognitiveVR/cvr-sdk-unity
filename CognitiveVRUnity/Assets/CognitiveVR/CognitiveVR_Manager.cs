@@ -3,107 +3,168 @@ using CognitiveVR;
 using System.Collections;
 using System.Collections.Generic;
 
-//goes somewhere in the scene
-//this should have the http request components on it
+/// <summary>
+/// initializes CognitiveVR analytics. Add components to track additional events
+/// </summary>
+
 namespace CognitiveVR
 {
     public class CognitiveVR_Manager : MonoBehaviour
     {
-        //fps
-        int samples = 30;
-        List<float> framerates = new List<float>();
+        #region Events
+        public delegate void CoreInitHandler(Error initError);
+        /// <summary>
+        /// CognitiveVR Core.Init callback
+        /// </summary>
+        public static event CoreInitHandler OnInit;
+        public void InitEvent(Error initError) { if (OnInit != null) { OnInit(initError); } }
 
-        //chaperone
-        string chaperoneGUID;
+        public delegate void UpdateHandler();
+        /// <summary>
+        /// Update. Called through Manager's update function for easy enabling/disabling
+        /// </summary>
+        public static event UpdateHandler OnUpdate;
+        public void UpdateEvent() { if (OnUpdate != null) { OnUpdate(); } }
 
-        string hmdpresentGUID;
+        public delegate void TickHandler();
+        /// <summary>
+        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// </summary>
+        public static event TickHandler OnTick;
+        public void TickEvent() { if (OnTick != null) { OnTick(); } }
+
+        public delegate void QuitHandler(); //quit
+        /// <summary>
+        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
+        /// </summary>
+        public static event QuitHandler OnQuit;
+        public void QuitEvent() { if (OnQuit != null) { OnQuit(); } }
+
+        public delegate void LevelLoadedHandler(); //level
+        /// <summary>
+        /// called from Unity's built in OnLevelWasLoaded(int id) or SceneManager.SceneLoaded(scene scene) in 5.4
+        /// </summary>
+        public static event LevelLoadedHandler OnLevelLoaded;
+        public void LevelLoadEvent() { if (OnLevelLoaded != null) { OnLevelLoaded(); } }
+
+#if CVR_STEAMVR
+        public delegate void PoseUpdateHandler(params object[] args);
+        /// <summary>
+        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
+        /// </summary>
+        public static event PoseUpdateHandler OnPoseUpdate;
+        public void PoseUpdateEvent(params object[] args) { if (OnPoseUpdate != null) { OnPoseUpdate(args); } }
+
+        public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
+        /// <summary>
+        /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
+        /// </summary>
+        public static event PoseEventHandler OnPoseEvent;
+        public void PoseEvent(Valve.VR.EVREventType eventType) { if (OnPoseEvent != null) { OnPoseEvent(eventType); } }
+
+#endif
+        #endregion
+
+        #region HMD and Controllers
+
+        private static Transform _hmd;
+        public static Transform HMD
+        {
+            get
+            {
+                if (_hmd == null)
+                {
+#if CVR_STEAMVR
+                    SteamVR_Camera cam = FindObjectOfType<SteamVR_Camera>();
+                    if (cam != null){ _hmd = cam.transform; }
+#elif CVR_OCULUSVR
+
+#else
+                    _hmd = Camera.main.transform;
+#endif
+                }
+                return _hmd;
+            }
+        }
+
+        static Transform[] controllers = new Transform[2];
+        public static Transform GetController(int id)
+        {
+#if CVR_STEAMVR
+            if (controllers[id] == null)
+            {
+                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
+                if (cm != null)
+                {
+                    if (cm.left != null)
+                        controllers[0] = cm.left.transform;
+                    if (cm.right != null)
+                        controllers[1] = cm.right.transform;
+                }
+            }
+#endif
+            return controllers[id];
+        }
+
+#endregion
+
+        private static CognitiveVR_Manager instance;
+        YieldInstruction playerSnapshotInverval;
 
         void Start()
         {
+            if (instance != null && instance != this) { Destroy(gameObject); return; }
+            instance = this;
+
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
-                customerId: CognitiveVR_Preferences.Instance.CustomerID
+                customerId: CognitiveVR_Preferences.Instance.CustomerID,
+                logEnabled: false
             );
-            CognitiveVR.Core.init(initParams, InitCallback);
+            CognitiveVR.Core.init(initParams, InitEvent);
+
             GameObject.DontDestroyOnLoad(gameObject);
-        }
 
-        void InitCallback(Error initError)
-        {
-            Debug.Log("CognitiveVR Initialize. Result: " + initError);
-            if (initError != Error.Success) { return; }
+            playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
+            StartCoroutine(Tick());
 
-            //USER STEAM ID
-            //if you are using steamworks.net (https://steamworks.github.io/installation/) you can use this code to pass in your user's steam id
-            //Steamworks.SteamAPI.Init(); //doesn't have to be called here, but Steamworks must be Initialized before you call GetSteamID()
-            //EntityInfo user = CognitiveVR.EntityInfo.createUserInfo(Steamworks.SteamUser.GetSteamID().ToString());
-            //Core.registerUser(user, delegate (Error error) { });
-
-            CognitiveVR.Plugins.Session.Transaction().begin();
-
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.TrackBatteryLevel) SendBatteryLevel();
-            if (CognitiveVR_Preferences.Instance.TrackChaperoneVisible)
-            {
-                //TODO register if chaperone is visible or not on initialization
-            }
-        }
-
-        void OnLevelWasLoaded()
-        {
-            //TODO send player snapshots option
-        }
-
-        bool hasDelayed;
-        void OnApplicationQuit()
-        {
-            bool doDelayQuit = false;
-            if (CognitiveVR_Preferences.Instance.sendDataOnQuit)
-            {
-                doDelayQuit = true;
-            }
-            if (CognitiveVR_Preferences.Instance.SessionEndOnApplicationQuit)
-            {
-                doDelayQuit = true;
-                CognitiveVR.Plugins.Session.Transaction().setProperty("duration",Time.time).end();
-            }
-            if (CognitiveVR_Preferences.Instance.TotalTimePlayedCollectionUpdate)
-            {
-                //CognitiveVR.Instrumentation.updateCollection("TimePlayed", 5, Time.time, false);
-            }
-            if (CognitiveVR_Preferences.Instance.TrackBatteryLevel)
-            {
-                doDelayQuit = true;
-                SendBatteryLevel();
-            }
-            //TODO send player snapshots on HMD removed
-
-            if (doDelayQuit && !hasDelayed)
-            {
-                Application.CancelQuit();
-                StartCoroutine(DelayQuit());
-            }
-        }
-
-        float updateInterval = 3.0f;
-        float timeleft;
-        float accum;
-        int frames;
-        bool lowFramerate;
-        string fpsTransactionID;
-
-        void Update()
-        {
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.TrackLowFramerateThreshold || CognitiveVR_Preferences.Instance.TrackComfort) UpdateFramerate();
-            if (CognitiveVR_Preferences.Instance.TrackComfort) UpdateHMDRotation();
+            GetController(0);
 
 #if CVR_STEAMVR
-            UpdateSteamVREvents();
+            SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
+#endif
+
+#if UNITY_5_4
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
 #endif
         }
 
-#if CVR_STEAMVR
-        void UpdateSteamVREvents()
+#if UNITY_5_4
+        private void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            LevelLoadEvent();
+        }
+#else
+        void OnLevelWasLoaded(int id)
+        {
+            LevelLoadEvent();
+        }
+#endif
+
+        IEnumerator Tick()
+        {
+            while (true)
+            {
+                yield return playerSnapshotInverval;
+                TickEvent();
+            }
+        }
+
+        void Update()
+        {
+            UpdateEvent();
+
+#if CVR_STEAMVR
             var system = Valve.VR.OpenVR.System;
             if (system != null)
             {
@@ -113,145 +174,23 @@ namespace CognitiveVR
                 {
                     if (!system.PollNextEvent(ref vrEvent, size))
                         break;
-                    if (CognitiveVR_Preferences.Instance.HMDProximity)
-                    {
-                        if ((Valve.VR.EVREventType)vrEvent.eventType == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
-                        {
-                            mdpresentGUID = System.Guid.NewGuid().ToString();
-                            Instrumentation.Transaction("HMDPresent", hmdpresentGUID).properties("present",true).properties("starttime",Time.time).begin();
-                        }
-                        if ((Valve.VR.EVREventType)vrEvent.eventType == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
-                        {
-                            Instrumentation.Transaction("HMDPresent", hmdpresentGUID).properties("present",false).properties("endtime",Time.time-10f).end();
-                        }
-                    }
-                    if (CognitiveVR_Preferences.Instance.TrackChaperoneVisible)
-                    {
-                        if ((Valve.VR.EVREventType)vrEvent.eventType == Valve.VR.EVREventType.VREvent_ChaperoneDataHasChanged)
-                        {
-                            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
-                            {
-                                chaperoneGUID = System.Guid.NewGuid().ToString();
-                                Instrumentation.Transaction("chaperone", chaperoneGUID).begin();
-                            }
-                            else
-                            {
-                                Instrumentation.Transaction("chaperone", chaperoneGUID).end();
-                            }
-                        }
-                    }
+                    PoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
                 }
             }
-        }
-#endif //steamvr
-
-        void SendBatteryLevel()
-        {
-            Instrumentation.updateDeviceState(new Dictionary<string, object> { { "batterylevel", GetBatteryLevel() } } );
-        }
-
-        public static float GetBatteryLevel()
-        {
-#if CVR_OCULUS
-            //TODO return oculus battery level
 #endif
-
-            if (Application.platform == RuntimePlatform.Android)
-            {
-                try
-                {
-                    using (AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                    {
-                        if (null != unityPlayer)
-                        {
-                            using (AndroidJavaObject currActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                            {
-                                if (null != currActivity)
-                                {
-                                    using (AndroidJavaObject intentFilter = new AndroidJavaObject("android.content.IntentFilter", new object[]{ "android.intent.action.BATTERY_CHANGED" }))
-                                    {
-                                        using (AndroidJavaObject batteryIntent = currActivity.Call<AndroidJavaObject>("registerReceiver", new object[]{null,intentFilter}))
-                                        {
-                                            int level = batteryIntent.Call<int>("getIntExtra", new object[]{"level",-1});
-                                            int scale = batteryIntent.Call<int>("getIntExtra", new object[]{"scale",-1});
- 
-                                            // Error checking that probably isn't needed but I added just in case.
-                                            if (level == -1 || scale == -1)
-                                            {
-                                                return 50f;
-                                            }
-                                            return ((float)level / (float)scale) * 100.0f; 
-                                        }
-                                 
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (System.Exception ex){}
-         }
-        
-         return 100f;
         }
 
-        Quaternion lastRotation;
-        PlayerTracker HMD;
-        float accumRotation;
-        float rotTimeLeft;
-        int rotFrames;
-        float lastRps;
-
-        void UpdateHMDRotation()
+#region Application Quit
+        bool hasDelayed;
+        void OnApplicationQuit()
         {
-            if (HMD == null) { HMD = FindObjectOfType<PlayerTracker>(); }
+            QuitEvent();
 
-            rotTimeLeft -= Time.deltaTime;
-            accumRotation += Quaternion.Angle(HMD.transform.rotation, lastRotation)/Time.deltaTime;
-            lastRotation = HMD.transform.rotation;
-            ++rotFrames;
-
-            // Interval ended - update GUI text and start new interval
-            if (rotTimeLeft <= 0.0)
+            if (!hasDelayed)
             {
-                lastRps = accumRotation / rotFrames;
-                //	DebugConsole.Log(format,level);
-                rotTimeLeft = updateInterval;
-                accumRotation = 0.0F;
-                rotFrames = 0;
-
-                //Debug.Log(rps);
-
-                Instrumentation.Transaction("comfort", fpsTransactionID).setProperty("fps", lastFps).setProperty("rps", lastRps).begin();
-            }
-        }
-
-        float lastFps;
-        void UpdateFramerate()
-        {
-            timeleft -= Time.deltaTime;
-            accum += Time.timeScale / Time.deltaTime;
-            ++frames;
-
-            // Interval ended - update GUI text and start new interval
-            if (timeleft <= 0.0)
-            {
-                lastFps = accum / frames;
-                //	DebugConsole.Log(format,level);
-                timeleft = updateInterval;
-                accum = 0.0F;
-                frames = 0;
-
-                if (lastFps < CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && !lowFramerate)
-                {
-                    lowFramerate = true;
-                    fpsTransactionID = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("performance", fpsTransactionID).setProperty("fps", lastFps).begin();
-                }
-                else if (lastFps > CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && lowFramerate)
-                {
-                    lowFramerate = false;
-                    Instrumentation.Transaction("performance", fpsTransactionID).end();
-                }
+                hasDelayed = true;
+                Application.CancelQuit();
+                StartCoroutine(DelayQuit());
             }
         }
 
@@ -260,5 +199,6 @@ namespace CognitiveVR
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
         }
+#endregion
     }
 }

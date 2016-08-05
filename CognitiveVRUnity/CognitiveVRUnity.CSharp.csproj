@@ -85,9 +85,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\CognitiveVR\CognitiveVR_Manager.cs" />
-    <Compile Include="Assets\CognitiveVR\PlayerTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\_Sample\CognitiveVR_SampleInitialization.cs" />
-    <Compile Include="Assets\CognitiveVR\_Sample\ControllerTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ArmLengthTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\BatteryTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ChaperoneTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\CognitiveVRAnalyticsComponent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ComfortTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ControllerCollisionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDHeightTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\OcclusionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\RoomSizeTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ScreenResolutionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUserTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\TeleportTracker.cs" />
     <Compile Include="Assets\CognitiveVR\_Sample\GazeObject.cs" />
   </ItemGroup>
   <ItemGroup>

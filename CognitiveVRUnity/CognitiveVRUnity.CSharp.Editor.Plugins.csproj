@@ -134,7 +134,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Plugins\CognitiveVR\Editor\CognitiveVR_EditorPrefs.cs" />
-    <Compile Include="Assets\Plugins\CognitiveVR\Editor\CognitiveVR_Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\CognitiveVR\Resources\CognitiveSceneDepth.shader" />
