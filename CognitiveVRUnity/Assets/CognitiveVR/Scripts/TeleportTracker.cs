@@ -36,7 +36,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "sends a transaction when a player's HMD root transform changes positions - likely a teleport";
+            return "Sends a transaction when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
         }
     }
 }

@@ -140,7 +140,7 @@ namespace CognitiveVR
         }
 
 #if UNITY_5_4
-        private void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             LevelLoadEvent();
         }

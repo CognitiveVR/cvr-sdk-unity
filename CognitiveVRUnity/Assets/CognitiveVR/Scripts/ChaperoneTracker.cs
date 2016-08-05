@@ -48,7 +48,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transaction when SteamVR Chaperone is becomes visible and is becomes hidden";
+            return "Sends transaction when SteamVR Chaperone becomes visible and becomes hidden";
         }
     }
 }

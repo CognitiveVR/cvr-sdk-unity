@@ -2,7 +2,7 @@ The cognitiveVR SDK for Unity
 =========
 Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, which provides analytics and insights about your Unity project.  In addition, cognitiveVR empowers you with the ability to take actions that will improve users' engagement with your experience.
 
-Last Updated: July 6, 2016
+Last Updated: August 5, 2016
 
 Quickstart
 =========
@@ -11,7 +11,7 @@ If you have not already done so, please register at
 [https://dashboard.cognitivevr.co](https://dashboard.cognitivevr.io).
 
 ## Download the SDK
-It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR_0_2_1.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR_0_2_1.unitypackage)
+It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR_0_3_0.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR_0_3_0.unitypackage)
 
 ## Import SDK
 Follow the standard unity package import process. You can import a custom package from the Assets>Import Package>Custom Package... menu option.
@@ -36,18 +36,22 @@ This is required to send telemetry to your application. The format is : ```yourc
 
 ![cognitiveVR Customer ID](doc/customer_id.PNG)
 
-### Init Prefab
-This button will create a prefab that will automatically initialize the cognitiveVR analytics. We recommend only using this as a reference - you should move this code elsewhere into your project to fit with your existing startup flow.
+### Add CognitiveVR Manager
+This button will create a prefab that will automatically initialize the cognitiveVR analytics. This prefab will also hold and activate the components selected in the component window (see below)
 
 ### VR SDK
-Select the SDK you are using for implementing VR into your unity project. At this time, we are only supporting the SteamVR plugin. Support for other SDKs including Oculus Utilities for Unity 5 will be coming soon.
+Select the SDK you are using for implementing VR into your unity project. At this time, we are only supporting the SteamVR plugin. The SDK should function correctly with any VR SDK you might be using, but additional functionality has been written for this specific SDK. Support for other SDKs including Oculus Utilities for Unity 5 will be coming soon.
 
 ## Done!
-That's it! You are now tracking your user's basic data including GPU,CPU,OS and RAM. If you are using the SteamVR plugin, you will also recieve the current room size. Unity 5.4 beta users will also receive the model of Head Mounted Display.
+That's it! You are now tracking your user's basic data including GPU,CPU,OS and RAM. Unity 5.4 users will also receive the model of Head Mounted Display.
 
+## Component Window
+After saving these settings, you can open the component window to add more functionality to your project. See the documentation for details
 
-cognitiveVR Wiki
+![cognitiveVR Component Window](doc/component_window.png)
+
+cognitiveVR Documentation
 =========
-This is only a quick reference to set up the cognitiveVR SDK. The wiki explains the concepts behind the SDK and provides more code samples.
+This is only a quick reference to set up the cognitiveVR SDK. The documentation explains the concepts behind the SDK and provides more code samples.
 
-[Go to the Wiki](https://github.com/CognitiveVR/cvr-sdk-unity/wiki)
+[Go to the Docs](http://docs.cognitivevr.io/unity/get-started/)

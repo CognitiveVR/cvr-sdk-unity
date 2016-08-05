@@ -84,13 +84,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\CognitiveVR\CognitiveVR_Manager.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ArmLengthTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\BatteryTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ChaperoneTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\CognitiveVRAnalyticsComponent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\CognitiveVR_Manager.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ComfortTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ControllerCollisionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ControllerInputTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDHeightTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentTracker.cs" />

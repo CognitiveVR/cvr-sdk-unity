@@ -175,7 +175,7 @@ namespace CognitiveVR
             }
             GUI.skin.toggle.richText = true;
 
-            string supportedPlatforms = "";
+            /*string supportedPlatforms = "";
             MethodInfo getPlatforms = componentType.GetMethod("GetPlatforms");
             if (getPlatforms != null)
             {
@@ -191,7 +191,7 @@ namespace CognitiveVR
                         supportedPlatforms = supportedPlatforms.Remove(supportedPlatforms.Length - 2);
                     }
                 }
-            }
+            }*/
 
             bool b = GUILayout.Toggle(component != null, "<size=14><b>" + prettyName + "</b></size>");
 
