@@ -68,8 +68,8 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Add("cvr.device.processor", SystemInfo.processorType);
             sDeviceAndAppInfo.Add("cvr.device.memory", SystemInfo.systemMemorySize);
             sDeviceAndAppInfo.Add("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
-            sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "");
-            sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "");
+            sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
+            sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
 
         }
 
