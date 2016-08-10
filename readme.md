@@ -2,7 +2,7 @@ The cognitiveVR SDK for Unity
 =========
 Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, which provides analytics and insights about your Unity project.  In addition, cognitiveVR empowers you with the ability to take actions that will improve users' engagement with your experience.
 
-Last Updated: August 5, 2016
+Last Updated: August 10, 2016
 
 Quickstart
 =========
@@ -11,7 +11,7 @@ If you have not already done so, please register at
 [https://dashboard.cognitivevr.co](https://dashboard.cognitivevr.io).
 
 ## Download the SDK
-It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR_0_3_0.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR_0_3_0.unitypackage)
+It is recommended that you clone this git repo to stay up to date with fixes and changes. You can also download the unity package directly : [cognitiveVR_0_3_1.unitypackage](https://github.com/CognitiveVR/cvr-sdk-unity/raw/master/dist/CognitiveVR_0_3_1.unitypackage)
 
 ## Import SDK
 Follow the standard unity package import process. You can import a custom package from the Assets>Import Package>Custom Package... menu option.
