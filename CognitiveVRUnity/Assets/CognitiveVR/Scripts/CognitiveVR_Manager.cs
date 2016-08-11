@@ -17,7 +17,14 @@ namespace CognitiveVR
         /// CognitiveVR Core.Init callback
         /// </summary>
         public static event CoreInitHandler OnInit;
-        public void InitEvent(Error initError) { if (OnInit != null) { OnInit(initError); } }
+        public void InitEvent(Error initError)
+        {
+            foreach (var v in GetComponentsInChildren<CognitiveVRAnalyticsComponent>())
+            {
+                v.CognitiveVR_Init(initError);
+            }
+            if (OnInit != null) { OnInit(initError); }
+        }
 
         public delegate void UpdateHandler();
         /// <summary>

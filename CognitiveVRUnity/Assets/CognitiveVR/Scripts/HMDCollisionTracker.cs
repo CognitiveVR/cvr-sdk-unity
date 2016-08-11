@@ -22,7 +22,7 @@ namespace CognitiveVR
             if (hit)
             {
                 Util.logDebug("hmd collision");
-                Instrumentation.Transaction("collision").beginAndEnd();
+                Instrumentation.Transaction("collision").setProperty("device","HMD").beginAndEnd();
             }
         }
         public static string GetDescription()

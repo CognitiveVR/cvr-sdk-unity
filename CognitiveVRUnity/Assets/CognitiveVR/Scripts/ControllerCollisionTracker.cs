@@ -25,14 +25,14 @@ namespace CognitiveVR
             if (hit)
             {
                 Util.logDebug("controller collision");
-                Instrumentation.Transaction("collision").beginAndEnd();
+                Instrumentation.Transaction("collision").setProperty("device", "controller 0").beginAndEnd();
             }
 
             hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(1).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
             if (hit)
             {
                 Util.logDebug("controller collision");
-                Instrumentation.Transaction("collision").beginAndEnd();
+                Instrumentation.Transaction("collision").setProperty("device", "controller 1").beginAndEnd();
             }
         }
 
