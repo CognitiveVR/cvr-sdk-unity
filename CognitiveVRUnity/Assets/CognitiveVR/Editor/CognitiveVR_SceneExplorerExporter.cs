@@ -286,7 +286,7 @@ namespace CognitiveVR
         {
             if (!CreateTargetFolder(fullName))
             {
-                Debug.Log("failed to create target folder");
+                Debug.LogError("Scene Explorer Exporter failed to create target folder: " + fullName);
                 return;
             }
 
@@ -324,13 +324,7 @@ namespace CognitiveVR
                 {
                     mf[i] = mfList[i];
                 }
-
-                //int stripIndex = fullName.LastIndexOf('/');
-
-                //if (stripIndex >= 0)
-                //    fullName = fullName.Substring(stripIndex + 1).Trim();
-
-                Debug.Log("fullName " + fullName);
+                
                 MeshesToFile(mf, "CognitiveVR_SceneExplorerExport/" + fullName, fullName, includeTextures);
             }
             else

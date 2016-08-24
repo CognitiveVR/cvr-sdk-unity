@@ -221,6 +221,13 @@ namespace CognitiveVR
 
             CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures);
 
+
+            if (string.IsNullOrEmpty(prefs.SavedBlenderPath) || !prefs.SavedBlenderPath.EndsWith("Blender.exe"))
+            {
+                Debug.LogError("Blender.exe is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender.exe\nScene: "+ fullName+" exported to folder but not mesh decimated!");
+                return;
+            }
+
             string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
@@ -245,17 +252,6 @@ namespace CognitiveVR
             BlenderRequest = true;
             HasOpenedBlender = false;
             EditorApplication.update += UpdateProcess;
-
-            /*
-            
-            ExecuteCommand("cd\\" +
-                "&cd " + prefs.SavedBlenderPath +
-                "&&blender -P " + decimateScriptPath + " " + objPath + " " + prefs.ExplorerMinimumFaceCount + " " + prefs.ExplorerMaximumFaceCount + " " + fullName +
-                "&&exit");
-            UnityEngine.Debug.Log("cd\\" +
-                "&cd " + prefs.SavedBlenderPath +
-                "&&blender -P " + decimateScriptPath + " " + objPath + " " + prefs.ExplorerMinimumFaceCount + " " + prefs.ExplorerMaximumFaceCount + " " + fullName +
-                "&&exit");*/
         }
 
         public static bool FoldoutButton(string title, bool showing)
