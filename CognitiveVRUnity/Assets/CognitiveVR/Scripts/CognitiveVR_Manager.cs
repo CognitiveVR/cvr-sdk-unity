@@ -19,10 +19,9 @@ namespace CognitiveVR
         public static event CoreInitHandler OnInit;
         public void InitEvent(Error initError)
         {
-            CognitiveVRAnalyticsComponent[] analyticsComponents = GetComponentsInChildren<CognitiveVRAnalyticsComponent>();
-            for (int i = 0; i<analyticsComponents.Length; i++)
+            foreach (var v in GetComponentsInChildren<CognitiveVRAnalyticsComponent>())
             {
-                analyticsComponents[i].CognitiveVR_Init(initError);
+                v.CognitiveVR_Init(initError);
             }
             if (OnInit != null) { OnInit(initError); }
         }
@@ -86,7 +85,7 @@ namespace CognitiveVR
                     SteamVR_Camera cam = FindObjectOfType<SteamVR_Camera>();
                     if (cam != null){ _hmd = cam.transform; }
 #elif CVR_OCULUSVR
-
+                    _hmd = Camera.main.transform;
 #else
                     _hmd = Camera.main.transform;
 #endif
@@ -118,24 +117,28 @@ namespace CognitiveVR
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
-        public static bool HasInitialized = false;
 
         /// <summary>
-        /// You can manually call this to start initializing CognitiveVR analytics
-        /// bool 'HasInitialized' is used to limit this, so Tick loop does not 
+        /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
+        /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
         /// </summary>
-        public void Start()
+        EntityInfo GetUniqueEntityID()
+        {
+            if (GetComponent<SteamworksUserTracker>() == null)
+                return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
+            return null;
+        }
+
+        void Start()
         {
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
 
-            if (HasInitialized) { return; }
-            HasInitialized = true;
-
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: false
+                logEnabled: false,
+                userInfo: GetUniqueEntityID()
             );
             CognitiveVR.Core.init(initParams, InitEvent);
 

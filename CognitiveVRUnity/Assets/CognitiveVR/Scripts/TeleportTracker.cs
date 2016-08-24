@@ -10,7 +10,17 @@ namespace CognitiveVR
     public class TeleportTracker : CognitiveVRAnalyticsComponent
     {
         Transform _root;
-        Transform root { get { if (_root == null) _root = CognitiveVR_Manager.HMD.root; return _root; } }
+        Transform root
+        {
+            get
+            {
+                if (_root == null)
+                    if (CognitiveVR_Manager.HMD == null) _root = transform;
+                    else { _root = CognitiveVR_Manager.HMD.root; }
+                return _root;
+            }
+        }
+
         Vector3 lastRootPosition;
 
         public override void CognitiveVR_Init(Error initError)
@@ -26,8 +36,7 @@ namespace CognitiveVR
                 string transactionID = System.Guid.NewGuid().ToString();
                 Vector3 newPosition = root.position;
 
-                Instrumentation.Transaction("teleport", transactionID).setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).begin();
-                Instrumentation.Transaction("teleport", transactionID).end();
+                Instrumentation.Transaction("teleport", transactionID).setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
                 Util.logDebug("teleport");
 
                 lastRootPosition = root.position;
