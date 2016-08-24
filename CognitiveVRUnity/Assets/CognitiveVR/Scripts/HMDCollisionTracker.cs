@@ -10,6 +10,7 @@ namespace CognitiveVR
 {
     public class HMDCollisionTracker : CognitiveVRAnalyticsComponent
     {
+        string HMDGuid;
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -19,10 +20,16 @@ namespace CognitiveVR
         private void CognitiveVR_Manager_OnTick()
         {
             bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-            if (hit)
+            if (hit && string.IsNullOrEmpty(HMDGuid))
             {
                 Util.logDebug("hmd collision");
-                Instrumentation.Transaction("collision").setProperty("device","HMD").beginAndEnd();
+                HMDGuid = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("collision", HMDGuid).setProperty("device", "HMD").begin();
+            }
+            else if (!hit && !string.IsNullOrEmpty(HMDGuid))
+            {
+                Instrumentation.Transaction("collision", HMDGuid).end();
+                HMDGuid = string.Empty;
             }
         }
         public static string GetDescription()

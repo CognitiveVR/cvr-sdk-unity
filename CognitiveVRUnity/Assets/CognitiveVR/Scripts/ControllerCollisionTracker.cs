@@ -22,17 +22,29 @@ namespace CognitiveVR
         private void CognitiveVR_Manager_OnTick()
         {
             bool hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(0).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-            if (hit)
+            if (hit && string.IsNullOrEmpty(controller0GUID))
             {
                 Util.logDebug("controller collision");
-                Instrumentation.Transaction("collision").setProperty("device", "controller 0").beginAndEnd();
+                controller0GUID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("collision", controller0GUID).setProperty("device", "controller 0").begin();
+            }
+            else if (!hit && !string.IsNullOrEmpty(controller0GUID))
+            {
+                Instrumentation.Transaction("collision", controller0GUID).end();
+                controller0GUID = string.Empty;
             }
 
             hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(1).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-            if (hit)
+            if (hit && string.IsNullOrEmpty(controller1GUID))
             {
                 Util.logDebug("controller collision");
-                Instrumentation.Transaction("collision").setProperty("device", "controller 1").beginAndEnd();
+                controller1GUID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("collision", controller1GUID).setProperty("device", "controller 1").begin();
+            }
+            else if (!hit && !string.IsNullOrEmpty(controller1GUID))
+            {
+                Instrumentation.Transaction("collision", controller1GUID).end();
+                controller1GUID = string.Empty;
             }
         }
 

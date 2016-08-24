@@ -2,14 +2,31 @@
 
 namespace CognitiveVR
 {
+    public class TransactionSnapshot
+    {
+        public string category;
+        public Dictionary<string, object> properties;
+        public float[] position = new float[3] { 0, 0, 0 };
+        public double timestamp;
+
+        public TransactionSnapshot(string cat, Dictionary<string, object> props, float[] pos, double time)
+        {
+            category = cat;
+            properties = props;
+            position = pos;
+            timestamp = time;
+        }
+    }
+
     public static class InstrumentationSubsystem
     {
+        public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
         public static void init()
         {
             Util.cacheCurrencyInfo();
         }
 
-        public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, IDictionary<string, object> properties)
+        public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties)
         {
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
             .setArg(category)
@@ -20,7 +37,7 @@ namespace CognitiveVR
             .send();
         }
 
-        public static void updateTransaction(string category, int progress, string transactionId, IDictionary<string, object> properties)
+        public static void updateTransaction(string category, int progress, string transactionId, Dictionary<string, object> properties)
         {
             new CoreSubsystem.DataPointBuilder("datacollector_updateTransaction")
             .setArg(category)
@@ -30,8 +47,10 @@ namespace CognitiveVR
             .send();
         }
 
-        public static void endTransaction(string category, string result, string transactionId, IDictionary<string, object> properties)
+        public static void endTransaction(string category, string result, string transactionId, Dictionary<string, object> properties, float[] position)
         {
+            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+
             new CoreSubsystem.DataPointBuilder("datacollector_endTransaction")
             .setArg(category)
             .setArg(result)

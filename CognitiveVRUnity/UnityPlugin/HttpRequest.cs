@@ -45,7 +45,7 @@ namespace CognitiveVR
         //// The WWW request
         private WWW mWWW;
 
-        internal HttpRequest()
+        internal void BeginHttpRequest()
         {
             mResult = new Result();
 
@@ -63,6 +63,7 @@ namespace CognitiveVR
 
             // Set the start time to now
             mStartTime = System.DateTime.UtcNow;
+            Update();
         }
 
         // Overriden from MonoBehaviour
@@ -180,6 +181,7 @@ namespace CognitiveVR
             req.mTimeout = requestTimeout;
             req.mSendData = sendData;
             req.mListener = listener;
+            req.BeginHttpRequest();
         }
         #endregion
 

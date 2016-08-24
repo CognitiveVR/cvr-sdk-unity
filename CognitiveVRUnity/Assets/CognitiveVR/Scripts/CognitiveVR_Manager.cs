@@ -19,9 +19,10 @@ namespace CognitiveVR
         public static event CoreInitHandler OnInit;
         public void InitEvent(Error initError)
         {
-            foreach (var v in GetComponentsInChildren<CognitiveVRAnalyticsComponent>())
+            CognitiveVRAnalyticsComponent[] analyticsComponents = GetComponentsInChildren<CognitiveVRAnalyticsComponent>();
+            for (int i = 0; i<analyticsComponents.Length; i++)
             {
-                v.CognitiveVR_Init(initError);
+                analyticsComponents[i].CognitiveVR_Init(initError);
             }
             if (OnInit != null) { OnInit(initError); }
         }
@@ -117,11 +118,19 @@ namespace CognitiveVR
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
+        public static bool HasInitialized = false;
 
-        void Start()
+        /// <summary>
+        /// You can manually call this to start initializing CognitiveVR analytics
+        /// bool 'HasInitialized' is used to limit this, so Tick loop does not 
+        /// </summary>
+        public void Start()
         {
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
+
+            if (HasInitialized) { return; }
+            HasInitialized = true;
 
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
