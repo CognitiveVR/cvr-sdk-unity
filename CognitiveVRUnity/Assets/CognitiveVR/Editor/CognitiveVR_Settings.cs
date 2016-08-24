@@ -84,6 +84,12 @@ namespace CognitiveVR
                 newID = GetPreferences().CustomerID;
             }
 
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Version: " + Core.SDK_Version);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             //links
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -140,7 +146,7 @@ namespace CognitiveVR
                     if (!hasManager)
                     {
                         string sampleResourcePath = GetSamplesResourcePath();
-                        Object basicInit = AssetDatabase.LoadAssetAtPath<Object>(sampleResourcePath + "CognitiveVR/_Sample/CognitiveVR_Manager.prefab");
+                        Object basicInit = AssetDatabase.LoadAssetAtPath<Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
                         if (basicInit)
                         {
                             PrefabUtility.InstantiatePrefab(basicInit);

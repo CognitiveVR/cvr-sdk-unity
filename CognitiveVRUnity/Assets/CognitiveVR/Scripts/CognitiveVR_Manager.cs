@@ -200,23 +200,9 @@ namespace CognitiveVR
         }
 
 #region Application Quit
-        bool hasDelayed;
         void OnApplicationQuit()
         {
             QuitEvent();
-
-            if (!hasDelayed)
-            {
-                hasDelayed = true;
-                Application.CancelQuit();
-                StartCoroutine(DelayQuit());
-            }
-        }
-
-        IEnumerator DelayQuit()
-        {
-            yield return new WaitForSeconds(0.5f);
-            Application.Quit();
         }
 #endregion
     }

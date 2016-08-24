@@ -5,9 +5,9 @@ using System.IO;
 using UnityEngine.SceneManagement;
 
 ///===============================================================
-///Add this component to your cognitivevr_manager
+/// Add this component to your cognitivevr_manager
 ///
-///you should not need to modify this script!
+/// you should not need to modify this script!
 ///===============================================================
 
 namespace CognitiveVR
@@ -22,10 +22,8 @@ namespace CognitiveVR
 
         Camera cam;
         PlayerTrackerHelper periodicRenderer;
-
-#if CVR_STEAMVR
-        SteamVR_PlayArea steamvr_playArea;
-#endif
+        
+        //TODO level loaded stuff should use cognitivevr_manager events
 
         public override void CognitiveVR_Init(Error initError)
         {
@@ -43,7 +41,7 @@ namespace CognitiveVR
             }
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
-                CognitiveVR_Manager.OnQuit += CognitiveVR_Manager_OnQuit;
+                CognitiveVR_Manager.OnQuit += SendData;
 
 #if CVR_STEAMVR
             //if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
@@ -167,7 +165,6 @@ namespace CognitiveVR
                else
                {
                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
-
                }
            }*/
         }
@@ -220,7 +217,6 @@ namespace CognitiveVR
 
             PlayerSnapshot snapshot = new PlayerSnapshot();
 
-            //Dictionary<string, object> snapshotProperties = new Dictionary<string, object>();
             snapshot.Properties.Add("position", cam.transform.position);
             snapshot.Properties.Add("gazeDirection", cam.transform.forward);
             snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
@@ -229,33 +225,28 @@ namespace CognitiveVR
             snapshot.Properties.Add("renderDepth", rt);
 
 #if CVR_STEAMVR
-                if (steamvr_playArea == null)
-                    steamvr_playArea = FindObjectOfType<SteamVR_PlayArea>();
-                if (steamvr_playArea != null)
-                    snapshot.Properties.Add("roomPosition", steamvr_playArea.transform.position);
-
-                if (Valve.VR.OpenVR.Chaperone != null)
-                    snapshot.Properties.Add("chaperoneVisible", Valve.VR.OpenVR.Chaperone.AreBoundsVisible());
+            if (Valve.VR.OpenVR.Chaperone != null)
+                snapshot.Properties.Add("chaperoneVisible", Valve.VR.OpenVR.Chaperone.AreBoundsVisible());
 #endif
-
             playerSnapshots.Add(snapshot);
-            if (playerSnapshots.Count > CognitiveVR_Preferences.Instance.SnapshotThreshold)
+            if (playerSnapshots.Count >= CognitiveVR_Preferences.Instance.SnapshotThreshold)
             {
-                //TODO stitch data together for the same scene,same session, different 'files'
                 SendData();
             }
         }
 
-        private void CognitiveVR_Manager_OnQuit()
-        {
-            SendData();
-        }
-
+        //TODO stitch data together for the same scene,same session, different 'files'
         public void SendData()
         {
             if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }
 
-            Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName);
+            var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
+            if (sceneSettings == null)
+            {
+                Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + sceneSettings + "! Cancel Data Upload");
+                return;
+            }
+            Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "("+ sceneSettings.SceneKey+")");
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -281,7 +272,6 @@ namespace CognitiveVR
             }
             else
             {
-                var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
                 if (sceneSettings != null)
                 {
                     string SceneURLGaze = "sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
@@ -304,7 +294,7 @@ namespace CognitiveVR
             InstrumentationSubsystem.CachedTransactions.Clear();
         }
 
-        public IEnumerator SendRequest(byte[] bytes, string url)
+        private IEnumerator SendRequest(byte[] bytes, string url)
         {
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
@@ -324,10 +314,10 @@ namespace CognitiveVR
 
             builder.Append("{");
 
-            //header stuff
+            //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            //builder.Append(SetString("keys", "whatever"));
+            //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");
 
 
@@ -356,10 +346,10 @@ namespace CognitiveVR
 
             builder.Append("{");
 
-            //header stuff
+            //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            //builder.Append(SetString("keys", "whatever"));
+            //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");
 
 
@@ -370,11 +360,7 @@ namespace CognitiveVR
                 builder.Append(SetGazePont(v));
                 builder.Append(",");
             }
-            /*if (playerSnapshots.Count > 0)
-            {
-                //TODO why did this leave a trailing ',' at the end of the json object?
-                //KNOWN BUG json format invalid if 0 gaze points are sent - not that there's anything to record, though
-            }*/
+            //KNOWN BUG json format invalid if 0 gaze points are sent - not that there's anything to record, though
             builder.Remove(builder.Length - 1, 1);
             builder.Append("]");
 
