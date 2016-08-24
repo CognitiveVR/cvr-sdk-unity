@@ -33,10 +33,9 @@ namespace CognitiveVR
         {
             if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
             {
-                string transactionID = System.Guid.NewGuid().ToString();
                 Vector3 newPosition = root.position;
 
-                Instrumentation.Transaction("teleport", transactionID).setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
+                Instrumentation.Transaction("teleport").setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
                 Util.logDebug("teleport");
 
                 lastRootPosition = root.position;
