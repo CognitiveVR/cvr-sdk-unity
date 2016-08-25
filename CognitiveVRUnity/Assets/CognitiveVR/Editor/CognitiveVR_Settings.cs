@@ -215,7 +215,7 @@ namespace CognitiveVR
             }
 
             bool containsSDKSymbol = false;
-            if (PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Contains("CVR_"))
+            if (PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Contains("CVR_"))
             {
                 containsSDKSymbol = true;
             }
@@ -236,7 +236,7 @@ namespace CognitiveVR
         public void SetPlayerDefine(string newDefine)
         {
             //get all scripting define symbols
-            string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+            string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             string[] symbols = s.Split(';');
 
             //remove all CVR_ symbols
@@ -264,7 +264,7 @@ namespace CognitiveVR
             {
                 alldefines += newDefine + ";";
             }
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, alldefines);
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, alldefines);
 
         }
 
