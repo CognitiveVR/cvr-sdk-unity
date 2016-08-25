@@ -11,13 +11,24 @@ namespace CognitiveVR
 {
     public class IssueTracker : CognitiveVRAnalyticsComponent
     {
+        //Input keys
+        KeyCode ConsoleKey = KeyCode.BackQuote;
+        KeyCode EscapeKey = KeyCode.Escape;
+        KeyCode SendKey = KeyCode.Return;
+        char SendChar = '\n';
+        bool SendShiftModifier = true;
+
+
+
+        //console display
         string _title = "";
         string _description = "";
         string _repro = "";
         bool _consoleOpen;
-        bool _backquotedown;
-        List<CommonIssue> _commonIssues = new List<CommonIssue>();
+        bool _consoleKeyDown;
 
+
+        List<CommonIssue> _commonIssues = new List<CommonIssue>();
         private class CommonIssue
         {
             public string Title;
@@ -32,12 +43,13 @@ namespace CognitiveVR
             }
         }
 
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            _commonIssues.Add(new CommonIssue("Collision", "Object collision doesn't act as expected\nOr Object collision is missing", ""));
+            _commonIssues.Add(new CommonIssue("Collision", "Object collision doesn't act as expected", ""));
             _commonIssues.Add(new CommonIssue("Typo", "There is a spelling or grammar error in text", ""));
-            _commonIssues.Add(new CommonIssue("Navmesh", "AI Pathfinding does not work as expected through this point", ""));
+            _commonIssues.Add(new CommonIssue("Navmesh", "AI Pathfinding does not work as expected", ""));
             _commonIssues.Add(new CommonIssue("Lighting", "Lighting is not baked on an object", ""));
         }
 
@@ -45,15 +57,15 @@ namespace CognitiveVR
         {
             Event e = Event.current;
 
-            if (e.keyCode == KeyCode.BackQuote && e.type == EventType.KeyDown && !_backquotedown)
+            if (e.keyCode == ConsoleKey && e.type == EventType.KeyDown && !_consoleKeyDown)
             {
-                _backquotedown = true;
+                _consoleKeyDown = true;
                 return;
             }
 
-            if (e.keyCode == KeyCode.BackQuote && e.type == EventType.keyUp)
+            if (e.keyCode == ConsoleKey && e.type == EventType.keyUp)
             {
-                _backquotedown = false;
+                _consoleKeyDown = false;
 
                 if (_consoleOpen)
                 {
@@ -67,22 +79,22 @@ namespace CognitiveVR
                 return;
             }
 
-            if (e.keyCode == KeyCode.Escape && e.type == EventType.KeyDown)
+            if (e.keyCode == EscapeKey && e.type == EventType.KeyDown)
             {
-                CloseConsole(false);
+                ClearConsole(false);
                 return;
             }
 
             //display text fields
-            if (_consoleOpen && !_backquotedown)
+            if (_consoleOpen && !_consoleKeyDown)
             {
                 float width = Mathf.Max(200, Screen.width / 4);
 
-                if (e.character == '\n' && e.type == EventType.KeyDown)
+                if ((e.character == SendChar || e.keyCode == SendKey) && e.type == EventType.KeyDown)
                 {
-                    if (e.shift)
+                    if (e.shift && SendShiftModifier || !SendShiftModifier)
                     {
-                        CloseConsole(true);
+                        ClearConsole(true);
                         return;
                     }
                 }
@@ -115,11 +127,8 @@ namespace CognitiveVR
                 GUI.SetNextControlName("repro");
                 _repro = GUILayout.TextArea(_repro, GUILayout.Width(width), GUILayout.Height(50));
                 GUILayout.EndHorizontal();
-                GUI.color = Color.green;
-                GUILayout.Label("Shift + Return to submit");
-                GUI.color = Color.red;
-                GUILayout.Label("Escape to cancel");
-                GUI.color = Color.white;
+
+                GUILayout.Box("<size=10><color=red>" + EscapeKey.ToString() + " to cancel          </color></size>" + "<size=10><color=white>" + (SendShiftModifier ? "Shift + " : "") + SendKey.ToString() + " to submit</color></size>");
 
                 GUI.Label(new Rect(Input.mousePosition.x+20,Screen.height - Input.mousePosition.y+40, 240, 80), GUI.tooltip);
 
@@ -130,7 +139,7 @@ namespace CognitiveVR
             }
         }
 
-        void CloseConsole(bool send)
+        void ClearConsole(bool send)
         {
             if (send)
             {
@@ -151,7 +160,7 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(repro)) { t.setProperty("Reproduction", repro); }
             t.beginAndEnd();
 
-            //TODO integration with JIRA
+            //TODO integrate with JIRA rest api
         }
 
         public static string GetDescription()
