@@ -274,8 +274,8 @@ namespace CognitiveVR
             {
                 if (sceneSettings != null)
                 {
-                    string SceneURLGaze = "sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
-                    string SceneURLEvents = "sceneexplorer.com/api/events/" + sceneSettings.SceneKey;
+                    string SceneURLGaze = "http://sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
+                    string SceneURLEvents = "http://sceneexplorer.com/api/events/" + sceneSettings.SceneKey;
 
                     Debug.Log("uploading gaze and events to " + sceneSettings.SceneKey);
 
