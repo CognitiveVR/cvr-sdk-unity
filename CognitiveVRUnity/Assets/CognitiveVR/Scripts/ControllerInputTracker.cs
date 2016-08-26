@@ -100,6 +100,8 @@ namespace CognitiveVR
                 pendingTransactions.Remove(transactionID);
             }
         }
+#elif CVR_OCULUS
+        //TODO input events from Oculus Touch controls and fallback to other controller inputs
 #endif
         public static string GetDescription()
         {

@@ -17,7 +17,7 @@ namespace CognitiveVR
         {
             bool show = true;
 
-#if CVR_STEAMVR || CVR_OCULUSVR || CVR_GOOGLEVR || CVR_NONE
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_NONE
         show = false;
 #endif
             string version = EditorPrefs.GetString("cvr_version");
@@ -27,7 +27,7 @@ namespace CognitiveVR
                 //new version
 #if CVR_STEAMVR
                 option = "CVR_STEAMVR";
-#elif CVR_OCULUSVR
+#elif CVR_OCULUS
                 option = "CVR_OCULUS";
 #elif CVR_GOOGLEVR
                 option = "CVR_GOOGLEVR";
@@ -178,10 +178,11 @@ namespace CognitiveVR
             if (GUILayout.Button("Steam VR")) { option = "CVR_STEAMVR"; }
             GUI.color = Color.white;
 
-            /*if (option == "CVR_OCULUSVR") { GUI.color = Green; GUI.backgroundColor = Color.white; }
-            if (GUILayout.Button("Oculus VR")) { option = "CVR_OCULUSVR"; }
+            if (option == "CVR_OCULUS") { GUI.color = Green; GUI.backgroundColor = Color.white; }
+            if (GUILayout.Button("Oculus VR")) { option = "CVR_OCULUS"; }
             GUI.color = Color.white;
 
+            /*
             if (option == "CVR_GOOGLEVR") { GUI.color = Green; GUI.backgroundColor = Color.white; }
             if (GUILayout.Button("Google VR")) { option = "CVR_GOOGLEVR"; }
             GUI.color = Color.white;*/

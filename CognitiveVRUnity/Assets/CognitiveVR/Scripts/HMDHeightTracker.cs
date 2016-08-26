@@ -40,7 +40,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
+            return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nRequires SteamVR";
         }
     }
 }

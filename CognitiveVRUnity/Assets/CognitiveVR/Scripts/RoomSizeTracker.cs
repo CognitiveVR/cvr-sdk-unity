@@ -30,12 +30,25 @@ namespace CognitiveVR
                     { "cvr.vr.roomscale", !seated }
                 });
             }
+#elif CVR_OCULUS
+
+            if (OVRManager.tracker.isPresent)
+            {
+                Instrumentation.updateDeviceState(new Dictionary<string, object>() {
+                    { "cvr.vr.frustrumFOV", OVRManager.tracker.GetFrustum().fov },
+                    { "cvr.vr.frustrumNear", OVRManager.tracker.GetFrustum().nearZ },
+                    { "cvr.vr.frustrumFar", OVRManager.tracker.GetFrustum().farZ }});
+            }
+            else
+            {
+                Util.logDebug("OVRManager tracker is not present!");
+            }
 #endif
         }
 
         public static string GetDescription()
         {
-            return "Include SteamVR Chaperone Room Size in Device Info";
+            return "Include SteamVR Chaperone Room Size in Device Info\nOn Oculus, sends the tracker FOV, NearZ and FarZ";
         }
     }
 }

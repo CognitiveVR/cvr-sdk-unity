@@ -11,20 +11,33 @@ namespace CognitiveVR
     public class OcclusionTracker : CognitiveVRAnalyticsComponent
     {
         string chaperoneGUID;
+        
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
             CognitiveVR_Manager.OnPoseUpdate += CognitiveVR_Manager_PoseUpdateHandler;
-            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
-            {
-                chaperoneGUID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("chaperone", chaperoneGUID).begin();
-                Util.logDebug("chaperone visible");
-            }
+#elif CVR_OCULUS
+            OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
+            OVRManager.TrackingLost += OVRManager_TrackingLost;
 #endif
         }
+
+#if CVR_OCULUS
+        string hmdGUID;
+        private void OVRManager_TrackingLost()
+        {
+            Instrumentation.Transaction("Device", hmdGUID).setProperty("Device", "HMD").setProperty("visible", false).end();
+            hmdGUID = string.Empty;
+        }
+
+        private void OVRManager_TrackingAcquired()
+        {
+            hmdGUID = System.Guid.NewGuid().ToString();
+            Instrumentation.Transaction("Device", hmdGUID).setProperty("Device", "HMD").setProperty("visible", true).begin();
+        }
+#endif
 
 #if CVR_STEAMVR
         List<TrackedDevice> Devices = new List<TrackedDevice>();
@@ -92,7 +105,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
+            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)\nOn Oculus, this will also happen if the HMD moves out of the tracking frustrum";
         }
     }
 }

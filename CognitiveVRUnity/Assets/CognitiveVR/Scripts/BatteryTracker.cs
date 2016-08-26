@@ -13,7 +13,9 @@ namespace CognitiveVR
 {
     public class BatteryTracker : CognitiveVRAnalyticsComponent
     {
+#if !CVR_OCULUS
         float batteryLevel; //0-100 battery level
+#endif
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -28,18 +30,28 @@ namespace CognitiveVR
 
         void SendBatteryLevel()
         {
+
+#if CVR_OCULUS
+            Util.logDebug("batterylevel " + OVRPlugin.batteryLevel);
+            Instrumentation.Transaction("battery")
+                .setProperty("batterylevel", OVRPlugin.batteryLevel)
+                .setProperty("batterytemperature", OVRPlugin.batteryTemperature)
+                .setProperty("batterystatus", OVRPlugin.batteryStatus)
+                .beginAndEnd();
+#else
+
             if (GetBatteryLevel())
             {
                 Util.logDebug("batterylevel " + batteryLevel);
+
                 Instrumentation.Transaction("battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
             }
+#endif
         }
 
+#if !CVR_OCULUS
         public bool GetBatteryLevel()
         {
-#if CVR_OCULUS
-            //TODO return oculus battery level
-#endif
             if (Application.platform == RuntimePlatform.Android)
             {
                 try
@@ -81,6 +93,7 @@ namespace CognitiveVR
             batteryLevel = 100f;
             return false;
         }
+#endif
 
         public static bool GetWarning()
         {
@@ -93,7 +106,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Send the battery level of Android device after initialization and on quit" + (GetWarning() ? "\nPlatform not set to Android!": "");
+            return "Send the battery level of Android device after initialization and on quit\nOculus Utilies also includes battery temperature and status" + (GetWarning() ? "\nPlatform not set to Android!": "");
         }
     }
 }

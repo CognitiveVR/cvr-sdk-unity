@@ -80,14 +80,22 @@ namespace CognitiveVR
                 accumRotation = 0.0F;
                 rotFrames = 0;
                 
-                Instrumentation.Transaction("comfort", fpsTransactionID).setProperty("fps", lastFps).setProperty("rps", lastRps).begin();
+                Instrumentation.Transaction("comfort", fpsTransactionID)
+                    .setProperty("fps", lastFps)
+                    .setProperty("rps", lastRps)
+#if CVR_OCULUS
+                    .setProperty("cpulevel", OVRPlugin.cpuLevel)
+                    .setProperty("gpulevel", OVRPlugin.gpuLevel)
+                    .setProperty("powersaving", OVRPlugin.powerSaving)
+#endif
+                    .beginAndEnd();
                 Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
             }
         }
 
         public static string GetDescription()
         {
-            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
+            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)\nWith Oculus Utilities, includes cpu and gpu levels and device power saving mode";
         }
     }
 }
