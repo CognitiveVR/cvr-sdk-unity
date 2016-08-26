@@ -243,7 +243,7 @@ namespace CognitiveVR
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)
             {
-                Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + sceneSettings + "! Cancel Data Upload");
+                Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
             Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "("+ sceneSettings.SceneKey+")");
@@ -262,6 +262,17 @@ namespace CognitiveVR
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
 #endif
+                }
+            }
+            else if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
+            {
+                for (int i = 0; i < playerSnapshots.Count; i++)
+                {
+                    Vector3 position = (Vector3)playerSnapshots[i].Properties["position"] + (Vector3)playerSnapshots[i].Properties["gazeDirection"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
+
+                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazeDirection"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier, Color.yellow, 5);
+
+                    playerSnapshots[i].Properties.Add("gazePoint", position);
                 }
             }
 

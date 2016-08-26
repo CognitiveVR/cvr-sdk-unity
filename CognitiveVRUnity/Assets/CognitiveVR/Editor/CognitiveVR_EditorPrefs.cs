@@ -85,18 +85,19 @@ namespace CognitiveVR
 
             prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file instead of uploading to scene explorer"), prefs.DebugWriteToFile);
 
-            EditorGUI.BeginDisabledGroup(true);
-            prefs.TrackPosition = EditorGUILayout.Toggle(new GUIContent("Track Position", "Snapshot World position of player"), prefs.TrackPosition);
-            prefs.TrackGazePoint = EditorGUILayout.Toggle(new GUIContent("Track Gaze Point", "Snapshot the world point the player is looking at"), prefs.TrackGazePoint);
-            prefs.TrackGazeDirection = EditorGUILayout.Toggle(new GUIContent("Track Gaze Direction", "Snapshot the normalized direction the player is looking"), prefs.TrackGazeDirection);
-            EditorGUI.EndDisabledGroup();
+            prefs.TrackPosition = EditorGUILayout.Toggle(new GUIContent("Send Position", "Snapshot World position of HMD"), prefs.TrackPosition);
+            prefs.TrackGazePoint = EditorGUILayout.Toggle(new GUIContent("Send Rendered Gaze Point", "Snapshot the world point the player is looking at"), prefs.TrackGazePoint);
+            prefs.TrackGazeDirection = EditorGUILayout.Toggle(new GUIContent("Send Gaze Direction", "Snapshot the normalized direction the player is looking"), prefs.TrackGazeDirection);
+            prefs.GazePointFromDirection = EditorGUILayout.Toggle(new GUIContent("Send Gaze Point From Direction", "Calculate the Gaze Point by HMD position and HMD rotation, multiplied by the Gaze Direction Multiplier\n\nFor a 360 video player, this is a cheap way to see where the user is looking"), prefs.GazePointFromDirection);
+
+            prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("GazeDirectionMultipler", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
+            prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
+
             GUILayout.Space(10);
 
-            prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send data on Quit", "Sends all snapshots on Application OnQuit"), prefs.SendDataOnQuit);
+            prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
             //prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
-            //EditorGUI.BeginDisabledGroup(true);
             prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
-            //EditorGUI.EndDisabledGroup();
 
 
 
@@ -222,7 +223,7 @@ namespace CognitiveVR
             CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures);
 
 
-            if (string.IsNullOrEmpty(prefs.SavedBlenderPath) || !prefs.SavedBlenderPath.EndsWith("Blender.exe"))
+            if (string.IsNullOrEmpty(prefs.SavedBlenderPath) || !prefs.SavedBlenderPath.ToLower().EndsWith("blender.exe"))
             {
                 Debug.LogError("Blender.exe is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender.exe\nScene: "+ fullName+" exported to folder but not mesh decimated!");
                 return;

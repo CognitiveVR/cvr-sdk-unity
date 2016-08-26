@@ -53,6 +53,8 @@ namespace CognitiveVR
         public bool TrackPosition = true;
         public bool TrackGazePoint = true;
         public bool TrackGazeDirection = false;
+        public bool GazePointFromDirection = false;
+        public float GazeDirectionMultiplier = 1.0f;
 
         public bool SendDataOnQuit = true;
         public bool SendDataOnHMDRemove = true;
