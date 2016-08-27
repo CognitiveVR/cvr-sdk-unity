@@ -135,7 +135,15 @@ namespace CognitiveVR
                 addInitButtonText.text = "CognitiveVR Manager Found!";
                 addInitButtonText.tooltip = "";
             }
-            newID = EditorGUILayout.TextField(newID);
+
+            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(newID))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                EditorGUILayout.TextField("companyname1234-productname-test", style);
+            }
+            else
+                newID = EditorGUILayout.TextField(newID);
 
             bool validID = (newID != null && newID != "companyname1234-productname-test" && newID.Length > 0);
             if (validID)

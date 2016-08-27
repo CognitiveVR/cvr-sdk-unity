@@ -119,7 +119,20 @@ namespace CognitiveVR
 
             settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
             GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
-            settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
+
+
+            //settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
+            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(settings.SceneKey))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                EditorGUILayout.TextField("a12345b6-78c9-01d2-3456-78e9f0ghi123", style);
+            }
+            else
+            {
+                settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
+            }
+
 
             if (settings.Track)
             {
@@ -130,6 +143,12 @@ namespace CognitiveVR
                     if (settings.SceneKey.Contains("http://sceneexplorer.com/scene/"))
                     {
                         settings.SceneKey = settings.SceneKey.Replace("http://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    else if (settings.SceneKey.Contains("sceneexplorer.com/scene/"))
+                    {
+                        settings.SceneKey = settings.SceneKey.Replace("sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
                     }
 
                     GUI.color = Color.red;

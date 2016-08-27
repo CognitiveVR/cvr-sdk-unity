@@ -38,7 +38,7 @@ namespace CognitiveVR
             }
         }
 
-        public string CustomerID = "companyname1234-productname-test";
+        public string CustomerID = "";
 
         [Header("Events")]
         public int LowFramerateThreshold = 60;
