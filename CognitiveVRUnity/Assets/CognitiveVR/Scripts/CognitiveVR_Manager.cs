@@ -85,9 +85,21 @@ namespace CognitiveVR
 #if CVR_STEAMVR
                     SteamVR_Camera cam = FindObjectOfType<SteamVR_Camera>();
                     if (cam != null){ _hmd = cam.transform; }
+                    if (_hmd == null)
+                    {
+                        _hmd = Camera.main.transform;
+                    }
 #elif CVR_OCULUS
-                    OVRCameraRig cam = FindObjectOfType<OVRCameraRig>();
-                    if (cam != null) { _hmd = cam.transform; }
+                    OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
+                    if (rig != null)
+                    {
+                        Camera cam = rig.GetComponentInChildren<Camera>();
+                        _hmd = cam.transform;
+                    }
+                    if (_hmd == null)
+                    {
+                        _hmd = Camera.main.transform;
+                    }
 #else
                     _hmd = Camera.main.transform;
 #endif
@@ -96,7 +108,7 @@ namespace CognitiveVR
             }
         }
 
-#if CVR_STEAMVR
+#if !CVR_OCULUS
         static Transform[] controllers = new Transform[2];
 #endif
         /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>

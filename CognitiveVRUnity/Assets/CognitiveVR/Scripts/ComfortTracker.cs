@@ -8,6 +8,10 @@ using System.Collections;
 
 namespace CognitiveVR
 {
+    /// CPU performance level (int 0-2). Lower performance levels save more power.
+    /// GPU performance level (int 0-2). Lower performance levels save more power.
+    /// PowerSaving? The CPU and GPU are currently throttled to save power and/or reduce the temperature.
+
     public class ComfortTracker : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)

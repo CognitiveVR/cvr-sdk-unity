@@ -24,7 +24,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Check if the user has headphones connected.\nCurrently only works with Oculus Utilities";
+            return "Check if the user has headphones connected.\nCurrently only works with Oculus Utilities on Android";
         }
     }
 }

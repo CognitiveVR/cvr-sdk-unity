@@ -18,13 +18,9 @@ namespace CognitiveVR
             bool show = true;
 
 #if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_NONE
-        show = false;
+            show = false;
 #endif
-            string version = EditorPrefs.GetString("cvr_version");
-            if (string.IsNullOrEmpty(version) || version != CognitiveVR.Core.SDK_Version)
-            {
-                show = true;
-                //new version
+
 #if CVR_STEAMVR
                 option = "CVR_STEAMVR";
 #elif CVR_OCULUS
@@ -32,8 +28,14 @@ namespace CognitiveVR
 #elif CVR_GOOGLEVR
                 option = "CVR_GOOGLEVR";
 #elif CVR_NONE
-                option = "CVR_NONE";
+            option = "CVR_NONE";
 #endif
+
+            string version = EditorPrefs.GetString("cvr_version");
+            if (string.IsNullOrEmpty(version) || version != CognitiveVR.Core.SDK_Version)
+            {
+                show = true;
+                //new version
             }
 
             if (show)

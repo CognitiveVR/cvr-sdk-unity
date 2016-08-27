@@ -11,7 +11,7 @@ namespace CognitiveVR
     public class OcclusionTracker : CognitiveVRAnalyticsComponent
     {
         string chaperoneGUID;
-        
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -28,14 +28,14 @@ namespace CognitiveVR
         string hmdGUID;
         private void OVRManager_TrackingLost()
         {
-            Instrumentation.Transaction("Device", hmdGUID).setProperty("Device", "HMD").setProperty("visible", false).end();
+            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", false).end();
             hmdGUID = string.Empty;
         }
 
         private void OVRManager_TrackingAcquired()
         {
             hmdGUID = System.Guid.NewGuid().ToString();
-            Instrumentation.Transaction("Device", hmdGUID).setProperty("Device", "HMD").setProperty("visible", true).begin();
+            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", true).begin();
         }
 #endif
 
@@ -77,12 +77,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Device", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", false).begin();
                     }
                 }
                 else if (Devices[j].ValidTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Device", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", true).end();
                     Devices[j].ValidTransID = string.Empty;
                 }
 
@@ -91,12 +91,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Device", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", false).begin();
                     }
                 }
                 else if (Devices[j].ConnectedTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Device", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", true).end();
                     Devices[j].ConnectedTransID = string.Empty;
                 }
             }
