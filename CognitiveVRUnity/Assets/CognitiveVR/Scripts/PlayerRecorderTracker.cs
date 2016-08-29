@@ -148,25 +148,19 @@ namespace CognitiveVR
         }
 #endif
 
-
-        //DEBUG ONLY
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F9))
+            if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
+            if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
             {
+                CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
+
+                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
+                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
+                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
+
                 EndPlayerRecording();
             }
-            /*   DebugCapture = !DebugCapture;
-               if (DebugCapture)
-               {
-                   Debug.Log("CognitiveVR_PlayerTracker Begin Capture");
-                   CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-               }
-               else
-               {
-                   CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
-               }
-           }*/
         }
 
         public static void BeginPlayerRecording()

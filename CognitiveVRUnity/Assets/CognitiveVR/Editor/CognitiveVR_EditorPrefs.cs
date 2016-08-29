@@ -7,13 +7,13 @@ using Debug = UnityEngine.Debug;
 
 namespace CognitiveVR
 {
-    public class CognitiveVR_EditorPrefs
+    public class CognitiveVR_EditorPrefs : EditorWindow
     {
         static string appendName = "";
 
         static Vector2 canvasPos;
-
         static CognitiveVR_Preferences prefs;
+        static bool remapHotkey;
 
         [PreferenceItem("CognitiveVR")]
         public static void CustomPreferencesGUI()
@@ -79,27 +79,133 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(new GUIContent("Scene Explorer Player Tracker Options", "The identifier for your company and product on the CognitiveVR Dashboard"));
+            GUILayout.Label(new GUIContent("Player Recorder Options", "Settings for how the Player Recorder collects and sends data to SceneExplorer.com"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file instead of uploading to scene explorer"), prefs.DebugWriteToFile);
+            //radio buttons
 
-            prefs.TrackPosition = EditorGUILayout.Toggle(new GUIContent("Send Position", "Snapshot World position of HMD"), prefs.TrackPosition);
-            prefs.TrackGazePoint = EditorGUILayout.Toggle(new GUIContent("Send Rendered Gaze Point", "Snapshot the world point the player is looking at"), prefs.TrackGazePoint);
-            prefs.TrackGazeDirection = EditorGUILayout.Toggle(new GUIContent("Send Gaze Direction", "Snapshot the normalized direction the player is looking"), prefs.TrackGazeDirection);
-            prefs.GazePointFromDirection = EditorGUILayout.Toggle(new GUIContent("Send Gaze Point From Direction", "Calculate the Gaze Point by HMD position and HMD rotation, multiplied by the Gaze Direction Multiplier\n\nFor a 360 video player, this is a cheap way to see where the user is looking"), prefs.GazePointFromDirection);
+            GUIStyle selectedRadio = new GUIStyle(GUI.skin.label);
+            selectedRadio.normal.textColor = new Color(0, 0.0f, 0, 1.0f);
+            selectedRadio.fontStyle = FontStyle.Bold;
 
-            prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("GazeDirectionMultipler", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
+            //3D content
+            GUILayout.BeginHorizontal();
+            if (prefs.PlayerDataType == 0)
+            {
+                GUILayout.Label("3D Content (default)", selectedRadio, GUILayout.Width(195));
+            }
+            else
+            {
+                GUILayout.Label("3D Content (default)", GUILayout.Width(195));
+            }
+            bool o = prefs.PlayerDataType == 0;
+            bool b = GUILayout.Toggle(prefs.PlayerDataType == 0, "",EditorStyles.radioButton);
+            if (b != o)
+            {
+                prefs.PlayerDataType = 0;
+            }
+            GUILayout.EndHorizontal();
+
+            //360 video content
+            GUILayout.BeginHorizontal();
+            if (prefs.PlayerDataType == 1)
+            {
+                GUILayout.Label(new GUIContent("360 Video Content", "Video content displayed in a sphere"), selectedRadio, GUILayout.Width(195));
+            }
+            else
+            {
+                GUILayout.Label(new GUIContent("360 Video Content", "Video content displayed in a sphere"), GUILayout.Width(195));
+            }
+            
+            bool o2 = prefs.PlayerDataType == 1;
+            bool b2 = GUILayout.Toggle(prefs.PlayerDataType == 1, "", EditorStyles.radioButton);
+            if (b2 != o2)
+            {
+                prefs.PlayerDataType = 1;
+            }
+            GUILayout.EndHorizontal();
+
+            if (GUI.changed)
+            {
+                if (prefs.PlayerDataType == 0) //3d content
+                {
+                    prefs.TrackPosition = true;
+                    prefs.TrackGazePoint = true;
+                    prefs.TrackGazeDirection = false;
+                    prefs.GazePointFromDirection = false;
+                }
+                else //video content
+                {
+                    prefs.TrackPosition = true;
+                    prefs.TrackGazePoint = false;
+                    prefs.TrackGazeDirection = false;
+                    prefs.GazePointFromDirection = true;
+                }
+            }
+
+            EditorGUI.BeginDisabledGroup(prefs.PlayerDataType != 1);
+            prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("Video Sphere Radius", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
             prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(10);
 
-            prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
+            prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send Data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
+            prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send Data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
+            prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file instead of uploading to SceneExplorer"), prefs.DebugWriteToFile);
+            prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);
             //prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
-            prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
 
+            EditorGUI.BeginDisabledGroup(!prefs.SendDataOnHotkey);
 
+            if (remapHotkey)
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.label);
+                style.wordWrap = true;
+                style.normal.textColor = new Color(0.5f, 1.0f, 0.5f, 1.0f);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
+                GUI.color = Color.green;
+                GUILayout.Button("Any Key",GUILayout.Width(70));
+                GUI.color = Color.white;
+
+                string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
+                GUILayout.Label(displayKey);
+                GUILayout.EndHorizontal();
+                Event e = Event.current;
+                
+                //shift, ctrl, alt
+                if (e.type == EventType.keyDown && e.keyCode != KeyCode.None && e.keyCode != KeyCode.LeftShift && e.keyCode != KeyCode.RightShift && e.keyCode != KeyCode.LeftControl && e.keyCode != KeyCode.RightControl && e.keyCode != KeyCode.LeftAlt && e.keyCode != KeyCode.RightAlt)
+                {
+                    prefs.HotkeyAlt = e.alt;
+                    prefs.HotkeyShift = e.shift;
+                    prefs.HotkeyCtrl = e.control;
+                    prefs.SendDataHotkey = e.keyCode;
+                    remapHotkey = false;
+                    //this is kind of a hack, but it works
+                    GetWindow<CognitiveVR_EditorPrefs>().Repaint();
+                    GetWindow<CognitiveVR_EditorPrefs>().Close();
+                }
+            }
+            else
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.label);
+                style.wordWrap = true;
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
+                if (GUILayout.Button("Remap", GUILayout.Width(70)))
+                {
+                    remapHotkey = true;
+                }
+                string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
+                GUILayout.Label(displayKey);
+                GUILayout.EndHorizontal();
+            }
+
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });

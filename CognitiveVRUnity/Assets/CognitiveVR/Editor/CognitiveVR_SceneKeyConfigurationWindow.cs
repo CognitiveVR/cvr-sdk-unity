@@ -120,8 +120,6 @@ namespace CognitiveVR
             settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
             GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
-
-            //settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
             if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(settings.SceneKey))
             {
                 GUIStyle style = new GUIStyle(GUI.skin.textField);

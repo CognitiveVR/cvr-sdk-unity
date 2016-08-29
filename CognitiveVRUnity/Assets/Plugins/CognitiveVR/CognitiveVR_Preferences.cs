@@ -50,6 +50,7 @@ namespace CognitiveVR
         public bool DebugWriteToFile = false;
         public float SnapshotInterval = 0.5f;
 
+        public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public bool TrackPosition = true;
         public bool TrackGazePoint = true;
         public bool TrackGazeDirection = false;
@@ -59,6 +60,11 @@ namespace CognitiveVR
         public bool SendDataOnQuit = true;
         public bool SendDataOnHMDRemove = true;
         public bool SendDataOnLevelLoad = true;
+        public bool SendDataOnHotkey = true;
+        public bool HotkeyShift = true;
+        public bool HotkeyCtrl = false;
+        public bool HotkeyAlt = false;
+        public KeyCode SendDataHotkey = KeyCode.F9;
 
         public int TrackHMDHeightSamples = 50;
         public int TrackArmLengthSamples = 50;
