@@ -77,12 +77,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", false).begin();
                     }
                 }
                 else if (Devices[j].ValidTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", true).end();
                     Devices[j].ValidTransID = string.Empty;
                 }
 
@@ -91,12 +91,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", false).begin();
                     }
                 }
                 else if (Devices[j].ConnectedTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", true).end();
                     Devices[j].ConnectedTransID = string.Empty;
                 }
             }

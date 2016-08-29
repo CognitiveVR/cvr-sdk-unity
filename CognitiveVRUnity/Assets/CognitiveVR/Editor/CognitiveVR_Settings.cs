@@ -131,7 +131,18 @@ namespace CognitiveVR
                 addInitButtonText.text = "CognitiveVR Manager Found!";
                 addInitButtonText.tooltip = "";
             }
-            newID = EditorGUILayout.TextField(newID);
+            //newID = EditorGUILayout.TextField(newID);
+
+            if (Event.current.type == EventType.repaint && string.IsNullOrEmpty(newID))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                EditorGUILayout.TextField("companyname1234-productname-test", style);
+            }
+            else
+            {
+                newID = EditorGUILayout.TextField(newID);
+            }
 
             bool validID = (newID != null && newID != "companyname1234-productname-test" && newID.Length > 0);
             if (validID)
@@ -142,14 +153,17 @@ namespace CognitiveVR
                     if (!hasManager)
                     {
                         string sampleResourcePath = GetSamplesResourcePath();
-                        Object basicInit = AssetDatabase.LoadAssetAtPath<Object>(sampleResourcePath + "CognitiveVR/_Sample/CognitiveVR_Manager.prefab");
+                        Object basicInit = AssetDatabase.LoadAssetAtPath<Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
                         if (basicInit)
                         {
                             PrefabUtility.InstantiatePrefab(basicInit);
                         }
                         else
                         {
-                            Debug.Log("Couldn't find CognitiveVR_Manager.prefab");
+                            Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
+                            GameObject go = new GameObject("CognitiveVR_Manager");
+                            go.AddComponent<CognitiveVR_Manager>();
+                            Selection.activeGameObject = go;
                         }
                     }
                 }
