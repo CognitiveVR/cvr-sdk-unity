@@ -4,7 +4,8 @@ Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, wh
 
 This branch includes the SceneExplorer export options as well as the Player Recorder component.
 
-Last Updated: August 24, 2016
+Last Updated: August 29, 2016
+
 
 Quickstart
 =========

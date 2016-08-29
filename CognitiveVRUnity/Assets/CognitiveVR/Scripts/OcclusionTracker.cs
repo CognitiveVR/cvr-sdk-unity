@@ -11,20 +11,33 @@ namespace CognitiveVR
     public class OcclusionTracker : CognitiveVRAnalyticsComponent
     {
         string chaperoneGUID;
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
             CognitiveVR_Manager.OnPoseUpdate += CognitiveVR_Manager_PoseUpdateHandler;
-            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
-            {
-                chaperoneGUID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("chaperone", chaperoneGUID).begin();
-                Util.logDebug("chaperone visible");
-            }
+#elif CVR_OCULUS
+            OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
+            OVRManager.TrackingLost += OVRManager_TrackingLost;
 #endif
         }
+
+#if CVR_OCULUS
+        string hmdGUID;
+        private void OVRManager_TrackingLost()
+        {
+            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", false).end();
+            hmdGUID = string.Empty;
+        }
+
+        private void OVRManager_TrackingAcquired()
+        {
+            hmdGUID = System.Guid.NewGuid().ToString();
+            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", true).begin();
+        }
+#endif
 
 #if CVR_STEAMVR
         List<TrackedDevice> Devices = new List<TrackedDevice>();
@@ -64,12 +77,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Device", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", false).begin();
                     }
                 }
                 else if (Devices[j].ValidTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Device", Devices[j].ValidTransID).setProperty("Device", Devices[j]).setProperty("visible", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", true).end();
                     Devices[j].ValidTransID = string.Empty;
                 }
 
@@ -78,12 +91,12 @@ namespace CognitiveVR
                     if (Devices[j].ValidTransID == string.Empty)
                     {
                         Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Device", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", false).begin();
+                        Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", false).begin();
                     }
                 }
                 else if (Devices[j].ConnectedTransID != string.Empty)
                 {
-                    Instrumentation.Transaction("Device", Devices[j].ConnectedTransID).setProperty("Device", Devices[j]).setProperty("connected", true).end();
+                    Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", true).end();
                     Devices[j].ConnectedTransID = string.Empty;
                 }
             }
@@ -92,7 +105,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
+            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)\nOn Oculus, this will also happen if the HMD moves out of the tracking frustrum";
         }
     }
 }

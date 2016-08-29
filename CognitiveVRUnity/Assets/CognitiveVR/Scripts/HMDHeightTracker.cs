@@ -31,7 +31,7 @@ namespace CognitiveVR
                 if (samples >= sampleCount)
                 {
                     float averageHeight = hmdAccumHeight / samples;
-                    Util.logDebug("head length " + averageHeight);
+                    Util.logDebug("head height " + averageHeight);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "height", averageHeight } });
                     CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
                 }
@@ -40,7 +40,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
+            return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nRequires SteamVR";
         }
     }
 }

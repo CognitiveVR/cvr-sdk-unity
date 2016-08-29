@@ -75,6 +75,7 @@ namespace CognitiveVR
         #region HMD and Controllers
 
         private static Transform _hmd;
+        /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
         public static Transform HMD
         {
             get
@@ -84,8 +85,21 @@ namespace CognitiveVR
 #if CVR_STEAMVR
                     SteamVR_Camera cam = FindObjectOfType<SteamVR_Camera>();
                     if (cam != null){ _hmd = cam.transform; }
-#elif CVR_OCULUSVR
-                    _hmd = Camera.main.transform;
+                    if (_hmd == null)
+                    {
+                        _hmd = Camera.main.transform;
+                    }
+#elif CVR_OCULUS
+                    OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
+                    if (rig != null)
+                    {
+                        Camera cam = rig.GetComponentInChildren<Camera>();
+                        _hmd = cam.transform;
+                    }
+                    if (_hmd == null)
+                    {
+                        _hmd = Camera.main.transform;
+                    }
 #else
                     _hmd = Camera.main.transform;
 #endif
@@ -94,10 +108,14 @@ namespace CognitiveVR
             }
         }
 
+#if !CVR_OCULUS
         static Transform[] controllers = new Transform[2];
+#endif
+        /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>
         public static Transform GetController(int id)
         {
 #if CVR_STEAMVR
+            //TODO update controllers when new controller is detected
             if (controllers[id] == null)
             {
                 SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
@@ -109,8 +127,12 @@ namespace CognitiveVR
                         controllers[1] = cm.right.transform;
                 }
             }
-#endif
+#elif CVR_OCULUS
+            // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
+            return null;
+#else
             return controllers[id];
+#endif
         }
 
 #endregion

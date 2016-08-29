@@ -21,36 +21,44 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_OnTick()
         {
-            bool hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(0).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-            if (hit && string.IsNullOrEmpty(controller0GUID))
+            bool hit;
+
+            if (CognitiveVR_Manager.GetController(0) != null)
             {
-                Util.logDebug("controller collision");
-                controller0GUID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("collision", controller0GUID).setProperty("device", "controller 0").begin();
-            }
-            else if (!hit && !string.IsNullOrEmpty(controller0GUID))
-            {
-                Instrumentation.Transaction("collision", controller0GUID).end();
-                controller0GUID = string.Empty;
+                hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(0).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                if (hit && string.IsNullOrEmpty(controller0GUID))
+                {
+                    Util.logDebug("controller collision");
+                    controller0GUID = System.Guid.NewGuid().ToString();
+                    Instrumentation.Transaction("collision", controller0GUID).setProperty("device", "controller 0").begin();
+                }
+                else if (!hit && !string.IsNullOrEmpty(controller0GUID))
+                {
+                    Instrumentation.Transaction("collision", controller0GUID).end();
+                    controller0GUID = string.Empty;
+                }
             }
 
-            hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(1).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-            if (hit && string.IsNullOrEmpty(controller1GUID))
+            if (CognitiveVR_Manager.GetController(1) != null)
             {
-                Util.logDebug("controller collision");
-                controller1GUID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("collision", controller1GUID).setProperty("device", "controller 1").begin();
-            }
-            else if (!hit && !string.IsNullOrEmpty(controller1GUID))
-            {
-                Instrumentation.Transaction("collision", controller1GUID).end();
-                controller1GUID = string.Empty;
+                hit = Physics.CheckSphere(CognitiveVR_Manager.GetController(1).position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                if (hit && string.IsNullOrEmpty(controller1GUID))
+                {
+                    Util.logDebug("controller collision");
+                    controller1GUID = System.Guid.NewGuid().ToString();
+                    Instrumentation.Transaction("collision", controller1GUID).setProperty("device", "controller 1").begin();
+                }
+                else if (!hit && !string.IsNullOrEmpty(controller1GUID))
+                {
+                    Instrumentation.Transaction("collision", controller1GUID).end();
+                    controller1GUID = string.Empty;
+                }
             }
         }
 
         public static string GetDescription()
         {
-            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences";
+            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nOnly SteamVR controllers are currently supported";
         }
     }
 }

@@ -108,12 +108,18 @@ namespace CognitiveVR
             {
                 if (GUILayout.Button(new GUIContent("Add CognitiveVR Manager", "Does not Destroy on Load\nInitializes analytics system with basic device info"),GUILayout.Height(40)))
                 {
-
                     string sampleResourcePath = GetSamplesResourcePath();
                     UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
                     if (basicInit)
                     {
                         Selection.activeGameObject = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
+                        GameObject go = new GameObject("CognitiveVR_Manager");
+                        manager = go.AddComponent<CognitiveVR_Manager>();
+                        Selection.activeGameObject = go;
                     }
                 }
             }

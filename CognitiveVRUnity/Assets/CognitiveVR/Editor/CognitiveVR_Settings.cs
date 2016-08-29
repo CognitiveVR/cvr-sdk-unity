@@ -17,23 +17,25 @@ namespace CognitiveVR
         {
             bool show = true;
 
-#if CVR_STEAMVR || CVR_OCULUSVR || CVR_GOOGLEVR || CVR_NONE
-        show = false;
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_NONE
+            show = false;
 #endif
+
+#if CVR_STEAMVR
+                option = "CVR_STEAMVR";
+#elif CVR_OCULUS
+                option = "CVR_OCULUS";
+#elif CVR_GOOGLEVR
+                option = "CVR_GOOGLEVR";
+#elif CVR_NONE
+            option = "CVR_NONE";
+#endif
+
             string version = EditorPrefs.GetString("cvr_version");
             if (string.IsNullOrEmpty(version) || version != CognitiveVR.Core.SDK_Version)
             {
                 show = true;
                 //new version
-#if CVR_STEAMVR
-                option = "CVR_STEAMVR";
-#elif CVR_OCULUSVR
-                option = "CVR_OCULUS";
-#elif CVR_GOOGLEVR
-                option = "CVR_GOOGLEVR";
-#elif CVR_NONE
-                option = "CVR_NONE";
-#endif
             }
 
             if (show)
@@ -136,14 +138,16 @@ namespace CognitiveVR
                 addInitButtonText.tooltip = "";
             }
 
-            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(newID))
+            if (Event.current.type == EventType.repaint && string.IsNullOrEmpty(newID))
             {
                 GUIStyle style = new GUIStyle(GUI.skin.textField);
                 style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
                 EditorGUILayout.TextField("companyname1234-productname-test", style);
             }
             else
+            {
                 newID = EditorGUILayout.TextField(newID);
+            }
 
             bool validID = (newID != null && newID != "companyname1234-productname-test" && newID.Length > 0);
             if (validID)
@@ -161,7 +165,10 @@ namespace CognitiveVR
                         }
                         else
                         {
-                            Debug.Log("Couldn't find CognitiveVR_Manager.prefab");
+                            Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
+                            GameObject go = new GameObject("CognitiveVR_Manager");
+                            go.AddComponent<CognitiveVR_Manager>();
+                            Selection.activeGameObject = go;
                         }
                     }
                 }
@@ -192,10 +199,11 @@ namespace CognitiveVR
             if (GUILayout.Button("Steam VR")) { option = "CVR_STEAMVR"; }
             GUI.color = Color.white;
 
-            /*if (option == "CVR_OCULUSVR") { GUI.color = Green; GUI.backgroundColor = Color.white; }
-            if (GUILayout.Button("Oculus VR")) { option = "CVR_OCULUSVR"; }
+            if (option == "CVR_OCULUS") { GUI.color = Green; GUI.backgroundColor = Color.white; }
+            if (GUILayout.Button("Oculus VR")) { option = "CVR_OCULUS"; }
             GUI.color = Color.white;
 
+            /*
             if (option == "CVR_GOOGLEVR") { GUI.color = Green; GUI.backgroundColor = Color.white; }
             if (GUILayout.Button("Google VR")) { option = "CVR_GOOGLEVR"; }
             GUI.color = Color.white;*/

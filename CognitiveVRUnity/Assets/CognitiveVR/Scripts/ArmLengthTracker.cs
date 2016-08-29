@@ -11,11 +11,11 @@ namespace CognitiveVR
 {
     public class ArmLengthTracker : CognitiveVRAnalyticsComponent
     {
+#if CVR_STEAMVR
         float maxSqrDistance;
         int sampleCount = 50;
         int samples = 0;
 
-#if CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -39,11 +39,13 @@ namespace CognitiveVR
         }
 #endif
 
-    private void CognitiveVR_Manager_OnTick()
+#if CVR_STEAMVR
+        private void CognitiveVR_Manager_OnTick()
         {
             if (samples < sampleCount)
             {
                 maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
+
                 samples++;
                 if (samples >= sampleCount)
                 {
@@ -53,10 +55,10 @@ namespace CognitiveVR
                 }
             }
         }
-
+#endif
         public static string GetDescription()
         {
-            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
+            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nOnly SteamVR controllers are currently supported";
         }
     }
 }
