@@ -13,7 +13,8 @@ namespace CognitiveVR
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            OVRManager.display.RecenteredPose += RecenterEventTracker_RecenteredPose;
+            if (OVRManager.display != null)
+                OVRManager.display.RecenteredPose += RecenterEventTracker_RecenteredPose;
         }
 
         private void RecenterEventTracker_RecenteredPose()
