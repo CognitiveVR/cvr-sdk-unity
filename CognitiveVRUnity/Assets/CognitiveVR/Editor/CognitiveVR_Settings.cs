@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 
 namespace CognitiveVR
 {
@@ -22,13 +23,16 @@ namespace CognitiveVR
 #endif
 
 #if CVR_STEAMVR
-                option = "CVR_STEAMVR";
-#elif CVR_OCULUS
-                option = "CVR_OCULUS";
-#elif CVR_GOOGLEVR
-                option = "CVR_GOOGLEVR";
-#elif CVR_NONE
-            option = "CVR_NONE";
+            option.Add("CVR_STEAMVR");
+#endif
+#if CVR_OCULUS
+            option.Add("CVR_OCULUS");
+#endif
+#if CVR_GOOGLEVR
+            option.Add("CVR_GOOGLEVR");
+#endif
+#if CVR_NONE
+            option.Add("CVR_NONE");
 #endif
 
             string version = EditorPrefs.GetString("cvr_version");
@@ -65,7 +69,7 @@ namespace CognitiveVR
             return path.Substring(0, path.Length - "Editor".Length) + "";
         }
 
-        static string option = "";
+        static List<string> option = new List<string>();
         string newID = "";
         public void OnGUI()
         {
@@ -85,6 +89,12 @@ namespace CognitiveVR
             {
                 newID = GetPreferences().CustomerID;
             }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Version: " + Core.SDK_Version);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
             //links
             GUILayout.BeginHorizontal();
@@ -131,7 +141,6 @@ namespace CognitiveVR
                 addInitButtonText.text = "CognitiveVR Manager Found!";
                 addInitButtonText.tooltip = "";
             }
-            //newID = EditorGUILayout.TextField(newID);
 
             if (Event.current.type == EventType.repaint && string.IsNullOrEmpty(newID))
             {
@@ -190,12 +199,32 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if (option == "CVR_STEAMVR") { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR")) { option = "CVR_STEAMVR"; }
+            if (option.Contains("CVR_STEAMVR")) { GUI.color = Green; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Steam VR"))
+            {
+                if (option.Contains("CVR_STEAMVR"))
+                    option.Remove("CVR_STEAMVR");
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_STEAMVR");
+                }
+            }
             GUI.color = Color.white;
 
-            if (option == "CVR_OCULUS") { GUI.color = Green; GUI.backgroundColor = Color.white; }
-            if (GUILayout.Button("Oculus VR")) { option = "CVR_OCULUS"; }
+            if (option.Contains("CVR_OCULUS")) { GUI.color = Green; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Oculus VR"))
+            {
+                if (option.Contains("CVR_OCULUS"))
+                    option.Remove("CVR_OCULUS");
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_OCULUS");
+                }
+            }
             GUI.color = Color.white;
 
             /*
@@ -203,8 +232,18 @@ namespace CognitiveVR
             if (GUILayout.Button("Google VR")) { option = "CVR_GOOGLEVR"; }
             GUI.color = Color.white;*/
 
-            if (option == "CVR_NONE") { GUI.color = Green; GUI.backgroundColor = Color.white; }
-            if (GUILayout.Button("None")) { option = "CVR_NONE"; }
+            if (option.Contains("CVR_NONE")) { GUI.color = Green; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("None"))
+            {
+                if (option.Contains("CVR_NONE"))
+                    option.Remove("CVR_NONE");
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_NONE");
+                }
+            }
             GUI.color = Color.white;
 
             EditorGUI.EndDisabledGroup();
@@ -217,7 +256,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
-            EditorGUI.BeginDisabledGroup(!validID || string.IsNullOrEmpty(option));
+            EditorGUI.BeginDisabledGroup(!validID || option.Count == 0);
 
             if (GUILayout.Button("Save"))
             {
@@ -250,7 +289,7 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
         }
 
-        public void SetPlayerDefine(string newDefine)
+        public void SetPlayerDefine(List<string> newDefines)
         {
             //get all scripting define symbols
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
@@ -275,12 +314,11 @@ namespace CognitiveVR
                 }
             }
 
-
-            //if newDefine !null set new define
-            if (!string.IsNullOrEmpty(newDefine))
+            foreach (string define in newDefines)
             {
-                alldefines += newDefine + ";";
+                alldefines += define + ";";
             }
+
             PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, alldefines);
 
         }

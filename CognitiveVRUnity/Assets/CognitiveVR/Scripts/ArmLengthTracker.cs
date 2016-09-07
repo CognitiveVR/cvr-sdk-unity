@@ -42,14 +42,11 @@ namespace CognitiveVR
 #if CVR_STEAMVR
         private void CognitiveVR_Manager_OnTick()
         {
+            if (CognitiveVR_Manager.GetController(0) == null){return;}
+
             if (samples < sampleCount)
             {
                 maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
-
-
-
-
-        //maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(OVRInput.GetLocalControllerPosition(OVRInput.Controller.Touch) - FindObjectsOfType<ovr .HMD.position));
 
                 samples++;
                 if (samples >= sampleCount)

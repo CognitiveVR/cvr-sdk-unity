@@ -112,7 +112,7 @@ namespace CognitiveVR
                     UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
                     if (basicInit)
                     {
-                        PrefabUtility.InstantiatePrefab(basicInit);
+                        Selection.activeGameObject = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
                     }
                     else
                     {

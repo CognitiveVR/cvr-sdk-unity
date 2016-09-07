@@ -108,7 +108,7 @@ namespace CognitiveVR
             }
         }
 
-#if !CVR_OCULUS
+#if CVR_STEAMVR || CVR_NONE
         static Transform[] controllers = new Transform[2];
 #endif
         /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>
@@ -127,11 +127,12 @@ namespace CognitiveVR
                         controllers[1] = cm.right.transform;
                 }
             }
+            return controllers[id];
 #elif CVR_OCULUS
             // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
             return null;
 #else
-            return controllers[id];
+            return null;
 #endif
         }
 
@@ -139,6 +140,17 @@ namespace CognitiveVR
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
+
+        /// <summary>
+        /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
+        /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
+        /// </summary>
+        EntityInfo GetUniqueEntityID()
+        {
+            if (GetComponent<SteamworksUserTracker>() == null)
+                return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
+            return null;
+        }
 
         void Start()
         {
@@ -148,7 +160,8 @@ namespace CognitiveVR
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: false
+                logEnabled: false,
+                userInfo: GetUniqueEntityID()
             );
             CognitiveVR.Core.init(initParams, InitEvent);
 

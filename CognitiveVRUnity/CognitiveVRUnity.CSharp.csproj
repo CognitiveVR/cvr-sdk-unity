@@ -96,6 +96,9 @@
     <Compile Include="Assets\CognitiveVR\Scripts\HMDHeightTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\OcclusionTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\PlayerRecorderTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\PlayerSnapshot.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\PlayerTrackerHelper.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\RoomSizeTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ScreenResolutionTracker.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUserTracker.cs" />
