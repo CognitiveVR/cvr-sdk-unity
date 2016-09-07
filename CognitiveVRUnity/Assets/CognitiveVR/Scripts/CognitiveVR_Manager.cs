@@ -108,7 +108,7 @@ namespace CognitiveVR
             }
         }
 
-#if !CVR_OCULUS
+#if CVR_STEAMVR || CVR_NONE
         static Transform[] controllers = new Transform[2];
 #endif
         /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>
@@ -127,11 +127,12 @@ namespace CognitiveVR
                         controllers[1] = cm.right.transform;
                 }
             }
+            return controllers[id];
 #elif CVR_OCULUS
             // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
             return null;
 #else
-            return controllers[id];
+            return null;
 #endif
         }
 

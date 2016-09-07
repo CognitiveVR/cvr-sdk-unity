@@ -14,12 +14,11 @@ namespace CognitiveVR
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-#if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
-#elif CVR_OCULUS
-
+#if CVR_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
+#elif CVR_STEAMVR
+            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
         }
 
