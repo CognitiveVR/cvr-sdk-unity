@@ -272,8 +272,10 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.DebugWriteToFile)
             {
-                WriteToFile(FormatGazeToString(), "_GAZE_" + trackingSceneName);
-                WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
+                if (playerSnapshots.Count > 0)
+                    WriteToFile(FormatGazeToString(), "_GAZE_" + trackingSceneName);
+                if (InstrumentationSubsystem.CachedTransactions.Count > 0)
+                    WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
             }
             else
             {
@@ -284,11 +286,18 @@ namespace CognitiveVR
 
                     Debug.Log("uploading gaze and events to " + sceneSettings.SceneKey);
 
-                    byte[] bytes = FormatGazeToString();
-                    StartCoroutine(SendRequest(bytes, SceneURLGaze));
+                    byte[] bytes;
 
-                    bytes = FormatEventsToString();
-                    StartCoroutine(SendRequest(bytes, SceneURLEvents));
+                    if (playerSnapshots.Count > 0)
+                    {
+                        bytes = FormatGazeToString();
+                        StartCoroutine(SendRequest(bytes, SceneURLGaze));
+                    }
+                    if (InstrumentationSubsystem.CachedTransactions.Count > 0)
+                    {
+                        bytes = FormatEventsToString();
+                        StartCoroutine(SendRequest(bytes, SceneURLEvents));
+                    }
                 }
                 else
                 {
