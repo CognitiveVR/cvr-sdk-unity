@@ -17,6 +17,9 @@ namespace CognitiveVR
         static Color Green = new Color(0.6f, 1f, 0.6f);
         static Color Orange = new Color(1f, 0.6f, 0.3f);
 
+        System.Collections.Generic.IEnumerable<Type> childTypes;
+        Vector2 canvasPos;
+
         public static void Init()
         {
             // Get existing open window or if none, make a new one:
@@ -41,8 +44,6 @@ namespace CognitiveVR
             return path.Substring(0, path.Length - "Editor".Length) + "";
         }
 
-        System.Collections.Generic.IEnumerable<Type> childTypes;
-
         void GetAnalyticsComponentTypes()
         {
             if (childTypes != null) { return; }
@@ -54,7 +55,6 @@ namespace CognitiveVR
                                 .Select(t => t));
         }
 
-        Vector2 canvasPos;
         public void OnGUI()
         {
             GUI.skin.label.wordWrap = true;
@@ -164,7 +164,7 @@ namespace CognitiveVR
 
             GUILayout.Space(20);
 
-            if (GUILayout.Button("Close"))
+            if (GUILayout.Button("Save and Close"))
             {
                 Close();
             }

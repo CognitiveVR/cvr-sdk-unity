@@ -272,38 +272,39 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.DebugWriteToFile)
             {
+                Debug.LogWarning("Player Recorder writing player data to file!");
+
                 if (playerSnapshots.Count > 0)
                     WriteToFile(FormatGazeToString(), "_GAZE_" + trackingSceneName);
                 if (InstrumentationSubsystem.CachedTransactions.Count > 0)
                     WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
             }
-            else
+            
+            if (sceneSettings != null)
             {
-                if (sceneSettings != null)
+                string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
+                string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneKey;
+
+                Debug.Log("uploading gaze and events to " + sceneSettings.SceneKey);
+
+                byte[] bytes;
+
+                if (playerSnapshots.Count > 0)
                 {
-                    string SceneURLGaze = "http://sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
-                    string SceneURLEvents = "http://sceneexplorer.com/api/events/" + sceneSettings.SceneKey;
-
-                    Debug.Log("uploading gaze and events to " + sceneSettings.SceneKey);
-
-                    byte[] bytes;
-
-                    if (playerSnapshots.Count > 0)
-                    {
-                        bytes = FormatGazeToString();
-                        StartCoroutine(SendRequest(bytes, SceneURLGaze));
-                    }
-                    if (InstrumentationSubsystem.CachedTransactions.Count > 0)
-                    {
-                        bytes = FormatEventsToString();
-                        StartCoroutine(SendRequest(bytes, SceneURLEvents));
-                    }
+                    bytes = FormatGazeToString();
+                    StartCoroutine(SendRequest(bytes, SceneURLGaze));
                 }
-                else
+                if (InstrumentationSubsystem.CachedTransactions.Count > 0)
                 {
-                    Debug.LogError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + trackingSceneName + "!");
+                    bytes = FormatEventsToString();
+                    StartCoroutine(SendRequest(bytes, SceneURLEvents));
                 }
             }
+            else
+            {
+                Debug.LogError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + trackingSceneName + "!");
+            }
+            
             playerSnapshots.Clear();
             InstrumentationSubsystem.CachedTransactions.Clear();
         }
