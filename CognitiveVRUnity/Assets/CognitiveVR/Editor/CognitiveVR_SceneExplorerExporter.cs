@@ -31,13 +31,10 @@ namespace CognitiveVR
 
         static void WriteTerrainTexture(TerrainData data)
         {
-            //TODO test 0-1 layers. test > 4 layers
             float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
 
-            //LIMIT to 3 layers for now!
-            int layerCount = Mathf.Min(maps.GetLength(2), 3);
-
-
+            //LIMIT to 6 layers for now! rbga + black + transparency?
+            int layerCount = Mathf.Min(maps.GetLength(2), 6);
 
 
             //set terrain textures to readable
@@ -177,7 +174,7 @@ namespace CognitiveVR
 
         }
 
-        private static string Export(TerrainData terrainData, Vector3 offset)
+        private static string Export(TerrainData terrainData, Vector3 offset, int id)
         {
             int w = terrainData.heightmapWidth;
             int h = terrainData.heightmapHeight;
@@ -229,7 +226,7 @@ namespace CognitiveVR
             //StreamWriter sw = new StreamWriter(fileName);
             try
             {
-                outputStringBuilder.Append("g ").Append("terrain").Append("\n");
+                outputStringBuilder.Append("o ").Append("terrain" + id).Append("\n");
 
                 // Write vertices
                 for (int i = 0; i < tVertices.Length; i++)
@@ -512,7 +509,7 @@ namespace CognitiveVR
                 for (int i = 0; i < terrains.Length; i++)
                 {
                     EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
-                    sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position));
+                    sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
                     if (includeTextures)
                         WriteTerrainTexture(terrains[i].terrainData);
                 }
