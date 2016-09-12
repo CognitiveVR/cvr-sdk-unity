@@ -22,8 +22,275 @@ namespace CognitiveVR
         private static int normalOffset = 0;
         private static int uvOffset = 0;
 
+        enum SaveResolution { Full = 0, Half, Quarter, Eighth, Sixteenth }
+        static SaveResolution saveResolution = SaveResolution.Quarter;
 
-        private static string MeshToString(MeshFilter mf, Dictionary<string, ObjMaterial> materialList)
+        static string folder;
+        static Dictionary<string, ObjMaterial> materialList;
+        static string TerrainAppendMaterial;
+
+        static void WriteTerrainTexture(TerrainData data)
+        {
+            //TODO test 0-1 layers. test > 4 layers
+            float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
+
+            //LIMIT to 3 layers for now!
+            int layerCount = Mathf.Min(maps.GetLength(2), 3);
+
+
+
+
+            //set terrain textures to readable
+            bool[] textureReadable = new bool[layerCount];
+            for (int i = 0; i< layerCount; i++)
+            {
+                try
+                {
+                    TextureImporterFormat format;
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i], out format))
+                    {
+                        Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
+                        SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+
+            //get the highest value layer and write pixels to texture
+            //Texture2D tempTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
+            Texture2D outTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
+            for (int y = 0; y < data.alphamapHeight; y++)
+            {
+                for (int x = 0; x < data.alphamapWidth; x++)
+                {
+                    float[] colorAtLayer = new float[layerCount];
+                    for (int i = 0; i<colorAtLayer.Length; i++)
+                    {
+                        //put layers into colours
+                        colorAtLayer[i] = maps[x, y, i];
+                    }
+
+
+                    int highestMap=0;
+                    float highestMapValue=0;
+
+                    
+
+                    for (int i = 0; i<colorAtLayer.Length; i++)
+                    {
+                        if (colorAtLayer[i] > highestMapValue)
+                        {
+                            highestMapValue = colorAtLayer[i];
+                            highestMap = i;
+                        }
+                    }
+
+                    outTex.SetPixel(x, y, data.splatPrototypes[highestMap].texture.GetPixel(x * 10 % (data.splatPrototypes[highestMap].texture.width * 1), y * 10 % (data.splatPrototypes[highestMap].texture.height * 1)));
+
+
+                    /*
+                    float a0 = maps[x, y, 0];
+                    float a1 = maps[x, y, 1];
+                    float a2 = maps[x, y, 2];
+
+                    if (a0 > a1 && a0 > a2)
+                    {
+                        //red
+                        //outTex = data.splatPrototypes[0].texture;
+                        outTex.SetPixel(x, y, data.splatPrototypes[0].texture.GetPixel(x * 10 % (data.splatPrototypes[0].texture.width * 1), y * 10 % (data.splatPrototypes[0].texture.height * 1)));
+                    }
+                    else if (a1 > a0 && a1 > a2)
+                    {
+                        //green
+                        outTex.SetPixel(x, y, data.splatPrototypes[1].texture.GetPixel(x * 10 % (data.splatPrototypes[1].texture.width * 1), y * 10 % (data.splatPrototypes[1].texture.height * 1)));
+                    }
+                    else
+                    {
+                        //blue
+                        outTex.SetPixel(x, y, data.splatPrototypes[2].texture.GetPixel(x * 10 % (data.splatPrototypes[2].texture.width * 1), y * 10 % (data.splatPrototypes[2].texture.height * 1)));
+                    }
+                    */
+
+                    //debug splat
+                    //Color c = new Color(a0, a1, a2);
+                    //tempTex.SetPixel(x, y, c);
+                }
+            }
+
+
+
+            //write material into list
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("\n");
+            sb.Append("newmtl Terrain_Generated\n");
+            sb.Append("Ka  0.6 0.6 0.6\n");
+            sb.Append("Kd  1.0 1.0 1.0\n");
+            sb.Append("Ks  0.0 0.0 0.0\n");
+            sb.Append("d  1.0\n");
+            sb.Append("Ns  96.0\n");
+            sb.Append("Ni  1.0\n");
+            sb.Append("illum 1\n");
+            sb.Append("map_Kd Terrain_Generated.png");
+
+            TerrainAppendMaterial = sb.ToString();
+
+
+
+
+            //write texture to file
+
+            string destinationFile = "";
+            int stripIndex = destinationFile.LastIndexOf('/');
+            if (stripIndex >= 0)
+                destinationFile = destinationFile.Substring(stripIndex + 1).Trim();
+            destinationFile = folder + "/" + destinationFile;
+
+
+            byte[] bytes = outTex.EncodeToPNG();
+            File.WriteAllBytes(destinationFile + "Terrain_Generated.png", bytes);
+
+
+
+
+            //texture importer to original
+
+            for (int i = 0; i < layerCount; i++)
+            {
+                try
+                {
+                    bool ignored;
+                    TextureImporterFormat format;
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored, out format))
+                    {
+                        SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i], TextureImporterFormat.RGBA32);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+
+        }
+
+        private static string Export(TerrainData terrainData, Vector3 offset)
+        {
+            int w = terrainData.heightmapWidth;
+            int h = terrainData.heightmapHeight;
+            Vector3 meshScale = terrainData.size;
+            int tRes = (int)Mathf.Pow(2, (int)saveResolution);
+            meshScale = new Vector3(meshScale.x / (w - 1) * tRes, meshScale.y, meshScale.z / (h - 1) * tRes);
+            Vector2 uvScale = new Vector2(1.0f / (w - 1), 1.0f / (h - 1));
+            float[,] tData = terrainData.GetHeights(0, 0, w, h);
+
+            w = (w - 1) / tRes + 1;
+            h = (h - 1) / tRes + 1;
+            Vector3[] tVertices = new Vector3[w * h];
+            Vector2[] tUV = new Vector2[w * h];
+
+            int[] tPolys;
+
+            tPolys = new int[(w - 1) * (h - 1) * 6];
+
+            // Build vertices and UVs
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    tVertices[y * w + x] = Vector3.Scale(meshScale, new Vector3(-y, tData[x * tRes, y * tRes], x)) + offset;
+                    tUV[y * w + x] = Vector2.Scale(new Vector2(x * tRes, y * tRes), uvScale);
+                }
+            }
+
+            int index = 0;
+            // Build triangle indices: 3 indices into vertex array for each triangle
+            for (int y = 0; y < h - 1; y++)
+            {
+                for (int x = 0; x < w - 1; x++)
+                {
+                    // For each grid cell output two triangles
+                    tPolys[index++] = (y * w) + x;
+                    tPolys[index++] = ((y + 1) * w) + x;
+                    tPolys[index++] = (y * w) + x + 1;
+
+                    tPolys[index++] = ((y + 1) * w) + x;
+                    tPolys[index++] = ((y + 1) * w) + x + 1;
+                    tPolys[index++] = (y * w) + x + 1;
+                }
+            }
+
+            // Export to .obj
+            StringBuilder outputStringBuilder = new StringBuilder();
+
+            //StreamWriter sw = new StreamWriter(fileName);
+            try
+            {
+                outputStringBuilder.Append("g ").Append("terrain").Append("\n");
+
+                // Write vertices
+                for (int i = 0; i < tVertices.Length; i++)
+                {
+                    StringBuilder sb = new StringBuilder("v ", 20);
+
+                    //x is flipped
+                    sb.Append((tVertices[i].x - offset.x).ToString()).Append(" ").
+                    Append((tVertices[i].y + offset.y).ToString()).Append(" ").
+                    Append((tVertices[i].z + offset.z).ToString());
+                    outputStringBuilder.Append(sb);
+                    outputStringBuilder.Append("\n");
+                }
+
+                //write fake normals
+                for (int i = 0; i < tVertices.Length; i++)
+                {
+                    StringBuilder sb = new StringBuilder("vn ", 22);
+                    sb.Append("0 0 1");
+                    outputStringBuilder.Append(sb);
+                    outputStringBuilder.Append("\n");
+                }
+
+                // Write UVs
+                for (int i = 0; i < tUV.Length; i++)
+                {
+                    StringBuilder sb = new StringBuilder("vt ", 22);
+                    sb.Append(tUV[i].x.ToString()).Append(" ").
+                    Append(tUV[i].y.ToString());
+                    outputStringBuilder.Append(sb);
+                    outputStringBuilder.Append("\n");
+                }
+
+                outputStringBuilder.Append("usemtl ").Append("Terrain_Generated").Append("\n");
+
+                // Write triangles
+                for (int i = 0; i < tPolys.Length; i += 3)
+                {
+                    StringBuilder sb = new StringBuilder("f ", 43);
+                    sb.Append(tPolys[i] + 1 + vertexOffset).Append("/").Append(tPolys[i] + 1 + uvOffset).Append(" ").
+                    Append(tPolys[i + 1] + 1 + vertexOffset).Append("/").Append(tPolys[i + 1] + 1 + uvOffset).Append(" ").
+                    Append(tPolys[i + 2] + 1 + vertexOffset).Append("/").Append(tPolys[i + 2] + 1 + uvOffset);
+
+                    outputStringBuilder.Append(sb);
+                    outputStringBuilder.Append("\n");
+                }
+
+                vertexOffset += tVertices.Length;
+                normalOffset += tVertices.Length;
+                uvOffset += tUV.Length;
+            }
+            catch (Exception err)
+            {
+                Debug.Log("Error saving file: " + err.Message);
+            }
+
+            return outputStringBuilder.ToString();
+        }
+
+
+        private static string MeshToString(MeshFilter mf)
         {
             Mesh m = mf.sharedMesh;
             if (m == null) return "";
@@ -31,7 +298,7 @@ namespace CognitiveVR
 
             if (m.uv.Length == 0)
             {
-                //TODO figure out why all the vertices explode when uvs not set
+                //TODO sometimes explodes when vertex/uv/normal counts don't line up - faces are written assuming these all have the right count!
                 Debug.LogError("Skipping export of mesh \"" + m.name + "\". Exporting meshes must be unwrapped");
                 return "";
             }
@@ -45,8 +312,7 @@ namespace CognitiveVR
             {
                 Vector3 wv = mf.transform.TransformPoint(lv);
 
-                //This is sort of ugly - inverting x-component since we're in
-                //a different coordinate system than "everyone" is "used to".
+                //invert x axis
                 sb.Append(string.Format("v {0} {1} {2}\n", -wv.x, wv.y, wv.z));
             }
             sb.Append("\n");
@@ -80,7 +346,6 @@ namespace CognitiveVR
                 else
                 {
                     sb.Append("usemtl ").Append(mats[material].name).Append("\n");
-                    //sb.Append("usemap ").Append(mats[material].name).Append("\n");
                 }
 
                 //See if this material is already in the materiallist.
@@ -148,7 +413,7 @@ namespace CognitiveVR
             return new Dictionary<string, ObjMaterial>();
         }
 
-        private static void MaterialsToFile(Dictionary<string, ObjMaterial> materialList, string folder, string filename)
+        private static void MaterialsToFile(string filename)
         {
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".mtl"))
             {
@@ -226,17 +491,31 @@ namespace CognitiveVR
 
                     sw.Write("\n\n\n");
                 }
+                if (!string.IsNullOrEmpty(TerrainAppendMaterial))
+                {
+                    sw.Write(TerrainAppendMaterial);
+                }
+                TerrainAppendMaterial = null;
             }
             EditorUtility.ClearProgressBar();
         }
 
-        private static void MeshesToFile(MeshFilter[] mf, string folder, string filename, bool includeTextures)
+        private static void MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures)
         {
-            Dictionary<string, ObjMaterial> materialList = PrepareFileWrite();
+            materialList = PrepareFileWrite();
 
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
             {
                 sw.Write("mtllib ./" + filename + ".mtl\n");
+
+                Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
+                for (int i = 0; i < terrains.Length; i++)
+                {
+                    EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
+                    sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position));
+                    if (includeTextures)
+                        WriteTerrainTexture(terrains[i].terrainData);
+                }
 
                 int meshCount = mf.Length;
                 int currentMeshIndex = 0;
@@ -248,13 +527,13 @@ namespace CognitiveVR
                         EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount) / 2);
                     else
                         EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount));
-                    sw.Write(MeshToString(mf[i], materialList));
+                    sw.Write(MeshToString(mf[i]));
                 }
             }
             EditorUtility.ClearProgressBar();
 
             if (includeTextures)
-                MaterialsToFile(materialList, folder, filename);
+                MaterialsToFile(filename);
         }
 
         //retrun path to CognitiveVR_SceneExplorerExport. create if it doesn't exist
@@ -324,8 +603,8 @@ namespace CognitiveVR
                 {
                     mf[i] = mfList[i];
                 }
-                
-                MeshesToFile(mf, "CognitiveVR_SceneExplorerExport/" + fullName, fullName, includeTextures);
+                folder = "CognitiveVR_SceneExplorerExport/" + fullName;
+                MeshesToFile(mf, fullName, includeTextures);
             }
             else
                 EditorUtility.DisplayDialog("Objects not exported", "Make sure at least some of your selected objects have mesh filters!", "");

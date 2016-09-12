@@ -108,7 +108,7 @@ namespace CognitiveVR
             }
         }
 
-#if CVR_STEAMVR || CVR_NONE
+#if CVR_STEAMVR
         static Transform[] controllers = new Transform[2];
 #endif
         /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>
