@@ -509,9 +509,12 @@ namespace CognitiveVR
                 for (int i = 0; i < terrains.Length; i++)
                 {
                     EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
-                    sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
-                    if (includeTextures)
-                        WriteTerrainTexture(terrains[i].terrainData);
+                    if (terrains[i].terrainData != null)
+                    {
+                        sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
+                        if (includeTextures)
+                            WriteTerrainTexture(terrains[i].terrainData);
+                    }
                 }
 
                 int meshCount = mf.Length;

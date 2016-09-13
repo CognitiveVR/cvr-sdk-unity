@@ -287,7 +287,7 @@ namespace CognitiveVR
             Process[] blenders;
             if (BlenderRequest == true)
             {
-                Debug.Log("BLENDER - opening");
+                //Debug.Log("BLENDER - opening");
                 blenders = Process.GetProcessesByName("blender");
                 if (blenders.Length > 0)
                 {
@@ -300,19 +300,19 @@ namespace CognitiveVR
                 blenders = Process.GetProcessesByName("blender");
                 if (blenders.Length > 0)
                 {
-                    Debug.Log("BLENDER - do work");
+                    //Debug.Log("BLENDER - do work");
                 }
                 else
                 {
-                    Debug.Log("BLENDER - finished work");
+                    //Debug.Log("BLENDER - finished work");
                     EditorApplication.update -= UpdateProcess;
                     HasOpenedBlender = false;
-                    UpdateDecimatedScene();
+                    UploadDecimatedScene();
                 }
             }
         }
 
-        static void UpdateDecimatedScene()
+        static void UploadDecimatedScene()
         {
             //TODO get this scene name
             //use that to figure out which directory
