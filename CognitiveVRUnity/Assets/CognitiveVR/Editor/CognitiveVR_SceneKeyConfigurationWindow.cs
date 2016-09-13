@@ -67,6 +67,7 @@ namespace CognitiveVR
 
         Vector2 canvasPos;
         bool loadedScenes;
+        string searchString = "";
         void OnGUI()
         {
             CognitiveVR_Preferences prefs = CognitiveVR_EditorPrefs.GetPreferences();
@@ -84,6 +85,9 @@ namespace CognitiveVR
             }
 
             GUILayout.EndHorizontal();
+            searchString = EditorGUILayout.TextField("Search", searchString);
+
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
 
             if (!loadedScenes)
             {
@@ -106,6 +110,7 @@ namespace CognitiveVR
 
             foreach (var v in prefs.SceneKeySettings)
             {
+                if (!string.IsNullOrEmpty(searchString) && !v.SceneName.ToLower().Contains(searchString.ToLower())) { continue; }
                 DisplaySceneKeySettings(v);
             }
 
@@ -120,6 +125,8 @@ namespace CognitiveVR
             settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
             GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
+            string startSceneName = settings.SceneKey;
+
             if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(settings.SceneKey))
             {
                 GUIStyle style = new GUIStyle(GUI.skin.textField);
@@ -131,6 +138,11 @@ namespace CognitiveVR
                 settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
             }
 
+            if (!string.IsNullOrEmpty(settings.SceneKey) && string.IsNullOrEmpty(startSceneName))
+            {
+                //new key!
+                settings.Track = true;
+            }
 
             if (settings.Track)
             {
@@ -141,6 +153,11 @@ namespace CognitiveVR
                     if (settings.SceneKey.Contains("http://sceneexplorer.com/scene/"))
                     {
                         settings.SceneKey = settings.SceneKey.Replace("http://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    if (settings.SceneKey.Contains("https://sceneexplorer.com/scene/"))
+                    {
+                        settings.SceneKey = settings.SceneKey.Replace("https://sceneexplorer.com/scene/", "");
                         GUI.FocusControl("NULL");
                     }
                     else if (settings.SceneKey.Contains("sceneexplorer.com/scene/"))

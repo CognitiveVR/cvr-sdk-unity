@@ -72,17 +72,6 @@ namespace CognitiveVR
             }
         }
 
-        Vector3 ConvertFlatPointToSphere(int width, int height)
-        {
-            Vector3 outVector = (Vector3)Properties["gazeDirection"];
-            //float cameraFOV = 60; //assume 60 atm. save camera fov
-
-            outVector += Vector3.Lerp(Vector3.down, Vector3.up, height / 64f) * 0.5f; //something something mat.sin(60) = 0.5f
-            outVector += Vector3.Lerp(Vector3.left, Vector3.right, width / 64f) * 0.5f;
-
-            return outVector;
-        }
-
         public Texture2D GetRTPixels(RenderTexture rt)
         {
             Texture2D tex = new Texture2D(rt.width, rt.height);
@@ -94,36 +83,6 @@ namespace CognitiveVR
 
             RenderTexture.active = currentActiveRT;
             return tex;
-        }
-
-        public string ToStringLook()
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-
-            Vector3 GazeWorldPoints = (Vector3)Properties["gazePoint"];
-            builder.Append(string.Concat("\"gaze\":[", GazeWorldPoints.x, ",", GazeWorldPoints.y, ",", GazeWorldPoints.z, "]"));
-
-
-            /*for (int i = 0; i < PixelSamples * PixelSamples; i++)
-            {
-                builder.Append(string.Concat("\"point\":[", GazeWorldPoints[i].x, ",", GazeWorldPoints[i].y, ",", GazeWorldPoints[i].z, "],\n"));
-            }*/
-            //builder = builder.Remove(builder.Length - 2, 2);
-            return builder.ToString();
-        }
-
-        public string ToStringLookDir()
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            Vector3 forward = (Vector3)Properties["gazeDirection"];
-            builder.Append("\"dir\":[" + forward.x + "," + forward.y + "," + forward.z + "]");
-            return builder.ToString();
-        }
-
-        public string ToStringPos()
-        {
-            Vector3 position = (Vector3)Properties["position"];
-            return string.Concat("\"pos\":[", position.x, ",", position.y, ",", position.z, "]");
         }
     }
 }

@@ -13,7 +13,7 @@ namespace CognitiveVR
             public string SceneName = "";
             public string SceneKey = "";
             public string ScenePath = "";
-            public bool Track = true;
+            public bool Track = false;
 
             public SceneKeySetting(string name, string path)
             {
