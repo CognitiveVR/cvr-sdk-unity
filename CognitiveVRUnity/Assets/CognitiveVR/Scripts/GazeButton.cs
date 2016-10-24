@@ -12,12 +12,18 @@ namespace CognitiveVR
         public Image Button;
         public Image Fill;
 
-        static float LookTime = 1f;
+        public float LookTime = 1.5f;
 
-        float _dotThreshold = 0.95f;
+        //float _dotThreshold = 0.99f;
         float _currentLookTime;
 
-        System.Action _action;
+        //this is used to increase the dot product threshold as distance increases - basically a very cheap raycast
+        public float Radius = 0.25f;
+        float _distanceToTarget;
+        float _angle;
+        float _theta;
+
+        public UnityEngine.EventSystems.EventTrigger.TriggerEvent OnLook;
 
         Transform _t;
         Transform _transform
@@ -34,14 +40,21 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            _currentLookTime = 0;
             UpdateFillAmount();
+            _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
+            _angle = Mathf.Atan(Radius / _distanceToTarget);
+            _theta = Mathf.Cos(_angle);
         }
 
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
         void Update()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            if (Vector3.Dot(CognitiveVR_Manager.HMD.forward, CognitiveVR_Manager.HMD.position - _transform.position) > _dotThreshold)
+            if (ExitPollPanel.NextResponseTime > Time.time) { return; }
+            if (OnLook == null) { return; }
+
+            if (Vector3.Dot(CognitiveVR_Manager.HMD.forward, (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
             {
                 _currentLookTime += Time.deltaTime;
                 UpdateFillAmount();
@@ -65,20 +78,21 @@ namespace CognitiveVR
             Fill.fillAmount = _currentLookTime / LookTime;
         }
 
-        public void SetAction(System.Action newAction)
-        {
-            _action = newAction;
-        }
-
         public void ActivateAction()
         {
-            _action.Invoke();
+            OnLook.Invoke(null);
         }
 
-        //used to stop Update from changing the fill amount on the buttons
-        public void SetEnabled(bool enabled)
+        public void ClearAction()
         {
-            this.enabled = enabled;
+            //_action = null;
+            _currentLookTime = 0;
+            UpdateFillAmount();
+        }
+
+        void OnDrawGizmos()
+        {
+            Gizmos.DrawWireSphere(transform.position, Radius);
         }
     }
 }
