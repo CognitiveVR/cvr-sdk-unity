@@ -52,6 +52,9 @@ namespace CognitiveVR
         [Tooltip("Use to HMD Y position instead of spawning the poll directly ahead of the player")]
         public bool LockYPosition;
 
+        [Tooltip("If this window is not in the player's line of sight, rotate around the player toward their facing")]
+        public bool RotateToStayOnScreen = false;
+
         public float ResponseDelayTime = 2;
         public static float NextResponseTime { get; private set; }
 
@@ -295,6 +298,11 @@ namespace CognitiveVR
         {
             //don't try to close again if the question has already started closing
             if (_closeAction == null) { return; }
+            if (CognitiveVR_Manager.HMD == null)
+            {
+                Close();
+                return;
+            }
             if (_remainingTime > 0)
             {
                 if (NextResponseTime < Time.time)
@@ -306,6 +314,7 @@ namespace CognitiveVR
             else
             {
                 Close();
+                return;
             }
             if (StickyWindow)
             {
@@ -315,6 +324,53 @@ namespace CognitiveVR
                     _transform.position -= delta;
 
                     _lastRootPosition = root.position;
+                }
+            }
+            if (RotateToStayOnScreen)
+            {
+                float maxDot = 0.9f;
+                float maxRotSpeed = 360;
+
+                if (LockYPosition)
+                {
+                    Vector3 camforward = CognitiveVR_Manager.HMD.forward;
+                    camforward.y = 0;
+                    camforward.Normalize();
+
+                    Vector3 toCube = _transform.position - CognitiveVR_Manager.HMD.position;
+                    toCube.y = 0;
+                    toCube.Normalize();
+
+                    float dot = Vector3.Dot(camforward, toCube);
+                    Debug.Log(dot);
+                    if (dot < maxDot)
+                    {
+                        Vector3 rotateAxis = Vector3.down;
+
+                        Vector3 camRightYlock = CognitiveVR_Manager.HMD.right;
+                        camRightYlock.y = 0;
+                        camRightYlock.Normalize();
+
+                        float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
+                        float directionDot = Vector3.Dot(camRightYlock, toCube);
+                        if (directionDot < 0)
+                            rotateSpeed *= -1;
+
+                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                    }
+                }
+                else
+                {
+                    Vector3 toCube = (_transform.position - CognitiveVR_Manager.HMD.position).normalized;
+                    float dot = Vector3.Dot(CognitiveVR_Manager.HMD.forward, toCube);
+                    if (dot < maxDot)
+                    {
+                        Vector3 rotateAxis = Vector3.Cross(toCube, CognitiveVR_Manager.HMD.forward);
+                        float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
+
+                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                        _transform.rotation = Quaternion.Lerp(_transform.rotation, CognitiveVR_Manager.HMD.rotation, 0.1f);
+                    }
                 }
             }
         }
