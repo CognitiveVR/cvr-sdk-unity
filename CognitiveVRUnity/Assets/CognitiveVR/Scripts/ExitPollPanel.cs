@@ -7,6 +7,12 @@ using CognitiveVR;
 
 namespace CognitiveVR
 {
+    public enum ExitPollPanelType
+    {
+        ExitPollMicrophonePanel,
+        ExitPollQuestionPanel,
+    }
+
     public class ExitPollPanel : MonoBehaviour
     {
         struct ExitPollResponse
@@ -14,19 +20,22 @@ namespace CognitiveVR
             public string customerId;
             public string sessionId;
             public string pollState; //what are the poll states?
-            public ExitPollQuestion[] pollValues;
+            public ExitPollTuningQuestion[] pollValues;
             public string sceneId;
             public double timestamp; //this
             public System.Collections.Generic.KeyValuePair<string, object>[] properties;
         }
 
-        struct ExitPollQuestion
+        struct ExitPollTuningQuestion
         {
             public string question;
             public string answer;
         }
 
+        ExitPollPanelType _exitPollPanelType;
         System.Action _closeAction;
+
+        public string ExitPollQuestion = "ExitPollQuestion";
 
         [Header("Components")]
         public Text Title;
@@ -46,24 +55,30 @@ namespace CognitiveVR
         public AnimationCurve YScale;
         public float PopupTime = 0.2f;
 
-        [Tooltip("Mask for what things the exit poll will 'hit' and appear in front of if too close to a surface")]
-        public LayerMask LayerMask;
-
-        [Tooltip("Use to HMD Y position instead of spawning the poll directly ahead of the player")]
-        public bool LockYPosition;
-
-        [Tooltip("If this window is not in the player's line of sight, rotate around the player toward their facing")]
-        public bool RotateToStayOnScreen = false;
-
         public float ResponseDelayTime = 2;
         public static float NextResponseTime { get; private set; }
 
         [Tooltip("Automatically close this window if there is no response after this many seconds")]
         public float TimeOut = 10;
         float _remainingTime;
+        bool _allowTimeout = true;
 
+        [Tooltip("Mask for what things the exit poll will 'hit' and appear in front of if too close to a surface")]
+        public LayerMask LayerMask;
+
+        [Header("Display Options")]
+        [Tooltip("Use to HMD Y position instead of spawning the poll directly ahead of the player")]
+        public bool LockYPosition;
+
+        [Tooltip("Create a simple reticule while the ExitPoll Panel is visible")]
         public bool DisplayReticule;
         GameObject _reticule;
+
+        [Tooltip("If this window is not in the player's line of sight, rotate around the player toward their facing")]
+        public bool RotateToStayOnScreen = false;
+
+        [Tooltip("Update the position of the Exit Poll prefab if the player teleports")]
+        public bool StickyWindow;
 
         Transform _t;
         Transform _transform
@@ -78,18 +93,7 @@ namespace CognitiveVR
             }
         }
 
-        static ExitPollPanel _inst;
-        static ExitPollPanel _instance
-        {
-            get
-            {
-                if (_inst == null)
-                {
-                    _inst = Instantiate(Resources.Load<GameObject>("ExitPollPanel")).GetComponent<ExitPollPanel>();
-                }
-                return _inst;
-            }
-        }
+        private static ExitPollPanel _instance;
 
         Transform _p;
         Transform _panel
@@ -104,8 +108,6 @@ namespace CognitiveVR
             }
         }
 
-        [Tooltip("Update the position of the Exit Poll prefab if the player teleports")]
-        public bool StickyWindow;
         Transform _root;
         Transform root
         {
@@ -123,7 +125,9 @@ namespace CognitiveVR
         /// Instantiate and position the exit poll at an arbitrary point
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
-        public static void Initialize(System.Action closeAction, Vector3 position)
+        /// <param name="position">where to instantiate the exitpoll window</param>
+        /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
+        public static void Initialize(System.Action closeAction, Vector3 position, ExitPollPanelType exitpollType)
         {
             if (CognitiveVR_Manager.HMD == null)
             {
@@ -141,40 +145,23 @@ namespace CognitiveVR
                 return;
             }
 
-            _instance._closeAction = closeAction;
-            _instance.gameObject.SetActive(true);
-            NextResponseTime = _instance.ResponseDelayTime + Time.time;
-            _instance._remainingTime = _instance.TimeOut;
-            _instance.UpdateTimeoutBar();
-
-            //set position and rotation
-            _instance.transform.position = position;
-            _instance._panel.rotation = Quaternion.LookRotation(position - CognitiveVR_Manager.HMD.position, Vector3.up);
-
-
-            //set up actions
-            _instance.PositiveButtonScript.enabled = true;
-            _instance.NegativeButtonScript.enabled = true;
-            if (_instance.CloseButtonScript)
-                _instance.CloseButtonScript.enabled = true;
-
-            /*_instance.PositiveButton.SetAction(() => _instance.Answer(true));
-            _instance.NegativeButton.SetAction(() => _instance.Answer(false));
-            if (_instance.CloseButton != null)
+            if (_instance != null)
             {
-                _instance.CloseButton.SetAction(() => _instance.Close());
-            }*/
+                Destroy(_instance.gameObject);
+            }
+            _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
 
-            //fetch a question
-            _instance.StartCoroutine(_instance.FetchQuestion());
-            _instance._lastRootPosition = _instance.root.position;
+            _instance._transform.position = position;
+
+            PostInitialize(closeAction, exitpollType);
         }
 
         /// <summary>
         /// Instantiate and position the exit poll in front of the player.
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
-        public static void Initialize(System.Action closeAction)
+        /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
+        public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType)
         {
             if (CognitiveVR_Manager.HMD == null)
             {
@@ -182,6 +169,22 @@ namespace CognitiveVR
                     closeAction.Invoke();
                 return;
             }
+
+            bool enabled = Tuning.getVar<bool>("ExitPollEnabled", true);
+            if (!enabled)
+            {
+                Util.logDebug("TuningVariable ExitPollEnabled==false");
+                if (closeAction != null)
+                    closeAction.Invoke();
+                return;
+            }
+
+            if (_instance != null)
+            {
+                Destroy(_instance.gameObject);
+                Debug.Log("destroy old instance");
+            }
+            _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
 
             //set position and rotation
             Vector3 tempPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
@@ -212,7 +215,49 @@ namespace CognitiveVR
                 }
             }
 
-            Initialize(closeAction, tempPosition);
+            _instance._transform.position = tempPosition;
+
+            PostInitialize(closeAction, exitpollType);
+        }
+
+        static void PostInitialize(System.Action closeAction, ExitPollPanelType exitpollType)
+        {
+            Debug.Log("exitpollType " + exitpollType.ToString());
+
+            //initialize variables
+            if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
+            {
+                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, ExitPollPanelType.ExitPollMicrophonePanel);
+                _instance._closeAction = microphoneAction;
+                Debug.Log("set microphone action");
+            }
+            else
+            {
+                Debug.Log("set close action");
+                _instance._closeAction = closeAction;
+            }
+
+            //_instance._closeAction = closeAction;
+            _instance.gameObject.SetActive(true);
+            NextResponseTime = _instance.ResponseDelayTime + Time.time;
+            _instance._remainingTime = _instance.TimeOut;
+            _instance._allowTimeout = true;
+            _instance.UpdateTimeoutBar();
+
+            //set position and rotation
+            //_instance.transform.position = _instance._transform.position;
+            _instance._panel.rotation = Quaternion.LookRotation(_instance._transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
+
+
+            //set up actions
+            _instance.PositiveButtonScript.enabled = true;
+            _instance.NegativeButtonScript.enabled = true;
+            if (_instance.CloseButtonScript)
+                _instance.CloseButtonScript.enabled = true;
+
+            //fetch a question
+            _instance.StartCoroutine(_instance.FetchQuestion());
+            _instance._lastRootPosition = _instance.root.position;
         }
 
         //close action is called immediately if fetching the question fails
@@ -221,7 +266,7 @@ namespace CognitiveVR
             //TODO ask question server
 
             //tuning variable
-            string response = Tuning.getVar<string>("ExitPollQuestion", "");
+            string response = Tuning.getVar<string>(ExitPollQuestion, "");
             if (!string.IsNullOrEmpty(response))
             {
                 //parse out title and question
@@ -291,7 +336,15 @@ namespace CognitiveVR
                 {
                     Destroy(_reticule);
                 }
+                Destroy(gameObject);
             }
+        }
+
+        public void DisableTimeout()
+        {
+            _allowTimeout = false;
+            _remainingTime = TimeOut;
+            UpdateTimeoutBar();
         }
 
         void Update()
@@ -303,18 +356,21 @@ namespace CognitiveVR
                 Close();
                 return;
             }
-            if (_remainingTime > 0)
+            if (_allowTimeout)
             {
-                if (NextResponseTime < Time.time)
+                if (_remainingTime > 0)
                 {
-                    _remainingTime -= Time.deltaTime;
-                    UpdateTimeoutBar();
+                    if (NextResponseTime < Time.time)
+                    {
+                        _remainingTime -= Time.deltaTime;
+                        UpdateTimeoutBar();
+                    }
                 }
-            }
-            else
-            {
-                Close();
-                return;
+                else
+                {
+                    Close();
+                    return;
+                }
             }
             if (StickyWindow)
             {
@@ -388,7 +444,7 @@ namespace CognitiveVR
 
 
             //question
-            ExitPollQuestion q = new ExitPollQuestion();
+            ExitPollTuningQuestion q = new ExitPollTuningQuestion();
             q.answer = positive.ToString();
             q.question = Question.text;
 
@@ -396,14 +452,15 @@ namespace CognitiveVR
             ExitPollResponse r = new ExitPollResponse();
             r.customerId = CognitiveVR_Preferences.Instance.CustomerID;
             r.pollState = "OPEN";
-            r.pollValues = new ExitPollQuestion[1] { q };
+            r.pollValues = new ExitPollTuningQuestion[1] { q };
             r.properties = null;
             var key = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             if (key != null)
             {
                 r.sceneId = key.SceneKey;
                 //r.sessionId = Core.SessionId; //NEED TO GET THIS FROM INIT
-                r.timestamp = (System.DateTime.UtcNow - new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+
+                r.timestamp = Util.Timestamp();
 
                 //TODO send this to a server somwhere
                 string s = JsonUtility.ToJson(r, true);

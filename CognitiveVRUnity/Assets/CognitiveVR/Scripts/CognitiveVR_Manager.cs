@@ -140,6 +140,7 @@ namespace CognitiveVR
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
+        public static double TimeStamp { get; private set; }
 
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
@@ -185,11 +186,13 @@ namespace CognitiveVR
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             LevelLoadEvent();
+            TimeStamp = Util.Timestamp();
         }
 #else
         void OnLevelWasLoaded(int id)
         {
             LevelLoadEvent();
+            TimeStamp = Util.Timestamp();
         }
 #endif
 
