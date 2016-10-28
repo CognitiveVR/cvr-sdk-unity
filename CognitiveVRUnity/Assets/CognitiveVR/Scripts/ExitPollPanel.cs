@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using CognitiveVR;
 
@@ -15,21 +16,34 @@ namespace CognitiveVR
 
     public class ExitPollPanel : MonoBehaviour
     {
-        struct ExitPollResponse
+        class ExitPollResponse
         {
             public string customerId;
             public string sessionId;
             public string pollState; //what are the poll states?
             public ExitPollTuningQuestion[] pollValues;
             public string sceneId;
-            public double timestamp; //this
-            public System.Collections.Generic.KeyValuePair<string, object>[] properties;
+            public int timestamp;
+            public ExitPollProperties[] properties = new ExitPollProperties[0];
         }
 
-        struct ExitPollTuningQuestion
+        [System.Serializable]
+        class ExitPollProperties
+        {
+            public string name;
+            public string value;
+        }
+
+        [System.Serializable]
+        class ExitPollTuningQuestion
         {
             public string question;
             public string answer;
+        }
+
+        class Response
+        {
+            public string pollId;
         }
 
         ExitPollPanelType _exitPollPanelType;
@@ -54,6 +68,9 @@ namespace CognitiveVR
         public AnimationCurve XScale;
         public AnimationCurve YScale;
         public float PopupTime = 0.2f;
+
+        //when the user finishes answering the question or finishes closing the window
+        bool _completed = false;
 
         public float ResponseDelayTime = 2;
         public static float NextResponseTime { get; private set; }
@@ -131,8 +148,7 @@ namespace CognitiveVR
         {
             if (CognitiveVR_Manager.HMD == null)
             {
-                if (closeAction != null)
-                    closeAction.Invoke();
+                _instance.Close(true);
                 return;
             }
 
@@ -140,15 +156,10 @@ namespace CognitiveVR
             if (!enabled)
             {
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
-                if (closeAction != null)
-                    closeAction.Invoke();
+                _instance.Close(true);
                 return;
             }
 
-            if (_instance != null)
-            {
-                Destroy(_instance.gameObject);
-            }
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
 
             _instance._transform.position = position;
@@ -165,8 +176,7 @@ namespace CognitiveVR
         {
             if (CognitiveVR_Manager.HMD == null)
             {
-                if (closeAction != null)
-                    closeAction.Invoke();
+                _instance.Close(true);
                 return;
             }
 
@@ -174,16 +184,10 @@ namespace CognitiveVR
             if (!enabled)
             {
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
-                if (closeAction != null)
-                    closeAction.Invoke();
+                _instance.Close(true);
                 return;
             }
 
-            if (_instance != null)
-            {
-                Destroy(_instance.gameObject);
-                Debug.Log("destroy old instance");
-            }
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
 
             //set position and rotation
@@ -204,9 +208,7 @@ namespace CognitiveVR
                 if (hit.distance < _instance.MinimumDisplayDistance)
                 {
                     //too close! just fail the popup and keep playing the game
-                    if (closeAction != null)
-                        closeAction.Invoke();
-                    Debug.Log("too close to camera!");
+                    _instance.Close(true);
                     return;
                 }
                 else
@@ -222,18 +224,14 @@ namespace CognitiveVR
 
         static void PostInitialize(System.Action closeAction, ExitPollPanelType exitpollType)
         {
-            Debug.Log("exitpollType " + exitpollType.ToString());
-
             //initialize variables
             if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
             {
                 System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, ExitPollPanelType.ExitPollMicrophonePanel);
                 _instance._closeAction = microphoneAction;
-                Debug.Log("set microphone action");
             }
             else
             {
-                Debug.Log("set close action");
                 _instance._closeAction = closeAction;
             }
 
@@ -276,13 +274,11 @@ namespace CognitiveVR
                     Title.text = tuningQuestion[0];
                     Question.text = tuningQuestion[1];
                     SetVisible(true);
-                    Debug.Log("fetch question from tuning variable! " + Question);
                 }
                 else
                 {
                     //debug tuning variable incorrect format. should be title|question
-                    if (_closeAction != null)
-                        _closeAction.Invoke();
+                    Close(true);
                     Util.logDebug("TuningVariable ExitPollQuestion is in the wrong format! should be 'title|question'");
                 }
 
@@ -291,12 +287,13 @@ namespace CognitiveVR
 
             Debug.LogWarning("couldn't get tuning variable question!");
 
+            Close(true);
+
             yield return null;
         }
 
         public void SetVisible(bool visible)
         {
-            Debug.Log("set visible");
             //runs x/y scale through animation curve
             StartCoroutine(_SetVisible(visible));
         }
@@ -331,7 +328,7 @@ namespace CognitiveVR
                     yield return null;
                 }
                 _panel.localScale = Vector3.zero;
-                _instance.gameObject.SetActive(false);
+                gameObject.SetActive(false);
                 if (_reticule)
                 {
                     Destroy(_reticule);
@@ -351,9 +348,10 @@ namespace CognitiveVR
         {
             //don't try to close again if the question has already started closing
             if (_closeAction == null) { return; }
+            if (_completed) { return; }
             if (CognitiveVR_Manager.HMD == null)
             {
-                Close();
+                Close(true);
                 return;
             }
             if (_allowTimeout)
@@ -368,7 +366,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    Close();
+                    Close(true);
                     return;
                 }
             }
@@ -412,7 +410,7 @@ namespace CognitiveVR
                         if (directionDot < 0)
                             rotateSpeed *= -1;
 
-                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                        _panel.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                     }
                 }
                 else
@@ -425,7 +423,7 @@ namespace CognitiveVR
                         float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
 
                         _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
-                        _transform.rotation = Quaternion.Lerp(_transform.rotation, CognitiveVR_Manager.HMD.rotation, 0.1f);
+                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, CognitiveVR_Manager.HMD.up), 0.1f);
                     }
                 }
             }
@@ -437,40 +435,69 @@ namespace CognitiveVR
                 TimeoutBar.fillAmount = _remainingTime / TimeOut;
         }
 
+        //from buttons
         public void Answer(bool positive)
         {
-            //transaction
-            Instrumentation.Transaction("ExitPoll").setProperty("Question", Question.text).setProperty("Answer", positive).beginAndEnd();
-
-
+            if (_completed) { return; }
+            _completed = true;
             //question
-            ExitPollTuningQuestion q = new ExitPollTuningQuestion();
-            q.answer = positive.ToString();
-            q.question = Question.text;
+            ExitPollTuningQuestion question = new ExitPollTuningQuestion();
+            question.answer = positive.ToString();
+            question.question = Question.text;
 
             //response details
-            ExitPollResponse r = new ExitPollResponse();
-            r.customerId = CognitiveVR_Preferences.Instance.CustomerID;
-            r.pollState = "OPEN";
-            r.pollValues = new ExitPollTuningQuestion[1] { q };
-            r.properties = null;
+            ExitPollResponse response = new ExitPollResponse();
+            response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
+            response.pollState = "OPEN";
+            response.pollValues = new ExitPollTuningQuestion[1] { question };
             var key = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             if (key != null)
             {
-                r.sceneId = key.SceneKey;
-                //r.sessionId = Core.SessionId; //NEED TO GET THIS FROM INIT
+                response.sceneId = key.SceneKey;
+                response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
+                response.sessionId = (int)CognitiveVR_Manager.TimeStamp + "_" + Core.UniqueID;
 
-                r.timestamp = Util.Timestamp();
+                string url = "http://testapi.cognitivevr.io/poll";
+                string jsonResponse = JsonUtility.ToJson(response, true);
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 
-                //TODO send this to a server somwhere
-                string s = JsonUtility.ToJson(r, true);
-                Debug.Log(s);
+                Debug.Log(jsonResponse);
+
+                StartCoroutine(SendAnswer(bytes, url));
+            }
+            else
+            {
+                //may get exit poll without a scenekey
+                //Instrumentation.Transaction("ExitPoll").setProperty("Question", Question.text).setProperty("Answer", positive).beginAndEnd();
+                Close();
+            }
+        }
+
+        private IEnumerator SendAnswer(byte[] bytes, string url)
+        {
+            var headers = new Dictionary<string, string>();
+            headers.Add("Content-Type", "application/json");
+            headers.Add("X-HTTP-Method-Override", "POST");
+
+            WWW www = new UnityEngine.WWW(url, bytes, headers);
+            yield return www; //10 second timeout by default
+
+            if (!string.IsNullOrEmpty(www.error))
+            {
+                Debug.Log("error response: " + www.error);
+            }
+            else
+            {
+                Response response = JsonUtility.FromJson<Response>(www.text);
+                Instrumentation.Transaction("ExitPoll").setProperty("pollId", response.pollId).beginAndEnd();
+                Debug.Log("exit poll is " + response.pollId);
             }
 
             Close();
         }
 
-        public void Close()
+        //from buttons
+        public void Close(bool immediate = false)
         {
             //disable button actions
             PositiveButtonScript.enabled = false;
@@ -480,12 +507,25 @@ namespace CognitiveVR
 
             //call close action
             if (_closeAction != null)
+            {
                 _closeAction.Invoke();
+            }
 
             _closeAction = null;
 
-            //make invisible
-            SetVisible(false);
+            if (immediate)
+            {
+                gameObject.SetActive(false);
+                if (_reticule)
+                {
+                    Destroy(_reticule);
+                }
+                Destroy(gameObject);
+            }
+            else
+            {
+                SetVisible(false);
+            }
         }
     }
 }

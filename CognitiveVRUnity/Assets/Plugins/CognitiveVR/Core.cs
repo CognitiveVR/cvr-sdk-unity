@@ -11,7 +11,7 @@ namespace CognitiveVR
     public class Core
     {
         private const string SDK_NAME_PREFIX = "unity";
-        private const string SDK_VERSION = "0.4.6";
+        private const string SDK_VERSION = "0.4.7";
         public static string SDK_Version { get { return SDK_VERSION; } }
         internal const string HUB_OBJECT = "CognitiveVR_Manager";
 
@@ -36,6 +36,21 @@ namespace CognitiveVR
             get
             {
                 return CoreSubsystem.DeviceId;
+            }
+        }
+
+        /// <summary>
+        /// returns userID. if userID is empty, returns deviceID
+        /// </summary>
+        public static string UniqueID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return userId;
+                }
+                return deviceId;
             }
         }
 

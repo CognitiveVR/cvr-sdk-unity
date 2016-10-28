@@ -19,7 +19,6 @@ namespace CognitiveVR
             base.CognitiveVR_Init(initError);
 
             CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-
         }
 
         private void CognitiveVR_Manager_OnTick()
