@@ -40,9 +40,11 @@ namespace CognitiveVR
 
         bool _recording;
         bool _finishedRecording;
-        float _maxUploadWaitTime = 2;
+        float _maxUploadWaitTime = 5;
 
         public int RecordTime = 10;
+
+        public Image MicrophoneImage;
 
         Transform _t;
         Transform _transform
@@ -64,6 +66,8 @@ namespace CognitiveVR
             _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
+            MicrophoneImage.transform.localScale = Vector3.one;
+            Fill.color = Color.white;
         }
 
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
@@ -77,6 +81,8 @@ namespace CognitiveVR
             {
                 _currentRecordTime -= Time.deltaTime;
                 UpdateFillAmount();
+                MicrophoneImage.transform.localScale = Vector3.Lerp(MicrophoneImage.transform.localScale, Vector3.one * 0.5f + Vector3.one * Mathf.Clamp(MicrophoneUtility.LevelMax(clip), 0, 0.5f), 0.1f);
+
                 if (_currentRecordTime <= 0)
                 {
                     Microphone.End(null);
@@ -98,6 +104,7 @@ namespace CognitiveVR
                         Debug.Log("recording");
                         // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
                         clip = Microphone.Start(null, false, RecordTime, outputRate);
+                        Fill.color = Color.red;
 
                         GetComponentInParent<ExitPollPanel>().DisableTimeout();
 
@@ -116,8 +123,6 @@ namespace CognitiveVR
 
         IEnumerator UploadAudio()
         {
-            //customer id or something
-
             string url = "http://someurl/poll";
             url = "";
 

@@ -3,26 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using CognitiveVR;
+using CognitiveVR.Json;
 
 //visibility changes in a coroutine
-
 namespace CognitiveVR
 {
-    public enum ExitPollPanelType
+    namespace Json
     {
-        ExitPollMicrophonePanel,
-        ExitPollQuestionPanel,
-    }
-
-    public class ExitPollPanel : MonoBehaviour
-    {
-        class ExitPollResponse
+        //these are filled/emptied from json, so may not be directly referenced
+#pragma warning disable 0649
+        class ExitPollRequest
         {
             public string customerId;
-            public string sessionId;
-            public string pollState; //what are the poll states?
+            public string sessionId; //sessionID for scene explorer
             public ExitPollTuningQuestion[] pollValues;
-            public string sceneId;
             public int timestamp;
             public ExitPollProperties[] properties = new ExitPollProperties[0];
         }
@@ -41,11 +35,21 @@ namespace CognitiveVR
             public string answer;
         }
 
-        class Response
+        class ExitPollResponse
         {
             public string pollId;
         }
+#pragma warning restore 0649
+    }
 
+    public enum ExitPollPanelType
+    {
+        ExitPollMicrophonePanel,
+        ExitPollQuestionPanel,
+    }
+
+    public class ExitPollPanel : MonoBehaviour
+    {
         ExitPollPanelType _exitPollPanelType;
         System.Action _closeAction;
 
@@ -148,6 +152,8 @@ namespace CognitiveVR
         {
             if (CognitiveVR_Manager.HMD == null)
             {
+                if (closeAction != null)
+                    closeAction.Invoke();
                 _instance.Close(true);
                 return;
             }
@@ -156,6 +162,8 @@ namespace CognitiveVR
             if (!enabled)
             {
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
+                if (closeAction != null)
+                    closeAction.Invoke();
                 _instance.Close(true);
                 return;
             }
@@ -174,8 +182,11 @@ namespace CognitiveVR
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
         public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType)
         {
+            //set initially, so if this has to close early, it can proceed with gameplay
             if (CognitiveVR_Manager.HMD == null)
             {
+                if (closeAction != null)
+                    closeAction.Invoke();
                 _instance.Close(true);
                 return;
             }
@@ -184,6 +195,8 @@ namespace CognitiveVR
             if (!enabled)
             {
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
+                if (closeAction != null)
+                    closeAction.Invoke();
                 _instance.Close(true);
                 return;
             }
@@ -203,17 +216,32 @@ namespace CognitiveVR
             }
 
             RaycastHit hit = new RaycastHit();
-            if (Physics.SphereCast(CognitiveVR_Manager.HMD.position, 0.5f, tempPosition - CognitiveVR_Manager.HMD.position, out hit, _instance.DisplayDistance, _instance.LayerMask))
+
+            Collider[] colliderHits = Physics.OverlapSphere(CognitiveVR_Manager.HMD.position + Vector3.forward * 0.5f, 0.5f, _instance.LayerMask);
+            if (colliderHits.Length > 0)
             {
-                if (hit.distance < _instance.MinimumDisplayDistance)
+                //too close! just fail the popup and keep playing the game
+                if (closeAction != null)
+                    closeAction.Invoke();
+                _instance.Close(true);
+                return;
+            }
+
+            //ray from slightly behind the player's hmd position
+            Vector3 startPos = CognitiveVR_Manager.HMD.position - CognitiveVR_Manager.HMD.forward;
+            if (Physics.SphereCast(startPos, 0.5f, tempPosition - CognitiveVR_Manager.HMD.position, out hit, _instance.DisplayDistance + 1, _instance.LayerMask))
+            {
+                if (hit.distance < _instance.MinimumDisplayDistance + 1)
                 {
                     //too close! just fail the popup and keep playing the game
+                    if (closeAction != null)
+                        closeAction.Invoke();
                     _instance.Close(true);
                     return;
                 }
                 else
                 {
-                    tempPosition = CognitiveVR_Manager.HMD.position + (tempPosition - CognitiveVR_Manager.HMD.position).normalized * hit.distance;
+                    tempPosition = CognitiveVR_Manager.HMD.position + (tempPosition - CognitiveVR_Manager.HMD.position).normalized * (hit.distance + 1);
                 }
             }
 
@@ -446,31 +474,19 @@ namespace CognitiveVR
             question.question = Question.text;
 
             //response details
-            ExitPollResponse response = new ExitPollResponse();
+            ExitPollRequest response = new ExitPollRequest();
             response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
-            response.pollState = "OPEN";
             response.pollValues = new ExitPollTuningQuestion[1] { question };
-            var key = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            if (key != null)
-            {
-                response.sceneId = key.SceneKey;
-                response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
-                response.sessionId = (int)CognitiveVR_Manager.TimeStamp + "_" + Core.UniqueID;
+            response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
+            response.sessionId = (int)CognitiveVR_Manager.TimeStamp + "_" + Core.UniqueID;
 
-                string url = "http://testapi.cognitivevr.io/poll";
-                string jsonResponse = JsonUtility.ToJson(response, true);
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
+            string url = "http://testapi.cognitivevr.io/poll";
+            string jsonResponse = JsonUtility.ToJson(response, true);
+            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 
-                Debug.Log(jsonResponse);
+            Debug.Log(jsonResponse);
 
-                StartCoroutine(SendAnswer(bytes, url));
-            }
-            else
-            {
-                //may get exit poll without a scenekey
-                //Instrumentation.Transaction("ExitPoll").setProperty("Question", Question.text).setProperty("Answer", positive).beginAndEnd();
-                Close();
-            }
+            StartCoroutine(SendAnswer(bytes, url));
         }
 
         private IEnumerator SendAnswer(byte[] bytes, string url)
@@ -480,7 +496,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "POST");
 
             WWW www = new UnityEngine.WWW(url, bytes, headers);
-            yield return www; //10 second timeout by default
+            yield return www; //10 second timeout by default on unity's www class
 
             if (!string.IsNullOrEmpty(www.error))
             {
@@ -488,7 +504,7 @@ namespace CognitiveVR
             }
             else
             {
-                Response response = JsonUtility.FromJson<Response>(www.text);
+                ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
                 Instrumentation.Transaction("ExitPoll").setProperty("pollId", response.pollId).beginAndEnd();
                 Debug.Log("exit poll is " + response.pollId);
             }

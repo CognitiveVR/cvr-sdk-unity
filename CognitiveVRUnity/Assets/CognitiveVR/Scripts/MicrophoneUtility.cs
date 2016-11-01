@@ -146,5 +146,38 @@ namespace CognitiveVR
             byte[] subChunk2 = BitConverter.GetBytes(samples * channels * 2);
             fileStream.Write(subChunk2, 0, 4);
         }
+
+
+        //https://forum.unity3d.com/threads/check-current-microphone-input-volume.133501/
+        //http://answers.unity3d.com/questions/1188892/error-executing-result-instance-m-sound-lockoffset.html
+
+        static int _sampleWindow = 128;
+        //get data from microphone into audioclip
+        public static float LevelMax(AudioClip clip)
+        {
+            float levelMax = 0;
+            float[] waveData = new float[_sampleWindow];
+            int micPosition = Microphone.GetPosition(null) - (_sampleWindow + 1); // null means the first microphone
+            if (micPosition < 0) { return 0; } //not enough samples
+
+            //Debug.Log(waveData.Length + " wave data length sample. channels == "+ clip.channels +" microphone position " + micPosition);
+            //TODO find a better way of dealing with this. has to do with unity audio thread?
+            clip.GetData(waveData, micPosition);
+            
+
+
+            // Getting a peak on the last 128 samples
+            for (int i = 0; i < _sampleWindow; i++)
+            {
+                float wavePeak = waveData[i] * waveData[i];
+                if (levelMax < wavePeak)
+                {
+                    levelMax = wavePeak;
+                }
+            }
+
+            levelMax *= 128;
+            return levelMax;
+        }
     }
 }
