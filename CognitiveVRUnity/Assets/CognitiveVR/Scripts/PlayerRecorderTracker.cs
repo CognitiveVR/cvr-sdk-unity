@@ -332,6 +332,8 @@ namespace CognitiveVR
             //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
+            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(",");
             //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");
 
@@ -363,6 +365,8 @@ namespace CognitiveVR
 
             //header
             builder.Append(SetString("userid", Core.userId));
+            builder.Append(",");
+            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
             builder.Append(",");
             //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");

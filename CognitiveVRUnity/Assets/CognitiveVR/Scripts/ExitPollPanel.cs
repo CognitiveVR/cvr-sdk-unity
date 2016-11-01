@@ -148,7 +148,7 @@ namespace CognitiveVR
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, Vector3 position, ExitPollPanelType exitpollType)
+        public static void Initialize(System.Action closeAction, Vector3 position, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             if (CognitiveVR_Manager.HMD == null)
             {
@@ -180,7 +180,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType)
+        public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             //set initially, so if this has to close early, it can proceed with gameplay
             if (CognitiveVR_Manager.HMD == null)
