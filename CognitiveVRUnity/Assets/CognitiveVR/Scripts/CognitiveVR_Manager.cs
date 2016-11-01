@@ -141,6 +141,9 @@ namespace CognitiveVR
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
 
+        [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
+        public bool EnableLogging = false;
+
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
         /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
@@ -157,10 +160,16 @@ namespace CognitiveVR
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
 
+            if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
+            {
+                if (EnableLogging){ Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
+                return;
+            }
+
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: false,
+                logEnabled: EnableLogging,
                 userInfo: GetUniqueEntityID()
             );
             CognitiveVR.Core.init(initParams, InitEvent);

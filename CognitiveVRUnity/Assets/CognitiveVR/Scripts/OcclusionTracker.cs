@@ -25,17 +25,46 @@ namespace CognitiveVR
         }
 
 #if CVR_OCULUS
+        string rRouchGUID;
+        string lTouchGUID;
+        void Update()
+        {
+            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && string.IsNullOrEmpty(rRouchGUID))
+            {
+                rRouchGUID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("cvr.tracking", rRouchGUID).setProperty("Device","RTouch").setProperty("visible",false).begin();
+
+            }
+            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && !string.IsNullOrEmpty(rRouchGUID))
+            {
+                Instrumentation.Transaction("cvr.tracking", rRouchGUID).end();
+                rRouchGUID = string.Empty;
+            }
+
+            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && string.IsNullOrEmpty(lTouchGUID))
+            {
+                lTouchGUID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("cvr.tracking", lTouchGUID).setProperty("Device", "LTouch").setProperty("visible", false).begin();
+
+            }
+            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && !string.IsNullOrEmpty(lTouchGUID))
+            {
+                Instrumentation.Transaction("cvr.tracking", lTouchGUID).end();
+                lTouchGUID = string.Empty;
+            }
+        }
+
         string hmdGUID;
         private void OVRManager_TrackingLost()
         {
-            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", false).end();
-            hmdGUID = string.Empty;
+            hmdGUID = System.Guid.NewGuid().ToString();
+            Instrumentation.Transaction("cvr.tracking", hmdGUID).setProperty("Device", "HMD").begin();
         }
 
         private void OVRManager_TrackingAcquired()
         {
-            hmdGUID = System.Guid.NewGuid().ToString();
-            Instrumentation.Transaction("Tracking", hmdGUID).setProperty("Device", "HMD").setProperty("visible", true).begin();
+            Instrumentation.Transaction("cvr.tracking", hmdGUID).setProperty("Device", "HMD").end();
+            hmdGUID = string.Empty;
         }
 #endif
 
@@ -74,30 +103,31 @@ namespace CognitiveVR
             {
                 if (!poses[Devices[j].deviceID].bPoseIsValid)
                 {
-                    if (Devices[j].ValidTransID == string.Empty)
+                    if (!Devices[j].ValidTransID == string.Empty)
                     {
-                        Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", false).begin();
+                        Instrumentation.Transaction("cvr.tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j].deviceID).setProperty("visible", true).end();
+                    Devices[j].ValidTransID = string.Empty;
                     }
                 }
-                else if (Devices[j].ValidTransID != string.Empty)
+                else if (Devices[j].ValidTransID == string.Empty)
                 {
-                    Instrumentation.Transaction("Tracking", Devices[j].ValidTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("visible", true).end();
-                    Devices[j].ValidTransID = string.Empty;
+                    Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
+                    Instrumentation.Transaction("cvr.tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j].deviceID).setProperty("visible", false).begin();
                 }
 
                 if (!poses[Devices[j].deviceID].bDeviceIsConnected)
                 {
-                    if (Devices[j].ValidTransID == string.Empty)
+                    if (!Devices[j].ValidTransID == string.Empty)
                     {
-                        Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
-                        Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", false).begin();
+                        Instrumentation.Transaction("cvr.tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j].deviceID).setProperty("connected", true).end();
+                        Devices[j].ConnectedTransID = string.Empty;    
                     }
                 }
-                else if (Devices[j].ConnectedTransID != string.Empty)
+                else if (Devices[j].ConnectedTransID == string.Empty)
                 {
-                    Instrumentation.Transaction("Tracking", Devices[j].ConnectedTransID).setProperty("deviceID", Devices[j].deviceID).setProperty("connected", true).end();
-                    Devices[j].ConnectedTransID = string.Empty;
+                    Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
+                    Instrumentation.Transaction("cvr.tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j].deviceID).setProperty("connected", false).begin();
+                    
                 }
             }
         }

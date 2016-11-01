@@ -200,7 +200,7 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
             if (option.Contains("CVR_STEAMVR")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR"))
+            if (GUILayout.Button("Steam VR 1.1.1+"))
             {
                 if (option.Contains("CVR_STEAMVR"))
                     option.Remove("CVR_STEAMVR");
@@ -214,7 +214,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_OCULUS")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Oculus VR"))
+            if (GUILayout.Button("Oculus Utilities 1.8.0+"))
             {
                 if (option.Contains("CVR_OCULUS"))
                     option.Remove("CVR_OCULUS");

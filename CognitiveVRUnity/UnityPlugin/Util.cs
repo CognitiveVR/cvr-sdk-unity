@@ -168,7 +168,7 @@ namespace CognitiveVR
         /// <summary>
 		/// Get the Unix timestamp
 		/// </summary>
-		internal static double Timestamp()
+		public static double Timestamp()
 		{
 			TimeSpan span = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			return span.TotalSeconds;

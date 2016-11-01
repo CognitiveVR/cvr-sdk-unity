@@ -2,9 +2,9 @@ The cognitiveVR SDK for Unity
 =========
 Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, which provides analytics and insights about your Unity project.  In addition, cognitiveVR empowers you with the ability to take actions that will improve users' engagement with your experience.
 
-This includes the SceneExplorer export options as well as the Player Recorder component.
+**This plugin now requires Unity 5.4.1p1 or newer**
 
-Last Updated: Sept 13, 2016
+Last Updated: Nov 1, 2016
 
 
 Quickstart

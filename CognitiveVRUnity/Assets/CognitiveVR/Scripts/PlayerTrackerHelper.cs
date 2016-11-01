@@ -14,7 +14,8 @@ namespace CognitiveVR
         Material _mat;
         Material material
         {
-            get {
+            get
+            {
                 if (_mat == null)
                     _mat = new Material(Shader.Find("Hidden/CognitiveVRSceneDepth"));
                 return _mat;

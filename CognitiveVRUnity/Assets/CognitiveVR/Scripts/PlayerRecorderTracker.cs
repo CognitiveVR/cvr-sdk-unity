@@ -22,7 +22,7 @@ namespace CognitiveVR
 
         Camera cam;
         PlayerTrackerHelper periodicRenderer;
-        
+
         //TODO level loaded stuff should use cognitivevr_manager events
 
         public override void CognitiveVR_Init(Error initError)
@@ -169,7 +169,7 @@ namespace CognitiveVR
             if (trackerInstance != null)
             {
                 CognitiveVR_Manager.OnTick += trackerInstance.CognitiveVR_Manager_OnTick;
-                
+
             }
         }
 
@@ -240,7 +240,7 @@ namespace CognitiveVR
                 Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
-            Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "("+ sceneSettings.SceneKey+")");
+            Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneKey + ")");
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -279,7 +279,7 @@ namespace CognitiveVR
                 if (InstrumentationSubsystem.CachedTransactions.Count > 0)
                     WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
             }
-            
+
             if (sceneSettings != null)
             {
                 string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
@@ -304,7 +304,7 @@ namespace CognitiveVR
             {
                 Debug.LogError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + trackingSceneName + "!");
             }
-            
+
             playerSnapshots.Clear();
             InstrumentationSubsystem.CachedTransactions.Clear();
         }

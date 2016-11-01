@@ -26,7 +26,8 @@ namespace CognitiveVR
             UpdateHMDRotation();
         }
 
-        float updateInterval = 3;
+        //TODO make this adjustable in cognitivevr_preference settings
+        float updateInterval = 6;
 
         float timeleft;
         float accum;
@@ -52,13 +53,13 @@ namespace CognitiveVR
                 {
                     lowFramerate = true;
                     fpsTransactionID = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("performance", fpsTransactionID).setProperty("fps", lastFps).begin();
+                    Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
                     Util.logDebug("low framerate");
                 }
                 else if (lastFps > CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && lowFramerate)
                 {
                     lowFramerate = false;
-                    Instrumentation.Transaction("performance", fpsTransactionID).end();
+                    Instrumentation.Transaction("cvr.performance", fpsTransactionID).end();
                 }
             }
         }
@@ -83,8 +84,8 @@ namespace CognitiveVR
                 rotTimeLeft = updateInterval;
                 accumRotation = 0.0F;
                 rotFrames = 0;
-                
-                Instrumentation.Transaction("comfort", fpsTransactionID)
+
+                Instrumentation.Transaction("cvr.comfort", fpsTransactionID)
                     .setProperty("fps", lastFps)
                     .setProperty("rps", lastRps)
 #if CVR_OCULUS
