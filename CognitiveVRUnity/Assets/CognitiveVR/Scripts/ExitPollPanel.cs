@@ -69,9 +69,11 @@ namespace CognitiveVR
         public float DisplayDistance = 3;
         [Tooltip("If the position is invalid (ex, in a wall), the panel moves closer to the camera. If the distance is below this value, skip the question")]
         public float MinimumDisplayDistance = 1;
+        [Tooltip("Mask for what things the exit poll will 'hit' and appear in front of if too close to a surface")]
+        public LayerMask LayerMask;
+        public float PopupTime = 0.2f;
         public AnimationCurve XScale;
         public AnimationCurve YScale;
-        public float PopupTime = 0.2f;
 
         //when the user finishes answering the question or finishes closing the window
         bool _completed = false;
@@ -83,9 +85,6 @@ namespace CognitiveVR
         public float TimeOut = 10;
         float _remainingTime;
         bool _allowTimeout = true;
-
-        [Tooltip("Mask for what things the exit poll will 'hit' and appear in front of if too close to a surface")]
-        public LayerMask LayerMask;
 
         [Header("Display Options")]
         [Tooltip("Use to HMD Y position instead of spawning the poll directly ahead of the player")]
