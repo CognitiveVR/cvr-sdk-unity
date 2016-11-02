@@ -40,11 +40,14 @@ namespace CognitiveVR
 
         bool _recording;
         bool _finishedRecording;
-        float _maxUploadWaitTime = 5;
+        float _maxUploadWaitTime = 2;
 
         public int RecordTime = 10;
 
         public Image MicrophoneImage;
+        public Image MicrophoneBackgroundImage;
+        public Color LowVolumeColor;
+        public Color HighVolumeColor;
 
         Transform _t;
         Transform _transform
@@ -68,6 +71,7 @@ namespace CognitiveVR
             _theta = Mathf.Cos(_angle);
             MicrophoneImage.transform.localScale = Vector3.one;
             Fill.color = Color.white;
+            MicrophoneBackgroundImage.color = LowVolumeColor;
         }
 
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
@@ -81,7 +85,9 @@ namespace CognitiveVR
             {
                 _currentRecordTime -= Time.deltaTime;
                 UpdateFillAmount();
-                MicrophoneImage.transform.localScale = Vector3.Lerp(MicrophoneImage.transform.localScale, Vector3.one * 0.5f + Vector3.one * Mathf.Clamp(MicrophoneUtility.LevelMax(clip), 0, 0.5f), 0.1f);
+                float volumeLevel = MicrophoneUtility.LevelMax(clip);
+                MicrophoneImage.transform.localScale = Vector3.Lerp(MicrophoneImage.transform.localScale, Vector3.one * 0.5f + Vector3.one * Mathf.Clamp(volumeLevel, 0, 0.5f), 0.1f);
+                MicrophoneBackgroundImage.color = Color.Lerp(LowVolumeColor, Color.Lerp(MicrophoneBackgroundImage.color, HighVolumeColor, Mathf.Clamp(volumeLevel, 0, 1f)), 0.1f);
 
                 if (_currentRecordTime <= 0)
                 {
@@ -123,16 +129,21 @@ namespace CognitiveVR
 
         IEnumerator UploadAudio()
         {
+            //customer id or something
+
             string url = "http://someurl/poll";
             url = "";
 
             byte[] bytes;
-            string filepath = CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
+            CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
             //TODO upload to some server byte by byte
 
             var headers = new Dictionary<string, string>();
             //headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
+
+            //DEBUGGING
+            //File.WriteAllBytes("DebugMicrophoneRecord.wav", bytes);
 
             WWW www = new UnityEngine.WWW(url, bytes, headers);
 

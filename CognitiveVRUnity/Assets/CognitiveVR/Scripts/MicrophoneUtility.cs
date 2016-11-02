@@ -24,6 +24,8 @@
 //  derived from Gregorio Zanon's script
 //  http://forum.unity3d.com/threads/119295-Writing-AudioListener.GetOutputData-to-wav-problem?p=806734&viewfull=1#post806734
 
+//This version has been altered to put the wav into bytes instead of writing to disk
+
 using System;
 using System.IO;
 using UnityEngine;
@@ -35,23 +37,17 @@ namespace CognitiveVR
     {
         const int HEADER_SIZE = 44;
 
-        public static string Save(AudioClip clip, out byte[] fileBytes)
+        public static void Save(AudioClip clip, out byte[] fileBytes)
         {
-            string filename = Guid.NewGuid().ToString() + ".wav";
+            byte[] data;
+            byte[] headers;
 
-            var filepath = Path.Combine(Application.persistentDataPath, filename);
+            data = ConvertAndWrite(clip);
+            headers = WriteHeader(clip, data);
 
-            // Make sure directory exists if user is saving to sub dir.
-            Directory.CreateDirectory(Path.GetDirectoryName(filepath));
-
-            using (var fileStream = CreateEmpty(filepath))
-            {
-                ConvertAndWrite(fileStream, clip);
-                WriteHeader(fileStream, clip);
-                fileBytes = new byte[fileStream.Length];
-                fileStream.Read(fileBytes, 0, (int)fileStream.Length);
-            }
-            return filepath;
+            fileBytes = new byte[data.Length + headers.Length];
+            headers.CopyTo(fileBytes, 0);
+            data.CopyTo(fileBytes, headers.Length);
         }
 
         static FileStream CreateEmpty(string filepath)
@@ -67,7 +63,7 @@ namespace CognitiveVR
             return fileStream;
         }
 
-        static void ConvertAndWrite(FileStream fileStream, AudioClip clip)
+        static byte[] ConvertAndWrite(AudioClip clip)
         {
 
             var samples = new float[clip.samples];
@@ -90,61 +86,62 @@ namespace CognitiveVR
                 byteArr = BitConverter.GetBytes(intData[i]);
                 byteArr.CopyTo(bytesData, i * 2);
             }
-
-            fileStream.Write(bytesData, 0, bytesData.Length);
+            return bytesData;
         }
 
-        static void WriteHeader(FileStream fileStream, AudioClip clip)
+        static byte[] WriteHeader(AudioClip clip, byte[] data)
         {
+            List<byte> returnBytes = new List<byte>();
 
             var hz = clip.frequency;
             var channels = clip.channels;
             var samples = clip.samples;
 
-            fileStream.Seek(0, SeekOrigin.Begin);
+            byte[] riff = System.Text.Encoding.UTF8.GetBytes("RIFF"); //4
+            returnBytes.AddRange(riff);
 
-            byte[] riff = System.Text.Encoding.UTF8.GetBytes("RIFF");
-            fileStream.Write(riff, 0, 4);
+            byte[] chunkSize = BitConverter.GetBytes(data.Length - 8); //4
+            returnBytes.AddRange(chunkSize);
 
-            byte[] chunkSize = BitConverter.GetBytes(fileStream.Length - 8);
-            fileStream.Write(chunkSize, 0, 4);
+            byte[] wave = System.Text.Encoding.UTF8.GetBytes("WAVE"); //4
+            returnBytes.AddRange(wave);
 
-            byte[] wave = System.Text.Encoding.UTF8.GetBytes("WAVE");
-            fileStream.Write(wave, 0, 4);
+            byte[] fmt = System.Text.Encoding.UTF8.GetBytes("fmt "); //4
+            returnBytes.AddRange(fmt);
 
-            byte[] fmt = System.Text.Encoding.UTF8.GetBytes("fmt ");
-            fileStream.Write(fmt, 0, 4);
-
-            byte[] subChunk1 = BitConverter.GetBytes(16);
-            fileStream.Write(subChunk1, 0, 4);
+            byte[] subChunk1 = BitConverter.GetBytes(16); //4
+            returnBytes.AddRange(subChunk1);
 
             ushort one = 1;
-            //ushort two = 2;
+            byte[] audioFormat = BitConverter.GetBytes(one); //2
+            returnBytes.AddRange(audioFormat);
+
+            byte[] numChannels = BitConverter.GetBytes(channels); //2
+            byte[] returnchannels = new byte[2];
+            returnchannels[0] = numChannels[0];
+            returnchannels[1] = numChannels[1];
+            returnBytes.AddRange(returnchannels);
+
+            byte[] sampleRate = BitConverter.GetBytes(hz); //4
+            returnBytes.AddRange(sampleRate);
+
+            byte[] byteRate = BitConverter.GetBytes(hz * channels * 2);  //4 // sampleRate * bytesPerSample*number of channels, here 44100*2*2
+            returnBytes.AddRange(byteRate);
+
+            ushort blockAlign = (ushort)(channels * 2); //2
+            returnBytes.AddRange(BitConverter.GetBytes(blockAlign));
+
             ushort bps = 16;
+            byte[] bitsPerSample = BitConverter.GetBytes(bps); //2
+            returnBytes.AddRange(bitsPerSample);
 
-            byte[] audioFormat = BitConverter.GetBytes(one);
-            fileStream.Write(audioFormat, 0, 2);
+            byte[] datastring = System.Text.Encoding.UTF8.GetBytes("data"); //4
+            returnBytes.AddRange(datastring);
 
-            byte[] numChannels = BitConverter.GetBytes(channels);
-            fileStream.Write(numChannels, 0, 2);
+            byte[] subChunk2 = BitConverter.GetBytes(samples * channels * 2); //4
+            returnBytes.AddRange(subChunk2);
 
-            byte[] sampleRate = BitConverter.GetBytes(hz);
-            fileStream.Write(sampleRate, 0, 4);
-
-            byte[] byteRate = BitConverter.GetBytes(hz * channels * 2); // sampleRate * bytesPerSample*number of channels, here 44100*2*2
-            fileStream.Write(byteRate, 0, 4);
-
-            ushort blockAlign = (ushort)(channels * 2);
-            fileStream.Write(BitConverter.GetBytes(blockAlign), 0, 2);
-
-            byte[] bitsPerSample = BitConverter.GetBytes(bps);
-            fileStream.Write(bitsPerSample, 0, 2);
-
-            byte[] datastring = System.Text.Encoding.UTF8.GetBytes("data");
-            fileStream.Write(datastring, 0, 4);
-
-            byte[] subChunk2 = BitConverter.GetBytes(samples * channels * 2);
-            fileStream.Write(subChunk2, 0, 4);
+            return returnBytes.ToArray();
         }
 
 
@@ -160,10 +157,8 @@ namespace CognitiveVR
             int micPosition = Microphone.GetPosition(null) - (_sampleWindow + 1); // null means the first microphone
             if (micPosition < 0) { return 0; } //not enough samples
 
-            //Debug.Log(waveData.Length + " wave data length sample. channels == "+ clip.channels +" microphone position " + micPosition);
-            //TODO find a better way of dealing with this. has to do with unity audio thread?
             clip.GetData(waveData, micPosition);
-            
+            //TODO find a way of dealing with this. error because of unity's audio thread?
 
 
             // Getting a peak on the last 128 samples
