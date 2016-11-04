@@ -50,8 +50,6 @@ namespace CognitiveVR
         string transactionID;
         void Update()
         {
-            Debug.Log(OVRManager.boundary.GetVisible());
-
             if (OVRManager.boundary.GetVisible() && string.IsNullOrEmpty(transactionID))
             {
                 transactionID = System.Guid.NewGuid().ToString();
@@ -63,9 +61,6 @@ namespace CognitiveVR
                 Instrumentation.Transaction("cvr.boundary.visible", transactionID).end();
                 transactionID = string.Empty;
             }
-
-            //if boundary.getvisible doesn't work, could test points
-            //OVRBoundary.BoundaryTestResult result = OVRManager.boundary.TestPoint(Vector3.zero, OVRBoundary.BoundaryType.PlayArea);
         }
 #endif
 
