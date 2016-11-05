@@ -13,6 +13,21 @@ namespace CognitiveVR
         string controller0GUID;
         string controller1GUID;
 
+#if CVR_OCULUS
+        OVRCameraRig _cameraRig;
+        OVRCameraRig CameraRig
+        {
+            get
+            {
+                if (_cameraRig == null)
+                {
+                    _cameraRig = FindObjectOfType<OVRCameraRig>();
+                }
+                return _cameraRig;
+            }
+        }
+#endif
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -28,8 +43,6 @@ namespace CognitiveVR
 #endif
             {
                 Vector3 pos = GetControllerPosition(0);
-
-                Debug.DrawRay(pos, Vector3.forward * 0.25f, Color.red, 0.1f);
 
                 hit = Physics.CheckSphere(pos, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller0GUID))
@@ -52,8 +65,6 @@ namespace CognitiveVR
             {
                 Vector3 pos = GetControllerPosition(1);
 
-                Debug.DrawRay(pos, Vector3.forward * 0.25f, Color.red, 0.1f);
-
                 hit = Physics.CheckSphere(pos, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller1GUID))
                 {
@@ -71,17 +82,20 @@ namespace CognitiveVR
 
         Vector3 GetControllerPosition(int index)
         {
+
 #if CVR_OCULUS
             if (index == 0)
             {
-                return OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
+                if (CameraRig != null)
+                    return CameraRig.rightHandAnchor.position;
             }
             else if (index == 1)
             {
-                return OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch);
+                if (CameraRig != null)
+                    return CameraRig.leftHandAnchor.position;
             }
 #elif CVR_STEAMVR
-            return CognitiveVR_Manager.GetController(index);
+            return CognitiveVR_Manager.GetController(index).position;
 #endif
             return Vector3.zero;
         }
