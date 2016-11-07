@@ -53,7 +53,7 @@ namespace CognitiveVR
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller0GUID))
                 {
-                    Instrumentation.Transaction("cvr.collision", controller0GUID).end();
+                    Instrumentation.Transaction("cvr.collision", controller0GUID).setProperty("device", "controller 0").end();
                     controller0GUID = string.Empty;
                 }
             }
@@ -65,6 +65,8 @@ namespace CognitiveVR
             {
                 Vector3 pos = GetControllerPosition(1);
 
+
+
                 hit = Physics.CheckSphere(pos, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller1GUID))
                 {
@@ -74,7 +76,7 @@ namespace CognitiveVR
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller1GUID))
                 {
-                    Instrumentation.Transaction("cvr.collision", controller1GUID).end();
+                    Instrumentation.Transaction("cvr.collision", controller1GUID).setProperty("device", "controller 1").end();
                     controller1GUID = string.Empty;
                 }
             }
@@ -102,7 +104,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nOnly SteamVR controllers are currently supported";
+            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nRequires SteamVR controllers or Oculus Touch controllers";
         }
     }
 }
