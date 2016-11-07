@@ -240,7 +240,7 @@ namespace CognitiveVR
                 Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
-            Debug.Log("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneKey + ")");
+            Util.logDebug("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneKey + ")");
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -285,7 +285,7 @@ namespace CognitiveVR
                 string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneKey;
                 string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneKey;
 
-                Debug.Log("uploading gaze and events to " + sceneSettings.SceneKey);
+                Util.logDebug("uploading gaze and events to " + sceneSettings.SceneKey);
 
                 byte[] bytes;
 
