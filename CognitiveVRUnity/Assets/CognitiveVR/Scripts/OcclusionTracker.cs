@@ -10,7 +10,7 @@ namespace CognitiveVR
 {
     public class OcclusionTracker : CognitiveVRAnalyticsComponent
     {
-        string chaperoneGUID;
+
 
         public override void CognitiveVR_Init(Error initError)
         {
@@ -69,6 +69,7 @@ namespace CognitiveVR
 #endif
 
 #if CVR_STEAMVR
+        string chaperoneGUID;
         List<TrackedDevice> Devices = new List<TrackedDevice>();
 
         [System.Serializable]
@@ -103,7 +104,7 @@ namespace CognitiveVR
             {
                 if (!poses[Devices[j].deviceID].bPoseIsValid)
                 {
-                    if (!Devices[j].ValidTransID == string.Empty)
+                    if (Devices[j].ValidTransID != string.Empty)
                     {
                         Instrumentation.Transaction("cvr.tracking", Devices[j].ValidTransID).setProperty("Device", Devices[j].deviceID).setProperty("visible", true).end();
                     Devices[j].ValidTransID = string.Empty;
@@ -117,7 +118,7 @@ namespace CognitiveVR
 
                 if (!poses[Devices[j].deviceID].bDeviceIsConnected)
                 {
-                    if (!Devices[j].ValidTransID == string.Empty)
+                    if (Devices[j].ValidTransID != string.Empty)
                     {
                         Instrumentation.Transaction("cvr.tracking", Devices[j].ConnectedTransID).setProperty("Device", Devices[j].deviceID).setProperty("connected", true).end();
                         Devices[j].ConnectedTransID = string.Empty;    

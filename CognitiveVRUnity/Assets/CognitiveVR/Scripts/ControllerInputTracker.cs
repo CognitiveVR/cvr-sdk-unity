@@ -79,21 +79,24 @@ namespace CognitiveVR
 #if CVR_OCULUS || CVR_STEAMVR
         void BeginTransaction(string transactionKey, string type, int controller)
         {
+            Vector3 pos = CognitiveVR_Manager.GetControllerPosition(controller);
+
             string transactionID = System.Guid.NewGuid().ToString();
             Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
             inTransaction.setProperty("controllerindex", controller).setProperty("type", type);
-            inTransaction.begin();
+            inTransaction.begin(pos);
 
             if (!pendingTransactions.ContainsKey(transactionKey))
             { pendingTransactions.Add(transactionKey, transactionID); }
         }
 
-        void EndTransaction(string transactionKey)
+        void EndTransaction(string transactionKey, string type, int controller)
         {
             string transactionID;
             if (pendingTransactions.TryGetValue(transactionKey, out transactionID))
             {
-                Instrumentation.Transaction("cvr.input", transactionID).end();
+                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(controller);
+                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("controllerindex",controller).end(pos);
                 pendingTransactions.Remove(transactionID);
             }
         }
@@ -124,12 +127,12 @@ namespace CognitiveVR
 
         private void OnGripped(object sender, ClickedEventArgs e)
         {
-            BeginTransaction("grip"+e.controllerIndex, "grip", e.controllerIndex);
+            BeginTransaction("grip"+e.controllerIndex, "grip", (int)e.controllerIndex);
         }
 
         private void OnUngripped(object sender, ClickedEventArgs e)
         {
-            EndTransaction("grip"+e.controllerIndex);
+            EndTransaction("grip"+e.controllerIndex,"grip",(int)e.controllerIndex);
         }
 
         private void OnPadClicked(object sender, ClickedEventArgs e)
@@ -147,12 +150,12 @@ namespace CognitiveVR
 
         void OnTriggerClicked(object sender, ClickedEventArgs e)
         {
-            BeginTransaction("trigger"+e.controllerIndex, "trigger", e.controllerIndex);
+            BeginTransaction("trigger"+e.controllerIndex, "trigger", (int)e.controllerIndex);
         }
 
         void OnTriggerUnclicked(object sender, ClickedEventArgs e)
         {
-            EndTransaction("trigger"+e.controllerIndex);
+            EndTransaction("trigger"+e.controllerIndex,"trigger",(int)e.controllerIndex);
         }
 #endif
 

@@ -42,7 +42,7 @@ namespace CognitiveVR
             if (CognitiveVR_Manager.GetController(0) != null)
 #endif
             {
-                Vector3 pos = GetControllerPosition(0);
+                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(0);
 
                 hit = Physics.CheckSphere(pos, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller0GUID))
@@ -63,7 +63,7 @@ namespace CognitiveVR
             if (CognitiveVR_Manager.GetController(1) != null)
 #endif
             {
-                Vector3 pos = GetControllerPosition(1);
+                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(1);
 
 
 
@@ -80,26 +80,6 @@ namespace CognitiveVR
                     controller1GUID = string.Empty;
                 }
             }
-        }
-
-        Vector3 GetControllerPosition(int index)
-        {
-
-#if CVR_OCULUS
-            if (index == 0)
-            {
-                if (CameraRig != null)
-                    return CameraRig.rightHandAnchor.position;
-            }
-            else if (index == 1)
-            {
-                if (CameraRig != null)
-                    return CameraRig.leftHandAnchor.position;
-            }
-#elif CVR_STEAMVR
-            return CognitiveVR_Manager.GetController(index).position;
-#endif
-            return Vector3.zero;
         }
 
         public static string GetDescription()

@@ -136,7 +136,42 @@ namespace CognitiveVR
 #endif
         }
 
-#endregion
+        /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
+        public static Vector3 GetControllerPosition(int id)
+        {
+#if CVR_STEAMVR
+            //TODO update controllers when new controller is detected
+            if (controllers[id] == null)
+            {
+                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
+                if (cm != null)
+                {
+                    if (cm.left != null)
+                        controllers[0] = cm.left.transform;
+                    if (cm.right != null)
+                        controllers[1] = cm.right.transform;
+                }
+            }
+            return controllers[id].position;
+#elif CVR_OCULUS
+            // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
+                        if (index == 0)
+            {
+                if (CameraRig != null)
+                    return CameraRig.rightHandAnchor.position;
+            }
+            else if (index == 1)
+            {
+                if (CameraRig != null)
+                    return CameraRig.leftHandAnchor.position;
+            }
+            return Vector3.zero;
+#else
+            return Vector3.zero;
+#endif
+        }
+
+        #endregion
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
@@ -162,7 +197,7 @@ namespace CognitiveVR
 
             if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
             {
-                if (EnableLogging){ Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
+                if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
                 return;
             }
 
@@ -231,11 +266,11 @@ namespace CognitiveVR
 #endif
         }
 
-#region Application Quit
+        #region Application Quit
         void OnApplicationQuit()
         {
             QuitEvent();
         }
-#endregion
+        #endregion
     }
 }

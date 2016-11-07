@@ -26,8 +26,10 @@ namespace CognitiveVR
             Util.cacheCurrencyInfo();
         }
 
-        public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties)
+        public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)
         {
+            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
             .setArg(category)
             .setArg(timeoutMode)
