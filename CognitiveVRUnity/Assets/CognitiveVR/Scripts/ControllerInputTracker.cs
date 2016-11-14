@@ -36,67 +36,67 @@ namespace CognitiveVR
 
             if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
             {
-                BeginTransaction("primarytrigger", "trigger", 0);
+                BeginTransaction("primarytrigger", "trigger", true);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger))
             {
-                BeginTransaction("secondarytrigger", "trigger", 1);
+                BeginTransaction("secondarytrigger", "trigger", false);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
             {
-                BeginTransaction("primarygrip", "grip", 0);
+                BeginTransaction("primarygrip", "grip", true);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
             {
-                BeginTransaction("secondarygrip", "grip", 1);
+                BeginTransaction("secondarygrip", "grip", false);
             }
 
 
             if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger))
             {
-                EndTransaction("primarytrigger");
+                EndTransaction("primarytrigger","trigger",true);
             }
             if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
             {
-                EndTransaction("secondarytrigger");
+                EndTransaction("secondarytrigger","trigger",false);
             }
 
             if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger))
             {
-                EndTransaction("primarygrip");
+                EndTransaction("primarygrip","grip",true);
             }
 
             if (OVRInput.GetUp(OVRInput.Button.SecondaryHandTrigger))
             {
-                EndTransaction("secondarygrip");
+                EndTransaction("secondarygrip","grip",false);
             }
         }
 #endif
 
 #if CVR_OCULUS || CVR_STEAMVR
-        void BeginTransaction(string transactionKey, string type, int controller)
+        void BeginTransaction(string transactionKey, string type, bool rightController)
         {
-            Vector3 pos = CognitiveVR_Manager.GetControllerPosition(controller);
+            Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
 
             string transactionID = System.Guid.NewGuid().ToString();
             Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
-            inTransaction.setProperty("controllerindex", controller).setProperty("type", type);
+            inTransaction.setProperty("device", rightController?"right controller": "left controller").setProperty("type", type);
             inTransaction.begin(pos);
 
             if (!pendingTransactions.ContainsKey(transactionKey))
             { pendingTransactions.Add(transactionKey, transactionID); }
         }
 
-        void EndTransaction(string transactionKey, string type, int controller)
+        void EndTransaction(string transactionKey, string type, bool rightController)
         {
             string transactionID;
             if (pendingTransactions.TryGetValue(transactionKey, out transactionID))
             {
-                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(controller);
-                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("controllerindex",controller).end(pos);
+                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
+                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("device", rightController ? "right controller" : "left controller").end(pos);
                 pendingTransactions.Remove(transactionID);
             }
         }
@@ -110,12 +110,13 @@ namespace CognitiveVR
             SteamVR_TrackedController controller;
             for (int i = 0; i<2; i++)
             {
+                bool right = i == 0 ? true : false;
                 //TODO run this when a controller becomes active, not just on Init
-                if (CognitiveVR_Manager.GetController(i) == null){continue;}
-                controller = CognitiveVR_Manager.GetController(i).GetComponent<SteamVR_TrackedController>();
+                if (CognitiveVR_Manager.GetController(right) == null){continue;}
+                controller = CognitiveVR_Manager.GetController(right).GetComponent<SteamVR_TrackedController>();
 
                 if (controller == null)
-                    controller = CognitiveVR_Manager.GetController(i).gameObject.AddComponent<SteamVR_TrackedController>();
+                    controller = CognitiveVR_Manager.GetController(right).gameObject.AddComponent<SteamVR_TrackedController>();
 
                 controller.TriggerClicked += new ClickedEventHandler(OnTriggerClicked);
                 controller.TriggerUnclicked += new ClickedEventHandler(OnTriggerUnclicked);
@@ -127,21 +128,27 @@ namespace CognitiveVR
 
         private void OnGripped(object sender, ClickedEventArgs e)
         {
-            BeginTransaction("grip"+e.controllerIndex, "grip", (int)e.controllerIndex);
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+
+            BeginTransaction("grip" + e.controllerIndex, "grip", cont.isRight);
         }
 
         private void OnUngripped(object sender, ClickedEventArgs e)
         {
-            EndTransaction("grip"+e.controllerIndex,"grip",(int)e.controllerIndex);
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+
+            EndTransaction("grip" + e.controllerIndex, "grip", cont.isRight);
         }
 
         private void OnPadClicked(object sender, ClickedEventArgs e)
         {
             Transaction padTransaction = Instrumentation.Transaction("cvr.input");
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+            if (cont == null) { return; }
             padTransaction.setProperties(new Dictionary<string, object>
             {
                 { "type","pad" },
-                { "controllerindex",e.controllerIndex },
+                { "device", cont.isRight?"right controller":"left controller"},
                 { "x",e.padX },
                 { "y",e.padY }
             });
@@ -150,12 +157,15 @@ namespace CognitiveVR
 
         void OnTriggerClicked(object sender, ClickedEventArgs e)
         {
-            BeginTransaction("trigger"+e.controllerIndex, "trigger", (int)e.controllerIndex);
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+            BeginTransaction("trigger"+e.controllerIndex, "trigger", cont.isRight);
         }
 
         void OnTriggerUnclicked(object sender, ClickedEventArgs e)
         {
-            EndTransaction("trigger"+e.controllerIndex,"trigger",(int)e.controllerIndex);
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+
+            EndTransaction("trigger" + e.controllerIndex, "trigger", cont.isRight);
         }
 #endif
 
