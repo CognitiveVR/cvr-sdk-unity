@@ -214,7 +214,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_OCULUS")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Oculus Utilities 1.8.0+"))
+            if (GUILayout.Button("Oculus Utilities 1.9.0+"))
             {
                 if (option.Contains("CVR_OCULUS"))
                     option.Remove("CVR_OCULUS");
