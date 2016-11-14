@@ -86,8 +86,6 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS) { return; }
 
-            Debug.Log("accum rotation " + accumRotation + " rotframe " + rotFrames);
-
             lastRps = accumRotation / rotFrames;
             accumRotation = 0.0F;
             rotFrames = 0;

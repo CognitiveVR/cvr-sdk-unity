@@ -138,7 +138,6 @@ namespace CognitiveVR
                         int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
                         if (controllerIndex > 0)
                         {
-                            Debug.Log("found left controller index is " + controllerIndex);
                             controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false, id = controllerIndex };
                         }
                     }
@@ -154,7 +153,6 @@ namespace CognitiveVR
                         int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
                         if (controllerIndex > 0)
                         {
-                            Debug.Log("found right controller index is " + controllerIndex);
                             controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true, id = controllerIndex };
                         }
                     }
@@ -297,22 +295,13 @@ namespace CognitiveVR
             SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
 #endif
 
-#if UNITY_5_4
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-#endif
         }
 
-#if UNITY_5_4
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             LevelLoadEvent();
         }
-#else
-        void OnLevelWasLoaded(int id)
-        {
-            LevelLoadEvent();
-        }
-#endif
 
         IEnumerator Tick()
         {

@@ -58,12 +58,10 @@ namespace CognitiveVR
             {
                 if (sceneSettings.Track)
                     BeginPlayerRecording();
-                //else
-                //Debug.Log("PlayerRecorderTracker - don't track this scene " + sceneName);
             }
             else
             {
-                //Debug.Log("PlayerRecorderTracker - startup couldn't find scene -" + sceneName);
+                Util.logDebug("PlayerRecorderTracker - startup couldn't find scene -" + sceneName);
             }
             trackingSceneName = SceneManager.GetActiveScene().name;
         }
@@ -90,7 +88,6 @@ namespace CognitiveVR
                 {
                     if (sceneKeySettings.Track)
                     {
-                        //Debug.Log("DO RECORD - " + sceneKeySettings.SceneName);
                         CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
                     }
                 }
@@ -204,7 +201,7 @@ namespace CognitiveVR
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)
             {
-                Debug.Log("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
             Util.logDebug("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneKey + ")");
@@ -269,7 +266,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.LogError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + trackingSceneName + "!");
+                Util.logError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + trackingSceneName + "!");
             }
 
             playerSnapshots.Clear();
@@ -286,7 +283,7 @@ namespace CognitiveVR
 
             yield return www;
 
-            Debug.Log("request finished - return: " + www.error);
+            Util.logDebug("request finished - return: " + www.error);
 
         }
 
