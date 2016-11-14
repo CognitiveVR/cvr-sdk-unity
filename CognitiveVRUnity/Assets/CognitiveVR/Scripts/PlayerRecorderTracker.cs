@@ -48,10 +48,8 @@ namespace CognitiveVR
             //CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
 
-#if UNITY_5_4
             //if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-#endif
 
             string sceneName = SceneManager.GetActiveScene().name;
 
@@ -70,8 +68,7 @@ namespace CognitiveVR
             trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
-#if UNITY_5_4
-        //5.4 change. replaces OnLevelWasLoaded(int)
+
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
             Scene activeScene = arg0;
@@ -101,36 +98,6 @@ namespace CognitiveVR
 
             trackingSceneName = activeScene.name;
         }
-#endif
-#if !UNITY_5_4
-        void OnLevelWasLoaded(int id)
-        {
-            Scene activeScene = SceneManager.GetActiveScene();
-
-            if (!string.IsNullOrEmpty(trackingSceneName))
-            {
-                CognitiveVR_Preferences.SceneKeySetting lastSceneKeySettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
-                if (lastSceneKeySettings != null)
-                {
-                    if (lastSceneKeySettings.Track)
-                    {
-                        SendData();
-                        CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
-                    }
-                }
-
-                CognitiveVR_Preferences.SceneKeySetting sceneKeySettings = CognitiveVR_Preferences.Instance.FindScene(activeScene.name);
-                if (sceneKeySettings != null)
-                {
-                    if (sceneKeySettings.Track)
-                    {
-                        CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-                    }
-                }
-            }
-            trackingSceneName = activeScene.name;
-        }
-#endif
 
         bool headsetPresent = true;
 #if CVR_STEAMVR
