@@ -99,6 +99,12 @@ namespace CognitiveVR
                 entityId = userId;
             }
 
+            if (sCacheVars == null)
+            {
+                Util.logError("TuningSubsystem sCacheVars have not been initialized!");
+                return defaultValue;
+            }
+
             // Grab the value from the cache
             return sCacheVars.getValue(entityType, entityId, varName, defaultValue);
         }
@@ -348,6 +354,8 @@ namespace CognitiveVR
 
             internal T getValue<T>(string type, string id, string var, T defaultValue)
             {
+                UnityEngine.Debug.Log("get value from cached vars");
+
                 T ret = defaultValue;
 
                 if (null != var)

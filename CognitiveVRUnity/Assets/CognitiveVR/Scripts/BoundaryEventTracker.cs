@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace CognitiveVR
 {
-    public class ChaperoneTracker : CognitiveVRAnalyticsComponent
+    public class BoundaryEventTracker : CognitiveVRAnalyticsComponent
     {
         string chaperoneGUID;
         public override void CognitiveVR_Init(Error initError)
@@ -21,7 +21,7 @@ namespace CognitiveVR
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
                 chaperoneGUID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("chaperone", chaperoneGUID).begin();
+                Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).begin();
                 Util.logDebug("chaperone visible");
             }
 #endif
@@ -35,20 +35,38 @@ namespace CognitiveVR
                 if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
                 {
                     chaperoneGUID = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("chaperone", chaperoneGUID).begin();
+                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).begin();
                     Util.logDebug("chaperone visible");
                 }
                 else
                 {
-                    Instrumentation.Transaction("chaperone", chaperoneGUID).end();
+                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).end();
                 }
+            }
+        }
+#endif
+
+#if CVR_OCULUS
+        string transactionID;
+        void Update()
+        {
+            if (OVRManager.boundary.GetVisible() && string.IsNullOrEmpty(transactionID))
+            {
+                transactionID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("cvr.boundary.visible", transactionID).begin();
+
+            }
+            if (!OVRManager.boundary.GetVisible() && !string.IsNullOrEmpty(transactionID))
+            {
+                Instrumentation.Transaction("cvr.boundary.visible", transactionID).end();
+                transactionID = string.Empty;
             }
         }
 #endif
 
         public static string GetDescription()
         {
-            return "Sends transaction when SteamVR Chaperone becomes visible and becomes hidden";
+            return "Sends transaction when SteamVR Chaperone or Oculus Guardian becomes visible and becomes hidden";
         }
     }
 }

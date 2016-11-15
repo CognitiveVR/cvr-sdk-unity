@@ -18,15 +18,28 @@ namespace CognitiveVR
         {
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            updateInterval = CognitiveVR_Preferences.Instance.ComfortTrackingInterval;
+            timeleft = updateInterval;
+            lastRotation = CognitiveVR_Manager.HMD.rotation;
         }
 
         private void CognitiveVR_Manager_OnUpdate()
         {
             UpdateFramerate();
-            UpdateHMDRotation();
+            if (!CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS)
+            {
+                UpdateHMDRotation();
+            }
+
+            timeleft -= Time.deltaTime;
+            if (timeleft <= 0.0f)
+            {
+                IntervalEnd();
+                timeleft = updateInterval;
+            }
         }
 
-        float updateInterval = 3;
+        float updateInterval = 6;
 
         float timeleft;
         float accum;
@@ -36,65 +49,57 @@ namespace CognitiveVR
         float lastFps;
         void UpdateFramerate()
         {
-            timeleft -= Time.deltaTime;
             accum += Time.timeScale / Time.deltaTime;
             ++frames;
-
-            // Interval ended - update GUI text and start new interval
-            if (timeleft <= 0.0)
-            {
-                lastFps = accum / frames;
-                timeleft = updateInterval;
-                accum = 0.0F;
-                frames = 0;
-
-                if (lastFps < CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && !lowFramerate)
-                {
-                    lowFramerate = true;
-                    fpsTransactionID = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("performance", fpsTransactionID).setProperty("fps", lastFps).begin();
-                    Util.logDebug("low framerate");
-                }
-                else if (lastFps > CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && lowFramerate)
-                {
-                    lowFramerate = false;
-                    Instrumentation.Transaction("performance", fpsTransactionID).end();
-                }
-            }
         }
 
         Quaternion lastRotation;
         float accumRotation;
-        float rotTimeLeft;
         int rotFrames;
         float lastRps;
-
         void UpdateHMDRotation()
         {
-            rotTimeLeft -= Time.deltaTime;
             accumRotation += Quaternion.Angle(CognitiveVR_Manager.HMD.rotation, lastRotation) / Time.deltaTime;
             lastRotation = CognitiveVR_Manager.HMD.rotation;
             ++rotFrames;
+        }
 
+        void IntervalEnd()
+        {
             // Interval ended - update GUI text and start new interval
-            if (rotTimeLeft <= 0.0)
+            lastFps = accum / frames;
+            accum = 0.0F;
+            frames = 0;
+
+            if (lastFps < CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && !lowFramerate)
             {
-                lastRps = accumRotation / rotFrames;
-                rotTimeLeft = updateInterval;
-                accumRotation = 0.0F;
-                rotFrames = 0;
-                
-                Instrumentation.Transaction("comfort", fpsTransactionID)
-                    .setProperty("fps", lastFps)
-                    .setProperty("rps", lastRps)
+                lowFramerate = true;
+                fpsTransactionID = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
+                Util.logDebug("low framerate");
+            }
+            else if (lastFps > CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && lowFramerate)
+            {
+                lowFramerate = false;
+                Instrumentation.Transaction("cvr.performance", fpsTransactionID).end();
+            }
+
+            if (CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS) { return; }
+
+            lastRps = accumRotation / rotFrames;
+            accumRotation = 0.0F;
+            rotFrames = 0;
+
+            Instrumentation.Transaction("cvr.comfort", fpsTransactionID)
+                .setProperty("fps", lastFps)
+                .setProperty("rps", lastRps)
 #if CVR_OCULUS
                     .setProperty("cpulevel", OVRPlugin.cpuLevel)
                     .setProperty("gpulevel", OVRPlugin.gpuLevel)
                     .setProperty("powersaving", OVRPlugin.powerSaving)
 #endif
                     .beginAndEnd();
-                Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
-            }
+            Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
         }
 
         public static string GetDescription()

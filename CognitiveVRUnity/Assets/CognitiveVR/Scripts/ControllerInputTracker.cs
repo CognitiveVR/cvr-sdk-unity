@@ -15,9 +15,94 @@ namespace CognitiveVR
 {
     public class ControllerInputTracker : CognitiveVRAnalyticsComponent
     {
-#if CVR_STEAMVR
+#if CVR_OCULUS || CVR_STEAMVR
         Dictionary<string, string> pendingTransactions = new Dictionary<string, string>();
+#endif
 
+#if CVR_OCULUS
+        public override void CognitiveVR_Init(Error initError)
+        {
+            base.CognitiveVR_Init(initError);
+        }
+
+        public void Update()
+        {
+            //near touch stuff
+            //var leftPoint = !OVRInput.Get(OVRInput.NearTouch.SecondaryIndexTrigger,OVRInput.Controller.LTouch);
+            //var rightPoint = !OVRInput.Get(OVRInput.NearTouch.PrimaryIndexTrigger, OVRInput.Controller.RTouch);
+
+            //var leftThumb = !OVRInput.Get(OVRInput.NearTouch.SecondaryThumbButtons, OVRInput.Controller.LTouch);
+            //var rightThumb = !OVRInput.Get(OVRInput.NearTouch.PrimaryThumbButtons, OVRInput.Controller.RTouch);
+
+            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+            {
+                BeginTransaction("primarytrigger", "trigger", true);
+            }
+
+            if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger))
+            {
+                BeginTransaction("secondarytrigger", "trigger", false);
+            }
+
+            if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
+            {
+                BeginTransaction("primarygrip", "grip", true);
+            }
+
+            if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
+            {
+                BeginTransaction("secondarygrip", "grip", false);
+            }
+
+
+            if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger))
+            {
+                EndTransaction("primarytrigger","trigger",true);
+            }
+            if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
+            {
+                EndTransaction("secondarytrigger","trigger",false);
+            }
+
+            if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger))
+            {
+                EndTransaction("primarygrip","grip",true);
+            }
+
+            if (OVRInput.GetUp(OVRInput.Button.SecondaryHandTrigger))
+            {
+                EndTransaction("secondarygrip","grip",false);
+            }
+        }
+#endif
+
+#if CVR_OCULUS || CVR_STEAMVR
+        void BeginTransaction(string transactionKey, string type, bool rightController)
+        {
+            Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
+
+            string transactionID = System.Guid.NewGuid().ToString();
+            Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
+            inTransaction.setProperty("device", rightController?"right controller": "left controller").setProperty("type", type);
+            inTransaction.begin(pos);
+
+            if (!pendingTransactions.ContainsKey(transactionKey))
+            { pendingTransactions.Add(transactionKey, transactionID); }
+        }
+
+        void EndTransaction(string transactionKey, string type, bool rightController)
+        {
+            string transactionID;
+            if (pendingTransactions.TryGetValue(transactionKey, out transactionID))
+            {
+                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
+                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("device", rightController ? "right controller" : "left controller").end(pos);
+                pendingTransactions.Remove(transactionID);
+            }
+        }
+#endif
+
+#if CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -25,12 +110,13 @@ namespace CognitiveVR
             SteamVR_TrackedController controller;
             for (int i = 0; i<2; i++)
             {
+                bool right = i == 0 ? true : false;
                 //TODO run this when a controller becomes active, not just on Init
-                if (CognitiveVR_Manager.GetController(i) == null){continue;}
-                controller = CognitiveVR_Manager.GetController(i).GetComponent<SteamVR_TrackedController>();
+                if (CognitiveVR_Manager.GetController(right) == null){continue;}
+                controller = CognitiveVR_Manager.GetController(right).GetComponent<SteamVR_TrackedController>();
 
                 if (controller == null)
-                    controller = CognitiveVR_Manager.GetController(i).gameObject.AddComponent<SteamVR_TrackedController>();
+                    controller = CognitiveVR_Manager.GetController(right).gameObject.AddComponent<SteamVR_TrackedController>();
 
                 controller.TriggerClicked += new ClickedEventHandler(OnTriggerClicked);
                 controller.TriggerUnclicked += new ClickedEventHandler(OnTriggerUnclicked);
@@ -42,35 +128,27 @@ namespace CognitiveVR
 
         private void OnGripped(object sender, ClickedEventArgs e)
         {
-            string transactionDescription = "input";
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
 
-            string transactionID = System.Guid.NewGuid().ToString();
-            Transaction inTransaction = Instrumentation.Transaction(transactionDescription, transactionID);
-            inTransaction.setProperty("controllerindex", e.controllerIndex).setProperty("type", "grip");
-            inTransaction.begin();
-
-            if (!pendingTransactions.ContainsKey(transactionDescription))
-            { pendingTransactions.Add(transactionDescription, transactionID); }
+            BeginTransaction("grip" + e.controllerIndex, "grip", cont.isRight);
         }
 
         private void OnUngripped(object sender, ClickedEventArgs e)
         {
-            string transactionID;
-            string transactionDescription = "input";
-            if (pendingTransactions.TryGetValue(transactionDescription, out transactionID))
-            {
-                Instrumentation.Transaction(transactionDescription, transactionID).end();
-                pendingTransactions.Remove(transactionID);
-            }
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+
+            EndTransaction("grip" + e.controllerIndex, "grip", cont.isRight);
         }
 
         private void OnPadClicked(object sender, ClickedEventArgs e)
         {
-            Transaction padTransaction = Instrumentation.Transaction("input");
+            Transaction padTransaction = Instrumentation.Transaction("cvr.input");
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+            if (cont == null) { return; }
             padTransaction.setProperties(new Dictionary<string, object>
             {
                 { "type","pad" },
-                { "controllerindex",e.controllerIndex },
+                { "device", cont.isRight?"right controller":"left controller"},
                 { "x",e.padX },
                 { "y",e.padY }
             });
@@ -79,33 +157,21 @@ namespace CognitiveVR
 
         void OnTriggerClicked(object sender, ClickedEventArgs e)
         {
-            string transactionDescription = "input";
-
-            string transactionID = System.Guid.NewGuid().ToString();
-            Transaction inTransaction = Instrumentation.Transaction(transactionDescription, transactionID);
-            inTransaction.setProperty("controllerindex", e.controllerIndex).setProperty("type", "trigger");
-            inTransaction.begin();
-
-            if (!pendingTransactions.ContainsKey(transactionDescription))
-            { pendingTransactions.Add(transactionDescription, transactionID); }
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+            BeginTransaction("trigger"+e.controllerIndex, "trigger", cont.isRight);
         }
 
         void OnTriggerUnclicked(object sender, ClickedEventArgs e)
         {
-            string transactionID;
-            string transactionDescription = "input";
-            if (pendingTransactions.TryGetValue(transactionDescription, out transactionID))
-            {
-                Instrumentation.Transaction(transactionDescription, transactionID).end();
-                pendingTransactions.Remove(transactionID);
-            }
+            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
+
+            EndTransaction("trigger" + e.controllerIndex, "trigger", cont.isRight);
         }
-#elif CVR_OCULUS
-        //TODO input events from Oculus Touch controls and fallback to other controller inputs
 #endif
+
         public static string GetDescription()
         {
-            return "Sends a transaction when the player does an input with a SteamVR controller";
+            return "Sends a transaction when the player does an input with a SteamVR controller or Oculus Touch";
         }
     }
 }

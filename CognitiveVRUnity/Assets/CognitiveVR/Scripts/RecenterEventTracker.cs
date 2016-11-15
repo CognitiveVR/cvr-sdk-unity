@@ -19,7 +19,7 @@ namespace CognitiveVR
 
         private void RecenterEventTracker_RecenteredPose()
         {
-            Instrumentation.Transaction("Recenter").beginAndEnd();
+            Instrumentation.Transaction("cvr.recenter").beginAndEnd();
         }
 #endif
 

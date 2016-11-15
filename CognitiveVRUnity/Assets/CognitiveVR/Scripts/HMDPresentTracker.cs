@@ -25,15 +25,15 @@ namespace CognitiveVR
         private void OVRManager_HMDMounted()
         {
             hmdpresentGUID = System.Guid.NewGuid().ToString();
-            Instrumentation.Transaction("HMDPresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
+            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
         }
 
         private void OVRManager_HMDUnmounted()
         {
-            Instrumentation.Transaction("HMDPresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time).end();
+            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time).end();
         }
 
-        
+
 #if CVR_STEAMVR
         void CognitiveVR_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
         {

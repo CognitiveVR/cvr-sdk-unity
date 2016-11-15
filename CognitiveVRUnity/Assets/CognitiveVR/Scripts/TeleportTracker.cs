@@ -27,6 +27,7 @@ namespace CognitiveVR
         {
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            lastRootPosition = root.position;
         }
 
         void CognitiveVR_Manager_OnUpdate()
@@ -35,7 +36,7 @@ namespace CognitiveVR
             {
                 Vector3 newPosition = root.position;
 
-                Instrumentation.Transaction("teleport").setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
+                Instrumentation.Transaction("cvr.teleport").setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
                 Util.logDebug("teleport");
 
                 lastRootPosition = root.position;

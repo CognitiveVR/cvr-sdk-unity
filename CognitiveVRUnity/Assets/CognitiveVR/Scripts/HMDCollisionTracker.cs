@@ -26,11 +26,11 @@ namespace CognitiveVR
                 {
                     Util.logDebug("hmd collision");
                     HMDGuid = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("collision", HMDGuid).setProperty("device", "HMD").begin();
+                    Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").begin();
                 }
                 else if (!hit && !string.IsNullOrEmpty(HMDGuid))
                 {
-                    Instrumentation.Transaction("collision", HMDGuid).end();
+                    Instrumentation.Transaction("cvr.collision", HMDGuid).end();
                     HMDGuid = string.Empty;
                 }
             }

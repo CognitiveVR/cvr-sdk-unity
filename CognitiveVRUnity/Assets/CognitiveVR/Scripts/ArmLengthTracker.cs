@@ -11,11 +11,12 @@ namespace CognitiveVR
 {
     public class ArmLengthTracker : CognitiveVRAnalyticsComponent
     {
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_OCULUS
         float maxSqrDistance;
         int sampleCount = 50;
         int samples = 0;
-
+#endif
+#if CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -37,9 +38,7 @@ namespace CognitiveVR
                 }
             }
         }
-#endif
 
-#if CVR_STEAMVR
         private void CognitiveVR_Manager_OnTick()
         {
             if (CognitiveVR_Manager.GetController(0) == null){return;}
@@ -47,6 +46,40 @@ namespace CognitiveVR
             if (samples < sampleCount)
             {
                 maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
+
+                samples++;
+                if (samples >= sampleCount)
+                {
+                    Util.logDebug("arm length " + maxSqrDistance);
+                    Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
+                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                }
+            }
+        }
+#endif
+
+#if CVR_OCULUS
+        public override void CognitiveVR_Init(Error initError)
+        {
+            base.CognitiveVR_Init(initError);
+            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+        }
+
+        private void CognitiveVR_Manager_OnUpdate()
+        {
+            if (OVRInput.GetDown(OVRInput.Button.Any))
+            {
+                CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+                CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+            }
+        }
+
+        private void CognitiveVR_Manager_OnTick()
+        {
+            if (samples < sampleCount)
+            {
+                maxSqrDistance = Mathf.Max(maxSqrDistance, OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch).sqrMagnitude, OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch).sqrMagnitude);
+                //maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
                 if (samples >= sampleCount)

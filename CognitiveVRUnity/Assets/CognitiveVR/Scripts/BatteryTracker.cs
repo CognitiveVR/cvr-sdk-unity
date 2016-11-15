@@ -44,7 +44,7 @@ namespace CognitiveVR
             {
                 Util.logDebug("batterylevel " + batteryLevel);
 
-                Instrumentation.Transaction("battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
+                Instrumentation.Transaction("cvr.battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
             }
 #endif
         }
@@ -77,7 +77,7 @@ namespace CognitiveVR
                                                 batteryLevel = 50f;
                                                 return false;
                                             }
-                                            batteryLevel =((float)level / (float)scale) * 100.0f;
+                                            batteryLevel = ((float)level / (float)scale) * 100.0f;
                                             return true;
                                         }
 
@@ -106,7 +106,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Send the battery level of Android device after initialization and on quit\nOculus Utilies also includes battery temperature and status" + (GetWarning() ? "\nPlatform not set to Android!": "");
+            return "Send the battery level of Android device after initialization and on quit\nOculus Utilies also includes battery temperature and status" + (GetWarning() ? "\nPlatform not set to Android!" : "");
         }
     }
 }

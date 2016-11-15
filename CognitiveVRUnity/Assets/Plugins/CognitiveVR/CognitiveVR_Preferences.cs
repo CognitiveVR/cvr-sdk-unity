@@ -44,6 +44,9 @@ namespace CognitiveVR
         public int LowFramerateThreshold = 60;
         public LayerMask CollisionLayerMask = 1;
 
+        public float ComfortTrackingInterval = 6;
+        public bool OnlySendComfortOnLowFPS = false;
+
         [Header("Player Tracking")]
         //player tracking
         public int SnapshotThreshold = 1000;
