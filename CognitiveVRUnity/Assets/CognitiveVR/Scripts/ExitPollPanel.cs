@@ -477,7 +477,7 @@ namespace CognitiveVR
             response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
             response.pollValues = new ExitPollTuningQuestion[1] { question };
             response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
-            response.sessionId = (int)CognitiveVR_Manager.TimeStamp + "_" + Core.UniqueID;
+            response.sessionId = CognitiveVR_Manager.SessionID;
 
             string url = "http://testapi.cognitivevr.io/poll";
             string jsonResponse = JsonUtility.ToJson(response, true);

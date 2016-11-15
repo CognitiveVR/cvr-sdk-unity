@@ -143,6 +143,14 @@ namespace CognitiveVR
         private static double _timeStamp;
         public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
 
+        public static string SessionID
+        {
+            get
+            {
+                return (int)TimeStamp + "_" + Core.UniqueID;
+            }
+        }
+
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
         /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
