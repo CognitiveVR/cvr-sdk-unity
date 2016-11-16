@@ -9,7 +9,6 @@ namespace CognitiveVR
 {
     public class BoundaryEventTracker : CognitiveVRAnalyticsComponent
     {
-        string chaperoneGUID;
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);

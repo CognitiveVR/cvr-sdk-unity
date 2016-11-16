@@ -354,8 +354,6 @@ namespace CognitiveVR
 
             internal T getValue<T>(string type, string id, string var, T defaultValue)
             {
-                UnityEngine.Debug.Log("get value from cached vars");
-
                 T ret = defaultValue;
 
                 if (null != var)

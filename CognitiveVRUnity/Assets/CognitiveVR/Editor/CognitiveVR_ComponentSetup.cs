@@ -13,7 +13,6 @@ namespace CognitiveVR
 {
     public class CognitiveVR_ComponentSetup : EditorWindow
     {
-        static CognitiveVR_ComponentSetup window;
         static Color Green = new Color(0.6f, 1f, 0.6f);
         static Color Orange = new Color(1f, 0.6f, 0.3f);
 

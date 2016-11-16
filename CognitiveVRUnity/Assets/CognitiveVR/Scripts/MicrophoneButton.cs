@@ -28,15 +28,10 @@ namespace CognitiveVR
         //call this after the recording sent response, or _maxUploadWaitTime seconds after sent request
         public UnityEngine.EventSystems.EventTrigger.TriggerEvent OnFinishedRecording;
 
-        private int bufferSize;
-        private int numBuffers;
         private int outputRate = 16000;// 44100;
         //private int headerSize = 44; //default for uncompressed wav
 
-        private bool recOutput;
         AudioClip clip;
-
-        private FileStream fileStream;
 
         bool _recording;
         bool _finishedRecording;

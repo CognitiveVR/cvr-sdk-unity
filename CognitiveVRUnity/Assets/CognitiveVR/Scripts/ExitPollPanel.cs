@@ -50,7 +50,6 @@ namespace CognitiveVR
 
     public class ExitPollPanel : MonoBehaviour
     {
-        ExitPollPanelType _exitPollPanelType;
         System.Action _closeAction;
 
         public string ExitPollQuestion = "ExitPollQuestion";
@@ -181,8 +180,7 @@ namespace CognitiveVR
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
         public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
-            //set initially, so if this has to close early, it can proceed with gameplay
-            if (CognitiveVR_Manager.HMD == null)
+            if (CognitiveVR_Manager.HMD == null) //no hmd? fail
             {
                 if (closeAction != null)
                     closeAction.Invoke();
@@ -191,7 +189,7 @@ namespace CognitiveVR
             }
 
             bool enabled = Tuning.getVar<bool>("ExitPollEnabled", true);
-            if (!enabled)
+            if (!enabled) //exit poll set to false? fail
             {
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
                 if (closeAction != null)
@@ -203,7 +201,7 @@ namespace CognitiveVR
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
 
             //set position and rotation
-            Vector3 tempPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
+            Vector3 spawnPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
 
             if (_instance.LockYPosition)
             {
@@ -211,14 +209,16 @@ namespace CognitiveVR
                 modifiedForward.y = 0;
                 modifiedForward.Normalize();
 
-                tempPosition = CognitiveVR_Manager.HMD.position + modifiedForward * _instance.DisplayDistance;
+                spawnPosition = CognitiveVR_Manager.HMD.position + modifiedForward * _instance.DisplayDistance;
             }
 
             RaycastHit hit = new RaycastHit();
 
+            //test slightly in front of the player's hmd
             Collider[] colliderHits = Physics.OverlapSphere(CognitiveVR_Manager.HMD.position + Vector3.forward * 0.5f, 0.5f, _instance.LayerMask);
             if (colliderHits.Length > 0)
             {
+                Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
                 //too close! just fail the popup and keep playing the game
                 if (closeAction != null)
                     closeAction.Invoke();
@@ -226,12 +226,12 @@ namespace CognitiveVR
                 return;
             }
 
-            //ray from slightly behind the player's hmd position
-            Vector3 startPos = CognitiveVR_Manager.HMD.position - CognitiveVR_Manager.HMD.forward;
-            if (Physics.SphereCast(startPos, 0.5f, tempPosition - CognitiveVR_Manager.HMD.position, out hit, _instance.DisplayDistance + 1, _instance.LayerMask))
+            //ray from player's hmd position
+            if (Physics.SphereCast(CognitiveVR_Manager.HMD.position, 0.5f, spawnPosition - CognitiveVR_Manager.HMD.position, out hit, _instance.DisplayDistance, _instance.LayerMask))
             {
-                if (hit.distance < _instance.MinimumDisplayDistance + 1)
+                if (hit.distance < _instance.MinimumDisplayDistance)
                 {
+                    Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
                     //too close! just fail the popup and keep playing the game
                     if (closeAction != null)
                         closeAction.Invoke();
@@ -240,11 +240,11 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    tempPosition = CognitiveVR_Manager.HMD.position + (tempPosition - CognitiveVR_Manager.HMD.position).normalized * (hit.distance + 1);
+                    spawnPosition = CognitiveVR_Manager.HMD.position + (spawnPosition - CognitiveVR_Manager.HMD.position).normalized * (hit.distance);
                 }
             }
 
-            _instance._transform.position = tempPosition;
+            _instance._transform.position = spawnPosition;
 
             PostInitialize(closeAction, exitpollType);
         }
@@ -306,17 +306,17 @@ namespace CognitiveVR
                 {
                     //debug tuning variable incorrect format. should be title|question
                     Close(true);
-                    Util.logDebug("TuningVariable ExitPollQuestion is in the wrong format! should be 'title|question'");
+                    Util.logDebug("ExitPoll TuningVariable "+ ExitPollQuestion+" is in the wrong format! should be 'title|question'");
                 }
 
                 yield break;
             }
-
-            Debug.LogWarning("couldn't get tuning variable question!");
-
-            Close(true);
-
-            yield return null;
+            else
+            {
+                //no question set up. use default from prefab
+                SetVisible(true);
+                yield break;
+            }
         }
 
         public void SetVisible(bool visible)
