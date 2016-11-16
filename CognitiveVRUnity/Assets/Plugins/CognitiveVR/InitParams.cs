@@ -37,7 +37,7 @@
 			string customerId,
 			EntityInfo deviceInfo = null,
 			EntityInfo userInfo = null,
-			int requestTimeout = Constants.DEFAULT_REQUEST_TIMEOUT,
+			int requestTimeout = Constants.INIT_TIMEOUT,
 			string host = "https://data.cognitivevr.io",
 			bool logEnabled = false,
 			string notificationHost = "https://notification.cognitivevr.io",

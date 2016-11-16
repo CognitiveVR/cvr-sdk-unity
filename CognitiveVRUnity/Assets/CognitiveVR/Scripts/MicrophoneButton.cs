@@ -131,21 +131,25 @@ namespace CognitiveVR
         {
             //customer id or something
 
-            string url = "http://someurl/poll";
-            url = "";
+            string url = "http://cognitivevr.io/polls/replacemewithapollid/feedback";
+            //url = "http://192.168.1.112:9000/polls/replacemewithapollid/feedback";
 
             byte[] bytes;
             CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
             //TODO upload to some server byte by byte
 
-            var headers = new Dictionary<string, string>();
+
+            File.WriteAllBytes("OnlyByteWav.wav", bytes);
+
+
+            //var headers = new Dictionary<string, string>();
             //headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
+            //headers.Add("X-HTTP-Method-Override", "POST");
+            WWWForm form = new WWWForm();
+            form.headers.Add("X-HTTP-Method-Override", "POST");
+            form.AddBinaryData("feedback", bytes);
+            WWW www = new UnityEngine.WWW(url, form);
 
-            //DEBUGGING
-            //File.WriteAllBytes("DebugMicrophoneRecord.wav", bytes);
-
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
 
             float startTime = 0;
             while (startTime < _maxUploadWaitTime)
@@ -155,7 +159,7 @@ namespace CognitiveVR
                 yield return null;
             }
 
-            Debug.Log("upload complete! delete clip");
+            Debug.Log("--------upload complete! delete clip");
 
             //clip = null;
             //File.Delete(filepath);

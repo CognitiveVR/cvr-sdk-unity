@@ -8,6 +8,7 @@ namespace CognitiveVR
     public static class Constants
     {
         public const int DEFAULT_REQUEST_TIMEOUT = 3000; // in ms
+        public const int INIT_TIMEOUT = 10000; // in ms
         public const string TXN_SUCCESS = "success";
         public const string TXN_ERROR = "error";
         public const string ENTITY_TYPE_USER = "USER";
