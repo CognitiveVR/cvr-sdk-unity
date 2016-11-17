@@ -50,6 +50,9 @@ namespace CognitiveVR
 
     public class ExitPollPanel : MonoBehaviour
     {
+        ExitPollPanelType _exitPollType;
+
+        System.Action _finalCloseAction;
         System.Action _closeAction;
 
         public string ExitPollQuestion = "ExitPollQuestion";
@@ -139,6 +142,8 @@ namespace CognitiveVR
             }
         }
         Vector3 _lastRootPosition;
+
+        public static string PollID { get; private set; }
 
         /// <summary>
         /// Instantiate and position the exit poll at an arbitrary point
@@ -255,12 +260,16 @@ namespace CognitiveVR
             if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
             {
                 System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, ExitPollPanelType.ExitPollMicrophonePanel);
+                _instance._finalCloseAction = closeAction;
                 _instance._closeAction = microphoneAction;
             }
             else
             {
+                _instance._finalCloseAction = closeAction;
                 _instance._closeAction = closeAction;
             }
+
+            _instance._exitPollType = exitpollType;
 
             //_instance._closeAction = closeAction;
             _instance.gameObject.SetActive(true);
@@ -393,7 +402,8 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    Close(true);
+                    PollID = string.Empty;
+                    Close();
                     return;
                 }
             }
@@ -452,6 +462,7 @@ namespace CognitiveVR
                         _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                         _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, CognitiveVR_Manager.HMD.up), 0.1f);
                     }
+                    //TODO rotate so window stays relatively vertical
                 }
             }
         }
@@ -483,7 +494,7 @@ namespace CognitiveVR
             string jsonResponse = JsonUtility.ToJson(response, true);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 
-            Debug.Log(jsonResponse);
+            Util.logDebug("ExitPoll Request\n" + jsonResponse);
 
             StartCoroutine(SendAnswer(bytes, url));
         }
@@ -499,19 +510,27 @@ namespace CognitiveVR
 
             if (!string.IsNullOrEmpty(www.error))
             {
-                Debug.Log("error response: " + www.error);
+                Util.logError("error response: " + www.error);
             }
             else
             {
                 ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
                 Instrumentation.Transaction("ExitPoll").setProperty("pollId", response.pollId).beginAndEnd();
-                Debug.Log("exit poll is " + response.pollId);
+                PollID = response.pollId;
             }
 
             Close();
         }
 
-        //from buttons
+        /// <summary>
+        /// from buttons on panel
+        /// </summary>
+        public void CloseButton()
+        {
+            PollID = string.Empty;
+            Close();
+        }
+
         public void Close(bool immediate = false)
         {
             //disable button actions
@@ -520,10 +539,20 @@ namespace CognitiveVR
             if (CloseButtonScript)
                 CloseButtonScript.enabled = false;
 
-            //call close action
-            if (_closeAction != null)
+            if (string.IsNullOrEmpty(PollID))
             {
-                _closeAction.Invoke();
+                if (_finalCloseAction != null)
+                {
+                    _finalCloseAction.Invoke();
+                }
+            }
+            else
+            {
+                //call close action
+                if (_closeAction != null)
+                {
+                    _closeAction.Invoke();
+                }
             }
 
             _closeAction = null;

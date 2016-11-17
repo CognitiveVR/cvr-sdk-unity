@@ -126,20 +126,17 @@ namespace CognitiveVR
         {
             //customer id or something
 
-            string url = "http://cognitivevr.io/polls/replacemewithapollid/feedback";
+            //this is set when the first question is answered
+            //ExitPollPanel.PollID
+
+            string url = "http://testapi.cognitivevr.io/polls/replacemewithapollid/feedback";
             //url = "http://192.168.1.112:9000/polls/replacemewithapollid/feedback";
 
             byte[] bytes;
             CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
-            //TODO upload to some server byte by byte
 
+            //File.WriteAllBytes("Feedback.wav", bytes);
 
-            File.WriteAllBytes("OnlyByteWav.wav", bytes);
-
-
-            //var headers = new Dictionary<string, string>();
-            //headers.Add("Content-Type", "application/json");
-            //headers.Add("X-HTTP-Method-Override", "POST");
             WWWForm form = new WWWForm();
             form.headers.Add("X-HTTP-Method-Override", "POST");
             form.AddBinaryData("feedback", bytes);
@@ -147,17 +144,13 @@ namespace CognitiveVR
 
 
             float startTime = 0;
-            while (startTime < _maxUploadWaitTime)
+            while (startTime < _maxUploadWaitTime) //give 2 seconds to upload before closing panel. can still upload in the background
             {
                 startTime += Time.deltaTime;
                 if (www.isDone) { break; }
                 yield return null;
             }
-
-            Debug.Log("--------upload complete! delete clip");
-
-            //clip = null;
-            //File.Delete(filepath);
+            
             ActivateAction();
         }
 
