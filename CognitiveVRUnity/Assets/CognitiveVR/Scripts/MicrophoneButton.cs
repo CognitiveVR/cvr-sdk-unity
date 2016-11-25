@@ -59,6 +59,7 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (CognitiveVR_Manager.HMD == null) { return; }
             _currentLookTime = 0;
             UpdateFillAmount();
             _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
@@ -126,17 +127,11 @@ namespace CognitiveVR
         {
             //customer id or something
 
-            //this is set when the first question is answered
-            //ExitPollPanel.PollID
-
-            string url = "http://testapi.cognitivevr.io/polls/replacemewithapollid/feedback";
-            //url = "http://192.168.1.112:9000/polls/replacemewithapollid/feedback";
+            string url = "https://testapi.cognitivevr.io/polls/"+ExitPollPanel.PollID+"/feedback";
 
             byte[] bytes;
             CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
-
-            //File.WriteAllBytes("Feedback.wav", bytes);
-
+            
             WWWForm form = new WWWForm();
             form.headers.Add("X-HTTP-Method-Override", "POST");
             form.AddBinaryData("feedback", bytes);

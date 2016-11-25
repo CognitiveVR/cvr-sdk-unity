@@ -23,22 +23,9 @@ namespace CognitiveVR
         Camera cam;
         PlayerTrackerHelper periodicRenderer;
 
-        //TODO level loaded stuff should use cognitivevr_manager events
-
         public override void CognitiveVR_Init(Error initError)
         {
-            if (CognitiveVR_Manager.HMD != null)
-            {
-                periodicRenderer = CognitiveVR_Manager.HMD.GetComponent<PlayerTrackerHelper>();
-
-                if (periodicRenderer == null)
-                {
-                    periodicRenderer = CognitiveVR_Manager.HMD.gameObject.AddComponent<PlayerTrackerHelper>();
-                    periodicRenderer.enabled = false;
-                }
-                cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
-                cam.depthTextureMode = DepthTextureMode.Depth;
-            }
+            CheckCameraSettings();
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
                 CognitiveVR_Manager.OnQuit += SendData;
@@ -66,6 +53,25 @@ namespace CognitiveVR
             trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
+        void CheckCameraSettings()
+        {
+            if (CognitiveVR_Manager.HMD == null) { return; }
+            
+            if (periodicRenderer == null)
+            {
+                periodicRenderer = CognitiveVR_Manager.HMD.GetComponent<PlayerTrackerHelper>();
+                if (periodicRenderer == null)
+                {
+                    periodicRenderer = CognitiveVR_Manager.HMD.gameObject.AddComponent<PlayerTrackerHelper>();
+                    periodicRenderer.enabled = false;
+                }
+            }
+            if (cam == null)
+                cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
+
+            if (cam.depthTextureMode != DepthTextureMode.Depth)
+                cam.depthTextureMode = DepthTextureMode.Depth;
+        }
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
@@ -150,18 +156,7 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (CognitiveVR_Manager.HMD != null)
-            {
-                periodicRenderer = CognitiveVR_Manager.HMD.GetComponent<PlayerTrackerHelper>();
-
-                if (periodicRenderer == null)
-                {
-                    periodicRenderer = CognitiveVR_Manager.HMD.gameObject.AddComponent<PlayerTrackerHelper>();
-                    periodicRenderer.enabled = false;
-                }
-                cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
-                cam.depthTextureMode = DepthTextureMode.Depth;
-            }
+            CheckCameraSettings();
 
             if (!headsetPresent || CognitiveVR_Manager.HMD == null) { return; }
 

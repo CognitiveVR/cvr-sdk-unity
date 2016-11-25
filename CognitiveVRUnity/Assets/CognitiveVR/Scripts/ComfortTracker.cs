@@ -20,11 +20,13 @@ namespace CognitiveVR
             CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
             updateInterval = CognitiveVR_Preferences.Instance.ComfortTrackingInterval;
             timeleft = updateInterval;
-            lastRotation = CognitiveVR_Manager.HMD.rotation;
+            if (CognitiveVR_Manager.HMD != null)
+                lastRotation = CognitiveVR_Manager.HMD.rotation;
         }
 
         private void CognitiveVR_Manager_OnUpdate()
         {
+            if (CognitiveVR_Manager.HMD == null) { return; }
             UpdateFramerate();
             if (!CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS)
             {

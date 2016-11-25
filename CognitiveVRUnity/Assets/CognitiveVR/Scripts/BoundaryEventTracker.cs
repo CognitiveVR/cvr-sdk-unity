@@ -27,6 +27,7 @@ namespace CognitiveVR
         }
 
 #if CVR_STEAMVR
+        string chaperoneGUID;
         void CognitiveVR_Manager_PoseEventHandler(Valve.VR.EVREventType evrevent)
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_ChaperoneDataHasChanged)

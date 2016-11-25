@@ -19,20 +19,19 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (CognitiveVR_Manager.HMD != null)
+            if (CognitiveVR_Manager.HMD == null) { return; }
+
+            bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+            if (hit && string.IsNullOrEmpty(HMDGuid))
             {
-                bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
-                if (hit && string.IsNullOrEmpty(HMDGuid))
-                {
-                    Util.logDebug("hmd collision");
-                    HMDGuid = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").begin();
-                }
-                else if (!hit && !string.IsNullOrEmpty(HMDGuid))
-                {
-                    Instrumentation.Transaction("cvr.collision", HMDGuid).end();
-                    HMDGuid = string.Empty;
-                }
+                Util.logDebug("hmd collision");
+                HMDGuid = System.Guid.NewGuid().ToString();
+                Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").begin();
+            }
+            else if (!hit && !string.IsNullOrEmpty(HMDGuid))
+            {
+                Instrumentation.Transaction("cvr.collision", HMDGuid).end();
+                HMDGuid = string.Empty;
             }
         }
         public static string GetDescription()

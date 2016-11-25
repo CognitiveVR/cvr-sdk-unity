@@ -490,7 +490,7 @@ namespace CognitiveVR
             response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
             response.sessionId = CognitiveVR_Manager.SessionID;
 
-            string url = "http://testapi.cognitivevr.io/poll";
+            string url = "https://testapi.cognitivevr.io/polls";
             string jsonResponse = JsonUtility.ToJson(response, true);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 
@@ -511,6 +511,7 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(www.error))
             {
                 Util.logError("error response: " + www.error);
+                PollID = string.Empty;
             }
             else
             {

@@ -23,6 +23,7 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_OnTick()
         {
+            if (CognitiveVR_Manager.HMD == null) { return; }
             if (samples < sampleCount)
             {
                 hmdAccumHeight += CognitiveVR_Manager.HMD.position.y;

@@ -40,6 +40,7 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (CognitiveVR_Manager.HMD == null) { return; }
             _currentLookTime = 0;
             UpdateFillAmount();
             _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);

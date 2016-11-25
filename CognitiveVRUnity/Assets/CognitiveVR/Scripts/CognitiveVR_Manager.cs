@@ -117,6 +117,8 @@ namespace CognitiveVR
                         _hmd = Camera.main.transform;
                     }
 #else
+                    if (Camera.main == null)
+                        return null;
                     _hmd = Camera.main.transform;
 #endif
                 }
@@ -291,6 +293,7 @@ namespace CognitiveVR
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
                 logEnabled: EnableLogging,
                 userInfo: GetUniqueEntityID()
+                
             );
             CognitiveVR.Core.init(initParams, InitEvent);
 

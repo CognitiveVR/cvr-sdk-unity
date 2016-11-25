@@ -32,7 +32,10 @@ namespace CognitiveVR
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
                 relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).linear.r;
             else
+            {
+                //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
                 relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).r;
+            }
 
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
             GazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
