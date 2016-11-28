@@ -61,7 +61,7 @@ namespace CognitiveVR
         public float GazeDirectionMultiplier = 1.0f;
 
         public bool SendDataOnQuit = true;
-        public bool SendDataOnHMDRemove = true;
+        public bool SendDataOnHMDRemove = false;
         public bool SendDataOnLevelLoad = true;
         public bool SendDataOnHotkey = true;
         public bool HotkeyShift = true;

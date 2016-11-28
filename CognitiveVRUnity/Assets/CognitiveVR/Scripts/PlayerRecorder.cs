@@ -31,15 +31,11 @@ namespace CognitiveVR.Components
                 CognitiveVR_Manager.OnQuit += SendData;
 
 #if CVR_STEAMVR
-            if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
-                CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
 #if CVR_OCULUS
-            if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
-            {
-                OVRManager.HMDMounted += OVRManager_HMDMounted;
-                OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-            }
+            OVRManager.HMDMounted += OVRManager_HMDMounted;
+            OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #endif
             if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
                 SceneManager.sceneLoaded += SceneManager_sceneLoaded;
@@ -119,7 +115,8 @@ namespace CognitiveVR.Components
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 headsetPresent = false;
-                SendData();
+                if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
+                    SendData();
             }
         }
 #endif
@@ -133,7 +130,8 @@ namespace CognitiveVR.Components
         private void OVRManager_HMDUnmounted()
         {
             headsetPresent = false;
-            SendData();
+            if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
+                SendData();
         }
 #endif
 
@@ -529,7 +527,10 @@ namespace CognitiveVR.Components
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("\"" + name + "\":");
 
-            builder.Append(objectValue.ToString());
+            if (objectValue.GetType() == typeof(bool))
+                builder.Append(objectValue.ToString().ToLower());
+            else
+                builder.Append(objectValue.ToString());
 
             return builder.ToString();
         }

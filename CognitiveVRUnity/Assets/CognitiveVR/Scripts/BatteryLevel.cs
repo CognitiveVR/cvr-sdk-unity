@@ -33,7 +33,7 @@ namespace CognitiveVR.Components
 
 #if CVR_OCULUS
             Util.logDebug("batterylevel " + OVRPlugin.batteryLevel);
-            Instrumentation.Transaction("battery")
+            Instrumentation.Transaction("cvr.battery")
                 .setProperty("batterylevel", OVRPlugin.batteryLevel)
                 .setProperty("batterytemperature", OVRPlugin.batteryTemperature)
                 .setProperty("batterystatus", OVRPlugin.batteryStatus)
