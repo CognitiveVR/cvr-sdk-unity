@@ -35,12 +35,12 @@ namespace CognitiveVR.Components
                 if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
                 {
                     chaperoneGUID = System.Guid.NewGuid().ToString();
-                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).begin();
+                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).setProperty("visible", "true").begin();
                     Util.logDebug("chaperone visible");
                 }
                 else
                 {
-                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).end();
+                    Instrumentation.Transaction("cvr.boundary.visible", chaperoneGUID).setProperty("visible", "false").end();
                 }
             }
         }
@@ -53,12 +53,12 @@ namespace CognitiveVR.Components
             if (OVRManager.boundary.GetVisible() && string.IsNullOrEmpty(transactionID))
             {
                 transactionID = System.Guid.NewGuid().ToString();
-                Instrumentation.Transaction("cvr.boundary.visible", transactionID).begin();
+                Instrumentation.Transaction("cvr.boundary.visible", transactionID).setProperty("visible", "true").begin();
 
             }
             if (!OVRManager.boundary.GetVisible() && !string.IsNullOrEmpty(transactionID))
             {
-                Instrumentation.Transaction("cvr.boundary.visible", transactionID).end();
+                Instrumentation.Transaction("cvr.boundary.visible", transactionID).setProperty("visible", "false").end();
                 transactionID = string.Empty;
             }
         }

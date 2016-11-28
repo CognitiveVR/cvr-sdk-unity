@@ -36,7 +36,7 @@ namespace CognitiveVR.Components
             {
                 Vector3 newPosition = root.position;
 
-                Instrumentation.Transaction("cvr.teleport").setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd();
+                Instrumentation.Transaction("cvr.teleport").setProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).beginAndEnd(newPosition);
                 Util.logDebug("teleport");
 
                 lastRootPosition = root.position;
