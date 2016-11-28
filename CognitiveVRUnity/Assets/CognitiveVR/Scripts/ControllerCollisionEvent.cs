@@ -6,9 +6,9 @@ using System.Collections;
 /// collision layers are set in CognitiveVR_Preferences
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class ControllerCollisionTracker : CognitiveVRAnalyticsComponent
+    public class ControllerCollisionEvent : CognitiveVRAnalyticsComponent
     {
         string controller0GUID;
         string controller1GUID;
@@ -67,7 +67,12 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nRequires SteamVR controllers or Oculus Touch controllers";
+            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nRequires SteamVR or Oculus Touch controllers";
+        }
+
+        void OnDestroy()
+        {
+            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
         }
     }
 }

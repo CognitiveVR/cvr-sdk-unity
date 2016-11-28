@@ -45,7 +45,7 @@ namespace CognitiveVR
         public LayerMask CollisionLayerMask = 1;
 
         public float ComfortTrackingInterval = 6;
-        public bool OnlySendComfortOnLowFPS = false;
+        public bool OnlySendComfortOnLowFPS = true;
 
         [Header("Player Tracking")]
         //player tracking

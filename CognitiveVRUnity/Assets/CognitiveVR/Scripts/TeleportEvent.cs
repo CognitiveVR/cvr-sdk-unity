@@ -5,9 +5,9 @@ using System.Collections;
 /// sends a transaction when a player's HMD root transform changes positions. likely a teleport
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class TeleportTracker : CognitiveVRAnalyticsComponent
+    public class TeleportEvent : CognitiveVRAnalyticsComponent
     {
         Transform _root;
         Transform root
@@ -46,6 +46,11 @@ namespace CognitiveVR
         public static string GetDescription()
         {
             return "Sends a transaction when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
+        }
+
+        void OnDestroy()
+        {
+            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

@@ -7,9 +7,9 @@ using System.Collections.Generic;
 /// this only starts tracking when the player has pressed the Steam Controller Trigger
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class ArmLengthTracker : CognitiveVRAnalyticsComponent
+    public class ArmLength : CognitiveVRAnalyticsComponent
     {
 #if CVR_STEAMVR || CVR_OCULUS
         float maxSqrDistance;
@@ -93,7 +93,15 @@ namespace CognitiveVR
 #endif
         public static string GetDescription()
         {
-            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nOnly SteamVR controllers are currently supported";
+            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nRequires SteamVR or Oculus Touch controllers";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_STEAMVR || CVR_OCULUS
+            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+#endif
         }
     }
 }

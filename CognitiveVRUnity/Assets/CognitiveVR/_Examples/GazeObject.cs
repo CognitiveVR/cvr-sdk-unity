@@ -34,7 +34,7 @@ namespace CognitiveVR
             cameraTransform = Camera.main.transform;
             myCollider = GetComponent<Collider>();
             myTransform = GetComponent<Transform>();
-
+            
             objectSendInterval = CognitiveVR.CognitiveVR_Preferences.Instance.GazeObjectSendInterval;
             nextIntervalTime = Time.time + objectSendInterval;
         }

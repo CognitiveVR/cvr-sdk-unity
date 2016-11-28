@@ -19,7 +19,7 @@ namespace CognitiveVR
         public static event CoreInitHandler OnInit;
         public void InitEvent(Error initError)
         {
-            foreach (var v in GetComponentsInChildren<CognitiveVRAnalyticsComponent>())
+            foreach (var v in GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>())
             {
                 v.CognitiveVR_Init(initError);
             }
@@ -103,6 +103,8 @@ namespace CognitiveVR
                     if (cam != null){ _hmd = cam.transform; }
                     if (_hmd == null)
                     {
+                        if (Camera.main == null)
+                            return null;
                         _hmd = Camera.main.transform;
                     }
 #elif CVR_OCULUS
@@ -114,6 +116,8 @@ namespace CognitiveVR
                     }
                     if (_hmd == null)
                     {
+                        if (Camera.main == null)
+                            return null;
                         _hmd = Camera.main.transform;
                     }
 #else
@@ -265,6 +269,8 @@ namespace CognitiveVR
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
         public bool EnableLogging = false;
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize. Useful for delaying startup until loading scenes/connecting to server is completed")]
+        public bool InitializeOnStart = true;
 
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
@@ -272,14 +278,22 @@ namespace CognitiveVR
         /// </summary>
         EntityInfo GetUniqueEntityID()
         {
-            if (GetComponent<SteamworksUserTracker>() == null)
+            if (GetComponent<CognitiveVR.Components.SteamworksUser>() == null)
                 return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
             return null;
         }
 
         void Start()
         {
-            if (instance != null && instance != this) { Destroy(gameObject); return; }
+            GameObject.DontDestroyOnLoad(gameObject);
+            if (InitializeOnStart)
+                Initialize();
+        }
+
+        public void Initialize()
+        {
+            if (instance != null && instance != this) { Destroy(gameObject); return; } //destroy if there's already another manager
+            if (instance == this) { return; } //skip if this manage has already been initialized
             instance = this;
 
             if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
@@ -293,11 +307,9 @@ namespace CognitiveVR
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
                 logEnabled: EnableLogging,
                 userInfo: GetUniqueEntityID()
-                
+
             );
             CognitiveVR.Core.init(initParams, InitEvent);
-
-            GameObject.DontDestroyOnLoad(gameObject);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
@@ -346,10 +358,16 @@ namespace CognitiveVR
 #endif
         }
 
+        void OnDestroy()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+        }
+
         #region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            if (OnQuit == null) { return; }
             if (hasCanceled) { return; }
             Application.CancelQuit();
             hasCanceled = true;

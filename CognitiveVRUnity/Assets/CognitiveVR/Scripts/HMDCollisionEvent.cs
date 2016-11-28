@@ -6,9 +6,9 @@ using System.Collections;
 /// collision layers are set in CognitiveVR_Preferences
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class HMDCollisionTracker : CognitiveVRAnalyticsComponent
+    public class HMDCollisionEvent : CognitiveVRAnalyticsComponent
     {
         string HMDGuid;
         public override void CognitiveVR_Init(Error initError)
@@ -37,6 +37,11 @@ namespace CognitiveVR
         public static string GetDescription()
         {
             return "Sends transactions if the HMD collides with something in the game world\nCollision layers are set in CognitiveVR_Preferences";
+        }
+
+        void OnDestroy()
+        {
+            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
         }
     }
 }

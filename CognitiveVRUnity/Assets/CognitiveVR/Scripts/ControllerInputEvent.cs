@@ -11,9 +11,9 @@ using CognitiveVR;
 /// For example, it may be easier to send one Transaction at the end of a level to see how many bullets a player had fired.
 /// These Transactions could be more valuable if you are trying to determine if certain gestures are difficult for some players to perform
 /// ===================================================
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class ControllerInputTracker : CognitiveVRAnalyticsComponent
+    public class ControllerInputEvent : CognitiveVRAnalyticsComponent
     {
 #if CVR_OCULUS || CVR_STEAMVR
         Dictionary<string, string> pendingTransactions = new Dictionary<string, string>();
@@ -36,42 +36,42 @@ namespace CognitiveVR
 
             if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
             {
-                BeginTransaction("primarytrigger", "trigger", true);
+                BeginTransaction("primarytrigger", "trigger", false);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger))
             {
-                BeginTransaction("secondarytrigger", "trigger", false);
+                BeginTransaction("secondarytrigger", "trigger", true);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
             {
-                BeginTransaction("primarygrip", "grip", true);
+                BeginTransaction("primarygrip", "grip", false);
             }
 
             if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
             {
-                BeginTransaction("secondarygrip", "grip", false);
+                BeginTransaction("secondarygrip", "grip", true);
             }
 
 
             if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger))
             {
-                EndTransaction("primarytrigger","trigger",true);
+                EndTransaction("primarytrigger","trigger",false);
             }
             if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
             {
-                EndTransaction("secondarytrigger","trigger",false);
+                EndTransaction("secondarytrigger","trigger",true);
             }
 
             if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger))
             {
-                EndTransaction("primarygrip","grip",true);
+                EndTransaction("primarygrip","grip",false);
             }
 
             if (OVRInput.GetUp(OVRInput.Button.SecondaryHandTrigger))
             {
-                EndTransaction("secondarygrip","grip",false);
+                EndTransaction("secondarygrip","grip",true);
             }
         }
 #endif
@@ -111,7 +111,6 @@ namespace CognitiveVR
             for (int i = 0; i<2; i++)
             {
                 bool right = i == 0 ? true : false;
-                //TODO run this when a controller becomes active, not just on Init
                 if (CognitiveVR_Manager.GetController(right) == null){continue;}
                 controller = CognitiveVR_Manager.GetController(right).GetComponent<SteamVR_TrackedController>();
 
@@ -145,6 +144,8 @@ namespace CognitiveVR
             Transaction padTransaction = Instrumentation.Transaction("cvr.input");
             CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
             if (cont == null) { return; }
+            
+            Vector3 pos = CognitiveVR_Manager.GetControllerPosition(cont.isRight);
             padTransaction.setProperties(new Dictionary<string, object>
             {
                 { "type","pad" },
@@ -152,7 +153,7 @@ namespace CognitiveVR
                 { "x",e.padX },
                 { "y",e.padY }
             });
-            padTransaction.beginAndEnd();
+            padTransaction.beginAndEnd(pos);
         }
 
         void OnTriggerClicked(object sender, ClickedEventArgs e)
@@ -171,7 +172,28 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends a transaction when the player does an input with a SteamVR controller or Oculus Touch";
+            return "Sends a transaction when a controller detects certain inputs. This should only be used for testing!\nRequires SteamVR or Oculus Touch controllers";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_STEAMVR
+            SteamVR_TrackedController controller;
+            for (int i = 0; i < 2; i++)
+            {
+                bool right = i == 0 ? true : false;
+                if (CognitiveVR_Manager.GetController(right) == null) { continue; }
+                controller = CognitiveVR_Manager.GetController(right).GetComponent<SteamVR_TrackedController>();
+
+                if (controller == null) { continue; }
+
+                controller.TriggerClicked -= new ClickedEventHandler(OnTriggerClicked);
+                controller.TriggerUnclicked -= new ClickedEventHandler(OnTriggerUnclicked);
+                controller.Gripped -= new ClickedEventHandler(OnGripped);
+                controller.Ungripped -= new ClickedEventHandler(OnUngripped);
+                controller.PadClicked -= new ClickedEventHandler(OnPadClicked);
+            }
+#endif
         }
     }
 }

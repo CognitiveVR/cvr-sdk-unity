@@ -72,32 +72,32 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\CognitiveVR\Scripts\ArmLengthTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\BatteryTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\BoundaryEventTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ArmLength.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\BatteryLevel.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\BoundaryEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\CognitiveVRAnalyticsComponent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\CognitiveVR_Manager.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\ComfortTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\ControllerCollisionTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\ControllerInputTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\Comfort.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ControllerCollisionEvent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ControllerInputEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ExitPollPanel.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\GazeButton.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\HMDHeightTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\HeadphoneTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\IssueTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionEvent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDHeight.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentEvent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\HeadphoneState.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\IssueReporter.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\MicrophoneButton.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\MicrophoneUtility.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\OcclusionTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\PlayerRecorderTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\OcclusionEvent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\PlayerRecorder.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\PlayerRecorderHelper.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\PlayerSnapshot.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\PlayerTrackerHelper.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\RecenterEventTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\RoomSizeTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\ScreenResolutionTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUserTracker.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\TeleportTracker.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\RecenterEvent.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\RoomSize.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\ScreenResolution.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUser.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\TeleportEvent.cs" />
     <Compile Include="Assets\CognitiveVR\_Examples\GazeObject.cs" />
   </ItemGroup>
   <ItemGroup>

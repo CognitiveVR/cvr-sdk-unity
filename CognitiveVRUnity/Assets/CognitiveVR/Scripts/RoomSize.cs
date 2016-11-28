@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// Adds room size from SteamVR chaperone to device info
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class RoomSizeTracker : CognitiveVRAnalyticsComponent
+    public class RoomSize : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {

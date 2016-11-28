@@ -127,7 +127,7 @@ namespace CognitiveVR
         {
             //customer id or something
 
-            string url = "https://testapi.cognitivevr.io/polls/"+ExitPollPanel.PollID+"/feedback";
+            string url = "https://api.cognitivevr.io/polls/"+ExitPollPanel.PollID+"/feedback";
 
             byte[] bytes;
             CognitiveVR.MicrophoneUtility.Save(clip, out bytes);

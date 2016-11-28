@@ -5,9 +5,9 @@ using System.Collections;
 /// sends transactions when SteamVR Chaperone is visible
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class BoundaryEventTracker : CognitiveVRAnalyticsComponent
+    public class BoundaryEvent : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
@@ -67,6 +67,13 @@ namespace CognitiveVR
         public static string GetDescription()
         {
             return "Sends transaction when SteamVR Chaperone or Oculus Guardian becomes visible and becomes hidden";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_STEAMVR
+            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_PoseEventHandler;
+#endif
         }
     }
 }

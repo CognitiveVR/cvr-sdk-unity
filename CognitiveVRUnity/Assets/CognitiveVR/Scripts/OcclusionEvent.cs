@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (isvalid) or is disconnected/loses power (disconnected)
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class OcclusionTracker : CognitiveVRAnalyticsComponent
+    public class OcclusionEvent : CognitiveVRAnalyticsComponent
     {
 
 
@@ -139,7 +139,18 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)\nOn Oculus, this will also happen if the HMD moves out of the tracking frustrum";
+            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_STEAMVR
+            CognitiveVR_Manager.OnPoseUpdate -= CognitiveVR_Manager_PoseUpdateHandler;
+#endif
+#if CVR_OCULUS
+            OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;
+            OVRManager.TrackingLost -= OVRManager_TrackingLost;
+#endif
         }
     }
 }

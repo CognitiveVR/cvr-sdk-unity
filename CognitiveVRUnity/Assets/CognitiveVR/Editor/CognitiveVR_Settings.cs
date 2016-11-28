@@ -233,7 +233,7 @@ namespace CognitiveVR
             GUI.color = Color.white;*/
 
             if (option.Contains("CVR_DEFAULT")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Default"))
+            if (GUILayout.Button("Unity Default VR Settings"))
             {
                 if (option.Contains("CVR_DEFAULT"))
                     option.Remove("CVR_DEFAULT");

@@ -7,9 +7,9 @@ using System.Collections.Generic;
 /// this uses OnGUI - which can impact performance! this could be rolled into your own existing console
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class IssueTracker : CognitiveVRAnalyticsComponent
+    public class IssueReporter : CognitiveVRAnalyticsComponent
     {
         //Input keys
         KeyCode ConsoleKey = KeyCode.BackQuote;

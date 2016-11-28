@@ -6,9 +6,9 @@ using System.Collections;
 /// NOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class HMDPresentTracker : CognitiveVRAnalyticsComponent
+    public class HMDPresentEvent : CognitiveVRAnalyticsComponent
     {
         string hmdpresentGUID;
         public override void CognitiveVR_Init(Error initError)
@@ -53,6 +53,17 @@ namespace CognitiveVR
         public static string GetDescription()
         {
             return "Sends transactions when a player removes or wears HMD\nNOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_STEAMVR
+            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_OnPoseEvent;
+#endif
+#if CVR_OCULUS
+            OVRManager.HMDMounted -= OVRManager_HMDMounted;
+            OVRManager.HMDUnmounted -= OVRManager_HMDUnmounted;
+#endif
         }
     }
 }

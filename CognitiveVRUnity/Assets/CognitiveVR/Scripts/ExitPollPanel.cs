@@ -50,8 +50,6 @@ namespace CognitiveVR
 
     public class ExitPollPanel : MonoBehaviour
     {
-        ExitPollPanelType _exitPollType;
-
         System.Action _finalCloseAction;
         System.Action _closeAction;
 
@@ -268,9 +266,7 @@ namespace CognitiveVR
                 _instance._finalCloseAction = closeAction;
                 _instance._closeAction = closeAction;
             }
-
-            _instance._exitPollType = exitpollType;
-
+            
             //_instance._closeAction = closeAction;
             _instance.gameObject.SetActive(true);
             NextResponseTime = _instance.ResponseDelayTime + Time.time;
@@ -490,7 +486,7 @@ namespace CognitiveVR
             response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
             response.sessionId = CognitiveVR_Manager.SessionID;
 
-            string url = "https://testapi.cognitivevr.io/polls";
+            string url = "https://api.cognitivevr.io/polls";
             string jsonResponse = JsonUtility.ToJson(response, true);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 

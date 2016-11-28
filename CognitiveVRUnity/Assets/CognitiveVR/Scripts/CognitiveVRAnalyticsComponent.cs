@@ -5,7 +5,7 @@ using System.Collections;
 /// base for CognitiveVR analytics components
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
     public class CognitiveVRAnalyticsComponent : MonoBehaviour
     {

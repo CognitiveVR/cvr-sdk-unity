@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// Check if the user has headphones connected
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class HeadphoneTracker : CognitiveVRAnalyticsComponent
+    public class HeadphoneState : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {

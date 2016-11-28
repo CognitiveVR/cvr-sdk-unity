@@ -9,9 +9,9 @@ using System.Collections.Generic;
 /// on unsupported platforms (pc, laptop, vive, iOS) does not send battery level
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class BatteryTracker : CognitiveVRAnalyticsComponent
+    public class BatteryLevel : CognitiveVRAnalyticsComponent
     {
 #if !CVR_OCULUS
         float batteryLevel; //0-100 battery level
@@ -107,6 +107,11 @@ namespace CognitiveVR
         public static string GetDescription()
         {
             return "Send the battery level of Android device after initialization and on quit\nOculus Utilies also includes battery temperature and status" + (GetWarning() ? "\nPlatform not set to Android!" : "");
+        }
+
+        void OnDestroy()
+        {
+            CognitiveVR_Manager.OnQuit -= CognitiveVR_Manager_OnQuit;
         }
     }
 }
