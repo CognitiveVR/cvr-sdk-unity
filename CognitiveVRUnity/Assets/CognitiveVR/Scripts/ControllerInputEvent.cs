@@ -83,7 +83,7 @@ namespace CognitiveVR.Components
 
             string transactionID = System.Guid.NewGuid().ToString();
             Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
-            inTransaction.setProperty("device", rightController?"right controller": "left controller").setProperty("type", type);
+            inTransaction.setProperty("type", type).setProperty("device", rightController?"right controller": "left controller").setProperty("state","begin");
             inTransaction.begin(pos);
 
             if (!pendingTransactions.ContainsKey(transactionKey))
@@ -96,7 +96,7 @@ namespace CognitiveVR.Components
             if (pendingTransactions.TryGetValue(transactionKey, out transactionID))
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
-                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("device", rightController ? "right controller" : "left controller").end(pos);
+                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("device", rightController ? "right controller" : "left controller").setProperty("state","end").end(pos);
                 pendingTransactions.Remove(transactionID);
             }
         }
