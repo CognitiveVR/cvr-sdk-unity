@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class HMDHeightTracker : CognitiveVRAnalyticsComponent
+    public class HMDHeight: CognitiveVRAnalyticsComponent
     {
         int sampleCount = 50;
         int samples = 0;
@@ -19,11 +19,11 @@ namespace CognitiveVR
             base.CognitiveVR_Init(initError);
 
             CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-
         }
 
         private void CognitiveVR_Manager_OnTick()
         {
+            if (CognitiveVR_Manager.HMD == null) { return; }
             if (samples < sampleCount)
             {
                 hmdAccumHeight += CognitiveVR_Manager.HMD.position.y;
@@ -40,7 +40,12 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nRequires SteamVR";
+            return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
+        }
+
+        void OnDestroy()
+        {
+            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
         }
     }
 }

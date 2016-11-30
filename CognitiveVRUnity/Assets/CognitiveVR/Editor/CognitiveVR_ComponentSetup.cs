@@ -13,7 +13,6 @@ namespace CognitiveVR
 {
     public class CognitiveVR_ComponentSetup : EditorWindow
     {
-        static CognitiveVR_ComponentSetup window;
         static Color Green = new Color(0.6f, 1f, 0.6f);
         static Color Orange = new Color(1f, 0.6f, 0.3f);
 
@@ -48,7 +47,7 @@ namespace CognitiveVR
         {
             if (childTypes != null) { return; }
             int iterations = 1;
-            Type pType = typeof(CognitiveVRAnalyticsComponent);
+            Type pType = typeof(Components.CognitiveVRAnalyticsComponent);
             childTypes = Enumerable.Range(1, iterations)
                .SelectMany(i => Assembly.GetAssembly(pType).GetTypes()
                                 .Where(t => t.IsClass && t != pType && pType.IsAssignableFrom(t))
@@ -178,11 +177,6 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
 
-            string prettyName = componentType.Name;
-            if (prettyName.Contains("Tracker"))
-            {
-                prettyName = prettyName.Replace("Tracker", "");
-            }
             GUI.skin.toggle.richText = true;
 
             /*string supportedPlatforms = "";
@@ -203,7 +197,7 @@ namespace CognitiveVR
                 }
             }*/
 
-            bool b = GUILayout.Toggle(component != null, "<size=14><b>" + prettyName + "</b></size>");
+            bool b = GUILayout.Toggle(component != null, "<size=14><b>" + componentType.Name + "</b></size>");
 
             if (b != (component != null))
             {

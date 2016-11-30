@@ -18,7 +18,7 @@ namespace CognitiveVR
         {
             bool show = true;
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_NONE
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT
             show = false;
 #endif
 
@@ -31,8 +31,8 @@ namespace CognitiveVR
 #if CVR_GOOGLEVR
             option.Add("CVR_GOOGLEVR");
 #endif
-#if CVR_NONE
-            option.Add("CVR_NONE");
+#if CVR_DEFAULT
+            option.Add("CVR_DEFAULT");
 #endif
 
             string version = EditorPrefs.GetString("cvr_version");
@@ -200,7 +200,7 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
             if (option.Contains("CVR_STEAMVR")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR"))
+            if (GUILayout.Button("Steam VR 1.1.1+"))
             {
                 if (option.Contains("CVR_STEAMVR"))
                     option.Remove("CVR_STEAMVR");
@@ -214,7 +214,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_OCULUS")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Oculus VR"))
+            if (GUILayout.Button("Oculus Utilities 1.9.0+"))
             {
                 if (option.Contains("CVR_OCULUS"))
                     option.Remove("CVR_OCULUS");
@@ -232,16 +232,16 @@ namespace CognitiveVR
             if (GUILayout.Button("Google VR")) { option = "CVR_GOOGLEVR"; }
             GUI.color = Color.white;*/
 
-            if (option.Contains("CVR_NONE")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("None"))
+            if (option.Contains("CVR_DEFAULT")) { GUI.color = Green; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Unity Default VR Settings"))
             {
-                if (option.Contains("CVR_NONE"))
-                    option.Remove("CVR_NONE");
+                if (option.Contains("CVR_DEFAULT"))
+                    option.Remove("CVR_DEFAULT");
                 else
                 {
                     if (!Event.current.shift)
                         option.Clear();
-                    option.Add("CVR_NONE");
+                    option.Add("CVR_DEFAULT");
                 }
             }
             GUI.color = Color.white;

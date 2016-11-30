@@ -59,8 +59,6 @@ namespace CognitiveVR
 
             prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nHMD Height\nHMD Collsion\nArm Length\nController Collision"), prefs.SnapshotInterval);
             prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
-            prefs.LowFramerateThreshold = EditorGUILayout.IntField(new GUIContent("Low Framerate Threshold", "Falling below and rising above this threshold will send events"), prefs.LowFramerateThreshold);
-            prefs.LowFramerateThreshold = Mathf.Max(prefs.LowFramerateThreshold, 1);
             prefs.CollisionLayerMask = LayerMaskField(new GUIContent("Collision Layer", "LayerMask for HMD and Controller Collision events"), prefs.CollisionLayerMask);
             prefs.GazeObjectSendInterval = EditorGUILayout.FloatField(new GUIContent("Gaze Object Send Interval", "How many seconds of gaze data are batched together when reporting CognitiveVR_GazeObject look durations"), prefs.GazeObjectSendInterval);
             prefs.GazeObjectSendInterval = Mathf.Max(prefs.GazeObjectSendInterval, 1);
@@ -70,8 +68,10 @@ namespace CognitiveVR
             prefs.TrackArmLengthSamples = Mathf.Clamp(prefs.TrackArmLengthSamples, 1, 100);
             prefs.TrackHMDHeightSamples = Mathf.Clamp(prefs.TrackHMDHeightSamples, 1, 100);
 
-
-
+            prefs.ComfortTrackingInterval = EditorGUILayout.Slider(new GUIContent("Comfort Tracking Send Rate", "Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail"), prefs.ComfortTrackingInterval, 3, 60);
+            prefs.OnlySendComfortOnLowFPS = EditorGUILayout.Toggle(new GUIContent("Only Send Low FPS", "Ignore sending Comfort at set intervals. Only send FPS events below the threshold"), prefs.OnlySendComfortOnLowFPS);
+            prefs.LowFramerateThreshold = EditorGUILayout.IntField(new GUIContent("Low Framerate Threshold", "Falling below and rising above this threshold will send events"), prefs.LowFramerateThreshold);
+            prefs.LowFramerateThreshold = Mathf.Max(prefs.LowFramerateThreshold, 1);
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });

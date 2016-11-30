@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// Adds screen resolution to device info
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class ScreenResolutionTracker : CognitiveVRAnalyticsComponent
+    public class ScreenResolution : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
@@ -19,7 +19,7 @@ namespace CognitiveVR
 
         public static string GetDescription()
         {
-            return "Include Screen Resolution in Device Info. Probaby only useful for mobile";
+            return "Include Screen Resolution in Device Info. Probably only useful for mobile";
         }
     }
 }

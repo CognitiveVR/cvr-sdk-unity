@@ -5,9 +5,9 @@ using System.Collections;
 /// sends recenter hmd transaction
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class RecenterEventTracker : CognitiveVRAnalyticsComponent
+    public class RecenterEvent : CognitiveVRAnalyticsComponent
     {
 #if CVR_OCULUS
         public override void CognitiveVR_Init(Error initError)
@@ -19,13 +19,20 @@ namespace CognitiveVR
 
         private void RecenterEventTracker_RecenteredPose()
         {
-            Instrumentation.Transaction("Recenter").beginAndEnd();
+            Instrumentation.Transaction("cvr.recenter").beginAndEnd();
         }
 #endif
 
         public static string GetDescription()
         {
             return "Sends transaction when the HMD recenters\nRequires Oculus Utilities";
+        }
+
+        void OnDestroy()
+        {
+#if CVR_OCULUS
+            OVRManager.display.RecenteredPose -= RecenterEventTracker_RecenteredPose;
+#endif
         }
     }
 }

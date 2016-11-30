@@ -7,9 +7,9 @@ using System.Collections.Generic;
 /// this uses OnGUI - which can impact performance! this could be rolled into your own existing console
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class IssueTracker : CognitiveVRAnalyticsComponent
+    public class IssueReporter : CognitiveVRAnalyticsComponent
     {
         //Input keys
         KeyCode ConsoleKey = KeyCode.BackQuote;
@@ -100,9 +100,9 @@ namespace CognitiveVR
                 }
 
                 GUILayout.BeginHorizontal();
-                for (int i = 0; i<_commonIssues.Count; i++)
+                for (int i = 0; i < _commonIssues.Count; i++)
                 {
-                    if (GUILayout.Button(new GUIContent(_commonIssues[i].Title,_commonIssues[i].Desc)))
+                    if (GUILayout.Button(new GUIContent(_commonIssues[i].Title, _commonIssues[i].Desc)))
                     {
                         SendIssue(_commonIssues[i].Title, _commonIssues[i].Desc, _commonIssues[i].Repro);
                     }
@@ -130,7 +130,7 @@ namespace CognitiveVR
 
                 GUILayout.Box("<size=10><color=red>" + EscapeKey.ToString() + " to cancel          </color></size>" + "<size=10><color=white>" + (SendShiftModifier ? "Shift + " : "") + SendKey.ToString() + " to submit</color></size>");
 
-                GUI.Label(new Rect(Input.mousePosition.x+20,Screen.height - Input.mousePosition.y+40, 240, 80), GUI.tooltip);
+                GUI.Label(new Rect(Input.mousePosition.x + 20, Screen.height - Input.mousePosition.y + 40, 240, 80), GUI.tooltip);
 
                 if (string.IsNullOrEmpty(GUI.GetNameOfFocusedControl()))
                 {
@@ -143,7 +143,7 @@ namespace CognitiveVR
         {
             if (send)
             {
-                SendIssue(_title,_description,_repro);
+                SendIssue(_title, _description, _repro);
             }
             _consoleOpen = false;
             _title = string.Empty;
@@ -155,7 +155,7 @@ namespace CognitiveVR
         {
             if (string.IsNullOrEmpty(title)) { return; }
 
-            Transaction t = Instrumentation.Transaction("Issue").setProperty("Title", title);
+            Transaction t = Instrumentation.Transaction("cvr.issue").setProperty("Title", title);
             if (!string.IsNullOrEmpty(description)) { t.setProperty("Description", description); }
             if (!string.IsNullOrEmpty(repro)) { t.setProperty("Reproduction", repro); }
             t.beginAndEnd();

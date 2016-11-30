@@ -19,7 +19,7 @@ namespace CognitiveVR
         public static event CoreInitHandler OnInit;
         public void InitEvent(Error initError)
         {
-            foreach (var v in GetComponentsInChildren<CognitiveVRAnalyticsComponent>())
+            foreach (var v in GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>())
             {
                 v.CognitiveVR_Init(initError);
             }
@@ -74,6 +74,22 @@ namespace CognitiveVR
 
         #region HMD and Controllers
 
+
+#if CVR_OCULUS
+        static OVRCameraRig _cameraRig;
+        static OVRCameraRig CameraRig
+        {
+            get
+            {
+                if (_cameraRig == null)
+                {
+                    _cameraRig = FindObjectOfType<OVRCameraRig>();
+                }
+                return _cameraRig;
+            }
+        }
+#endif
+
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
         public static Transform HMD
@@ -87,6 +103,8 @@ namespace CognitiveVR
                     if (cam != null){ _hmd = cam.transform; }
                     if (_hmd == null)
                     {
+                        if (Camera.main == null)
+                            return null;
                         _hmd = Camera.main.transform;
                     }
 #elif CVR_OCULUS
@@ -98,9 +116,13 @@ namespace CognitiveVR
                     }
                     if (_hmd == null)
                     {
+                        if (Camera.main == null)
+                            return null;
                         _hmd = Camera.main.transform;
                     }
 #else
+                    if (Camera.main == null)
+                        return null;
                     _hmd = Camera.main.transform;
 #endif
                 }
@@ -109,25 +131,71 @@ namespace CognitiveVR
         }
 
 #if CVR_STEAMVR
-        static Transform[] controllers = new Transform[2];
-#endif
-        /// <summary>Returns Tracked Controller by index. Based on SDK. MAY RETURN NULL!</summary>
-        public static Transform GetController(int id)
+
+        static void InitializeControllers()
         {
-#if CVR_STEAMVR
-            //TODO update controllers when new controller is detected
-            if (controllers[id] == null)
+            if (controllers[0].id < 0)
             {
                 SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
                 if (cm != null)
                 {
                     if (cm.left != null)
-                        controllers[0] = cm.left.transform;
-                    if (cm.right != null)
-                        controllers[1] = cm.right.transform;
+                    {
+                        int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
+                        if (controllerIndex > 0)
+                        {
+                            controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false, id = controllerIndex };
+                        }
+                    }
                 }
             }
-            return controllers[id];
+            if (controllers[1].id < 0)
+            {
+                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
+                if (cm != null)
+                {
+                    if (cm.right != null)
+                    {
+                        int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
+                        if (controllerIndex > 0)
+                        {
+                            controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true, id = controllerIndex };
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        public class ControllerInfo
+        {
+            public Transform transform;
+            public bool isRight;
+            public int id = -1;
+        }
+
+        static ControllerInfo[] controllers = new ControllerInfo[2] { new ControllerInfo(), new ControllerInfo() };
+
+        public static ControllerInfo GetControllerInfo(int deviceID)
+        {
+            InitializeControllers();
+            if (controllers[0].id == deviceID) { return controllers[0]; }
+            if (controllers[1].id == deviceID) { return controllers[1]; }
+            return null;
+        }
+#endif
+        /// <summary>
+        /// steamvr ID is tracked device id
+        /// oculus ID 0 is right, 1 is left controller
+        /// </summary>
+        public static Transform GetController(int deviceid)
+        {
+#if CVR_STEAMVR
+            InitializeControllers();
+            if (controllers[0].id == deviceid) { return controllers[0].transform; }
+            if (controllers[1].id == deviceid) { return controllers[1].transform; }
+            return null;
 #elif CVR_OCULUS
             // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
             return null;
@@ -136,10 +204,73 @@ namespace CognitiveVR
 #endif
         }
 
-#endregion
+        public static Transform GetController(bool right)
+        {
+#if CVR_STEAMVR
+            InitializeControllers();
+
+            if (right == controllers[0].isRight) { return controllers[0].transform; }
+            if (right == controllers[1].isRight) { return controllers[1].transform; }
+            return null;
+#elif CVR_OCULUS
+            return null;
+#else
+            return null;
+#endif
+        }
+
+        /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
+        public static Vector3 GetControllerPosition(bool rightController)
+        {
+#if CVR_STEAMVR
+            InitializeControllers();
+            if (rightController)
+            {
+                if (controllers[0].transform != null)
+                { return controllers[0].transform.position; }
+            }
+            else
+            {
+                if (controllers[1].transform != null)
+                { return controllers[1].transform.position; }
+            }
+            return Vector3.zero;
+#elif CVR_OCULUS
+            if (rightController)
+            {
+                if (CameraRig != null)
+                    return CameraRig.rightHandAnchor.position;
+            }
+            else
+            {
+                if (CameraRig != null)
+                    return CameraRig.leftHandAnchor.position;
+            }
+            return Vector3.zero;
+#else
+            return Vector3.zero;
+#endif
+        }
+
+        #endregion
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
+        private static double _timeStamp;
+        public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
+
+        public static string SessionID
+        {
+            get
+            {
+                return (int)TimeStamp + "_" + Core.UniqueID;
+            }
+        }
+
+        [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
+        public bool EnableLogging = false;
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize. Useful for delaying startup until loading scenes/connecting to server is completed")]
+        public bool InitializeOnStart = true;
 
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
@@ -147,51 +278,56 @@ namespace CognitiveVR
         /// </summary>
         EntityInfo GetUniqueEntityID()
         {
-            if (GetComponent<SteamworksUserTracker>() == null)
+            if (GetComponent<CognitiveVR.Components.SteamworksUser>() == null)
                 return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
             return null;
         }
 
         void Start()
         {
-            if (instance != null && instance != this) { Destroy(gameObject); return; }
+            GameObject.DontDestroyOnLoad(gameObject);
+            if (InitializeOnStart)
+                Initialize();
+        }
+
+        public void Initialize()
+        {
+            if (instance != null && instance != this) { Destroy(gameObject); return; } //destroy if there's already another manager
+            if (instance == this) { return; } //skip if this manage has already been initialized
             instance = this;
+
+            if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
+            {
+                if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
+                return;
+            }
 
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: false,
+                logEnabled: EnableLogging,
                 userInfo: GetUniqueEntityID()
+
             );
             CognitiveVR.Core.init(initParams, InitEvent);
-
-            GameObject.DontDestroyOnLoad(gameObject);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
 
-            GetController(0);
+            //GetController(true);
 
 #if CVR_STEAMVR
             SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
 #endif
 
-#if UNITY_5_4
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-#endif
         }
 
-#if UNITY_5_4
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             LevelLoadEvent();
+            _timeStamp = Util.Timestamp();
         }
-#else
-        void OnLevelWasLoaded(int id)
-        {
-            LevelLoadEvent();
-        }
-#endif
 
         IEnumerator Tick()
         {
@@ -222,11 +358,28 @@ namespace CognitiveVR
 #endif
         }
 
-#region Application Quit
+        void OnDestroy()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+        }
+
+        #region Application Quit
+        bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            if (OnQuit == null) { return; }
+            if (hasCanceled) { return; }
+            Application.CancelQuit();
+            hasCanceled = true;
             QuitEvent();
+            StartCoroutine(SlowQuit());
         }
-#endregion
+
+        IEnumerator SlowQuit()
+        {
+            yield return new WaitForSeconds(1);
+            Application.Quit();
+        }
+        #endregion
     }
 }

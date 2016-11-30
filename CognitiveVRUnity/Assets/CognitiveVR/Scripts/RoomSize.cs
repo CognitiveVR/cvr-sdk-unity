@@ -6,9 +6,9 @@ using System.Collections.Generic;
 /// Adds room size from SteamVR chaperone to device info
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class RoomSizeTracker : CognitiveVRAnalyticsComponent
+    public class RoomSize : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
@@ -32,23 +32,19 @@ namespace CognitiveVR
             }
 #elif CVR_OCULUS
 
-            if (OVRManager.tracker.isPresent)
+            //(x = width, y = height, z = depth)
+            Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
+
+            Instrumentation.updateDeviceState(new Dictionary<string, object>()
             {
-                Instrumentation.updateDeviceState(new Dictionary<string, object>() {
-                    { "cvr.vr.frustrumFOV", OVRManager.tracker.GetFrustum().fov },
-                    { "cvr.vr.frustrumNear", OVRManager.tracker.GetFrustum().nearZ },
-                    { "cvr.vr.frustrumFar", OVRManager.tracker.GetFrustum().farZ }});
-            }
-            else
-            {
-                Util.logDebug("OVRManager tracker is not present!");
-            }
+                { "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", dimensions.x, dimensions.z) }
+            });
 #endif
         }
 
         public static string GetDescription()
         {
-            return "Include SteamVR Chaperone Room Size in Device Info\nOn Oculus, sends the tracker FOV, NearZ and FarZ";
+            return "Include Room Size in Device Info from SteamVR Chaperone or Oculus Guardian";
         }
     }
 }

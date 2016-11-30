@@ -44,6 +44,9 @@ namespace CognitiveVR
         public int LowFramerateThreshold = 60;
         public LayerMask CollisionLayerMask = 1;
 
+        public float ComfortTrackingInterval = 6;
+        public bool OnlySendComfortOnLowFPS = true;
+
         [Header("Player Tracking")]
         //player tracking
         public int SnapshotThreshold = 1000;
@@ -58,7 +61,7 @@ namespace CognitiveVR
         public float GazeDirectionMultiplier = 1.0f;
 
         public bool SendDataOnQuit = true;
-        public bool SendDataOnHMDRemove = true;
+        public bool SendDataOnHMDRemove = false;
         public bool SendDataOnLevelLoad = true;
         public bool SendDataOnHotkey = true;
         public bool HotkeyShift = true;

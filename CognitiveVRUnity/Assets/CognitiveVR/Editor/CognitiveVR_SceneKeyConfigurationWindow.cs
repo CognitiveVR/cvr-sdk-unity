@@ -167,7 +167,7 @@ namespace CognitiveVR
                     }
 
                     GUI.color = Color.red;
-                    GUILayout.Button(new GUIContent("!", "ID is invalid! Should be similar to:\na12345b6-78c9-01d2-3456-78e9f0ghi123"), GUILayout.Width(14), GUILayout.Height(14));
+                    GUILayout.Button(new GUIContent("!", "ID is invalid! Should be format:\na12345b6-78c9-01d2-3456-78e9f0ghi123"), GUILayout.Width(14), GUILayout.Height(14));
                     GUI.color = Color.white;
                 }
             }

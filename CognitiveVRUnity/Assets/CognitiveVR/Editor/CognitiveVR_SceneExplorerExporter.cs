@@ -606,7 +606,7 @@ namespace CognitiveVR
             {
                 mfList.RemoveAll(delegate (MeshFilter obj) { return obj == null; });
                 mfList.RemoveAll(delegate (MeshFilter obj) { return obj.sharedMesh == null; });
-                mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.mesh.name); });
+                mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
                 MeshesToFile(mfList.ToArray(), fullName, includeTextures);
