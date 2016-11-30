@@ -14,6 +14,7 @@ namespace CognitiveVR
 #pragma warning disable 0649
         class ExitPollRequest
         {
+            public string sceneId;
             public string customerId;
             public string sessionId; //sessionID for scene explorer
             public ExitPollTuningQuestion[] pollValues;
@@ -479,20 +480,29 @@ namespace CognitiveVR
             question.answer = positive.ToString();
             question.question = Question.text;
 
-            //response details
-            ExitPollRequest response = new ExitPollRequest();
-            response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
-            response.pollValues = new ExitPollTuningQuestion[1] { question };
-            response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
-            response.sessionId = CognitiveVR_Manager.SessionID;
+            var key = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            if (key != null)
+            {
+                //response details
+                ExitPollRequest response = new ExitPollRequest();
+                response.sceneId = key.SceneKey;
+                response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
+                response.pollValues = new ExitPollTuningQuestion[1] { question };
+                response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
+                response.sessionId = CognitiveVR_Manager.SessionID;
 
-            string url = "https://api.cognitivevr.io/polls";
-            string jsonResponse = JsonUtility.ToJson(response, true);
-            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
+                string url = "https://api.cognitivevr.io/polls";
+                string jsonResponse = JsonUtility.ToJson(response, true);
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
 
-            Util.logDebug("ExitPoll Request\n" + jsonResponse);
+                Util.logDebug("ExitPoll Request\n" + jsonResponse);
 
-            StartCoroutine(SendAnswer(bytes, url));
+                StartCoroutine(SendAnswer(bytes, url));
+            }
+            else
+            {
+                Close();
+            }
         }
 
         private IEnumerator SendAnswer(byte[] bytes, string url)
