@@ -58,7 +58,7 @@ namespace CognitiveVR.Components
         void CheckCameraSettings()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            
+
             if (periodicRenderer == null)
             {
                 periodicRenderer = CognitiveVR_Manager.HMD.GetComponent<PlayerRecorderHelper>();
@@ -204,6 +204,22 @@ namespace CognitiveVR.Components
             snapshot.Properties.Add("time", Time.time);
             snapshot.Properties.Add("renderDepth", rt);
 
+#if CVR_FOVE
+            var hmd = Fove.FoveHeadset.GetHeadset();
+            var c = hmd.GetWorldGaze().convergence;
+            var v = new Vector3(c.x, c.y, c.z);
+
+            //Quaternion rotation = Quaternion.Euler(v);
+            //Vector3 rotateConvergence = rotation * cam.transform.forward;
+
+            snapshot.Properties.Add("convergence", Quaternion.LookRotation(cam.transform.forward) * v);
+
+            Vector2 gazePoint = hmd.GetGazePoint();
+            if (float.IsNaN(gazePoint.x)) { return; }
+
+            snapshot.Properties.Add("fovepoint", hmd.GetGazePoint());
+#endif
+
 #if CVR_STEAMVR
             if (Valve.VR.OpenVR.Chaperone != null)
                 snapshot.Properties.Add("chaperoneVisible", Valve.VR.OpenVR.Chaperone.AreBoundsVisible());
@@ -235,8 +251,8 @@ namespace CognitiveVR.Components
                 {
                     playerSnapshots[i].Properties.Add("gazePoint", playerSnapshots[i].GetGazePoint(depthTex));
 #if CVR_DEBUG
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], Vector3.up * 10, Color.magenta, 10);
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up * 10, Color.magenta, 10);
+                    //Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], Vector3.up * 10, Color.magenta, 10);
+                    //Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up * 10, Color.magenta, 10);
                     Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);

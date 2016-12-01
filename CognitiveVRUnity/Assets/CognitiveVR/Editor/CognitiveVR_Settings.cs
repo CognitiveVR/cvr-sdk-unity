@@ -18,7 +18,7 @@ namespace CognitiveVR
         {
             bool show = true;
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
             show = false;
 #endif
 
@@ -33,6 +33,9 @@ namespace CognitiveVR
 #endif
 #if CVR_DEFAULT
             option.Add("CVR_DEFAULT");
+#endif
+#if CVR_FOVE
+            option.Add("CVR_FOVE");
 #endif
 
             string version = EditorPrefs.GetString("cvr_version");
@@ -242,6 +245,20 @@ namespace CognitiveVR
                     if (!Event.current.shift)
                         option.Clear();
                     option.Add("CVR_DEFAULT");
+                }
+            }
+            GUI.color = Color.white;
+
+            if (option.Contains("CVR_FOVE")) { GUI.color = Green; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Fove VR Plugin"))
+            {
+                if (option.Contains("CVR_FOVE"))
+                    option.Remove("CVR_FOVE");
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_FOVE");
                 }
             }
             GUI.color = Color.white;

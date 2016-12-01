@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-
 /// <summary>
 /// container for cached player tracking data points
 /// </summary>
@@ -26,9 +25,46 @@ namespace CognitiveVR
         public Vector3 GetGazePoint(Texture2D texTemp)
         {
             texTemp = GetRTPixels((RenderTexture)Properties["renderDepth"]);
-            float relativeDepth;
+            float relativeDepth = 0;
 
             Vector3 GazeWorldPoint;
+
+#if CVR_FOVE
+
+            //TODO project vector3 onto vector2
+
+            //Vector3 convergence = (Vector3)Properties["convergence"];
+            //Vector3 directionToConvergencePoint = convergence - (Vector3)Properties["position"];
+            //directionToConvergencePoint.Normalize();
+
+            Vector2 foveGazePoint = (Vector2)Properties["fovepoint"] * 0.5f + Vector2.one * 0.5f;
+            //range between -1.0 and 1.0. SHOULD CLAMP THIS 1.1 has been seen
+
+            foveGazePoint *= 64;
+
+            foveGazePoint.x = Mathf.Clamp(foveGazePoint.x, 0, 64);
+            foveGazePoint.y = Mathf.Clamp(foveGazePoint.y, 0, 64);
+
+            //Debug.Log("foveGazePoint " + foveGazePoint);
+
+            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+                relativeDepth = texTemp.GetPixel((int)foveGazePoint.x, (int)foveGazePoint.y).linear.r;
+            else
+            {
+                //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
+                relativeDepth = texTemp.GetPixel((int)foveGazePoint.x, (int)foveGazePoint.y).r;
+            }
+
+#if CVR_DEBUG
+            //texTemp.SetPixel((int)foveGazePoint.x, (int)foveGazePoint.y, Color.red);
+            //System.IO.File.WriteAllBytes(System.Guid.NewGuid().ToString() + ".png", texTemp.EncodeToJPG(100));
+#endif
+
+
+            float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
+            GazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["convergence"] * actualDistance;
+            return GazeWorldPoint;
+#else
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
                 relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).linear.r;
             else
@@ -40,6 +76,8 @@ namespace CognitiveVR
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
             GazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
             return GazeWorldPoint;
+#endif
+
         }
 
         public Texture2D GetRTPixels(RenderTexture rt)
