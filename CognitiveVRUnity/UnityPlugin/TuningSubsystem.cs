@@ -99,6 +99,12 @@ namespace CognitiveVR
                 entityId = userId;
             }
 
+            if (sCacheVars == null)
+            {
+                Util.logError("TuningSubsystem sCacheVars have not been initialized!");
+                return defaultValue;
+            }
+
             // Grab the value from the cache
             return sCacheVars.getValue(entityType, entityId, varName, defaultValue);
         }

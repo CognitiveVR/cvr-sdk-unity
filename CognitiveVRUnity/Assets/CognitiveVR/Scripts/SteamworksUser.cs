@@ -9,9 +9,9 @@ using System.Collections.Generic;
 /// Below should be perfectly working code if you have Steamworks.net in your project - just un-comment!
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
-    public class SteamworksUserTracker : CognitiveVRAnalyticsComponent
+    public class SteamworksUser : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {

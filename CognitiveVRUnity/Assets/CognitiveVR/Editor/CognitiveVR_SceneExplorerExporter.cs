@@ -39,7 +39,7 @@ namespace CognitiveVR
 
             //set terrain textures to readable
             bool[] textureReadable = new bool[layerCount];
-            for (int i = 0; i< layerCount; i++)
+            for (int i = 0; i < layerCount; i++)
             {
                 try
                 {
@@ -64,19 +64,19 @@ namespace CognitiveVR
                 for (int x = 0; x < data.alphamapWidth; x++)
                 {
                     float[] colorAtLayer = new float[layerCount];
-                    for (int i = 0; i<colorAtLayer.Length; i++)
+                    for (int i = 0; i < colorAtLayer.Length; i++)
                     {
                         //put layers into colours
                         colorAtLayer[i] = maps[x, y, i];
                     }
 
 
-                    int highestMap=0;
-                    float highestMapValue=0;
+                    int highestMap = 0;
+                    float highestMapValue = 0;
 
-                    
 
-                    for (int i = 0; i<colorAtLayer.Length; i++)
+
+                    for (int i = 0; i < colorAtLayer.Length; i++)
                     {
                         if (colorAtLayer[i] > highestMapValue)
                         {
@@ -295,9 +295,14 @@ namespace CognitiveVR
 
             if (m.uv.Length == 0)
             {
-                //TODO sometimes explodes when vertex/uv/normal counts don't line up - faces are written assuming these all have the right count!
-                Debug.LogError("Skipping export of mesh \"" + m.name + "\". Exporting meshes must be unwrapped");
-                return "";
+                m.uv = new Vector2[m.vertexCount];
+                Debug.LogWarning(m.name + " does not have UV data. Generating uv data could lead to artifacts!");
+            }
+
+            if (m.normals.Length == 0)
+            {
+                m.normals = new Vector3[m.vertexCount];
+                Debug.LogWarning(m.name + " does not have normals data. Generating normal data could lead to artifacts!");
             }
 
             Material[] mats = mf.GetComponent<Renderer>().sharedMaterials;
@@ -578,6 +583,8 @@ namespace CognitiveVR
             }
 
             int exportedObjects = 0;
+            int smallObjectCount = 0;
+            int nonstaticObjectCount = 0;
 
             List<MeshFilter> mfList = new List<MeshFilter>();
 
@@ -587,9 +594,9 @@ namespace CognitiveVR
 
             for (int i = 0; i < meshes.Length; i++)
             {
-                if (staticGeoOnly && !meshes[i].gameObject.isStatic) { continue; }
+                if (staticGeoOnly && !meshes[i].gameObject.isStatic) { nonstaticObjectCount++; continue; }
                 Renderer r = meshes[i].GetComponent<Renderer>();
-                if (r == null || r.bounds.size.magnitude < minSize) { continue; }
+                if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
 
                 exportedObjects++;
                 mfList.Add(meshes[i]);
@@ -597,17 +604,20 @@ namespace CognitiveVR
 
             if (exportedObjects > 0)
             {
-                MeshFilter[] mf = new MeshFilter[mfList.Count];
+                mfList.RemoveAll(delegate (MeshFilter obj) { return obj == null; });
+                mfList.RemoveAll(delegate (MeshFilter obj) { return obj.sharedMesh == null; });
+                mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
-                for (int i = 0; i < mfList.Count; i++)
-                {
-                    mf[i] = mfList[i];
-                }
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                MeshesToFile(mf, fullName, includeTextures);
+                MeshesToFile(mfList.ToArray(), fullName, includeTextures);
             }
             else
-                EditorUtility.DisplayDialog("Objects not exported", "Make sure at least some of your selected objects have mesh filters!", "");
+            {
+                if (staticGeoOnly && nonstaticObjectCount > smallObjectCount)
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticGeoOnly in Preferences!", "");
+                else
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinExportGeoSize. This can be changed in Preferences", "");
+            }
         }
 
         public static Texture2D RescaleForExport(Texture2D tex, int newWidth, int newHeight)

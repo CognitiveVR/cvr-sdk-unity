@@ -5,16 +5,17 @@ using System.Collections;
 /// this is automatically added to your main camera if PlayerRecorderTracker is set to capture Gaze Points
 /// </summary>
 
-namespace CognitiveVR
+namespace CognitiveVR.Components
 {
     //depth capture generated this and calls 'do render' a couple times a second, instead of 60fps
-    public class PlayerTrackerHelper : MonoBehaviour
+    public class PlayerRecorderHelper : MonoBehaviour
     {
         Camera cam;
         Material _mat;
         Material material
         {
-            get {
+            get
+            {
                 if (_mat == null)
                     _mat = new Material(Shader.Find("Hidden/CognitiveVRSceneDepth"));
                 return _mat;
