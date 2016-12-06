@@ -38,15 +38,6 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.Instance.SceneKeySettings.Add(new CognitiveVR_Preferences.SceneKeySetting(name, path));
             }
 
-            //all scenes in build settings
-            /*foreach (UnityEditor.EditorBuildSettingsScene S in UnityEditor.EditorBuildSettings.scenes)
-            {
-                string name = S.path.Substring(S.path.LastIndexOf('/') + 1);
-                name = name.Substring(0, name.Length - 6);
-
-                CognitiveVR_Preferences.Instance.SceneKeySettings.Add(new CognitiveVR_Preferences.SceneKeySetting(name, S.path));
-            }*/
-
             //match up dictionary keys from temp list
             foreach (var oldSetting in oldSettings)
             {

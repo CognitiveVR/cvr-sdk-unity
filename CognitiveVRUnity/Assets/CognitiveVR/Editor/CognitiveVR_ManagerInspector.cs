@@ -18,23 +18,6 @@ namespace CognitiveVR
             {
                 CognitiveVR_ComponentSetup.Init();
             }
-            //doesn't work in 5.4?
-            /*if (GUILayout.Button("Open CognitiveVR Preferences"))
-            {
-                var asm = System.Reflection.Assembly.GetAssembly(typeof(EditorWindow));
-                var T = asm.GetType("UnityEditor.PreferencesWindow");
-                var M = T.GetMethod("ShowPreferencesWindow", BindingFlags.NonPublic | BindingFlags.Static);
-                PropertyInfo selectedSection = T.GetProperty("selectedSectionIndex", BindingFlags.Instance | BindingFlags.NonPublic);
-
-                //open window
-                M.Invoke(null, null);
-                var window = UnityEditor.EditorWindow.GetWindow(T);
-
-                //repaint and select cognitive preferences
-                T.GetMethod("RepaintImmediately", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(window, null);
-                //TODO check which section cognitive
-                selectedSection.SetValue(window, 7, null);
-            }*/
         }
     }
 }

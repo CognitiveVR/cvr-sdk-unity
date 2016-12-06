@@ -227,11 +227,6 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            /*
-            if (option == "CVR_GOOGLEVR") { GUI.color = Green; GUI.backgroundColor = Color.white; }
-            if (GUILayout.Button("Google VR")) { option = "CVR_GOOGLEVR"; }
-            GUI.color = Color.white;*/
-
             if (option.Contains("CVR_DEFAULT")) { GUI.color = Green; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Unity Default VR Settings"))
             {

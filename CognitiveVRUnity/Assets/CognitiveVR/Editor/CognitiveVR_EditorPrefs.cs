@@ -354,11 +354,11 @@ namespace CognitiveVR
             ProcessInfo.UseShellExecute = true;
             ProcessInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + prefs.ExplorerMinimumFaceCount + " " + prefs.ExplorerMaximumFaceCount + " " + fullName;
 
-            //KNOWN BUG - changing scene while blender is decimating the level will break the file that should be uploaded
+            //changing scene while blender is decimating the level will break the file that will be automatically uploaded
             Process.Start(ProcessInfo);
             BlenderRequest = true;
             HasOpenedBlender = false;
-            EditorApplication.update += UpdateProcess;
+            //EditorApplication.update += UpdateProcess;
         }
 
         public static bool FoldoutButton(string title, bool showing)
