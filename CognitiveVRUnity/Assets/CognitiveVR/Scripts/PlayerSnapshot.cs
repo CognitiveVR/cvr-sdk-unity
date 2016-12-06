@@ -8,6 +8,8 @@ namespace CognitiveVR
 {
     public class PlayerSnapshot
     {
+        public static int Resolution = 64;
+
         public double timestamp;
         public Dictionary<string, object> Properties = new Dictionary<string, object>();
 
@@ -40,10 +42,10 @@ namespace CognitiveVR
             Vector2 foveGazePoint = (Vector2)Properties["fovepoint"] * 0.5f + Vector2.one * 0.5f;
             //range between -1.0 and 1.0. SHOULD CLAMP THIS 1.1 has been seen
 
-            foveGazePoint *= 64;
+            foveGazePoint *= Resolution;
 
-            foveGazePoint.x = Mathf.Clamp(foveGazePoint.x, 0, 64);
-            foveGazePoint.y = Mathf.Clamp(foveGazePoint.y, 0, 64);
+            foveGazePoint.x = Mathf.Clamp(foveGazePoint.x, 0, Resolution);
+            foveGazePoint.y = Mathf.Clamp(foveGazePoint.y, 0, Resolution);
 
             //Debug.Log("foveGazePoint " + foveGazePoint);
 
@@ -69,7 +71,7 @@ namespace CognitiveVR
                 relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).linear.r;
             else
             {
-                //TODO fix depth samples on gamma lighting. gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
+                //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
                 relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).r;
             }
 

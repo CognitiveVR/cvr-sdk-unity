@@ -17,9 +17,6 @@ namespace CognitiveVR.Components
         string trackingSceneName;
         public List<PlayerSnapshot> playerSnapshots = new List<PlayerSnapshot>();
 
-        int width = 64;
-        int height = 64;
-
         Camera cam;
         PlayerRecorderHelper periodicRenderer;
 
@@ -191,7 +188,7 @@ namespace CognitiveVR.Components
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
                 periodicRenderer.enabled = true;
-                rt = periodicRenderer.DoRender(new RenderTexture(width, height, 0));
+                rt = periodicRenderer.DoRender(new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0));
                 periodicRenderer.enabled = false;
             }
 
@@ -203,6 +200,7 @@ namespace CognitiveVR.Components
             snapshot.Properties.Add("farDepth", cam.farClipPlane);
             snapshot.Properties.Add("time", Time.time);
             snapshot.Properties.Add("renderDepth", rt);
+            snapshot.Properties.Add("hmdRotation", cam.transform.rotation.eulerAngles);
 
 #if CVR_FOVE
             var hmd = Fove.FoveHeadset.GetHeadset();
@@ -231,7 +229,7 @@ namespace CognitiveVR.Components
             }
         }
 
-        //KNOWN BUG backend doesn't correctly join sent data yet
+        //TODO stitch data together for the same scene,same session, different 'files'
         public void SendData()
         {
             if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }
@@ -246,7 +244,7 @@ namespace CognitiveVR.Components
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
-                Texture2D depthTex = new Texture2D(width, height);
+                Texture2D depthTex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
                 for (int i = 0; i < playerSnapshots.Count; i++)
                 {
                     playerSnapshots[i].Properties.Add("gazePoint", playerSnapshots[i].GetGazePoint(depthTex));
@@ -448,6 +446,8 @@ namespace CognitiveVR.Components
             builder.Append(SetObject("time", snap.timestamp));
             builder.Append(",");
             builder.Append(SetPos("p", (Vector3)snap.Properties["position"]));
+            builder.Append(",");
+            builder.Append(SetPos("r", (Vector3)snap.Properties["hmdRotation"]));
             builder.Append(",");
             builder.Append(SetPos("g", (Vector3)snap.Properties["gazePoint"]));
 
