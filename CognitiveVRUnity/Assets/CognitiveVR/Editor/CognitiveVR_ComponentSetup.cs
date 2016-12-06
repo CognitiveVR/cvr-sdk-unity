@@ -179,24 +179,6 @@ namespace CognitiveVR
 
             GUI.skin.toggle.richText = true;
 
-            /*string supportedPlatforms = "";
-            MethodInfo getPlatforms = componentType.GetMethod("GetPlatforms");
-            if (getPlatforms != null)
-            {
-                var platforms = getPlatforms.Invoke(null, null) as string[];
-                if (platforms != null)
-                {
-                    for(int i = 0; i<platforms.Length; i++)
-                    {
-                        supportedPlatforms += platforms[i] + ", ";
-                    }
-                    if (supportedPlatforms.Length > 0)
-                    {
-                        supportedPlatforms = supportedPlatforms.Remove(supportedPlatforms.Length - 2);
-                    }
-                }
-            }*/
-
             bool b = GUILayout.Toggle(component != null, "<size=14><b>" + componentType.Name + "</b></size>");
 
             if (b != (component != null))

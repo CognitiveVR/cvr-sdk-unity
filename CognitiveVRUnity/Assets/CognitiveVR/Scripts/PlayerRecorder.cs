@@ -215,7 +215,7 @@ namespace CognitiveVR.Components
             }
         }
 
-        //TODO stitch data together for the same scene,same session, different 'files'
+        //KNOWN BUG backend doesn't correctly join sent data yet
         public void SendData()
         {
             if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }
