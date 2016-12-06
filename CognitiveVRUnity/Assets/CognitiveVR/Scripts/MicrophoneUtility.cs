@@ -158,7 +158,7 @@ namespace CognitiveVR
             if (micPosition < 0) { return 0; } //not enough samples
 
             clip.GetData(waveData, micPosition);
-            //TODO find a way of dealing with this. error because of unity's audio thread?
+            //TODO fix error. caused by unity's audio thread?
 
 
             // Getting a peak on the last 128 samples

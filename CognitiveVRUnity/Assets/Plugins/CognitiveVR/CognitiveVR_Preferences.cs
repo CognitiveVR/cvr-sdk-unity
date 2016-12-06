@@ -73,7 +73,7 @@ namespace CognitiveVR
         public int TrackArmLengthSamples = 50;
 
         public bool ExportStaticOnly = true;
-        public float MinExportGeoSize = 4;
+        public float MinExportGeoSize = 1;
         public int ExplorerMinimumFaceCount = 200;
         public int ExplorerMaximumFaceCount = 5000;
         public string SavedBlenderPath = "";

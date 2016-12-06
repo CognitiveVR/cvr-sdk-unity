@@ -4,7 +4,7 @@ Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, wh
 
 **This plugin now requires Unity 5.4.1p4 or newer**
 
-Last Updated: Nov 14, 2016
+Last Updated: Dec 1, 2016
 
 
 Quickstart
@@ -21,10 +21,10 @@ Follow the standard unity package import process. You can import a custom packag
 
 ![Importing the Custom Package for the cognitiveVR SDK](doc/25_import_custom_package_bubblepop.png)
 
-If you are having problems updating to the latest version of the cognitiveVR Unity SDK, it is recommended that you delete the existing cognitiveVR folders :
+If you are having problems updating to the latest version of the cognitiveVR Unity SDK, it is recommended that you delete the existing cognitiveVR folders before importing the package :
 ```
-Assets/Plugins/CognitiveVR
-Assets/Plugins/CognitiveVR.dll
+Assets/CognitiveVR/
+Assets/Plugins/CognitiveVR/
 ```
 
 ## CognitiveVR Settings window
@@ -45,7 +45,7 @@ This button will create a prefab that will automatically initialize cognitiveVR 
 Select the SDK you are using for implementing VR into your Unity project. The cognitiveVR SDK should function correctly with any VR SDK you might be using, but additional functionality has been written for these supported SDKs. You can select multiple SDKs by shift-clicking the options.
 
 ## Done!
-That's it! You are now tracking your user's basic data including GPU,CPU,OS and RAM. Unity 5.4 users will also receive the model of Head Mounted Display.
+That's it! You are now tracking your user's basic data including GPU,CPU,OS and RAM and the model of Head Mounted Display.
 
 ## Component Window
 After saving these settings, you can open the component window to add more functionality to your project. See the documentation for details

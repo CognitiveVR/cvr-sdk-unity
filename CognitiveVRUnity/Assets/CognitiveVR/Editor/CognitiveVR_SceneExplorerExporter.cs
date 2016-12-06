@@ -86,34 +86,6 @@ namespace CognitiveVR
                     }
 
                     outTex.SetPixel(x, y, data.splatPrototypes[highestMap].texture.GetPixel(x * 10 % (data.splatPrototypes[highestMap].texture.width * 1), y * 10 % (data.splatPrototypes[highestMap].texture.height * 1)));
-
-
-                    /*
-                    float a0 = maps[x, y, 0];
-                    float a1 = maps[x, y, 1];
-                    float a2 = maps[x, y, 2];
-
-                    if (a0 > a1 && a0 > a2)
-                    {
-                        //red
-                        //outTex = data.splatPrototypes[0].texture;
-                        outTex.SetPixel(x, y, data.splatPrototypes[0].texture.GetPixel(x * 10 % (data.splatPrototypes[0].texture.width * 1), y * 10 % (data.splatPrototypes[0].texture.height * 1)));
-                    }
-                    else if (a1 > a0 && a1 > a2)
-                    {
-                        //green
-                        outTex.SetPixel(x, y, data.splatPrototypes[1].texture.GetPixel(x * 10 % (data.splatPrototypes[1].texture.width * 1), y * 10 % (data.splatPrototypes[1].texture.height * 1)));
-                    }
-                    else
-                    {
-                        //blue
-                        outTex.SetPixel(x, y, data.splatPrototypes[2].texture.GetPixel(x * 10 % (data.splatPrototypes[2].texture.width * 1), y * 10 % (data.splatPrototypes[2].texture.height * 1)));
-                    }
-                    */
-
-                    //debug splat
-                    //Color c = new Color(a0, a1, a2);
-                    //tempTex.SetPixel(x, y, c);
                 }
             }
 
@@ -443,7 +415,6 @@ namespace CognitiveVR
                     sw.Write("Ni  1.0\n");
                     sw.Write("illum 1\n");
 
-                    //TODO some bug where unused textures are still exported?
                     if (kvp.Value.textureName != null)
                     {
                         string destinationFile = "";
