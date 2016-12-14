@@ -430,7 +430,6 @@ namespace CognitiveVR
                     toCube.Normalize();
 
                     float dot = Vector3.Dot(camforward, toCube);
-                    Debug.Log(dot);
                     if (dot < maxDot)
                     {
                         Vector3 rotateAxis = Vector3.down;

@@ -198,24 +198,20 @@ namespace CognitiveVR.Components
             snapshot.Properties.Add("gazeDirection", cam.transform.forward);
             snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
             snapshot.Properties.Add("farDepth", cam.farClipPlane);
-            snapshot.Properties.Add("time", Time.time);
             snapshot.Properties.Add("renderDepth", rt);
-            snapshot.Properties.Add("hmdRotation", cam.transform.rotation.eulerAngles);
+            snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
 
 #if CVR_FOVE
             var hmd = Fove.FoveHeadset.GetHeadset();
             var c = hmd.GetWorldGaze().convergence;
             var v = new Vector3(c.x, c.y, c.z);
 
-            //Quaternion rotation = Quaternion.Euler(v);
-            //Vector3 rotateConvergence = rotation * cam.transform.forward;
-
             snapshot.Properties.Add("convergence", Quaternion.LookRotation(cam.transform.forward) * v);
 
             Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(gazePoint.x)) { return; }
 
-            snapshot.Properties.Add("fovepoint", hmd.GetGazePoint());
+            snapshot.Properties.Add("hmdGazePoint", gazePoint);
 #endif
 
 #if CVR_STEAMVR
@@ -249,8 +245,6 @@ namespace CognitiveVR.Components
                 {
                     playerSnapshots[i].Properties.Add("gazePoint", playerSnapshots[i].GetGazePoint(depthTex));
 #if CVR_DEBUG
-                    //Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], Vector3.up * 10, Color.magenta, 10);
-                    //Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up * 10, Color.magenta, 10);
                     Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
                     Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
@@ -447,7 +441,7 @@ namespace CognitiveVR.Components
             builder.Append(",");
             builder.Append(SetPos("p", (Vector3)snap.Properties["position"]));
             builder.Append(",");
-            builder.Append(SetPos("r", (Vector3)snap.Properties["hmdRotation"]));
+            builder.Append(SetQuat("r", (Quaternion)snap.Properties["hmdRotation"]));
             builder.Append(",");
             builder.Append(SetPos("g", (Vector3)snap.Properties["gazePoint"]));
 
@@ -600,6 +594,24 @@ namespace CognitiveVR.Components
                 builder.Append(",");
                 builder.Append(pos.z);
             }
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
+        public static string SetQuat(string name, Quaternion quat)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"" + name + "\":[");
+
+            builder.Append(string.Format("{0:0.000}", quat.x));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.y));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.z));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.w));
 
             builder.Append("]");
             return builder.ToString();

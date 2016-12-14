@@ -327,8 +327,6 @@ namespace CognitiveVR
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
 
-            //GetController(true);
-
 #if CVR_STEAMVR
             SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
 #endif
