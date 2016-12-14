@@ -120,6 +120,19 @@ namespace CognitiveVR
                             return null;
                         _hmd = Camera.main.transform;
                     }
+#elif CVR_FOVE
+                    FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
+                    if (eyecam != null)
+                    {
+                        Camera cam = eyecam.GetComponentInChildren<Camera>();
+                        _hmd = cam.transform;
+                    }
+                    if (_hmd == null)
+                    {
+                        if (Camera.main == null)
+                            return null;
+                        _hmd = Camera.main.transform;
+                    }
 #else
                     if (Camera.main == null)
                         return null;
@@ -313,8 +326,6 @@ namespace CognitiveVR
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
-
-            //GetController(true);
 
 #if CVR_STEAMVR
             SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
