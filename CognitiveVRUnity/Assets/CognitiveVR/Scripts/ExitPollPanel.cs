@@ -521,7 +521,7 @@ namespace CognitiveVR
             else
             {
                 ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
-                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd();
+                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd(transform.position);
                 PollID = response.pollId;
             }
 
