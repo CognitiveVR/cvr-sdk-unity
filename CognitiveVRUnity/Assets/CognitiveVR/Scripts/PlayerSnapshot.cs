@@ -39,7 +39,7 @@ namespace CognitiveVR
 
             //dot product to find projection of gaze with direction
             float fwdAmount = Vector3.Dot(gazeDir.normalized * far, camForward.normalized);
-            Vector3 fwdPoint = camForward * fwdAmount;
+            //Vector3 fwdPoint = camForward * fwdAmount;
             //Debug.DrawRay(fwdPoint, Vector3.up, Color.cyan, 0.1f);
             //Debug.DrawRay(gazeDir * far, Vector3.up, Color.yellow, 0.1f);
 

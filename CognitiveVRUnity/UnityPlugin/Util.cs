@@ -73,6 +73,16 @@ namespace CognitiveVR
 
         }
 
+        //returns vive/rift/gear/unknown based on hmd model name
+        public static string GetSimpleHMDName()
+        {
+            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
+            if (rawHMDName.Contains("rift cv1")) { return "rift"; }
+            if (rawHMDName.Contains("samsung")) { return "gear"; }
+            return "unknown";
+        }
+
         internal static void cacheCurrencyInfo()
         {
             // Clear out any previously set data

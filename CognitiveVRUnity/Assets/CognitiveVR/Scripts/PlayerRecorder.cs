@@ -388,6 +388,14 @@ namespace CognitiveVR.Components
             builder.Append(",");
             builder.Append(SetString("sessionid", CognitiveVR_Manager.SessionID));
             builder.Append(",");
+
+#if CVR_FOVE
+            builder.Append(SetString("hmdtype", "fove"));
+#else
+            builder.Append(SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
+#endif
+            builder.Append(",");
+
             //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");
 
@@ -616,6 +624,6 @@ namespace CognitiveVR.Components
             builder.Append("]");
             return builder.ToString();
         }
-        #endregion
+#endregion
     }
 }
