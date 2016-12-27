@@ -28,9 +28,19 @@ namespace CognitiveVR
         static int sceneIndex = 0;
         bool exportOptionsFoldout = false;
         bool hideNonBuildScenes = false;
+        static CognitiveVR_Preferences.SceneKeySetting currentSceneSettings;
+
+        bool loadedScenes = false;
         void OnGUI()
         {
+            if (!loadedScenes)
+            {
+                ReadNames();
+                loadedScenes = true;
+            }
+
             GUI.skin.label.richText = true;
+
             prefs = CognitiveVR_Settings.GetPreferences();
 
             //=========================
@@ -78,15 +88,16 @@ namespace CognitiveVR
             {
                 selectedSceneName = sceneNames[sceneIndex];
             }
-            GUILayout.Label(selectedSceneName);
+            //GUILayout.Label(selectedSceneName);
 
-            CognitiveVR_Preferences.SceneKeySetting settings = CognitiveVR_Settings.GetPreferences().FindScene(selectedSceneName);
+            //when should scenes and keys get added to this?
+            currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(selectedSceneName);
 
             System.DateTime revisionDate = System.DateTime.MinValue;
 
-            if (settings != null)
+            if (currentSceneSettings != null)
             {
-                revisionDate = settings.LastRevision;
+                revisionDate = currentSceneSettings.LastRevision;
             }
 
             //revision date
@@ -164,6 +175,7 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
             exportOptionsFoldout = EditorGUILayout.Foldout(exportOptionsFoldout, "Advanced Options");
+            EditorGUI.indentLevel++;
             if (exportOptionsFoldout)
             {
                 prefs.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Geo Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), prefs.ExportSettings.ExportStaticOnly);
@@ -179,6 +191,7 @@ namespace CognitiveVR
                 if (prefs.ExportSettings.ExplorerMaximumFaceCount < 1) { prefs.ExportSettings.ExplorerMaximumFaceCount = 1; }
                 if (prefs.ExportSettings.ExplorerMinimumFaceCount > prefs.ExportSettings.ExplorerMaximumFaceCount) { prefs.ExportSettings.ExplorerMinimumFaceCount = prefs.ExportSettings.ExplorerMaximumFaceCount; }
             }
+            EditorGUI.indentLevel--;
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
@@ -201,8 +214,7 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(!validBlenderPath);
             if (GUILayout.Button(new GUIContent("Export Scene", "Exports the scene to Blender and reduces polygons. This also exports required textures at a low resolution")))
             {
-                ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);
-                settings.LastRevision = System.DateTime.UtcNow;
+                ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);   
             }
 
             EditorGUI.EndDisabledGroup();
@@ -438,6 +450,9 @@ namespace CognitiveVR
 
         static void UploadDecimatedScene()
         {
+            if (currentSceneSettings != null)
+                currentSceneSettings.LastRevision = System.DateTime.UtcNow;
+
             //TODO get this scene name
             //use that to figure out which directory
             //get all files in teh directory
@@ -450,8 +465,13 @@ namespace CognitiveVR
         {
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
 
-            CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor);
+            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor);
 
+            if (!successfulExport)
+            {
+                Debug.LogError("Scene export canceled!");
+                return;
+            }
 
             if (string.IsNullOrEmpty(prefs.SavedBlenderPath) || !prefs.SavedBlenderPath.ToLower().EndsWith("blender.exe"))
             {
@@ -559,6 +579,48 @@ namespace CognitiveVR
                         {
                             CognitiveVR_Preferences.Instance.SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
                         }
+                    }
+                }
+            }
+        }
+
+        private static void ReadNames()
+        {
+            //save these to a temp list
+            List<CognitiveVR_Preferences.SceneKeySetting> oldSettings = new List<CognitiveVR_Preferences.SceneKeySetting>();
+            foreach (var v in CognitiveVR_Preferences.Instance.SceneKeySettings)
+            {
+                oldSettings.Add(v);
+            }
+
+
+            //clear then rebuild the list in preferences
+            CognitiveVR_Preferences.Instance.SceneKeySettings.Clear();
+
+            //add all scenes
+            string[] guidList = AssetDatabase.FindAssets("t:scene");
+
+            foreach (var v in guidList)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(v);
+                string name = path.Substring(path.LastIndexOf('/') + 1);
+                name = name.Substring(0, name.Length - 6);
+
+                CognitiveVR_Preferences.Instance.SceneKeySettings.Add(new CognitiveVR_Preferences.SceneKeySetting(name, path));
+            }
+
+            //match up dictionary keys from temp list
+            foreach (var oldSetting in oldSettings)
+            {
+                foreach (var newSetting in CognitiveVR_Preferences.Instance.SceneKeySettings)
+                {
+                    if (newSetting.SceneName == oldSetting.SceneName)
+                    {
+                        newSetting.SceneKey = oldSetting.SceneKey;
+                        newSetting.Track = oldSetting.Track;
+                        newSetting.LastRevision = oldSetting.LastRevision;
+                        newSetting.SceneName = oldSetting.SceneName;
+                        newSetting.ScenePath = oldSetting.ScenePath;
                     }
                 }
             }

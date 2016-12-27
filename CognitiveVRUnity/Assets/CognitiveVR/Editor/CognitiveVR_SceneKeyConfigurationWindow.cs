@@ -47,6 +47,9 @@ namespace CognitiveVR
                     {
                         newSetting.SceneKey = oldSetting.SceneKey;
                         newSetting.Track = oldSetting.Track;
+                        newSetting.LastRevision = oldSetting.LastRevision;
+                        newSetting.SceneName = oldSetting.SceneName;
+                        newSetting.ScenePath = oldSetting.ScenePath;
                     }
                 }
             }

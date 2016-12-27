@@ -26,7 +26,7 @@ namespace CognitiveVR.Components
         [DisplaySetting]
         public bool someOtherBool = true;*/
 
-        [DisplaySetting]
+        [DisplaySetting(5,100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
         public int SampleCount = 50;
 

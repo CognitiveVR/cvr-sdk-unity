@@ -14,7 +14,7 @@ namespace CognitiveVR.Components
 
     public class Comfort : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting]
+        [DisplaySetting(5f,60f)]
         [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]
         public float ComfortTrackingInterval = 6;
 
@@ -22,7 +22,7 @@ namespace CognitiveVR.Components
         [Tooltip("Ignore sending Comfort at set intervals. Only send FPS events below the threshold")]
         public bool OnlySendComfortOnLowFPS = true;
 
-        [DisplaySetting(1,120)]
+        [DisplaySetting(10,240)]
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 

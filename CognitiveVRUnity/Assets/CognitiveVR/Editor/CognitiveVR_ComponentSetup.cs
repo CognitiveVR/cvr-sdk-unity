@@ -419,6 +419,7 @@ namespace CognitiveVR
                 var tempValue = 0;
 
                 GUIContent guiContent = new GUIContent(field.Name, "");
+                Components.DisplaySettingAttribute display = null;
 
                 for (int i = 0; i<field.GetCustomAttributes(false).Length; i++)
                 {
@@ -427,9 +428,19 @@ namespace CognitiveVR
                         var tooltip = (TooltipAttribute)field.GetCustomAttributes(false)[i];
                         guiContent.tooltip = tooltip.tooltip;
                     }
+                    if (field.GetCustomAttributes(false)[i].GetType() == typeof(Components.DisplaySettingAttribute))
+                    {
+                        display = (Components.DisplaySettingAttribute)field.GetCustomAttributes(false)[i];
+                    }
                 }
 
                 tempValue = EditorGUILayout.IntField(guiContent, valueAsInt);
+
+                int min, max;
+                if (display.GetIntLimits(out min, out max))
+                {
+                    tempValue = Mathf.Clamp(tempValue, min, max);
+                }
 
                 if (GUI.changed)
                 {
@@ -452,6 +463,7 @@ namespace CognitiveVR
 
                 var tempValue = 0f;
                 GUIContent guiContent = new GUIContent(field.Name, "");
+                Components.DisplaySettingAttribute display = null;
 
                 for (int i = 0; i < field.GetCustomAttributes(false).Length; i++)
                 {
@@ -460,9 +472,18 @@ namespace CognitiveVR
                         var tooltip = (TooltipAttribute)field.GetCustomAttributes(false)[i];
                         guiContent.tooltip = tooltip.tooltip;
                     }
+                    if (field.GetCustomAttributes(false)[i].GetType() == typeof(Components.DisplaySettingAttribute))
+                    {
+                        display = (Components.DisplaySettingAttribute)field.GetCustomAttributes(false)[i];
+                    }
                 }
 
                 tempValue = EditorGUILayout.FloatField(guiContent, valueAsFloat);
+                float min, max;
+                if (display.GetFloatLimits(out min, out max))
+                {
+                    tempValue = Mathf.Clamp(tempValue, min, max);
+                }
 
                 if (GUI.changed)
                 {

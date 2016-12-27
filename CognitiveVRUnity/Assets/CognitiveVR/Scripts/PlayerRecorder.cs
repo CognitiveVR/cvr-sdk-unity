@@ -133,7 +133,7 @@ namespace CognitiveVR
         }
 #endif
 
-        void NotUpdate()
+        void UpdatePlayerRecorder()
         {
             if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
             if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
@@ -303,12 +303,6 @@ namespace CognitiveVR
 
             Util.logDebug("request finished - return: " + www.error);
 
-        }
-
-        [DisplaySetting]
-        public static string GetDescription()
-        {
-            return "This returns the player's world position, gaze direction and world gaze point\nOptions are available in Edit/Preferences... CognitiveVR";
         }
 
         void OnDestroyPlayerRecorder()

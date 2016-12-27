@@ -10,8 +10,8 @@ namespace CognitiveVR.Components
 {
     public class HMDHeight: CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting]
-        [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
+        [DisplaySetting(5,100)]
+        [Tooltip("Number of samples taken. The average is assumed to be HMD height")]
         public int SampleCount = 50;
 
         int samples = 0;

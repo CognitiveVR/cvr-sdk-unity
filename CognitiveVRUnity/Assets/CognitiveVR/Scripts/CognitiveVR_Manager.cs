@@ -353,6 +353,7 @@ namespace CognitiveVR
         void Update()
         {
             UpdateEvent();
+            UpdatePlayerRecorder();
 
 #if CVR_STEAMVR
             var system = Valve.VR.OpenVR.System;
@@ -372,6 +373,7 @@ namespace CognitiveVR
 
         void OnDestroy()
         {
+            OnDestroyPlayerRecorder();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
 

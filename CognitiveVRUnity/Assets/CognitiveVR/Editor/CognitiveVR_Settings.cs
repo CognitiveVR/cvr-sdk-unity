@@ -61,7 +61,6 @@ namespace CognitiveVR
         static void EditorUpdate()
         {
             bool show = true;
-            bool remindDateValid = true;
 
 #if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
             show = false;
@@ -73,37 +72,8 @@ namespace CognitiveVR
                 show = true;
                 //new version installed
             }
-            else
-            {
-                System.DateTime remindDate;
-                //TODO fix this. shouldn't have to re-read this value to parse it to the correct format
-                if (Instance != null)
-                {
-                    if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate))
-                    {
-                        remindDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
-                        if (System.DateTime.UtcNow < remindDate)
-                        {
-                            // Don't remind yet
-                            // show = false;
-                            remindDateValid = false;
-                        }
-                    }
-                }
 
-                /*
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
-                {
-                    if (System.DateTime.UtcNow < remindDate)
-                    {
-                        // Don't remind yet
-                        // show = false;
-                        remindDateValid = false;
-                    }
-                }*/
-            }
-
-            if (show && remindDateValid)
+            if (show)
             {
                 Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
                 Vector2 size = new Vector2(300, 550);
@@ -111,7 +81,35 @@ namespace CognitiveVR
                 Instance.maxSize = size;
                 Instance.Show();
 
-                System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate);
+                //System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate);
+            }
+
+            System.DateTime remindDate;
+            //TODO fix this. shouldn't have to re-read this value to parse it to the correct format
+            if (Instance != null)
+            {
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate))
+                {
+                    remindDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                    if (System.DateTime.UtcNow > remindDate)
+                    {
+                        Instance.CheckForUpdates();
+                        Debug.Log("settings check for updates");
+                    }
+                    else
+                    {
+                        Debug.Log("check updates later " + remindDate);
+                    }
+                }
+                else
+                {
+                    Debug.Log("failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
+                    Instance.CheckForUpdates();
+                }
+            }
+            else
+            {
+                Debug.Log("NO INSTANCE TO CHECK UPDATES ON");
             }
 
             EditorApplication.update -= EditorUpdate;
@@ -133,7 +131,7 @@ namespace CognitiveVR
             return path.Substring(0, path.Length - "Editor".Length) + "";
         }
 
-        static List<string> option = new List<string>();
+        //static List<string> option = new List<string>();
         static int productIndex = 0; //THIS SHOULD BE SAVED IN THE EDITOR PREFERENCES OR SOMETHING
         static int organizationIndex = 0;
         string password;
@@ -331,7 +329,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Save"))
             {
-                SaveSettings();
+                //SaveSettings();
             }
 
             GUILayout.BeginHorizontal();
@@ -428,62 +426,6 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if (option.Contains("CVR_STEAMVR")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR 1.1.1+"))
-            {
-                if (option.Contains("CVR_STEAMVR"))
-                    option.Remove("CVR_STEAMVR");
-                else
-                {
-                    if (!Event.current.shift)
-                        option.Clear();
-                    option.Add("CVR_STEAMVR");
-                }
-            }
-            GUI.color = Color.white;
-
-            if (option.Contains("CVR_OCULUS")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Oculus Utilities 1.9.0+"))
-            {
-                if (option.Contains("CVR_OCULUS"))
-                    option.Remove("CVR_OCULUS");
-                else
-                {
-                    if (!Event.current.shift)
-                        option.Clear();
-                    option.Add("CVR_OCULUS");
-                }
-            }
-            GUI.color = Color.white;
-
-            if (option.Contains("CVR_DEFAULT")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Unity Default VR Settings"))
-            {
-                if (option.Contains("CVR_DEFAULT"))
-                    option.Remove("CVR_DEFAULT");
-                else
-                {
-                    if (!Event.current.shift)
-                        option.Clear();
-                    option.Add("CVR_DEFAULT");
-                }
-            }
-            GUI.color = Color.white;
-
-            if (option.Contains("CVR_FOVE")) { GUI.color = Green; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Fove VR Plugin"))
-            {
-                if (option.Contains("CVR_FOVE"))
-                    option.Remove("CVR_FOVE");
-                else
-                {
-                    if (!Event.current.shift)
-                        option.Clear();
-                    option.Add("CVR_FOVE");
-                }
-            }
-            GUI.color = Color.white;
-
             EditorGUI.EndDisabledGroup();
 
             //=========================
@@ -494,7 +436,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
-            EditorGUI.BeginDisabledGroup(!validID || option.Count == 0);
+            EditorGUI.BeginDisabledGroup(!validID);
 
             if (GUILayout.Button("Save"))
             {
@@ -625,20 +567,19 @@ namespace CognitiveVR
 
             //create www request to server somewhere
 
-            var url = "http://testapi.cognitivevr.io/getsdkupdates";
-            var headers = new Dictionary<string, string>();
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
+            var url = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
+            //var headers = new Dictionary<string, string>();
+            //headers.Add("Content-Type", "application/json");
+            //headers.Add("X-HTTP-Method-Override", "POST");
 
-            System.Text.StringBuilder json = new System.Text.StringBuilder();
-            json.Append("{");
+            //System.Text.StringBuilder json = new System.Text.StringBuilder();
+            /*json.Append("{");
             json.Append("\"sessionId\":\"" + GetPreferences().sessionID + "\"");
-            //json.Append("\"organizationName\":\"" + GetPreferences().SelectedOrganization + "\",");
-            //json.Append("\"productName\":\"" + productName + "\"");
-            json.Append("}");
+            json.Append("}");*/
 
-            byte[] bytes = new System.Text.UTF8Encoding(true).GetBytes(json.ToString());
-            checkForUpdatesRequest = new UnityEngine.WWW(url, bytes, headers);
+            //byte[] bytes = new System.Text.UTF8Encoding(true).GetBytes(json.ToString());
+            checkForUpdatesRequest = new UnityEngine.WWW(url);//, bytes, headers);
+
 
             EditorApplication.update += UpdateCheckForUpdates;
         }
@@ -651,6 +592,30 @@ namespace CognitiveVR
             }
             else
             {
+                /*//DEBUG
+                var sdkVersion = new Json.SDKVersion() { version = "0.4.11" };
+                string sdkSummary = "stuff";
+
+                if (sdkVersion != null)
+                {
+                    Debug.Log("found sdk version " + sdkVersion.version);
+                    Debug.Log("skip version "+EditorPrefs.GetString("cvr_skipVersion"));
+                    if (EditorPrefs.GetString("cvr_skipVersion") == sdkVersion.version)
+                    {
+                        //skip
+                    }
+                    else
+                    {
+                        Debug.Log("init update window");
+                        CognitiveVR_UpdateSDKWindow.Init(sdkVersion.version,sdkSummary);
+                    }
+                }
+                EditorApplication.update -= UpdateCheckForUpdates;
+
+
+                return;*/
+
+
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.error))
                 {
                     Debug.Log("got some error " + checkForUpdatesRequest.error);
@@ -661,17 +626,21 @@ namespace CognitiveVR
                     //this should return the latest sdk version number
                     Debug.Log("got some data " + checkForUpdatesRequest.text);
 
-                    var version = JsonUtility.FromJson<Json.SDKVersion>(checkForUpdatesRequest.text);
+                    string[] split = checkForUpdatesRequest.text.Split('|');
+
+                    var version = split[0];
+                    string summary = split[1];
 
                     if (version != null)
                     {
-                        if (EditorPrefs.GetString("cvr_skipVersion") == version.version)
+                        if (EditorPrefs.GetString("cvr_skipVersion") == version)
                         {
-                            //skip
+                            //skip this version. limit this check to once a day
+                            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                         }
                         else
                         {
-                            CognitiveVR_UpdateSDKWindow.Init(version.version);
+                            CognitiveVR_UpdateSDKWindow.Init(version,summary);
                         }
                     }
                 }
@@ -689,7 +658,7 @@ namespace CognitiveVR
 
         public void SaveSettings()
         {
-            SetPlayerDefine(option);
+            //SetPlayerDefine(option);
 
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
             //prefs.CustomerID = newID;
