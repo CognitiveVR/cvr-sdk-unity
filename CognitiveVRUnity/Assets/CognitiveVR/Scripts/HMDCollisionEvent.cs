@@ -10,6 +10,9 @@ namespace CognitiveVR.Components
 {
     public class HMDCollisionEvent : CognitiveVRAnalyticsComponent
     {
+        [DisplaySetting]
+        public LayerMask CollisionLayerMask = 1;
+
         string HMDGuid;
         public override void CognitiveVR_Init(Error initError)
         {
@@ -21,7 +24,7 @@ namespace CognitiveVR.Components
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
 
-            bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+            bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CollisionLayerMask);
             if (hit && string.IsNullOrEmpty(HMDGuid))
             {
                 Util.logDebug("hmd collision");

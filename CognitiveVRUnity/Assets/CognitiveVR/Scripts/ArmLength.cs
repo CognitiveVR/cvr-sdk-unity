@@ -11,9 +11,27 @@ namespace CognitiveVR.Components
 {
     public class ArmLength : CognitiveVRAnalyticsComponent
     {
+        /*[DisplaySetting]
+        public float someFloat = 3.14f;
+        
+        public int someInt = 3;
+
+        [DisplaySetting]
+        public string someString = "pi";
+
+        [DisplaySetting]
+        [Tooltip("some non-static thing")]
+        public int nonStaticInt = 13;
+
+        [DisplaySetting]
+        public bool someOtherBool = true;*/
+
+        [DisplaySetting]
+        [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
+        public int SampleCount = 50;
+
 #if CVR_STEAMVR || CVR_OCULUS
         float maxSqrDistance;
-        int sampleCount = 50;
         int samples = 0;
 #endif
 #if CVR_STEAMVR
@@ -43,12 +61,12 @@ namespace CognitiveVR.Components
         {
             if (CognitiveVR_Manager.GetController(0) == null){return;}
 
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
@@ -76,13 +94,13 @@ namespace CognitiveVR.Components
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 maxSqrDistance = Mathf.Max(maxSqrDistance, OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch).sqrMagnitude, OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch).sqrMagnitude);
                 //maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
@@ -103,5 +121,7 @@ namespace CognitiveVR.Components
             CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
 #endif
         }
+
+
     }
 }

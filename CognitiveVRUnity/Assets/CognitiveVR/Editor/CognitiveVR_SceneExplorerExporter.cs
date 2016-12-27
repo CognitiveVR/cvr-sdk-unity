@@ -387,7 +387,7 @@ namespace CognitiveVR
             return new Dictionary<string, ObjMaterial>();
         }
 
-        private static void MaterialsToFile(string filename)
+        private static void MaterialsToFile(string filename, int textureDivisor)
         {
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".mtl"))
             {
@@ -435,8 +435,7 @@ namespace CognitiveVR
                                 Texture2D originalTexture = m.mainTexture as Texture2D;
 
                                 SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
-                                int size = 4; //TODO have this adjustable in editorprefs
-                                Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / size, Mathf.NextPowerOfTwo(originalTexture.height) / size);
+                                Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
                                 File.WriteAllBytes(destinationFile + m.mainTexture.name + ".png", bytes);
@@ -473,7 +472,7 @@ namespace CognitiveVR
             EditorUtility.ClearProgressBar();
         }
 
-        private static void MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures)
+        private static void MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures,int textureDivisor)
         {
             materialList = PrepareFileWrite();
 
@@ -509,7 +508,7 @@ namespace CognitiveVR
             EditorUtility.ClearProgressBar();
 
             if (includeTextures)
-                MaterialsToFile(filename);
+                MaterialsToFile(filename,textureDivisor);
         }
 
         //retrun path to CognitiveVR_SceneExplorerExport. create if it doesn't exist
@@ -537,7 +536,7 @@ namespace CognitiveVR
         }
 
 
-        public static void ExportWholeSelectionToSingle(string fullName, bool includeTextures)
+        public static void ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor)
         {
             if (!CreateTargetFolder(fullName))
             {
@@ -559,9 +558,9 @@ namespace CognitiveVR
 
             List<MeshFilter> mfList = new List<MeshFilter>();
 
-            CognitiveVR_Preferences prefs = CognitiveVR_EditorPrefs.GetPreferences();
-            bool staticGeoOnly = prefs.ExportStaticOnly;
-            float minSize = prefs.MinExportGeoSize;
+            //CognitiveVR_Preferences prefs = CognitiveVR_SceneExportWindow.GetPreferences();
+            //bool staticGeoOnly = prefs.ExportSettings.ExportStaticOnly;
+            //float minSize = prefs.ExportSettings.MinExportGeoSize;
 
             for (int i = 0; i < meshes.Length; i++)
             {
@@ -580,7 +579,7 @@ namespace CognitiveVR
                 mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                MeshesToFile(mfList.ToArray(), fullName, includeTextures);
+                MeshesToFile(mfList.ToArray(), fullName, includeTextures,textureDivisor);
             }
             else
             {

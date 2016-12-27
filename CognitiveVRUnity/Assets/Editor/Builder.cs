@@ -10,7 +10,7 @@ public class Builder
 		"Assets/CognitiveVR",
 	};
 
-	[MenuItem("CognitiveVR/Export CognitiveVR Package")]
+	[MenuItem("Dist/Export CognitiveVR Package")]
 	static void MakeCognitiveVRPackage()
 	{
 		System.IO.Directory.CreateDirectory(Application.dataPath + "/../../dist");

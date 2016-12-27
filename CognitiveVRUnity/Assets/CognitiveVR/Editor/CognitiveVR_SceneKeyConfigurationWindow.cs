@@ -61,7 +61,7 @@ namespace CognitiveVR
         string searchString = "";
         void OnGUI()
         {
-            CognitiveVR_Preferences prefs = CognitiveVR_EditorPrefs.GetPreferences();
+            CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Refresh Scenes"))
             {
@@ -86,13 +86,11 @@ namespace CognitiveVR
                 loadedScenes = true;
             }
 
-
             GUILayout.BeginHorizontal();
             GUILayout.Label("Record", GUILayout.Width(toggleWidth));
             GUILayout.Label("Scene Name", GUILayout.Width(sceneWidth));
             GUILayout.Label("SceneID", GUILayout.Width(keyWidth));
             GUILayout.EndHorizontal();
-
 
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
@@ -106,7 +104,6 @@ namespace CognitiveVR
             }
 
             GUILayout.EndScrollView();
-
         }
 
         void DisplaySceneKeySettings(CognitiveVR_Preferences.SceneKeySetting settings)
@@ -170,7 +167,8 @@ namespace CognitiveVR
             if (GUILayout.Button(new GUIContent("Export Scene", "Load this scene and begin exporting with current export settings")))
             {
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
-                CognitiveVR.CognitiveVR_EditorPrefs.ExportScene(true);
+                var prefs = CognitiveVR_Settings.GetPreferences();
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
             }
 #endif
             GUILayout.EndHorizontal();

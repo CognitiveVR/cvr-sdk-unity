@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine.SceneManagement;
+using CognitiveVR.Components;
 
 ///===============================================================
 /// Add this component to your cognitivevr_manager
@@ -10,9 +11,9 @@ using UnityEngine.SceneManagement;
 /// you should not need to modify this script!
 ///===============================================================
 
-namespace CognitiveVR.Components
+namespace CognitiveVR
 {
-    public class PlayerRecorder : CognitiveVRAnalyticsComponent
+    public partial class CognitiveVR_Manager// : CognitiveVRAnalyticsComponent
     {
         string trackingSceneName;
         public List<PlayerSnapshot> playerSnapshots = new List<PlayerSnapshot>();
@@ -20,7 +21,7 @@ namespace CognitiveVR.Components
         Camera cam;
         PlayerRecorderHelper periodicRenderer;
 
-        public override void CognitiveVR_Init(Error initError)
+        public void PlayerRecorderInit(Error initError)
         {
             CheckCameraSettings();
 
@@ -132,7 +133,7 @@ namespace CognitiveVR.Components
         }
 #endif
 
-        void Update()
+        void NotUpdate()
         {
             if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
             if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
@@ -150,32 +151,19 @@ namespace CognitiveVR.Components
         public static void BeginPlayerRecording()
         {
             //TODO check here that there is a sceneID to track
-            PlayerRecorder trackerInstance = FindObjectOfType<PlayerRecorder>();
-            if (trackerInstance != null)
-            {
-                CognitiveVR_Manager.OnTick += trackerInstance.CognitiveVR_Manager_OnTick;
-
-            }
+            CognitiveVR_Manager.OnTick += instance.CognitiveVR_Manager_OnTick;
         }
 
         public static void SendPlayerRecording()
         {
-            PlayerRecorder trackerInstance = FindObjectOfType<PlayerRecorder>();
-            if (trackerInstance != null)
-            {
-                trackerInstance.SendData();
-            }
+            CognitiveVR_Manager.instance.SendData();
         }
 
         public static void EndPlayerRecording()
         {
-            PlayerRecorder trackerInstance = FindObjectOfType<PlayerRecorder>();
-            if (trackerInstance != null)
-            {
-                CognitiveVR_Manager.OnTick -= trackerInstance.CognitiveVR_Manager_OnTick;
-                trackerInstance.SendData();
-                trackerInstance.trackingSceneName = SceneManager.GetActiveScene().name;
-            }
+            CognitiveVR_Manager.OnTick -= instance.CognitiveVR_Manager_OnTick;
+            instance.SendData();
+            instance.trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
         private void CognitiveVR_Manager_OnTick()
@@ -317,12 +305,13 @@ namespace CognitiveVR.Components
 
         }
 
+        [DisplaySetting]
         public static string GetDescription()
         {
             return "This returns the player's world position, gaze direction and world gaze point\nOptions are available in Edit/Preferences... CognitiveVR";
         }
 
-        void OnDestroy()
+        void OnDestroyPlayerRecorder()
         {
             //unsubscribe events
             CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;

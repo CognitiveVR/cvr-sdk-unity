@@ -10,7 +10,10 @@ namespace CognitiveVR.Components
 {
     public class HMDHeight: CognitiveVRAnalyticsComponent
     {
-        int sampleCount = 50;
+        [DisplaySetting]
+        [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
+        public int SampleCount = 50;
+
         int samples = 0;
         float hmdAccumHeight;
 
@@ -24,11 +27,11 @@ namespace CognitiveVR.Components
         private void CognitiveVR_Manager_OnTick()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 hmdAccumHeight += CognitiveVR_Manager.HMD.position.y;
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     float averageHeight = hmdAccumHeight / samples;
                     Util.logDebug("head height " + averageHeight);

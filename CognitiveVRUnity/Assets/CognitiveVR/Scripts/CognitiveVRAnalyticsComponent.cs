@@ -9,6 +9,8 @@ namespace CognitiveVR.Components
 {
     public class CognitiveVRAnalyticsComponent : MonoBehaviour
     {
+        [HideInInspector]
+        public bool Track;
         public virtual void CognitiveVR_Init(Error initError)
         {
             //called after cognitiveVR initializes

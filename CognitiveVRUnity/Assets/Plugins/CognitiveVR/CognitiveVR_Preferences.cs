@@ -5,6 +5,77 @@ using System;
 
 namespace CognitiveVR
 {
+    namespace Json
+    {
+        //these are filled/emptied from json, so may not be directly referenced
+#pragma warning disable 0649
+        [System.Serializable]
+        public class Organization
+        {
+            public string id;
+            public string name;
+            public string prefix;
+        }
+        [System.Serializable]
+        public class Product
+        {
+            public string id;
+            public string name;
+            public string orgId;
+            public string customerId;
+        }
+        [System.Serializable]
+        public class UserData
+        {
+            public string userId;
+            public string email;
+            public string fullName;
+            public string phone;
+            public string[] roles = new string[] { };
+            public Organization[] organizations = new Organization[] { };
+            public Product[] products = new Product[] { };
+            public bool isSuperAdmin;
+
+            public static UserData Empty
+            {
+                get
+                {
+                    return new UserData();
+                }
+            }
+        }
+#pragma warning restore 0649
+    }
+
+    [System.Serializable]
+    public class ExportSettings
+    {
+        public bool ExportStaticOnly = true;
+        public float MinExportGeoSize = 1;
+        public int ExplorerMinimumFaceCount = 200;
+        public int ExplorerMaximumFaceCount = 5000;
+        public int TextureQuality = 4;
+
+        public static bool Match(ExportSettings a, ExportSettings b)
+        {
+            if (!Mathf.Approximately(a.MinExportGeoSize, b.MinExportGeoSize)) { return false; }
+            if (a.ExportStaticOnly != b.ExportStaticOnly) { return false; }
+            if (a.ExplorerMinimumFaceCount != b.ExplorerMinimumFaceCount) { return false; }
+            if (a.ExplorerMaximumFaceCount != b.ExplorerMaximumFaceCount) { return false; }
+            if (a.TextureQuality != b.TextureQuality) { return false; }
+            return true;
+        }
+
+        public static ExportSettings Copy(ExportSettings target)
+        {
+            return new ExportSettings() { ExportStaticOnly = target.ExportStaticOnly,
+                MinExportGeoSize = target.MinExportGeoSize,
+                ExplorerMaximumFaceCount = target.ExplorerMaximumFaceCount,
+                ExplorerMinimumFaceCount = target.ExplorerMinimumFaceCount,
+                TextureQuality = target.TextureQuality };
+        }
+    }
+
     public class CognitiveVR_Preferences : ScriptableObject
     {
         [Serializable]
@@ -14,6 +85,7 @@ namespace CognitiveVR
             public string SceneKey = "";
             public string ScenePath = "";
             public bool Track = false;
+            public System.DateTime LastRevision;
 
             public SceneKeySetting(string name, string path)
             {
@@ -21,7 +93,6 @@ namespace CognitiveVR
                 ScenePath = path;
             }
         }
-
 
         static CognitiveVR_Preferences instance;
         public static CognitiveVR_Preferences Instance
@@ -40,17 +111,16 @@ namespace CognitiveVR
 
         public string CustomerID = "";
 
-        [Header("Events")]
-        public int LowFramerateThreshold = 60;
-        public LayerMask CollisionLayerMask = 1;
+        [Header("User")]
+        public string sessionID;
 
-        public float ComfortTrackingInterval = 6;
-        public bool OnlySendComfortOnLowFPS = true;
+        public string UserName;
+        public CognitiveVR.Json.UserData UserData;
+        public string SelectedOrganization;
+        public string SelectedProduct;
 
         [Header("Player Tracking")]
         //player tracking
-        public int SnapshotThreshold = 1000;
-        public bool DebugWriteToFile = false;
         public float SnapshotInterval = 0.5f;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
@@ -59,6 +129,10 @@ namespace CognitiveVR
         public bool TrackGazeDirection = false;
         public bool GazePointFromDirection = false;
         public float GazeDirectionMultiplier = 1.0f;
+
+        [Header("Send Data")]
+        public int SnapshotThreshold = 1000;
+        public bool DebugWriteToFile = false;
 
         public bool SendDataOnQuit = true;
         public bool SendDataOnHMDRemove = false;
@@ -69,23 +143,51 @@ namespace CognitiveVR
         public bool HotkeyAlt = false;
         public KeyCode SendDataHotkey = KeyCode.F9;
 
-        public int TrackHMDHeightSamples = 50;
-        public int TrackArmLengthSamples = 50;
-
-        public bool ExportStaticOnly = true;
-        public float MinExportGeoSize = 1;
-        public int ExplorerMinimumFaceCount = 200;
-        public int ExplorerMaximumFaceCount = 5000;
+        [Header("Scene Export")]
         public string SavedBlenderPath = "";
+        public ExportSettings ExportSettings;
 
-        [Header("Gaze Objects")]
-        //gaze object
-        public float GazeObjectSendInterval = 10;
+        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 2,ExplorerMaximumFaceCount = 1000, ExplorerMinimumFaceCount = 20, TextureQuality = 8 };
+        public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 1, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 100, TextureQuality = 4 };
+        public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 400, TextureQuality = 2 };
+
+
+
 
         public List<SceneKeySetting> SceneKeySettings = new List<SceneKeySetting>();
+        //use scene path instead of sceneName, if possible
         public SceneKeySetting FindScene(string sceneName)
         {
             return SceneKeySettings.Find(x => x.SceneName == sceneName);
+        }
+
+        public SceneKeySetting FindSceneByPath(string scenePath)
+        {
+            return SceneKeySettings.Find(x => x.ScenePath == scenePath);
+        }
+
+
+        /// <summary>
+        /// get organization by name. returns null if no organization matches or no organizations are found
+        /// </summary>
+        /// <param name="organizationName"></param>
+        /// <returns></returns>
+        public Json.Organization GetOrganization(string organizationName)
+        {
+            for (int i = 0; i < UserData.organizations.Length; i++)
+            {
+                if (UserData.organizations[i].name == organizationName) { return UserData.organizations[i]; }
+            }
+            return null;
+        }
+
+        public Json.Product GetProduct(string productName)
+        {
+            for (int i = 0; i < UserData.products.Length; i++)
+            {
+                if (UserData.products[i].name == productName) { return UserData.products[i]; }
+            }
+            return null;
         }
     }
 }

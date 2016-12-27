@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace CognitiveVR
 {
-    public class CognitiveVR_Manager : MonoBehaviour
+    public partial class CognitiveVR_Manager : MonoBehaviour
     {
         #region Events
         public delegate void CoreInitHandler(Error initError);
@@ -23,6 +23,7 @@ namespace CognitiveVR
             {
                 v.CognitiveVR_Init(initError);
             }
+            PlayerRecorderInit(initError);
             if (OnInit != null) { OnInit(initError); }
         }
 

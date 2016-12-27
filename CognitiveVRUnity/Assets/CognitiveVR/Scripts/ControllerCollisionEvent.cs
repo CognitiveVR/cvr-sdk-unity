@@ -13,6 +13,9 @@ namespace CognitiveVR.Components
         string controller0GUID;
         string controller1GUID;
 
+        [DisplaySetting]
+        public LayerMask CollisionLayerMask = 1;
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
@@ -29,7 +32,7 @@ namespace CognitiveVR.Components
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(false);
 
-                hit = Physics.CheckSphere(pos, 0.1f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller0GUID))
                 {
                     Util.logDebug("controller collision");
@@ -50,7 +53,7 @@ namespace CognitiveVR.Components
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(true);
 
-                hit = Physics.CheckSphere(pos, 0.1f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller1GUID))
                 {
                     Util.logDebug("controller collision");
