@@ -502,7 +502,7 @@ namespace CognitiveVR
         {
             if (instance != null)
             {
-                var valueAsFloat = (float)field.GetValue(instance);
+                //var valueAsFloat = (float)field.GetValue(instance);
 
                 var tempValue = 0f;
                 //tempValue = EditorGUILayout.FloatField(field.Name, valueAsFloat);

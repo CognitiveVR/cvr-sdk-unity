@@ -46,7 +46,7 @@ namespace CognitiveVR
                     if (newSetting.SceneName == oldSetting.SceneName)
                     {
                         newSetting.SceneKey = oldSetting.SceneKey;
-                        newSetting.Track = oldSetting.Track;
+                        //newSetting.Track = oldSetting.Track;
                         newSetting.LastRevision = oldSetting.LastRevision;
                         newSetting.SceneName = oldSetting.SceneName;
                         newSetting.ScenePath = oldSetting.ScenePath;
@@ -113,7 +113,7 @@ namespace CognitiveVR
         {
             GUILayout.BeginHorizontal();
 
-            settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
+            //settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
             GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
             string startSceneName = settings.SceneKey;
@@ -132,10 +132,10 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(settings.SceneKey) && string.IsNullOrEmpty(startSceneName))
             {
                 //new key!
-                settings.Track = true;
+                //settings.Track = true;
             }
 
-            if (settings.Track)
+            /*if (settings.Track)
             {
                 bool validKey = KeyIsValid(settings.SceneKey);
 
@@ -162,6 +162,7 @@ namespace CognitiveVR
                     GUI.color = Color.white;
                 }
             }
+            */
 #if UNITY_EDITOR_OSX
             EditorGUI.BeginDisabledGroup(true);
             GUILayout.Button(new GUIContent("Export Scene", "Exporting scenes is not available on Mac at this time"));
@@ -169,6 +170,11 @@ namespace CognitiveVR
 #else
             if (GUILayout.Button(new GUIContent("Export Scene", "Load this scene and begin exporting with current export settings")))
             {
+                if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != settings.ScenePath)
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                }
+
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
                 var prefs = CognitiveVR_Settings.GetPreferences();
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);

@@ -84,8 +84,8 @@ namespace CognitiveVR
             public string SceneName = "";
             public string SceneKey = "";
             public string ScenePath = "";
-            public bool Track = false;
-            public System.DateTime LastRevision;
+            //public bool Track = false;
+            public long LastRevision;
 
             public SceneKeySetting(string name, string path)
             {

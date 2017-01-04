@@ -43,7 +43,7 @@ namespace CognitiveVR
             CognitiveVR_Preferences.SceneKeySetting sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
             if (sceneSettings != null)
             {
-                if (sceneSettings.Track)
+                if (!string.IsNullOrEmpty(sceneSettings.SceneKey))
                     BeginPlayerRecording();
             }
             else
@@ -82,7 +82,7 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.SceneKeySetting lastSceneKeySettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
                 if (lastSceneKeySettings != null)
                 {
-                    if (lastSceneKeySettings.Track)
+                    if (!string.IsNullOrEmpty(lastSceneKeySettings.SceneKey))
                     {
                         SendData();
                         CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
@@ -92,7 +92,7 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.SceneKeySetting sceneKeySettings = CognitiveVR_Preferences.Instance.FindScene(activeScene.name);
                 if (sceneKeySettings != null)
                 {
-                    if (sceneKeySettings.Track)
+                    if (!string.IsNullOrEmpty(sceneKeySettings.SceneKey))
                     {
                         CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
                     }

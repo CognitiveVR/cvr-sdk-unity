@@ -30,6 +30,12 @@ namespace CognitiveVR
         bool hideNonBuildScenes = false;
         static CognitiveVR_Preferences.SceneKeySetting currentSceneSettings;
 
+        string searchString = "";
+
+        int toggleWidth = 10;
+        int sceneWidth = 140;
+        int keyWidth = 400;
+
         bool loadedScenes = false;
         void OnGUI()
         {
@@ -79,38 +85,134 @@ namespace CognitiveVR
                 }
             }
 
-            sceneIndex = EditorGUILayout.Popup(sceneIndex, sceneNames.ToArray());
+            GUILayout.BeginHorizontal();
 
-            hideNonBuildScenes = GUILayout.Toggle(hideNonBuildScenes, "Hide non-building scenes");
+            hideNonBuildScenes = GUILayout.Toggle(hideNonBuildScenes, "Only show scenes in Build Settings");
+            //searchString = EditorGUILayout.TextField("Search", searchString);
 
-            string selectedSceneName = "invalid scene name";
-            if (sceneIndex < sceneNames.Count)
+            searchString = GhostTextField("Search scenes", "", searchString);
+
+
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+
+            canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
+
+            foreach (var v in prefs.SceneKeySettings)
             {
-                selectedSceneName = sceneNames[sceneIndex];
-            }
-            //GUILayout.Label(selectedSceneName);
-
-            //when should scenes and keys get added to this?
-            currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(selectedSceneName);
-
-            System.DateTime revisionDate = System.DateTime.MinValue;
-
-            if (currentSceneSettings != null)
-            {
-                revisionDate = currentSceneSettings.LastRevision;
+                if (!string.IsNullOrEmpty(searchString) && !v.SceneName.ToLower().Contains(searchString.ToLower())) { continue; }
+                DisplaySceneKeySettings(v);
             }
 
-            //revision date
+            GUILayout.EndScrollView();
+
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
+
+            currentSceneSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("<size=14><b>Last Scene Revision:</b></size> " + revisionDate.ToShortDateString());
+            GUILayout.Label("<size=14><b>Current Scene: "+currentSceneSettings.SceneName + "</b></size>");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            
+
+            /*string selectedSceneName = "invalid scene name";
+            if (sceneIndex < sceneNames.Count)
+            {
+                selectedSceneName = sceneNames[sceneIndex];
+            }*/
+            //GUILayout.Label(selectedSceneName);
+
+            //when should scenes and keys get added to this?
+            //currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(selectedSceneName);
+
+            if (currentSceneSettings == null)
+            {
+                //reload scenes if this one isn't currently found. likely was created while this window was open
+                //ReadNames();
+            }
+
+            /*if (GUILayout.Button("Open Scene"))
+            {
+                //UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
+                //var prefs = CognitiveVR_Settings.GetPreferences();
+                //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
+            }*/
+
+            System.DateTime revisionDate = System.DateTime.MinValue;
+
+            if (currentSceneSettings != null)
+            {
+                revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
+            }
+
+            //revision date
+
+            //GUILayout.Space(10);
+            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            //GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (revisionDate.Year < 1000)
+            {
+                GUILayout.Label("Last Scene Revision: Never");
+            }
+            else
+            {
+                GUILayout.Label("Last Scene Revision: " + revisionDate.ToShortDateString());
+            }
+            
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(currentSceneSettings.SceneKey))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.TextField("SceneID","a12345b6-78c9-01d2-3456-78e9f0ghi123", style);
+
+                EditorGUI.BeginDisabledGroup(true);
+                GUIContent sceneExplorerLink = new GUIContent("SceneExplorer...");
+                if (GUILayout.Button(sceneExplorerLink))
+                {
+                    Application.OpenURL("https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey);
+                }
+                EditorGUI.EndDisabledGroup();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                currentSceneSettings.SceneKey = EditorGUILayout.TextField("SceneID",currentSceneSettings.SceneKey, GUILayout.Width(keyWidth));
+                EditorGUI.BeginDisabledGroup(!KeyIsValid(currentSceneSettings.SceneKey));
+
+                GUIContent sceneExplorerLink = new GUIContent("SceneExplorer...");
+                if (KeyIsValid(currentSceneSettings.SceneKey))
+                {
+                    sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey;
+                }
+
+                if (GUILayout.Button(sceneExplorerLink))
+                {
+                    Application.OpenURL("https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey);
+                }
+                EditorGUI.EndDisabledGroup();
+                GUILayout.EndHorizontal();
+            }
+
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
@@ -193,9 +295,9 @@ namespace CognitiveVR
             }
             EditorGUI.indentLevel--;
 
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
+            //GUILayout.Space(10);
+            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            GUILayout.Space(20);
 
             if (string.IsNullOrEmpty(prefs.SavedBlenderPath))
             {
@@ -209,204 +311,47 @@ namespace CognitiveVR
                 prefs.SavedBlenderPath = EditorUtility.OpenFilePanel("Select Blender.exe", string.IsNullOrEmpty(prefs.SavedBlenderPath) ? "c:\\" : prefs.SavedBlenderPath, "");
             }
 
-            //appendName = EditorGUILayout.TextField(new GUIContent("Append to File Name", "This could be a level's number and version"), appendName);
-
-            EditorGUI.BeginDisabledGroup(!validBlenderPath);
-            if (GUILayout.Button(new GUIContent("Export Scene", "Exports the scene to Blender and reduces polygons. This also exports required textures at a low resolution")))
-            {
-                ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);   
-            }
-
-            EditorGUI.EndDisabledGroup();
-
-
-
-            return;
-
-            prefs = CognitiveVR_Settings.GetPreferences();
-
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(new GUIContent("Customer ID", "The identifier for your company and product on the CognitiveVR Dashboard"));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            prefs.CustomerID = EditorGUILayout.TextField(prefs.CustomerID);
-
-            GUILayout.Space(10);
-
-
-            /*if (GUILayout.Button("Save"))
-            {
-                EditorUtility.SetDirty(prefs);
-                AssetDatabase.SaveAssets();
-            }
-
-            if (GUILayout.Button("Open Component Setup"))
-            {
-                CognitiveVR_ComponentSetup.Init();
-            }*/
-
-            canvasPos = GUILayout.BeginScrollView(canvasPos, false, false);
-
-            GUILayout.Space(10);
-
-            //prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nHMD Height\nHMD Collsion\nArm Length\nController Collision"), prefs.SnapshotInterval);
-            //prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
-
-            //prefs.ComfortTrackingInterval = EditorGUILayout.Slider(new GUIContent("Comfort Tracking Send Rate", "Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail"), prefs.ComfortTrackingInterval, 3, 60);
-            //prefs.OnlySendComfortOnLowFPS = EditorGUILayout.Toggle(new GUIContent("Only Send Low FPS", "Ignore sending Comfort at set intervals. Only send FPS events below the threshold"), prefs.OnlySendComfortOnLowFPS);
-            //prefs.LowFramerateThreshold = EditorGUILayout.IntField(new GUIContent("Low Framerate Threshold", "Falling below and rising above this threshold will send events"), prefs.LowFramerateThreshold);
-            //prefs.LowFramerateThreshold = Mathf.Max(prefs.LowFramerateThreshold, 1);
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(new GUIContent("Player Recorder Options", "Settings for how the Player Recorder collects and sends data to SceneExplorer.com"));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            //radio buttons
-
-            GUIStyle selectedRadio = new GUIStyle(GUI.skin.label);
-            selectedRadio.normal.textColor = new Color(0, 0.0f, 0, 1.0f);
-            selectedRadio.fontStyle = FontStyle.Bold;
-
-            //3D content
-            GUILayout.BeginHorizontal();
-            if (prefs.PlayerDataType == 0)
-            {
-                GUILayout.Label("3D Content (default)", selectedRadio, GUILayout.Width(195));
-            }
-            else
-            {
-                GUILayout.Label("3D Content (default)", GUILayout.Width(195));
-            }
-            bool o = prefs.PlayerDataType == 0;
-            bool b = GUILayout.Toggle(prefs.PlayerDataType == 0, "",EditorStyles.radioButton);
-            if (b != o)
-            {
-                prefs.PlayerDataType = 0;
-            }
-            GUILayout.EndHorizontal();
-
-            //360 video content
-            GUILayout.BeginHorizontal();
-            if (prefs.PlayerDataType == 1)
-            {
-                GUILayout.Label(new GUIContent("360 Video Content", "Video content displayed in a sphere"), selectedRadio, GUILayout.Width(195));
-            }
-            else
-            {
-                GUILayout.Label(new GUIContent("360 Video Content", "Video content displayed in a sphere"), GUILayout.Width(195));
-            }
-            
-            bool originalContentType = prefs.PlayerDataType == 1;
-            bool selectedContentType = GUILayout.Toggle(prefs.PlayerDataType == 1, "", EditorStyles.radioButton);
-            if (selectedContentType != originalContentType)
-            {
-                prefs.PlayerDataType = 1;
-            }
-            GUILayout.EndHorizontal();
-
-            if (GUI.changed)
-            {
-                if (prefs.PlayerDataType == 0) //3d content
-                {
-                    prefs.TrackPosition = true;
-                    prefs.TrackGazePoint = true;
-                    prefs.TrackGazeDirection = false;
-                    prefs.GazePointFromDirection = false;
-                }
-                else //video content
-                {
-                    prefs.TrackPosition = true;
-                    prefs.TrackGazePoint = false;
-                    prefs.TrackGazeDirection = false;
-                    prefs.GazePointFromDirection = true;
-                }
-            }
-
-            EditorGUI.BeginDisabledGroup(prefs.PlayerDataType != 1);
-            prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("Video Sphere Radius", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
-            prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
-            EditorGUI.EndDisabledGroup();
-
-            GUILayout.Space(10);
-
-            //prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send Data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
-            //prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send Data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
-            //prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
-            //prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);
-            //prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("Scene Explorer Export Options");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-
 #if UNITY_EDITOR_OSX
             EditorGUILayout.HelpBox("Exporting scenes is not available on Mac at this time", MessageType.Warning);
             EditorGUI.BeginDisabledGroup(true);
 
 #endif
 
-            prefs.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Geo Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), prefs.ExportSettings.ExportStaticOnly);
-            prefs.ExportSettings.MinExportGeoSize = EditorGUILayout.FloatField(new GUIContent("Minimum export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), prefs.ExportSettings.MinExportGeoSize);
-            appendName = EditorGUILayout.TextField(new GUIContent("Append to File Name", "This could be a level's number and version"), appendName);
-            prefs.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), prefs.ExportSettings.ExplorerMinimumFaceCount);
-            prefs.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), prefs.ExportSettings.ExplorerMaximumFaceCount);
+            //appendName = EditorGUILayout.TextField(new GUIContent("Append to File Name", "This could be a level's number and version"), appendName);
 
-            if (prefs.ExportSettings.ExplorerMinimumFaceCount < 0) { prefs.ExportSettings.ExplorerMinimumFaceCount = 0; }
-            if (prefs.ExportSettings.ExplorerMaximumFaceCount < 1) { prefs.ExportSettings.ExplorerMaximumFaceCount = 1; }
-            if (prefs.ExportSettings.ExplorerMinimumFaceCount > prefs.ExportSettings.ExplorerMaximumFaceCount) { prefs.ExportSettings.ExplorerMinimumFaceCount = prefs.ExportSettings.ExplorerMaximumFaceCount; }
+            EditorGUI.BeginDisabledGroup(!validBlenderPath);
 
-            if (string.IsNullOrEmpty(prefs.SavedBlenderPath))
+            string exportButtonText = "Export Scene \"" + currentSceneSettings.SceneName +"\"";
+            /*if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != currentSceneSettings.ScenePath)
             {
-                FindBlender();
-            }
+                exportButtonText = "Change Scene and Export";
+            }*/
 
-            EditorGUILayout.LabelField("Path To Blender", prefs.SavedBlenderPath);
-            if (GUILayout.Button("Select Blender.exe"))
+            if (GUILayout.Button(new GUIContent(exportButtonText, "Exports the scene to Blender and reduces polygons. This also exports required textures at a reduced resolution")))
             {
-                prefs.SavedBlenderPath = EditorUtility.OpenFilePanel("Select Blender.exe", string.IsNullOrEmpty(prefs.SavedBlenderPath) ? "c:\\" : prefs.SavedBlenderPath, "");
+                //ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);
 
-                if (!string.IsNullOrEmpty(prefs.SavedBlenderPath))
-                {
-                    //prefs.SavedBlenderPath = prefs.SavedBlenderPath.Substring(0, prefs.SavedBlenderPath.Length - "blender.exe".Length) + "";
-                }
-            }
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("Export Scene", "Exports the scene to Blender and reduces polygons. This also exports required textures at a low resolution")))
-            {
-                ExportScene(true,prefs.ExportSettings.ExportStaticOnly,prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
-            }
+                //if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != currentSceneSettings.ScenePath)
+                //{
+                    //UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                    //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
+                //}
+                //var prefs = CognitiveVR_Settings.GetPreferences();
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
 
-            if (GUILayout.Button(new GUIContent("Export Scene SKIP TEXTURES", "Exports only the scene geometry to Blender and reduces polygons")))
-            {
-                ExportScene(false, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
+                //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
+                //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
             }
-            GUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
 
 #if UNITY_EDITOR_OSX
             EditorGUI.EndDisabledGroup();
 #endif
 
-            if (GUILayout.Button(new GUIContent("Manage Scene IDs", "Open window to set which tracked player data is uploaded to your scenes")))
+            /*if (GUILayout.Button(new GUIContent("Manage Scene IDs", "Open window to set which tracked player data is uploaded to your scenes")))
             {
                 CognitiveVR_SceneKeyConfigurationWindow.Init();
-            }
-
-            GUILayout.EndScrollView();
+            }*/
 
             if (GUI.changed)
             {
@@ -414,51 +359,126 @@ namespace CognitiveVR
             }
         }
 
-        static bool BlenderRequest;
-        static bool HasOpenedBlender;
-        //TODO check for the specific blender that was opened. save var when process.start(thisblender)
-
-        static void UpdateProcess()
+        bool IsSceneInBuildSettings(string scenePath)
         {
-            Process[] blenders;
-            if (BlenderRequest == true)
+            for (int i = 0; i< EditorBuildSettings.scenes.Length; i++)
             {
-                //Debug.Log("BLENDER - opening");
-                blenders = Process.GetProcessesByName("blender");
-                if (blenders.Length > 0)
-                {
-                    BlenderRequest = false;
-                    HasOpenedBlender = true;
-                }
+                if (EditorBuildSettings.scenes[i].path == scenePath){ return true; }
             }
-            if (HasOpenedBlender)
-            {
-                blenders = Process.GetProcessesByName("blender");
-                if (blenders.Length > 0)
-                {
-                    //Debug.Log("BLENDER - do work");
-                }
-                else
-                {
-                    //Debug.Log("BLENDER - finished work");
-                    EditorApplication.update -= UpdateProcess;
-                    HasOpenedBlender = false;
-                    UploadDecimatedScene();
-                }
-            }
+            return false;
         }
 
-        static void UploadDecimatedScene()
+        void DisplaySceneKeySettings(CognitiveVR_Preferences.SceneKeySetting settings)
         {
-            if (currentSceneSettings != null)
-                currentSceneSettings.LastRevision = System.DateTime.UtcNow;
+            bool inBuildSettings = IsSceneInBuildSettings(settings.ScenePath);
+            if (hideNonBuildScenes && !inBuildSettings)
+            {
+                return;
+            }
 
-            //TODO get this scene name
-            //use that to figure out which directory
-            //get all files in teh directory
-            //remove scenename.obj and scenename.mtl
-            //http POST to sceneexplorer.com/upload
-            //get sceneID back when upload complete
+            GUILayout.BeginHorizontal();
+
+            //settings.Track = GUILayout.Toggle(settings.Track, "", GUILayout.Width(toggleWidth));
+            EditorGUI.BeginDisabledGroup(true);
+            GUIContent buildScene = new GUIContent("");
+            
+
+            if (inBuildSettings)
+            { buildScene.tooltip = "In Build Settings"; }
+            else
+            { buildScene.tooltip = "NOT in Build Settings"; }
+
+            GUILayout.Toggle(inBuildSettings, buildScene, GUILayout.Width(toggleWidth));
+            EditorGUI.EndDisabledGroup();
+
+            if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
+            {
+                GUI.color = Color.green;
+            }
+
+            GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
+
+            DateTime dt = DateTime.FromBinary(settings.LastRevision);
+            if (dt.Year < 1000)
+            {
+                GUILayout.Label("Never", GUILayout.Width(sceneWidth));
+            }
+            else
+            {
+                string dtString = dt.ToShortDateString();
+                GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
+            }
+
+            GUI.color = Color.white;
+
+            string startSceneName = settings.SceneKey;
+
+            /*if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(settings.SceneKey))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                EditorGUILayout.TextField("a12345b6-78c9-01d2-3456-78e9f0ghi123", style);
+            }
+            else
+            {
+                settings.SceneKey = EditorGUILayout.TextField(settings.SceneKey, GUILayout.Width(keyWidth));
+            }*/
+
+            if (!string.IsNullOrEmpty(settings.SceneKey) && string.IsNullOrEmpty(startSceneName))
+            {
+                //new key!
+                //settings.Track = true;
+            }
+
+            EditorGUI.BeginDisabledGroup(!KeyIsValid(settings.SceneKey));
+            GUIContent sceneExplorerLink = new GUIContent("SceneExplorer...");
+            if (KeyIsValid(settings.SceneKey))
+            {
+                sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + settings.SceneKey;
+            }
+
+            if (GUILayout.Button(sceneExplorerLink))
+            {
+                Application.OpenURL("https://sceneexplorer.com/scene/" + settings.SceneKey);
+            }
+
+            EditorGUI.EndDisabledGroup();
+            
+            /*if (settings.Track)
+            {
+                bool validKey = KeyIsValid(settings.SceneKey);
+
+                if (!validKey)
+                {
+                    if (settings.SceneKey.Contains("http://sceneexplorer.com/scene/"))
+                    {
+                        settings.SceneKey = settings.SceneKey.Replace("http://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    if (settings.SceneKey.Contains("https://sceneexplorer.com/scene/"))
+                    {
+                        settings.SceneKey = settings.SceneKey.Replace("https://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    else if (settings.SceneKey.Contains("sceneexplorer.com/scene/"))
+                    {
+                        settings.SceneKey = settings.SceneKey.Replace("sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+
+                    GUI.color = Color.red;
+                    GUILayout.Button(new GUIContent("!", "ID is invalid! Should be format:\na12345b6-78c9-01d2-3456-78e9f0ghi123"), GUILayout.Width(14), GUILayout.Height(14));
+                    GUI.color = Color.white;
+                }
+            }*/
+
+            if (GUILayout.Button("Open Scene"))
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
+            }
+
+            GUILayout.EndHorizontal();
         }
 
         public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor)
@@ -492,25 +512,83 @@ namespace CognitiveVR
             EditorUtility.ClearProgressBar();
 
 
-            ProcessStartInfo ProcessInfo;
+            ProcessStartInfo processInfo;
 
-            ProcessInfo = new ProcessStartInfo(prefs.SavedBlenderPath);
-            ProcessInfo.UseShellExecute = true;
-            ProcessInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + prefs.ExportSettings.ExplorerMinimumFaceCount + " " + prefs.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
+            processInfo = new ProcessStartInfo(prefs.SavedBlenderPath);
+            processInfo.UseShellExecute = true;
+            processInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + prefs.ExportSettings.ExplorerMinimumFaceCount + " " + prefs.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
 
             //changing scene while blender is decimating the level will break the file that will be automatically uploaded
-            Process.Start(ProcessInfo);
+            blenderProcess = Process.Start(processInfo);
             BlenderRequest = true;
             HasOpenedBlender = false;
-            //EditorApplication.update += UpdateProcess;
+            EditorApplication.update += UpdateProcess;
         }
 
-        public static bool FoldoutButton(string title, bool showing)
+        static bool BlenderRequest;
+        static bool HasOpenedBlender;
+        static Process blenderProcess;
+        //TODO check for the specific blender that was opened. save var when process.start(thisblender)
+
+        static void UpdateProcess()
         {
-            string fullTitle = showing ? "Hide ":"Show " ;
-            fullTitle += title + " Options";
-            GUILayout.Space(4);
-            return GUILayout.Button(fullTitle, EditorStyles.toolbarButton);
+            if (blenderProcess == null)
+                Debug.Log("blender process null");
+            else
+                Debug.Log("blender process "+blenderProcess.Id);
+
+            Process[] blenders;
+            if (BlenderRequest == true)
+            {
+                //Debug.Log("BLENDER - opening");
+                blenders = Process.GetProcessesByName("blender");
+                if (blenders.Length > 0)
+                {
+                    BlenderRequest = false;
+                    HasOpenedBlender = true;
+                }
+            }
+            if (HasOpenedBlender)
+            {
+                blenders = Process.GetProcessesByName("blender");
+                if (blenders.Length > 0)
+                {
+                    //Debug.Log("BLENDER - do work");
+                }
+                else
+                {
+                    //Debug.Log("BLENDER - finished work");
+                    EditorApplication.update -= UpdateProcess;
+                    HasOpenedBlender = false;
+                    UploadDecimatedScene();
+                }
+            }
+        }
+
+        static void UploadDecimatedScene()
+        {
+            if (currentSceneSettings != null)
+                currentSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
+
+            //TODO get this scene name
+            //use that to figure out which directory
+            //get all files in teh directory
+            //remove scenename.obj and scenename.mtl
+            //http POST to sceneexplorer.com/upload
+            //get sceneID back when upload complete
+        }
+
+        #region Utility
+
+        bool KeyIsValid(string key)
+        {
+            if (string.IsNullOrEmpty(key)) { return false; }
+
+            //a12345b6-78c9-01d2-3456-78e9f0ghi123
+
+            string pattern = @"[A-Za-z0-9\-+]{" + key.Length + "}";
+            bool regexPass = System.Text.RegularExpressions.Regex.IsMatch(key, pattern);
+            return regexPass;
         }
 
         static List<int> layerNumbers = new List<int>();
@@ -617,7 +695,7 @@ namespace CognitiveVR
                     if (newSetting.SceneName == oldSetting.SceneName)
                     {
                         newSetting.SceneKey = oldSetting.SceneKey;
-                        newSetting.Track = oldSetting.Track;
+                        //newSetting.Track = oldSetting.Track;
                         newSetting.LastRevision = oldSetting.LastRevision;
                         newSetting.SceneName = oldSetting.SceneName;
                         newSetting.ScenePath = oldSetting.ScenePath;
@@ -625,5 +703,41 @@ namespace CognitiveVR
                 }
             }
         }
+
+        public static string GhostTextField(string ghostText, string label, string actualText)
+        {
+            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(actualText))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+
+                EditorGUILayout.TextField(label, ghostText, style);
+                return "";
+            }
+            else
+            {
+                actualText = EditorGUILayout.TextField(label, actualText);//, GUILayout.Width(keyWidth));
+            }
+            return actualText;
+        }
+
+        public static string GhostPasswordField(string ghostText, string label, string actualText)
+        {
+            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(actualText))
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.textField);
+                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+
+                EditorGUILayout.TextField(label, ghostText, style);
+                return "";
+            }
+            else
+            {
+                actualText = EditorGUILayout.PasswordField(label, actualText);//, GUILayout.Width(keyWidth));
+            }
+            return actualText;
+        }
+
+        #endregion
     }
 }

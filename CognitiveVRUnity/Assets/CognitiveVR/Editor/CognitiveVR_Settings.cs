@@ -30,8 +30,7 @@ namespace CognitiveVR
 
         public static CognitiveVR_Settings Instance;
 
-        System.DateTime lastUpdateDate;
-
+        System.DateTime updateDate;
 
 
         [MenuItem("cognitiveVR/Settings")]
@@ -47,10 +46,13 @@ namespace CognitiveVR
             Instance.Show();
 
             //TODO fix this. shouldn't have to re-read this value to parse it to the correct format
-            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate))
+            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.updateDate))
             {
-                Instance.lastUpdateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
             }
+
+            //if (System.DateTime.TryParseExact(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), "", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out Instance.updateDate);
+            //EditorPrefs.GetInt
         }
 
         static CognitiveVR_Settings()
@@ -81,16 +83,22 @@ namespace CognitiveVR
                 Instance.maxSize = size;
                 Instance.Show();
 
+                
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.updateDate))
+                {
+                    //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                }
+
                 //System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate);
             }
 
             System.DateTime remindDate;
-            //TODO fix this. shouldn't have to re-read this value to parse it to the correct format
+            
             if (Instance != null)
             {
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out Instance.lastUpdateDate))
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
                 {
-                    remindDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                    //remindDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                     if (System.DateTime.UtcNow > remindDate)
                     {
                         Instance.CheckForUpdates();
@@ -169,8 +177,16 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            prefs.UserName = GUILayout.TextField(prefs.UserName);
-            password = EditorGUILayout.PasswordField(password);
+
+            prefs.UserName = CognitiveVR_SceneExportWindow.GhostTextField("name@email.com", "", prefs.UserName);
+
+            password = CognitiveVR_SceneExportWindow.GhostPasswordField("password", "", password);
+
+            //prefs.UserName = GUILayout.TextField(prefs.UserName);
+            //password = EditorGUILayout.PasswordField(password);
+
+
+
             if (IsUserLoggedIn())
             {
                 if (GUILayout.Button("Logout"))
@@ -329,7 +345,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Save"))
             {
-                //SaveSettings();
+                SaveSettings();
             }
 
             GUILayout.BeginHorizontal();
@@ -340,126 +356,9 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Last Updated: " + lastUpdateDate.ToShortDateString());
+            GUILayout.Label("Last Updated: " + updateDate.ToShortDateString());
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-
-            return;
-
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-
-           
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("CognitiveVR Customer ID");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUIContent addInitButtonText = new GUIContent("Add CognitiveVR Manager", "Does not Destroy on Load\nInitializes analytics system with basic device info");
-
-            bool hasManager = FindObjectOfType<CognitiveVR.CognitiveVR_Manager>() != null;
-            if (hasManager)
-            {
-                addInitButtonText.text = "CognitiveVR Manager Found!";
-                addInitButtonText.tooltip = "";
-            }
-
-            /*if (Event.current.type == EventType.repaint && string.IsNullOrEmpty(newID))
-            {
-                GUIStyle style = new GUIStyle(GUI.skin.textField);
-                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
-                EditorGUILayout.TextField("companyname1234-productname-test", style);
-            }
-            else
-            {
-                newID = EditorGUILayout.TextField(newID);
-            }
-
-            bool validID = (newID != null && newID != "companyname1234-productname-test" && newID.Length > 0);*/
-            bool validID = false;
-            if (validID)
-            {
-                if (hasManager) { GUI.color = Green; }
-                if (GUILayout.Button(addInitButtonText))
-                {
-                    if (!hasManager)
-                    {
-                        string sampleResourcePath = GetSamplesResourcePath();
-                        Object basicInit = AssetDatabase.LoadAssetAtPath<Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
-                        if (basicInit)
-                        {
-                            PrefabUtility.InstantiatePrefab(basicInit);
-                        }
-                        else
-                        {
-                            Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
-                            GameObject go = new GameObject("CognitiveVR_Manager");
-                            go.AddComponent<CognitiveVR_Manager>();
-                            Selection.activeGameObject = go;
-                        }
-                    }
-                }
-                GUI.color = Color.white;
-            }
-            else
-            {
-                GUILayout.Button("Invalid Customer ID");
-            }
-
-            //=========================
-            //SDK
-            //=========================
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-
-            EditorGUI.BeginDisabledGroup(!validID);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("Please Select your VR SDK");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            EditorGUI.EndDisabledGroup();
-
-            //=========================
-            //save
-            //=========================
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-
-            EditorGUI.BeginDisabledGroup(!validID);
-
-            if (GUILayout.Button("Save"))
-            {
-                SaveSettings();
-            }
-
-            bool containsSDKSymbol = false;
-            if (PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Contains("CVR_"))
-            {
-                containsSDKSymbol = true;
-            }
-
-            EditorGUI.BeginDisabledGroup(!containsSDKSymbol);
-            //save and close
-            if (GUILayout.Button("Open Component Setup"))
-            {
-                CognitiveVR.CognitiveVR_ComponentSetup.Init();
-
-                Close();
-            }
-
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.EndDisabledGroup();
         }
 
         public void RequestLogin(string userEmail, string password)
@@ -673,10 +572,9 @@ namespace CognitiveVR
 
             if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
             {
-
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
                 EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                lastUpdateDate = System.DateTime.UtcNow;
+                updateDate = System.DateTime.UtcNow;
             }
         }
 
