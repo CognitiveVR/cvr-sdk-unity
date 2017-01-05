@@ -175,7 +175,6 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-
             if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(currentSceneSettings.SceneKey))
             {
                 GUIStyle style = new GUIStyle(GUI.skin.textField);
@@ -197,7 +196,30 @@ namespace CognitiveVR
             {
                 GUILayout.BeginHorizontal();
                 currentSceneSettings.SceneKey = EditorGUILayout.TextField("SceneID",currentSceneSettings.SceneKey, GUILayout.Width(keyWidth));
-                EditorGUI.BeginDisabledGroup(!KeyIsValid(currentSceneSettings.SceneKey));
+
+                //remove sceneexplorer.com/scene from sceneKey
+                bool validKey = KeyIsValid(currentSceneSettings.SceneKey);
+
+                if (!validKey)
+                {
+                    if (currentSceneSettings.SceneKey.Contains("http://sceneexplorer.com/scene/"))
+                    {
+                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("http://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    if (currentSceneSettings.SceneKey.Contains("https://sceneexplorer.com/scene/"))
+                    {
+                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("https://sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                    else if (currentSceneSettings.SceneKey.Contains("sceneexplorer.com/scene/"))
+                    {
+                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("sceneexplorer.com/scene/", "");
+                        GUI.FocusControl("NULL");
+                    }
+                }
+
+                EditorGUI.BeginDisabledGroup(!validKey);
 
                 GUIContent sceneExplorerLink = new GUIContent("SceneExplorer...");
                 if (KeyIsValid(currentSceneSettings.SceneKey))
@@ -319,7 +341,7 @@ namespace CognitiveVR
 
             //appendName = EditorGUILayout.TextField(new GUIContent("Append to File Name", "This could be a level's number and version"), appendName);
 
-            EditorGUI.BeginDisabledGroup(!validBlenderPath);
+            EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID));
 
             string exportButtonText = "Export Scene \"" + currentSceneSettings.SceneName +"\"";
             /*if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != currentSceneSettings.ScenePath)
@@ -327,7 +349,14 @@ namespace CognitiveVR
                 exportButtonText = "Change Scene and Export";
             }*/
 
-            if (GUILayout.Button(new GUIContent(exportButtonText, "Exports the scene to Blender and reduces polygons. This also exports required textures at a reduced resolution")))
+            GUIContent exportContent = new GUIContent(exportButtonText, "Exports the scene to Blender and reduces polygons. This also exports required textures at a reduced resolution");
+
+            if (string.IsNullOrEmpty(prefs.CustomerID))
+            {
+                exportContent.tooltip = "You must have a valid CustomerID to export a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
+            }
+
+            if (GUILayout.Button(exportContent))
             {
                 //ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);
 
@@ -337,11 +366,17 @@ namespace CognitiveVR
                     //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
                 //}
                 //var prefs = CognitiveVR_Settings.GetPreferences();
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
 
                 //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
                 //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
             }
+
+            if (GUILayout.Button(new GUIContent("Upload Scene","Upload scene files from default scene folder")))
+            {
+                UploadDecimatedScene();
+            }
+
             EditorGUI.EndDisabledGroup();
 
 #if UNITY_EDITOR_OSX
@@ -481,8 +516,14 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
         }
 
-        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor)
+        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID)
         {
+            if (blenderProcess != null)
+            {
+                Debug.LogError("Currently decimating a scene. Please wait until this is finished!");
+                return;
+            }
+
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
 
             bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor);
@@ -502,6 +543,9 @@ namespace CognitiveVR
             string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
+            //write json settings file
+            string jsonSettingsContents = "{ \"scale\":1, \"customerid\":\"" + customerID + "\"}";
+            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             //System.Diagnostics.Process.Start("http://google.com/search?q=" + "cat pictures");
 
@@ -523,6 +567,16 @@ namespace CognitiveVR
             BlenderRequest = true;
             HasOpenedBlender = false;
             EditorApplication.update += UpdateProcess;
+
+            EditorUtility.DisplayProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", 0.5f);
+            {
+                /*blenderProcess.Kill();
+                Debug.Log("KILL BLENDER PROCESS CANCEL BUTTON WOW");
+                blenderProcess = null;
+                EditorUtility.ClearProgressBar();*/
+            }
+            
+            //if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f))
         }
 
         static bool BlenderRequest;
@@ -532,11 +586,6 @@ namespace CognitiveVR
 
         static void UpdateProcess()
         {
-            if (blenderProcess == null)
-                Debug.Log("blender process null");
-            else
-                Debug.Log("blender process "+blenderProcess.Id);
-
             Process[] blenders;
             if (BlenderRequest == true)
             {
@@ -560,6 +609,8 @@ namespace CognitiveVR
                     //Debug.Log("BLENDER - finished work");
                     EditorApplication.update -= UpdateProcess;
                     HasOpenedBlender = false;
+                    blenderProcess = null;
+                    EditorUtility.ClearProgressBar();
                     UploadDecimatedScene();
                 }
             }
@@ -570,12 +621,74 @@ namespace CognitiveVR
             if (currentSceneSettings != null)
                 currentSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
 
-            //TODO get this scene name
-            //use that to figure out which directory
-            //get all files in teh directory
-            //remove scenename.obj and scenename.mtl
-            //http POST to sceneexplorer.com/upload
-            //get sceneID back when upload complete
+            if (EditorUtility.DisplayDialog("Upload Scene","Do you want to automatically upload your decimated scene to SceneExplorer.com?", "Yes", "No"))
+            {
+                string sceneName = currentSceneSettings.SceneName;
+
+                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
+                var filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + "\\CognitiveVR_SceneExplorerExport\\" + fullName + "\\");
+
+                WWWForm wwwForm = new WWWForm();
+                foreach (var f in filePaths)
+                {
+                    if (f.Contains(".obj") && !f.Contains("_decimated.obj")){ continue; }
+                    if (f.Contains(".mtl") && !f.Contains("_decimated.mtl")){ continue; }
+                    Debug.Log(f);
+
+                    var data = File.ReadAllBytes(f);
+                    wwwForm.AddBinaryData("fileUpload", data, Path.GetFileName(f));
+                }
+                sceneUploadWWW = new WWW("https://sceneexplorer.com/uploader", wwwForm);
+
+                EditorApplication.update += UpdateUploadData;
+                
+                //use scenename to figure out which directory
+                //get all files in teh directory
+                //remove scenename.obj and scenename.mtl
+                //http POST to sceneexplorer.com/upload
+                //get sceneID back when upload complete
+            }
+            else //cancel
+            {
+                Debug.Log("You can manually upload your scene at SceneExplorer.com/upload");
+            }
+        }
+
+        static WWW sceneUploadWWW;
+
+        static void UpdateUploadData()
+        {
+            if (sceneUploadWWW == null)
+            {
+                EditorApplication.update -= UpdateUploadData;
+                return;
+            }
+
+            if (EditorUtility.DisplayCancelableProgressBar("Uploading","Uploading scene data to sceneExplorer.com",sceneUploadWWW.uploadProgress))
+            {
+                EditorApplication.update -= UpdateUploadData;
+                EditorUtility.ClearProgressBar();
+                Debug.Log("Upload canceled!");
+                return;
+            }
+
+            if (!sceneUploadWWW.isDone) { return; }
+
+            Debug.Log("upload complete!");
+            EditorUtility.ClearProgressBar();
+            EditorApplication.update -= UpdateUploadData;
+
+            //response
+            if (!string.IsNullOrEmpty(sceneUploadWWW.error))
+            {
+                Debug.LogError(sceneUploadWWW.error);
+                return;
+            }
+
+            string responseText = sceneUploadWWW.text;
+            Debug.Log("upload scene response: " + responseText);
+
+            currentSceneSettings.SceneKey = responseText;
         }
 
         #region Utility

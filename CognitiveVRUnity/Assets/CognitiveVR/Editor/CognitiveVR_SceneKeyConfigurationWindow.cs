@@ -177,7 +177,7 @@ namespace CognitiveVR
 
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
                 var prefs = CognitiveVR_Settings.GetPreferences();
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
             }
 #endif
             GUILayout.EndHorizontal();

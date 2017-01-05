@@ -16,7 +16,9 @@ namespace CognitiveVR
         public override void OnGUI(Rect rect)
         {
             GUILayout.Label("New Product", EditorStyles.boldLabel);
-            productName = EditorGUILayout.TextField(productName);
+
+            productName = CognitiveVR_SceneExportWindow.GhostTextField("MyProductName", "", productName);
+            //productName = EditorGUILayout.TextField(productName);
             productName = MakeProductNameSafe(productName);
             GUILayout.BeginHorizontal();
 

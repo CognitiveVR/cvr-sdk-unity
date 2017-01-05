@@ -70,10 +70,6 @@ namespace CognitiveVR
 
             CognitiveVR_Manager manager = FindObjectOfType<CognitiveVR_Manager>();
 
-            //==============
-            //component list
-            //==============
-
             GetAnalyticsComponentTypes();
 
             canvasPos = GUILayout.BeginScrollView(canvasPos,false,true);
@@ -86,7 +82,9 @@ namespace CognitiveVR
                 GUI.color = new Color(0.7f, 0.7f, 0.7f);
             }
 
-            //TODO put general settings here before analytics components
+            //==============
+            //general settings
+            //==============
 
             GUI.skin.label.richText = true;
 
@@ -163,6 +161,11 @@ namespace CognitiveVR
                 EditorUtility.SetDirty(prefs);
             }
 
+
+            //==============
+            //component list
+            //==============
+
             foreach (var v in childTypes)
             {
                 GUILayout.Space(10);
@@ -188,20 +191,25 @@ namespace CognitiveVR
             {
                 var rect = new Rect(position.width / 2 - 90, position.height / 2 - 25, 180, 50);
 
-                if (GUI.Button(rect, new GUIContent("Add CognitiveVR Manager", "Does not Destroy on Load\nInitializes analytics system with basic device info")))
+                if (GUI.Button(rect, new GUIContent("Add cognitiveVR Manager", "Does not Destroy on Load\nInitializes analytics system with basic device info")))
                 {
                     string sampleResourcePath = GetSamplesResourcePath();
                     UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
                     if (basicInit)
                     {
-                        Selection.activeGameObject = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
+                        GameObject newManager = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
+                        Selection.activeGameObject = newManager;
+                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
                     }
                     else
                     {
                         Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
-                        GameObject go = new GameObject("CognitiveVR_Manager");
-                        manager = go.AddComponent<CognitiveVR_Manager>();
-                        Selection.activeGameObject = go;
+                        GameObject newManager = new GameObject("CognitiveVR_Manager");
+                        manager = newManager.AddComponent<CognitiveVR_Manager>();
+                        Selection.activeGameObject = newManager;
+
+                        Selection.activeGameObject = newManager;
+                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
                     }
                 }
 
@@ -254,16 +262,16 @@ namespace CognitiveVR
             //3D content
             GUILayout.BeginHorizontal();
 
-            bool o = prefs.PlayerDataType == 0;
-            bool b = GUILayout.Toggle(prefs.PlayerDataType == 0, "3D (default)", EditorStyles.radioButton);
-            if (b != o)
+            bool contentIs3D = prefs.PlayerDataType == 0;
+            bool newContentIs3D = GUILayout.Toggle(prefs.PlayerDataType == 0, "3D (default)", EditorStyles.radioButton);
+            if (newContentIs3D != contentIs3D)
             {
                 prefs.PlayerDataType = 0;
             }
 
-            bool originalContentType = prefs.PlayerDataType == 1;
-            bool selectedContentType = GUILayout.Toggle(prefs.PlayerDataType == 1, "360 Video", EditorStyles.radioButton);
-            if (selectedContentType != originalContentType)
+            bool contentIs360 = prefs.PlayerDataType == 1;
+            bool newContentIs360 = GUILayout.Toggle(prefs.PlayerDataType == 1, "360 Video", EditorStyles.radioButton);
+            if (newContentIs360 != contentIs360)
             {
                 prefs.PlayerDataType = 1;
             }
@@ -287,10 +295,19 @@ namespace CognitiveVR
                 }
             }
 
-            EditorGUI.BeginDisabledGroup(prefs.PlayerDataType != 1);
-            prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("Video Sphere Radius", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
-            prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
-            EditorGUI.EndDisabledGroup();
+            if (prefs.PlayerDataType == 0) //3d content
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                GUILayout.Label(new GUIContent("360 Video Sphere Radius"));
+                EditorGUI.EndDisabledGroup();
+            }
+            else //video content
+            {
+                EditorGUI.BeginDisabledGroup(prefs.PlayerDataType != 1);
+                prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("360 Video Sphere Radius", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
+                prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
+                EditorGUI.EndDisabledGroup();
+            }
         }
 
         void TogglableComponent(CognitiveVR_Manager manager, System.Type componentType)
@@ -306,8 +323,6 @@ namespace CognitiveVR
             GUI.skin.label.richText = true;
 
             GUILayout.Label("<size=14><b>" + componentType.Name + "</b></size>");
-
-
 
             //open script button
             /*if (GUILayout.Button("Open Script",GUILayout.Width(100)))
@@ -365,8 +380,6 @@ namespace CognitiveVR
                 }
             }
 
-            //EditorGUI.BeginDisabledGroup(!componentHasInstance);
-
             //get all the fields
             foreach (var field in componentType.GetFields())
             {
@@ -403,11 +416,9 @@ namespace CognitiveVR
                     else
                     {
                         GUILayout.Label(field.Name + t);
-                        //GUILayout.Toggle(false, v.Name + " FIELD");
                     }
                 }
             }
-            //EditorGUI.EndDisabledGroup();
         }
 
         private void DisplayIntField(Type componentType, Component instance, FieldInfo field)
@@ -502,14 +513,37 @@ namespace CognitiveVR
         {
             if (instance != null)
             {
-                //var valueAsFloat = (float)field.GetValue(instance);
+                var valueAsFloat = (float)field.GetValue(instance);
 
                 var tempValue = 0f;
-                //tempValue = EditorGUILayout.FloatField(field.Name, valueAsFloat);
-                //tempValue = EditorGUILayout.Slider(tempValue, 0, 10f);
-                //tempValue = GUILayout.HorizontalSlider(tempValue, 0f, 10f);
+                GUIContent guiContent = new GUIContent(field.Name, "");
+                Components.DisplaySettingAttribute display = null;
 
-                field.SetValue(instance, tempValue);
+                for (int i = 0; i < field.GetCustomAttributes(false).Length; i++)
+                {
+                    if (field.GetCustomAttributes(false)[i].GetType() == typeof(TooltipAttribute))
+                    {
+                        var tooltip = (TooltipAttribute)field.GetCustomAttributes(false)[i];
+                        guiContent.tooltip = tooltip.tooltip;
+                    }
+                    if (field.GetCustomAttributes(false)[i].GetType() == typeof(Components.DisplaySettingAttribute))
+                    {
+                        display = (Components.DisplaySettingAttribute)field.GetCustomAttributes(false)[i];
+                    }
+                }
+
+                float max = 1;
+                float min = 0;
+
+                display.GetFloatLimits(out min, out max);
+
+                tempValue = EditorGUILayout.Slider(guiContent, valueAsFloat,min,max);
+                tempValue = Mathf.Clamp(tempValue, min, max);
+
+                if (GUI.changed)
+                {
+                    field.SetValue(instance, tempValue);
+                }
             }
             else
             {
@@ -605,7 +639,6 @@ namespace CognitiveVR
                 }
 
                 tempValue = LayerMaskField(guiContent,valueAsLayerMask);
-                //tempValue = EditorGUILayout.LayerField(valueAsLayerMask);
 
                 if (GUI.changed)
                 {

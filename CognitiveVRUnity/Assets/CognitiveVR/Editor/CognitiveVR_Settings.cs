@@ -146,12 +146,19 @@ namespace CognitiveVR
         Rect productRect;
         Rect sdkRect;
 
+        int testprodSelection = -1;
+
         public void OnGUI()
         {
             GUI.skin.label.richText = true;
 
             CognitiveVR.CognitiveVR_Preferences prefs = GetPreferences();
-            
+
+            if (testprodSelection == -1)
+            {
+                testprodSelection = prefs.CustomerID.EndsWith("-prod") ? testprodSelection = 1 : testprodSelection = 0;
+            }
+
             //LOGO
             var resourcePath = GetResourcePath();
             var logo = AssetDatabase.LoadAssetAtPath<Texture2D>(resourcePath + "Textures/logo-light.png");
@@ -299,6 +306,21 @@ namespace CognitiveVR
             }
             if (Event.current.type == EventType.Repaint) productRect = GUILayoutUtility.GetLastRect();
 
+            GUIContent[] TestProd = new GUIContent[] { new GUIContent("Test", "send data to test backend"), new GUIContent("Prod", "send data to production backend") };
+            int oldTestProd = testprodSelection;
+
+            testprodSelection = GUILayout.Toolbar(testprodSelection, TestProd);
+            if (oldTestProd != testprodSelection) //update suffix test/prod on customerid
+            {
+                if (prefs.CustomerID.EndsWith("-test") || prefs.CustomerID.EndsWith("-prod"))
+                {
+                    prefs.CustomerID = prefs.CustomerID.Substring(0, prefs.CustomerID.Length - 5);
+                }
+                
+                //-test or -prod suffix appended in SaveSettings()
+                SaveSettings();
+            }
+
             EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(10);
@@ -306,33 +328,34 @@ namespace CognitiveVR
             GUILayout.Space(10);
 
             //=========================
-            //options and updates
+            //options
             //=========================
 
-            if (GUILayout.Button("Manage Tracking Options"))
+            if (GUILayout.Button("Open Component Options Window"))
             {
                 CognitiveVR_ComponentSetup.Init();
             }
-            if (GUILayout.Button("Manage Scene Explorer"))
+            if (GUILayout.Button("Open Scene Export Window"))
             {
                 CognitiveVR_SceneExportWindow.Init();
             }
+
+            //=========================
+            //select vr sdk
+            //=========================
+            if (GUILayout.Button("Select SDK"))
+            {
+                PopupWindow.Show(sdkRect, new CognitiveVR_SelectSDKPopup());
+            }
+            if (Event.current.type == EventType.Repaint) sdkRect = GUILayoutUtility.GetLastRect();
+
+            //updates
             if (GUILayout.Button("Check for Updates"))
             {
                 EditorPrefs.SetString("cvr_updateRemindDate", "");
                 EditorPrefs.SetString("cvr_skipVersion", "");
                 CheckForUpdates();
             }
-
-            //=========================
-            //select sdk
-            //=========================
-
-            if (GUILayout.Button("Select SDK"))
-            {
-                PopupWindow.Show(sdkRect, new CognitiveVR_SelectSDKPopup());
-            }
-            if (Event.current.type == EventType.Repaint) sdkRect = GUILayoutUtility.GetLastRect();
 
 
             GUILayout.Space(10);
@@ -557,14 +580,16 @@ namespace CognitiveVR
 
         public void SaveSettings()
         {
-            //SetPlayerDefine(option);
-
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
             //prefs.CustomerID = newID;
             var product = prefs.GetProduct(prefs.SelectedProduct);
             if (product != null)
             {
                 prefs.CustomerID = product.customerId;
+                if (testprodSelection == 0)
+                    prefs.CustomerID += "-test";
+                if (testprodSelection == 1)
+                    prefs.CustomerID += "-prod";
             }
 
             EditorUtility.SetDirty(prefs);

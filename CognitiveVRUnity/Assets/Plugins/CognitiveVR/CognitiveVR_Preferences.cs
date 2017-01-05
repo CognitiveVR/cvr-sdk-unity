@@ -109,11 +109,31 @@ namespace CognitiveVR
             }
         }
 
+        /// <summary>
+        /// companyname1234-productname-test
+        /// </summary>
         public string CustomerID = "";
 
-        [Header("User")]
+        /// <summary>
+        /// companyname1234-productname
+        /// </summary>
+        public string CompanyProductName
+        {
+            get
+            {
+                string customerid = CustomerID;
+                if (customerid.EndsWith("-test") || customerid.EndsWith("-prod"))
+                {
+                    customerid = customerid.Substring(0, customerid.Length - 5);
+                }
+                return customerid;
+            }
+        }
+
+        [HideInInspector]
         public string sessionID;
 
+        [Header("User")]
         public string UserName;
         public CognitiveVR.Json.UserData UserData;
         public string SelectedOrganization;
