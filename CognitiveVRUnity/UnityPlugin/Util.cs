@@ -183,5 +183,24 @@ namespace CognitiveVR
 			TimeSpan span = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			return span.TotalSeconds;
 		}
-	}
+
+        internal static void AddPref(string key, string value)
+        {
+            PlayerPrefs.SetString(key, value);
+            PlayerPrefs.Save();
+        }
+
+        internal static bool TryGetPrefValue(string key, out string value)
+        {
+            bool keyFound = false;
+            value = default(string);
+            if (PlayerPrefs.HasKey(key))
+            {
+                keyFound = true;
+                value = PlayerPrefs.GetString(key);
+            }
+
+            return keyFound;
+        }
+    }
 }
