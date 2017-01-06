@@ -213,12 +213,14 @@ namespace CognitiveVR
          * Pause the CognitiveVR system.
          * Note that currently this does nothing on native unity/wp8
          */
+        [System.Obsolete("CoreSubsystem.pause() is no longer used")]
         public static void pause() { }
 
         /**
          * Resume the CognitiveVR system.
          * Note that currently this does nothing on native unity/wp8
          */
+        [System.Obsolete("CoreSubsystem.resume() is no longer used")]
         public static void resume() { }
           
         /**

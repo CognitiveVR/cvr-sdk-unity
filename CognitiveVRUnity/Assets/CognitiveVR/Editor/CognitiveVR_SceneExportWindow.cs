@@ -14,18 +14,17 @@ namespace CognitiveVR
 
         static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
-        static bool remapHotkey;
+        //static bool remapHotkey;
 
         [MenuItem("cognitiveVR/Scene Export")]
         public static void Init()
         {
             // Get existing open window or if none, make a new one:
-            CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow),true, "cognitiveVR Scene Export");
+            CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");
             window.minSize = new Vector2(500, 500);
             window.Show();
         }
 
-        static int sceneIndex = 0;
         bool exportOptionsFoldout = false;
         bool hideNonBuildScenes = false;
         static CognitiveVR_Preferences.SceneKeySetting currentSceneSettings;
@@ -36,33 +35,16 @@ namespace CognitiveVR
         int sceneWidth = 140;
         int keyWidth = 400;
 
+
+
         bool loadedScenes = false;
-        void OnGUI()
+        List<string> sceneNames = new List<string>();
+
+        void AddAllScenes()
         {
-            if (!loadedScenes)
-            {
-                ReadNames();
-                loadedScenes = true;
-            }
-
-            GUI.skin.label.richText = true;
-
-            prefs = CognitiveVR_Settings.GetPreferences();
-
-            //=========================
-            //scene select
-            //=========================
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("<size=14><b>Scene Export Manager</b></size>");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
             //add all scenes
             string[] guidList = AssetDatabase.FindAssets("t:scene");
 
-            List<string> sceneNames = new List<string>();
             foreach (var v in guidList)
             {
                 string path = AssetDatabase.GUIDToAssetPath(v);
@@ -84,6 +66,30 @@ namespace CognitiveVR
                     sceneNames.Add(name);
                 }
             }
+        }
+
+        void OnGUI()
+        {
+            if (!loadedScenes)
+            {
+                ReadNames();
+                AddAllScenes();
+                loadedScenes = true;
+            }
+
+            GUI.skin.label.richText = true;
+
+            prefs = CognitiveVR_Settings.GetPreferences();
+
+            //=========================
+            //scene select
+            //=========================
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("<size=14><b>Scene Export Manager</b></size>");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
 
@@ -91,8 +97,6 @@ namespace CognitiveVR
             //searchString = EditorGUILayout.TextField("Search", searchString);
 
             searchString = GhostTextField("Search scenes", "", searchString);
-
-
 
             GUILayout.EndHorizontal();
 
@@ -116,13 +120,34 @@ namespace CognitiveVR
 
             currentSceneSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
 
+            if (currentSceneSettings == null)
+            {
+                currentSceneSettings = new CognitiveVR_Preferences.SceneKeySetting("Not Saved", "");
+            }
+
+            
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.Label("<size=14><b>Current Scene: "+currentSceneSettings.SceneName + "</b></size>");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            
+            if (string.IsNullOrEmpty(currentSceneSettings.ScenePath))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Refresh Scene List"))
+                {
+                    ReadNames();
+                    AddAllScenes();
+                }
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.Space(10);
+            }
+
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(currentSceneSettings.ScenePath));
 
             /*string selectedSceneName = "invalid scene name";
             if (sceneIndex < sceneNames.Count)
@@ -134,12 +159,6 @@ namespace CognitiveVR
             //when should scenes and keys get added to this?
             //currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(selectedSceneName);
 
-            if (currentSceneSettings == null)
-            {
-                //reload scenes if this one isn't currently found. likely was created while this window was open
-                //ReadNames();
-            }
-
             /*if (GUILayout.Button("Open Scene"))
             {
                 //UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
@@ -150,10 +169,7 @@ namespace CognitiveVR
 
             System.DateTime revisionDate = System.DateTime.MinValue;
 
-            if (currentSceneSettings != null)
-            {
-                revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
-            }
+            revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
 
             //revision date
 
@@ -334,14 +350,12 @@ namespace CognitiveVR
             }
 
 #if UNITY_EDITOR_OSX
-            EditorGUILayout.HelpBox("Exporting scenes is not available on Mac at this time", MessageType.Warning);
-            EditorGUI.BeginDisabledGroup(true);
-
+            EditorGUILayout.HelpBox("Exporting scenes has not been tested on Mac!", MessageType.Warning);
 #endif
 
             //appendName = EditorGUILayout.TextField(new GUIContent("Append to File Name", "This could be a level's number and version"), appendName);
 
-            EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID));
+            EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath));
 
             string exportButtonText = "Export Scene \"" + currentSceneSettings.SceneName +"\"";
             /*if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != currentSceneSettings.ScenePath)
@@ -358,35 +372,28 @@ namespace CognitiveVR
 
             if (GUILayout.Button(exportContent))
             {
-                //ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize,prefs.ExportSettings.TextureQuality);
-
-                //if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path != currentSceneSettings.ScenePath)
-                //{
-                    //UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
-                    //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
-                //}
-                //var prefs = CognitiveVR_Settings.GetPreferences();
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
-
-                //UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentSceneSettings.ScenePath);
-                //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality);
             }
 
-            if (GUILayout.Button(new GUIContent("Upload Scene","Upload scene files from default scene folder")))
+            var uploadButtonContent = new GUIContent("Upload Scene Files", "Upload scene files from default scene folder");
+            if (string.IsNullOrEmpty(prefs.CustomerID))
+            {
+                uploadButtonContent.tooltip = "You must have a valid CustomerID to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
+            }
+            else
+            {
+                //Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+                uploadButtonContent.tooltip = "Upload files in "+ Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            }
+
+            if (GUILayout.Button(uploadButtonContent))
             {
                 UploadDecimatedScene();
             }
 
             EditorGUI.EndDisabledGroup();
 
-#if UNITY_EDITOR_OSX
             EditorGUI.EndDisabledGroup();
-#endif
-
-            /*if (GUILayout.Button(new GUIContent("Manage Scene IDs", "Open window to set which tracked player data is uploaded to your scenes")))
-            {
-                CognitiveVR_SceneKeyConfigurationWindow.Init();
-            }*/
 
             if (GUI.changed)
             {
@@ -625,8 +632,9 @@ namespace CognitiveVR
             {
                 string sceneName = currentSceneSettings.SceneName;
 
-                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
-                var filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + "\\CognitiveVR_SceneExplorerExport\\" + fullName + "\\");
+                string fullName = sceneName + appendName;
+
+                var filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
 
                 WWWForm wwwForm = new WWWForm();
                 foreach (var f in filePaths)
@@ -636,17 +644,11 @@ namespace CognitiveVR
                     Debug.Log(f);
 
                     var data = File.ReadAllBytes(f);
-                    wwwForm.AddBinaryData("fileUpload", data, Path.GetFileName(f));
+                    wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
                 }
-                sceneUploadWWW = new WWW("https://sceneexplorer.com/uploader", wwwForm);
+                sceneUploadWWW = new WWW("https://sceneexplorer.com/api/scenes/", wwwForm);
 
                 EditorApplication.update += UpdateUploadData;
-                
-                //use scenename to figure out which directory
-                //get all files in teh directory
-                //remove scenename.obj and scenename.mtl
-                //http POST to sceneexplorer.com/upload
-                //get sceneID back when upload complete
             }
             else //cancel
             {
@@ -661,6 +663,7 @@ namespace CognitiveVR
             if (sceneUploadWWW == null)
             {
                 EditorApplication.update -= UpdateUploadData;
+                EditorUtility.ClearProgressBar();
                 return;
             }
 
@@ -674,21 +677,19 @@ namespace CognitiveVR
 
             if (!sceneUploadWWW.isDone) { return; }
 
-            Debug.Log("upload complete!");
             EditorUtility.ClearProgressBar();
             EditorApplication.update -= UpdateUploadData;
 
             //response
             if (!string.IsNullOrEmpty(sceneUploadWWW.error))
             {
-                Debug.LogError(sceneUploadWWW.error);
+                Debug.LogError("Scene Upload Error:" + sceneUploadWWW.error);
                 return;
             }
 
             string responseText = sceneUploadWWW.text;
-            Debug.Log("upload scene response: " + responseText);
-
-            currentSceneSettings.SceneKey = responseText;
+            currentSceneSettings.SceneKey = responseText.Replace("\"","");
+            GUI.FocusControl("NULL");
         }
 
         #region Utility

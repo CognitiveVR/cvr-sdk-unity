@@ -408,7 +408,7 @@ namespace CognitiveVR
             }
 
             string playerID = System.DateTime.Now.ToShortTimeString().Replace(':', '_').Replace(" ", "") + '_' + System.DateTime.Now.ToShortDateString().Replace('/', '_');
-            string path = System.IO.Directory.GetCurrentDirectory() + "\\CognitiveVR_SceneExplorerExport\\player" + playerID + appendFileName + ".json";
+            string path = System.IO.Directory.GetCurrentDirectory() +Path.DirectorySeparatorChar+ "CognitiveVR_SceneExplorerExport"+ Path.DirectorySeparatorChar+"player" + playerID + appendFileName + ".json";
 
             if (File.Exists(path))
             {

@@ -50,6 +50,7 @@ namespace CognitiveVR
 
 public static class ErrorExtension
 {
+    [System.Obsolete("ErrorExtension.toCognitiveVRError() is no longer used")]
 	public static CognitiveVR.Error toCognitiveVRError(this string value)
 	{
 		int intVal;

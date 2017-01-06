@@ -544,7 +544,7 @@ namespace CognitiveVR
         {
             CreateTargetFolder(fullName);
 
-            return Directory.GetCurrentDirectory() + "\\CognitiveVR_SceneExplorerExport\\" + fullName + "\\";
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar+"CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar;
         }
 
         private static bool CreateTargetFolder(string fullName)
@@ -552,7 +552,7 @@ namespace CognitiveVR
             try
             {
                 Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport\\" + fullName);
+                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
             }
             catch
             {

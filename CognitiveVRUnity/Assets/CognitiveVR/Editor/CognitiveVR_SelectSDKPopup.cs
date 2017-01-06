@@ -7,8 +7,6 @@ namespace CognitiveVR
 {
     public class CognitiveVR_SelectSDKPopup : PopupWindowContent
     {
-        string productName = "";
-
         public override Vector2 GetWindowSize()
         {
             return new Vector2(292, 150);

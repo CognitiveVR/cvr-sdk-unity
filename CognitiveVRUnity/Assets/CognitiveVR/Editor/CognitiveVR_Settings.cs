@@ -14,14 +14,6 @@ using System.Collections.Generic;
 
 namespace CognitiveVR
 {
-    namespace Json
-    {
-        class SDKVersion
-        {
-            public string version;
-        }
-    }
-
     [InitializeOnLoad]
     public class CognitiveVR_Settings : EditorWindow
     {
