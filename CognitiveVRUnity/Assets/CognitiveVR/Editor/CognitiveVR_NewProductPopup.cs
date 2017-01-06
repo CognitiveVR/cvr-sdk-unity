@@ -15,30 +15,33 @@ namespace CognitiveVR
 
         public override void OnGUI(Rect rect)
         {
+            if (CognitiveVR_Preferences.Instance.UserData.organizations.Length > 1)
+            {
+                GUILayout.Label("Current Organization: " + CognitiveVR_Preferences.Instance.SelectedOrganization.name);
+            }
+
+            //TODO if there are multiple organizations, add a label for which organization this will create the product for
+            //or add a dropdown to change the current organization
+            
             GUILayout.Label("New Product", EditorStyles.boldLabel);
 
             productName = CognitiveVR_SceneExportWindow.GhostTextField("MyProductName", "", productName);
-            //productName = EditorGUILayout.TextField(productName);
-            productName = MakeProductNameSafe(productName);
             GUILayout.BeginHorizontal();
 
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(productName));
             if (GUILayout.Button("Create"))
             {
                 RequestNewProduct();
                 editorWindow.Close();
             }
+            EditorGUI.EndDisabledGroup();
+
             if (GUILayout.Button("Close"))
             {
                 editorWindow.Close();                
             }
 
             GUILayout.EndHorizontal();
-        }
-
-        string MakeProductNameSafe(string unsafeName)
-        {
-            //TODO some regex nightmare to make sure it's all cool
-            return unsafeName.Replace(' ', '_');
         }
         
         public void RequestNewProduct()

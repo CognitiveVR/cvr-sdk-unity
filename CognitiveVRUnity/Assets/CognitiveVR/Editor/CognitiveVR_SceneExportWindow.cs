@@ -383,16 +383,22 @@ namespace CognitiveVR
             }
             else
             {
-                //Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
                 uploadButtonContent.tooltip = "Upload files in "+ Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             }
 
-            var exists = Directory.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar);
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            var exists = Directory.Exists(sceneExportDirectory);
 
-            EditorGUI.BeginDisabledGroup(!exists);
+            
+
+            EditorGUI.BeginDisabledGroup(!exists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
             if (!exists)
             {
-                uploadButtonContent.tooltip = "Directory doesn't exist! " + Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+                uploadButtonContent.tooltip = "Directory doesn't exist! " + sceneExportDirectory;
+            }
+            else
+            {
+                uploadButtonContent.tooltip = "Directory doesn't contain any files " + sceneExportDirectory;
             }
 
             if (GUILayout.Button(uploadButtonContent))
@@ -592,24 +598,24 @@ namespace CognitiveVR
             EditorApplication.update += UpdateProcess;
             UploadSceneSettings = currentSceneSettings;
 
-            EditorUtility.DisplayProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", 0.5f);
-            {
-                /*blenderProcess.Kill();
-                Debug.Log("KILL BLENDER PROCESS CANCEL BUTTON WOW");
-                blenderProcess = null;
-                EditorUtility.ClearProgressBar();*/
-            }
-            
-            //if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f))
+
+            blenderStartTime = (float)EditorApplication.timeSinceStartup;
         }
+
+        static float blenderStartTime = 0;
+        static float currentBlenderTime = 0;
+        static float maxBlenderTime = 240;
 
         static bool BlenderRequest;
         static bool HasOpenedBlender;
         static Process blenderProcess;
-        //TODO check for the specific blender that was opened. save var when process.start(thisblender)
 
         static void UpdateProcess()
         {
+            currentBlenderTime = (float)(EditorApplication.timeSinceStartup - blenderStartTime);
+            EditorUtility.DisplayProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", currentBlenderTime / maxBlenderTime);
+
+            //TODO could probably clean up some of this
             Process[] blenders;
             if (BlenderRequest == true)
             {
@@ -703,6 +709,8 @@ namespace CognitiveVR
                 EditorApplication.update -= UpdateUploadData;
                 EditorUtility.ClearProgressBar();
                 sceneUploadWWW.Dispose();
+                sceneUploadWWW = null;
+                UploadSceneSettings = null;
                 Debug.Log("Upload canceled!");
                 return;
             }
@@ -716,6 +724,10 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(sceneUploadWWW.error))
             {
                 Debug.LogError("Scene Upload Error:" + sceneUploadWWW.error);
+
+                sceneUploadWWW.Dispose();
+                sceneUploadWWW = null;
+                UploadSceneSettings = null;
                 return;
             }
 
@@ -725,6 +737,8 @@ namespace CognitiveVR
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
             sceneUploadWWW.Dispose();
             sceneUploadWWW = null;
+
+            UploadSceneSettings = null;
 
             GUI.FocusControl("NULL");
         }

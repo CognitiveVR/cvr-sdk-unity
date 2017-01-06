@@ -94,11 +94,11 @@ namespace CognitiveVR
                     if (System.DateTime.UtcNow > remindDate)
                     {
                         Instance.CheckForUpdates();
-                        Debug.Log("settings check for updates");
+                        //Debug.Log("settings check for updates");
                     }
                     else
                     {
-                        Debug.Log("check updates later " + remindDate);
+                        //Debug.Log("check updates later " + remindDate);
                     }
                 }
                 else
@@ -109,7 +109,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("NO INSTANCE TO CHECK UPDATES ON");
+                //Debug.Log("NO INSTANCE TO CHECK UPDATES ON");
             }
 
             EditorApplication.update -= EditorUpdate;
@@ -237,12 +237,12 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            string lastOrganization = prefs.SelectedOrganization; //used to check if organizations changed. for displaying products
-            if (!string.IsNullOrEmpty(prefs.SelectedOrganization))
+            string lastOrganization = prefs.SelectedOrganization.name; //used to check if organizations changed. for displaying products
+            if (!string.IsNullOrEmpty(prefs.SelectedOrganization.name))
             {
                 for (int i = 0; i < prefs.UserData.organizations.Length; i++)
                 {
-                    if (prefs.UserData.organizations[i].name == prefs.SelectedOrganization)
+                    if (prefs.UserData.organizations[i].name == prefs.SelectedOrganization.name)
                     {
                         organizationIndex = i;
                         break;
@@ -253,7 +253,7 @@ namespace CognitiveVR
             string[] organizations = GetUserOrganizations();
             organizationIndex = EditorGUILayout.Popup(organizationIndex, organizations);
             if (organizations.Length > 0)
-                prefs.SelectedOrganization = organizations[organizationIndex];
+                prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -267,19 +267,19 @@ namespace CognitiveVR
 
             string[] products = GetVRProductNames(organizationName);
 
-            if (lastOrganization != prefs.SelectedOrganization)
+            if (lastOrganization != prefs.SelectedOrganization.name)
             {
                 //ie, changed organization
-                prefs.SelectedProduct = "";
+                prefs.SelectedProduct = null;
                 productIndex = 0;
             }
             else
             {   
-                if (!string.IsNullOrEmpty(prefs.SelectedProduct))
+                if (!string.IsNullOrEmpty(prefs.SelectedProduct.name))
                 {
                     for (int i = 0; i < products.Length; i++)
                     {
-                        if (products[i] == prefs.SelectedProduct)
+                        if (products[i] == prefs.SelectedProduct.name)
                         {
                             productIndex = i;
                             break;
@@ -288,15 +288,19 @@ namespace CognitiveVR
                 }
             }
 
+            GUILayout.BeginHorizontal();
+
             productIndex = EditorGUILayout.Popup(productIndex, products);
             if (products.Length > 0)
-                prefs.SelectedProduct = products[productIndex];
+                prefs.SelectedProduct = GetPreferences().GetProduct(products[productIndex]);
 
-            if (GUILayout.Button("Add new Product"))
+            if (GUILayout.Button("New", GUILayout.Width(40)))
             {
                 PopupWindow.Show(productRect, new CognitiveVR_NewProductPopup());
             }
             if (Event.current.type == EventType.Repaint) productRect = GUILayoutUtility.GetLastRect();
+
+            GUILayout.EndHorizontal();
 
             GUIContent[] TestProd = new GUIContent[] { new GUIContent("Test", "send data to test backend"), new GUIContent("Prod", "send data to production backend") };
             int oldTestProd = testprodSelection;
@@ -332,6 +336,8 @@ namespace CognitiveVR
                 CognitiveVR_SceneExportWindow.Init();
             }
 
+            
+
             //=========================
             //select vr sdk
             //=========================
@@ -340,6 +346,8 @@ namespace CognitiveVR
                 PopupWindow.Show(sdkRect, new CognitiveVR_SelectSDKPopup());
             }
             if (Event.current.type == EventType.Repaint) sdkRect = GUILayoutUtility.GetLastRect();
+
+            GUILayout.Space(20);
 
             //updates
             if (GUILayout.Button("Check for Updates"))
@@ -350,9 +358,9 @@ namespace CognitiveVR
             }
 
 
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
+            //GUILayout.Space(10);
+            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            //GUILayout.Space(10);
 
             //=========================
             //version
@@ -388,6 +396,8 @@ namespace CognitiveVR
 
             loginRequest = new UnityEngine.WWW(url, bytes, headers);
 
+            Debug.Log("request login");
+
             EditorApplication.update += CheckLoginResponse;
         }
 
@@ -404,17 +414,33 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(loginRequest.error))
                 {
-                    Debug.Log("got some error" + loginRequest.error);
                     loginResponse = "Could not log in!";
+                    Debug.Log(loginRequest.error);
                 }
-
-                if (!string.IsNullOrEmpty(loginRequest.text))
+                if (true || !string.IsNullOrEmpty(loginRequest.text))
                 {
-                    Debug.Log("got some data " + loginRequest.text);
+                    Debug.Log("loginRequest.text: " + loginRequest.text);
                     loginResponse = "";
-                    //save this text somewhere. preferences?
-                    GetPreferences().UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
-                    GetPreferences().sessionID = "1234";
+
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(loginRequest.text))
+                        {
+                            GetPreferences().UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
+                            GetPreferences().sessionID = "1234";
+                        }
+                        else
+                        {
+                            loginResponse = "Could not log in!";
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        //this can rarely happen when json is not formatted correctly
+                        loginResponse = "Could not log in!";
+                        Debug.LogError("Cannot log in. " + e.Message);
+                        throw;
+                    }
                 }
 
                 EditorApplication.update -= CheckLoginResponse;
@@ -424,12 +450,14 @@ namespace CognitiveVR
         WWW NewProductRequest;
         public void RequestNewProduct(string productName)
         {
-            //productName
-            //CognitiveVR_Settings.GetPreferences().SelectedOrganization
+            if (!string.IsNullOrEmpty(NewProduct.name))
+            {
+                Debug.LogError("currently trying to create product " + NewProduct);
+                Debug.LogError("currently trying to create product " + NewProduct.name);
+                return;
+            }
 
-            //create www request to server somewhere
-
-            var url = "http://testapi.cognitivevr.io/makenewproduct";
+            var url = "http://testapi.cognitivevr.io/organizations/"+ GetPreferences().SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -437,18 +465,26 @@ namespace CognitiveVR
             System.Text.StringBuilder json = new System.Text.StringBuilder();
             json.Append("{");
             json.Append("\"sessionId\":\"" + GetPreferences().sessionID + "\",");
-            json.Append("\"organizationName\":\"" + GetPreferences().SelectedOrganization + "\",");
+            json.Append("\"organizationName\":\"" + GetPreferences().SelectedOrganization.prefix + "\",");
             json.Append("\"productName\":\"" + productName + "\"");
             json.Append("}");
 
             byte[] bytes = new System.Text.UTF8Encoding(true).GetBytes(json.ToString());
             NewProductRequest = new UnityEngine.WWW(url, bytes, headers);
 
+            NewProduct = new Json.Product();
+            NewProduct.name = productName;
+            NewProduct.orgId = GetPreferences().SelectedOrganization.id;
+            NewProduct.customerId = GetPreferences().SelectedOrganization.prefix + "-" + productName;
+            NewProduct.customerId = NewProduct.customerId.ToLower().Replace(" ", "");
+
             //used current organization
             //add product to list of product names
 
             EditorApplication.update += UpdateNewProductRequest;
         }
+
+        Json.Product NewProduct = null;
 
         public void UpdateNewProductRequest()
         {
@@ -462,13 +498,20 @@ namespace CognitiveVR
                 {
                     Debug.Log("got some error " + NewProductRequest.error);
                 }
-
-                if (!string.IsNullOrEmpty(NewProductRequest.text))
+                else
                 {
-                    Debug.Log("got some data " + NewProductRequest.text);
-                    //it would be nice for the response to include a customerid
+                    GetPreferences().UserData.AddProduct(NewProduct.name, NewProduct.customerId, NewProduct.orgId);
+
+                    if (!string.IsNullOrEmpty(NewProductRequest.text))
+                    {
+                        Debug.Log("got some data " + NewProductRequest.text);
+                        //it would be nice for the response to include a customerid
+                    }
+
+                    
                 }
 
+                NewProduct = null;
                 EditorApplication.update -= UpdateNewProductRequest;
             }
         }
@@ -532,13 +575,13 @@ namespace CognitiveVR
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.error))
                 {
-                    Debug.Log("got some error " + checkForUpdatesRequest.error);
+                    //Debug.Log("got some error " + checkForUpdatesRequest.error);
                 }
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
                 {
                     //this should return the latest sdk version number
-                    Debug.Log("got some data " + checkForUpdatesRequest.text);
+                    //Debug.Log("got some data " + checkForUpdatesRequest.text);
 
                     string[] split = checkForUpdatesRequest.text.Split('|');
 
@@ -574,10 +617,9 @@ namespace CognitiveVR
         {
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
             //prefs.CustomerID = newID;
-            var product = prefs.GetProduct(prefs.SelectedProduct);
-            if (product != null)
+            if (prefs.SelectedProduct != null)
             {
-                prefs.CustomerID = product.customerId;
+                prefs.CustomerID = prefs.SelectedProduct.customerId;
                 if (testprodSelection == 0)
                     prefs.CustomerID += "-test";
                 if (testprodSelection == 1)

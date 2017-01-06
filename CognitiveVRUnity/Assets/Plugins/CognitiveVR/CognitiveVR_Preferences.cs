@@ -43,6 +43,15 @@ namespace CognitiveVR
                     return new UserData();
                 }
             }
+
+            public void AddProduct(string newProductName, string newCustomerId, string newOrganizationId)
+            {
+                List<Product> productList = new List<Product>();
+                productList.AddRange(products);
+                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId};
+                productList.Add(newProduct);
+                products = productList.ToArray();
+            }
         }
 #pragma warning restore 0649
     }
@@ -136,8 +145,8 @@ namespace CognitiveVR
         [Header("User")]
         public string UserName;
         public CognitiveVR.Json.UserData UserData;
-        public string SelectedOrganization;
-        public string SelectedProduct;
+        public Json.Organization SelectedOrganization;
+        public Json.Product SelectedProduct;
 
         [Header("Player Tracking")]
         //player tracking
