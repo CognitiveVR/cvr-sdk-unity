@@ -184,6 +184,10 @@ namespace CognitiveVR.Components
 
             if (!headsetPresent || CognitiveVR_Manager.HMD == null) { return; }
 
+#if CVR_FOVE
+            if (!Fove.FoveHeadset.GetHeadset().IsEyeTrackingCalibrated()) { return; }
+#endif
+
             RenderTexture rt = null;
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -195,24 +199,44 @@ namespace CognitiveVR.Components
             PlayerSnapshot snapshot = new PlayerSnapshot();
 
             snapshot.Properties.Add("position", cam.transform.position);
-            snapshot.Properties.Add("gazeDirection", cam.transform.forward);
+            snapshot.Properties.Add("hmdForward", cam.transform.forward);
             snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
             snapshot.Properties.Add("farDepth", cam.farClipPlane);
             snapshot.Properties.Add("renderDepth", rt);
             snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
 
-#if CVR_FOVE
-            var hmd = Fove.FoveHeadset.GetHeadset();
-            var c = hmd.GetWorldGaze().convergence;
-            var v = new Vector3(c.x, c.y, c.z);
+#if CVR_GAZETRACK
 
-            snapshot.Properties.Add("convergence", Quaternion.LookRotation(cam.transform.forward) * v);
+            //gaze tracking sdks need to return a v3 direction "gazeDirection" and a v2 point "hmdGazePoint"
+            //the v2 point is used to get a pixel from the render texture
 
-            Vector2 gazePoint = hmd.GetGazePoint();
-            if (float.IsNaN(gazePoint.x)) { return; }
+            Vector3 worldGazeDirection = Vector3.forward;
 
-            snapshot.Properties.Add("hmdGazePoint", gazePoint);
-#endif
+#if CVR_FOVE //direction
+            var eyeRays = FoveInterface.GetEyeRays();
+            var ray = eyeRays.left;
+            worldGazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+            worldGazeDirection.Normalize();
+#endif //fove direction
+            snapshot.Properties.Add("gazeDirection", worldGazeDirection);
+
+
+            Vector2 screenGazePoint = Vector2.one * 0.5f;
+#if CVR_FOVE //screenpoint
+            var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left);
+
+            //Vector2 gazePoint = hmd.GetGazePoint();
+            if (float.IsNaN(normalizedPoint.x)) { return; }
+
+            screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
+#endif //fove screenpoint
+
+
+            snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
+#endif //gazetracker
+
+
+
 
 #if CVR_STEAMVR
             if (Valve.VR.OpenVR.Chaperone != null)
@@ -256,9 +280,9 @@ namespace CognitiveVR.Components
             {
                 for (int i = 0; i < playerSnapshots.Count; i++)
                 {
-                    Vector3 position = (Vector3)playerSnapshots[i].Properties["position"] + (Vector3)playerSnapshots[i].Properties["gazeDirection"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
+                    Vector3 position = (Vector3)playerSnapshots[i].Properties["position"] + (Vector3)playerSnapshots[i].Properties["hmdForward"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
 
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazeDirection"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier, Color.yellow, 5);
+                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["hmdForward"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier, Color.yellow, 5);
 
                     playerSnapshots[i].Properties.Add("gazePoint", position);
                 }

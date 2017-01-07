@@ -33,6 +33,8 @@ namespace CognitiveVR
             //this is the maximum distance - looking directly at the edge of the frustrum
             //float edgeDistance = Mathf.Sqrt(Mathf.Pow(width * 0.5f, 2) + Mathf.Pow(cam.farClipPlane, 2));
 
+
+
             //======= gaze (farclip distance)
             //Debug.DrawRay(position, gazeDir * far, Color.red, 0.1f);
             //Debug.DrawRay(position, camForward * far, new Color(0.5f, 0, 0), 0.1f);
@@ -60,11 +62,8 @@ namespace CognitiveVR
             texTemp = GetRTPixels((RenderTexture)Properties["renderDepth"]);
             float relativeDepth = 0;
             Vector3 gazeWorldPoint;
-
-#if CVR_FOVE
-
-            //range between 0 and 1.0
-            Vector2 snapshotPixel = (Vector2)Properties["hmdGazePoint"] * 0.5f + Vector2.one * 0.5f;
+#if CVR_GAZETRACK
+            Vector2 snapshotPixel = (Vector2)Properties["hmdGazePoint"];
 
             snapshotPixel *= Resolution;
 
@@ -81,11 +80,12 @@ namespace CognitiveVR
                 relativeDepth = texTemp.GetPixel((int)snapshotPixel.x, (int)snapshotPixel.y).r;
             }
 
-            float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["convergence"], (Vector3)Properties["gazeDirection"]);
+            float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["gazeDirection"], (Vector3)Properties["hmdForward"]);
 
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], actualDepth, relativeDepth);
 
-            gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["convergence"] * actualDistance;
+            gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
+
             return gazeWorldPoint;
 #else
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)

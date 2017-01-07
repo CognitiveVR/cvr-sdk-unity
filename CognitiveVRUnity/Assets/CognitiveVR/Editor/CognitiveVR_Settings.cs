@@ -254,6 +254,7 @@ namespace CognitiveVR
                     if (!Event.current.shift)
                         option.Clear();
                     option.Add("CVR_FOVE");
+                    option.Add("CVR_GAZETRACK");
                 }
             }
             GUI.color = Color.white;
