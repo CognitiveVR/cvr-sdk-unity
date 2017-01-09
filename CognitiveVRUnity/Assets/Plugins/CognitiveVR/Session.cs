@@ -15,7 +15,7 @@ namespace CognitiveVR.Plugins
 	}
 
 	/// <summary>
-	/// This CognitiveVR plugin provides a simple interface for instrumenting purchase flows in an application.
+	/// This CognitiveVR plugin provides a simple interface for instrumenting Session flow in an application.
 	/// </summary>
 	public class Session
 	{
