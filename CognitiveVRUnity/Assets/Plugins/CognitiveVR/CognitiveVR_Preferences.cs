@@ -139,7 +139,7 @@ namespace CognitiveVR
             }
         }
 
-        [HideInInspector]
+        //[HideInInspector]
         public string sessionID;
 
         [Header("User")]

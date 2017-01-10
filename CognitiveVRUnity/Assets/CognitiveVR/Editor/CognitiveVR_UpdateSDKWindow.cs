@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEditor;
 
 //this window pops up when there is a new version, this new version is not skipped and the remind date is valid (or manually checked)
-//http://www.arongranberg.com/astar/version.php
 
 namespace CognitiveVR
 {
@@ -12,8 +11,6 @@ namespace CognitiveVR
     {
         static string newVersion;
         bool reminderSet = false;
-        static GUIStyle largeStyle;
-        static GUIStyle normalStyle;
         string sdkSummary;
 
         public static void Init(string version, string summary)
@@ -26,24 +23,12 @@ namespace CognitiveVR
 
         void OnGUI()
         {
-            if (largeStyle == null)
-            {
-                largeStyle = new GUIStyle(EditorStyles.largeLabel);
-                largeStyle.fontSize = 20;
-                largeStyle.alignment = TextAnchor.UpperCenter;
-                largeStyle.richText = true;
-
-                normalStyle = new GUIStyle(EditorStyles.label);
-                normalStyle.wordWrap = true;
-                normalStyle.richText = true;
-            }
-
-            GUILayout.Label("cognitiveVR SDK - New Version", largeStyle);
+            GUILayout.Label("cognitiveVR SDK - New Version", CognitiveVR_Settings.HeaderStyle);
             GUILayout.Label("Current Version:<b>" + Core.SDK_Version + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
 
-            GUILayout.Label("Changes and fixes", largeStyle);
-            GUILayout.Label(sdkSummary,normalStyle);
+            GUILayout.Label("Changes and fixes", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.Label(sdkSummary);
             /*GUILayout.Label("There is a new version of the <b>A* Pathfinding Project</b> available for download.\n" +
                 "The new version is <b>" + newVersion + "</b> you have <b>" + Core.SDK_Version + "</b>\n\n" +
                 "<i>Summary:</i>\n" + summary, normalStyle
@@ -56,13 +41,15 @@ namespace CognitiveVR
 
             GUILayout.BeginVertical();
 
-            Color col = GUI.color;
-            GUI.backgroundColor *= new Color(0.5f, 1f, 0.5f);
-            if (GUILayout.Button("Releases Page", GUILayout.Height(30), GUILayout.MaxWidth(300)))
+            //Color col = GUI.color;
+            GUI.color = CognitiveVR_Settings.GreenButton;
+            //GUI.contentColor = Color.white;
+            if (GUILayout.Button("Download Latest Version", GUILayout.Height(30), GUILayout.MaxWidth(300)))
             {
                 Application.OpenURL("https://github.com/CognitiveVR/cvr-sdk-unity/releases");
             }
-            GUI.backgroundColor = col;
+            //GUI.contentColor = Color.white;
+            GUI.color = Color.white;
 
             GUILayout.EndVertical();
 

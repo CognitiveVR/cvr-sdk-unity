@@ -29,12 +29,22 @@ namespace CognitiveVR
             GUILayout.BeginHorizontal();
 
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(productName));
+
+            if (!string.IsNullOrEmpty(productName))
+            {
+                GUI.color = CognitiveVR_Settings.GreenButton;
+                GUI.contentColor = Color.white;
+            }
+
             if (GUILayout.Button("Create"))
             {
                 RequestNewProduct();
                 editorWindow.Close();
             }
             EditorGUI.EndDisabledGroup();
+
+            GUI.color = Color.white;
+            GUI.contentColor = Color.white;
 
             if (GUILayout.Button("Close"))
             {
@@ -46,6 +56,10 @@ namespace CognitiveVR
         
         public void RequestNewProduct()
         {
+            if (CognitiveVR_Settings.Instance == null)
+            {
+                Debug.Log("instance of settings window is null"); //when recompiling with the window open, instance loses it's reference
+            }
             CognitiveVR_Settings.Instance.RequestNewProduct(productName);
         }
     }

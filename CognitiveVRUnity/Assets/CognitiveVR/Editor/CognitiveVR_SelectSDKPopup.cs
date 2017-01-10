@@ -45,7 +45,7 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.Green; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Steam VR 1.1.1+"))
             {
                 if (option.Contains("CVR_STEAMVR"))
@@ -59,7 +59,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_OCULUS")) { GUI.color = CognitiveVR_Settings.Green; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_OCULUS")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Oculus Utilities 1.9.0+"))
             {
                 if (option.Contains("CVR_OCULUS"))
@@ -73,7 +73,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_FOVE")) { GUI.color = CognitiveVR_Settings.Green; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_FOVE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Fove VR Plugin"))
             {
                 if (option.Contains("CVR_FOVE"))
@@ -87,7 +87,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.Green; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Unity Default VR Settings"))
             {
                 if (option.Contains("CVR_DEFAULT"))
@@ -101,10 +101,14 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
+            GUILayout.Space(10);
+            GUI.color = CognitiveVR_Settings.GreenButton;
+            GUI.contentColor = Color.white;
             if (GUILayout.Button("Save and Close"))
             {
                 editorWindow.Close();                
             }
+            GUI.color = Color.white;
         }
     }
 }

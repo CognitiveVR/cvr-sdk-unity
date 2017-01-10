@@ -17,12 +17,35 @@ namespace CognitiveVR
     [InitializeOnLoad]
     public class CognitiveVR_Settings : EditorWindow
     {
-        public static Color Green = new Color(0.6f, 1f, 0.6f);
-        public static Color Orange = new Color(1f, 0.6f, 0.3f);
+        public static Color DarkerGreen = new Color(0.6f, 1f, 0.6f);
 
-        public static CognitiveVR_Settings Instance;
+        public static Color GreenText = new Color(0.6f, 1f, 0.6f);
+        //public static Color GreenText = new Color(0.48f, 0.66f, 0.23f);
+        public static Color GreenButton = new Color(0.6f, 1f, 0.6f);
 
-        System.DateTime updateDate;
+        //this colour is the green from the 'collab' checkmark that appears next to Authenticate after the user has logged in
+        //0.48
+        //0.66
+        //0.23
+
+
+        public static Color OrangeText = new Color(1f, 0.6f, 0.3f);
+
+        static CognitiveVR_Settings _instance;
+        public static CognitiveVR_Settings Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
+                }
+                return _instance;
+            }
+        }
+
+        //TODO make a better name for this
+        System.DateTime lastSdkUpdateDate;
 
 
         [MenuItem("cognitiveVR/Settings")]
@@ -31,16 +54,16 @@ namespace CognitiveVR
             EditorApplication.update -= EditorUpdate;
 
             // Get existing open window or if none, make a new one:
-            Instance = GetWindow<CognitiveVR_Settings>(true,"cognitiveVR Settings");
+            _instance = GetWindow<CognitiveVR_Settings>(true,"cognitiveVR Settings");
             Vector2 size = new Vector2(300, 550);
             Instance.minSize = size;
             Instance.maxSize = size;
             Instance.Show();
 
             //TODO fix this. shouldn't have to re-read this value to parse it to the correct format
-            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.updateDate))
+            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
             {
-                Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                Instance.lastSdkUpdateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
             }
 
             //if (System.DateTime.TryParseExact(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), "", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out Instance.updateDate);
@@ -69,14 +92,14 @@ namespace CognitiveVR
 
             if (show)
             {
-                Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
+                _instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
                 Vector2 size = new Vector2(300, 550);
                 Instance.minSize = size;
                 Instance.maxSize = size;
                 Instance.Show();
 
                 
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.updateDate))
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
                 {
                     //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                 }
@@ -143,6 +166,7 @@ namespace CognitiveVR
         public void OnGUI()
         {
             GUI.skin.label.richText = true;
+            GUI.skin.button.richText = true;
 
             CognitiveVR.CognitiveVR_Preferences prefs = GetPreferences();
 
@@ -170,21 +194,24 @@ namespace CognitiveVR
             //Authenticate
             //=========================
 
+            var greencheck = EditorGUIUtility.FindTexture("Collab");
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.Label("<size=14><b>Authenticate</b></size>");
+            if (IsUserLoggedIn())
+                GUILayout.Label(greencheck);
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            EditorGUI.BeginDisabledGroup(IsUserLoggedIn());
 
             prefs.UserName = CognitiveVR_SceneExportWindow.GhostTextField("name@email.com", "", prefs.UserName);
 
             password = CognitiveVR_SceneExportWindow.GhostPasswordField("password", "", password);
 
-            //prefs.UserName = GUILayout.TextField(prefs.UserName);
-            //password = EditorGUILayout.PasswordField(password);
-
-
+            EditorGUI.EndDisabledGroup();
 
             if (IsUserLoggedIn())
             {
@@ -199,13 +226,36 @@ namespace CognitiveVR
                 {
                     RequestLogin(prefs.UserName, password);
                 }
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                
+                if (EditorGUIUtility.isProSkin)
+                {
+                    GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
+                    s.normal.textColor = new Color(0.6f, 0.6f, 1);
+                    if (GUILayout.Button("Create Account", s))
+                        Application.OpenURL("https://dashboard.cognitivevr.io/");
+                }
+                else
+                {
+                    GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
+                    s.normal.textColor = Color.blue;
+                    if (GUILayout.Button("Create Account", s))
+                        Application.OpenURL("https://dashboard.cognitivevr.io/");
+                }
+
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
 
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(loginResponse);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty(loginResponse) || !IsUserLoggedIn())
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(loginResponse);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
@@ -231,11 +281,12 @@ namespace CognitiveVR
 
             EditorGUI.BeginDisabledGroup(!IsUserLoggedIn());
 
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("<size=14><b>Select Organization</b></size>");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //GUILayout.FlexibleSpace();
+            //GUILayout.Label("<size=14><b>Select Organization</b></size>");
+            GUILayout.Label("Select Organization", CognitiveVR_Settings.HeaderStyle);
+            //GUILayout.FlexibleSpace();
+            //GUILayout.EndHorizontal();
 
             string lastOrganization = prefs.SelectedOrganization.name; //used to check if organizations changed. for displaying products
             if (!string.IsNullOrEmpty(prefs.SelectedOrganization.name))
@@ -255,11 +306,12 @@ namespace CognitiveVR
             if (organizations.Length > 0)
                 prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("<size=14><b>Select Product</b></size>");
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //GUILayout.FlexibleSpace();
+            //GUILayout.Label("<size=14><b>Select Product</b></size>");
+            GUILayout.Label("Select Product", CognitiveVR_Settings.HeaderStyle);
+            //GUILayout.FlexibleSpace();
+            //GUILayout.EndHorizontal();
 
             string organizationName = "";
             if (organizations.Length > 0)
@@ -302,8 +354,7 @@ namespace CognitiveVR
 
             GUILayout.EndHorizontal();
 
-            GUIContent[] TestProd = new GUIContent[] { new GUIContent("Test", "send data to test backend"), new GUIContent("Prod", "send data to production backend") };
-            int oldTestProd = testprodSelection;
+            /*int oldTestProd = testprodSelection;
 
             testprodSelection = GUILayout.Toolbar(testprodSelection, TestProd);
             if (oldTestProd != testprodSelection) //update suffix test/prod on customerid
@@ -315,9 +366,37 @@ namespace CognitiveVR
                 
                 //-test or -prod suffix appended in SaveSettings()
                 SaveSettings();
+            }*/
+            
+            GUILayout.BeginHorizontal();
+
+            GUIStyle testStyle = new GUIStyle(EditorStyles.miniButtonLeft);
+            GUIStyle prodStyle = new GUIStyle(EditorStyles.miniButtonRight);
+            if (testprodSelection == 0)
+            {
+                testStyle.normal = testStyle.active;
+            }
+            else
+            {
+                prodStyle.normal = prodStyle.active;
             }
 
-            EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button(new GUIContent("Test", "Send data to your internal development server"), testStyle))
+            {
+                testprodSelection = 0;
+                prefs.CustomerID = prefs.CustomerID.Substring(0, prefs.CustomerID.Length - 5);
+                SaveSettings();
+            }
+
+            if (GUILayout.Button(new GUIContent("Prod", "Send data to your server for players"), prodStyle))
+            {
+                testprodSelection = 1;
+                prefs.CustomerID = prefs.CustomerID.Substring(0, prefs.CustomerID.Length - 5);
+                SaveSettings();
+            }
+
+            GUILayout.EndHorizontal();
+            
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
@@ -346,7 +425,7 @@ namespace CognitiveVR
                 PopupWindow.Show(sdkRect, new CognitiveVR_SelectSDKPopup());
             }
             if (Event.current.type == EventType.Repaint) sdkRect = GUILayoutUtility.GetLastRect();
-
+            EditorGUI.EndDisabledGroup();
             GUILayout.Space(20);
 
             //updates
@@ -379,7 +458,26 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Last Updated: " + updateDate.ToShortDateString());
+            if (lastSdkUpdateDate.Year < 100)
+            {
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
+                {
+                    //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    lastSdkUpdateDate.AddYears(600);
+                }
+            }
+            if (lastSdkUpdateDate.Year > 1000)
+            {
+                GUILayout.Label("Last Updated: " + lastSdkUpdateDate.ToShortDateString());
+            }
+            else
+            {
+                GUILayout.Label("Last Updated: Never");
+            }
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -414,10 +512,11 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(loginRequest.error))
                 {
-                    loginResponse = "Could not log in!";
-                    Debug.Log(loginRequest.error);
+                    //loginResponse = "Could not log in!";
+                    //TODO put a little warning icon by the authenticate header
+                    Debug.LogWarning("Could not log in to cognitiveVR SDK. Error: " + loginRequest.error);
                 }
-                if (true || !string.IsNullOrEmpty(loginRequest.text))
+                if (!string.IsNullOrEmpty(loginRequest.text))
                 {
                     Debug.Log("loginRequest.text: " + loginRequest.text);
                     loginResponse = "";
@@ -428,6 +527,7 @@ namespace CognitiveVR
                         {
                             GetPreferences().UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
                             GetPreferences().sessionID = "1234";
+                            AssetDatabase.SaveAssets();
                         }
                         else
                         {
@@ -450,9 +550,9 @@ namespace CognitiveVR
         WWW NewProductRequest;
         public void RequestNewProduct(string productName)
         {
-            if (!string.IsNullOrEmpty(NewProduct.name))
+            if (NewProduct != null)
             {
-                Debug.LogError("currently trying to create product " + NewProduct);
+                //Debug.LogError("currently trying to create product " + NewProduct);
                 Debug.LogError("currently trying to create product " + NewProduct.name);
                 return;
             }
@@ -478,9 +578,6 @@ namespace CognitiveVR
             NewProduct.customerId = GetPreferences().SelectedOrganization.prefix + "-" + productName;
             NewProduct.customerId = NewProduct.customerId.ToLower().Replace(" ", "");
 
-            //used current organization
-            //add product to list of product names
-
             EditorApplication.update += UpdateNewProductRequest;
         }
 
@@ -490,7 +587,7 @@ namespace CognitiveVR
         {
             if (!NewProductRequest.isDone)
             {
-                //check for timeout
+                //www timeout defaults to 10 seconds
             }
             else
             {
@@ -507,8 +604,6 @@ namespace CognitiveVR
                         Debug.Log("got some data " + NewProductRequest.text);
                         //it would be nice for the response to include a customerid
                     }
-
-                    
                 }
 
                 NewProduct = null;
@@ -610,7 +705,11 @@ namespace CognitiveVR
         {
             var prefs = GetPreferences();
             prefs.UserData = Json.UserData.Empty;
-            prefs.sessionID = string.Empty;            
+            prefs.sessionID = string.Empty;
+            prefs.SelectedOrganization = null;
+            prefs.SelectedProduct = null;
+            //atm you do not need to stay logged in to keep your customerid for your product.
+            AssetDatabase.SaveAssets();
         }
 
         public void SaveSettings()
@@ -633,7 +732,7 @@ namespace CognitiveVR
             {
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
                 EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                updateDate = System.DateTime.UtcNow;
+                lastSdkUpdateDate = System.DateTime.UtcNow;
             }
         }
 
@@ -747,6 +846,118 @@ namespace CognitiveVR
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// when the user is guided toward a specific action to complete a process
+        /// </summary>
+        /*public static bool ActionButton(string label,string tooltip, bool center = false)
+        {
+            bool clicked = false;
+            if (center)
+            {
+                GUI.color = GreenButton;
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                clicked = GUILayout.Button(new GUIContent(label, tooltip));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUI.color = Color.white;
+            }
+            else
+            {
+                GUI.color = GreenButton;
+                clicked = GUILayout.Button(new GUIContent(label, tooltip));
+                GUI.color = Color.white;
+            }
+            return clicked;
+        }
+
+        /// <summary>
+        /// major separation of functions
+        /// </summary>
+        public static void HeaderLabel(string label, bool center = false)
+        {
+            if (center)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("<size=14><b>" + label + "</b></size>");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("<size=14><b>" + label + "</b></size>");
+            }
+        }
+
+        /// <summary>
+        /// minor separation of functions
+        /// </summary>
+        public static void SubHeaderLabel(string label, bool center = false)
+        {
+            if (center)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("<b>"+label+"</b>");
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("<b>" + label + "</b>");
+            }
+        }
+
+        /// <summary>
+        /// show current selected items
+        /// </summary>
+        public static void HighlightLabel(string label, bool center = false)
+        {
+            if (center)
+            {
+                GUI.color = GreenText;
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(label);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUI.color = Color.white;
+            }
+            else
+            {
+                GUI.color = GreenText;
+                GUILayout.Label(label);
+                GUI.color = Color.white;
+            }
+        }
+
+        public static void CenterLabel(string label, string tooltip)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(new GUIContent(label,tooltip));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }*/
+
+        static GUIStyle headerStyle;
+        public static GUIStyle HeaderStyle
+        {
+            get
+            {
+                if (headerStyle == null)
+                {
+                    headerStyle = new GUIStyle(EditorStyles.largeLabel);
+                    headerStyle.fontSize = 14;
+                    headerStyle.alignment = TextAnchor.UpperCenter;
+                    headerStyle.fontStyle = FontStyle.Bold;
+                    headerStyle.richText = true;
+                }
+                return headerStyle;
+            }
         }
     }
 }
