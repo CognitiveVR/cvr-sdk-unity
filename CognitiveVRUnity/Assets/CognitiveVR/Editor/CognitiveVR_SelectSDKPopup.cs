@@ -41,7 +41,7 @@ namespace CognitiveVR
         {
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Please Select your VR SDK");
+            GUILayout.Label("<b>Please Select your VR SDK</b>");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -88,7 +88,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Unity Default VR Settings"))
+            if (GUILayout.Button("Unity Default VR"))
             {
                 if (option.Contains("CVR_DEFAULT"))
                     option.Remove("CVR_DEFAULT");
@@ -101,7 +101,10 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            GUILayout.Space(10);
+            GUILayout.Space(5);
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            GUILayout.Space(5);
+
             GUI.color = CognitiveVR_Settings.GreenButton;
             GUI.contentColor = Color.white;
             if (GUILayout.Button("Save and Close"))

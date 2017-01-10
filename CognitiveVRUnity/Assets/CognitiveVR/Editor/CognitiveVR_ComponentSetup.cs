@@ -21,16 +21,14 @@ namespace CognitiveVR
 
         Texture2D tex;
 
-        // Add menu named "My Window" to the Window menu
         [MenuItem("cognitiveVR/Tracker Options")]
         public static void Init()
         {
-            // Get existing open window or if none, make a new one:
             CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");
             window.minSize = new Vector2(500,500);
             window.Show();
 
-            window.tex = EditorGUIUtility.FindTexture("d_UnityEditor.InspectorWindow");
+            window.tex = EditorGUIUtility.FindTexture("d_UnityEditor.InspectorWindow"); //component info icon
         }
 
         string GetSamplesResourcePath()
@@ -65,6 +63,8 @@ namespace CognitiveVR
             if (tex == null)
                 tex = EditorGUIUtility.FindTexture("d_UnityEditor.InspectorWindow");
 
+            EditorGUIUtility.labelWidth = 200;
+
             GUI.skin.label.wordWrap = true;
             GUI.skin.label.alignment = TextAnchor.UpperLeft;
 
@@ -88,7 +88,6 @@ namespace CognitiveVR
 
             GUI.skin.label.richText = true;
 
-            //GUILayout.Label("<size=14><b>cognitiveVR Preferences</b></size>");
             GUILayout.Label("cognitiveVR Preferences", CognitiveVR_Settings.HeaderStyle);
             var prefs = CognitiveVR_Settings.GetPreferences();
             prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
@@ -185,8 +184,6 @@ namespace CognitiveVR
             //footer
             //==============
 
-            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-
             //add/select manager
             if (manager == null)
             {
@@ -213,37 +210,9 @@ namespace CognitiveVR
                         Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
                     }
                 }
-
-
-
-                /*if (GUILayout.Button(new GUIContent("Add CognitiveVR Manager", "Does not Destroy on Load\nInitializes analytics system with basic device info"),GUILayout.Height(40)))
-                {
-                    string sampleResourcePath = GetSamplesResourcePath();
-                    UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
-                    if (basicInit)
-                    {
-                        Selection.activeGameObject = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
-                        GameObject go = new GameObject("CognitiveVR_Manager");
-                        manager = go.AddComponent<CognitiveVR_Manager>();
-                        Selection.activeGameObject = go;
-                    }
-                }*/
-            }
-            else
-            {
-                /*if (GUILayout.Button("Select CognitiveVR Manager", GUILayout.Height(40)))
-                {
-                    Selection.activeGameObject = manager.gameObject;
-                }*/
             }
 
             //close
-
-            //GUILayout.Space(20);
 
             if (GUILayout.Button("Save and Close", GUILayout.Height(20)))
             {
@@ -254,8 +223,8 @@ namespace CognitiveVR
         void DisplayVideoRadioButtons()
         {
             var prefs = CognitiveVR_Settings.GetPreferences();
+            
             //radio buttons
-
             GUIStyle selectedRadio = new GUIStyle(GUI.skin.label);
             selectedRadio.normal.textColor = new Color(0, 0.0f, 0, 1.0f);
             selectedRadio.fontStyle = FontStyle.Bold;
@@ -319,11 +288,12 @@ namespace CognitiveVR
                 component = manager.GetComponent(componentType);
             }
 
+            Color infoboxColor = Color.white;
+
             GUILayout.BeginHorizontal();
 
             GUI.skin.label.richText = true;
 
-            //GUILayout.Label("<size=14><b>" + componentType.Name + "</b></size>");
             GUILayout.Label(componentType.Name, CognitiveVR_Settings.HeaderStyle);
 
             //open script button
@@ -337,14 +307,30 @@ namespace CognitiveVR
 
             if (component != null)
             {
-                GUI.backgroundColor = CognitiveVR_Settings.GreenText;
+                if (EditorGUIUtility.isProSkin)
+                {
+                    infoboxColor = new Color(0, 1, 0);
+                }
+                else
+                {
+                    infoboxColor = CognitiveVR_Settings.GreenButton;
+                }
+
                 MethodInfo warningInfo = componentType.GetMethod("GetWarning");
                 if (warningInfo != null)
                 {
                     var v = warningInfo.Invoke(null, null);
                     if (v != null && (bool)v == true)
                     {
-                        GUI.backgroundColor = CognitiveVR_Settings.OrangeText;
+                        
+                        if (EditorGUIUtility.isProSkin)
+                        {
+                            infoboxColor = new Color(1, 0.5f, 0);
+                        }
+                        else
+                        {
+                            infoboxColor = CognitiveVR_Settings.OrangeButton;
+                        }
                     }
                 }
             }
@@ -358,13 +344,12 @@ namespace CognitiveVR
             {
                 var v = getDescription.Invoke(null, null);
 
-                //TODO move this to class instead of finding for every component
+                Color c = GUI.color;
+                GUI.color = infoboxColor;
                 var guiC = new GUIContent(tex, (string)v);
-
                 GUILayout.Box(guiC);
+                GUI.color = c;
             }
-
-            GUI.backgroundColor = Color.white;
 
             GUILayout.EndHorizontal();
 
@@ -375,10 +360,12 @@ namespace CognitiveVR
                 if (component == null)
                 {
                     manager.gameObject.AddComponent(componentType);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 }
                 else
                 {
                     DestroyImmediate(component);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 }
             }
 

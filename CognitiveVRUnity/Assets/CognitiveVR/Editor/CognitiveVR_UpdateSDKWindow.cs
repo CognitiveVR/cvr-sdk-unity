@@ -18,6 +18,8 @@ namespace CognitiveVR
             newVersion = version;
             CognitiveVR_UpdateSDKWindow window = (CognitiveVR_UpdateSDKWindow)EditorWindow.GetWindow(typeof(CognitiveVR_UpdateSDKWindow),true,"cognitiveVR Update");
             window.sdkSummary = summary;
+            window.sdkSummary = "updated editor windows\nadded version update checker\nadded in-editor scene upload\nmerged player recorder with cognitive manager\nvarious bugfixes";
+            newVersion = "0.5.0";
             window.Show();
         }
 
@@ -29,10 +31,6 @@ namespace CognitiveVR
 
             GUILayout.Label("Changes and fixes", CognitiveVR_Settings.HeaderStyle);
             GUILayout.Label(sdkSummary);
-            /*GUILayout.Label("There is a new version of the <b>A* Pathfinding Project</b> available for download.\n" +
-                "The new version is <b>" + newVersion + "</b> you have <b>" + Core.SDK_Version + "</b>\n\n" +
-                "<i>Summary:</i>\n" + summary, normalStyle
-                );*/
 
             GUILayout.FlexibleSpace();
 
@@ -41,14 +39,13 @@ namespace CognitiveVR
 
             GUILayout.BeginVertical();
 
-            //Color col = GUI.color;
             GUI.color = CognitiveVR_Settings.GreenButton;
-            //GUI.contentColor = Color.white;
+
             if (GUILayout.Button("Download Latest Version", GUILayout.Height(30), GUILayout.MaxWidth(300)))
             {
                 Application.OpenURL("https://github.com/CognitiveVR/cvr-sdk-unity/releases");
             }
-            //GUI.contentColor = Color.white;
+
             GUI.color = Color.white;
 
             GUILayout.EndVertical();
@@ -62,7 +59,7 @@ namespace CognitiveVR
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
+            GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
 
@@ -76,9 +73,6 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Remind me next week", GUILayout.MaxWidth(300)))
             {
-                //EditorPrefs.SetString("AstarRemindUpdateDate", DateTime.UtcNow.AddDays(7).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                //EditorPrefs.SetString("AstarRemindUpdateVersion", version.ToString());
-
                 reminderSet = true;
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
@@ -87,21 +81,7 @@ namespace CognitiveVR
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-
-
-            
-
-            /*if (GUILayout.Button("Skip this version"))
-            {
-                reminderSet = true;
-                EditorPrefs.SetString("cvr_skipVersion", newVersion);
-            }
-
-            if (GUILayout.Button("remind me next week"))
-            {
-                reminderSet = true;
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString(System.Globalization.CultureInfo.InvariantCulture));
-            }*/
+            GUILayout.Space(5);
         }
 
         void OnDestroy()

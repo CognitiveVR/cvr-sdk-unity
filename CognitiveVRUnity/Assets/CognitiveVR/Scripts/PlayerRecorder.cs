@@ -150,7 +150,14 @@ namespace CognitiveVR
 
         public static void BeginPlayerRecording()
         {
-            //TODO check here that there is a sceneID to track
+            var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(SceneManager.GetActiveScene().path);
+
+            if (scenedata == null)
+            {
+                CognitiveVR.Util.logDebug(SceneManager.GetActiveScene().name + " Scene data is null! Player Recorder has nowhere to upload data");
+                return;
+            }
+
             CognitiveVR_Manager.OnTick += instance.CognitiveVR_Manager_OnTick;
         }
 
@@ -213,7 +220,6 @@ namespace CognitiveVR
             }
         }
 
-        //TODO stitch data together for the same scene,same session, different 'files'
         public void SendData()
         {
             if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }

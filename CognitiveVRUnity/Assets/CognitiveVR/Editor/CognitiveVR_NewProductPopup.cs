@@ -14,18 +14,15 @@ namespace CognitiveVR
         }
 
         public override void OnGUI(Rect rect)
-        {
+        {           
+            GUILayout.Label("New Product", EditorStyles.boldLabel);
+
             if (CognitiveVR_Preferences.Instance.UserData.organizations.Length > 1)
             {
                 GUILayout.Label("Current Organization: " + CognitiveVR_Preferences.Instance.SelectedOrganization.name);
             }
 
-            //TODO if there are multiple organizations, add a label for which organization this will create the product for
-            //or add a dropdown to change the current organization
-            
-            GUILayout.Label("New Product", EditorStyles.boldLabel);
-
-            productName = CognitiveVR_SceneExportWindow.GhostTextField("MyProductName", "", productName);
+            productName = CognitiveVR_Settings.GhostTextField("MyProductName", "", productName);
             GUILayout.BeginHorizontal();
 
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(productName));
@@ -58,7 +55,7 @@ namespace CognitiveVR
         {
             if (CognitiveVR_Settings.Instance == null)
             {
-                Debug.Log("instance of settings window is null"); //when recompiling with the window open, instance loses it's reference
+                Debug.Log("Instance of cognitiveVR_Settings window is null"); //when recompiling with the window open, instance loses it's reference
             }
             CognitiveVR_Settings.Instance.RequestNewProduct(productName);
         }
