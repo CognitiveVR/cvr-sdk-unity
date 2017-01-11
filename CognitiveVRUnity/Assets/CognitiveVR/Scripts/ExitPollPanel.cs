@@ -487,8 +487,8 @@ namespace CognitiveVR
                 response.sceneId = key.SceneKey;
                 response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
                 response.pollValues = new ExitPollTuningQuestion[1] { question };
-                response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
-                response.sessionId = CognitiveVR_Manager.SessionID;
+                response.timestamp = (int)CognitiveVR_Preferences.TimeStamp;
+                response.sessionId = CognitiveVR_Preferences.SessionID;
 
                 string url = "https://api.cognitivevr.io/polls";
                 string jsonResponse = JsonUtility.ToJson(response, true);
