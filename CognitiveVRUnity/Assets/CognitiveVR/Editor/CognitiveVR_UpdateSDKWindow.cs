@@ -18,9 +18,10 @@ namespace CognitiveVR
             newVersion = version;
             CognitiveVR_UpdateSDKWindow window = (CognitiveVR_UpdateSDKWindow)EditorWindow.GetWindow(typeof(CognitiveVR_UpdateSDKWindow),true,"cognitiveVR Update");
             window.sdkSummary = summary;
-            window.sdkSummary = "updated editor windows\nadded version update checker\nadded in-editor scene upload\nmerged player recorder with cognitive manager\nvarious bugfixes";
-            newVersion = "0.5.0";
             window.Show();
+
+            //window.sdkSummary = "updated editor windows\nadded version update checker\nadded in-editor scene upload\nmerged player recorder with cognitive manager\nvarious bugfixes";
+            //newVersion = "0.5.0";
         }
 
         void OnGUI()

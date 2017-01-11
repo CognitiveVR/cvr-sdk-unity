@@ -17,7 +17,6 @@ namespace CognitiveVR
     [InitializeOnLoad]
     public class CognitiveVR_Settings : EditorWindow
     {
-        public static string GreenTextString = "<color=#008800ff>";
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
 
 
@@ -56,7 +55,11 @@ namespace CognitiveVR
             //fix this. shouldn't have to re-read this value to parse it to the correct format
             if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
             {
-                Instance.lastSdkUpdateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+                //Instance.lastSdkUpdateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                Debug.Log("failed to parse UpdateDate");
             }
         }
 

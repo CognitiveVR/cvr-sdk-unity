@@ -556,7 +556,7 @@ namespace CognitiveVR
             }
             catch
             {
-                EditorUtility.DisplayDialog("Error!", "Failed to create target folder!", "Ok then");
+                EditorUtility.DisplayDialog("Error!", "Failed to create folder: CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
                 return false;
             }
 
@@ -623,9 +623,9 @@ namespace CognitiveVR
             else
             {
                 if (staticGeoOnly && nonstaticObjectCount > smallObjectCount)
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticGeoOnly in Preferences!", "");
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticMeshesOnly!", "Ok");
                 else
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinExportGeoSize. This can be changed in Preferences", "");
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinimumExportSize", "Ok");
                 return false;
             }
         }

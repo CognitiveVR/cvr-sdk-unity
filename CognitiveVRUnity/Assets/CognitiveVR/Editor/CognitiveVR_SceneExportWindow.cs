@@ -728,7 +728,7 @@ namespace CognitiveVR
                 Debug.LogError("scene upload WWW is not null. please wait until your scene has finished uploading before uploading another!");
             }
 
-            if (EditorUtility.DisplayDialog("Upload Scene","Do you want to automatically upload \""+ UploadSceneSettings.SceneName+"\" to SceneExplorer.com?", "Yes", "No"))
+            if (EditorUtility.DisplayDialog("Upload Scene","Do you want to upload \""+ UploadSceneSettings.SceneName+"\" to your Dashboard?", "Yes", "No"))
             {
                 string sceneName = UploadSceneSettings.SceneName;
 
