@@ -22,16 +22,18 @@ namespace CognitiveVR
 
 
         public static Color OrangeButton = new Color(1f, 0.6f, 0.3f);
+        public static Color OrangeButtonPro = new Color(1f, 0.8f, 0.5f);
 
         static CognitiveVR_Settings _instance;
         public static CognitiveVR_Settings Instance
         {
             get
             {
-                if (_instance == null)
+                /*if (_instance == null)
                 {
                     _instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
-                }
+                    Debug.Log("SETTINGS INSTANCE DOES THIS SHOW");
+                }*/
                 return _instance;
             }
         }
@@ -90,29 +92,26 @@ namespace CognitiveVR
                 {
                     //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                 }
-            }
+            } 
 
             System.DateTime remindDate;
-            
-            if (Instance != null)
+
+            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
             {
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
+                if (System.DateTime.UtcNow > remindDate)
                 {
-                    if (System.DateTime.UtcNow > remindDate)
-                    {
-                        Instance.CheckForUpdates();
-                        //Debug.Log("settings check for updates");
-                    }
-                    else
-                    {
-                        //Debug.Log("check updates later " + remindDate);
-                    }
+                    CheckForUpdates();
+                    //Debug.Log("settings check for updates");
                 }
                 else
                 {
-                    Debug.Log("failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
-                    Instance.CheckForUpdates();
+                    //Debug.Log("check updates later " + remindDate);
                 }
+            }
+            else
+            {
+                Debug.Log("failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
+                CheckForUpdates();
             }
 
             EditorApplication.update -= EditorUpdate;
@@ -173,15 +172,15 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+            var greencheck = EditorGUIUtility.FindTexture("Collab");
+            var warningcheck = EditorGUIUtility.FindTexture("CollabError");
             if (IsUserLoggedIn())
             {
-                var greencheck = EditorGUIUtility.FindTexture("Collab");
                 GUILayout.Label(greencheck);
             }
             else if (!string.IsNullOrEmpty(loginResponse))
             {
-                var greencheck = EditorGUIUtility.FindTexture("CollabError");
-                GUILayout.Label(greencheck);
+                GUILayout.Label(warningcheck);
             }
 
             GUILayout.Label("<size=14><b>Authenticate</b></size>");
@@ -351,32 +350,71 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
-            //=========================
-            //options
-            //=========================
-
-            if (GUILayout.Button("Open Component Options Window"))
-            {
-                CognitiveVR_ComponentSetup.Init();
-            }
-            if (GUILayout.Button("Open Scene Export Window"))
-            {
-                CognitiveVR_SceneExportWindow.Init();
-            }
-
-            
 
             //=========================
             //select vr sdk
             //=========================
+            GUILayout.BeginHorizontal();
+
+
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
+            GUILayout.Label(greencheck, GUILayout.Width(20));
+#else
+            GUILayout.Label("1", GUILayout.Width(20));
+#endif
+
             if (GUILayout.Button("Select SDK"))
             {
-                sdkRect.x += 300;
+                sdkRect.x += 280;
                 sdkRect.y -= 20;
 
                 PopupWindow.Show(sdkRect, new CognitiveVR_SelectSDKPopup());
             }
             if (Event.current.type == EventType.Repaint) sdkRect = GUILayoutUtility.GetLastRect();
+            GUILayout.EndHorizontal();
+
+            //=========================
+            //options
+            //=========================
+
+            GUILayout.BeginHorizontal();
+            CognitiveVR_Manager manager = FindObjectOfType<CognitiveVR_Manager>();
+            if (manager != null)
+            {
+                GUILayout.Label(greencheck, GUILayout.Width(20));
+            }
+            else
+            {
+                GUILayout.Label("2", GUILayout.Width(20));
+            }
+            if (GUILayout.Button("Track Player Actions"))
+            {
+                CognitiveVR_ComponentSetup.Init();
+            }
+
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal();
+
+            var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            if (scenedata == null || scenedata.LastRevision == 0)
+            {
+                GUILayout.Label("3", GUILayout.Width(20));
+            }
+            else
+            {
+                GUILayout.Label(greencheck, GUILayout.Width(20));
+            }
+
+            if (GUILayout.Button("Upload Scene"))
+            {
+                CognitiveVR_SceneExportWindow.Init();
+            }
+            GUILayout.EndHorizontal();
+
+            
+
             EditorGUI.EndDisabledGroup();
             GUILayout.Space(20);
 
@@ -404,8 +442,11 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            if (Instance == null) { _instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings"); }
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+
             if (lastSdkUpdateDate.Year < 100)
             {
                 if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
@@ -557,15 +598,15 @@ namespace CognitiveVR
             }
         }
 
-        WWW checkForUpdatesRequest;
-        void CheckForUpdates()
+        static WWW checkForUpdatesRequest;
+        static void CheckForUpdates()
         {
             var url = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
             checkForUpdatesRequest = new UnityEngine.WWW(url);
             EditorApplication.update += UpdateCheckForUpdates;
         }
 
-        public void UpdateCheckForUpdates()
+        public static void UpdateCheckForUpdates()
         {
             if (!checkForUpdatesRequest.isDone)
             {

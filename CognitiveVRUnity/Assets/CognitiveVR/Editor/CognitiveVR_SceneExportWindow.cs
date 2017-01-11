@@ -24,12 +24,10 @@ namespace CognitiveVR
         }
 
         bool exportOptionsFoldout = false;
-        bool hideNonBuildScenes = false;
         static CognitiveVR_Preferences.SceneKeySetting currentSceneSettings;
 
         string searchString = "";
 
-        int toggleWidth = 10;
         int sceneWidth = 140;
         int keyWidth = 400;
 
@@ -48,20 +46,7 @@ namespace CognitiveVR
                 string name = path.Substring(path.LastIndexOf('/') + 1);
                 name = name.Substring(0, name.Length - 6);
 
-                if (hideNonBuildScenes)
-                {
-                    for (int i = 0; i < EditorBuildSettings.scenes.Length; i++)
-                    {
-                        if (EditorBuildSettings.scenes[i].path == path)
-                        {
-                            sceneNames.Add(name);
-                        }
-                    }
-                }
-                else
-                {
-                    sceneNames.Add(name);
-                }
+                sceneNames.Add(name);
             }
         }
 
@@ -75,6 +60,9 @@ namespace CognitiveVR
             }
 
             GUI.skin.label.richText = true;
+            GUI.skin.box.richText = true;
+            GUI.skin.textField.richText = true;
+            
 
             prefs = CognitiveVR_Settings.GetPreferences();
 
@@ -86,9 +74,9 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
 
-            hideNonBuildScenes = GUILayout.Toggle(hideNonBuildScenes, "Only show scenes in Build Settings");
-
             searchString = CognitiveVR_Settings.GhostTextField("Search scenes", "", searchString);
+
+            
 
             GUILayout.EndHorizontal();
 
@@ -97,10 +85,9 @@ namespace CognitiveVR
             canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
 
             GUILayout.BeginHorizontal();
-
-            GUILayout.Label(new GUIContent("<size=8>Build</size>","Is this scene added to Build Settings?"), GUILayout.Width(30));
+            
             GUILayout.Label("<size=8>Scene Name</size>", GUILayout.Width(sceneWidth));
-            GUILayout.Label(new GUIContent("<size=8>Revision Date</size>","The most recent date the scene was successfully uploaded"), GUILayout.Width(keyWidth));
+            GUILayout.Label(new GUIContent("<size=8>Last Upload</size>","The most recent date the scene was successfully uploaded"), GUILayout.Width(keyWidth));
 
             GUILayout.EndHorizontal();
 
@@ -126,16 +113,16 @@ namespace CognitiveVR
             }
 
 
-
+            /*
             if (EditorGUIUtility.isProSkin)
             {
                 if (string.IsNullOrEmpty(currentSceneSettings.ScenePath))
                 {
-                    GUILayout.Label("<color=orange>Current Scene: " + currentSceneSettings.SceneName+"</color>", CognitiveVR_Settings.HeaderStyle);
+                    GUILayout.Box("<color=orange>Current Scene: " + currentSceneSettings.SceneName+"</color>", CognitiveVR_Settings.HeaderStyle);
                 }
                 else
                 {
-                    GUILayout.Label("<color=#00aa00ff>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
+                    GUILayout.Box("<color=#00aa00ff>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
                 }
             }
             else
@@ -144,7 +131,7 @@ namespace CognitiveVR
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label("<color=red>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
+                    GUILayout.Box("<color=red>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                 }
@@ -152,13 +139,67 @@ namespace CognitiveVR
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label(CognitiveVR_Settings.GreenTextString + "Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
+                    GUILayout.Box(CognitiveVR_Settings.GreenTextString + "Current Scene: " + currentSceneSettings.SceneName + "</color>");
                     GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                 }
             }
+            */
+            GUILayout.BeginHorizontal();
+            //GUILayout.FlexibleSpace();
 
-            if (string.IsNullOrEmpty(currentSceneSettings.ScenePath))
+            ///!string.IsNullOrEmpty(currentSceneSettings.ScenePath)
+            bool sceneIsSaved = !string.IsNullOrEmpty(currentSceneSettings.ScenePath);
+
+
+            
+            GUI.skin.textField.alignment = TextAnchor.MiddleCenter;
+
+            if (EditorGUIUtility.isProSkin)
+            {
+                if (sceneIsSaved)
+                {
+                    GUIStyle gs = new GUIStyle(EditorStyles.textField);
+                    //GUI.Box(selectedRect, "", gs);
+
+                    GUI.backgroundColor = CognitiveVR_Settings.GreenButton;
+                    GUILayout.Box("<size=14><b>Current Scene: " + currentSceneSettings.SceneName + "</b></size>", gs);
+                    GUI.backgroundColor = Color.white;
+                }
+                else
+                {
+                    GUIStyle gs = new GUIStyle(EditorStyles.textField);
+                    //GUI.Box(selectedRect, "", gs);
+
+                    GUI.backgroundColor = CognitiveVR_Settings.OrangeButtonPro;
+                    GUILayout.Box("<size=14><b>Current Scene: " + currentSceneSettings.SceneName + "</b></size>", gs);
+                    GUI.backgroundColor = Color.white;
+                }
+            }
+            else
+            {
+                if (sceneIsSaved)
+                {
+                    GUIStyle gs = new GUIStyle(EditorStyles.textField);
+                    GUI.backgroundColor = CognitiveVR_Settings.GreenButton;
+                    GUILayout.Box("<size=14><b>Current Scene: " + currentSceneSettings.SceneName + "</b></size>", gs);
+                    GUI.backgroundColor = Color.white;
+                }
+                else
+                {
+                    GUIStyle gs = new GUIStyle(EditorStyles.textField);
+                    GUI.backgroundColor = CognitiveVR_Settings.OrangeButton;
+                    GUILayout.Box("<size=14><b>Current Scene: " + currentSceneSettings.SceneName + "</b></size>", gs);
+                    GUI.backgroundColor = Color.white;
+                }
+            }
+
+            GUI.skin.textField.alignment = TextAnchor.MiddleLeft;
+
+            //GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            if (!sceneIsSaved)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
@@ -172,16 +213,15 @@ namespace CognitiveVR
                 GUILayout.Space(10);
             }
 
-            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(currentSceneSettings.ScenePath));
+            EditorGUI.BeginDisabledGroup(!sceneIsSaved);
 
 
 
             //revision date
 
-            System.DateTime revisionDate = System.DateTime.MinValue;
 
-            revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
 
+            /*
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (revisionDate.Year < 1000)
@@ -196,6 +236,7 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
+            
             //scene explorer id
             if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(currentSceneSettings.SceneKey))
             {
@@ -261,11 +302,13 @@ namespace CognitiveVR
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
-
+            */
 
             //compression amount
 
-            GUILayout.Label("Scene Export Quality", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.Space(10);
+
+            GUILayout.Label("Scene Export Quality",CognitiveVR_Settings.HeaderStyle);
 
             GUILayout.BeginHorizontal();
 
@@ -339,6 +382,9 @@ namespace CognitiveVR
 
             GUILayout.Space(20);
 
+
+            //Export Buttons
+
             if (string.IsNullOrEmpty(prefs.SavedBlenderPath))
             {
                 FindBlender();
@@ -348,17 +394,24 @@ namespace CognitiveVR
 
             var greencheck = EditorGUIUtility.FindTexture("Collab");
 
+            GUILayout.BeginHorizontal();
+
             GUIContent blenderButtonContent = new GUIContent("Select Blender.exe");
             if (validBlenderPath)
             {
-                blenderButtonContent.image = greencheck;
-                blenderButtonContent.text = " Select Blender.exe";
+                GUILayout.Label(greencheck, GUILayout.Width(20));
+                //blenderButtonContent.text = " Select Blender.exe";
+            }
+            else
+            {
+                GUILayout.Label("1", GUILayout.Width(20));
             }
 
             if (GUILayout.Button(blenderButtonContent))
             {
                 prefs.SavedBlenderPath = EditorUtility.OpenFilePanel("Select Blender.exe", string.IsNullOrEmpty(prefs.SavedBlenderPath) ? "c:\\" : prefs.SavedBlenderPath, "");
             }
+            GUILayout.EndHorizontal();
 
 #if UNITY_EDITOR_OSX
             EditorGUILayout.HelpBox("Exporting scenes has not been tested on Mac!", MessageType.Warning);
@@ -376,10 +429,6 @@ namespace CognitiveVR
                 exportContent.tooltip = "You must have a valid CustomerID to export a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
             }
 
-            if (GUILayout.Button(exportContent))
-            {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
-            }
 
             var uploadButtonContent = new GUIContent("Upload \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
             if (string.IsNullOrEmpty(prefs.CustomerID))
@@ -388,15 +437,32 @@ namespace CognitiveVR
             }
             else
             {
-                uploadButtonContent.tooltip = "Upload files in "+ Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+                uploadButtonContent.tooltip = "Upload files in " + Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             }
 
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var exists = Directory.Exists(sceneExportDirectory);
 
+
+
             
 
-            EditorGUI.BeginDisabledGroup(!exists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
+            GUILayout.BeginHorizontal();
+            if (exists && Directory.GetFiles(sceneExportDirectory).Length > 0)
+            {
+                GUILayout.Label(greencheck, GUILayout.Width(20));
+            }
+            else
+            {
+                GUILayout.Label("2", GUILayout.Width(20));
+            }
+
+            if (GUILayout.Button(exportContent))
+            {
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
+            }
+            GUILayout.EndHorizontal();
+
             if (!exists)
             {
                 uploadButtonContent.tooltip = "Directory doesn't exist! " + sceneExportDirectory;
@@ -406,10 +472,27 @@ namespace CognitiveVR
                 uploadButtonContent.tooltip = "Directory doesn't contain any files " + sceneExportDirectory;
             }
 
+            EditorGUI.BeginDisabledGroup(!exists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
+
+            System.DateTime revisionDate = System.DateTime.MinValue;
+            revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
+
+            GUILayout.BeginHorizontal();
+            if (revisionDate.Year > 1000)
+            {
+                GUILayout.Label(greencheck, GUILayout.Width(20));
+            }
+            else
+            {
+                GUILayout.Label("3", GUILayout.Width(20));
+            }
+
             if (GUILayout.Button(uploadButtonContent))
             {
                 UploadDecimatedScene(true);
             }
+            GUILayout.EndHorizontal();
+
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.EndDisabledGroup();
@@ -422,45 +505,36 @@ namespace CognitiveVR
             }
         }
 
-        bool IsSceneInBuildSettings(string scenePath)
-        {
-            for (int i = 0; i< EditorBuildSettings.scenes.Length; i++)
-            {
-                if (EditorBuildSettings.scenes[i].path == scenePath){ return true; }
-            }
-            return false;
-        }
-
         void DisplaySceneKeySettings(CognitiveVR_Preferences.SceneKeySetting settings)
         {
-            bool inBuildSettings = IsSceneInBuildSettings(settings.ScenePath);
-            if (hideNonBuildScenes && !inBuildSettings)
+            bool isCurrentScene = false;
+            if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
             {
-                return;
+                isCurrentScene = true;
             }
+
+            if (isCurrentScene)
+            {
+                if (EditorGUIUtility.isProSkin)
+                {
+                    GUI.color = new Color(0, 10, 0,1);
+
+                    GUIStyle gs = new GUIStyle(EditorStyles.textField);
+                    GUI.Box(selectedRect, "",gs);
+                }
+                else
+                {
+                    GUI.color = CognitiveVR_Settings.GreenButton;
+                    GUI.Box(selectedRect, "");
+                }
+            }
+            GUI.color = Color.white;
+            
 
             GUILayout.BeginHorizontal();
 
-            EditorGUI.BeginDisabledGroup(true);
-            GUIContent buildScene = new GUIContent("");
-            
-
-            if (inBuildSettings)
-            { buildScene.tooltip = "In Build Settings"; }
-            else
-            { buildScene.tooltip = "NOT in Build Settings"; }
-
-            GUILayout.Toggle(inBuildSettings, buildScene, GUILayout.Width(30));
-            EditorGUI.EndDisabledGroup();
-
-
             if (EditorGUIUtility.isProSkin)
             {
-                if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
-                {
-                    GUI.color = Color.green;
-                }
-
                 GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
                 DateTime dt = DateTime.FromBinary(settings.LastRevision);
@@ -473,30 +547,22 @@ namespace CognitiveVR
                     string dtString = dt.ToShortDateString();
                     GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
                 }
-
-                GUI.color = Color.white;
             }
             else
             {
-                bool isCurrentScene = false;
-                if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
-                {
-                    isCurrentScene = true;
-                }
-
                 if (isCurrentScene)
                 {
-                    GUILayout.Label(CognitiveVR_Settings.GreenTextString + settings.SceneName + "</color>", GUILayout.Width(sceneWidth));
+                    GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
                     DateTime dt = DateTime.FromBinary(settings.LastRevision);
                     if (dt.Year < 1000)
                     {
-                        GUILayout.Label(CognitiveVR_Settings.GreenTextString+"Never</color>", GUILayout.Width(sceneWidth));
+                        GUILayout.Label("Never", GUILayout.Width(sceneWidth));
                     }
                     else
                     {
                         string dtString = dt.ToShortDateString();
-                        GUILayout.Label(CognitiveVR_Settings.GreenTextString + dtString+"</color>", GUILayout.Width(sceneWidth));
+                        GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
                     }
                 }
                 else
@@ -529,14 +595,29 @@ namespace CognitiveVR
 
             EditorGUI.EndDisabledGroup();
 
-            if (GUILayout.Button("Open Scene"))
+            if (GUILayout.Button("Select"))
             {
                 UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
             }
-
             GUILayout.EndHorizontal();
+
+            if (isCurrentScene)
+            {
+                if (Event.current.type == EventType.Repaint)
+                {
+                    selectedRect = GUILayoutUtility.GetLastRect();
+                    selectedRect.x -= 2;
+                    selectedRect.y -= 1;
+                    selectedRect.width += 4;
+                    selectedRect.height += 4;
+
+                    Repaint();
+                }
+            }
         }
+
+        Rect selectedRect;
 
         public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID)
         {
