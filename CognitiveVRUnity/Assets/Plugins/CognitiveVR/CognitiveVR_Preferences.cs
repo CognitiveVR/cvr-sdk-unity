@@ -61,8 +61,8 @@ namespace CognitiveVR
     {
         public bool ExportStaticOnly = true;
         public float MinExportGeoSize = 1;
-        public int ExplorerMinimumFaceCount = 200;
-        public int ExplorerMaximumFaceCount = 5000;
+        public int ExplorerMinimumFaceCount = 100;
+        public int ExplorerMaximumFaceCount = 8000;
         public int TextureQuality = 4;
 
         public static bool Match(ExportSettings a, ExportSettings b)

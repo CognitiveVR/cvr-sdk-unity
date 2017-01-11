@@ -283,7 +283,7 @@ namespace CognitiveVR
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
         public bool EnableLogging = false;
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize. Useful for delaying startup until loading scenes/connecting to server is completed")]
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace CognitiveVR
 
         Texture2D tex;
 
-        [MenuItem("cognitiveVR/Tracker Options")]
+        [MenuItem("cognitiveVR/Tracker Options", priority = 2)]
         public static void Init()
         {
             CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");
@@ -75,11 +75,23 @@ namespace CognitiveVR
             canvasPos = GUILayout.BeginScrollView(canvasPos,false,true);
             EditorGUI.BeginDisabledGroup(manager == null);
 
+            Color infoboxColor = Color.white;
             if (manager == null)
             {
                 GUI.color = new Color(0.5f, 0.5f, 0.5f);
                 GUI.Box(new Rect(canvasPos.x, canvasPos.y, position.width, position.height),"");
                 GUI.color = new Color(0.7f, 0.7f, 0.7f);
+            }
+            else
+            {
+                if (EditorGUIUtility.isProSkin)
+                {
+                    infoboxColor = new Color(0, 1, 0);
+                }
+                else
+                {
+                    infoboxColor = CognitiveVR_Settings.GreenButton;
+                }
             }
 
             //==============
@@ -88,7 +100,20 @@ namespace CognitiveVR
 
             GUI.skin.label.richText = true;
 
+            GUILayout.BeginHorizontal();
             GUILayout.Label("cognitiveVR Preferences", CognitiveVR_Settings.HeaderStyle);
+
+            
+            
+
+            GUIContent standardInfo = new GUIContent(tex, "Record Player gaze and position\nGather GPU,CPU,RAM,OS,etc");
+
+            Color c = GUI.color;
+            GUI.color = infoboxColor;
+            GUILayout.Box(standardInfo);
+            GUI.color = c;
+            GUILayout.EndHorizontal();
+
             var prefs = CognitiveVR_Settings.GetPreferences();
             prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
             prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
@@ -110,7 +135,9 @@ namespace CognitiveVR
                 style.normal.textColor = new Color(0.5f, 1.0f, 0.5f, 1.0f);
 
                 GUILayout.BeginHorizontal();
+                
                 GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
+                
                 GUI.color = Color.green;
                 GUILayout.Button("Any Key", GUILayout.Width(70));
                 GUI.color = Color.white;
@@ -189,7 +216,7 @@ namespace CognitiveVR
             {
                 var rect = new Rect(position.width / 2 - 90, position.height / 2 - 25, 180, 50);
 
-                if (GUI.Button(rect, new GUIContent("Add cognitiveVR Manager\n(required)", "Does not Destroy on Load\nInitializes analytics system with basic device info")))
+                if (GUI.Button(rect, new GUIContent("Add cognitiveVR Manager\n(required)", "Persists between scenes\nInitializes analytics system and gathers basic device info")))
                 {
                     string sampleResourcePath = GetSamplesResourcePath();
                     UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");

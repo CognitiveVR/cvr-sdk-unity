@@ -15,7 +15,7 @@ namespace CognitiveVR
         static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
 
-        [MenuItem("cognitiveVR/Scene Export")]
+        [MenuItem("cognitiveVR/Scene Export", priority = 3)]
         public static void Init()
         {
             CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");
@@ -50,6 +50,8 @@ namespace CognitiveVR
             }
         }
 
+        
+
         void OnGUI()
         {
             if (!loadedScenes)
@@ -83,6 +85,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
 
             canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
+            GUI.Box(new Rect(-10, -10, position.width * 10, 10000), "");
 
             GUILayout.BeginHorizontal();
             
@@ -100,7 +103,7 @@ namespace CognitiveVR
             GUILayout.EndScrollView();
 
 
-            GUILayout.Space(10);
+            //GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
@@ -308,6 +311,8 @@ namespace CognitiveVR
 
             GUILayout.Space(10);
 
+            if (!sceneIsSaved) { return; }
+
             GUILayout.Label("Scene Export Quality",CognitiveVR_Settings.HeaderStyle);
 
             GUILayout.BeginHorizontal();
@@ -361,7 +366,8 @@ namespace CognitiveVR
 
             EditorGUIUtility.labelWidth = 200;
 
-            exportOptionsFoldout = EditorGUILayout.Foldout(exportOptionsFoldout, "Advanced Options");
+            exportOptionsFoldout = EditorGUI.Foldout(EditorGUILayout.GetControlRect(), exportOptionsFoldout, "Advanced Options", true);
+
             EditorGUI.indentLevel++;
             if (exportOptionsFoldout)
             {
@@ -392,20 +398,15 @@ namespace CognitiveVR
 
             bool validBlenderPath = prefs.SavedBlenderPath.ToLower().EndsWith("blender.exe");
 
-            var greencheck = EditorGUIUtility.FindTexture("Collab");
-
             GUILayout.BeginHorizontal();
 
             GUIContent blenderButtonContent = new GUIContent("Select Blender.exe");
+            
             if (validBlenderPath)
-            {
-                GUILayout.Label(greencheck, GUILayout.Width(20));
-                //blenderButtonContent.text = " Select Blender.exe";
-            }
-            else
-            {
-                GUILayout.Label("1", GUILayout.Width(20));
-            }
+                blenderButtonContent.tooltip = prefs.SavedBlenderPath;
+
+            CognitiveVR_Settings.UserStartupBox("1", validBlenderPath);
+            
 
             if (GUILayout.Button(blenderButtonContent))
             {
@@ -448,14 +449,8 @@ namespace CognitiveVR
             
 
             GUILayout.BeginHorizontal();
-            if (exists && Directory.GetFiles(sceneExportDirectory).Length > 0)
-            {
-                GUILayout.Label(greencheck, GUILayout.Width(20));
-            }
-            else
-            {
-                GUILayout.Label("2", GUILayout.Width(20));
-            }
+
+            CognitiveVR_Settings.UserStartupBox("2", exists && Directory.GetFiles(sceneExportDirectory).Length > 0);
 
             if (GUILayout.Button(exportContent))
             {
@@ -478,14 +473,8 @@ namespace CognitiveVR
             revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
 
             GUILayout.BeginHorizontal();
-            if (revisionDate.Year > 1000)
-            {
-                GUILayout.Label(greencheck, GUILayout.Width(20));
-            }
-            else
-            {
-                GUILayout.Label("3", GUILayout.Width(20));
-            }
+
+            CognitiveVR_Settings.UserStartupBox("3", revisionDate.Year > 1000);
 
             if (GUILayout.Button(uploadButtonContent))
             {
