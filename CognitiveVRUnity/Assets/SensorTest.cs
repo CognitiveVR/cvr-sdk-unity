@@ -21,8 +21,8 @@ public class SensorTest : MonoBehaviour {
             CognitiveVR.Plugins.Sensor.RecordDataPoint("twitchiness", Random.Range(1, 100f));
         }
 
-        string json = CognitiveVR.Plugins.Sensor.SerializeSensorData();
-        Debug.Log(json);
+        CognitiveVR.Plugins.Sensor.SendData();
+        //Debug.Log(json);
 
 
     }

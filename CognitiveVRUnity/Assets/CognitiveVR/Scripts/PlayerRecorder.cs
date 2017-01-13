@@ -164,6 +164,7 @@ namespace CognitiveVR.Components
             if (trackerInstance != null)
             {
                 trackerInstance.SendData();
+                CognitiveVR.Plugins.Sensor.SendData();
             }
         }
 

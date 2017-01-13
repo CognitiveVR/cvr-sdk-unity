@@ -4,28 +4,24 @@ using System.Text;
 
 namespace CognitiveVR.Plugins
 {
-
     public class SensorSnapshot
     {
-        //public string category;
         public double timestamp;
         public double sensorValue;
 
         public SensorSnapshot(double time, double value)
         {
-            //category = cat;
             timestamp = time;
             sensorValue = value;
         }
     }
 
     /// <summary>
-    /// This CognitiveVR plugin provides a simple interface for instrumenting purchase flows in an application.
+    /// This CognitiveVR plugin provides a simple interface for instrumenting sensor in an application.
     /// </summary>
     public static class Sensor
 	{
-        //public static Dictionary<string, float[,]> CachedSnapshots = new Dictionary<string, float[,]>();
-        public static Dictionary<string,List<SensorSnapshot>> CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
+        static Dictionary<string,List<SensorSnapshot>> CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
 
         public static void RecordDataPoint(string category, float value)
         {
@@ -40,35 +36,36 @@ namespace CognitiveVR.Plugins
             }
         }
 
-        public static void GenerateSensorData()
+        public static void SendData()
         {
-            for (int i = 0; i<5; i++)
-            {
-                System.Random r = new System.Random();
-                RecordDataPoint("temperature",(float)r.NextDouble());
-            }
+            if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
-            
-            //hearbeat data
-            for (int i = 0; i < 5; i++)
-            {
-                System.Random r = new System.Random();
-                RecordDataPoint("heartbeat", (float)r.NextDouble());
-            }
+            //var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            //if (sceneSettings == null) { CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings"); return; }
 
-            //twitchiness data
-            for (int i = 0; i < 5; i++)
-            {
-                System.Random r = new System.Random();
-                RecordDataPoint("twitchiness", (float)r.NextDouble());
-            }
+            byte[] serializedData = SerializeSensorData();
+            //www send
+            string sceneURLSensors = "https://sceneexplorer.com/api/sessions/" + CognitiveVR_Preferences.SessionID;
+            SendRequest(serializedData, sceneURLSensors);
+
+            //clear sensor data list
+            CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
         }
 
-        public static string SerializeSensorData()
+        private static void SendRequest(byte[] bytes, string url)
         {
-            //external.minijson.json.serialize works fine for lists, not objects
-            //return External.MiniJSON.Json.Serialize(sensors);
+            var headers = new Dictionary<string, string>();
+            headers.Add("Content-Type", "application/json");
+            headers.Add("X-HTTP-Method-Override", "POST");
 
+            var www = new UnityEngine.WWW(url, bytes, headers);
+            //because this is not a monobehaviour, this cannot hold a coroutine and get a response
+        }
+
+        #region json
+
+        static byte[] SerializeSensorData()
+        {
             StringBuilder sb = new StringBuilder();
             sb.Append("{\"userid\": \"");
             sb.Append(Core.userId);
@@ -85,8 +82,9 @@ namespace CognitiveVR.Plugins
 
             sb.Remove(sb.Length - 1, 1); //remove the last comma
             sb.Append("]}");
-            
-            return sb.ToString();
+
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
+            return outBytes;
         }
 
         static void AppendSensorData(KeyValuePair<string,List<SensorSnapshot>> kvp, StringBuilder sb)
@@ -108,6 +106,8 @@ namespace CognitiveVR.Plugins
             sb.Remove(sb.Length - 1, 1); //remove the last comma
             sb.Append("]},");
         }
+
+        #endregion
     }
 }
 
