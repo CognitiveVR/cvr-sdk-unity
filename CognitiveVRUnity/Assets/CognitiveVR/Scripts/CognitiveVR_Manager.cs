@@ -2,6 +2,9 @@
 using CognitiveVR;
 using System.Collections;
 using System.Collections.Generic;
+#if CVR_STEAMVR
+using Valve.VR;
+#endif
 
 /// <summary>
 /// initializes CognitiveVR analytics. Add components to track additional events
@@ -9,65 +12,73 @@ using System.Collections.Generic;
 
 namespace CognitiveVR
 {
-    public class CognitiveVR_Manager : MonoBehaviour
+    public partial class CognitiveVR_Manager : MonoBehaviour
     {
         #region Events
         public delegate void CoreInitHandler(Error initError);
         /// <summary>
         /// CognitiveVR Core.Init callback
         /// </summary>
-        public static event CoreInitHandler OnInit;
-        public void InitEvent(Error initError)
+        public static event CoreInitHandler InitEvent;
+        public void OnInit(Error initError)
         {
             foreach (var v in GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>())
             {
                 v.CognitiveVR_Init(initError);
             }
-            if (OnInit != null) { OnInit(initError); }
+            PlayerRecorderInit(initError);
+            if (InitEvent != null) { InitEvent(initError); }
         }
 
         public delegate void UpdateHandler();
         /// <summary>
         /// Update. Called through Manager's update function for easy enabling/disabling
         /// </summary>
-        public static event UpdateHandler OnUpdate;
-        public void UpdateEvent() { if (OnUpdate != null) { OnUpdate(); } }
+        public static event UpdateHandler UpdateEvent;
+        public void OnUpdate() { if (UpdateEvent != null) { UpdateEvent(); } }
 
         public delegate void TickHandler();
         /// <summary>
         /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
         /// </summary>
-        public static event TickHandler OnTick;
-        public void TickEvent() { if (OnTick != null) { OnTick(); } }
+        public static event TickHandler TickEvent;
+        public void OnTick() { if (TickEvent != null) { TickEvent(); } }
 
         public delegate void QuitHandler(); //quit
         /// <summary>
         /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
         /// </summary>
-        public static event QuitHandler OnQuit;
-        public void QuitEvent() { if (OnQuit != null) { OnQuit(); } }
+        public static event QuitHandler QuitEvent;
+        public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
+
+        public delegate void SendDataHandler(); //send data
+        /// <summary>
+        /// called when CognitiveVR_Manager.SendData is called. also called when player snapshots > maxSnapshotThreshold
+        /// </summary>
+        public static event SendDataHandler SendDataEvent;
+        public void OnSendData() { if (SendDataEvent != null) { SendDataEvent(); } }
 
         public delegate void LevelLoadedHandler(); //level
         /// <summary>
-        /// called from Unity's built in OnLevelWasLoaded(int id) or SceneManager.SceneLoaded(scene scene) in 5.4
+        /// called from Unity's SceneManager.SceneLoaded(scene scene)
         /// </summary>
-        public static event LevelLoadedHandler OnLevelLoaded;
-        public void LevelLoadEvent() { if (OnLevelLoaded != null) { OnLevelLoaded(); } }
+        public static event LevelLoadedHandler LevelLoadedEvent;
+        public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
 
 #if CVR_STEAMVR
-        public delegate void PoseUpdateHandler(params object[] args);
+        public delegate void PoseUpdateHandler(params TrackedDevicePose_t[] args);
         /// <summary>
         /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
         /// </summary>
-        public static event PoseUpdateHandler OnPoseUpdate;
-        public void PoseUpdateEvent(params object[] args) { if (OnPoseUpdate != null) { OnPoseUpdate(args); } }
+        public static event PoseUpdateHandler PoseUpdateEvent;
+        public void OnPoseUpdate(params TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
 
         public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
         /// <summary>
         /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
         /// </summary>
-        public static event PoseEventHandler OnPoseEvent;
-        public void PoseEvent(Valve.VR.EVREventType eventType) { if (OnPoseEvent != null) { OnPoseEvent(eventType); } }
+        public static event PoseEventHandler PoseEvent;
+        public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
 
 #endif
         #endregion
@@ -282,7 +293,7 @@ namespace CognitiveVR
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
         public bool EnableLogging = false;
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize. Useful for delaying startup until loading scenes/connecting to server is completed")]
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 
         /// <summary>
@@ -322,13 +333,14 @@ namespace CognitiveVR
                 userInfo: GetUniqueEntityID()
 
             );
-            CognitiveVR.Core.init(initParams, InitEvent);
+            CognitiveVR.Core.init(initParams, OnInit);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
 
 #if CVR_STEAMVR
-            SteamVR_Utils.Event.Listen("new_poses", PoseUpdateEvent);
+            SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
+            //SteamVR_Utils.Event.Listen("new_poses", OnPoseUpdate); //steamvr 1.1
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
@@ -336,7 +348,7 @@ namespace CognitiveVR
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            LevelLoadEvent();
+            OnLevelLoaded();
             _timeStamp = Util.Timestamp();
         }
 
@@ -345,13 +357,14 @@ namespace CognitiveVR
             while (true)
             {
                 yield return playerSnapshotInverval;
-                TickEvent();
+                OnTick();
             }
         }
 
         void Update()
         {
-            UpdateEvent();
+            OnUpdate();
+            UpdatePlayerRecorder();
 
 #if CVR_STEAMVR
             var system = Valve.VR.OpenVR.System;
@@ -363,7 +376,7 @@ namespace CognitiveVR
                 {
                     if (!system.PollNextEvent(ref vrEvent, size))
                         break;
-                    PoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
+                    OnPoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
                 }
             }
 #endif
@@ -371,18 +384,42 @@ namespace CognitiveVR
 
         void OnDestroy()
         {
+            OnDestroyPlayerRecorder();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
+
+#if UNITY_EDITOR
+        //replace with this in unity 5.6
+        //http://answers.unity3d.com/questions/495007/editor-script-that-executes-before-build.html
+        //class PreBuildProcess : UnityEditor.Build.IPreprocessBuild{}
+
+        [UnityEditor.Callbacks.PostProcessScene()]
+        public static void OnPostProcessScene()
+        {
+            if (UnityEditor.BuildPipeline.isBuildingPlayer)
+            {
+                Debug.Log("cognitiveVR Preferences clearing non-essential info");
+                CognitiveVR_Preferences asset = UnityEditor.AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+                if (asset == null) { return; }
+                //remove any potentially sensitive data from preferences as the asset is being built
+                asset.sessionID = string.Empty;
+                asset.UserName = string.Empty;
+                asset.UserData = new Json.UserData();
+                asset.SelectedOrganization = new Json.Organization();
+                asset.SelectedProduct = new Json.Product();
+            }
+        }
+#endif
 
         #region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
-            if (OnQuit == null) { return; }
+            if (QuitEvent == null) { return; }
             if (hasCanceled) { return; }
             Application.CancelQuit();
             hasCanceled = true;
-            QuitEvent();
+            OnQuit();
             StartCoroutine(SlowQuit());
         }
 

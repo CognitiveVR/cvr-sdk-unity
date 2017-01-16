@@ -11,7 +11,7 @@ namespace CognitiveVR
     public class Core
     {
         private const string SDK_NAME_PREFIX = "unity";
-        private const string SDK_VERSION = "0.4.10";
+        private const string SDK_VERSION = "0.5.0";
         public static string SDK_Version { get { return SDK_VERSION; } }
         internal const string HUB_OBJECT = "CognitiveVR_Manager";
 
@@ -191,18 +191,20 @@ namespace CognitiveVR
         /// <b>Note:</b> On some platforms, one can still make calls to CognitiveVR functions even when it's paused, but doing so will trigger 
         /// reads and writes to Internal Storage, so it should be done judiciously
         /// </summary>
+        [System.Obsolete("Core.pause() is no longer used")]
         public static void pause()
         {
-            CoreSubsystem.pause();
+            //CoreSubsystem.pause();
         }
 
         /// <summary>
         /// Resume CognitiveVR.  This causes CognitiveVR read its last known state from Internal Storage and restart polling for events to send.
         /// One would typically call this whenever the application is brought to the foreground.
         /// </summary>
+        [System.Obsolete("Core.resume() is no longer used")]
         public static void resume()
         {
-            CoreSubsystem.resume();
+            //CoreSubsystem.resume();
         }
     }
 }

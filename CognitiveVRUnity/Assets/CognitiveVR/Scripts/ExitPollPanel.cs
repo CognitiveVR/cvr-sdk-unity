@@ -294,8 +294,6 @@ namespace CognitiveVR
         //close action is called immediately if fetching the question fails
         IEnumerator FetchQuestion()
         {
-            //TODO ask question server
-
             //tuning variable
             string response = Tuning.getVar<string>(ExitPollQuestion, "");
             if (!string.IsNullOrEmpty(response))

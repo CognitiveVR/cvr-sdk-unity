@@ -160,7 +160,7 @@ namespace CognitiveVR.Components
             if (!string.IsNullOrEmpty(repro)) { t.setProperty("Reproduction", repro); }
             t.beginAndEnd();
 
-            //TODO integrate with JIRA rest api
+            //integrate call to some JIRA rest webthing
         }
 
         public static string GetDescription()

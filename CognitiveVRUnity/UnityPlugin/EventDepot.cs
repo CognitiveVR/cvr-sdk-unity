@@ -43,11 +43,13 @@ namespace CognitiveVR
             return Error.Success;
         }
 
+        [System.Obsolete("EventDepot.pause() is no longer used")]
         internal static void pause()
         {
             // Do nothing for native unity...
         }
 
+        [System.Obsolete("EventDepot.resume() is no longer used")]
         internal static void resume()
         {
             // Do nothing for native unity...

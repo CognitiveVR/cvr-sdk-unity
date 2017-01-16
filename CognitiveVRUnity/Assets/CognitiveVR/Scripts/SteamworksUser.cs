@@ -26,7 +26,7 @@ namespace CognitiveVR.Components
 
         public static string GetDescription()
         {
-            return "Create a unique user from Steamworks.net plugin\nThis requires attention before this will function! - Press 'Open Script'";
+            return "Create a unique user from Steamworks.net plugin\nThis requires attention before this will function!";
         }
     }
 }

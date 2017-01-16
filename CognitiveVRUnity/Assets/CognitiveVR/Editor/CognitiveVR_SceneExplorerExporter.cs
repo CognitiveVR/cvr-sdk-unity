@@ -387,8 +387,9 @@ namespace CognitiveVR
             return new Dictionary<string, ObjMaterial>();
         }
 
-        private static void MaterialsToFile(string filename)
+        private static bool MaterialsToFile(string filename, int textureDivisor)
         {
+            bool canceled = false;
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".mtl"))
             {
                 int materialCount = materialList.Count;
@@ -397,7 +398,11 @@ namespace CognitiveVR
                 foreach (KeyValuePair<string, ObjMaterial> kvp in materialList)
                 {
                     i++;
-                    EditorUtility.DisplayProgressBar("Scene Explorer Export", kvp.Key + " Material", (i / (float)materialCount) / 2 + 0.5f);
+                    if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", kvp.Key + " Material", (i / (float)materialCount) / 2 + 0.5f))
+                    {
+                        canceled = true;
+                        break;
+                    }
 
                     Material m = kvp.Value.material;
 
@@ -435,8 +440,7 @@ namespace CognitiveVR
                                 Texture2D originalTexture = m.mainTexture as Texture2D;
 
                                 SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
-                                int size = 4; //TODO have this adjustable in editorprefs
-                                Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / size, Mathf.NextPowerOfTwo(originalTexture.height) / size);
+                                Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
                                 File.WriteAllBytes(destinationFile + m.mainTexture.name + ".png", bytes);
@@ -471,10 +475,12 @@ namespace CognitiveVR
                 TerrainAppendMaterial = null;
             }
             EditorUtility.ClearProgressBar();
+            return !canceled;
         }
 
-        private static void MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures)
+        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures,int textureDivisor)
         {
+            bool canceled = false;
             materialList = PrepareFileWrite();
 
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
@@ -484,7 +490,12 @@ namespace CognitiveVR
                 Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
                 for (int i = 0; i < terrains.Length; i++)
                 {
-                    EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
+                    //EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
+                    if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f))
+                    {
+                        canceled = true;
+                        break;
+                    }
                     if (terrains[i].terrainData != null)
                     {
                         sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
@@ -500,16 +511,32 @@ namespace CognitiveVR
                 {
                     currentMeshIndex++;
                     if (includeTextures)
-                        EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount) / 2);
+                    {
+                        if (canceled) break;
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount) / 2))
+                        {
+                            canceled = true;
+                        }
+                    }
                     else
-                        EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount));
+                    {
+                        if (canceled) break;
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount)))
+                        {
+                            canceled = true;
+                        }
+                    }
                     sw.Write(MeshToString(mf[i]));
                 }
             }
             EditorUtility.ClearProgressBar();
 
-            if (includeTextures)
-                MaterialsToFile(filename);
+            bool materialSuccess = false;
+
+            if (includeTextures && !canceled)
+                materialSuccess = MaterialsToFile(filename,textureDivisor);
+
+            return materialSuccess && !canceled;
         }
 
         //retrun path to CognitiveVR_SceneExplorerExport. create if it doesn't exist
@@ -517,7 +544,7 @@ namespace CognitiveVR
         {
             CreateTargetFolder(fullName);
 
-            return Directory.GetCurrentDirectory() + "\\CognitiveVR_SceneExplorerExport\\" + fullName + "\\";
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar+"CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar;
         }
 
         private static bool CreateTargetFolder(string fullName)
@@ -525,32 +552,40 @@ namespace CognitiveVR
             try
             {
                 Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport\\" + fullName);
+                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
             }
             catch
             {
-                EditorUtility.DisplayDialog("Error!", "Failed to create target folder!", "Ok then");
+                EditorUtility.DisplayDialog("Error!", "Failed to create folder: CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
                 return false;
             }
 
             return true;
         }
 
-
-        public static void ExportWholeSelectionToSingle(string fullName, bool includeTextures)
+        /// <summary>
+        /// returns true if successfully exported scene
+        /// </summary>
+        /// <param name="fullName"></param>
+        /// <param name="includeTextures"></param>
+        /// <param name="staticGeoOnly"></param>
+        /// <param name="minSize"></param>
+        /// <param name="textureDivisor"></param>
+        /// <returns></returns>
+        public static bool ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor)
         {
             if (!CreateTargetFolder(fullName))
             {
                 Debug.LogError("Scene Explorer Exporter failed to create target folder: " + fullName);
-                return;
+                return false;
             }
 
             MeshFilter[] meshes = UnityEngine.Object.FindObjectsOfType<MeshFilter>();
 
             if (meshes.Length == 0)
             {
-                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "");
-                return;
+                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "Ok");
+                return false;
             }
 
             int exportedObjects = 0;
@@ -559,9 +594,9 @@ namespace CognitiveVR
 
             List<MeshFilter> mfList = new List<MeshFilter>();
 
-            CognitiveVR_Preferences prefs = CognitiveVR_EditorPrefs.GetPreferences();
-            bool staticGeoOnly = prefs.ExportStaticOnly;
-            float minSize = prefs.MinExportGeoSize;
+            //CognitiveVR_Preferences prefs = CognitiveVR_SceneExportWindow.GetPreferences();
+            //bool staticGeoOnly = prefs.ExportSettings.ExportStaticOnly;
+            //float minSize = prefs.ExportSettings.MinExportGeoSize;
 
             for (int i = 0; i < meshes.Length; i++)
             {
@@ -573,6 +608,8 @@ namespace CognitiveVR
                 mfList.Add(meshes[i]);
             }
 
+            bool success = false;
+
             if (exportedObjects > 0)
             {
                 mfList.RemoveAll(delegate (MeshFilter obj) { return obj == null; });
@@ -580,14 +617,16 @@ namespace CognitiveVR
                 mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                MeshesToFile(mfList.ToArray(), fullName, includeTextures);
+                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures,textureDivisor);
+                return success;
             }
             else
             {
                 if (staticGeoOnly && nonstaticObjectCount > smallObjectCount)
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticGeoOnly in Preferences!", "");
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticMeshesOnly!", "Ok");
                 else
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinExportGeoSize. This can be changed in Preferences", "");
+                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinimumExportSize", "Ok");
+                return false;
             }
         }
 

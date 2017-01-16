@@ -18,7 +18,7 @@ namespace CognitiveVR
         Collider myCollider;
 
         //gaze interval and duration
-        float objectSendInterval = 10; //set in CognitiveVR_EditorPrefs
+        float GazeObjectSendInterval = 10;
         float nextIntervalTime;
         float lookDuration;
 
@@ -35,8 +35,7 @@ namespace CognitiveVR
             myCollider = GetComponent<Collider>();
             myTransform = GetComponent<Transform>();
             
-            objectSendInterval = CognitiveVR.CognitiveVR_Preferences.Instance.GazeObjectSendInterval;
-            nextIntervalTime = Time.time + objectSendInterval;
+            nextIntervalTime = Time.time + GazeObjectSendInterval;
         }
 
         void Update()
@@ -85,7 +84,7 @@ namespace CognitiveVR
                     CognitiveVR.Instrumentation.Transaction("gazeobject.look").setProperty("name", GazeObjectName).setProperty("duration", lookDuration).beginAndEnd();
                     lookDuration = 0;
                 }
-                nextIntervalTime = Time.time + objectSendInterval;
+                nextIntervalTime = Time.time + GazeObjectSendInterval;
             }
         }
 
