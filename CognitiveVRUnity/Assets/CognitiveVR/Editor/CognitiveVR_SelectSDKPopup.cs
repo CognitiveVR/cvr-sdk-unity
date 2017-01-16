@@ -46,7 +46,7 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
             if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR 1.1.1+"))
+            if (GUILayout.Button("Steam VR 1.2.0+"))
             {
                 if (option.Contains("CVR_STEAMVR"))
                     option.Remove("CVR_STEAMVR");
@@ -74,7 +74,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_FOVE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Fove VR Plugin"))
+            if (GUILayout.Button("Fove VR 0.9.2"))
             {
                 if (option.Contains("CVR_FOVE"))
                     option.Remove("CVR_FOVE");

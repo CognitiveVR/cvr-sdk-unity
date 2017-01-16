@@ -21,7 +21,7 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         private void CognitiveVR_Manager_OnTick()
@@ -36,7 +36,7 @@ namespace CognitiveVR.Components
                     float averageHeight = hmdAccumHeight / samples;
                     Util.logDebug("head height " + averageHeight);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "height", averageHeight } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -48,7 +48,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

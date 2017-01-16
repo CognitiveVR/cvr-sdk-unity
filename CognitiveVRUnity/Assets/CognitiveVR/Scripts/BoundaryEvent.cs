@@ -14,7 +14,7 @@ namespace CognitiveVR.Components
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_PoseEventHandler;
+            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_PoseEventHandler;
 
 
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
@@ -72,7 +72,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_PoseEventHandler;
+            CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_PoseEventHandler;
 #endif
         }
     }

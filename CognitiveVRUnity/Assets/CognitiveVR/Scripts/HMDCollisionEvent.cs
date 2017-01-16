@@ -17,7 +17,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         private void CognitiveVR_Manager_OnTick()
@@ -44,7 +44,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

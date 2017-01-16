@@ -584,7 +584,7 @@ namespace CognitiveVR
 
             if (meshes.Length == 0)
             {
-                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "");
+                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "Ok");
                 return false;
             }
 

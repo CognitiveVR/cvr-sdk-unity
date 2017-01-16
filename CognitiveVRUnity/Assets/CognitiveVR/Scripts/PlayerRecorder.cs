@@ -5,15 +5,13 @@ using System.IO;
 using UnityEngine.SceneManagement;
 using CognitiveVR.Components;
 
-///===============================================================
-/// Add this component to your cognitivevr_manager
-///
-/// you should not need to modify this script!
-///===============================================================
+/// <summary>
+/// this tracks the position and gaze point of the player. this also handles the sending data event
+/// </summary>
 
 namespace CognitiveVR
 {
-    public partial class CognitiveVR_Manager// : CognitiveVRAnalyticsComponent
+    public partial class CognitiveVR_Manager
     {
         string trackingSceneName;
         public List<PlayerSnapshot> playerSnapshots = new List<PlayerSnapshot>();
@@ -26,10 +24,12 @@ namespace CognitiveVR
             CheckCameraSettings();
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
-                CognitiveVR_Manager.OnQuit += SendData;
+                QuitEvent += OnSendData;
+            
+            SendDataEvent += SendPlayerGazeSnapshots;
 
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
 #if CVR_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
@@ -84,8 +84,9 @@ namespace CognitiveVR
                 {
                     if (!string.IsNullOrEmpty(lastSceneKeySettings.SceneKey))
                     {
-                        SendData();
-                        CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                        OnSendData();
+                        //SendPlayerGazeSnapshots();
+                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                     }
                 }
 
@@ -94,7 +95,7 @@ namespace CognitiveVR
                 {
                     if (!string.IsNullOrEmpty(sceneKeySettings.SceneKey))
                     {
-                        CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
                     }
                 }
             }
@@ -114,7 +115,9 @@ namespace CognitiveVR
             {
                 headsetPresent = false;
                 if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
-                    SendData();
+                {
+                    OnSendData();
+                }
             }
         }
 #endif
@@ -129,7 +132,9 @@ namespace CognitiveVR
         {
             headsetPresent = false;
             if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
-                SendData();
+            {
+                OnSendData();
+            }
         }
 #endif
 
@@ -158,18 +163,20 @@ namespace CognitiveVR
                 return;
             }
 
-            CognitiveVR_Manager.OnTick += instance.CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent += instance.CognitiveVR_Manager_OnTick;
         }
 
         public static void SendPlayerRecording()
         {
-            CognitiveVR_Manager.instance.SendData();
+            instance.OnSendData();
+            //CognitiveVR_Manager.instance.SendPlayerGazeSnapshots();
         }
 
         public static void EndPlayerRecording()
         {
-            CognitiveVR_Manager.OnTick -= instance.CognitiveVR_Manager_OnTick;
-            instance.SendData();
+            CognitiveVR_Manager.TickEvent -= instance.CognitiveVR_Manager_OnTick;
+            //instance.SendPlayerGazeSnapshots();
+            instance.OnSendData();
             instance.trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
@@ -216,11 +223,14 @@ namespace CognitiveVR
             playerSnapshots.Add(snapshot);
             if (playerSnapshots.Count >= CognitiveVR_Preferences.Instance.SnapshotThreshold)
             {
-                SendData();
+                OnSendData();
             }
         }
 
-        public void SendData()
+        /// <summary>
+        /// registered to OnSendData
+        /// </summary>
+        public void SendPlayerGazeSnapshots()
         {
             if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }
 
@@ -314,11 +324,12 @@ namespace CognitiveVR
         void OnDestroyPlayerRecorder()
         {
             //unsubscribe events
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
-            CognitiveVR_Manager.OnQuit -= SendData;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+            SendDataEvent -= SendPlayerGazeSnapshots;
+            CognitiveVR_Manager.QuitEvent -= OnSendData;
             SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;
 #endif
 #if CVR_OCULUS
             OVRManager.HMDMounted -= OVRManager_HMDMounted;

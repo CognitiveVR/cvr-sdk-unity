@@ -380,6 +380,7 @@ namespace CognitiveVR
                 int[] textureQualities = new int[] { 1, 2, 4, 8, 16 };
                 prefs.ExportSettings.TextureQuality = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), prefs.ExportSettings.TextureQuality, textureQualityNames, textureQualities);
 
+                if (prefs.ExportSettings.MinExportGeoSize < 0) { prefs.ExportSettings.MinExportGeoSize = 0; }
                 if (prefs.ExportSettings.ExplorerMinimumFaceCount < 0) { prefs.ExportSettings.ExplorerMinimumFaceCount = 0; }
                 if (prefs.ExportSettings.ExplorerMaximumFaceCount < 1) { prefs.ExportSettings.ExplorerMaximumFaceCount = 1; }
                 if (prefs.ExportSettings.ExplorerMinimumFaceCount > prefs.ExportSettings.ExplorerMaximumFaceCount) { prefs.ExportSettings.ExplorerMinimumFaceCount = prefs.ExportSettings.ExplorerMaximumFaceCount; }
@@ -431,7 +432,7 @@ namespace CognitiveVR
             }
 
 
-            var uploadButtonContent = new GUIContent("Upload \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
+            var uploadButtonContent = new GUIContent("Upload baked \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
             if (string.IsNullOrEmpty(prefs.CustomerID))
             {
                 uploadButtonContent.tooltip = "You must have a valid CustomerID to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
@@ -457,7 +458,7 @@ namespace CognitiveVR
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
             }
             GUILayout.EndHorizontal();
-
+            
             if (!exists)
             {
                 uploadButtonContent.tooltip = "Directory doesn't exist! " + sceneExportDirectory;
@@ -487,6 +488,33 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.EndDisabledGroup();
+
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (revisionDate.Year > 1000)
+            {
+                GUI.color = CognitiveVR_Settings.GreenButton;
+                if (GUILayout.Button("Save and Close", GUILayout.Height(40), GUILayout.MaxWidth(300)))
+                {
+                    Close();
+                }
+                GUI.color = Color.white;
+            }
+            else
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                if (GUILayout.Button("Save and Close", GUILayout.Height(40), GUILayout.MaxWidth(300)))
+                {
+                    Close();
+                }
+                EditorGUI.EndDisabledGroup();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
             if (GUI.changed)
             {
@@ -642,7 +670,7 @@ namespace CognitiveVR
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1, \"customerid\":\"" + customerID + "\"}";
+            string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + customerID + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+"\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             //System.Diagnostics.Process.Start("http://google.com/search?q=" + "cat pictures");
@@ -807,11 +835,16 @@ namespace CognitiveVR
             sceneUploadWWW.Dispose();
             sceneUploadWWW = null;
 
-            UploadSceneSettings = null;
-
             GUI.FocusControl("NULL");
 
             AssetDatabase.SaveAssets();
+
+            if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?","Open on SceneExplorer","Close"))
+            {
+                Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneKey);
+            }
+
+            UploadSceneSettings = null;
         }
 
         #region Utility

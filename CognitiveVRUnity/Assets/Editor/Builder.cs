@@ -13,7 +13,10 @@ public class Builder
 	[MenuItem("Dist/Export CognitiveVR Package")]
 	static void MakeCognitiveVRPackage()
 	{
-		System.IO.Directory.CreateDirectory(Application.dataPath + "/../../dist");
+        //preferences should not be exported
+        AssetDatabase.DeleteAsset("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+
+        System.IO.Directory.CreateDirectory(Application.dataPath + "/../../dist");
 
         string sdkversion = CognitiveVR.Core.SDK_Version.Replace('.', '_');
 

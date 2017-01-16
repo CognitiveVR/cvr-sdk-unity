@@ -18,7 +18,7 @@ namespace CognitiveVR.Components
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #elif CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
         }
 
@@ -58,7 +58,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;
 #endif
 #if CVR_OCULUS
             OVRManager.HMDMounted -= OVRManager_HMDMounted;

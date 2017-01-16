@@ -29,7 +29,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
             if (CognitiveVR_Manager.HMD != null)
                 lastRotation = CognitiveVR_Manager.HMD.rotation;
@@ -120,7 +120,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

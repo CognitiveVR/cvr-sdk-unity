@@ -72,14 +72,14 @@ namespace CognitiveVR
 
             GetAnalyticsComponentTypes();
 
-            canvasPos = GUILayout.BeginScrollView(canvasPos,false,true);
+            canvasPos = GUILayout.BeginScrollView(canvasPos, false, true);
             EditorGUI.BeginDisabledGroup(manager == null);
 
             Color infoboxColor = Color.white;
             if (manager == null)
             {
                 GUI.color = new Color(0.5f, 0.5f, 0.5f);
-                GUI.Box(new Rect(canvasPos.x, canvasPos.y, position.width, position.height),"");
+                GUI.Box(new Rect(canvasPos.x, canvasPos.y, position.width, position.height), "");
                 GUI.color = new Color(0.7f, 0.7f, 0.7f);
             }
             else
@@ -102,9 +102,8 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("cognitiveVR Preferences", CognitiveVR_Settings.HeaderStyle);
+            var prefs = CognitiveVR_Settings.GetPreferences();
 
-            
-            
 
             GUIContent standardInfo = new GUIContent(tex, "Record Player gaze and position\nGather GPU,CPU,RAM,OS,etc");
 
@@ -114,74 +113,81 @@ namespace CognitiveVR
             GUI.color = c;
             GUILayout.EndHorizontal();
 
-            var prefs = CognitiveVR_Settings.GetPreferences();
-            prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
-            prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
-
-            GUILayout.Space(10);
-
-            prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send Data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
-            prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send Data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
-            prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
-            prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);
-            //prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
-
-            EditorGUI.BeginDisabledGroup(!prefs.SendDataOnHotkey);
-
-            if (remapHotkey)
+            if (manager != null)
             {
-                GUIStyle style = new GUIStyle(GUI.skin.label);
-                style.wordWrap = true;
-                style.normal.textColor = new Color(0.5f, 1.0f, 0.5f, 1.0f);
+                prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
+                prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
 
-                GUILayout.BeginHorizontal();
-                
-                GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
-                
-                GUI.color = Color.green;
-                GUILayout.Button("Any Key", GUILayout.Width(70));
-                GUI.color = Color.white;
+                GUILayout.Space(10);
 
-                string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
-                GUILayout.Label(displayKey);
-                GUILayout.EndHorizontal();
-                Event e = Event.current;
+                prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send Data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
+                prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send Data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
+                prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
+                prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);
+                //prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
 
-                //shift, ctrl, alt
-                if (e.type == EventType.keyDown && e.keyCode != KeyCode.None && e.keyCode != KeyCode.LeftShift && e.keyCode != KeyCode.RightShift && e.keyCode != KeyCode.LeftControl && e.keyCode != KeyCode.RightControl && e.keyCode != KeyCode.LeftAlt && e.keyCode != KeyCode.RightAlt)
+                EditorGUI.BeginDisabledGroup(!prefs.SendDataOnHotkey);
+
+                if (remapHotkey)
                 {
-                    prefs.HotkeyAlt = e.alt;
-                    prefs.HotkeyShift = e.shift;
-                    prefs.HotkeyCtrl = e.control;
-                    prefs.SendDataHotkey = e.keyCode;
-                    remapHotkey = false;
-                    //this is kind of a hack, but it works
-                    GetWindow<CognitiveVR_SceneExportWindow>().Repaint();
-                    GetWindow<CognitiveVR_SceneExportWindow>().Close();
+                    GUIStyle style = new GUIStyle(GUI.skin.label);
+                    style.wordWrap = true;
+                    style.normal.textColor = new Color(0.5f, 1.0f, 0.5f, 1.0f);
+
+                    GUILayout.BeginHorizontal();
+
+                    GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
+
+                    GUI.color = Color.green;
+                    GUILayout.Button("Any Key", GUILayout.Width(70));
+                    GUI.color = Color.white;
+
+                    string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
+                    GUILayout.Label(displayKey);
+                    GUILayout.EndHorizontal();
+                    Event e = Event.current;
+
+                    //shift, ctrl, alt
+                    if (e.type == EventType.keyDown && e.keyCode != KeyCode.None && e.keyCode != KeyCode.LeftShift && e.keyCode != KeyCode.RightShift && e.keyCode != KeyCode.LeftControl && e.keyCode != KeyCode.RightControl && e.keyCode != KeyCode.LeftAlt && e.keyCode != KeyCode.RightAlt)
+                    {
+                        prefs.HotkeyAlt = e.alt;
+                        prefs.HotkeyShift = e.shift;
+                        prefs.HotkeyCtrl = e.control;
+                        prefs.SendDataHotkey = e.keyCode;
+                        remapHotkey = false;
+                        //this is kind of a hack, but it works
+                        GetWindow<CognitiveVR_SceneExportWindow>().Repaint();
+                        GetWindow<CognitiveVR_SceneExportWindow>().Close();
+                    }
                 }
+                else
+                {
+                    GUIStyle style = new GUIStyle(GUI.skin.label);
+                    style.wordWrap = true;
+                    style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
+                    if (GUILayout.Button("Remap", GUILayout.Width(70)))
+                    {
+                        remapHotkey = true;
+                    }
+                    string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
+                    GUILayout.Label(displayKey);
+                    GUILayout.EndHorizontal();
+                }
+
+                EditorGUI.EndDisabledGroup();
+
+                GUILayout.Space(10);
+                GUILayout.Label("<size=12><b>Scene Type</b></size>");
+                DisplayVideoRadioButtons();
+                GUILayout.Space(10);
             }
             else
             {
-                GUIStyle style = new GUIStyle(GUI.skin.label);
-                style.wordWrap = true;
-                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(new GUIContent("Hotkey", "Shift, Ctrl and Alt modifier keys are not allowed"), GUILayout.Width(125));
-                if (GUILayout.Button("Remap", GUILayout.Width(70)))
-                {
-                    remapHotkey = true;
-                }
-                string displayKey = (prefs.HotkeyCtrl ? "Ctrl + " : "") + (prefs.HotkeyShift ? "Shift + " : "") + (prefs.HotkeyAlt ? "Alt + " : "") + prefs.SendDataHotkey.ToString();
-                GUILayout.Label(displayKey);
-                GUILayout.EndHorizontal();
+                GUILayout.Space(10);
             }
-
-            EditorGUI.EndDisabledGroup();
-
-            GUILayout.Space(10);
-            GUILayout.Label("<size=12><b>Scene Type</b></size>");
-            DisplayVideoRadioButtons();
-            GUILayout.Space(10);
+            
 
             if (GUI.changed)
             {
@@ -241,10 +247,12 @@ namespace CognitiveVR
 
             //close
 
-            if (GUILayout.Button("Save and Close", GUILayout.Height(20)))
+            GUI.color = CognitiveVR_Settings.GreenButton;
+            if (GUILayout.Button("Save and Close", GUILayout.Height(40)))
             {
                 Close();
             }
+            GUI.color = Color.white;
         }
 
         void DisplayVideoRadioButtons()
@@ -294,9 +302,9 @@ namespace CognitiveVR
 
             if (prefs.PlayerDataType == 0) //3d content
             {
-                EditorGUI.BeginDisabledGroup(true);
-                GUILayout.Label(new GUIContent("360 Video Sphere Radius"));
-                EditorGUI.EndDisabledGroup();
+                //EditorGUI.BeginDisabledGroup(true);
+                //GUILayout.Label(new GUIContent("360 Video Sphere Radius"));
+                //EditorGUI.EndDisabledGroup();
             }
             else //video content
             {
@@ -396,6 +404,7 @@ namespace CognitiveVR
                 }
             }
 
+            if (component == null) { return; }
             //get all the fields
             foreach (var field in componentType.GetFields())
             {

@@ -39,20 +39,21 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
         public Valve.VR.VRControllerState_t controllerState;
+        public uint stateSize;
         private void CognitiveVR_Manager_OnUpdate()
         {
             var system = Valve.VR.OpenVR.System;
-            if (system != null && system.GetControllerState(0, ref controllerState))
+            if (system != null && system.GetControllerState(0, ref controllerState, stateSize ))
             {
                 ulong trigger = controllerState.ulButtonPressed & (1UL << ((int)Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger));
                 if (trigger > 0L)
                 {
-                    CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-                    CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+                    CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
                 }
             }
         }
@@ -70,7 +71,7 @@ namespace CognitiveVR.Components
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -87,8 +88,8 @@ namespace CognitiveVR.Components
         {
             if (OVRInput.GetDown(OVRInput.Button.Any))
             {
-                CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-                CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+                CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
             }
         }
 
@@ -104,7 +105,7 @@ namespace CognitiveVR.Components
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -117,8 +118,8 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR || CVR_OCULUS
-            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
 #endif
         }
 
