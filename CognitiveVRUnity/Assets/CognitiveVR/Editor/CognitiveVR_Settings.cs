@@ -2,16 +2,6 @@
 using UnityEditor;
 using System.Collections.Generic;
 
-//cvr_version - current version installed
-
-//------//cvr_newVersion - version from update response DONT NEED TO SAVE THIS
-//cvr_skipVersion - if newVersion == skipVersion, don't show update window
-
-//cvr_updateDate - when cvr_version was last set
-//cvr_updateRemindDate - current date must be this or beyond to show popup window
-
-
-
 namespace CognitiveVR
 {
     [InitializeOnLoad]
@@ -38,15 +28,16 @@ namespace CognitiveVR
             }
         }
 
-        System.DateTime lastSdkUpdateDate;
+        System.DateTime lastSdkUpdateDate; // when cvr_version was last set
+        //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
 
-        [MenuItem("cognitiveVR/Settings",priority = 1)]
+        [MenuItem("cognitiveVR/Settings", priority = 1)]
         public static void Init()
         {
             EditorApplication.update -= EditorUpdate;
 
             // Get existing open window or if none, make a new one:
-            Instance = GetWindow<CognitiveVR_Settings>(true,"cognitiveVR Settings");
+            Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
             Vector2 size = new Vector2(300, 550);
             Instance.minSize = size;
             Instance.maxSize = size;
@@ -59,7 +50,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("failed to parse UpdateDate");
+                Debug.Log("CognitiveVR_Settings failed to parse UpdateDate");
             }
         }
 
@@ -91,30 +82,25 @@ namespace CognitiveVR
                 Instance.maxSize = size;
                 Instance.Show();
 
-                
+
                 if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
                 {
                     //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                 }
-            } 
+            }
 
-            System.DateTime remindDate;
+            System.DateTime remindDate; //current date must be this or beyond to show popup window
 
             if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
             {
                 if (System.DateTime.UtcNow > remindDate)
                 {
                     CheckForUpdates();
-                    //Debug.Log("settings check for updates");
-                }
-                else
-                {
-                    //Debug.Log("check updates later " + remindDate);
                 }
             }
             else
             {
-                Debug.Log("failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
+                Debug.Log("CognitiveVR_Settings Failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
                 CheckForUpdates();
             }
 
@@ -217,7 +203,7 @@ namespace CognitiveVR
                 }
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                
+
                 if (EditorGUIUtility.isProSkin)
                 {
                     GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
@@ -507,6 +493,17 @@ namespace CognitiveVR
 
         public void RequestLogin(string userEmail, string password)
         {
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                Debug.LogError("Missing Username!");
+                return;
+            }
+            if (string.IsNullOrEmpty(password))
+            {
+                Debug.LogError("Missing Password!");
+                return;
+            }
+
             var url = "https://testapi.cognitivevr.io/sessions";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
@@ -517,7 +514,7 @@ namespace CognitiveVR
 
             loginRequest = new UnityEngine.WWW(url, bytes, headers);
 
-            Debug.Log("request login");
+            Debug.Log("cognitiveVR Request Login");
 
             EditorApplication.update += CheckLoginResponse;
         }
@@ -537,12 +534,10 @@ namespace CognitiveVR
                     //loginResponse = "Could not log in!";
                     Debug.LogWarning("Could not log in to cognitiveVR SDK. Error: " + loginRequest.error);
                     password = string.Empty;
-                    
+
                 }
                 if (!string.IsNullOrEmpty(loginRequest.text))
                 {
-                    Debug.Log("loginRequest.text: " + loginRequest.text);
-
                     try
                     {
                         if (!string.IsNullOrEmpty(loginRequest.text))
@@ -553,13 +548,13 @@ namespace CognitiveVR
                         }
                         else
                         {
-                            Debug.Log("login request returned empty string!");
+                            Debug.Log("cognitiveVR login request returned empty string!");
                         }
                     }
                     catch (System.Exception e)
                     {
                         //this can rarely happen when json is not formatted correctly
-                        Debug.LogError("Cannot log in. " + e.Message);
+                        Debug.LogError("Cannot log in to cognitiveVR. Error: " + e.Message);
                         throw;
                     }
                 }
@@ -575,15 +570,11 @@ namespace CognitiveVR
             //why is new product not null here? should only be assigned a value later in this funciton
             if (NewProduct != null && !string.IsNullOrEmpty(NewProduct.name))
             {
-                Debug.LogError("currently trying to create product " + NewProduct.name + " " + productName);
+                Debug.LogError("Request new product failed. Currently trying to create product " + NewProduct.name + " " + productName);
                 return;
             }
-            else
-            {
-                Debug.Log("new product request!");
-            }
 
-            var url = "https://testapi.cognitivevr.io/organizations/"+ GetPreferences().SelectedOrganization.prefix + "/products";
+            var url = "https://testapi.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -613,7 +604,7 @@ namespace CognitiveVR
         {
             if (!NewProductRequest.isDone)
             {
-                //www timeout defaults to 10 seconds
+                //www timeout defaults to ~10 seconds
             }
             else
             {
@@ -655,7 +646,7 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.error))
                 {
-                    Debug.Log("Check for SDK version update error: " + checkForUpdatesRequest.error);
+                    Debug.Log("Check for cognitiveVR SDK version update error: " + checkForUpdatesRequest.error);
                 }
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
@@ -674,7 +665,7 @@ namespace CognitiveVR
                         }
                         else
                         {
-                            CognitiveVR_UpdateSDKWindow.Init(version,summary);
+                            CognitiveVR_UpdateSDKWindow.Init(version, summary);
                         }
                     }
                 }
@@ -688,8 +679,9 @@ namespace CognitiveVR
             var prefs = GetPreferences();
             prefs.UserData = Json.UserData.Empty;
             prefs.sessionID = string.Empty;
-            prefs.SelectedOrganization = null;
-            prefs.SelectedProduct = null;
+            prefs.UserName = string.Empty;
+            prefs.SelectedOrganization = new Json.Organization();
+            prefs.SelectedProduct = new Json.Product();
             //you do not need to stay logged in to keep your customerid for your product.
             AssetDatabase.SaveAssets();
         }
@@ -720,8 +712,8 @@ namespace CognitiveVR
         public string[] GetUserOrganizations()
         {
             List<string> organizationNames = new List<string>();
-            
-            for (int i = 0; i<GetPreferences().UserData.organizations.Length;i++)
+
+            for (int i = 0; i < GetPreferences().UserData.organizations.Length; i++)
             {
                 organizationNames.Add(GetPreferences().UserData.organizations[i].name);
             }
@@ -756,7 +748,7 @@ namespace CognitiveVR
 
             int cvrDefineCount = 0;
             int newDefineContains = 0;
-            for (int i = 0; i< symbols.Length; i++)
+            for (int i = 0; i < symbols.Length; i++)
             {
                 if (symbols[i].StartsWith("CVR_"))
                 {
@@ -775,7 +767,7 @@ namespace CognitiveVR
             }
 
             //remove all CVR_ symbols
-            for(int i = 0; i<symbols.Length; i++)
+            for (int i = 0; i < symbols.Length; i++)
             {
                 if (symbols[i].Contains("CVR_"))
                 {
@@ -826,8 +818,6 @@ namespace CognitiveVR
             }
             return true;
         }
-        
-
 
         static GUIStyle headerStyle;
         public static GUIStyle HeaderStyle
@@ -886,7 +876,6 @@ namespace CognitiveVR
 
             if (showCheckbox)
             {
-                //GUILayout.Label(greencheck, GUILayout.Width(20));
                 EditorGUI.BeginDisabledGroup(true);
                 GUILayout.Box(greencheck, GUILayout.Width(20));
                 EditorGUI.EndDisabledGroup();
@@ -894,10 +883,9 @@ namespace CognitiveVR
             else
             {
                 EditorGUI.BeginDisabledGroup(true);
-                GUILayout.Box(CognitiveVR_Settings.GreyTextColorString + number +"</color>", GUILayout.Width(20));
+                GUILayout.Box(CognitiveVR_Settings.GreyTextColorString + number + "</color>", GUILayout.Width(20));
                 EditorGUI.EndDisabledGroup();
             }
         }
     }
 }
- 

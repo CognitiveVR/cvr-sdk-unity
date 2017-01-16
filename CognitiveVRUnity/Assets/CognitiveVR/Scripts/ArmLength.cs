@@ -11,21 +11,6 @@ namespace CognitiveVR.Components
 {
     public class ArmLength : CognitiveVRAnalyticsComponent
     {
-        /*[DisplaySetting]
-        public float someFloat = 3.14f;
-        
-        public int someInt = 3;
-
-        [DisplaySetting]
-        public string someString = "pi";
-
-        [DisplaySetting]
-        [Tooltip("some non-static thing")]
-        public int nonStaticInt = 13;
-
-        [DisplaySetting]
-        public bool someOtherBool = true;*/
-
         [DisplaySetting(5,100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
         public int SampleCount = 50;
