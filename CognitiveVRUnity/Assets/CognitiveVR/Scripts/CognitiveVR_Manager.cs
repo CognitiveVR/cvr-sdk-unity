@@ -388,6 +388,29 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
 
+#if UNITY_EDITOR
+        //replace with this in unity 5.6
+        //http://answers.unity3d.com/questions/495007/editor-script-that-executes-before-build.html
+        //class PreBuildProcess : UnityEditor.Build.IPreprocessBuild{}
+
+        [UnityEditor.Callbacks.PostProcessScene()]
+        public static void OnPostProcessScene()
+        {
+            if (UnityEditor.BuildPipeline.isBuildingPlayer)
+            {
+                Debug.Log("cognitiveVR Preferences clearing non-essential info");
+                CognitiveVR_Preferences asset = UnityEditor.AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+                if (asset == null) { return; }
+                //remove any potentially sensitive data from preferences as the asset is being built
+                asset.sessionID = string.Empty;
+                asset.UserName = string.Empty;
+                asset.UserData = new Json.UserData();
+                asset.SelectedOrganization = new Json.Organization();
+                asset.SelectedProduct = new Json.Product();
+            }
+        }
+#endif
+
         #region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()

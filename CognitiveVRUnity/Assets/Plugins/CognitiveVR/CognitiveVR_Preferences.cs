@@ -29,12 +29,8 @@ namespace CognitiveVR
         {
             public string userId;
             public string email;
-            public string fullName;
-            public string phone;
-            public string[] roles = new string[] { };
             public Organization[] organizations = new Organization[] { };
             public Product[] products = new Product[] { };
-            public bool isSuperAdmin;
 
             public static UserData Empty
             {

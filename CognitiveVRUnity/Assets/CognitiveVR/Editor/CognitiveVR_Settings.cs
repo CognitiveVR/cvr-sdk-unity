@@ -898,41 +898,6 @@ namespace CognitiveVR
                 EditorGUI.EndDisabledGroup();
             }
         }
-
-        [UnityEditor.Callbacks.PostProcessBuild(0)]
-        public static void PostProcessBuild(BuildTarget target, string pathToBuiltProject)
-        {
-            CognitiveVR_Preferences asset = AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
-            if (asset == null) { return; }
-            if (!string.IsNullOrEmpty(asset.sessionID)) { DisplayPreferencesWarning(); return; }
-            if (!string.IsNullOrEmpty(asset.UserName)) { DisplayPreferencesWarning(); return; }
-
-            if (!string.IsNullOrEmpty(asset.UserData.userId)) { DisplayPreferencesWarning(); return; }
-            if (!string.IsNullOrEmpty(asset.UserData.email)) { DisplayPreferencesWarning(); return; }
-            if (!string.IsNullOrEmpty(asset.UserData.phone)) { DisplayPreferencesWarning(); return; }
-            if (!string.IsNullOrEmpty(asset.UserData.fullName)) { DisplayPreferencesWarning(); return; }
-
-            if (asset.SelectedOrganization != null && !string.IsNullOrEmpty(asset.SelectedOrganization.name)) { DisplayPreferencesWarning(); return; }
-            if (asset.SelectedProduct != null && !string.IsNullOrEmpty(asset.SelectedProduct.name)) { DisplayPreferencesWarning(); return; }
-        }
-
-        static void DisplayPreferencesWarning()
-        {
-            if (EditorUtility.DisplayDialog("cognitiveVR Preferences included in build", "Your build may have included the email you used to log into the CognitiveVR SDK. If you project is decompiled, it is possible this data could become visible.\n\nThis will be fixed in Unity 5.6", "Clear Preferences", "Close Window"))
-            {
-                Debug.Log("clear your preferences!");
-                CognitiveVR_Preferences asset = AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
-                asset.sessionID = string.Empty;
-                asset.UserName = string.Empty;
-                asset.UserData = new Json.UserData();
-                asset.SelectedOrganization = new Json.Organization();
-                asset.SelectedProduct = new Json.Product();
-                AssetDatabase.SaveAssets();
-            }
-        }
     }
-
-    //http://answers.unity3d.com/questions/495007/editor-script-that-executes-before-build.html
-    //class PreBuildProcess : UnityEditor.Build.IPreprocessBuild{}
 }
  
