@@ -443,7 +443,7 @@ namespace CognitiveVR
                                 Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name + ".png", bytes);
+                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
 
                                 SetTextureImporterFormat(originalTexture, readable, format);
                             }
@@ -454,7 +454,7 @@ namespace CognitiveVR
                                 tex.SetPixel(1, 1, Color.grey);
 
                                 byte[] bytes = tex.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name + ".png", bytes);
+                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
                                 //this sometimes happens when exporting built-in unity textures, such as Default Checker
                                 Debug.LogWarning("CognitiveVR Scene Export could not find texture '" + m.mainTexture.name + "'. Creating placeholder texture");
                             }
@@ -463,7 +463,7 @@ namespace CognitiveVR
                         {
 
                         }
-                        sw.Write("map_Kd {0}", m.mainTexture.name + ".png");
+                        sw.Write("map_Kd {0}", m.mainTexture.name.Replace(' ','_') + ".png");
                     }
 
                     sw.Write("\n\n\n");
