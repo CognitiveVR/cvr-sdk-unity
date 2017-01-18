@@ -21,7 +21,7 @@ namespace CognitiveVR
 
         Texture2D tex;
 
-        [MenuItem("cognitiveVR/Tracker Options", priority = 2)]
+        [MenuItem("cognitiveVR/Tracker Options Window", priority = 2)]
         public static void Init()
         {
             CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");

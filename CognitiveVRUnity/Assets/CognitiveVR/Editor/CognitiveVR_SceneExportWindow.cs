@@ -15,7 +15,7 @@ namespace CognitiveVR
         static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
 
-        [MenuItem("cognitiveVR/Scene Export", priority = 3)]
+        [MenuItem("cognitiveVR/Scene Export Window", priority = 3)]
         public static void Init()
         {
             CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");
@@ -84,15 +84,15 @@ namespace CognitiveVR
 
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
 
-            canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
-            GUI.Box(new Rect(-10, -10, position.width * 10, 10000), "");
-
             GUILayout.BeginHorizontal();
-            
+
             GUILayout.Label("<size=8>Scene Name</size>", GUILayout.Width(sceneWidth));
-            GUILayout.Label(new GUIContent("<size=8>Last Upload</size>","The most recent date the scene was successfully uploaded"), GUILayout.Width(keyWidth));
+            GUILayout.Label(new GUIContent("<size=8>Last Upload</size>", "The most recent date the scene was successfully uploaded"), GUILayout.Width(keyWidth));
 
             GUILayout.EndHorizontal();
+
+            canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
+            GUI.Box(new Rect(-10, -10, position.width * 10, 10000), "");
 
             foreach (var v in prefs.SceneKeySettings)
             {

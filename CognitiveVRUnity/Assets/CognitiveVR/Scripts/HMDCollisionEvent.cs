@@ -42,6 +42,15 @@ namespace CognitiveVR.Components
             return "Sends transactions if the HMD collides with something in the game world\nCollision layers are set in CognitiveVR_Preferences";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;

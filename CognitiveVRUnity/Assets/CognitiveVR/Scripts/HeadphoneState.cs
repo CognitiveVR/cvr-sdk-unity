@@ -23,6 +23,15 @@ namespace CognitiveVR.Components
 
         }
 
+        public static bool GetWarning()
+        {
+#if CVR_OCULUS && UNITY_ANDROID
+            return false;
+#else
+            return true;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Check if the user has headphones connected.\nCurrently only works with Oculus Utilities on Android";

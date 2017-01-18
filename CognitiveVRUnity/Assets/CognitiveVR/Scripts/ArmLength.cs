@@ -66,7 +66,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
         private void CognitiveVR_Manager_OnUpdate()
@@ -98,6 +98,15 @@ namespace CognitiveVR.Components
         public static string GetDescription()
         {
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nRequires SteamVR or Oculus Touch controllers";
+        }
+
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
         }
 
         void OnDestroy()

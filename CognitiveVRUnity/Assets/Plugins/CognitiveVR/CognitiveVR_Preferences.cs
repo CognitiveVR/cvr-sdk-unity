@@ -89,7 +89,6 @@ namespace CognitiveVR
             public string SceneName = "";
             public string SceneKey = "";
             public string ScenePath = "";
-            //public bool Track = false;
             public long LastRevision;
 
             public SceneKeySetting(string name, string path)
@@ -135,7 +134,7 @@ namespace CognitiveVR
             }
         }
 
-        //[HideInInspector]
+        [HideInInspector]
         public string sessionID;
 
         [Header("User")]

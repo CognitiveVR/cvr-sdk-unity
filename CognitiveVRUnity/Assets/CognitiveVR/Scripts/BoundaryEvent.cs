@@ -69,6 +69,15 @@ namespace CognitiveVR.Components
             return "Sends transaction when SteamVR Chaperone or Oculus Guardian becomes visible and becomes hidden";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
 #if CVR_STEAMVR

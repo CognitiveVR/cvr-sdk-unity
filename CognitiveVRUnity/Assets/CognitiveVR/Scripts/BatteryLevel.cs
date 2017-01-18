@@ -97,11 +97,11 @@ namespace CognitiveVR.Components
 
         public static bool GetWarning()
         {
-#if UNITY_EDITOR
-            if (UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.Android)
-                return false;
-#endif
+#if UNITY_ANDROID
+            return false;
+#else
             return true;
+#endif
         }
 
         public static string GetDescription()

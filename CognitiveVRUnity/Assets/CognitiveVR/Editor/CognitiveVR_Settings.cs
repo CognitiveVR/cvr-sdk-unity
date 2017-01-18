@@ -31,7 +31,7 @@ namespace CognitiveVR
         System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
 
-        [MenuItem("cognitiveVR/Settings", priority = 1)]
+        [MenuItem("cognitiveVR/Settings Window", priority = 1)]
         public static void Init()
         {
             EditorApplication.update -= EditorUpdate;
@@ -508,6 +508,7 @@ namespace CognitiveVR
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
+            //headers.Add("Cookie")
 
             string json = "{\"email\":\"" + userEmail + "\",\"password\":\"" + password + "\"}";
             byte[] bytes = new System.Text.UTF8Encoding(true).GetBytes(json);
@@ -533,7 +534,6 @@ namespace CognitiveVR
                 {
                     //loginResponse = "Could not log in!";
                     Debug.LogWarning("Could not log in to cognitiveVR SDK. Error: " + loginRequest.error);
-                    password = string.Empty;
 
                 }
                 if (!string.IsNullOrEmpty(loginRequest.text))
@@ -543,7 +543,17 @@ namespace CognitiveVR
                         if (!string.IsNullOrEmpty(loginRequest.text))
                         {
                             GetPreferences().UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
-                            GetPreferences().sessionID = "1234";
+
+                            foreach (var v in loginRequest.responseHeaders)
+                            {
+                                if (v.Key == "SET-COOKIE")
+                                {
+                                    //split semicolons. ignore everything except split[0]
+                                    string[] split = v.Value.Split(';');
+                                    GetPreferences().sessionID = split[0].Substring(18);
+                                }
+                            }
+
                             AssetDatabase.SaveAssets();
                         }
                         else
@@ -680,6 +690,7 @@ namespace CognitiveVR
             prefs.UserData = Json.UserData.Empty;
             prefs.sessionID = string.Empty;
             prefs.UserName = string.Empty;
+            password = string.Empty;
             prefs.SelectedOrganization = new Json.Organization();
             prefs.SelectedProduct = new Json.Product();
             //you do not need to stay logged in to keep your customerid for your product.
@@ -689,7 +700,7 @@ namespace CognitiveVR
         public void SaveSettings()
         {
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
-            if (prefs.SelectedProduct != null)
+            if (prefs.SelectedProduct != null && testprodSelection > -1)
             {
                 prefs.CustomerID = prefs.SelectedProduct.customerId;
                 if (testprodSelection == 0)

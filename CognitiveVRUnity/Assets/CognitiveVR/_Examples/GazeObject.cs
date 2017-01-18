@@ -81,7 +81,7 @@ namespace CognitiveVR
             {
                 if (lookDuration > 0)
                 {
-                    CognitiveVR.Instrumentation.Transaction("gazeobject.look").setProperty("name", GazeObjectName).setProperty("duration", lookDuration).beginAndEnd();
+                    CognitiveVR.Instrumentation.Transaction("gazeobject.look").setProperty("name", GazeObjectName).setProperty("duration", lookDuration).beginAndEnd(transform.position);
                     lookDuration = 0;
                 }
                 nextIntervalTime = Time.time + GazeObjectSendInterval;

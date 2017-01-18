@@ -23,6 +23,15 @@ namespace CognitiveVR.Components
         }
 #endif
 
+        public static bool GetWarning()
+        {
+#if CVR_OCULUS
+            return false;
+#else
+            return true;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Sends transaction when the HMD recenters\nRequires Oculus Utilities";

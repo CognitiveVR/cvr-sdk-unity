@@ -175,6 +175,15 @@ namespace CognitiveVR.Components
             return "Sends a transaction when a controller detects certain inputs. This should only be used for testing!\nRequires SteamVR or Oculus Touch controllers";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
 #if CVR_STEAMVR
