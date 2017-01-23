@@ -28,7 +28,7 @@ Assets/Plugins/CognitiveVR/
 ```
 
 ## CognitiveVR Settings window
-![cognitiveVR Settings Popup](doc/init_window.PNG)
+![cognitiveVR Settings Popup](doc/settings_window.png)
 
 ### CustomerID
 This is required to send telemetry from your application. The format is : ```yourcompanyname1234-productname-test```. This is taken from the dashboard on your product page.
@@ -56,4 +56,4 @@ cognitiveVR Documentation
 =========
 This is only a quick reference to set up the cognitiveVR SDK. The documentation explains the concepts behind the SDK and provides more code samples.
 
-[Go to the Docs](http://docs.cognitivevr.io/unity/get-started/)
+[Go to the Docs](http://docs.cognitivevr.io/unity/scene-explorer/)

@@ -224,24 +224,7 @@ namespace CognitiveVR
 
                 if (GUI.Button(rect, new GUIContent("Add cognitiveVR Manager\n(required)", "Persists between scenes\nInitializes analytics system and gathers basic device info")))
                 {
-                    string sampleResourcePath = GetSamplesResourcePath();
-                    UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(sampleResourcePath + "CognitiveVR/Resources/CognitiveVR_Manager.prefab");
-                    if (basicInit)
-                    {
-                        GameObject newManager = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
-                        Selection.activeGameObject = newManager;
-                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
-                        GameObject newManager = new GameObject("CognitiveVR_Manager");
-                        manager = newManager.AddComponent<CognitiveVR_Manager>();
-                        Selection.activeGameObject = newManager;
-
-                        Selection.activeGameObject = newManager;
-                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                    }
+                    AddCognitiveVRManager();
                 }
             }
 
@@ -253,6 +236,27 @@ namespace CognitiveVR
                 Close();
             }
             GUI.color = Color.white;
+        }
+
+        public static void AddCognitiveVRManager()
+        {
+            UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/CognitiveVR/Resources/CognitiveVR_Manager.prefab");
+            if (basicInit)
+            {
+                GameObject newManager = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
+                Selection.activeGameObject = newManager;
+                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+            }
+            else
+            {
+                Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
+                GameObject newManager = new GameObject("CognitiveVR_Manager");
+                //manager = newManager.AddComponent<CognitiveVR_Manager>();
+                Selection.activeGameObject = newManager;
+
+                Selection.activeGameObject = newManager;
+                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+            }
         }
 
         void DisplayVideoRadioButtons()

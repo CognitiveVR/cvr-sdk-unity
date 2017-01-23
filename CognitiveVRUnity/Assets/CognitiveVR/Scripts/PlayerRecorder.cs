@@ -271,13 +271,21 @@ namespace CognitiveVR
                 Texture2D depthTex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
                 for (int i = 0; i < playerSnapshots.Count; i++)
                 {
-                    playerSnapshots[i].Properties.Add("gazePoint", playerSnapshots[i].GetGazePoint(depthTex));
+                    Vector3 calcGazePoint = playerSnapshots[i].GetGazePoint(depthTex);
+                    if (!float.IsNaN(calcGazePoint.x))
+                    {
+                        playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
 #if CVR_DEBUG
-                    Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
-                    Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
+                        Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
+                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
+                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
+                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
 #endif
+                    }
+                    else
+                    {
+                        playerSnapshots[i] = null;
+                    }
                 }
             }
             else if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
@@ -382,9 +390,9 @@ namespace CognitiveVR
 
             //events
             builder.Append("\"data\":[");
-            foreach (var v in InstrumentationSubsystem.CachedTransactions)
+            for (int i = 0; i<InstrumentationSubsystem.CachedTransactions.Count; i++)
             {
-                builder.Append(SetTransaction(v));
+                builder.Append(SetTransaction(InstrumentationSubsystem.CachedTransactions[i]));
                 builder.Append(",");
             }
             if (InstrumentationSubsystem.CachedTransactions.Count > 0)
@@ -426,9 +434,10 @@ namespace CognitiveVR
 
             //events
             builder.Append("\"data\":[");
-            foreach (var v in playerSnapshots)
+            for (int i = 0; i<playerSnapshots.Count; i++)
             {
-                builder.Append(SetGazePont(v));
+                if (playerSnapshots[i] == null) { continue; }
+                builder.Append(SetGazePont(playerSnapshots[i]));
                 builder.Append(",");
             }
             //KNOWN BUG json format invalid if 0 gaze points are sent - not that there's anything to record, though

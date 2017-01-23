@@ -22,9 +22,10 @@ namespace CognitiveVR
         public static event CoreInitHandler InitEvent;
         public void OnInit(Error initError)
         {
-            foreach (var v in GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>())
+            var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
+            for (int i = 0; i < components.Length; i++)
             {
-                v.CognitiveVR_Init(initError);
+                components[i].CognitiveVR_Init(initError);
             }
             PlayerRecorderInit(initError);
             if (InitEvent != null) { InitEvent(initError); }
@@ -132,12 +133,12 @@ namespace CognitiveVR
                         _hmd = Camera.main.transform;
                     }
 #elif CVR_FOVE
-                    FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
+                    /*FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
                     if (eyecam != null)
                     {
                         Camera cam = eyecam.GetComponentInChildren<Camera>();
                         _hmd = cam.transform;
-                    }
+                    }*/
                     if (_hmd == null)
                     {
                         if (Camera.main == null)

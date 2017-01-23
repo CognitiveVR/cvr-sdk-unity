@@ -40,11 +40,11 @@ namespace CognitiveVR
                 }
             }
 
-            public void AddProduct(string newProductName, string newCustomerId, string newOrganizationId)
+            public void AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
             {
                 List<Product> productList = new List<Product>();
                 productList.AddRange(products);
-                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId};
+                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId, id = newProductId };
                 productList.Add(newProduct);
                 products = productList.ToArray();
             }
@@ -136,6 +136,8 @@ namespace CognitiveVR
 
         [HideInInspector]
         public string sessionID;
+        [HideInInspector]
+        public string fullToken;
 
         [Header("User")]
         public string UserName;

@@ -23,6 +23,7 @@ namespace CognitiveVR
 
         void OnGUI()
         {
+            GUI.skin.label.richText = true;
             GUILayout.Label("cognitiveVR SDK - New Version", CognitiveVR_Settings.HeaderStyle);
             GUILayout.Label("Current Version:<b>" + Core.SDK_Version + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
