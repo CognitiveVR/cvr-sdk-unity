@@ -28,6 +28,9 @@ namespace CognitiveVR
             }
         }
 
+        static string SdkVersionUrl = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
+        string ApiPrefix = "testapi";
+
         System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
 
@@ -184,7 +187,14 @@ namespace CognitiveVR
 
             prefs.UserName = GhostTextField("name@email.com", "", prefs.UserName);
 
+            if (Event.current.character == '\n' && Event.current.type == EventType.KeyDown)
+            {
+                RequestLogin(prefs.UserName, password);
+            }
+
             password = GhostPasswordField("password", "", password);
+
+
 
             EditorGUI.EndDisabledGroup();
 
@@ -209,14 +219,14 @@ namespace CognitiveVR
                     GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
                     s.normal.textColor = new Color(0.6f, 0.6f, 1);
                     if (GUILayout.Button("Create Account", s))
-                        Application.OpenURL("https://dashboard.cognitivevr.io/");
+                        Application.OpenURL("https://dashboard.cognitivevr.io/#/login");
                 }
                 else
                 {
                     GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
                     s.normal.textColor = Color.blue;
                     if (GUILayout.Button("Create Account", s))
-                        Application.OpenURL("https://dashboard.cognitivevr.io/");
+                        Application.OpenURL("https://dashboard.cognitivevr.io/#/login");
                 }
 
                 GUILayout.FlexibleSpace();
@@ -504,11 +514,10 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://testapi.cognitivevr.io/sessions";
+            var url = "https://"+ApiPrefix+".cognitivevr.io/sessions";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
-            //headers.Add("Cookie")
 
             string json = "{\"email\":\"" + userEmail + "\",\"password\":\"" + password + "\"}";
             byte[] bytes = new System.Text.UTF8Encoding(true).GetBytes(json);
@@ -548,6 +557,7 @@ namespace CognitiveVR
                             {
                                 if (v.Key == "SET-COOKIE")
                                 {
+                                    GetPreferences().fullToken = v.Value;
                                     //split semicolons. ignore everything except split[0]
                                     string[] split = v.Value.Split(';');
                                     GetPreferences().sessionID = split[0].Substring(18);
@@ -584,15 +594,16 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://testapi.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
+            var url = "http://"+ApiPrefix+".cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
+            headers.Add("Cookie", GetPreferences().fullToken);
 
             System.Text.StringBuilder json = new System.Text.StringBuilder();
             json.Append("{");
-            json.Append("\"sessionId\":\"" + GetPreferences().sessionID + "\",");
-            json.Append("\"organizationName\":\"" + GetPreferences().SelectedOrganization.prefix + "\",");
+            //json.Append("\"sessionId\":\"" + GetPreferences().sessionID + "\",");
+            //json.Append("\"organizationName\":\"" + GetPreferences().SelectedOrganization.prefix + "\",");
             json.Append("\"productName\":\"" + productName + "\"");
             json.Append("}");
 
@@ -620,16 +631,16 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(NewProductRequest.error))
                 {
-                    Debug.Log("New Product Error: " + NewProductRequest.error);
+                    Debug.LogError("New Product Error: " + NewProductRequest.error);
+                }
+                else if (!string.IsNullOrEmpty(NewProductRequest.text))
+                {
+                    GetPreferences().UserData.AddProduct(NewProduct.name, NewProduct.customerId, NewProduct.orgId, NewProductRequest.text);
+                    Debug.Log("New Product Response: " + NewProductRequest.text);
                 }
                 else
                 {
-                    GetPreferences().UserData.AddProduct(NewProduct.name, NewProduct.customerId, NewProduct.orgId);
-
-                    if (!string.IsNullOrEmpty(NewProductRequest.text))
-                    {
-                        Debug.Log("New Product Response: " + NewProductRequest.text);
-                    }
+                    Debug.LogWarning("New Product Response has no text!");
                 }
 
                 NewProduct = null;
@@ -641,8 +652,7 @@ namespace CognitiveVR
         static WWW checkForUpdatesRequest;
         static void CheckForUpdates()
         {
-            var url = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
-            checkForUpdatesRequest = new UnityEngine.WWW(url);
+            checkForUpdatesRequest = new UnityEngine.WWW(SdkVersionUrl);
             EditorApplication.update += UpdateCheckForUpdates;
         }
 
@@ -878,6 +888,7 @@ namespace CognitiveVR
             {
                 actualText = EditorGUILayout.PasswordField(label, actualText);
             }
+
             return actualText;
         }
 
