@@ -275,9 +275,16 @@ namespace CognitiveVR
 
                 if (organizations.Length > 0)
                 {
-                    if (organizations.Length > organizationIndex)
+                    //TODO fix this some other day
+                    try
+                    {
+                        prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
+                    }
+                    catch
+                    {
                         organizationIndex = 0;
-                    prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
+                        prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[0]);
+                    }
                 }
 
                 //=========================
