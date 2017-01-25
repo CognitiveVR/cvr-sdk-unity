@@ -26,7 +26,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
 
@@ -50,7 +50,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

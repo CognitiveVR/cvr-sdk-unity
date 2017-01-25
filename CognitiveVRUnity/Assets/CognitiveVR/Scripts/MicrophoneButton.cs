@@ -103,7 +103,6 @@ namespace CognitiveVR
 
                     if (_currentLookTime >= LookTime)
                     {
-                        Debug.Log("recording");
                         // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
                         clip = Microphone.Start(null, false, RecordTime, outputRate);
                         Fill.color = Color.red;

@@ -294,8 +294,6 @@ namespace CognitiveVR
         //close action is called immediately if fetching the question fails
         IEnumerator FetchQuestion()
         {
-            //TODO ask question server
-
             //tuning variable
             string response = Tuning.getVar<string>(ExitPollQuestion, "");
             if (!string.IsNullOrEmpty(response))
@@ -430,7 +428,6 @@ namespace CognitiveVR
                     toCube.Normalize();
 
                     float dot = Vector3.Dot(camforward, toCube);
-                    Debug.Log(dot);
                     if (dot < maxDot)
                     {
                         Vector3 rotateAxis = Vector3.down;
@@ -485,7 +482,7 @@ namespace CognitiveVR
             {
                 //response details
                 ExitPollRequest response = new ExitPollRequest();
-                response.sceneId = key.SceneKey;
+                response.sceneId = key.SceneId;
                 response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
                 response.pollValues = new ExitPollTuningQuestion[1] { question };
                 response.timestamp = (int)CognitiveVR_Manager.TimeStamp;
@@ -522,7 +519,7 @@ namespace CognitiveVR
             else
             {
                 ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
-                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd();
+                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd(transform.position);
                 PollID = response.pollId;
             }
 

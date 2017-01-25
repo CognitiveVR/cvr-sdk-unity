@@ -4,10 +4,25 @@ using System.Runtime.InteropServices;
 
 namespace CognitiveVR.Plugins
 {
-	/// <summary>
-	/// A light wrapper around CognitiveVR.Transaction to provide some built-in characteristics for Purchase transactions
-	/// </summary>
-	public class PurchaseTransaction : TransactionBase<PurchaseTransaction>
+    /// <summary>
+    /// This CognitiveVR plugin provides a simple interface for instrumenting purchase flows in an application.
+    /// </summary>
+    public class Purchase
+    {
+        /// <summary>
+        /// Factory method for invoking CognitiveVRPlugins.SessionTransaction methods
+        /// </summary>
+        /// <param name="transactionId">Transaction id, if applicable - this is only REQUIRED in situation where multiple transactions in the same category may exist (read: be concurrently begun)</param> 
+        public static PurchaseTransaction Transaction(string transactionId = null)
+        {
+            return new PurchaseTransaction(transactionId);
+        }
+    }
+
+    /// <summary>
+    /// A light wrapper around CognitiveVR.Transaction to provide some built-in characteristics for Purchase transactions
+    /// </summary>
+    public class PurchaseTransaction : TransactionBase<PurchaseTransaction>
 	{
 		internal PurchaseTransaction(string transactionId) : base("Purchase", transactionId) {}
 
@@ -50,21 +65,6 @@ namespace CognitiveVR.Plugins
 		/// <returns>The transaction itself (to support a builder-style implementation)</returns>
 		/// <param name="pointOfSale">Application defined point-of-sale</param>
 		public PurchaseTransaction setPointOfSale(string pointOfSale) { setProperty("pointOfSale", pointOfSale); return this; }
-	}
-
-	/// <summary>
-	/// This CognitiveVR plugin provides a simple interface for instrumenting purchase flows in an application.
-	/// </summary>
-	public class Purchase
-	{
-		/// <summary>
-		/// Factory method for invoking CognitiveVRPlugins.SessionTransaction methods
-		/// </summary>
-		/// <param name="transactionId">Transaction id, if applicable - this is only REQUIRED in situation where multiple transactions in the same category may exist (read: be concurrently begun)</param> 
-		public static PurchaseTransaction Transaction(string transactionId = null)
-		{
-			return new PurchaseTransaction(transactionId);
-		}
 	}
 }
 

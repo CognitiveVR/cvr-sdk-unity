@@ -18,7 +18,7 @@ namespace CognitiveVR.Components
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #elif CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent;
 #endif
         }
 
@@ -50,6 +50,15 @@ namespace CognitiveVR.Components
         }
 #endif
 
+        public static bool GetWarning()
+        {
+#if !CVR_OCULUS && !CVR_STEAMVR
+            return true;
+#else
+            return false;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Sends transactions when a player removes or wears HMD\nNOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
@@ -58,7 +67,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_OnPoseEvent;
+            CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;
 #endif
 #if CVR_OCULUS
             OVRManager.HMDMounted -= OVRManager_HMDMounted;

@@ -17,6 +17,15 @@ namespace CognitiveVR.Components
             CognitiveVR.Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.screenresolution", Screen.height + " x " + Screen.width } });
         }
 
+        public static bool GetWarning()
+        {
+#if CVR_OCULUS && UNITY_ANDROID
+            return false;
+#else
+            return true;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Include Screen Resolution in Device Info. Probably only useful for mobile";

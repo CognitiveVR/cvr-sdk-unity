@@ -73,6 +73,16 @@ namespace CognitiveVR
 
         }
 
+        //returns vive/rift/gear/unknown based on hmd model name
+        public static string GetSimpleHMDName()
+        {
+            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
+            if (rawHMDName.Contains("rift cv1")) { return "rift"; }
+            if (rawHMDName.Contains("samsung")) { return "gear"; }
+            return "unknown";
+        }
+
         internal static void cacheCurrencyInfo()
         {
             // Clear out any previously set data
@@ -173,5 +183,24 @@ namespace CognitiveVR
 			TimeSpan span = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			return span.TotalSeconds;
 		}
-	}
+
+        internal static void AddPref(string key, string value)
+        {
+            PlayerPrefs.SetString(key, value);
+            PlayerPrefs.Save();
+        }
+
+        internal static bool TryGetPrefValue(string key, out string value)
+        {
+            bool keyFound = false;
+            value = default(string);
+            if (PlayerPrefs.HasKey(key))
+            {
+                keyFound = true;
+                value = PlayerPrefs.GetString(key);
+            }
+
+            return keyFound;
+        }
+    }
 }

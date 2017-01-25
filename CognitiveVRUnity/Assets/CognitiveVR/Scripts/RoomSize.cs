@@ -42,6 +42,15 @@ namespace CognitiveVR.Components
 #endif
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Include Room Size in Device Info from SteamVR Chaperone or Oculus Guardian";

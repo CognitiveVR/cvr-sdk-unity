@@ -10,7 +10,10 @@ namespace CognitiveVR.Components
 {
     public class HMDHeight: CognitiveVRAnalyticsComponent
     {
-        int sampleCount = 50;
+        [DisplaySetting(5,100)]
+        [Tooltip("Number of samples taken. The average is assumed to be HMD height")]
+        public int SampleCount = 50;
+
         int samples = 0;
         float hmdAccumHeight;
 
@@ -18,22 +21,22 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         private void CognitiveVR_Manager_OnTick()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 hmdAccumHeight += CognitiveVR_Manager.HMD.position.y;
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     float averageHeight = hmdAccumHeight / samples;
                     Util.logDebug("head height " + averageHeight);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "height", averageHeight } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -43,9 +46,18 @@ namespace CognitiveVR.Components
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

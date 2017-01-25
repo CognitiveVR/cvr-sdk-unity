@@ -12,7 +12,7 @@ namespace CognitiveVR
         {
             base.OnInspectorGUI();
 
-            EditorGUILayout.HelpBox("Initializes the CognitiveVR Analytics platform on Start\nAutomatically records device data", MessageType.Info);
+            EditorGUILayout.HelpBox("Persists between scenes\nInitializes cognitiveVR Analytics\nGathers basic device info", MessageType.Info);
 
             if (GUILayout.Button("Open Component Setup"))
             {

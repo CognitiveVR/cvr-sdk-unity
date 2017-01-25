@@ -20,7 +20,7 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
             SendBatteryLevel();
-            CognitiveVR_Manager.OnQuit += CognitiveVR_Manager_OnQuit;
+            CognitiveVR_Manager.QuitEvent += CognitiveVR_Manager_OnQuit;
         }
 
         void CognitiveVR_Manager_OnQuit()
@@ -97,11 +97,11 @@ namespace CognitiveVR.Components
 
         public static bool GetWarning()
         {
-#if UNITY_EDITOR
-            if (UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.Android)
-                return false;
-#endif
+#if UNITY_ANDROID
+            return false;
+#else
             return true;
+#endif
         }
 
         public static string GetDescription()
@@ -111,7 +111,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnQuit -= CognitiveVR_Manager_OnQuit;
+            CognitiveVR_Manager.QuitEvent -= CognitiveVR_Manager_OnQuit;
         }
     }
 }
