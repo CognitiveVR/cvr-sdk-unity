@@ -56,6 +56,8 @@ namespace CognitiveVR
             if (CognitiveVR_Settings.Instance == null)
             {
                 Debug.Log("Instance of cognitiveVR_Settings window is null"); //when recompiling with the window open, instance loses it's reference
+                editorWindow.Close();
+                return;
             }
             CognitiveVR_Settings.Instance.RequestNewProduct(productName);
         }

@@ -24,7 +24,7 @@ namespace CognitiveVR
         }
 
         bool exportOptionsFoldout = false;
-        static CognitiveVR_Preferences.SceneKeySetting currentSceneSettings;
+        static CognitiveVR_Preferences.SceneSettings currentSceneSettings;
 
         string searchString = "";
 
@@ -94,10 +94,10 @@ namespace CognitiveVR
             canvasPos = GUILayout.BeginScrollView(canvasPos, false,true,GUILayout.Height(140));
             GUI.Box(new Rect(-10, -10, position.width * 10, 10000), "");
 
-            foreach (var v in prefs.SceneKeySettings)
+            foreach (var v in prefs.sceneSettings)
             {
                 if (!string.IsNullOrEmpty(searchString) && !v.SceneName.ToLower().Contains(searchString.ToLower())) { continue; }
-                DisplaySceneKeySettings(v);
+                DisplaySceneSettings(v);
             }
 
             GUILayout.EndScrollView();
@@ -112,46 +112,12 @@ namespace CognitiveVR
 
             if (currentSceneSettings == null)
             {
-                currentSceneSettings = new CognitiveVR_Preferences.SceneKeySetting("Not Saved", "");
+                currentSceneSettings = new CognitiveVR_Preferences.SceneSettings("Not Saved", "");
             }
 
 
-            /*
-            if (EditorGUIUtility.isProSkin)
-            {
-                if (string.IsNullOrEmpty(currentSceneSettings.ScenePath))
-                {
-                    GUILayout.Box("<color=orange>Current Scene: " + currentSceneSettings.SceneName+"</color>", CognitiveVR_Settings.HeaderStyle);
-                }
-                else
-                {
-                    GUILayout.Box("<color=#00aa00ff>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
-                }
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(currentSceneSettings.ScenePath))
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Box("<color=red>Current Scene: " + currentSceneSettings.SceneName + "</color>", CognitiveVR_Settings.HeaderStyle);
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
-                }
-                else
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Box(CognitiveVR_Settings.GreenTextString + "Current Scene: " + currentSceneSettings.SceneName + "</color>");
-                    GUILayout.FlexibleSpace();
-                    GUILayout.EndHorizontal();
-                }
-            }
-            */
             GUILayout.BeginHorizontal();
-            //GUILayout.FlexibleSpace();
 
-            ///!string.IsNullOrEmpty(currentSceneSettings.ScenePath)
             bool sceneIsSaved = !string.IsNullOrEmpty(currentSceneSettings.ScenePath);
 
 
@@ -217,95 +183,6 @@ namespace CognitiveVR
             }
 
             EditorGUI.BeginDisabledGroup(!sceneIsSaved);
-
-
-
-            //revision date
-
-
-
-            /*
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (revisionDate.Year < 1000)
-            {
-                GUILayout.Label("Last Scene Revision: Never");
-            }
-            else
-            {
-                GUILayout.Label("Last Scene Revision: " + revisionDate.ToShortDateString());
-            }
-            
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            
-            //scene explorer id
-            if (Event.current.type == EventType.Repaint && string.IsNullOrEmpty(currentSceneSettings.SceneKey))
-            {
-                GUIStyle style = new GUIStyle(GUI.skin.textField);
-                style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
-
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.TextField("SceneID","a12345b6-78c9-01d2-3456-78e9f0ghi123", style);
-
-                EditorGUI.BeginDisabledGroup(true);
-                GUIContent sceneExplorerLink = new GUIContent("View on Dashboard");
-                if (GUILayout.Button(sceneExplorerLink))
-                {
-                    Application.OpenURL("https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey);
-                }
-                EditorGUI.EndDisabledGroup();
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                currentSceneSettings.SceneKey = EditorGUILayout.TextField("SceneID",currentSceneSettings.SceneKey, GUILayout.Width(keyWidth));
-
-                //remove sceneexplorer.com/scene from sceneKey
-                bool validKey = KeyIsValid(currentSceneSettings.SceneKey);
-
-                if (!validKey)
-                {
-                    if (currentSceneSettings.SceneKey.Contains("http://sceneexplorer.com/scene/"))
-                    {
-                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("http://sceneexplorer.com/scene/", "");
-                        GUI.FocusControl("NULL");
-                    }
-                    if (currentSceneSettings.SceneKey.Contains("https://sceneexplorer.com/scene/"))
-                    {
-                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("https://sceneexplorer.com/scene/", "");
-                        GUI.FocusControl("NULL");
-                    }
-                    else if (currentSceneSettings.SceneKey.Contains("sceneexplorer.com/scene/"))
-                    {
-                        currentSceneSettings.SceneKey = currentSceneSettings.SceneKey.Replace("sceneexplorer.com/scene/", "");
-                        GUI.FocusControl("NULL");
-                    }
-                }
-
-                EditorGUI.BeginDisabledGroup(!validKey);
-
-                GUIContent sceneExplorerLink = new GUIContent("View on Dashboard");
-                if (KeyIsValid(currentSceneSettings.SceneKey))
-                {
-                    sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey;
-                }
-
-                if (GUILayout.Button(sceneExplorerLink))
-                {
-                    Application.OpenURL("https://sceneexplorer.com/scene/" + currentSceneSettings.SceneKey);
-                }
-                EditorGUI.EndDisabledGroup();
-                GUILayout.EndHorizontal();
-            }
-
-
-            GUILayout.Space(10);
-            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
-            GUILayout.Space(10);
-            */
 
             //compression amount
 
@@ -522,7 +399,7 @@ namespace CognitiveVR
             }
         }
 
-        void DisplaySceneKeySettings(CognitiveVR_Preferences.SceneKeySetting settings)
+        void DisplaySceneSettings(CognitiveVR_Preferences.SceneSettings settings)
         {
             bool isCurrentScene = false;
             if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
@@ -598,16 +475,16 @@ namespace CognitiveVR
                 }
             }
 
-            EditorGUI.BeginDisabledGroup(!KeyIsValid(settings.SceneKey));
+            EditorGUI.BeginDisabledGroup(!KeyIsValid(settings.SceneId));
             GUIContent sceneExplorerLink = new GUIContent("View on Dashboard");
-            if (KeyIsValid(settings.SceneKey))
+            if (KeyIsValid(settings.SceneId))
             {
-                sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + settings.SceneKey;
+                sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + settings.SceneId;
             }
 
             if (GUILayout.Button(sceneExplorerLink))
             {
-                Application.OpenURL("https://sceneexplorer.com/scene/" + settings.SceneKey);
+                Application.OpenURL("https://sceneexplorer.com/scene/" + settings.SceneId);
             }
 
             EditorGUI.EndDisabledGroup();
@@ -788,7 +665,7 @@ namespace CognitiveVR
             }
         }
 
-        static CognitiveVR_Preferences.SceneKeySetting UploadSceneSettings;
+        static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
 
         static WWW sceneUploadWWW;
 
@@ -829,7 +706,7 @@ namespace CognitiveVR
             }
 
             string responseText = sceneUploadWWW.text;
-            UploadSceneSettings.SceneKey = responseText.Replace("\"","");
+            UploadSceneSettings.SceneId = responseText.Replace("\"","");
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
             sceneUploadWWW.Dispose();
@@ -841,7 +718,7 @@ namespace CognitiveVR
 
             if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?","Open on SceneExplorer","Close"))
             {
-                Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneKey);
+                Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneId);
             }
 
             UploadSceneSettings = null;
@@ -934,15 +811,15 @@ namespace CognitiveVR
         private static void UpdateSceneNames()
         {
             //save these to a temp list
-            List<CognitiveVR_Preferences.SceneKeySetting> oldSettings = new List<CognitiveVR_Preferences.SceneKeySetting>();
-            foreach (var v in CognitiveVR_Preferences.Instance.SceneKeySettings)
+            List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
+            foreach (var v in CognitiveVR_Preferences.Instance.sceneSettings)
             {
                 oldSettings.Add(v);
             }
 
 
             //clear then rebuild the list in preferences
-            CognitiveVR_Preferences.Instance.SceneKeySettings.Clear();
+            CognitiveVR_Preferences.Instance.sceneSettings.Clear();
 
             //add all scenes
             string[] guidList = AssetDatabase.FindAssets("t:scene");
@@ -953,17 +830,17 @@ namespace CognitiveVR
                 string name = path.Substring(path.LastIndexOf('/') + 1);
                 name = name.Substring(0, name.Length - 6);
 
-                CognitiveVR_Preferences.Instance.SceneKeySettings.Add(new CognitiveVR_Preferences.SceneKeySetting(name, path));
+                CognitiveVR_Preferences.Instance.sceneSettings.Add(new CognitiveVR_Preferences.SceneSettings(name, path));
             }
 
             //match up dictionary keys from temp list
             foreach (var oldSetting in oldSettings)
             {
-                foreach (var newSetting in CognitiveVR_Preferences.Instance.SceneKeySettings)
+                foreach (var newSetting in CognitiveVR_Preferences.Instance.sceneSettings)
                 {
                     if (newSetting.SceneName == oldSetting.SceneName)
                     {
-                        newSetting.SceneKey = oldSetting.SceneKey;
+                        newSetting.SceneId = oldSetting.SceneId;
                         newSetting.LastRevision = oldSetting.LastRevision;
                         newSetting.SceneName = oldSetting.SceneName;
                         newSetting.ScenePath = oldSetting.ScenePath;

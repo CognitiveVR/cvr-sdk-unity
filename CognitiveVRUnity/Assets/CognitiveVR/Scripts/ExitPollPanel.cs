@@ -482,7 +482,7 @@ namespace CognitiveVR
             {
                 //response details
                 ExitPollRequest response = new ExitPollRequest();
-                response.sceneId = key.SceneKey;
+                response.sceneId = key.SceneId;
                 response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
                 response.pollValues = new ExitPollTuningQuestion[1] { question };
                 response.timestamp = (int)CognitiveVR_Manager.TimeStamp;

@@ -40,13 +40,14 @@ namespace CognitiveVR
                 }
             }
 
-            public void AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
+            public Product AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
             {
                 List<Product> productList = new List<Product>();
                 productList.AddRange(products);
                 Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId, id = newProductId };
                 productList.Add(newProduct);
                 products = productList.ToArray();
+                return newProduct;
             }
         }
 #pragma warning restore 0649
@@ -84,14 +85,15 @@ namespace CognitiveVR
     public class CognitiveVR_Preferences : ScriptableObject
     {
         [Serializable]
-        public class SceneKeySetting
+        public class SceneSettings
         {
             public string SceneName = "";
-            public string SceneKey = "";
+            [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
+            public string SceneId = "";
             public string ScenePath = "";
             public long LastRevision;
 
-            public SceneKeySetting(string name, string path)
+            public SceneSettings(string name, string path)
             {
                 SceneName = name;
                 ScenePath = path;
@@ -180,16 +182,16 @@ namespace CognitiveVR
 
 
 
-        public List<SceneKeySetting> SceneKeySettings = new List<SceneKeySetting>();
+        public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
-        public SceneKeySetting FindScene(string sceneName)
+        public SceneSettings FindScene(string sceneName)
         {
-            return SceneKeySettings.Find(x => x.SceneName == sceneName);
+            return sceneSettings.Find(x => x.SceneName == sceneName);
         }
 
-        public SceneKeySetting FindSceneByPath(string scenePath)
+        public SceneSettings FindSceneByPath(string scenePath)
         {
-            return SceneKeySettings.Find(x => x.ScenePath == scenePath);
+            return sceneSettings.Find(x => x.ScenePath == scenePath);
         }
 
 

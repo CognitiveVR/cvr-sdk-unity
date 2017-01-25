@@ -249,9 +249,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.LogWarning("Couldn't find CognitiveVR_Manager.prefab");
                 GameObject newManager = new GameObject("CognitiveVR_Manager");
-                //manager = newManager.AddComponent<CognitiveVR_Manager>();
                 Selection.activeGameObject = newManager;
 
                 Selection.activeGameObject = newManager;
