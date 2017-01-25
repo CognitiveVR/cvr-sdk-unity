@@ -29,7 +29,6 @@ namespace CognitiveVR
         }
 
         static string SdkVersionUrl = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
-        string ApiPrefix = "testapi";
 
         System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
@@ -275,7 +274,11 @@ namespace CognitiveVR
 
 
                 if (organizations.Length > 0)
+                {
+                    if (organizations.Length > organizationIndex)
+                        organizationIndex = 0;
                     prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
+                }
 
                 //=========================
                 //select product
@@ -514,7 +517,7 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://"+ApiPrefix+".cognitivevr.io/sessions";
+            var url = "https://testapi.cognitivevr.io/sessions";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -594,11 +597,13 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "http://"+ApiPrefix+".cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
+            var url = "https://testapi.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
             headers.Add("Cookie", GetPreferences().fullToken);
+
+            productName = productName.Replace("\"", "\\\"");
 
             System.Text.StringBuilder json = new System.Text.StringBuilder();
             json.Append("{");
@@ -635,8 +640,14 @@ namespace CognitiveVR
                 }
                 else if (!string.IsNullOrEmpty(NewProductRequest.text))
                 {
-                    GetPreferences().UserData.AddProduct(NewProduct.name, NewProduct.customerId, NewProduct.orgId, NewProductRequest.text);
                     Debug.Log("New Product Response: " + NewProductRequest.text);
+
+                    Json.Product responseProduct = JsonUtility.FromJson<Json.Product>(NewProductRequest.text);
+                    responseProduct.orgId = NewProduct.orgId;
+
+                    var AddedProduct = GetPreferences().UserData.AddProduct(responseProduct.name, responseProduct.customerId, responseProduct.orgId, responseProduct.id);
+                    GetPreferences().SelectedProduct = AddedProduct;
+                    SaveSettings();
                 }
                 else
                 {
