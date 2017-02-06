@@ -280,6 +280,7 @@ namespace CognitiveVR
         #endregion
 
         private static CognitiveVR_Manager instance;
+        public static CognitiveVR_Manager Instance { get { return instance; } }
         YieldInstruction playerSnapshotInverval;
         private static double _timeStamp;
         public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
