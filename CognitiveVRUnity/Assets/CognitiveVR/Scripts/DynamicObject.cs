@@ -42,7 +42,11 @@ namespace CognitiveVR
 
         [Header("IDs")]
         public bool UseCustomId = false;
-        public int id;
+        public int CustomId;
+        public bool ReleaseIdOnDestroy = false;
+
+        public DynamicObjectId ObjectId;
+
         public string meshName;
 
         [Header("Updates")]
@@ -52,6 +56,7 @@ namespace CognitiveVR
         //static variables
         private static int uniqueIdOffset = 1000;
         private static int currentUniqueId;
+        public static List<DynamicObjectId> ObjectIds = new List<DynamicObjectId>();
 
         public static List<DynamicObjectSnapshot> Snapshots = new List<DynamicObjectSnapshot>();
         public static List<DynamicObjectManifestEntry> ObjectManifest = new List<DynamicObjectManifestEntry>();
@@ -66,14 +71,6 @@ namespace CognitiveVR
                     v.SetTick(true);
                 }
             }
-
-            StartCoroutine(TEMP());
-        }
-
-        IEnumerator TEMP()
-        {
-            yield return new WaitForSeconds(5);
-                CognitiveVR_Manager_SendDataEvent();
         }
 
         public IEnumerator UpdateTick()
@@ -112,15 +109,45 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot NewSnapshot(string mesh)
         {
-            var manifestEntry = ObjectManifest.Find(x => x.id == id);
-            if (manifestEntry == null)
+            bool needObjectId = false;
+            //add object to manifest and set ObjectId
+            if (ObjectId == null)
+            {
+                needObjectId = true;
+            }
+            else
+            {
+                var manifestEntry = ObjectManifest.Find(x => x.id == ObjectId.id);
+                if (manifestEntry == null)
+                {
+                    needObjectId = true;
+                }
+            }
+
+            //new objectId and manifest entry (if required)
+            if (needObjectId)
             {
                 if (!UseCustomId)
                 {
-                    int newId = GetUniqueID();
-                    id = newId;
+                    var recycledId = ObjectIds.Find(x => !x.used && x.meshName == mesh);
+                    if (recycledId != null)
+                    {
+                        ObjectId = recycledId;
+                        ObjectId.used = true;
+                        //id is already on manifest
+                    }
+                    else
+                    {
+                        int newId = GetUniqueID();
+                        ObjectId = new DynamicObjectId(newId, meshName);
+                        ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, meshName));
+                    }
                 }
-                ObjectManifest.Add(new DynamicObjectManifestEntry(id,gameObject.name,meshName));
+                else
+                {
+                    ObjectId = new DynamicObjectId(CustomId, meshName);
+                    ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, meshName));
+                }
 
                 if (ObjectManifest.Count == 1)
                 {
@@ -128,6 +155,7 @@ namespace CognitiveVR
                 }
             }
             
+            //create snapshot for this object
             var snapshot = new DynamicObjectSnapshot(this);
             Snapshots.Add(snapshot);
             return snapshot;
@@ -139,6 +167,7 @@ namespace CognitiveVR
             lastRotation = _transform.rotation;
         }
 
+        //TODO this should return a dynamicObjectId instance
         public static int GetUniqueID()
         {
             currentUniqueId++;
@@ -273,6 +302,7 @@ namespace CognitiveVR
                 builder.Append("\"properties\":[");
                 foreach (var v in snap.properties)
                 {
+                    builder.Append("{");
                     if (v.Value.GetType() == typeof(string))
                     {
                         builder.Append(Json.Util.SetString(v.Key, (string)v.Value));
@@ -281,7 +311,7 @@ namespace CognitiveVR
                     {
                         builder.Append(Json.Util.SetObject(v.Key, v.Value));
                     }
-                    builder.Append(",");
+                    builder.Append("},");
                 }
                 builder.Remove(builder.Length - 1, 1); //remove last comma
                 builder.Append("]"); //close properties object
@@ -290,6 +320,12 @@ namespace CognitiveVR
             builder.Append("}"); //close transaction object
 
             return builder.ToString();
+        }
+
+        void OnDestroy()
+        {
+            if (!ReleaseIdOnDestroy) { return; }
+            NewSnapshot().ReleaseUniqueId();
         }
     }
 
@@ -305,14 +341,14 @@ namespace CognitiveVR
         public DynamicObjectSnapshot(DynamicObject dynamic)
         {
             this.dynamic = dynamic;
-            id = dynamic.id;
+            id = dynamic.CustomId;
             timestamp = Util.Timestamp();
         }
 
         public DynamicObjectSnapshot(DynamicObject dynamic, Vector3 pos, Quaternion rot, Dictionary<string, object> props = null)
         {
             this.dynamic = dynamic;
-            id = dynamic.id;
+            id = dynamic.CustomId;
             properties = props;
             position = new float[3] { 0, 0, 0 };
             rotation = new float[4] { rot.x, rot.y, rot.z, rot.w };
@@ -322,7 +358,7 @@ namespace CognitiveVR
         public DynamicObjectSnapshot(DynamicObject dynamic, float[] pos, float[] rot, Dictionary<string, object> props = null)
         {
             this.dynamic = dynamic;
-            id = dynamic.id;
+            id = dynamic.CustomId;
             properties = props;
             position = pos;
             
@@ -375,7 +411,34 @@ namespace CognitiveVR
                 properties = new Dictionary<string, object>();
             }
             properties["enabled"] = enable;
-            return null;
+            return this;
+        }
+
+        //releasing an id allows a new object with the same mesh to be used instead of bloating the object manifest
+        //if objects are pooled on the dev side, this may not be required
+        public DynamicObjectSnapshot ReleaseUniqueId()
+        {
+            var foundId = DynamicObject.ObjectIds.Find(x => x.id == this.id);
+            if (foundId != null)
+            {
+                foundId.used = false;
+            }
+            return this;
+        }
+    }
+
+    //holds info about which ids are used and what meshes they are held by
+    //used to 'release' unique ids so meshes can be pooled in scene explorer
+    public class DynamicObjectId
+    {
+        public int id;
+        public bool used = true;
+        public string meshName;
+
+        public DynamicObjectId(int id, string meshName)
+        {
+            this.id = id;
+            this.meshName = meshName;
         }
     }
 

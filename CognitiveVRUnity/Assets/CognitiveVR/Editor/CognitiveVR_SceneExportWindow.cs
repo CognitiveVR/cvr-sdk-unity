@@ -724,6 +724,30 @@ namespace CognitiveVR
             UploadSceneSettings = null;
         }
 
+        public static void UploadDynamicObjects()
+        {
+            Debug.Log("Upload dynamic objects to scene explorer/something");
+            string fileList = "Upload Files:\n";
+
+            var subdirectories = Directory.GetDirectories(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic");
+            foreach (var subdir in subdirectories)
+            {
+                var filePaths = Directory.GetFiles(subdir);
+
+                WWWForm wwwForm = new WWWForm();
+                foreach (var f in filePaths)
+                {
+                    fileList += f + "\n";
+
+                    var data = File.ReadAllBytes(f);
+                    wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
+                }
+                //upload file info to dynamic endpoint backend dealy
+                //sceneUploadWWW = new WWW("https://sceneexplorer.com/api/scenes/", wwwForm);
+            }
+            Debug.Log(fileList);
+        }
+
         #region Utility
 
         bool KeyIsValid(string key)
