@@ -63,6 +63,35 @@ namespace CognitiveVR
 
         static void EditorUpdate()
         {
+
+            //HACK there is a bug with serializing the cognitivevr_preferences file that may be related to scripting define symbols
+            //this will check if the cognitivevr file exists but cannot be loaded - if that is the case, it will recompile the scripts which will fix this
+
+            //you can start playing the game to have unity update its serialization and fix loading this script
+            //without this, you may LOSE YOUR SAVED PREFERENCES, including sceneIDs used to upload to scene explorer
+
+            //hopefully this will be fixed in the future
+
+            if (System.IO.File.Exists(Application.dataPath + "/CognitiveVR/Resources/CognitiveVR_Preferences.asset") && null == AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset"))
+            {
+                Debug.Log("CognitiveVR Prefs file exists but cannot be loaded - Recompile");
+                AssetDatabase.StartAssetEditing();
+                //recompile
+                string[] allassetpaths = AssetDatabase.GetAllAssetPaths();
+                foreach (var v in allassetpaths)
+                {
+                    MonoScript script = AssetDatabase.LoadAssetAtPath(v, typeof(MonoScript)) as MonoScript;
+                    if (script != null)
+                    {
+                        //recompile a script
+                        AssetDatabase.ImportAsset(v);
+                        break;
+                    }
+                }
+                AssetDatabase.StopAssetEditing();
+            }
+
+
             bool show = true;
 
 #if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
