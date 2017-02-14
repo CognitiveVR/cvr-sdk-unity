@@ -526,7 +526,7 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://testapi.cognitivevr.io/sessions";
+            var url = "https://api.cognitivevr.io/sessions";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -606,7 +606,7 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://testapi.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
+            var url = "https://api.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
