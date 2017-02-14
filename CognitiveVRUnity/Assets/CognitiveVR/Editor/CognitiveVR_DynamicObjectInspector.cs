@@ -21,7 +21,15 @@ namespace CognitiveVR
 
             GUILayout.Label("Setup", EditorStyles.boldLabel);
 
-            dynamic.meshName = EditorGUILayout.TextField("Mesh Name", dynamic.meshName);
+            dynamic.UseCustomMesh = EditorGUILayout.Toggle("Use Custom Mesh", dynamic.UseCustomMesh);
+            if (dynamic.UseCustomMesh)
+            {
+                dynamic.meshName = EditorGUILayout.TextField("Mesh Name", dynamic.meshName);
+            }
+            else
+            {
+                dynamic.commomMesh = (DynamicObject.CommonDynamicMesh)EditorGUILayout.EnumPopup("Common Mesh", dynamic.commomMesh);
+            }
 
             dynamic.SnapshotOnEnable = EditorGUILayout.Toggle("Snapshot On Enable",dynamic.SnapshotOnEnable);
             if (dynamic.SnapshotOnEnable)

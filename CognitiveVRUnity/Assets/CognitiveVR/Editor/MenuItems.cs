@@ -101,7 +101,8 @@ namespace CognitiveVR
         static bool ValidateExportSelectedObjectsPrefab()
         {
             // Return false if no transform is selected.
-            return Selection.activeTransform != null;
+            return Selection.activeGameObject != null;
+            //return Selection.activeTransform != null;
         }
 
         [MenuItem("cognitiveVR/Upload Dynamic Objects")]

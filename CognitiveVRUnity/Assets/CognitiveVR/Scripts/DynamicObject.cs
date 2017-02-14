@@ -17,6 +17,13 @@ namespace CognitiveVR
 {
     public class DynamicObject : MonoBehaviour
     {
+        public enum CommonDynamicMesh
+        {
+            ViveController,
+            OculusTouchLeft,
+            OculusTouchRight
+        }
+
         //instance variables    
         private Transform _t;
         public Transform _transform
@@ -47,6 +54,8 @@ namespace CognitiveVR
 
         public DynamicObjectId ObjectId;
 
+        public bool UseCustomMesh;
+        public CommonDynamicMesh commomMesh;
         public string meshName;
 
         [Header("Updates")]
@@ -183,7 +192,21 @@ namespace CognitiveVR
             if (DynamicObject.ObjectManifest.Count > 0 && DynamicObject.Snapshots.Count > 0)
             {
                 bytes = FormatDynamicsToString();
-                //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(bytes, "example.com"));
+
+                string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+                if (sceneSettings == null)
+                {
+                    Debug.Log("scene settings are null " + sceneName);
+                    return;
+                }
+
+                string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+
+                Debug.Log("send dynamic data to " + url);
+
+                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(bytes, url));
             }
 
             //clear the manifest
@@ -341,14 +364,14 @@ namespace CognitiveVR
         public DynamicObjectSnapshot(DynamicObject dynamic)
         {
             this.dynamic = dynamic;
-            id = dynamic.CustomId;
+            id = dynamic.ObjectId.id;
             timestamp = Util.Timestamp();
         }
 
         public DynamicObjectSnapshot(DynamicObject dynamic, Vector3 pos, Quaternion rot, Dictionary<string, object> props = null)
         {
             this.dynamic = dynamic;
-            id = dynamic.CustomId;
+            id = dynamic.ObjectId.id;
             properties = props;
             position = new float[3] { 0, 0, 0 };
             rotation = new float[4] { rot.x, rot.y, rot.z, rot.w };
@@ -358,7 +381,7 @@ namespace CognitiveVR
         public DynamicObjectSnapshot(DynamicObject dynamic, float[] pos, float[] rot, Dictionary<string, object> props = null)
         {
             this.dynamic = dynamic;
-            id = dynamic.CustomId;
+            id = dynamic.ObjectId.id;
             properties = props;
             position = pos;
             
