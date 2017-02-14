@@ -5,83 +5,6 @@ using System;
 
 namespace CognitiveVR
 {
-    namespace Json
-    {
-        //these are filled/emptied from json, so may not be directly referenced
-#pragma warning disable 0649
-        [System.Serializable]
-        public class Organization
-        {
-            public string id;
-            public string name;
-            public string prefix;
-        }
-        [System.Serializable]
-        public class Product
-        {
-            public string id;
-            public string name;
-            public string orgId;
-            public string customerId;
-        }
-        [System.Serializable]
-        public class UserData
-        {
-            public string userId;
-            public string email;
-            public Organization[] organizations = new Organization[] { };
-            public Product[] products = new Product[] { };
-
-            public static UserData Empty
-            {
-                get
-                {
-                    return new UserData();
-                }
-            }
-
-            public Product AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
-            {
-                List<Product> productList = new List<Product>();
-                productList.AddRange(products);
-                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId, id = newProductId };
-                productList.Add(newProduct);
-                products = productList.ToArray();
-                return newProduct;
-            }
-        }
-#pragma warning restore 0649
-    }
-
-    [System.Serializable]
-    public class ExportSettings
-    {
-        public bool ExportStaticOnly = true;
-        public float MinExportGeoSize = 1;
-        public int ExplorerMinimumFaceCount = 100;
-        public int ExplorerMaximumFaceCount = 8000;
-        public int TextureQuality = 4;
-
-        public static bool Match(ExportSettings a, ExportSettings b)
-        {
-            if (!Mathf.Approximately(a.MinExportGeoSize, b.MinExportGeoSize)) { return false; }
-            if (a.ExportStaticOnly != b.ExportStaticOnly) { return false; }
-            if (a.ExplorerMinimumFaceCount != b.ExplorerMinimumFaceCount) { return false; }
-            if (a.ExplorerMaximumFaceCount != b.ExplorerMaximumFaceCount) { return false; }
-            if (a.TextureQuality != b.TextureQuality) { return false; }
-            return true;
-        }
-
-        public static ExportSettings Copy(ExportSettings target)
-        {
-            return new ExportSettings() { ExportStaticOnly = target.ExportStaticOnly,
-                MinExportGeoSize = target.MinExportGeoSize,
-                ExplorerMaximumFaceCount = target.ExplorerMaximumFaceCount,
-                ExplorerMinimumFaceCount = target.ExplorerMinimumFaceCount,
-                TextureQuality = target.TextureQuality };
-        }
-    }
-
     public class CognitiveVR_Preferences : ScriptableObject
     {
         [Serializable]
@@ -175,7 +98,7 @@ namespace CognitiveVR
         public string SavedBlenderPath = "";
         public ExportSettings ExportSettings;
 
-        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 2,ExplorerMaximumFaceCount = 1000, ExplorerMinimumFaceCount = 20, TextureQuality = 8 };
+        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 2, ExplorerMaximumFaceCount = 1000, ExplorerMinimumFaceCount = 20, TextureQuality = 8 };
         public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 1, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 100, TextureQuality = 4 };
         public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 400, TextureQuality = 2 };
 
@@ -218,4 +141,83 @@ namespace CognitiveVR
             return null;
         }
     }
+
+    namespace Json
+    {
+        //these are filled/emptied from json, so may not be directly referenced
+#pragma warning disable 0649
+        [System.Serializable]
+        public class Organization
+        {
+            public string id;
+            public string name;
+            public string prefix;
+        }
+        [System.Serializable]
+        public class Product
+        {
+            public string id;
+            public string name;
+            public string orgId;
+            public string customerId;
+        }
+        [System.Serializable]
+        public class UserData
+        {
+            public string userId;
+            public string email;
+            public Organization[] organizations = new Organization[] { };
+            public Product[] products = new Product[] { };
+
+            public static UserData Empty
+            {
+                get
+                {
+                    return new UserData();
+                }
+            }
+
+            public Product AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
+            {
+                List<Product> productList = new List<Product>();
+                productList.AddRange(products);
+                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId, id = newProductId };
+                productList.Add(newProduct);
+                products = productList.ToArray();
+                return newProduct;
+            }
+        }
+#pragma warning restore 0649
+    }
+
+    [System.Serializable]
+    public class ExportSettings
+    {
+        public bool ExportStaticOnly = true;
+        public float MinExportGeoSize = 1;
+        public int ExplorerMinimumFaceCount = 100;
+        public int ExplorerMaximumFaceCount = 8000;
+        public int TextureQuality = 4;
+
+        public static bool Match(ExportSettings a, ExportSettings b)
+        {
+            if (!Mathf.Approximately(a.MinExportGeoSize, b.MinExportGeoSize)) { return false; }
+            if (a.ExportStaticOnly != b.ExportStaticOnly) { return false; }
+            if (a.ExplorerMinimumFaceCount != b.ExplorerMinimumFaceCount) { return false; }
+            if (a.ExplorerMaximumFaceCount != b.ExplorerMaximumFaceCount) { return false; }
+            if (a.TextureQuality != b.TextureQuality) { return false; }
+            return true;
+        }
+
+        public static ExportSettings Copy(ExportSettings target)
+        {
+            return new ExportSettings() { ExportStaticOnly = target.ExportStaticOnly,
+                MinExportGeoSize = target.MinExportGeoSize,
+                ExplorerMaximumFaceCount = target.ExplorerMaximumFaceCount,
+                ExplorerMinimumFaceCount = target.ExplorerMinimumFaceCount,
+                TextureQuality = target.TextureQuality };
+        }
+    }
+
+    
 }
