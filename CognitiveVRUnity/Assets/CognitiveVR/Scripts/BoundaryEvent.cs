@@ -14,7 +14,7 @@ namespace CognitiveVR.Components
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent += CognitiveVR_Manager_PoseEventHandler;
+            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_PoseEventHandler;
 
 
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
@@ -69,10 +69,19 @@ namespace CognitiveVR.Components
             return "Sends transaction when SteamVR Chaperone or Oculus Guardian becomes visible and becomes hidden";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseEvent -= CognitiveVR_Manager_PoseEventHandler;
+            CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_PoseEventHandler;
 #endif
         }
     }

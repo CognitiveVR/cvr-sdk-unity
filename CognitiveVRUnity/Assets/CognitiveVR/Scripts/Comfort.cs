@@ -14,12 +14,23 @@ namespace CognitiveVR.Components
 
     public class Comfort : CognitiveVRAnalyticsComponent
     {
+        [DisplaySetting(5f,60f)]
+        [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]
+        public float ComfortTrackingInterval = 6;
+
+        [DisplaySetting]
+        [Tooltip("Ignore sending Comfort at set intervals. Only send FPS events below the threshold")]
+        public bool OnlySendComfortOnLowFPS = true;
+
+        [DisplaySetting(10,240)]
+        [Tooltip("Falling below and rising above this threshold will send events")]
+        public int LowFramerateThreshold = 60;
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
-            updateInterval = CognitiveVR_Preferences.Instance.ComfortTrackingInterval;
-            timeleft = updateInterval;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            timeleft = ComfortTrackingInterval;
             if (CognitiveVR_Manager.HMD != null)
                 lastRotation = CognitiveVR_Manager.HMD.rotation;
         }
@@ -28,7 +39,7 @@ namespace CognitiveVR.Components
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
             UpdateFramerate();
-            if (!CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS)
+            if (OnlySendComfortOnLowFPS == false)
             {
                 UpdateHMDRotation();
             }
@@ -37,11 +48,9 @@ namespace CognitiveVR.Components
             if (timeleft <= 0.0f)
             {
                 IntervalEnd();
-                timeleft = updateInterval;
+                timeleft = ComfortTrackingInterval;
             }
         }
-
-        float updateInterval = 6;
 
         float timeleft;
         float accum;
@@ -73,20 +82,20 @@ namespace CognitiveVR.Components
             accum = 0.0F;
             frames = 0;
 
-            if (lastFps < CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && !lowFramerate)
+            if (lastFps < LowFramerateThreshold && !lowFramerate)
             {
                 lowFramerate = true;
                 fpsTransactionID = System.Guid.NewGuid().ToString();
                 Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
                 Util.logDebug("low framerate");
             }
-            else if (lastFps > CognitiveVR.CognitiveVR_Preferences.Instance.LowFramerateThreshold && lowFramerate)
+            else if (lastFps > LowFramerateThreshold && lowFramerate)
             {
                 lowFramerate = false;
                 Instrumentation.Transaction("cvr.performance", fpsTransactionID).end();
             }
 
-            if (CognitiveVR_Preferences.Instance.OnlySendComfortOnLowFPS) { return; }
+            if (OnlySendComfortOnLowFPS) { return; }
 
             lastRps = accumRotation / rotFrames;
             accumRotation = 0.0F;
@@ -111,7 +120,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

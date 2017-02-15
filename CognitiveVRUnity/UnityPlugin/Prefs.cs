@@ -3,6 +3,7 @@
 namespace CognitiveVR
 {
     // The default implementation for Unity is to use the PlayerPrefs class
+    [System.Obsolete("CognitiveVR.Prefs is no longer used. Use CognitiveVR.Util instead")]
     internal static class Prefs
     {
         // Adds an entry to the dictionary for the key-value pair.

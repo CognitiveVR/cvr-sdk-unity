@@ -13,10 +13,13 @@ namespace CognitiveVR.Components
         string controller0GUID;
         string controller1GUID;
 
+        [DisplaySetting]
+        public LayerMask CollisionLayerMask = 1;
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         private void CognitiveVR_Manager_OnTick()
@@ -29,7 +32,7 @@ namespace CognitiveVR.Components
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(false);
 
-                hit = Physics.CheckSphere(pos, 0.1f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller0GUID))
                 {
                     Util.logDebug("controller collision");
@@ -50,7 +53,7 @@ namespace CognitiveVR.Components
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(true);
 
-                hit = Physics.CheckSphere(pos, 0.1f, CognitiveVR_Preferences.Instance.CollisionLayerMask);
+                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
                 if (hit && string.IsNullOrEmpty(controller1GUID))
                 {
                     Util.logDebug("controller collision");
@@ -70,9 +73,18 @@ namespace CognitiveVR.Components
             return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nRequires SteamVR or Oculus Touch controllers";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

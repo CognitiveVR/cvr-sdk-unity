@@ -60,7 +60,7 @@ namespace CognitiveVR
 		
 				// First see if we have a deviceId stored off locally that we can use
                 string savedDeviceId;
-                if (!isValidId(deviceId) && Prefs.TryGetValue(DEVICEID_KEY_NAME, out savedDeviceId))
+                if (!isValidId(deviceId) && Util.TryGetPrefValue(DEVICEID_KEY_NAME, out savedDeviceId))
                 {
                     if (isValidId(savedDeviceId))
                     {
@@ -213,12 +213,14 @@ namespace CognitiveVR
          * Pause the CognitiveVR system.
          * Note that currently this does nothing on native unity/wp8
          */
+        [System.Obsolete("CoreSubsystem.pause() is no longer used")]
         public static void pause() { }
 
         /**
          * Resume the CognitiveVR system.
          * Note that currently this does nothing on native unity/wp8
          */
+        [System.Obsolete("CoreSubsystem.resume() is no longer used")]
         public static void resume() { }
           
         /**
@@ -355,7 +357,7 @@ namespace CognitiveVR
                                     if (null != DeviceId)
                                     {
                                         // Save it off
-                                        Prefs.Add(DEVICEID_KEY_NAME, DeviceId);
+                                        Util.AddPref(DEVICEID_KEY_NAME, DeviceId);
 
                                         if (ret.ContainsKey("devicetuning"))
                                         {

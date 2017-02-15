@@ -17,7 +17,7 @@ namespace CognitiveVR.Components
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseUpdate += CognitiveVR_Manager_PoseUpdateHandler;
+            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler;
 #elif CVR_OCULUS
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
@@ -78,14 +78,14 @@ namespace CognitiveVR.Components
             public string ConnectedTransID = string.Empty;
         }
 
-        private void CognitiveVR_Manager_PoseUpdateHandler(params object[] args)
+        private void CognitiveVR_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
         {
-            var poses = (Valve.VR.TrackedDevicePose_t[])args[0];
+            //var poses = (Valve.VR.TrackedDevicePose_t[])args[0];
             for (int i = 0; i < 16; i++)
             {
-                if (poses.Length <= i) { break; }
+                if (args.Length <= i) { break; }
 
-                if (poses[i].bDeviceIsConnected && poses[i].bPoseIsValid)
+                if (args[i].bDeviceIsConnected && args[i].bPoseIsValid)
                 {
                     bool foundMatchingDevice = false;
                     for (int j = 0; j < Devices.Count; j++)
@@ -99,23 +99,23 @@ namespace CognitiveVR.Components
 
             for (int j = 0; j < Devices.Count; j++)
             {
-                if (poses[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID != string.Empty)
+                if (args[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID != string.Empty)
                 {
                     Instrumentation.Transaction("cvr.tracking", Devices[j].ValidTransID).setProperty("device", GetViveDeviceName(Devices[j].deviceID)).setProperty("visible", true).end();
                     Devices[j].ValidTransID = string.Empty;
                 }
-                if (!poses[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID == string.Empty)
+                if (!args[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID == string.Empty)
                 {
                     Devices[j].ValidTransID = System.Guid.NewGuid().ToString();
                     Instrumentation.Transaction("cvr.tracking", Devices[j].ValidTransID).setProperty("device", GetViveDeviceName(Devices[j].deviceID)).setProperty("visible", false).begin();
                 }
 
-                if (poses[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID != string.Empty)
+                if (args[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID != string.Empty)
                 {
                     Instrumentation.Transaction("cvr.tracking", Devices[j].ConnectedTransID).setProperty("device", GetViveDeviceName(Devices[j].deviceID)).setProperty("connected", true).end();
                     Devices[j].ConnectedTransID = string.Empty;
                 }
-                if (!poses[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID == string.Empty)
+                if (!args[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID == string.Empty)
                 {
                     Devices[j].ConnectedTransID = System.Guid.NewGuid().ToString();
                     Instrumentation.Transaction("cvr.tracking", Devices[j].ConnectedTransID).setProperty("device", GetViveDeviceName(Devices[j].deviceID)).setProperty("connected", false).begin();
@@ -137,6 +137,15 @@ namespace CognitiveVR.Components
         }
 #endif
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         public static string GetDescription()
         {
             return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
@@ -145,7 +154,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.OnPoseUpdate -= CognitiveVR_Manager_PoseUpdateHandler;
+            CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateHandler;
 #endif
 #if CVR_OCULUS
             OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;

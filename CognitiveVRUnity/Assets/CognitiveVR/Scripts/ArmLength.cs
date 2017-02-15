@@ -11,9 +11,12 @@ namespace CognitiveVR.Components
 {
     public class ArmLength : CognitiveVRAnalyticsComponent
     {
+        [DisplaySetting(5,100)]
+        [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
+        public int SampleCount = 50;
+
 #if CVR_STEAMVR || CVR_OCULUS
         float maxSqrDistance;
-        int sampleCount = 50;
         int samples = 0;
 #endif
 #if CVR_STEAMVR
@@ -21,20 +24,21 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
         public Valve.VR.VRControllerState_t controllerState;
+        public uint stateSize;
         private void CognitiveVR_Manager_OnUpdate()
         {
             var system = Valve.VR.OpenVR.System;
-            if (system != null && system.GetControllerState(0, ref controllerState))
+            if (system != null && system.GetControllerState(0, ref controllerState, stateSize ))
             {
                 ulong trigger = controllerState.ulButtonPressed & (1UL << ((int)Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger));
                 if (trigger > 0L)
                 {
-                    CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-                    CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+                    CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
                 }
             }
         }
@@ -43,16 +47,16 @@ namespace CognitiveVR.Components
         {
             if (CognitiveVR_Manager.GetController(0) == null){return;}
 
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -62,31 +66,31 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.OnUpdate += CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
         private void CognitiveVR_Manager_OnUpdate()
         {
             if (OVRInput.GetDown(OVRInput.Button.Any))
             {
-                CognitiveVR_Manager.OnTick += CognitiveVR_Manager_OnTick;
-                CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
+                CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
             }
         }
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (samples < sampleCount)
+            if (samples < SampleCount)
             {
                 maxSqrDistance = Mathf.Max(maxSqrDistance, OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch).sqrMagnitude, OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch).sqrMagnitude);
                 //maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
-                if (samples >= sampleCount)
+                if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
                     Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
         }
@@ -96,12 +100,23 @@ namespace CognitiveVR.Components
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nRequires SteamVR or Oculus Touch controllers";
         }
 
+        public static bool GetWarning()
+        {
+#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
+            return true;
+#else
+            return false;
+#endif
+        }
+
         void OnDestroy()
         {
 #if CVR_STEAMVR || CVR_OCULUS
-            CognitiveVR_Manager.OnUpdate -= CognitiveVR_Manager_OnUpdate;
-            CognitiveVR_Manager.OnTick -= CognitiveVR_Manager_OnTick;
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
 #endif
         }
+
+
     }
 }

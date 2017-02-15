@@ -11,19 +11,13 @@ public class SensorTest : MonoBehaviour {
 
     IEnumerator OneSecondLoop()
     {
-        int i = 0;
-        while (i < 5)
+        while (true)
         {
-            i++;
-            yield return new WaitForSeconds(1f);
-            CognitiveVR.Plugins.Sensor.RecordDataPoint("temperature", Random.Range(35f, 37f));
-            CognitiveVR.Plugins.Sensor.RecordDataPoint("heatrate", Random.Range(60f, 80f));
-            CognitiveVR.Plugins.Sensor.RecordDataPoint("twitchiness", Random.Range(1, 100f));
+            yield return new WaitForSeconds(0.05f);
+            SensorRecorder.RecordDataPoint("temperature", Mathf.Sin(Time.time*Mathf.PI) + 35 + Random.Range(-0.2f,0.2f));
+            SensorRecorder.RecordDataPoint("heartrate", Mathf.Sin(Time.time) * 10 + 70);
+            SensorRecorder.RecordDataPoint("twitchiness", Random.Range(1, 100f));
         }
-
-        CognitiveVR.Plugins.Sensor.SendData();
-        //Debug.Log(json);
-
-
+        //this should be sent when player gaze is sent
     }
 }

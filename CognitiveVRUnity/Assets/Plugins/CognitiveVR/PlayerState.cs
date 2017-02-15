@@ -7,6 +7,7 @@ namespace CognitiveVR.Plugins
 	/// <summary>
 	/// A light wrapper around CognitiveVR.Transaction to provide some built-in characteristics for Purchase transactions
 	/// </summary>
+    [System.Obsolete("PlayerStateTransaction is no longer used")]
 	public class PlayerStateTransaction : TransactionBase<PlayerStateTransaction>
 	{
 		internal PlayerStateTransaction(string transactionId) : base("Player State", transactionId) {}
@@ -42,10 +43,11 @@ namespace CognitiveVR.Plugins
         public PlayerStateTransaction setRoomPosition(UnityEngine.Vector3 position) { setProperty("roomPosition", position); return this; }
 	}
 
-	/// <summary>
-	/// This CognitiveVR plugin provides a simple interface for instrumenting player state
-	/// </summary>
-	public class PlayerState
+    /// <summary>
+    /// This CognitiveVR plugin provides a simple interface for instrumenting player state
+    /// </summary>
+    [System.Obsolete("PlayerState is no longer used")]
+    public class PlayerState
     {
 		/// <summary>
 		/// Factory method for invoking CognitiveVRPlugins.SessionTransaction methods

@@ -294,8 +294,6 @@ namespace CognitiveVR
         //close action is called immediately if fetching the question fails
         IEnumerator FetchQuestion()
         {
-            //TODO ask question server
-
             //tuning variable
             string response = Tuning.getVar<string>(ExitPollQuestion, "");
             if (!string.IsNullOrEmpty(response))
@@ -484,7 +482,7 @@ namespace CognitiveVR
             {
                 //response details
                 ExitPollRequest response = new ExitPollRequest();
-                response.sceneId = key.SceneKey;
+                response.sceneId = key.SceneId;
                 response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
                 response.pollValues = new ExitPollTuningQuestion[1] { question };
                 response.timestamp = (int)CognitiveVR_Preferences.TimeStamp;
