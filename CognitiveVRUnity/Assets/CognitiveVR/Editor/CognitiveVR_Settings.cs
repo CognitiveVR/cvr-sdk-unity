@@ -67,7 +67,7 @@ namespace CognitiveVR
 
             bool show = true;
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
             show = false;
 #endif
 
@@ -402,8 +402,8 @@ namespace CognitiveVR
                 GUILayout.BeginHorizontal();
 
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE
-            UserStartupBox("4", true);
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
+                UserStartupBox("4", true);
 #else
                 UserStartupBox("4", false);
 #endif
