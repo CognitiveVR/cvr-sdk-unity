@@ -38,9 +38,23 @@ namespace CognitiveVR
             }
         }
 
-        /// <summary>
-        /// companyname1234-productname-test
-        /// </summary>
+        //timestamp and session id
+        private static double _timeStamp;
+        public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
+
+        private static string _sessionId;
+        public static string SessionID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_sessionId))
+                {
+                    _sessionId = (int)TimeStamp + "_" + Core.UniqueID;
+                }
+                return _sessionId;
+            }
+        }
+
         public string CustomerID = "";
 
         /// <summary>

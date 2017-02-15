@@ -281,16 +281,6 @@ namespace CognitiveVR
 
         private static CognitiveVR_Manager instance;
         YieldInstruction playerSnapshotInverval;
-        private static double _timeStamp;
-        public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
-
-        public static string SessionID
-        {
-            get
-            {
-                return (int)TimeStamp + "_" + Core.UniqueID;
-            }
-        }
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
         public bool EnableLogging = false;
@@ -350,7 +340,6 @@ namespace CognitiveVR
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             OnLevelLoaded();
-            _timeStamp = Util.Timestamp();
         }
 
         IEnumerator Tick()

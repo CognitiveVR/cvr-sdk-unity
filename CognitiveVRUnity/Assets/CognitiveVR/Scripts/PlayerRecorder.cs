@@ -175,7 +175,6 @@ namespace CognitiveVR
         public static void SendPlayerRecording()
         {
             instance.OnSendData();
-            //CognitiveVR_Manager.instance.SendPlayerGazeSnapshots();
         }
 
         public static void EndPlayerRecording()
@@ -386,9 +385,9 @@ namespace CognitiveVR
             //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(SetString("sessionid", CognitiveVR_Manager.SessionID));
+            builder.Append(SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
             builder.Append(SetObject("part", jsonEventPart));
             builder.Append(",");
@@ -426,9 +425,9 @@ namespace CognitiveVR
             //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(SetString("sessionid", CognitiveVR_Manager.SessionID));
+            builder.Append(SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
             builder.Append(SetObject("part", jsonGazePart));
             builder.Append(",");
