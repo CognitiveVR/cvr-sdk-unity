@@ -18,6 +18,8 @@ namespace CognitiveVR
 
         Camera cam;
         PlayerRecorderHelper periodicRenderer;
+        int jsonGazePart = 1;
+        int jsonEventPart = 1;
 
         bool headsetPresent = true;
 
@@ -42,8 +44,7 @@ namespace CognitiveVR
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #endif
-            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
-                SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
             string sceneName = SceneManager.GetActiveScene().name;
 
@@ -99,6 +100,11 @@ namespace CognitiveVR
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
+            jsonGazePart = 1;
+            jsonEventPart = 1;
+
+            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad) { return; }
+
             Scene activeScene = arg0;
 
             if (!string.IsNullOrEmpty(trackingSceneName))
@@ -192,7 +198,6 @@ namespace CognitiveVR
         public static void SendPlayerRecording()
         {
             instance.OnSendData();
-            //CognitiveVR_Manager.instance.SendPlayerGazeSnapshots();
         }
 
         public static void EndPlayerRecording()
@@ -415,10 +420,14 @@ namespace CognitiveVR
             //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(SetString("sessionid", CognitiveVR_Manager.SessionID));
+            builder.Append(SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
+            builder.Append(SetObject("part", jsonEventPart));
+            builder.Append(",");
+
+            jsonEventPart++;
             //builder.Append(SetString("keys", "userdata"));
             //builder.Append(",");
 
@@ -451,10 +460,15 @@ namespace CognitiveVR
             //header
             builder.Append(SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(SetString("sessionid", CognitiveVR_Manager.SessionID));
+            builder.Append(SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
+            builder.Append(SetObject("part", jsonGazePart));
+            builder.Append(",");
+
+            jsonGazePart++;
+
 
 #if CVR_FOVE
             builder.Append(SetString("hmdtype", "fove"));
