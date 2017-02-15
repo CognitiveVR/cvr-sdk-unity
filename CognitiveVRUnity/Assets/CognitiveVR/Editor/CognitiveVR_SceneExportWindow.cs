@@ -724,6 +724,10 @@ namespace CognitiveVR
             UploadSceneSettings = null;
         }
 
+        static int uploadRequests = 0;
+        static WWW dynamicUploadWWW;
+
+
         public static void UploadDynamicObjects()
         {
             string fileList = "Upload Files:\n";
@@ -740,6 +744,7 @@ namespace CognitiveVR
             string uploadUrl = "https://sceneexplorer.com/api/objects/" + sceneid + "/";
 
             var subdirectories = Directory.GetDirectories(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic");
+
             foreach (var subdir in subdirectories)
             {
                 var filePaths = Directory.GetFiles(subdir);
@@ -755,13 +760,46 @@ namespace CognitiveVR
 
                 var dirname = new DirectoryInfo(subdir).Name;
 
-                Debug.Log("upload url: " + uploadUrl + dirname);
+                Debug.Log("upload dynamic object: " + dirname);
 
                 //upload file info to dynamic endpoint backend dealy
-                sceneUploadWWW = new WWW(uploadUrl + dirname, wwwForm);
+                dynamicUploadWWW = new WWW(uploadUrl + dirname, wwwForm);
+                uploadRequests++;
+            }
+
+            if (uploadRequests > 0)
+            {
+                EditorApplication.update += UpdateUploadDynamics;
             }
             Debug.Log(fileList);
         }
+
+        static void UpdateUploadDynamics()
+        {
+            if (dynamicUploadWWW == null)
+            {
+                EditorApplication.update -= UpdateUploadData;
+                return;
+            }
+
+            if (!dynamicUploadWWW.isDone) { return; }
+
+            if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
+            {
+                Debug.LogError(dynamicUploadWWW.error);
+            }
+            if (!string.IsNullOrEmpty(dynamicUploadWWW.text))
+            {
+                Debug.Log("dynamic object upload reponse text " + dynamicUploadWWW.text);
+            }
+            else
+            {
+                Debug.Log("dynamic object upload complete");
+            }
+
+            EditorApplication.update -= UpdateUploadData;
+        }
+
 
         #region Utility
 

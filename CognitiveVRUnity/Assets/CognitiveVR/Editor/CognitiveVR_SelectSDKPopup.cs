@@ -9,7 +9,7 @@ namespace CognitiveVR
     {
         public override Vector2 GetWindowSize()
         {
-            return new Vector2(292, 150);
+            return new Vector2(292, 170);
         }
 
         public override void OnOpen()
@@ -28,6 +28,9 @@ namespace CognitiveVR
 #endif
 #if CVR_FOVE
             option.Add("CVR_FOVE");
+#endif
+#if CVR_PUPIL
+            option.Add("CVR_PUPIL");
 #endif
         }
 
@@ -77,12 +80,33 @@ namespace CognitiveVR
             if (GUILayout.Button("Fove VR 0.9.2"))
             {
                 if (option.Contains("CVR_FOVE"))
+                {
                     option.Remove("CVR_FOVE");
+                    option.Remove("CVR_GAZETRACK");
+                }
                 else
                 {
                     if (!Event.current.shift)
                         option.Clear();
                     option.Add("CVR_FOVE");
+                    option.Add("CVR_GAZETRACK");
+                }
+            }
+            GUI.color = Color.white;
+
+            if (option.Contains("CVR_PUPIL")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Pupil Labs"))
+            {
+                if (option.Contains("CVR_PUPIL"))
+                {
+                    option.Remove("CVR_PUPIL");
+                    option.Remove("CVR_GAZETRACK");
+                }
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_PUPIL");
                     option.Add("CVR_GAZETRACK");
                 }
             }
@@ -110,7 +134,7 @@ namespace CognitiveVR
             GUI.contentColor = Color.white;
             if (GUILayout.Button("Save and Close"))
             {
-                editorWindow.Close();                
+                editorWindow.Close();
             }
             GUI.color = Color.white;
         }

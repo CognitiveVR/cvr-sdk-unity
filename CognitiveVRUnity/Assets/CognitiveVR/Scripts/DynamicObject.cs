@@ -50,16 +50,20 @@ namespace CognitiveVR
         [Header("IDs")]
         public bool UseCustomId = false;
         public int CustomId;
-        public bool ReleaseIdOnDestroy = false;
+        public bool ReleaseIdOnDestroy = true;
+        public bool ReleaseIdOnDisable = true;
+
+        public string GroupName;
 
         public DynamicObjectId ObjectId;
 
         public bool UseCustomMesh;
-        public CommonDynamicMesh commomMesh;
-        public string meshName;
+        public CommonDynamicMesh CommonMesh;
+        public string MeshName;
 
         [Header("Updates")]
-        public float updateRate = 0.5f;
+        public bool SyncWithPlayerUpdate = false;
+        public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
 
         //static variables
@@ -84,13 +88,18 @@ namespace CognitiveVR
 
         public IEnumerator UpdateTick()
         {
-            updateTick = new WaitForSeconds(updateRate);
+            updateTick = new WaitForSeconds(UpdateRate);
 
             while (true)
             {
                 yield return updateTick;
                 CheckUpdate();
             }
+        }
+
+        public void CognitiveVR_Manager_TickEvent()
+        {
+            CheckUpdate();
         }
 
         public void CheckUpdate()
@@ -113,7 +122,7 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot NewSnapshot()
         {
-            return NewSnapshot(meshName);
+            return NewSnapshot(MeshName);
         }
 
         public DynamicObjectSnapshot NewSnapshot(string mesh)
@@ -148,14 +157,14 @@ namespace CognitiveVR
                     else
                     {
                         int newId = GetUniqueID();
-                        ObjectId = new DynamicObjectId(newId, meshName);
-                        ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, meshName));
+                        ObjectId = new DynamicObjectId(newId, MeshName);
+                        ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName));
                     }
                 }
                 else
                 {
-                    ObjectId = new DynamicObjectId(CustomId, meshName);
-                    ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, meshName));
+                    ObjectId = new DynamicObjectId(CustomId, MeshName);
+                    ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName));
                 }
 
                 if (ObjectManifest.Count == 1)
@@ -185,8 +194,6 @@ namespace CognitiveVR
 
         private static void CognitiveVR_Manager_SendDataEvent()
         {
-            //TODO serialize the manifest and snapshots into json
-
             byte[] bytes;
 
             if (DynamicObject.ObjectManifest.Count > 0 && DynamicObject.Snapshots.Count > 0)
@@ -223,9 +230,9 @@ namespace CognitiveVR
             //header
             builder.Append(Json.Util.SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(Json.Util.SetObject("timestamp", CognitiveVR_Manager.TimeStamp));
+            builder.Append(Json.Util.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetString("sessionid", CognitiveVR_Manager.SessionID));
+            builder.Append(Json.Util.SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
 
             //manifest
@@ -345,8 +352,16 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+        void OnDisable()
+        {
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+            if (!ReleaseIdOnDisable) { return; }
+            NewSnapshot().ReleaseUniqueId();
+        }
+
         void OnDestroy()
         {
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             if (!ReleaseIdOnDestroy) { return; }
             NewSnapshot().ReleaseUniqueId();
         }
@@ -404,7 +419,16 @@ namespace CognitiveVR
         {
             dynamic.StopAllCoroutines();
             if (enable)
-                dynamic.StartCoroutine(dynamic.UpdateTick());
+            {
+                if (dynamic.SyncWithPlayerUpdate)
+                {
+                    CognitiveVR_Manager.TickEvent += dynamic.CognitiveVR_Manager_TickEvent;
+                }
+                else
+                {
+                    dynamic.StartCoroutine(dynamic.UpdateTick());
+                }
+            }
             return this;
         }
 
@@ -445,6 +469,7 @@ namespace CognitiveVR
             if (foundId != null)
             {
                 foundId.used = false;
+                this.dynamic.ObjectId = null;
             }
             return this;
         }

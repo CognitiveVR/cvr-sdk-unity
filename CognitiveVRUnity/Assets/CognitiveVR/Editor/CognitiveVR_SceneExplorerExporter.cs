@@ -418,12 +418,17 @@ namespace CognitiveVR
                     if (m.HasProperty("_Color"))
                         c = m.GetColor("_Color");
 
+                    //TODO deal with additive particle property names(tintcolor,particletexture). use transparency maps
+                    float opacity = 1.0f;
+                    if (m.renderQueue >= 3000) //3000 is the default transparent queue
+                        opacity = m.color.a;
+
                     sw.Write("\n");
                     sw.Write("newmtl {0}\n", kvp.Key);
                     sw.Write("Ka  0.6 0.6 0.6\n");
                     sw.Write("Kd  " + c.r + " " + c.g + " " + c.b + "\n");
                     sw.Write("Ks  0.0 0.0 0.0\n");
-                    sw.Write("d  1.0\n");
+                    sw.Write("d  "+ opacity + "\n");
                     sw.Write("Ns  96.0\n");
                     sw.Write("Ni  1.0\n");
                     sw.Write("illum 1\n");
@@ -732,23 +737,29 @@ namespace CognitiveVR
                 Debug.Log("Skipping " + transform.gameObject + ". Needs a Dynamic Object component");
                 return false;
             }
+            if (!dynamic.UseCustomMesh)
+            {
+                Debug.Log("Skipping " + transform.gameObject + ". Common Meshes for Dynamic Objects don't need to be exported");
+                return false;
+            }
+
             MeshFilter[] meshfilter = transform.GetComponentsInChildren<MeshFilter>();
 
             if (meshfilter.Length == 0)
             {
-                Debug.Log("skipping " + transform.gameObject + ". No mesh filter on gameobject or children");
+                Debug.Log("Skipping " + transform.gameObject + ". No mesh filter on gameobject or children");
                 return false;
             }
 
-            if (!CreateTargetFolder("Dynamic/" + dynamic.meshName))
+            if (!CreateTargetFolder("Dynamic/" + dynamic.MeshName))
             {
-                Debug.LogWarning("Failed to create folder " + dynamic.meshName);
+                Debug.LogWarning("Failed to create folder " + dynamic.MeshName);
                 return false;
             }
 
             //exportedObjectCount++;
 
-            string objectName = dynamic.meshName;
+            string objectName = dynamic.MeshName;
 
             folder = "CognitiveVR_SceneExplorerExport/Dynamic/" + objectName;
             return MeshesToFile(meshfilter, objectName, true, 1, transform.transform.position);
