@@ -12,6 +12,17 @@ namespace CognitiveVR
         static int jsonPart = 1;
         static Dictionary<string, List<SensorSnapshot>> CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
 
+        static SensorRecorder()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+        }
+
+        private static void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.LoadSceneMode arg1)
+        {
+            //TODO tie this to data send, as opposed to scene load
+            jsonPart = 1;
+        }
+
         public static void RecordDataPoint(string category, float value)
         {
             if (CachedSnapshots.Count == 0)
@@ -54,12 +65,13 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            var www = new UnityEngine.WWW(url, bytes, headers);
+            new UnityEngine.WWW(url, bytes, headers);
             //because this is not a monobehaviour, this cannot hold a coroutine and get a response
         }
 
         #region json
 
+        //TODO use the generic json append methods from the dynamic object branch
         static byte[] SerializeSensorData()
         {
             StringBuilder sb = new StringBuilder();

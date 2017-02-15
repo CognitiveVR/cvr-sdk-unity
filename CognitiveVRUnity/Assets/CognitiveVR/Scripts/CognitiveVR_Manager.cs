@@ -52,9 +52,18 @@ namespace CognitiveVR
         public static event QuitHandler QuitEvent;
         public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
 
+        //TODO separately package and send data in 0.6.0
+        //public delegate void PackageDataHandler(); //package data
+        /// <summary>
+        /// this is called when data thresholds are reached/hmd is removed and just before level is loaded and application quit
+        /// puts data into reasonable sized byte[] to be uploaded to the server
+        /// </summary>
+        //public static event PackageDataHandler PackageDataEvent;
+        //public void OnPackageData() { if (PackageDataEvent != null) { PackageDataEvent(); } }
+
         public delegate void SendDataHandler(); //send data
         /// <summary>
-        /// called when CognitiveVR_Manager.SendData is called. also called when player snapshots > maxSnapshotThreshold
+        /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
         /// </summary>
         public static event SendDataHandler SendDataEvent;
         public void OnSendData() { if (SendDataEvent != null) { SendDataEvent(); } }

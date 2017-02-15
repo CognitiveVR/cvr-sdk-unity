@@ -410,6 +410,7 @@ namespace CognitiveVR
                     if (m.HasProperty("_Color"))
                         c = m.GetColor("_Color");
 
+                    //TODO deal with additive particle property names(tintcolor,particletexture). use transparency maps
                     float opacity = 1.0f;
                     if (m.renderQueue >= 3000) //3000 is the default transparent queue
                         opacity = m.color.a;
