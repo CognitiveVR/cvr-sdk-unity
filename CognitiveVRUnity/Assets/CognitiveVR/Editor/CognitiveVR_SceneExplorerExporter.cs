@@ -410,12 +410,17 @@ namespace CognitiveVR
                     if (m.HasProperty("_Color"))
                         c = m.GetColor("_Color");
 
+                    //TODO deal with additive particle property names(tintcolor,particletexture). use transparency maps
+                    float opacity = 1.0f;
+                    if (m.renderQueue >= 3000) //3000 is the default transparent queue
+                        opacity = m.color.a;
+
                     sw.Write("\n");
                     sw.Write("newmtl {0}\n", kvp.Key);
                     sw.Write("Ka  0.6 0.6 0.6\n");
                     sw.Write("Kd  " + c.r + " " + c.g + " " + c.b + "\n");
                     sw.Write("Ks  0.0 0.0 0.0\n");
-                    sw.Write("d  1.0\n");
+                    sw.Write("d  "+ opacity + "\n");
                     sw.Write("Ns  96.0\n");
                     sw.Write("Ni  1.0\n");
                     sw.Write("illum 1\n");
