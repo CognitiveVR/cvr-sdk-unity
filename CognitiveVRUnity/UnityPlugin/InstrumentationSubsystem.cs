@@ -2,7 +2,7 @@
 
 namespace CognitiveVR
 {
-    public class TransactionSnapshot
+    /*public class TransactionSnapshot
     {
         public string category;
         public Dictionary<string, object> properties;
@@ -16,19 +16,76 @@ namespace CognitiveVR
             position = pos;
             timestamp = time;
         }
-    }
+    }*/
 
     public static class InstrumentationSubsystem
     {
-        public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
+        //public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
+        //string builder for 'data'. put into container when 'packaged', then 'sent'
+        public static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
+
         public static void init()
         {
             Util.cacheCurrencyInfo();
         }
 
+        /// <summary>
+        /// return string formatted to be sent as a webrequest
+        /// </summary>
+        /// <returns></returns>
+        public static string PackageData()
+        {
+            return "";
+        }
+
+        public static void OnSendData()
+        {
+
+        }
+
+        public static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
+        {
+            //System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            TransactionBuilder.Append("{");
+
+            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetObject("time", timestamp));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+
+
+            if (properties != null && properties.Keys.Count > 0)
+            {
+                TransactionBuilder.Append(",");
+                TransactionBuilder.Append("\"properties\":{");
+                foreach (var v in properties)
+                {
+                    if (v.Value.GetType() == typeof(string))
+                    {
+                        TransactionBuilder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
+                    }
+                    else
+                    {
+                        TransactionBuilder.Append(JsonUtil.SetObject(v.Key, v.Value));
+                    }
+                    TransactionBuilder.Append(",");
+                }
+                TransactionBuilder.Remove(TransactionBuilder.Length - 1, 1); //remove last comma
+                TransactionBuilder.Append("}"); //close properties object
+            }
+
+            TransactionBuilder.Append("}"); //close transaction object
+
+            //return TransactionBuilder.ToString();
+        }
+
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+            //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+
+            SetTransaction(category, properties, position, Util.Timestamp());
+            TransactionBuilder.Append(",");
 
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
             .setArg(category)
@@ -51,7 +108,9 @@ namespace CognitiveVR
 
         public static void endTransaction(string category, string result, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+            //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+            SetTransaction(category, properties, position, Util.Timestamp());
+            TransactionBuilder.Append(",");
 
             new CoreSubsystem.DataPointBuilder("datacollector_endTransaction")
             .setArg(category)

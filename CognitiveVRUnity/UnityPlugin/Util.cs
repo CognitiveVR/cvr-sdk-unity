@@ -203,4 +203,164 @@ namespace CognitiveVR
             return keyFound;
         }
     }
+
+    public static class JsonUtil
+    {
+        /// <returns>"name":["obj","obj","obj"]</returns>
+        public static string SetListString(string name, List<string> list)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"" + name + "\":[");
+            for (int i = 0; i < list.Count; i++)
+            {
+                builder.Append("\"" + list[i] + "\"");
+                builder.Append(",");
+            }
+            builder.Remove(builder.Length - 1, 1);
+            builder.Append("]");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[obj,obj,obj]</returns>
+        public static string SetListObject<T>(string name, List<T> list)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":{");
+            for (int i = 0; i < list.Count; i++)
+            {
+                builder.Append(list[i].ToString());
+                builder.Append(",");
+            }
+            builder.Remove(builder.Length - 1, 1);
+            builder.Append("}");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":"stringval"</returns>
+        public static string SetString(string name, string stringValue)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":");
+
+            builder.Append("\"");
+            builder.Append(stringValue);
+            builder.Append("\"");
+
+            return builder.ToString();
+        }
+
+        /// <returns>"name":objectValue.ToString()</returns>
+        public static string SetObject(string name, object objectValue)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":");
+
+            if (objectValue.GetType() == typeof(bool))
+                builder.Append(objectValue.ToString().ToLower());
+            else
+                builder.Append(objectValue.ToString());
+
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3]</returns>
+        public static string SetVector(string name, float[] pos, bool centimeterLimit = true)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"");
+            builder.Append( name);
+            builder.Append("\":[");
+
+            if (centimeterLimit)
+            {
+                builder.Append(string.Format("{0:0.00}", pos[0]));
+                builder.Append(",");
+                builder.Append(string.Format("{0:0.00}", pos[1]));
+                builder.Append(",");
+                builder.Append(string.Format("{0:0.00}", pos[2]));
+            }
+            else
+            {
+                builder.Append(pos[0]);
+                builder.Append(",");
+                builder.Append(pos[1]);
+                builder.Append(",");
+                builder.Append(pos[2]);
+            }
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3]</returns>
+        public static string SetPos(string name, Vector3 pos, bool centimeterLimit = true)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            if (centimeterLimit)
+            {
+                builder.Append(string.Format("{0:0.00}", pos.x));
+                builder.Append(",");
+                builder.Append(string.Format("{0:0.00}", pos.y));
+                builder.Append(",");
+                builder.Append(string.Format("{0:0.00}", pos.z));
+            }
+            else
+            {
+                builder.Append(pos.x);
+                builder.Append(",");
+                builder.Append(pos.y);
+                builder.Append(",");
+                builder.Append(pos.z);
+            }
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
+        public static string SetQuat(string name, Quaternion quat)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"" + name + "\":[");
+
+            builder.Append(string.Format("{0:0.000}", quat.x));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.y));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.z));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat.w));
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
+        public static string SetQuat(string name, float[] quat)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("\"" + name + "\":[");
+
+            builder.Append(string.Format("{0:0.000}", quat[0]));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat[1]));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat[2]));
+            builder.Append(",");
+            builder.Append(string.Format("{0:0.000}", quat[3]));
+
+            builder.Append("]");
+            return builder.ToString();
+        }
+    }
 }

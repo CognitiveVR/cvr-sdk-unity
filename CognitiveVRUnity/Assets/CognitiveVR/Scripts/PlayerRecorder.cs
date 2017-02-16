@@ -418,14 +418,14 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            builder.Append(Json.Util.SetString("userid", Core.userId));
+            builder.Append(JsonUtil.SetString("userid", Core.userId));
             builder.Append(",");
 			
-            builder.Append(Json.Util.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+            builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+            builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
 			builder.Append(",");
-			builder.Append(Json.Util.SetObject("part", jsonEventPart));
+			builder.Append(JsonUtil.SetObject("part", jsonEventPart));
             builder.Append(",");
             
 
@@ -460,23 +460,23 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            builder.Append(Json.Util.SetString("userid", Core.userId));
+            builder.Append(JsonUtil.SetString("userid", Core.userId));
             builder.Append(",");
 
-            builder.Append(Json.Util.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+            builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+            builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
 			builder.Append(",");
-			builder.Append(Json.Util.SetObject("part", jsonGazePart));
+			builder.Append(JsonUtil.SetObject("part", jsonGazePart));
 			builder.Append(",");
 
             jsonGazePart++;
 
 
 #if CVR_FOVE
-            builder.Append(Json.Util.SetString("hmdtype", "fove"));
+            builder.Append(JsonUtil.SetString("hmdtype", "fove"));
 #else
-            builder.Append(Json.Util.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
+            builder.Append(JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
 #endif
             builder.Append(",");
 
@@ -530,13 +530,13 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
 
-            builder.Append(Json.Util.SetObject("time", snap.timestamp));
+            builder.Append(JsonUtil.SetObject("time", snap.timestamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetPos("p", (Vector3)snap.Properties["position"]));
+            builder.Append(JsonUtil.SetPos("p", (Vector3)snap.Properties["position"]));
             builder.Append(",");
-            builder.Append(Json.Util.SetQuat("r", (Quaternion)snap.Properties["hmdRotation"]));
+            builder.Append(JsonUtil.SetQuat("r", (Quaternion)snap.Properties["hmdRotation"]));
             builder.Append(",");
-            builder.Append(Json.Util.SetPos("g", (Vector3)snap.Properties["gazePoint"]));
+            builder.Append(JsonUtil.SetPos("g", (Vector3)snap.Properties["gazePoint"]));
 
             builder.Append("}");
 
@@ -549,11 +549,11 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
 
-            builder.Append(Json.Util.SetString("name", snap.category));
+            builder.Append(JsonUtil.SetString("name", snap.category));
             builder.Append(",");
-            builder.Append(Json.Util.SetObject("time", snap.timestamp));
+            builder.Append(JsonUtil.SetObject("time", snap.timestamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetVector("point", snap.position));
+            builder.Append(JsonUtil.SetVector("point", snap.position));
 
 
             if (snap.properties != null && snap.properties.Keys.Count > 0)
@@ -564,11 +564,11 @@ namespace CognitiveVR
                 {
                     if (v.Value.GetType() == typeof(string))
                     {
-                        builder.Append(Json.Util.SetString(v.Key, (string)v.Value));
+                        builder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
                     }
                     else
                     {
-                        builder.Append(Json.Util.SetObject(v.Key, v.Value));
+                        builder.Append(JsonUtil.SetObject(v.Key, v.Value));
                     }
                     builder.Append(",");
                 }
@@ -581,155 +581,5 @@ namespace CognitiveVR
             return builder.ToString();
         }
 #endregion
-    }
-
-    namespace Json
-    {
-        public static class Util
-        {
-            /// <returns>"name":["obj","obj","obj"]</returns>
-            public static string SetListString(string name, List<string> list)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":[");
-                for (int i = 0; i < list.Count; i++)
-                {
-                    builder.Append("\"" + list[i] + "\"");
-                    builder.Append(",");
-                }
-                builder.Remove(builder.Length - 1, 1);
-                builder.Append("]");
-                return builder.ToString();
-            }
-
-            /// <returns>"name":[obj,obj,obj]</returns>
-            public static string SetListObject<T>(string name, List<T> list)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":{");
-                for (int i = 0; i < list.Count; i++)
-                {
-                    builder.Append(list[i].ToString());
-                    builder.Append(",");
-                }
-                builder.Remove(builder.Length - 1, 1);
-                builder.Append("}");
-                return builder.ToString();
-            }
-
-            /// <returns>"name":"stringval"</returns>
-            public static string SetString(string name, string stringValue)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":");
-                builder.Append("\"" + stringValue + "\"");
-
-                return builder.ToString();
-            }
-
-            /// <returns>"name":objectValue.ToString()</returns>
-            public static string SetObject(string name, object objectValue)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":");
-
-                if (objectValue.GetType() == typeof(bool))
-                    builder.Append(objectValue.ToString().ToLower());
-                else
-                    builder.Append(objectValue.ToString());
-
-                return builder.ToString();
-            }
-
-            /// <returns>"name":[0.1,0.2,0.3]</returns>
-            public static string SetVector(string name, float[] pos, bool centimeterLimit = true)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":[");
-
-                if (centimeterLimit)
-                {
-                    builder.Append(string.Format("{0:0.00}", pos[0]));
-                    builder.Append(",");
-                    builder.Append(string.Format("{0:0.00}", pos[1]));
-                    builder.Append(",");
-                    builder.Append(string.Format("{0:0.00}", pos[2]));
-                }
-                else
-                {
-                    builder.Append(pos[0]);
-                    builder.Append(",");
-                    builder.Append(pos[1]);
-                    builder.Append(",");
-                    builder.Append(pos[2]);
-                }
-
-                builder.Append("]");
-                return builder.ToString();
-            }
-
-            /// <returns>"name":[0.1,0.2,0.3]</returns>
-            public static string SetPos(string name, Vector3 pos, bool centimeterLimit = true)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":[");
-
-                if (centimeterLimit)
-                {
-                    builder.Append(string.Format("{0:0.00}", pos.x));
-                    builder.Append(",");
-                    builder.Append(string.Format("{0:0.00}", pos.y));
-                    builder.Append(",");
-                    builder.Append(string.Format("{0:0.00}", pos.z));
-                }
-                else
-                {
-                    builder.Append(pos.x);
-                    builder.Append(",");
-                    builder.Append(pos.y);
-                    builder.Append(",");
-                    builder.Append(pos.z);
-                }
-
-                builder.Append("]");
-                return builder.ToString();
-            }
-
-            /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
-            public static string SetQuat(string name, Quaternion quat)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":[");
-
-                builder.Append(string.Format("{0:0.000}", quat.x));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat.y));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat.z));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat.w));
-
-                builder.Append("]");
-                return builder.ToString();
-            }
-
-            /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
-            public static string SetQuat(string name, float[] quat)
-            {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder();
-                builder.Append("\"" + name + "\":[");
-
-                builder.Append(string.Format("{0:0.000}", quat[0]));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat[1]));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat[2]));
-                builder.Append(",");
-                builder.Append(string.Format("{0:0.000}", quat[3]));
-
-                builder.Append("]");
-                return builder.ToString();
-            }
-        }
     }
 }

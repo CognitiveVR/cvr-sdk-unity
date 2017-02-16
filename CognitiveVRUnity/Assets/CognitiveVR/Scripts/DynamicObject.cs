@@ -228,11 +228,11 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            builder.Append(Json.Util.SetString("userid", Core.userId));
+            builder.Append(JsonUtil.SetString("userid", Core.userId));
             builder.Append(",");
-            builder.Append(Json.Util.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+            builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+            builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
 
             //manifest
@@ -281,10 +281,10 @@ namespace CognitiveVR
 
             if (!string.IsNullOrEmpty(entry.name))
             {
-                builder.Append(Json.Util.SetString("name", entry.name));
+                builder.Append(JsonUtil.SetString("name", entry.name));
                 builder.Append(",");
             }
-            builder.Append(Json.Util.SetString("mesh", entry.meshName));
+            builder.Append(JsonUtil.SetString("mesh", entry.meshName));
 
 
             /*if (snap.properties != null && snap.properties.Keys.Count > 0)
@@ -295,11 +295,11 @@ namespace CognitiveVR
                 {
                     if (v.Value.GetType() == typeof(string))
                     {
-                        builder.Append(Json.Util.SetString(v.Key, (string)v.Value));
+                        builder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
                     }
                     else
                     {
-                        builder.Append(Json.Util.SetObject(v.Key, v.Value));
+                        builder.Append(JsonUtil.SetObject(v.Key, v.Value));
                     }
                     builder.Append(",");
                 }
@@ -317,13 +317,13 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
 
-            builder.Append(Json.Util.SetObject("id", snap.id));
+            builder.Append(JsonUtil.SetObject("id", snap.id));
             builder.Append(",");
-            builder.Append(Json.Util.SetObject("time", snap.timestamp));
+            builder.Append(JsonUtil.SetObject("time", snap.timestamp));
             builder.Append(",");
-            builder.Append(Json.Util.SetVector("p", snap.position));
+            builder.Append(JsonUtil.SetVector("p", snap.position));
             builder.Append(",");
-            builder.Append(Json.Util.SetQuat("r", snap.rotation));
+            builder.Append(JsonUtil.SetQuat("r", snap.rotation));
 
 
             if (snap.properties != null && snap.properties.Keys.Count > 0)
@@ -335,11 +335,11 @@ namespace CognitiveVR
                     builder.Append("{");
                     if (v.Value.GetType() == typeof(string))
                     {
-                        builder.Append(Json.Util.SetString(v.Key, (string)v.Value));
+                        builder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
                     }
                     else
                     {
-                        builder.Append(Json.Util.SetObject(v.Key, v.Value));
+                        builder.Append(JsonUtil.SetObject(v.Key, v.Value));
                     }
                     builder.Append("},");
                 }
