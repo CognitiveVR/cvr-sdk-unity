@@ -18,8 +18,6 @@ namespace CognitiveVR
 
         Camera cam;
         PlayerRecorderHelper periodicRenderer;
-        int jsonGazePart = 1;
-        int jsonEventPart = 1;
 
         bool headsetPresent = true;
 
@@ -59,6 +57,34 @@ namespace CognitiveVR
                 Util.logDebug("PlayerRecorderTracker - startup couldn't find scene -" + sceneName);
             }
             trackingSceneName = SceneManager.GetActiveScene().name;
+
+
+            InstrumentationSubsystem.EventDataThresholdEvent += InstrumentationSubsystem_EventDataThresholdEvent;
+            SendDataEvent += CognitiveVR_Manager_SendTransactionDataEvent;
+        }
+
+        private void CognitiveVR_Manager_SendTransactionDataEvent()
+        {
+            var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
+            if (sceneSettings == null)
+            {
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
+                return;
+            }
+
+            //sends all packaged transaction events from instrumentaiton subsystem to events dealy
+            foreach (var v in InstrumentationSubsystem.PackagedTransactionBundles)
+            {
+                string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
+                byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(v);
+                StartCoroutine(PostJsonRequest(outBytes, SceneURLEvents));
+            }
+            InstrumentationSubsystem.SendData();
+        }
+
+        private void InstrumentationSubsystem_EventDataThresholdEvent()
+        {
+            InstrumentationSubsystem.PackageData(Core.userId, CognitiveVR_Preferences.TimeStamp, CognitiveVR_Preferences.SessionID);
         }
 
 #if CVR_PUPIL
@@ -100,9 +126,6 @@ namespace CognitiveVR
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
-            jsonGazePart = 1;
-            jsonEventPart = 1;
-
             if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad) { return; }
 
             Scene activeScene = arg0;
@@ -296,7 +319,7 @@ namespace CognitiveVR
         /// </summary>
         public void SendPlayerGazeSnapshots()
         {
-            if (playerSnapshots.Count == 0 && InstrumentationSubsystem.CachedTransactions.Count == 0) { return; }
+            if (playerSnapshots.Count == 0) { return; }
 
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)
@@ -304,7 +327,7 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
-            Util.logDebug("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneId + ")");
+            //Util.logDebug("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneId + ")");
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -346,14 +369,14 @@ namespace CognitiveVR
 
                 if (playerSnapshots.Count > 0)
                     WriteToFile(FormatGazeToString(), "_GAZE_" + trackingSceneName);
-                if (InstrumentationSubsystem.CachedTransactions.Count > 0)
-                    WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
+                //if (InstrumentationSubsystem.CachedTransactions.Count > 0)
+                    //WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
             }
 
             if (sceneSettings != null)
             {
                 string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
-                string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
+                //string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
 
                 Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
 
@@ -364,11 +387,11 @@ namespace CognitiveVR
                     bytes = FormatGazeToString();
                     StartCoroutine(PostJsonRequest(bytes, SceneURLGaze));
                 }
-                if (InstrumentationSubsystem.CachedTransactions.Count > 0)
+                /*if (InstrumentationSubsystem.CachedTransactions.Count > 0)
                 {
                     bytes = FormatEventsToString();
                     StartCoroutine(PostJsonRequest(bytes, SceneURLEvents));
-                }
+                }*/
             }
             else
             {
@@ -376,7 +399,7 @@ namespace CognitiveVR
             }
 
             playerSnapshots.Clear();
-            InstrumentationSubsystem.CachedTransactions.Clear();
+            //InstrumentationSubsystem.CachedTransactions.Clear();
         }
 
         public IEnumerator PostJsonRequest(byte[] bytes, string url)
@@ -390,7 +413,6 @@ namespace CognitiveVR
             yield return www;
 
             Util.logDebug("request finished - return: " + www.error);
-
         }
 
         void OnDestroyPlayerRecorder()
@@ -413,6 +435,8 @@ namespace CognitiveVR
 
         byte[] FormatEventsToString()
         {
+            return null;
+            /*
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
 
             builder.Append("{");
@@ -450,7 +474,7 @@ namespace CognitiveVR
             builder.Append("}");
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-            return outBytes;
+            return outBytes;*/
         }
 
         byte[] FormatGazeToString()
@@ -467,10 +491,8 @@ namespace CognitiveVR
             builder.Append(",");
             builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
 			builder.Append(",");
-			builder.Append(JsonUtil.SetObject("part", jsonGazePart));
+			builder.Append(JsonUtil.SetObject("part", 1));
 			builder.Append(",");
-
-            jsonGazePart++;
 
 
 #if CVR_FOVE
@@ -544,7 +566,7 @@ namespace CognitiveVR
         }
 
         /// <returns>{snapshotstuff}</returns>
-        public static string SetTransaction(TransactionSnapshot snap)
+        /*public static string SetTransaction(TransactionSnapshot snap)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
@@ -579,7 +601,7 @@ namespace CognitiveVR
             builder.Append("}"); //close transaction object
 
             return builder.ToString();
-        }
+        }*/
 #endregion
     }
 }
