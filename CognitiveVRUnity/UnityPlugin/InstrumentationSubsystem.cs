@@ -29,7 +29,8 @@ namespace CognitiveVR
         /// </summary>
         public static List<string> PackagedTransactionBundles = new List<string>();
         private static int partCount = 1;
-        private static int maxThresholdCount = 10;
+        //DEBUG public shoudl be private
+        public static int maxThresholdCount = 20;
         private static int currentTthresholdCount = 0;
 
 
@@ -75,7 +76,7 @@ namespace CognitiveVR
 
             builder.Append(TransactionBuilder.ToString());
 
-            builder.Remove(TransactionBuilder.Length - 1, 1); //remove the last comma
+            //builder.Remove(TransactionBuilder.Length, 1); //remove the last comma
             builder.Append("]");
 
             builder.Append("}");
@@ -109,6 +110,7 @@ namespace CognitiveVR
             TransactionBuilder.Append("{");
 
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            CognitiveVR.Util.logDebug("set transaction " + category);
             TransactionBuilder.Append(",");
             TransactionBuilder.Append(JsonUtil.SetObject("time", timestamp));
             TransactionBuilder.Append(",");
@@ -146,11 +148,14 @@ namespace CognitiveVR
             //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
 
             SetTransaction(category, properties, position, Util.Timestamp());
-            TransactionBuilder.Append(",");
             if (currentTthresholdCount >= maxThresholdCount)
             {
                 OnEventDataThresholdEvent();
                 currentTthresholdCount = 0;
+            }
+            else
+            {
+                TransactionBuilder.Append(",");
             }
 
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
@@ -176,11 +181,14 @@ namespace CognitiveVR
         {
             //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
             SetTransaction(category, properties, position, Util.Timestamp());
-            TransactionBuilder.Append(",");
             if (currentTthresholdCount >= maxThresholdCount)
             {
                 OnEventDataThresholdEvent();
                 currentTthresholdCount = 0;
+            }
+            else
+            {
+                TransactionBuilder.Append(",");
             }
 
             new CoreSubsystem.DataPointBuilder("datacollector_endTransaction")

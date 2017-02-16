@@ -274,8 +274,11 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("\"");
-            builder.Append( name);
-            builder.Append("\":[");
+            builder.Append( name );
+            builder.Append(" \" : [");
+
+            //8th index
+            //missing either : or [
 
             if (centimeterLimit)
             {
