@@ -9,6 +9,9 @@ namespace CognitiveVR
         private static Uri sUri;
         private static int sReqTimeout;
         private static HttpRequest.Listener sRequestListener;
+        //DEBUG
+        public static List<string> savedTransactions = new List<string>();
+        public static int MaxTransactions = 16;
 
         /**
          * Initialize the event depot.
@@ -37,8 +40,54 @@ namespace CognitiveVR
             allArgs.Add(Util.Timestamp());
             allArgs.Add(new List<object> { eventData });
 
+            //serializedJsonTransactions.Add(Json.Serialize(allArgs));
+
+            
+
+            //CognitiveVR.Util.logDebug("all args:" + Json.Serialize(new List<object> { eventData }));
+            //CognitiveVR.Util.logDebug("json all args:"+Json.Serialize(allArgs));
+            //CognitiveVR.Util.logDebug("json eventdata:" + Json.Serialize(new List<object> { eventData }));
+
+            string data = Json.Serialize(new List<object> { eventData });
+            data = data.Remove(data.Length-1, 1);
+            data = data.Remove(0, 1);
+
+            //CognitiveVR.Util.logDebug(data);
+            savedTransactions.Add(data);
+
+
+            if (savedTransactions.Count >= MaxTransactions)
+            {
+                string sendJson = "";
+                sendJson += "[";
+                sendJson += Util.Timestamp();
+                sendJson += ",";
+                sendJson += "[";
+                foreach (var v in savedTransactions)
+                {
+                    sendJson += v;
+                    sendJson += ",";
+                }
+                if (savedTransactions.Count > 0)
+                {
+                    sendJson = sendJson.Remove(sendJson.Length-1, 1);
+                }
+                sendJson += "]]";
+
+                //CognitiveVR.Util.logError("json concat:" + sendJson);
+                
+                HttpRequest.executeAsync(sUri, sReqTimeout, sendJson, sRequestListener);
+                savedTransactions.Clear();
+            }
+
+            //if (serializedJsonTransactions.Count >= MaxTransactions)
+            {
+                //HttpRequest.executeAsync(sUri, sReqTimeout, serializedJsonTransactions, sRequestListener);
+              //  serializedJsonTransactions.Clear();
+            }
+
             // Create a new request to send the data "asynchronously", but we're going to fire and forget in this implementation
-            HttpRequest.executeAsync(sUri, sReqTimeout, Json.Serialize(allArgs), sRequestListener);
+            
 
             return Error.Success;
         }

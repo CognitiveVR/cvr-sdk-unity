@@ -33,7 +33,10 @@ namespace CognitiveVR
         public static int maxThresholdCount = 20;
         private static int currentTthresholdCount = 0;
 
-
+        public static void SetMaxTransactions(int max)
+        {
+            EventDepot.MaxTransactions = max;
+        }
 
         public static void init()
         {
