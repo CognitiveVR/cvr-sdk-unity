@@ -29,6 +29,7 @@ namespace CognitiveVR
                 QuitEvent += OnSendData;
 
             SendDataEvent += SendPlayerGazeSnapshots;
+            SendDataEvent += InstrumentationSubsystem.SendCachedTransactions;
 
 #if CVR_PUPIL
             PupilGazeTracker.Instance.OnCalibrationStarted += PupilGazeTracker_OnCalibrationStarted;
@@ -58,12 +59,10 @@ namespace CognitiveVR
             }
             trackingSceneName = SceneManager.GetActiveScene().name;
 
-
-            InstrumentationSubsystem.EventDataThresholdEvent += InstrumentationSubsystem_EventDataThresholdEvent;
-            SendDataEvent += CognitiveVR_Manager_SendTransactionDataEvent;
+            InstrumentationSubsystem.EventDataThresholdEvent += InstrumentationSubsystem_TransactionBatchSentEvent;
         }
 
-        private void CognitiveVR_Manager_SendTransactionDataEvent()
+        private void InstrumentationSubsystem_TransactionBatchSentEvent(string packagedEvents)
         {
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)
@@ -72,19 +71,12 @@ namespace CognitiveVR
                 return;
             }
 
-            //sends all packaged transaction events from instrumentaiton subsystem to events dealy
-            foreach (var v in InstrumentationSubsystem.PackagedTransactionBundles)
-            {
-                string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
-                byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(v);
-                StartCoroutine(PostJsonRequest(outBytes, SceneURLEvents));
-            }
-            InstrumentationSubsystem.SendData();
-        }
+            //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
+            string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
+            StartCoroutine(PostJsonRequest(outBytes, SceneURLEvents));
 
-        private void InstrumentationSubsystem_EventDataThresholdEvent()
-        {
-            InstrumentationSubsystem.PackageData(Core.userId, CognitiveVR_Preferences.TimeStamp, CognitiveVR_Preferences.SessionID);
+            Util.logDebug("sent transaction event data. clear packaged bundles");
         }
 
 #if CVR_PUPIL
@@ -327,7 +319,6 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
                 return;
             }
-            //Util.logDebug("CognitiveVR_PlayerTracker.SendData " + playerSnapshots.Count + " gaze points " + InstrumentationSubsystem.CachedTransactions.Count + " event points on scene " + trackingSceneName + "(" + sceneSettings.SceneId + ")");
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -369,14 +360,11 @@ namespace CognitiveVR
 
                 if (playerSnapshots.Count > 0)
                     WriteToFile(FormatGazeToString(), "_GAZE_" + trackingSceneName);
-                //if (InstrumentationSubsystem.CachedTransactions.Count > 0)
-                    //WriteToFile(FormatEventsToString(), "_EVENTS_" + trackingSceneName);
             }
 
             if (sceneSettings != null)
             {
                 string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
-                //string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
 
                 Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
 
@@ -387,11 +375,6 @@ namespace CognitiveVR
                     bytes = FormatGazeToString();
                     StartCoroutine(PostJsonRequest(bytes, SceneURLGaze));
                 }
-                /*if (InstrumentationSubsystem.CachedTransactions.Count > 0)
-                {
-                    bytes = FormatEventsToString();
-                    StartCoroutine(PostJsonRequest(bytes, SceneURLEvents));
-                }*/
             }
             else
             {
@@ -432,50 +415,6 @@ namespace CognitiveVR
         }
 
         #region json
-
-        byte[] FormatEventsToString()
-        {
-            return null;
-            /*
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-
-            builder.Append("{");
-
-            //header
-            builder.Append(JsonUtil.SetString("userid", Core.userId));
-            builder.Append(",");
-			
-            builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
-            builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
-			builder.Append(",");
-			builder.Append(JsonUtil.SetObject("part", jsonEventPart));
-            builder.Append(",");
-            
-
-            jsonEventPart++;
-            //builder.Append(SetString("keys", "userdata"));
-            //builder.Append(",");
-
-
-            //events
-            builder.Append("\"data\":[");
-            for (int i = 0; i < InstrumentationSubsystem.CachedTransactions.Count; i++)
-            {
-                builder.Append(SetTransaction(InstrumentationSubsystem.CachedTransactions[i]));
-                builder.Append(",");
-            }
-            if (InstrumentationSubsystem.CachedTransactions.Count > 0)
-            {
-                builder.Remove(builder.Length - 1, 1);
-            }
-            builder.Append("]");
-
-            builder.Append("}");
-
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-            return outBytes;*/
-        }
 
         byte[] FormatGazeToString()
         {
@@ -564,44 +503,7 @@ namespace CognitiveVR
 
             return builder.ToString();
         }
-
-        /// <returns>{snapshotstuff}</returns>
-        /*public static string SetTransaction(TransactionSnapshot snap)
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("{");
-
-            builder.Append(JsonUtil.SetString("name", snap.category));
-            builder.Append(",");
-            builder.Append(JsonUtil.SetObject("time", snap.timestamp));
-            builder.Append(",");
-            builder.Append(JsonUtil.SetVector("point", snap.position));
-
-
-            if (snap.properties != null && snap.properties.Keys.Count > 0)
-            {
-                builder.Append(",");
-                builder.Append("\"properties\":{");
-                foreach (var v in snap.properties)
-                {
-                    if (v.Value.GetType() == typeof(string))
-                    {
-                        builder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
-                    }
-                    else
-                    {
-                        builder.Append(JsonUtil.SetObject(v.Key, v.Value));
-                    }
-                    builder.Append(",");
-                }
-                builder.Remove(builder.Length - 1, 1); //remove last comma
-                builder.Append("}"); //close properties object
-            }
-
-            builder.Append("}"); //close transaction object
-
-            return builder.ToString();
-        }*/
+        
 #endregion
     }
 }

@@ -24,18 +24,17 @@ namespace CognitiveVR
         //string builder for 'data'. put into container when 'packaged', then 'sent'
         public static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
 
-        /// <summary>
-        /// fully formatted string ready to be sent as webrequest body
-        /// </summary>
-        public static List<string> PackagedTransactionBundles = new List<string>();
+        //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
-        //DEBUG public shoudl be private
-        public static int maxThresholdCount = 20;
-        private static int currentTthresholdCount = 0;
 
         public static void SetMaxTransactions(int max)
         {
-            EventDepot.MaxTransactions = max;
+            EventDepot.maxCachedTransactions = max;
+        }
+
+        public static void SendCachedTransactions()
+        {
+            EventDepot.SendCachedTransactions();
         }
 
         public static void init()
@@ -46,13 +45,15 @@ namespace CognitiveVR
         /// <summary>
         /// call this when threshold for transactions is reached
         /// format transactions to be sent as the body of a webrequest
-        /// core.userid
-        /// preferences.timestamp
-        /// preferences.sessionid
-        /// #ifFOVE || CognitiveVR.Util.GetSimpleHMDName()
+        /// this can be called manually, but it is automatically called when
         /// </summary>
-        public static void PackageData(string userid, double timestamp, string sessionid)
+        private static string PackageData()
         {
+            //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
+            string userid = CoreSubsystem.UniqueID;
+            double timestamp = CoreSubsystem.SessionTimeStamp;
+            string sessionId = CoreSubsystem.SessionID;
+
             CognitiveVR.Util.logDebug("package transaction event data");
             //when thresholds are reached, etc
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
@@ -64,56 +65,47 @@ namespace CognitiveVR
 
             builder.Append(JsonUtil.SetObject("timestamp", timestamp));
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionid", sessionid));
+            builder.Append(JsonUtil.SetString("sessionid", sessionId));
             builder.Append(",");
             builder.Append(JsonUtil.SetObject("part", partCount));
             partCount++;
             builder.Append(",");
-
-            //not needed for gaze json
-            /*builder.Append(JsonUtil.SetString("hmdtype", hmdname));
-            builder.Append(",");*/
 
             //events
             builder.Append("\"data\":[");
 
             builder.Append(TransactionBuilder.ToString());
 
-            //builder.Remove(TransactionBuilder.Length, 1); //remove the last comma
+            builder.Remove(builder.Length + TransactionBuilder.Length-1, 1); //remove the last comma
             builder.Append("]");
 
             builder.Append("}");
 
             //clear the transaction builder
             TransactionBuilder = new System.Text.StringBuilder();
-            PackagedTransactionBundles.Add(builder.ToString());
+            return builder.ToString();
         }
 
-        /// <summary>
-        /// call this when the packaged strings are sent. rese
-        /// </summary>
-        public static void SendData()
-        {
-            CognitiveVR.Util.logDebug("sent transaction event data. clear packaged bundles");
-            //send all the packages
-            PackagedTransactionBundles.Clear();
-        }
-
-        public delegate void EventsThresholdHandler(); //package data
+        public delegate void EventsThresholdHandler(string packagedTransactionEvents); //package data
         /// <summary>
         /// this is called when data thresholds are reached/hmd is removed and just before level is loaded and application quit
         /// puts data into reasonable sized byte[] to be uploaded to the server
         /// </summary>
         public static event EventsThresholdHandler EventDataThresholdEvent;
-        public static void OnEventDataThresholdEvent() { if (EventDataThresholdEvent != null) { EventDataThresholdEvent(); } }
+        public static void OnEventDataThresholdEvent()
+        {
+            if (EventDataThresholdEvent != null)
+            {
+                string s = PackageData();
+                EventDataThresholdEvent(s);
+            }
+        }
 
         private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
         {
             //System.Text.StringBuilder builder = new System.Text.StringBuilder();
             TransactionBuilder.Append("{");
-
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
-            CognitiveVR.Util.logDebug("set transaction " + category);
             TransactionBuilder.Append(",");
             TransactionBuilder.Append(JsonUtil.SetObject("time", timestamp));
             TransactionBuilder.Append(",");
@@ -141,25 +133,11 @@ namespace CognitiveVR
             }
 
             TransactionBuilder.Append("}"); //close transaction object
-
-            //return TransactionBuilder.ToString();
-            currentTthresholdCount++;
         }
 
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
-
             SetTransaction(category, properties, position, Util.Timestamp());
-            if (currentTthresholdCount >= maxThresholdCount)
-            {
-                OnEventDataThresholdEvent();
-                currentTthresholdCount = 0;
-            }
-            else
-            {
-                TransactionBuilder.Append(",");
-            }
 
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
             .setArg(category)
@@ -182,17 +160,7 @@ namespace CognitiveVR
 
         public static void endTransaction(string category, string result, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            //CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
             SetTransaction(category, properties, position, Util.Timestamp());
-            if (currentTthresholdCount >= maxThresholdCount)
-            {
-                OnEventDataThresholdEvent();
-                currentTthresholdCount = 0;
-            }
-            else
-            {
-                TransactionBuilder.Append(",");
-            }
 
             new CoreSubsystem.DataPointBuilder("datacollector_endTransaction")
             .setArg(category)

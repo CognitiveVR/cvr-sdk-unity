@@ -24,6 +24,43 @@ namespace CognitiveVR
 		public static string UserId { get; private set; }
 		public static string DeviceId { get; private set; }
 
+        public static string UniqueID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(UserId))
+                {
+                    return UserId;
+                }
+                return DeviceId;
+            }
+        }
+
+        private static double _timestamp;
+        public static double SessionTimeStamp
+        {
+             get { if (_timestamp < 1) _timestamp = Util.Timestamp(); return _timestamp; }
+        }
+
+        private static string _sessionId;
+        public static string SessionID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_sessionId))
+                {
+                    _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
+                }
+                return _sessionId;
+            }
+        }
+
+        /*public static string SimpleHMDName { get; private set; }
+        public static void SetSimpleHMDName(string name)
+        {
+            SimpleHMDName = name;
+        }*/
+
         internal static bool Initialized { get; private set; }
 		internal static int ReqTimeout { get; private set; }
 		internal static string Host { get; private set; }

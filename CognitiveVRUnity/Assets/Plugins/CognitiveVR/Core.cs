@@ -46,11 +46,7 @@ namespace CognitiveVR
         {
             get
             {
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return userId;
-                }
-                return deviceId;
+                return CoreSubsystem.UniqueID;
             }
         }
 

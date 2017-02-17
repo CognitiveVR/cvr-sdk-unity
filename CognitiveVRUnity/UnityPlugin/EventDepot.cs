@@ -9,9 +9,9 @@ namespace CognitiveVR
         private static Uri sUri;
         private static int sReqTimeout;
         private static HttpRequest.Listener sRequestListener;
-        //DEBUG
-        public static List<string> savedTransactions = new List<string>();
-        public static int MaxTransactions = 16;
+
+        private static List<string> savedTransactions = new List<string>();
+        internal static int maxCachedTransactions = 16;
 
         /**
          * Initialize the event depot.
@@ -28,6 +28,32 @@ namespace CognitiveVR
             sRequestListener = new SendEventRequestListener();
         }
 
+        internal static void SendCachedTransactions()
+        {
+            if (savedTransactions.Count == 0) { return; }
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("[");
+            builder.Append(Util.Timestamp());
+            builder.Append(",[");
+
+            foreach (var v in savedTransactions)
+            {
+                builder.Append(v);
+                builder.Append(",");
+            }
+            if (savedTransactions.Count > 0)
+            {
+                builder = builder.Remove(builder.Length - 1, 1);
+                //sendJson = sendJson.Remove(sendJson.Length-1, 1);
+            }
+            builder.Append("]]");
+
+            HttpRequest.executeAsync(sUri, sReqTimeout, builder.ToString(), sRequestListener);
+            savedTransactions.Clear();
+            InstrumentationSubsystem.OnEventDataThresholdEvent();
+        }
+
         /**
          * Store an event in the depot.
          *
@@ -39,55 +65,17 @@ namespace CognitiveVR
             List<object> allArgs = new List<object>(2);
             allArgs.Add(Util.Timestamp());
             allArgs.Add(new List<object> { eventData });
-
-            //serializedJsonTransactions.Add(Json.Serialize(allArgs));
-
             
-
-            //CognitiveVR.Util.logDebug("all args:" + Json.Serialize(new List<object> { eventData }));
-            //CognitiveVR.Util.logDebug("json all args:"+Json.Serialize(allArgs));
-            //CognitiveVR.Util.logDebug("json eventdata:" + Json.Serialize(new List<object> { eventData }));
-
             string data = Json.Serialize(new List<object> { eventData });
             data = data.Remove(data.Length-1, 1);
             data = data.Remove(0, 1);
 
-            //CognitiveVR.Util.logDebug(data);
             savedTransactions.Add(data);
 
-
-            if (savedTransactions.Count >= MaxTransactions)
+            if (savedTransactions.Count >= maxCachedTransactions)
             {
-                string sendJson = "";
-                sendJson += "[";
-                sendJson += Util.Timestamp();
-                sendJson += ",";
-                sendJson += "[";
-                foreach (var v in savedTransactions)
-                {
-                    sendJson += v;
-                    sendJson += ",";
-                }
-                if (savedTransactions.Count > 0)
-                {
-                    sendJson = sendJson.Remove(sendJson.Length-1, 1);
-                }
-                sendJson += "]]";
-
-                //CognitiveVR.Util.logError("json concat:" + sendJson);
-                
-                HttpRequest.executeAsync(sUri, sReqTimeout, sendJson, sRequestListener);
-                savedTransactions.Clear();
+                SendCachedTransactions();
             }
-
-            //if (serializedJsonTransactions.Count >= MaxTransactions)
-            {
-                //HttpRequest.executeAsync(sUri, sReqTimeout, serializedJsonTransactions, sRequestListener);
-              //  serializedJsonTransactions.Clear();
-            }
-
-            // Create a new request to send the data "asynchronously", but we're going to fire and forget in this implementation
-            
 
             return Error.Success;
         }
