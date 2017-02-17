@@ -368,11 +368,9 @@ namespace CognitiveVR
 
                 Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
 
-                byte[] bytes;
-
                 if (playerSnapshots.Count > 0)
                 {
-                    bytes = FormatGazeToString();
+                    byte[] bytes = FormatGazeToString();
                     StartCoroutine(PostJsonRequest(bytes, SceneURLGaze));
                 }
             }
@@ -382,7 +380,6 @@ namespace CognitiveVR
             }
 
             playerSnapshots.Clear();
-            //InstrumentationSubsystem.CachedTransactions.Clear();
         }
 
         public IEnumerator PostJsonRequest(byte[] bytes, string url)
@@ -401,6 +398,7 @@ namespace CognitiveVR
         void OnDestroyPlayerRecorder()
         {
             //unsubscribe events
+            //TODO should i set all these events to null?
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
             SendDataEvent -= SendPlayerGazeSnapshots;
             CognitiveVR_Manager.QuitEvent -= OnSendData;
@@ -463,7 +461,7 @@ namespace CognitiveVR
             return outBytes;
         }
 
-        static void WriteToFile(byte[] bytes, string appendFileName = "")
+        private static void WriteToFile(byte[] bytes, string appendFileName = "")
         {
             if (!System.IO.Directory.Exists("CognitiveVR_SceneExplorerExport"))
             {
@@ -486,7 +484,7 @@ namespace CognitiveVR
         }
 
         /// <returns>{gaze point}</returns>
-        public static string SetGazePont(PlayerSnapshot snap)
+        private static string SetGazePont(PlayerSnapshot snap)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");

@@ -71,18 +71,17 @@ namespace CognitiveVR
         private static int currentUniqueId;
         public static List<DynamicObjectId> ObjectIds = new List<DynamicObjectId>();
 
-        private static List<string> savedDynamicManifest = new List<string>();
-        private static List<string> savedDynamicSnapshots = new List<string>();
+        //cumulative. all objects
         public static List<DynamicObjectManifestEntry> ObjectManifest = new List<DynamicObjectManifestEntry>();
 
         //new until they are packaged into json
         public static List<DynamicObjectSnapshot> NewSnapshots = new List<DynamicObjectSnapshot>();
         private static List<DynamicObjectManifestEntry> NewObjectManifest = new List<DynamicObjectManifestEntry>();
-        static int maxSnapshotBatchCount = 64;
-        
-        //TODO
-        //OnSendData format and send whatver is in the list
-        //count manifest add as a transaction
+
+        private static List<string> savedDynamicManifest = new List<string>();
+        private static List<string> savedDynamicSnapshots = new List<string>();
+        private static int maxSnapshotBatchCount = 64;
+        private static int jsonpart = 0;
 
         void OnEnable()
         {
@@ -96,6 +95,7 @@ namespace CognitiveVR
             }
         }
 
+        //public so snapshot can begin this
         public IEnumerator UpdateTick()
         {
             updateTick = new WaitForSeconds(UpdateRate);
@@ -107,17 +107,18 @@ namespace CognitiveVR
             }
         }
 
-        public static void CognitiveVR_Manager_PackageFromTick()
+        private static void CognitiveVR_Manager_PackageFromTick()
         {
             PackageNewSnapshots();
         }
 
+        //public so snapshot can tie cognitivevr_manager tick event to this
         public void CognitiveVR_Manager_TickEvent()
         {
             CheckUpdate();
         }
 
-        static void PackageNewSnapshots()
+        private static void PackageNewSnapshots()
         {
             //write new dynamic object snapshots to strings
             for (int i = 0; i < NewSnapshots.Count; i++)
@@ -232,12 +233,15 @@ namespace CognitiveVR
         }
 
         //TODO this should return a dynamicObjectId instance
-        public static int GetUniqueID()
+        private static int GetUniqueID()
         {
             currentUniqueId++;
             return currentUniqueId + uniqueIdOffset;
         }
 
+        /// <summary>
+        /// it is recommended that you use PlayerRecorder.SendData instead. that will send all outstanding data
+        /// </summary>
         public static void SendSavedSnapshots()
         {
             if (savedDynamicManifest.Count == 0 && savedDynamicSnapshots.Count == 0) { return; }
@@ -261,6 +265,9 @@ namespace CognitiveVR
             builder.Append(",");
             builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
+            builder.Append(JsonUtil.SetObject("part", jsonpart));
+            builder.Append(",");
+            jsonpart++;
 
             //format all the savedmanifest entries
 
@@ -313,7 +320,7 @@ namespace CognitiveVR
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
         }
 
-        public static string SetManifestEntry(DynamicObjectManifestEntry entry)
+        private static string SetManifestEntry(DynamicObjectManifestEntry entry)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
 
@@ -355,7 +362,7 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-        public static string SetSnapshot(DynamicObjectSnapshot snap)
+        private static string SetSnapshot(DynamicObjectSnapshot snap)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");

@@ -86,6 +86,7 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+        //TODO does there need to be an event? where is this used?
         public delegate void EventsThresholdHandler(string packagedTransactionEvents); //package data
         /// <summary>
         /// this is called when data thresholds are reached/hmd is removed and just before level is loaded and application quit
