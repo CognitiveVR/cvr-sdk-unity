@@ -14,7 +14,12 @@ namespace CognitiveVR
     public partial class CognitiveVR_Manager
     {
         string trackingSceneName;
+        
+        //snapshots still 'exist' so the rendertexture can be evaluated
         public List<PlayerSnapshot> playerSnapshots = new List<PlayerSnapshot>();
+
+        //a list of snapshots already formated to string
+        public List<List<string>> savedGazeSnapshots = new List<List<string>>();
 
         Camera cam;
         PlayerRecorderHelper periodicRenderer;
@@ -51,32 +56,17 @@ namespace CognitiveVR
             if (sceneSettings != null)
             {
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
+                {
                     BeginPlayerRecording();
+                    CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
+                }
             }
             else
             {
                 Util.logDebug("PlayerRecorderTracker - startup couldn't find scene -" + sceneName);
             }
             trackingSceneName = SceneManager.GetActiveScene().name;
-
-            InstrumentationSubsystem.EventDataThresholdEvent += InstrumentationSubsystem_TransactionBatchSentEvent;
-        }
-
-        private void InstrumentationSubsystem_TransactionBatchSentEvent(string packagedEvents)
-        {
-            var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
-            if (sceneSettings == null)
-            {
-                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
-                return;
-            }
-
-            //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string SceneURLEvents = "https://sceneexplorer.com/api/events/" + sceneSettings.SceneId;
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
-            StartCoroutine(PostJsonRequest(outBytes, SceneURLEvents));
-
-            Util.logDebug("sent transaction event data. clear packaged bundles");
+            
         }
 
 #if CVR_PUPIL
@@ -135,12 +125,15 @@ namespace CognitiveVR
                     }
                 }
 
+                CoreSubsystem.CurrentSceneId = string.Empty;
+
                 CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(activeScene.name);
                 if (sceneSettings != null)
                 {
                     if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
                     }
                 }
             }
@@ -254,6 +247,8 @@ namespace CognitiveVR
             snapshot.Properties.Add("renderDepth", rt);
             snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
 
+            //TODO write hmd position, hmd rotation and time to string immediately
+
 #if CVR_GAZETRACK
 
             //gaze tracking sdks need to return a v3 direction "gazeDirection" and a v2 point "hmdGazePoint"
@@ -300,6 +295,7 @@ namespace CognitiveVR
                 snapshot.Properties.Add("chaperoneVisible", Valve.VR.OpenVR.Chaperone.AreBoundsVisible());
 #endif
             playerSnapshots.Add(snapshot);
+            
             if (playerSnapshots.Count >= CognitiveVR_Preferences.Instance.SnapshotThreshold)
             {
                 OnSendData();

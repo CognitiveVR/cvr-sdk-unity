@@ -14,7 +14,7 @@ namespace CognitiveVR
         private static int currentSensorSnapshots = 0;
         private static int MaxSensorSnapshots = 64;
 
-        private static SensorRecorder()
+        static SensorRecorder()
         {
             CognitiveVR_Manager.SendDataEvent += SendData;
         }

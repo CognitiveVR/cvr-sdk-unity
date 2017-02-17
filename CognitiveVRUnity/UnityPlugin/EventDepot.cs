@@ -51,7 +51,7 @@ namespace CognitiveVR
 
             HttpRequest.executeAsync(sUri, sReqTimeout, builder.ToString(), sRequestListener);
             savedTransactions.Clear();
-            InstrumentationSubsystem.OnEventDataThresholdEvent();
+            InstrumentationSubsystem.SendTransactionsToSceneExplorer();
         }
 
         /**

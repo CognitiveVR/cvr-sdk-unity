@@ -55,6 +55,8 @@ namespace CognitiveVR
             }
         }
 
+        public static string CurrentSceneId;
+
         /*public static string SimpleHMDName { get; private set; }
         public static void SetSimpleHMDName(string name)
         {

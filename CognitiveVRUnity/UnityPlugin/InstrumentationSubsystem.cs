@@ -86,20 +86,31 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-        //TODO does there need to be an event? where is this used?
-        public delegate void EventsThresholdHandler(string packagedTransactionEvents); //package data
-        /// <summary>
-        /// this is called when data thresholds are reached/hmd is removed and just before level is loaded and application quit
-        /// puts data into reasonable sized byte[] to be uploaded to the server
-        /// </summary>
-        public static event EventsThresholdHandler EventDataThresholdEvent;
-        public static void OnEventDataThresholdEvent()
+        internal static void SendTransactionsToSceneExplorer()
         {
-            if (EventDataThresholdEvent != null)
+            string packagedEvents = PackageData();
+
+            if (string.IsNullOrEmpty(CoreSubsystem.CurrentSceneId))
             {
-                string s = PackageData();
-                EventDataThresholdEvent(s);
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for scene! do not upload transactions to sceneexplorer");
+                return;
             }
+
+            //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
+            string url = "https://sceneexplorer.com/api/events/" + CoreSubsystem.CurrentSceneId;
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
+
+            var headers = new Dictionary<string, string>();
+            headers.Add("Content-Type", "application/json");
+            headers.Add("X-HTTP-Method-Override", "POST");
+
+            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+
+            //yield return www;
+
+            //Util.logDebug("request finished - return: " + www.error);
+
+            Util.logDebug("sent transaction event data. clear packaged bundles");
         }
 
         private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
