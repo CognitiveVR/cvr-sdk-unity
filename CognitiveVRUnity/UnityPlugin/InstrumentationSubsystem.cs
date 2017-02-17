@@ -76,7 +76,7 @@ namespace CognitiveVR
 
             builder.Append(TransactionBuilder.ToString());
 
-            builder.Remove(builder.Length + TransactionBuilder.Length-1, 1); //remove the last comma
+            builder.Remove(builder.Length-1, 1); //remove the last comma
             builder.Append("]");
 
             builder.Append("}");
@@ -103,7 +103,6 @@ namespace CognitiveVR
 
         private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
         {
-            //System.Text.StringBuilder builder = new System.Text.StringBuilder();
             TransactionBuilder.Append("{");
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
             TransactionBuilder.Append(",");
@@ -133,6 +132,7 @@ namespace CognitiveVR
             }
 
             TransactionBuilder.Append("}"); //close transaction object
+            TransactionBuilder.Append(",");
         }
 
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)

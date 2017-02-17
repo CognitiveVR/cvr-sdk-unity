@@ -283,10 +283,13 @@ namespace CognitiveVR
             if (centimeterLimit)
             {
                 builder.Append(string.Format("{0:0.00}", pos[0]));
+
                 builder.Append(",");
                 builder.Append(string.Format("{0:0.00}", pos[1]));
+
                 builder.Append(",");
                 builder.Append(string.Format("{0:0.00}", pos[2]));
+
             }
             else
             {
@@ -312,10 +315,13 @@ namespace CognitiveVR
             if (centimeterLimit)
             {
                 builder.Append(string.Format("{0:0.00}", pos.x));
+
                 builder.Append(",");
                 builder.Append(string.Format("{0:0.00}", pos.y));
+
                 builder.Append(",");
                 builder.Append(string.Format("{0:0.00}", pos.z));
+
             }
             else
             {
@@ -337,12 +343,16 @@ namespace CognitiveVR
             builder.Append("\"" + name + "\":[");
 
             builder.Append(string.Format("{0:0.000}", quat.x));
+
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat.y));
+
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat.z));
+
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat.w));
+
 
             builder.Append("]");
             return builder.ToString();
@@ -357,10 +367,13 @@ namespace CognitiveVR
             builder.Append(string.Format("{0:0.000}", quat[0]));
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat[1]));
+
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat[2]));
+
             builder.Append(",");
             builder.Append(string.Format("{0:0.000}", quat[3]));
+
 
             builder.Append("]");
             return builder.ToString();

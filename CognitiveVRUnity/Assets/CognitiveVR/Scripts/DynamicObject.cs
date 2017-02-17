@@ -71,8 +71,18 @@ namespace CognitiveVR
         private static int currentUniqueId;
         public static List<DynamicObjectId> ObjectIds = new List<DynamicObjectId>();
 
-        public static List<DynamicObjectSnapshot> Snapshots = new List<DynamicObjectSnapshot>();
+        private static List<string> savedDynamicManifest = new List<string>();
+        private static List<string> savedDynamicSnapshots = new List<string>();
         public static List<DynamicObjectManifestEntry> ObjectManifest = new List<DynamicObjectManifestEntry>();
+
+        //new until they are packaged into json
+        public static List<DynamicObjectSnapshot> NewSnapshots = new List<DynamicObjectSnapshot>();
+        private static List<DynamicObjectManifestEntry> NewObjectManifest = new List<DynamicObjectManifestEntry>();
+        static int maxSnapshotBatchCount = 64;
+        
+        //TODO
+        //OnSendData format and send whatver is in the list
+        //count manifest add as a transaction
 
         void OnEnable()
         {
@@ -97,9 +107,40 @@ namespace CognitiveVR
             }
         }
 
+        public static void CognitiveVR_Manager_PackageFromTick()
+        {
+            PackageNewSnapshots();
+        }
+
         public void CognitiveVR_Manager_TickEvent()
         {
             CheckUpdate();
+        }
+
+        static void PackageNewSnapshots()
+        {
+            //write new dynamic object snapshots to strings
+            for (int i = 0; i < NewSnapshots.Count; i++)
+            {
+                savedDynamicSnapshots.Add(SetSnapshot(NewSnapshots[i]));
+                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= maxSnapshotBatchCount)
+                {
+                    SendSavedSnapshots();
+                }
+            }
+            if (NewSnapshots.Count > 0)
+                NewSnapshots.Clear();
+
+            for (int i = 0; i < NewObjectManifest.Count; i++)
+            {
+                savedDynamicManifest.Add(SetManifestEntry(NewObjectManifest[i]));
+                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= maxSnapshotBatchCount)
+                {
+                    SendSavedSnapshots();
+                }
+            }
+            if (NewObjectManifest.Count > 0)
+                NewObjectManifest.Clear();
         }
 
         public void CheckUpdate()
@@ -158,24 +199,29 @@ namespace CognitiveVR
                     {
                         int newId = GetUniqueID();
                         ObjectId = new DynamicObjectId(newId, MeshName);
-                        ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName));
+                        var manifestEntry = new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName);
+                        ObjectManifest.Add(manifestEntry);
+                        NewObjectManifest.Add(manifestEntry);
                     }
                 }
                 else
                 {
                     ObjectId = new DynamicObjectId(CustomId, MeshName);
-                    ObjectManifest.Add(new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName));
+                    var manifestEntry = new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName);
+                    ObjectManifest.Add(manifestEntry);
+                    NewObjectManifest.Add(manifestEntry);
                 }
 
                 if (ObjectManifest.Count == 1)
                 {
-                    CognitiveVR_Manager.SendDataEvent += CognitiveVR_Manager_SendDataEvent;
+                    CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_PackageFromTick;
+                    CognitiveVR_Manager.SendDataEvent += SendSavedSnapshots;
                 }
             }
             
             //create snapshot for this object
             var snapshot = new DynamicObjectSnapshot(this);
-            Snapshots.Add(snapshot);
+            NewSnapshots.Add(snapshot);
             return snapshot;
         }
 
@@ -192,37 +238,18 @@ namespace CognitiveVR
             return currentUniqueId + uniqueIdOffset;
         }
 
-        private static void CognitiveVR_Manager_SendDataEvent()
+        public static void SendSavedSnapshots()
         {
-            byte[] bytes;
+            if (savedDynamicManifest.Count == 0 && savedDynamicSnapshots.Count == 0) { return; }
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-            if (DynamicObject.ObjectManifest.Count > 0 && DynamicObject.Snapshots.Count > 0)
+            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+            if (sceneSettings == null)
             {
-                bytes = FormatDynamicsToString();
-
-                string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-
-                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
-                if (sceneSettings == null)
-                {
-                    Debug.Log("scene settings are null " + sceneName);
-                    return;
-                }
-
-                string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
-
-                Debug.Log("send dynamic data to " + url);
-
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(bytes, url));
+                Debug.Log("scene settings are null " + sceneName);
+                return;
             }
 
-            //clear the manifest
-            CognitiveVR_Manager.SendDataEvent -= CognitiveVR_Manager_SendDataEvent;
-            ObjectManifest.Clear();
-        }
-
-        private static byte[] FormatDynamicsToString()
-        {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
 
             builder.Append("{");
@@ -235,39 +262,55 @@ namespace CognitiveVR
             builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
             builder.Append(",");
 
-            //manifest
-            builder.Append("\"manifest\":{");
-            for (int i = 0; i < DynamicObject.ObjectManifest.Count; i++)
-            {
-                builder.Append(SetManifestEntry(DynamicObject.ObjectManifest[i]));
-                builder.Append(",");
-            }
-            if (DynamicObject.ObjectManifest.Count > 0)
-            {
-                builder.Remove(builder.Length - 1, 1);
-            }
-            builder.Append("},");
+            //format all the savedmanifest entries
 
-            //snapshots
-            builder.Append("\"data\":[");
-            for (int i = 0; i < DynamicObject.Snapshots.Count; i++)
+            if (savedDynamicManifest.Count > 0)
             {
-                builder.Append(SetSnapshot(DynamicObject.Snapshots[i]));
-                builder.Append(",");
+                //manifest
+                builder.Append("\"manifest\":{");
+                for (int i = 0; i < savedDynamicManifest.Count; i++)
+                {
+                    builder.Append(savedDynamicManifest[i]);
+                    builder.Append(",");
+                }
+                if (savedDynamicManifest.Count > 0)
+                {
+                    builder.Remove(builder.Length - 1, 1);
+                }
+                builder.Append("},");
             }
-            if (DynamicObject.Snapshots.Count > 0)
-            {
-                builder.Remove(builder.Length - 1, 1);
-            }
-            builder.Append("]");
 
+            if (savedDynamicSnapshots.Count > 0)
+            {
+                //snapshots
+                builder.Append("\"data\":[");
+                for (int i = 0; i < savedDynamicSnapshots.Count; i++)
+                {
+                    builder.Append(savedDynamicSnapshots[i]);
+                    builder.Append(",");
+                }
+                if (savedDynamicSnapshots.Count > 0)
+                {
+                    builder.Remove(builder.Length - 1, 1);
+                }
+                builder.Append("]");
+            }
+            else
+            {
+                builder.Remove(builder.Length - 1, 1); //remove last comma from manifest array
+            }
 
             builder.Append("}");
 
-            Debug.Log(builder.ToString());
+            savedDynamicManifest.Clear();
+            savedDynamicSnapshots.Clear();
+
+            string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+
+            CognitiveVR.Util.logDebug("send dynamic data to " + url);
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-            return outBytes;
+            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
         }
 
         public static string SetManifestEntry(DynamicObjectManifestEntry entry)

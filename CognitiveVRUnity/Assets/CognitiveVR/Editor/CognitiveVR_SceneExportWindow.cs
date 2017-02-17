@@ -778,7 +778,7 @@ namespace CognitiveVR
         {
             if (dynamicUploadWWW == null)
             {
-                EditorApplication.update -= UpdateUploadData;
+                EditorApplication.update -= UpdateUploadDynamics;
                 return;
             }
 
@@ -797,7 +797,7 @@ namespace CognitiveVR
                 Debug.Log("dynamic object upload complete");
             }
 
-            EditorApplication.update -= UpdateUploadData;
+            EditorApplication.update -= UpdateUploadDynamics;
         }
 
 
