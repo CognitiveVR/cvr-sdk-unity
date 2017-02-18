@@ -81,7 +81,7 @@ namespace CognitiveVR
         private static List<string> savedDynamicManifest = new List<string>();
         private static List<string> savedDynamicSnapshots = new List<string>();
         private static int maxSnapshotBatchCount = 64;
-        private static int jsonpart = 0;
+        private static int jsonpart = 1;
 
         void OnEnable()
         {
