@@ -92,8 +92,10 @@ namespace CognitiveVR
             {
                 AppendSensorData(kvp, sb);
             }
-
-            sb.Remove(sb.Length - 1, 1); //remove the last comma
+            if (CachedSnapshots.Count > 0)
+            {
+                sb.Remove(sb.Length - 1, 1); //remove the last comma
+            }
             sb.Append("]}");
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
@@ -115,8 +117,10 @@ namespace CognitiveVR
                 sb.Append(kvp.Value[i].sensorValue);
                 sb.Append("],");
             }
-
-            sb.Remove(sb.Length - 1, 1); //remove the last comma
+            if (kvp.Value.Count > 0)
+            {
+                sb.Remove(sb.Length - 1, 1); //remove the last comma
+            }
             sb.Append("]},");
         }
 

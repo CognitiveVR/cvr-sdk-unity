@@ -489,8 +489,10 @@ namespace CognitiveVR
                 builder.Append(SetGazePont(playerSnapshots[i]));
                 builder.Append(",");
             }
-            //KNOWN BUG json format invalid if 0 gaze points are sent - not that there's anything to record, though
-            builder.Remove(builder.Length - 1, 1);
+            if (playerSnapshots.Count > 0)
+            {
+                builder.Remove(builder.Length - 1, 1);
+            }
             builder.Append("]");
 
             builder.Append("}");
@@ -591,7 +593,10 @@ namespace CognitiveVR
                 builder.Append("\"" + list[i] + "\"");
                 builder.Append(",");
             }
-            builder.Remove(builder.Length - 1, 1);
+            if (list.Count > 0)
+            {
+                builder.Remove(builder.Length - 1, 1);
+            }
             builder.Append("]");
             return builder.ToString();
         }
@@ -605,6 +610,10 @@ namespace CognitiveVR
             {
                 builder.Append(list[i].ToString());
                 builder.Append(",");
+            }
+            if (list.Count > 0)
+            {
+                builder.Remove(builder.Length - 1, 1);
             }
             builder.Remove(builder.Length - 1, 1);
             builder.Append("}");

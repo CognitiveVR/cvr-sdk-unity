@@ -7,22 +7,6 @@ namespace CognitiveVR
 {
     public class CognitiveVR_Preferences : ScriptableObject
     {
-        [Serializable]
-        public class SceneSettings
-        {
-            public string SceneName = "";
-            [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
-            public string SceneId = "";
-            public string ScenePath = "";
-            public long LastRevision;
-
-            public SceneSettings(string name, string path)
-            {
-                SceneName = name;
-                ScenePath = path;
-            }
-        }
-
         static CognitiveVR_Preferences instance;
         public static CognitiveVR_Preferences Instance
         {
@@ -154,6 +138,22 @@ namespace CognitiveVR
             }
             return null;
         }
+
+        [Serializable]
+        public class SceneSettings
+        {
+            public string SceneName = "";
+            [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
+            public string SceneId = "";
+            public string ScenePath = "";
+            public long LastRevision;
+
+            public SceneSettings(string name, string path)
+            {
+                SceneName = name;
+                ScenePath = path;
+            }
+        }
     }
 
     namespace Json
@@ -232,6 +232,4 @@ namespace CognitiveVR
                 TextureQuality = target.TextureQuality };
         }
     }
-
-    
 }
