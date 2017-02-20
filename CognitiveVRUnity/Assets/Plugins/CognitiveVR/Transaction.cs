@@ -95,6 +95,8 @@ namespace CognitiveVR
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void begin(double timeout = 0, TimeoutMode mode = TimeoutMode.Transaction)
         {
+            if (HMD == null) { return; }
+
             float[] pos = new float[3] { 0, 0, 0 };
 
             pos[0] = HMD.position.x;
@@ -123,6 +125,8 @@ namespace CognitiveVR
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
         public void end(string result = Constants.TXN_SUCCESS)
         {
+            if (HMD == null) { return; }
+
             float[] pos = new float[3] { 0, 0, 0 };
 
             pos[0] = HMD.position.x;
@@ -158,6 +162,8 @@ namespace CognitiveVR
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
         public void beginAndEnd(string result = Constants.TXN_SUCCESS)
         {
+            if (HMD == null) { return; }
+
             float[] pos = new float[3] { 0, 0, 0 };
 
             pos[0] = HMD.position.x;

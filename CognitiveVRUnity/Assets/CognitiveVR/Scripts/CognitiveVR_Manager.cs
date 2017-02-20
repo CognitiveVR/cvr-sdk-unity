@@ -289,6 +289,7 @@ namespace CognitiveVR
         #endregion
 
         private static CognitiveVR_Manager instance;
+        public static CognitiveVR_Manager Instance { get { return instance; } }
         YieldInstruction playerSnapshotInverval;
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]

@@ -724,6 +724,83 @@ namespace CognitiveVR
             UploadSceneSettings = null;
         }
 
+        static int uploadRequests = 0;
+        static WWW dynamicUploadWWW;
+
+
+        public static void UploadDynamicObjects()
+        {
+            string fileList = "Upload Files:\n";
+
+            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            if (settings == null)
+            {
+                Debug.Log("settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                return;
+            }
+
+            string sceneid = settings.SceneId;
+
+            string uploadUrl = "https://sceneexplorer.com/api/objects/" + sceneid + "/";
+
+            var subdirectories = Directory.GetDirectories(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic");
+
+            foreach (var subdir in subdirectories)
+            {
+                var filePaths = Directory.GetFiles(subdir);
+
+                WWWForm wwwForm = new WWWForm();
+                foreach (var f in filePaths)
+                {
+                    fileList += f + "\n";
+
+                    var data = File.ReadAllBytes(f);
+                    wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
+                }
+
+                var dirname = new DirectoryInfo(subdir).Name;
+
+                Debug.Log("upload dynamic object: " + dirname);
+
+                //upload file info to dynamic endpoint backend dealy
+                dynamicUploadWWW = new WWW(uploadUrl + dirname, wwwForm);
+                uploadRequests++;
+            }
+
+            if (uploadRequests > 0)
+            {
+                EditorApplication.update += UpdateUploadDynamics;
+            }
+            Debug.Log(fileList);
+        }
+
+        static void UpdateUploadDynamics()
+        {
+            if (dynamicUploadWWW == null)
+            {
+                EditorApplication.update -= UpdateUploadData;
+                return;
+            }
+
+            if (!dynamicUploadWWW.isDone) { return; }
+
+            if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
+            {
+                Debug.LogError(dynamicUploadWWW.error);
+            }
+            if (!string.IsNullOrEmpty(dynamicUploadWWW.text))
+            {
+                Debug.Log("dynamic object upload reponse text " + dynamicUploadWWW.text);
+            }
+            else
+            {
+                Debug.Log("dynamic object upload complete");
+            }
+
+            EditorApplication.update -= UpdateUploadData;
+        }
+
+
         #region Utility
 
         bool KeyIsValid(string key)

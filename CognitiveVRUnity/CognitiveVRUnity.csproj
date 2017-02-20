@@ -84,6 +84,7 @@
     <Compile Include="Assets\CognitiveVR\Scripts\ControllerCollisionEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ControllerInputEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\DisplaySettingAttribute.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\DynamicObject.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ExitPollPanel.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\GazeButton.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionEvent.cs" />
