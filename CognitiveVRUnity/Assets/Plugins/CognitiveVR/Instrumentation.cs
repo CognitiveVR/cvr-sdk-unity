@@ -49,5 +49,19 @@ namespace CognitiveVR
 		{
             InstrumentationSubsystem.updateCollection(name, balance, balanceModification, isCurrency);
 		}
-	}
+
+        public static void SetMaxTransactions(int max)
+        {
+            InstrumentationSubsystem.SetMaxTransactions(max);
+        }
+
+        /// <summary>
+        /// manually send cached transactions
+        /// this is also used when quiting the application
+        /// </summary>
+        public static void SendCachedTransactions()
+        {
+            InstrumentationSubsystem.SendCachedTransactions();
+        }
+    }
 }

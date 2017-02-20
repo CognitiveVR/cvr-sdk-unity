@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace CognitiveVR
 {
-    [CustomEditor(typeof(DynamicObject))]
+    [CustomEditor(typeof(CognitiveVR.DynamicObject))]
     public class CognitiveVR_DynamicObjectInspector : Editor
     {
         public override void OnInspectorGUI()
