@@ -73,7 +73,6 @@
     <Compile Include="Assets\Plugins\CognitiveVR\Instrumentation.cs" />
     <Compile Include="Assets\Plugins\CognitiveVR\PlayerState.cs" />
     <Compile Include="Assets\Plugins\CognitiveVR\Purchase.cs" />
-    <Compile Include="Assets\Plugins\CognitiveVR\Sensor.cs" />
     <Compile Include="Assets\Plugins\CognitiveVR\Session.cs" />
     <Compile Include="Assets\Plugins\CognitiveVR\Transaction.cs" />
     <Compile Include="Assets\Plugins\CognitiveVR\Tuning.cs" />

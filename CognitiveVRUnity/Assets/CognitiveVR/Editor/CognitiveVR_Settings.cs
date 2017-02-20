@@ -715,6 +715,8 @@ namespace CognitiveVR
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
                 {
+                    //TODO check that the text is in the right format
+
                     string[] split = checkForUpdatesRequest.text.Split('|');
 
                     var version = split[0];
