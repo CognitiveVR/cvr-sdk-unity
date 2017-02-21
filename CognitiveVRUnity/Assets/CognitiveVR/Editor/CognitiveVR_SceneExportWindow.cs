@@ -15,7 +15,7 @@ namespace CognitiveVR
         static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
 
-        [MenuItem("cognitiveVR/Scene Export Window", priority = 3)]
+        //[MenuItem("Window/cognitiveVR/Scene Export Window", priority = 3)]
         public static void Init()
         {
             CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");

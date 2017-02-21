@@ -64,6 +64,7 @@ namespace CognitiveVR
                 }
             }
 
+
             //get the highest value layer and write pixels to texture
             //Texture2D tempTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
             Texture2D outTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
@@ -93,7 +94,21 @@ namespace CognitiveVR
                         }
                     }
 
-                    outTex.SetPixel(x, y, data.splatPrototypes[highestMap].texture.GetPixel(x * 10 % (data.splatPrototypes[highestMap].texture.width * 1), y * 10 % (data.splatPrototypes[highestMap].texture.height * 1)));
+                    if (data.splatPrototypes.Length > highestMap)
+                    {
+                        try
+                        {
+                            int xpixel = x * 10 % (data.splatPrototypes[highestMap].texture.width * 1);
+                            int ypixel = y * 10 % (data.splatPrototypes[highestMap].texture.height * 1);
+                            Color color = data.splatPrototypes[highestMap].texture.GetPixel(xpixel, ypixel);
+
+                            outTex.SetPixel(x, y, color);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
                 }
             }
 
@@ -178,7 +193,7 @@ namespace CognitiveVR
             {
                 for (int x = 0; x < w; x++)
                 {
-                    tVertices[y * w + x] = Vector3.Scale(meshScale, new Vector3(-y, tData[x * tRes, y * tRes], x)) + offset;
+                    tVertices[y * w + x] = Vector3.Scale(meshScale, new Vector3(-y, tData[x * tRes, y * tRes], x));
                     tUV[y * w + x] = Vector2.Scale(new Vector2(x * tRes, y * tRes), uvScale);
                 }
             }

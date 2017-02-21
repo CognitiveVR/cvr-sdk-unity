@@ -17,7 +17,7 @@ namespace CognitiveVR.Components
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR
-            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler;
+            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
 #elif CVR_OCULUS
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
@@ -80,7 +80,7 @@ namespace CognitiveVR.Components
 
         private void CognitiveVR_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
         {
-            //var poses = (Valve.VR.TrackedDevicePose_t[])args[0];
+            //var poses = (Valve.VR.TrackedDevicePose_t[])args[0]; //steamvr 1.1. replace 'args' variable with 'poses'
             for (int i = 0; i < 16; i++)
             {
                 if (args.Length <= i) { break; }
@@ -154,7 +154,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_STEAMVR
-            CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateHandler;
+            CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateHandler; //1.2
 #endif
 #if CVR_OCULUS
             OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;

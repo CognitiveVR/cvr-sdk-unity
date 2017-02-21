@@ -210,7 +210,9 @@ namespace CognitiveVR
         public static string SetListString(string name, List<string> list)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("\"" + name + "\":[");
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
             for (int i = 0; i < list.Count; i++)
             {
                 builder.Append("\"" + list[i] + "\"");
@@ -275,7 +277,7 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("\"");
             builder.Append( name );
-            builder.Append(" \" : [");
+            builder.Append("\":[");
 
             //8th index
             //missing either : or [
@@ -305,7 +307,7 @@ namespace CognitiveVR
         }
 
         /// <returns>"name":[0.1,0.2,0.3]</returns>
-        public static string SetPos(string name, Vector3 pos, bool centimeterLimit = true)
+        public static string SetVector(string name, Vector3 pos, bool centimeterLimit = true)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("\"");
@@ -340,7 +342,9 @@ namespace CognitiveVR
         public static string SetQuat(string name, Quaternion quat)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("\"" + name + "\":[");
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
 
             builder.Append(string.Format("{0:0.000}", quat.x));
 
@@ -362,7 +366,9 @@ namespace CognitiveVR
         public static string SetQuat(string name, float[] quat)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("\"" + name + "\":[");
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
 
             builder.Append(string.Format("{0:0.000}", quat[0]));
             builder.Append(",");

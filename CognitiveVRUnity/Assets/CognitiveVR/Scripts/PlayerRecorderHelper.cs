@@ -39,7 +39,7 @@ namespace CognitiveVR.Components
 
         public IEnumerator OnPostRender()
         {
-            if (CognitiveVR_Manager.Instance.EvaluateGazeRealtime)
+            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
             {
                 yield return endOfFrame;
                 CognitiveVR_Manager.Instance.TickPostRender();

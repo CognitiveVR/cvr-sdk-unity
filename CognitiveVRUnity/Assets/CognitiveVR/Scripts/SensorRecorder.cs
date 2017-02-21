@@ -12,7 +12,6 @@ namespace CognitiveVR
         private static int jsonPart = 1;
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
-        private static int MaxSensorSnapshots = 64;
 
         static SensorRecorder()
         {
@@ -31,7 +30,7 @@ namespace CognitiveVR
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));
             }
             currentSensorSnapshots++;
-            if (currentSensorSnapshots >= MaxSensorSnapshots)
+            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
                 SendData();
             }
@@ -82,9 +81,6 @@ namespace CognitiveVR
 
             CachedSnapshots.Clear();
             currentSensorSnapshots = 0;
-
-            Debug.Log(sb.ToString());
-
 
             string url = "https://sceneexplorer.com/api/sensors/" + sceneSettings.SceneId;
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());

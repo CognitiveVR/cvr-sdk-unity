@@ -80,11 +80,18 @@ namespace CognitiveVR
 
         private static List<string> savedDynamicManifest = new List<string>();
         private static List<string> savedDynamicSnapshots = new List<string>();
-        private static int maxSnapshotBatchCount = 64;
+        //private static int maxSnapshotBatchCount = 64;
         private static int jsonpart = 1;
 
         void OnEnable()
         {
+            //set the 'custom mesh name' to be the lowercase of the common name
+            if (!UseCustomMesh)
+            {
+                UseCustomMesh = true;
+                MeshName = CommonMesh.ToString().ToLower();
+            }
+
             if (SnapshotOnEnable)
             {
                 var v = NewSnapshot().UpdateTransform();
@@ -107,24 +114,52 @@ namespace CognitiveVR
             }
         }
 
-        private static void CognitiveVR_Manager_PackageFromTick()
-        {
-            PackageNewSnapshots();
-        }
-
         //public so snapshot can tie cognitivevr_manager tick event to this
         public void CognitiveVR_Manager_TickEvent()
         {
             CheckUpdate();
         }
 
-        private static void PackageNewSnapshots()
+        //puts outstanding snapshots (from last update) into json. this can't happen
+        private static void CognitiveVR_Manager_Update()
+        {
+            WriteSnapshotsToString();
+        }
+
+        //write up to 4 dynamic object snapshots each frame
+        private static void WriteSnapshotsToString()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (NewObjectManifest.Count > 0)
+                {
+                    savedDynamicManifest.Add(SetManifestEntry(NewObjectManifest[0]));
+                    NewObjectManifest.RemoveAt(0);
+                    continue;
+                }
+                if (NewSnapshots.Count > 0)
+                {
+                    savedDynamicSnapshots.Add(SetSnapshot(NewSnapshots[0]));
+                    NewSnapshots.RemoveAt(0);
+                    continue;
+                }
+            }
+
+            if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.Instance.DynamicSnapshotCount)
+            {
+                SendSavedSnapshots();
+            }
+        }
+
+        private static void WriteAllSnapshots()
         {
             //write new dynamic object snapshots to strings
             for (int i = 0; i < NewSnapshots.Count; i++)
             {
+                if (NewSnapshots[i] == null) { continue; }
                 savedDynamicSnapshots.Add(SetSnapshot(NewSnapshots[i]));
-                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= maxSnapshotBatchCount)
+                NewSnapshots[i] = null;
+                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.Instance.DynamicSnapshotCount)
                 {
                     SendSavedSnapshots();
                 }
@@ -134,8 +169,10 @@ namespace CognitiveVR
 
             for (int i = 0; i < NewObjectManifest.Count; i++)
             {
+                if (NewObjectManifest[i] == null) { continue; }
                 savedDynamicManifest.Add(SetManifestEntry(NewObjectManifest[i]));
-                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= maxSnapshotBatchCount)
+                NewObjectManifest[i] = null;
+                if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.Instance.DynamicSnapshotCount)
                 {
                     SendSavedSnapshots();
                 }
@@ -215,7 +252,7 @@ namespace CognitiveVR
 
                 if (ObjectManifest.Count == 1)
                 {
-                    CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_PackageFromTick;
+                    CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
                     CognitiveVR_Manager.SendDataEvent += SendSavedSnapshots;
                 }
             }
@@ -237,6 +274,13 @@ namespace CognitiveVR
         {
             currentUniqueId++;
             return currentUniqueId + uniqueIdOffset;
+        }
+
+        public static void SendAllSnapshots()
+        {
+            Debug.Log("send all snapshots");
+            WriteAllSnapshots();
+            SendSavedSnapshots();
         }
 
         /// <summary>

@@ -150,7 +150,7 @@ namespace CognitiveVR
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, Vector3 position, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
+        public static void Initialize(System.Action closeAction, Vector3 position, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             if (CognitiveVR_Manager.HMD == null)
             {
@@ -171,6 +171,7 @@ namespace CognitiveVR
             }
 
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
+            _instance.ExitPollQuestion = QuestionName;
 
             _instance._transform.position = position;
 
@@ -182,7 +183,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
+        public static void Initialize(System.Action closeAction, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             if (CognitiveVR_Manager.HMD == null) //no hmd? fail
             {
@@ -203,6 +204,7 @@ namespace CognitiveVR
             }
 
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
+            _instance.ExitPollQuestion = QuestionName;
 
             //set position and rotation
             Vector3 spawnPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
@@ -258,7 +260,7 @@ namespace CognitiveVR
             //initialize variables
             if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
             {
-                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, ExitPollPanelType.ExitPollMicrophonePanel);
+                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, "ExitPollQuestion", ExitPollPanelType.ExitPollMicrophonePanel);
                 _instance._finalCloseAction = closeAction;
                 _instance._closeAction = microphoneAction;
             }

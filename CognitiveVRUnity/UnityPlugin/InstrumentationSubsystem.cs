@@ -76,7 +76,8 @@ namespace CognitiveVR
 
             builder.Append(TransactionBuilder.ToString());
 
-            builder.Remove(builder.Length-1, 1); //remove the last comma
+            if (TransactionBuilder.Length > 0)
+                builder.Remove(builder.Length-1, 1); //remove the last comma
             builder.Append("]");
 
             builder.Append("}");

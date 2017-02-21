@@ -21,7 +21,7 @@ namespace CognitiveVR
 
         Texture2D tex;
 
-        [MenuItem("cognitiveVR/Tracker Options Window", priority = 2)]
+        //[MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 2)]
         public static void Init()
         {
             CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");
@@ -119,10 +119,27 @@ namespace CognitiveVR
                 prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
 
                 GUILayout.Space(10);
+                GUILayout.Label("<size=12><b>Batching Data</b></size>");
 
+                prefs.EvaluateGazeRealtime = EditorGUILayout.Toggle(new GUIContent("Evaluate Gaze in Real Time", "Get the gaze points sent during gameplay"), prefs.EvaluateGazeRealtime);
+                prefs.GazeSnapshotCount = EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Threshold", "Automatically send snapshots when this many have been taken"), prefs.GazeSnapshotCount);
+                prefs.TransactionSnapshotCount = EditorGUILayout.IntField(new GUIContent("Transaction Threshold", "Automatically send snapshots when this many have been taken"), prefs.TransactionSnapshotCount);
+                prefs.DynamicSnapshotCount = EditorGUILayout.IntField(new GUIContent("Dynamic Object Snapshot Threshold", "Automatically send snapshots when this many have been taken"), prefs.DynamicSnapshotCount);
+                prefs.SensorSnapshotCount = EditorGUILayout.IntField(new GUIContent("Sensor Data Threshold", "Automatically send snapshots when this many have been taken"), prefs.SensorSnapshotCount);
+
+                prefs.GazeSnapshotCount = Mathf.Clamp(prefs.GazeSnapshotCount, 1,1024);
+                prefs.TransactionSnapshotCount = Mathf.Max(prefs.TransactionSnapshotCount, 1);
+                prefs.DynamicSnapshotCount = Mathf.Max(prefs.DynamicSnapshotCount, 1);
+                prefs.SensorSnapshotCount = Mathf.Max(prefs.SensorSnapshotCount, 1);
+
+                GUILayout.Space(10);
+                GUILayout.Label("<size=12><b>Sending Data</b></size>");
                 prefs.SendDataOnLevelLoad = EditorGUILayout.Toggle(new GUIContent("Send Data on Level Load", "Send all snapshots on Level Loaded"), prefs.SendDataOnLevelLoad);
                 prefs.SendDataOnQuit = EditorGUILayout.Toggle(new GUIContent("Send Data on Quit", "Sends all snapshots on Application OnQuit\nNot reliable on Mobile"), prefs.SendDataOnQuit);
                 prefs.SendDataOnHMDRemove = EditorGUILayout.Toggle(new GUIContent("Send data on HMD remove", "Send all snapshots on HMD remove event"), prefs.SendDataOnHMDRemove);
+
+                GUILayout.Space(10);
+                GUILayout.Label("<size=12><b>Debug</b></size>");
 
                 prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
                 prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);

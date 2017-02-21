@@ -67,6 +67,17 @@ namespace CognitiveVR
         public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
 
 #if CVR_STEAMVR
+        //1.1
+        /*
+        public delegate void PoseUpdateHandler(params object[] args);
+        /// <summary>
+        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
+        /// </summary>
+        public static event PoseUpdateHandler PoseUpdateEvent;
+        public void OnPoseUpdate(params object[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
+        */
+
+        //1.2
         public delegate void PoseUpdateHandler(params TrackedDevicePose_t[] args);
         /// <summary>
         /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
@@ -74,6 +85,7 @@ namespace CognitiveVR
         public static event PoseUpdateHandler PoseUpdateEvent;
         public void OnPoseUpdate(params TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
 
+        //1.1 and 1.2
         public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
         /// <summary>
         /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
