@@ -52,44 +52,44 @@ namespace CognitiveVR
 
             //Setup
             GUILayout.Label("Setup", EditorStyles.boldLabel);
-            dynamic.SnapshotOnEnable = EditorGUILayout.Toggle("Snapshot On Enable",dynamic.SnapshotOnEnable);
+            dynamic.SnapshotOnEnable = EditorGUILayout.Toggle(new GUIContent("Snapshot On Enable","Save the transform when this object is first enabled"), dynamic.SnapshotOnEnable);
             EditorGUI.BeginDisabledGroup(!dynamic.SnapshotOnEnable);
-            dynamic.UpdateTicksOnEnable = EditorGUILayout.Toggle("Update Ticks on Enable", dynamic.UpdateTicksOnEnable);
+            dynamic.UpdateTicksOnEnable = EditorGUILayout.Toggle(new GUIContent("Update Ticks on Enable","Begin coroutine that saves the transform of this object when it moves"), dynamic.UpdateTicksOnEnable);
             EditorGUI.EndDisabledGroup();
 
 
 
             //Object ID
             GUILayout.Label("IDs (Basic)", EditorStyles.boldLabel);
-            dynamic.ReleaseIdOnDisable = EditorGUILayout.Toggle("Release Id OnDisable", dynamic.ReleaseIdOnDisable);
-            dynamic.ReleaseIdOnDestroy = EditorGUILayout.Toggle("Release Id OnDestroy", dynamic.ReleaseIdOnDestroy);
+            dynamic.ReleaseIdOnDisable = EditorGUILayout.Toggle(new GUIContent("Release Id OnDisable","Allow other objects to use this Id when this object is no longer active"), dynamic.ReleaseIdOnDisable);
+            dynamic.ReleaseIdOnDestroy = EditorGUILayout.Toggle(new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"), dynamic.ReleaseIdOnDestroy);
 
 
             GUILayout.Label("Ids (Advanced)", EditorStyles.boldLabel);
 
             GUILayout.BeginHorizontal();
-            dynamic.UseCustomId = EditorGUILayout.Toggle("Use Custom Id", dynamic.UseCustomId);
+            dynamic.UseCustomId = EditorGUILayout.Toggle(new GUIContent("Use Custom Id","This is used to identify specific objects to aggregate the position across multiple play sessions"), dynamic.UseCustomId);
             EditorGUI.BeginDisabledGroup(!dynamic.UseCustomId);
             dynamic.CustomId = EditorGUILayout.IntField(dynamic.CustomId);
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
 
-            dynamic.GroupName = EditorGUILayout.TextField("Group Name", dynamic.GroupName);
+            dynamic.GroupName = EditorGUILayout.TextField(new GUIContent("Group Name","This is used to identify types of objects and combine aggregated data"), dynamic.GroupName);
 
 
             //Snapshot Threshold
             GUILayout.Label("Snapshot Threshold", EditorStyles.boldLabel);
 
-            dynamic.SyncWithPlayerUpdate = EditorGUILayout.Toggle("Sync with Player Update", dynamic.SyncWithPlayerUpdate);
+            dynamic.SyncWithPlayerUpdate = EditorGUILayout.Toggle(new GUIContent("Sync with Player Update","This is the Snapshot interval in the Tracker Options Window"), dynamic.SyncWithPlayerUpdate);
 
             EditorGUI.BeginDisabledGroup(dynamic.SyncWithPlayerUpdate);
-            dynamic.UpdateRate = EditorGUILayout.FloatField("Update Interval", dynamic.UpdateRate);
+            dynamic.UpdateRate = EditorGUILayout.FloatField(new GUIContent("Update Interval","Only active used if the object is set to 'Tick'. The delay before checking if the object moved beyond the threshold"), dynamic.UpdateRate);
             dynamic.UpdateRate = Mathf.Max(0.1f, dynamic.UpdateRate);
             EditorGUI.EndDisabledGroup();
 
-            dynamic.PositionThreshold = EditorGUILayout.FloatField("Position Threshold", dynamic.PositionThreshold);
+            dynamic.PositionThreshold = EditorGUILayout.FloatField(new GUIContent("Position Threshold","Meters the object must move to write a new snapshot. Checked each 'Tick'"), dynamic.PositionThreshold);
             dynamic.PositionThreshold = Mathf.Max(0, dynamic.PositionThreshold);
-            dynamic.RotationThreshold = EditorGUILayout.FloatField("Rotation Threshold", dynamic.RotationThreshold);
+            dynamic.RotationThreshold = EditorGUILayout.FloatField(new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"), dynamic.RotationThreshold);
             dynamic.RotationThreshold = Mathf.Max(0, dynamic.RotationThreshold);
             
 

@@ -121,13 +121,13 @@ namespace CognitiveVR
                 GUILayout.Space(10);
                 GUILayout.Label("<size=12><b>Batching Data</b></size>");
 
-                prefs.EvaluateGazeRealtime = EditorGUILayout.Toggle(new GUIContent("Evaluate Gaze in Real Time", "Get the gaze points sent during gameplay"), prefs.EvaluateGazeRealtime);
-                prefs.GazeSnapshotCount = EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Threshold", "Automatically send snapshots when this many have been taken"), prefs.GazeSnapshotCount);
-                prefs.TransactionSnapshotCount = EditorGUILayout.IntField(new GUIContent("Transaction Threshold", "Automatically send snapshots when this many have been taken"), prefs.TransactionSnapshotCount);
-                prefs.DynamicSnapshotCount = EditorGUILayout.IntField(new GUIContent("Dynamic Object Snapshot Threshold", "Automatically send snapshots when this many have been taken"), prefs.DynamicSnapshotCount);
-                prefs.SensorSnapshotCount = EditorGUILayout.IntField(new GUIContent("Sensor Data Threshold", "Automatically send snapshots when this many have been taken"), prefs.SensorSnapshotCount);
+                prefs.EvaluateGazeRealtime = EditorGUILayout.Toggle(new GUIContent("Evaluate Gaze in Real Time", "Send the gaze points during gameplay. False will send all the gaze points OnLevelLoaded, OnQuit, OnHMDRemove or when the threshold is reached"), prefs.EvaluateGazeRealtime);
+                prefs.GazeSnapshotCount = EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Threshold", "Automatically send gaze snapshots when this many have been taken"), prefs.GazeSnapshotCount);
+                prefs.TransactionSnapshotCount = EditorGUILayout.IntField(new GUIContent("Transaction Threshold", "Automatically send event snapshots when this many have been taken"), prefs.TransactionSnapshotCount);
+                prefs.DynamicSnapshotCount = EditorGUILayout.IntField(new GUIContent("Dynamic Object Snapshot Threshold", "Automatically send dynamic object snapshots when this many have been taken"), prefs.DynamicSnapshotCount);
+                prefs.SensorSnapshotCount = EditorGUILayout.IntField(new GUIContent("Sensor Data Threshold", "Automatically send sensor snapshots when this many have been taken"), prefs.SensorSnapshotCount);
 
-                prefs.GazeSnapshotCount = Mathf.Clamp(prefs.GazeSnapshotCount, 1,1024);
+                prefs.GazeSnapshotCount = Mathf.Max(prefs.GazeSnapshotCount, 1);
                 prefs.TransactionSnapshotCount = Mathf.Max(prefs.TransactionSnapshotCount, 1);
                 prefs.DynamicSnapshotCount = Mathf.Max(prefs.DynamicSnapshotCount, 1);
                 prefs.SensorSnapshotCount = Mathf.Max(prefs.SensorSnapshotCount, 1);

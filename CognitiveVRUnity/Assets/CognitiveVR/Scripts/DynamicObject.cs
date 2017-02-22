@@ -38,7 +38,6 @@ namespace CognitiveVR
 
 
         public bool SnapshotOnEnable = true;
-        [Tooltip("enables coroutine that continually checks if object has moved")]
         public bool UpdateTicksOnEnable = true;
 
         [Header("Thresholds")]
@@ -235,8 +234,8 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        int newId = GetUniqueID();
-                        ObjectId = new DynamicObjectId(newId, MeshName);
+                        ObjectId = GetUniqueID(MeshName);
+                        //ObjectId = new DynamicObjectId(newId, MeshName);
                         var manifestEntry = new DynamicObjectManifestEntry(ObjectId.Id, gameObject.name, MeshName);
                         if (!string.IsNullOrEmpty(GroupName))
                         {
@@ -277,16 +276,14 @@ namespace CognitiveVR
             lastRotation = _transform.rotation;
         }
 
-        //TODO this should return a dynamicObjectId instance
-        private static int GetUniqueID()
+        private static DynamicObjectId GetUniqueID(string MeshName)
         {
             currentUniqueId++;
-            return currentUniqueId + uniqueIdOffset;
+            return new DynamicObjectId(currentUniqueId + uniqueIdOffset, MeshName);
         }
 
         public static void SendAllSnapshots()
         {
-            Debug.Log("send all snapshots");
             WriteAllSnapshots();
             SendSavedSnapshots();
         }
@@ -302,7 +299,7 @@ namespace CognitiveVR
             CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
             if (sceneSettings == null)
             {
-                Debug.Log("scene settings are null " + sceneName);
+                CognitiveVR.Util.logDebug("scene settings are null " + sceneName);
                 return;
             }
 
@@ -395,6 +392,7 @@ namespace CognitiveVR
                 builder.Append("\"properties\":[");
                 foreach (var v in entry.Properties)
                 {
+                    builder.Append("{");
                     if (v.Value.GetType() == typeof(string))
                     {
                         builder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
@@ -403,7 +401,7 @@ namespace CognitiveVR
                     {
                         builder.Append(JsonUtil.SetObject(v.Key, v.Value));
                     }
-                    builder.Append(",");
+                    builder.Append("},");
                 }
                 builder.Remove(builder.Length - 1, 1); //remove last comma
                 builder.Append("]"); //close properties object
