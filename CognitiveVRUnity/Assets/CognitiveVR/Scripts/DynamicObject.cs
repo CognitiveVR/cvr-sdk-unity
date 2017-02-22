@@ -214,7 +214,7 @@ namespace CognitiveVR
             }
             else
             {
-                var manifestEntry = ObjectManifest.Find(x => x.id == ObjectId.id);
+                var manifestEntry = ObjectManifest.Find(x => x.Id == ObjectId.Id);
                 if (manifestEntry == null)
                 {
                     needObjectId = true;
@@ -226,18 +226,22 @@ namespace CognitiveVR
             {
                 if (!UseCustomId)
                 {
-                    var recycledId = ObjectIds.Find(x => !x.used && x.meshName == mesh);
+                    var recycledId = ObjectIds.Find(x => !x.Used && x.MeshName == mesh);
                     if (recycledId != null)
                     {
                         ObjectId = recycledId;
-                        ObjectId.used = true;
+                        ObjectId.Used = true;
                         //id is already on manifest
                     }
                     else
                     {
                         int newId = GetUniqueID();
                         ObjectId = new DynamicObjectId(newId, MeshName);
-                        var manifestEntry = new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName);
+                        var manifestEntry = new DynamicObjectManifestEntry(ObjectId.Id, gameObject.name, MeshName);
+                        if (!string.IsNullOrEmpty(GroupName))
+                        {
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
+                        }
                         ObjectManifest.Add(manifestEntry);
                         NewObjectManifest.Add(manifestEntry);
                     }
@@ -245,7 +249,11 @@ namespace CognitiveVR
                 else
                 {
                     ObjectId = new DynamicObjectId(CustomId, MeshName);
-                    var manifestEntry = new DynamicObjectManifestEntry(ObjectId.id, gameObject.name, MeshName);
+                    var manifestEntry = new DynamicObjectManifestEntry(ObjectId.Id, gameObject.name, MeshName);
+                    if (!string.IsNullOrEmpty(GroupName))
+                    {
+                        manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
+                    }
                     ObjectManifest.Add(manifestEntry);
                     NewObjectManifest.Add(manifestEntry);
                 }
@@ -369,23 +377,23 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
 
             builder.Append("\"");
-            builder.Append(entry.id);
+            builder.Append(entry.Id);
             builder.Append("\":{");
 
 
-            if (!string.IsNullOrEmpty(entry.name))
+            if (!string.IsNullOrEmpty(entry.Name))
             {
-                builder.Append(JsonUtil.SetString("name", entry.name));
+                builder.Append(JsonUtil.SetString("name", entry.Name));
                 builder.Append(",");
             }
-            builder.Append(JsonUtil.SetString("mesh", entry.meshName));
+            builder.Append(JsonUtil.SetString("mesh", entry.MeshName));
 
 
-            /*if (snap.properties != null && snap.properties.Keys.Count > 0)
+            if (entry.Properties != null && entry.Properties.Keys.Count > 0)
             {
                 builder.Append(",");
                 builder.Append("\"properties\":[");
-                foreach (var v in snap.properties)
+                foreach (var v in entry.Properties)
                 {
                     if (v.Value.GetType() == typeof(string))
                     {
@@ -399,9 +407,9 @@ namespace CognitiveVR
                 }
                 builder.Remove(builder.Length - 1, 1); //remove last comma
                 builder.Append("]"); //close properties object
-            }*/
+            }
 
-            builder.Append("}"); //close transaction object
+            builder.Append("}"); //close manifest entry
 
             return builder.ToString();
         }
@@ -411,20 +419,20 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
 
-            builder.Append(JsonUtil.SetObject("id", snap.id));
+            builder.Append(JsonUtil.SetObject("id", snap.Id));
             builder.Append(",");
-            builder.Append(JsonUtil.SetObject("time", snap.timestamp));
+            builder.Append(JsonUtil.SetObject("time", snap.Timestamp));
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("p", snap.position));
+            builder.Append(JsonUtil.SetVector("p", snap.Position));
             builder.Append(",");
-            builder.Append(JsonUtil.SetQuat("r", snap.rotation));
+            builder.Append(JsonUtil.SetQuat("r", snap.Rotation));
 
 
-            if (snap.properties != null && snap.properties.Keys.Count > 0)
+            if (snap.Properties != null && snap.Properties.Keys.Count > 0)
             {
                 builder.Append(",");
                 builder.Append("\"properties\":[");
-                foreach (var v in snap.properties)
+                foreach (var v in snap.Properties)
                 {
                     builder.Append("{");
                     if (v.Value.GetType() == typeof(string))
@@ -441,7 +449,7 @@ namespace CognitiveVR
                 builder.Append("]"); //close properties object
             }
 
-            builder.Append("}"); //close transaction object
+            builder.Append("}"); //close object snapshot
 
             return builder.ToString();
         }
@@ -463,64 +471,64 @@ namespace CognitiveVR
 
     public class DynamicObjectSnapshot
     {
-        public DynamicObject dynamic;
-        public int id;
-        public Dictionary<string, object> properties;
-        public float[] position = new float[3] { 0, 0, 0 };
-        public float[] rotation = new float[4] { 0, 0, 0, 1 };
-        public double timestamp;
+        public DynamicObject Dynamic;
+        public int Id;
+        public Dictionary<string, object> Properties;
+        public float[] Position = new float[3] { 0, 0, 0 };
+        public float[] Rotation = new float[4] { 0, 0, 0, 1 };
+        public double Timestamp;
 
         public DynamicObjectSnapshot(DynamicObject dynamic)
         {
-            this.dynamic = dynamic;
-            id = dynamic.ObjectId.id;
-            timestamp = Util.Timestamp();
+            this.Dynamic = dynamic;
+            Id = dynamic.ObjectId.Id;
+            Timestamp = Util.Timestamp();
         }
 
         public DynamicObjectSnapshot(DynamicObject dynamic, Vector3 pos, Quaternion rot, Dictionary<string, object> props = null)
         {
-            this.dynamic = dynamic;
-            id = dynamic.ObjectId.id;
-            properties = props;
-            position = new float[3] { 0, 0, 0 };
-            rotation = new float[4] { rot.x, rot.y, rot.z, rot.w };
-            timestamp = Util.Timestamp();
+            this.Dynamic = dynamic;
+            Id = dynamic.ObjectId.Id;
+            Properties = props;
+            Position = new float[3] { 0, 0, 0 };
+            Rotation = new float[4] { rot.x, rot.y, rot.z, rot.w };
+            Timestamp = Util.Timestamp();
         }
 
         public DynamicObjectSnapshot(DynamicObject dynamic, float[] pos, float[] rot, Dictionary<string, object> props = null)
         {
-            this.dynamic = dynamic;
-            id = dynamic.ObjectId.id;
-            properties = props;
-            position = pos;
+            this.Dynamic = dynamic;
+            Id = dynamic.ObjectId.Id;
+            Properties = props;
+            Position = pos;
             
-            rotation = rot;
-            timestamp = Util.Timestamp();
+            Rotation = rot;
+            Timestamp = Util.Timestamp();
         }
 
 
         public DynamicObjectSnapshot UpdateTransform()
         {
-            position = new float[3] { dynamic._transform.position.x, dynamic._transform.position.y, dynamic._transform.position.z };
-            rotation = new float[4] { dynamic._transform.rotation.x, dynamic._transform.rotation.y, dynamic._transform.rotation.z, dynamic._transform.rotation.w };
+            Position = new float[3] { Dynamic._transform.position.x, Dynamic._transform.position.y, Dynamic._transform.position.z };
+            Rotation = new float[4] { Dynamic._transform.rotation.x, Dynamic._transform.rotation.y, Dynamic._transform.rotation.z, Dynamic._transform.rotation.w };
 
-            dynamic.UpdateLastPositions();
+            Dynamic.UpdateLastPositions();
 
             return this;
         }
 
         public DynamicObjectSnapshot SetTick(bool enable)
         {
-            dynamic.StopAllCoroutines();
+            Dynamic.StopAllCoroutines();
             if (enable)
             {
-                if (dynamic.SyncWithPlayerUpdate)
+                if (Dynamic.SyncWithPlayerUpdate)
                 {
-                    CognitiveVR_Manager.TickEvent += dynamic.CognitiveVR_Manager_TickEvent;
+                    CognitiveVR_Manager.TickEvent += Dynamic.CognitiveVR_Manager_TickEvent;
                 }
                 else
                 {
-                    dynamic.StartCoroutine(dynamic.UpdateTick());
+                    Dynamic.StartCoroutine(Dynamic.UpdateTick());
                 }
             }
             return this;
@@ -528,30 +536,30 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot SetProperties(Dictionary<string, object> dict)
         {
-            properties = dict;
+            Properties = dict;
             return this;
         }
 
         public DynamicObjectSnapshot AppendProperties(Dictionary<string, object> dict)
         {
-            if (properties == null)
+            if (Properties == null)
             {
-                properties = new Dictionary<string, object>();
+                Properties = new Dictionary<string, object>();
             }
             foreach (var v in dict)
             {
-                properties[v.Key] = v.Value;
+                Properties[v.Key] = v.Value;
             }
             return this;
         }
 
         public DynamicObjectSnapshot SetEnabled(bool enable)
         {
-            if (properties == null)
+            if (Properties == null)
             {
-                properties = new Dictionary<string, object>();
+                Properties = new Dictionary<string, object>();
             }
-            properties["enabled"] = enable;
+            Properties["enabled"] = enable;
             return this;
         }
 
@@ -559,11 +567,11 @@ namespace CognitiveVR
         //if objects are pooled on the dev side, this may not be required
         public DynamicObjectSnapshot ReleaseUniqueId()
         {
-            var foundId = DynamicObject.ObjectIds.Find(x => x.id == this.id);
+            var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
             if (foundId != null)
             {
-                foundId.used = false;
-                this.dynamic.ObjectId = null;
+                foundId.Used = false;
+                this.Dynamic.ObjectId = null;
             }
             return this;
         }
@@ -573,28 +581,37 @@ namespace CognitiveVR
     //used to 'release' unique ids so meshes can be pooled in scene explorer
     public class DynamicObjectId
     {
-        public int id;
-        public bool used = true;
-        public string meshName;
+        public int Id;
+        public bool Used = true;
+        public string MeshName;
 
         public DynamicObjectId(int id, string meshName)
         {
-            this.id = id;
-            this.meshName = meshName;
+            this.Id = id;
+            this.MeshName = meshName;
         }
     }
 
     public class DynamicObjectManifestEntry
     {
-        public int id;
-        public string name;
-        public string meshName;
+        public int Id;
+        public string Name;
+        public string MeshName;
+        public Dictionary<string, object> Properties;
 
         public DynamicObjectManifestEntry(int id, string name, string meshName)
         {
-            this.id = id;
-            this.name = name;
-            this.meshName = meshName;
+            this.Id = id;
+            this.Name = name;
+            this.MeshName = meshName;
+        }
+
+        public DynamicObjectManifestEntry(int id, string name, string meshName,Dictionary<string,object>props)
+        {
+            this.Id = id;
+            this.Name = name;
+            this.MeshName = meshName;
+            this.Properties = props;
         }
     }
 }
