@@ -114,7 +114,7 @@ namespace CognitiveVR
             }
         }
 
-        //public so snapshot can tie cognitivevr_manager tick event to this
+        //public so snapshot can tie cognitivevr_manager tick event to this. this is for syncing player tick and this tick
         public void CognitiveVR_Manager_TickEvent()
         {
             CheckUpdate();

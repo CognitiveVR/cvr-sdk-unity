@@ -75,17 +75,17 @@ namespace CognitiveVR
 #if CVR_PUPIL
         bool IsCalibrated = true;
 
-
+        //these can happen on a separate thread?
         private void PupilGazeTracker_OnCalibrationDone(PupilGazeTracker manager)
         {
             IsCalibrated = true;
-            Instrumentation.Transaction("cvr.calibration").end();
+            //Instrumentation.Transaction("cvr.calibration").end();
         }
 
         private void PupilGazeTracker_OnCalibrationStarted(PupilGazeTracker manager)
         {
             IsCalibrated = false;
-            Instrumentation.Transaction("cvr.calibration").begin();
+            //Instrumentation.Transaction("cvr.calibration").begin();
         }
 #endif
 
@@ -253,11 +253,11 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
-                periodicRenderer.enabled = true;
-                rt = periodicRenderer.DoRender(rt);
-                periodicRenderer.enabled = false;
                 if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
                 {
+                    periodicRenderer.enabled = true;
+                    rt = periodicRenderer.DoRender(rt);
+                    periodicRenderer.enabled = false;
                     return;
                 }
                 else
@@ -280,10 +280,20 @@ namespace CognitiveVR
             snapshot.Properties.Add("hmdForward", cam.transform.forward);
             snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
             snapshot.Properties.Add("farDepth", cam.farClipPlane);
-            snapshot.Properties.Add("renderDepth", rt);
-            snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
+            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+            {
+                snapshot.Properties.Add("renderDepth", rt); //this is constantly getting overwritten
+            }
+            else
+            {
+                periodicRenderer.enabled = true;
+                RenderTexture newrt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
+                newrt = periodicRenderer.DoRender(newrt);
+                periodicRenderer.enabled = false;
+                snapshot.Properties.Add("renderDepth", newrt);
+            }            
 
-            //TODO write hmd position, hmd rotation and time to string immediately
+            snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
 
 #if CVR_GAZETRACK
 
@@ -337,9 +347,14 @@ namespace CognitiveVR
                     if (!float.IsNaN(calcGazePoint.x))
                     {
                         savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, calcGazePoint));
+                        Debug.DrawLine(HMD.position, calcGazePoint, Color.yellow, 5);
+                        Debug.DrawRay(calcGazePoint, Vector3.up, Color.green, 5);
+                        Debug.DrawRay(calcGazePoint, Vector3.right, Color.red, 5);
+                        Debug.DrawRay(calcGazePoint, Vector3.forward, Color.blue, 5);
                     }
                     else
                     {
+                        Debug.Log("NAN");
                         snapshot = null;
                     }
                 }
@@ -385,12 +400,12 @@ namespace CognitiveVR
                         {
                             playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
                             savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", calcGazePoint));
-#if CVR_DEBUG
-                        Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
-                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
-                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
-                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
-#endif
+//#if CVR_DEBUG
+                            Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
+                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
+                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
+                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
+//#endif
                         }
                         else
                         {
@@ -516,51 +531,6 @@ namespace CognitiveVR
         }
 
         #region json
-
-        /*byte[] FormatGazeToString()
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-
-            builder.Append("{");
-
-            //header
-            builder.Append(JsonUtil.SetString("userid", Core.userId));
-            builder.Append(",");
-
-            builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
-            builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
-			builder.Append(",");
-			builder.Append(JsonUtil.SetObject("part", jsonpart));
-			builder.Append(",");
-
-
-#if CVR_FOVE
-            builder.Append(JsonUtil.SetString("hmdtype", "fove"));
-#else
-            builder.Append(JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
-#endif
-            builder.Append(",");
-            
-            //events
-            builder.Append("\"data\":[");
-            for (int i = 0; i < playerSnapshots.Count; i++)
-            {
-                if (playerSnapshots[i] == null) { continue; }
-                builder.Append(SetGazePont(playerSnapshots[i]));
-                builder.Append(",");
-            }
-            if (playerSnapshots.Count > 0)
-            {
-                builder.Remove(builder.Length - 1, 1);
-            }
-            builder.Append("]");
-
-            builder.Append("}");
-
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-            return outBytes;
-        }*/
 
         private static void WriteToFile(byte[] bytes, string appendFileName = "")
         {

@@ -76,7 +76,9 @@ namespace CognitiveVR
             snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution);
             snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution);
 
-            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x, (int)snapshotPixel.y);
+            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x-1, (int)snapshotPixel.y-1);
+
+            //Debug.Log(snapshotPixel);
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {
@@ -124,14 +126,23 @@ namespace CognitiveVR
         {
             if (tex == null)
             {
-                tex = new Texture2D(1, 1);
+#if CVR_GAZETRACK
+                tex = new Texture2D(Resolution, Resolution);
+#else
+                tex = new Texture2D(1,1);
+#endif
             }
 
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-            tex.ReadPixels(new Rect(x, y, 1, 1), 0, 0);
-            var color = tex.GetPixel(x, y);
+#if CVR_GAZETRACK //TODO read 1 pixel from the render texture where the request point is
+            tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
+            var color = tex.GetPixel(x,y);
+#else
+            tex.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
+            var color = tex.GetPixel(0,0);
+#endif
 
             RenderTexture.active = currentActiveRT;
             return color;

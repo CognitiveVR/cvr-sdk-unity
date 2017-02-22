@@ -85,11 +85,13 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(dynamic.SyncWithPlayerUpdate);
             dynamic.UpdateRate = EditorGUILayout.FloatField("Update Interval", dynamic.UpdateRate);
             dynamic.UpdateRate = Mathf.Max(0.1f, dynamic.UpdateRate);
+            EditorGUI.EndDisabledGroup();
+
             dynamic.PositionThreshold = EditorGUILayout.FloatField("Position Threshold", dynamic.PositionThreshold);
             dynamic.PositionThreshold = Mathf.Max(0, dynamic.PositionThreshold);
             dynamic.RotationThreshold = EditorGUILayout.FloatField("Rotation Threshold", dynamic.RotationThreshold);
             dynamic.RotationThreshold = Mathf.Max(0, dynamic.RotationThreshold);
-            EditorGUI.EndDisabledGroup();
+            
 
             if (GUI.changed)
             {

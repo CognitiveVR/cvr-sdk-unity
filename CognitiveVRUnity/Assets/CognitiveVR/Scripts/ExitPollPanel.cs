@@ -166,7 +166,8 @@ namespace CognitiveVR
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
                 if (closeAction != null)
                     closeAction.Invoke();
-                _instance.Close(true);
+                if (_instance != null)
+                    _instance.Close(true);
                 return;
             }
 
@@ -199,7 +200,8 @@ namespace CognitiveVR
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
                 if (closeAction != null)
                     closeAction.Invoke();
-                _instance.Close(true);
+                if (_instance != null)
+                    _instance.Close(true);
                 return;
             }
 
