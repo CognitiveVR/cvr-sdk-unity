@@ -73,12 +73,10 @@ namespace CognitiveVR
 
             snapshotPixel *= Resolution;
 
-            snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution);
-            snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution);
+            snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution-1);
+            snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution-1);
 
-            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x-1, (int)snapshotPixel.y-1);
-
-            //Debug.Log(snapshotPixel);
+            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x, (int)snapshotPixel.y);
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {

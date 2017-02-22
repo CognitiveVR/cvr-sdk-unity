@@ -27,6 +27,7 @@ namespace CognitiveVR
         PlayerRecorderHelper periodicRenderer;
 
         bool headsetPresent = true;
+        private RenderTexture rt;
 
         public void PlayerRecorderInit(Error initError)
         {
@@ -73,18 +74,15 @@ namespace CognitiveVR
         }
 
 #if CVR_PUPIL
-        bool IsCalibrated = true;
 
-        //these can happen on a separate thread?
+        //TODO these can happen on a separate thread? uses camera.main which will only work on the main thread
         private void PupilGazeTracker_OnCalibrationDone(PupilGazeTracker manager)
         {
-            IsCalibrated = true;
             //Instrumentation.Transaction("cvr.calibration").end();
         }
 
         private void PupilGazeTracker_OnCalibrationStarted(PupilGazeTracker manager)
         {
-            IsCalibrated = false;
             //Instrumentation.Transaction("cvr.calibration").begin();
         }
 #endif
@@ -230,12 +228,11 @@ namespace CognitiveVR
         public static void EndPlayerRecording()
         {
             CognitiveVR_Manager.TickEvent -= instance.CognitiveVR_Manager_OnTick;
-            //instance.SendPlayerGazeSnapshots();
             instance.OnSendData();
             instance.trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
-        private RenderTexture rt;
+
 
         private void CognitiveVR_Manager_OnTick()
         {
@@ -245,10 +242,6 @@ namespace CognitiveVR
 
 #if CVR_FOVE
             if (!Fove.FoveHeadset.GetHeadset().IsEyeTrackingCalibrated()) { return; }
-#endif
-#if CVR_PUPIL
-            //this creates cvr.calibration begin and end transactions, but will not stop recording snapshots
-            //if (!IsCalibrated) { return; }
 #endif
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
@@ -310,6 +303,14 @@ namespace CognitiveVR
 #endif //fove direction
 #if CVR_PUPIL //direction
             var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
+
+            //if it doesn't find the eyes, it returns the last position. TODO use confidence level of last pupildata
+            /*if (PupilGazeTracker.Instance.Confidence < 0.5f)
+            {
+                Debug.Log("no confidence in pupil data");
+                return;
+            }*/
+
             var ray = cam.ViewportPointToRay(v2);
             worldGazeDirection = ray.direction.normalized;
 #endif //pupil direction
@@ -340,21 +341,20 @@ namespace CognitiveVR
             {
                 if (CognitiveVR_Preferences.Instance.TrackGazePoint)
                 {
-                    //Texture2D depthTex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
-
                     Vector3 calcGazePoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
 
                     if (!float.IsNaN(calcGazePoint.x))
                     {
                         savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, calcGazePoint));
+#if CVR_DEBUG
                         Debug.DrawLine(HMD.position, calcGazePoint, Color.yellow, 5);
                         Debug.DrawRay(calcGazePoint, Vector3.up, Color.green, 5);
                         Debug.DrawRay(calcGazePoint, Vector3.right, Color.red, 5);
                         Debug.DrawRay(calcGazePoint, Vector3.forward, Color.blue, 5);
+#endif
                     }
                     else
                     {
-                        Debug.Log("NAN");
                         snapshot = null;
                     }
                 }
@@ -400,12 +400,12 @@ namespace CognitiveVR
                         {
                             playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
                             savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", calcGazePoint));
-//#if CVR_DEBUG
+#if CVR_DEBUG
                             Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
-//#endif
+#endif
                         }
                         else
                         {
