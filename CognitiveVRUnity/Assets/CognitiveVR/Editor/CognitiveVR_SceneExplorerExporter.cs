@@ -282,8 +282,11 @@ namespace CognitiveVR
         }
 
 
-        private static string MeshToString(MeshFilter mf, Vector3 origin)
+        private static string MeshToString(MeshFilter mf, Vector3 origin, Quaternion rotation)
         {
+            //TODO rotate mesh inverse of rotation
+            //rotate the mf transform, export, then rotate it back?
+
             Mesh m = mf.sharedMesh;
             if (m == null) return "";
             if (mf.GetComponent<MeshRenderer>() == null || !mf.GetComponent<MeshRenderer>().enabled || !mf.gameObject.activeInHierarchy) { return ""; }
@@ -309,6 +312,9 @@ namespace CognitiveVR
             {
                 Vector3 wv = mf.transform.TransformPoint(lv) - origin;
 
+                //flips the vertex around by the rotation
+                wv = rotation * wv;
+
                 //invert x axis
                 sb.Append(string.Format("v {0} {1} {2}\n", -wv.x, wv.y, wv.z));
             }
@@ -317,6 +323,9 @@ namespace CognitiveVR
             foreach (Vector3 lv in m.normals)
             {
                 Vector3 wv = mf.transform.TransformDirection(lv);
+
+                //flips the vertex around by the rotation
+                wv = rotation * wv;
 
                 sb.Append(string.Format("vn {0} {1} {2}\n", -wv.x, wv.y, wv.z));
             }
@@ -443,7 +452,7 @@ namespace CognitiveVR
                     sw.Write("Ka  0.6 0.6 0.6\n");
                     sw.Write("Kd  " + c.r + " " + c.g + " " + c.b + "\n");
                     sw.Write("Ks  0.0 0.0 0.0\n");
-                    sw.Write("d  "+ opacity + "\n");
+                    sw.Write("d  " + opacity + "\n");
                     sw.Write("Ns  96.0\n");
                     sw.Write("Ni  1.0\n");
                     sw.Write("illum 1\n");
@@ -506,7 +515,7 @@ namespace CognitiveVR
             return !canceled;
         }
 
-        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures, int textureDivisor, Vector3 origin)
+        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot)
         {
             bool canceled = false;
             materialList = PrepareFileWrite();
@@ -554,7 +563,7 @@ namespace CognitiveVR
                             canceled = true;
                         }
                     }
-                    sw.Write(MeshToString(mf[i], origin));
+                    sw.Write(MeshToString(mf[i], origin, originRot));
                 }
             }
             EditorUtility.ClearProgressBar();
@@ -641,7 +650,7 @@ namespace CognitiveVR
                 mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero);
+                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity);
                 return success;
             }
             else
@@ -745,7 +754,6 @@ namespace CognitiveVR
                 return false;
             }
 
-            Debug.Log("selection " + transform.gameObject.name);
             DynamicObject dynamic = transform.GetComponent<DynamicObject>();
             if (dynamic == null)
             {
@@ -777,7 +785,7 @@ namespace CognitiveVR
             string objectName = dynamic.MeshName;
 
             folder = "CognitiveVR_SceneExplorerExport/Dynamic/" + objectName;
-            return MeshesToFile(meshfilter, objectName, true, 1, transform.transform.position);
+            return MeshesToFile(meshfilter, objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation));
         }
     }
 }
