@@ -304,7 +304,7 @@ namespace CognitiveVR
             {
                 //parse out title and question
                 string[] tuningQuestion = response.Split('|');
-                if (tuningQuestion.Length == 2)
+                if (tuningQuestion.Length == 2 && !string.IsNullOrEmpty(tuningQuestion[0]) && !string.IsNullOrEmpty(tuningQuestion[1]))
                 {
                     Title.text = tuningQuestion[0];
                     Question.text = tuningQuestion[1];
@@ -314,7 +314,7 @@ namespace CognitiveVR
                 {
                     //debug tuning variable incorrect format. should be title|question
                     Close(true);
-                    Util.logDebug("ExitPoll TuningVariable "+ ExitPollQuestion+" is in the wrong format! should be 'title|question'");
+                    Util.logDebug("ExitPoll TuningVariable " + ExitPollQuestion + " is in the wrong format! should be 'title|question'. Response is: " + response);
                 }
 
                 yield break;
@@ -498,7 +498,7 @@ namespace CognitiveVR
 
                 Util.logDebug("ExitPoll Request\n" + jsonResponse);
 
-                StartCoroutine(SendAnswer(bytes, url));
+                StartCoroutine(SendAnswer(bytes, url, Question.text, positive));
             }
             else
             {
@@ -506,7 +506,7 @@ namespace CognitiveVR
             }
         }
 
-        private IEnumerator SendAnswer(byte[] bytes, string url)
+        private IEnumerator SendAnswer(byte[] bytes, string url, string question, bool answer)
         {
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
@@ -523,7 +523,7 @@ namespace CognitiveVR
             else
             {
                 ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
-                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd(transform.position);
+                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).setProperty("question", question).setProperty("answer", answer).beginAndEnd(transform.position); //this goes to scene explorer
                 PollID = response.pollId;
             }
 

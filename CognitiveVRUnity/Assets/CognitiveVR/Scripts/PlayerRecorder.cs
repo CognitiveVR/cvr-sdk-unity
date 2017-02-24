@@ -512,7 +512,7 @@ namespace CognitiveVR
 
             yield return www;
 
-            Util.logDebug("request finished - return: " + www.error);
+            Util.logDebug(url + " PostJsonRequest response - return error: " + www.error + " return text: " + www.text);
         }
 
         void OnDestroyPlayerRecorder()
