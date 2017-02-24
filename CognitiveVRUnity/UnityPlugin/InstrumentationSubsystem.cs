@@ -107,10 +107,6 @@ namespace CognitiveVR
 
             UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
 
-            //yield return www;
-
-            //Util.logDebug("request finished - return: " + www.error);
-
             Util.logDebug("sent transaction event data. clear packaged bundles");
         }
 

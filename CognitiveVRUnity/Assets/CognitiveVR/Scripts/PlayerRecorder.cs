@@ -304,12 +304,8 @@ namespace CognitiveVR
 #if CVR_PUPIL //direction
             var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
 
-            //if it doesn't find the eyes, it returns the last position. TODO use confidence level of last pupildata
-            /*if (PupilGazeTracker.Instance.Confidence < 0.5f)
-            {
-                Debug.Log("no confidence in pupil data");
-                return;
-            }*/
+            //if it doesn't find the eyes, skip this snapshot
+            if (PupilGazeTracker.Instance.Confidence < 0.5f) { return; }
 
             var ray = cam.ViewportPointToRay(v2);
             worldGazeDirection = ray.direction.normalized;
@@ -386,6 +382,12 @@ namespace CognitiveVR
             if (sceneSettings == null)
             {
                 Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + trackingSceneName + "! Cancel Data Upload");
+                return;
+            }
+            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            {
+                playerSnapshots.Clear();
+                CognitiveVR.Util.logDebug("sceneid is empty. do not send gaze objects to sceneexplorer");
                 return;
             }
 

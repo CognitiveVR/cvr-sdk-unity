@@ -93,7 +93,7 @@ namespace CognitiveVR
 
             if (SnapshotOnEnable)
             {
-                var v = NewSnapshot().UpdateTransform();
+                var v = NewSnapshot().UpdateTransform().SetEnabled(true);
                 if (UpdateTicksOnEnable)
                 {
                     v.SetTick(true);
@@ -180,6 +180,9 @@ namespace CognitiveVR
                 NewObjectManifest.Clear();
         }
 
+        /// <summary>
+        /// send a snapshot of the position and rotation if the object has moved beyond its threshold
+        /// </summary>
         public void CheckUpdate()
         {
             bool doWrite = false;
@@ -203,7 +206,7 @@ namespace CognitiveVR
             return NewSnapshot(MeshName);
         }
 
-        public DynamicObjectSnapshot NewSnapshot(string mesh)
+        private DynamicObjectSnapshot NewSnapshot(string mesh)
         {
             bool needObjectId = false;
             //add object to manifest and set ObjectId
@@ -300,6 +303,16 @@ namespace CognitiveVR
             if (sceneSettings == null)
             {
                 CognitiveVR.Util.logDebug("scene settings are null " + sceneName);
+                savedDynamicManifest.Clear();
+                savedDynamicSnapshots.Clear();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            {
+                CognitiveVR.Util.logDebug("sceneid is empty. do not send dynamic objects to sceneexplorer");
+                savedDynamicManifest.Clear();
+                savedDynamicSnapshots.Clear();
                 return;
             }
 
@@ -504,7 +517,9 @@ namespace CognitiveVR
             Timestamp = Util.Timestamp();
         }
 
-
+        /// <summary>
+        /// Add the position and rotation to the snapshot, even if the dynamic object hasn't moved beyond it's threshold
+        /// </summary>
         public DynamicObjectSnapshot UpdateTransform()
         {
             Position = new float[3] { Dynamic._transform.position.x, Dynamic._transform.position.y, Dynamic._transform.position.z };
@@ -515,8 +530,13 @@ namespace CognitiveVR
             return this;
         }
 
+        /// <summary>
+        /// Enable or Disable the Tick coroutine to automatically update the dynamic object's position and rotation
+        /// </summary>
+        /// <param name="enable"></param>
         public DynamicObjectSnapshot SetTick(bool enable)
         {
+            CognitiveVR_Manager.TickEvent -= Dynamic.CognitiveVR_Manager_TickEvent;
             Dynamic.StopAllCoroutines();
             if (enable)
             {
@@ -532,12 +552,20 @@ namespace CognitiveVR
             return this;
         }
 
+        /// <summary>
+        /// Set various properties on the snapshot. Currently unused
+        /// </summary>
+        /// <param name="dict"></param>
         public DynamicObjectSnapshot SetProperties(Dictionary<string, object> dict)
         {
             Properties = dict;
             return this;
         }
 
+        /// <summary>
+        /// Append various properties on the snapshot without overwriting previous properties. Currently unused
+        /// </summary>
+        /// <param name="dict"></param>
         public DynamicObjectSnapshot AppendProperties(Dictionary<string, object> dict)
         {
             if (Properties == null)
@@ -551,6 +579,10 @@ namespace CognitiveVR
             return this;
         }
 
+        /// <summary>
+        /// Hide or show the dynamic object on SceneExplorer. This is happens automatically when you create, disable or destroy a gameobject
+        /// </summary>
+        /// <param name="enable"></param>
         public DynamicObjectSnapshot SetEnabled(bool enable)
         {
             if (Properties == null)
@@ -562,7 +594,6 @@ namespace CognitiveVR
         }
 
         //releasing an id allows a new object with the same mesh to be used instead of bloating the object manifest
-        //if objects are pooled on the dev side, this may not be required
         public DynamicObjectSnapshot ReleaseUniqueId()
         {
             var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
@@ -570,6 +601,7 @@ namespace CognitiveVR
             {
                 foundId.Used = false;
                 this.Dynamic.ObjectId = null;
+                this.SetEnabled(false);
             }
             return this;
         }
