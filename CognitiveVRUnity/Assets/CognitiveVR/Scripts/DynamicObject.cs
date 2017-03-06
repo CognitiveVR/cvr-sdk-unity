@@ -128,7 +128,7 @@ namespace CognitiveVR
         //write up to 4 dynamic object snapshots each frame
         private static void WriteSnapshotsToString()
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < Mathf.Max((NewObjectManifest.Count+NewSnapshots.Count)/10,4); i++)
             {
                 if (NewObjectManifest.Count > 0)
                 {
@@ -263,7 +263,7 @@ namespace CognitiveVR
                 if (ObjectManifest.Count == 1)
                 {
                     CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
-                    CognitiveVR_Manager.SendDataEvent += SendSavedSnapshots;
+                    CognitiveVR_Manager.SendDataEvent += SendAllSnapshots;
                 }
             }
             

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
 
@@ -8,12 +9,13 @@ using System.Reflection;
 namespace CognitiveVR
 {
     [CustomEditor(typeof(CognitiveVR.DynamicObject))]
+    [CanEditMultipleObjects]
     public class CognitiveVR_DynamicObjectInspector : Editor
     {
         public override void OnInspectorGUI()
         {
             var dynamic = target as DynamicObject;
-
+            
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
             serializedObject.Update();
@@ -44,7 +46,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Export", GUILayout.MaxWidth(100)))
             {
-                CognitiveVR_SceneExplorerExporter.ExportEachSelectionToSingle(dynamic.transform);
+                ExportMesh(dynamic.transform);
             }
             
             GUILayout.EndHorizontal();
@@ -97,6 +99,18 @@ namespace CognitiveVR
             {
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
+        }
+
+        void ExportMesh(Transform transform)
+        {
+            //spawn prefab into scene. if it's already in the scene, spawn a clone
+            var newPrefab = GameObject.Instantiate(transform.gameObject);
+
+            //export the object
+            CognitiveVR_SceneExplorerExporter.ExportEachSelectionToSingle(newPrefab.transform);
+
+            //destroy the temporary prefab
+            GameObject.DestroyImmediate(newPrefab);
         }
     }
 }
