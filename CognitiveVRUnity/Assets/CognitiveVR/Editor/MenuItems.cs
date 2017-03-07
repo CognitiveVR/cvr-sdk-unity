@@ -43,7 +43,7 @@ namespace CognitiveVR
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
 
-            Debug.Log("Trying to export " + entireSelection + " dynamic objects");
+            Debug.Log("Trying to export " + entireSelection.Count + " dynamic objects");
 
             List<Transform> sceneObjects = new List<Transform>();
             sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
