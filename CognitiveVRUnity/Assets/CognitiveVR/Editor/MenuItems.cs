@@ -38,7 +38,7 @@ namespace CognitiveVR
         }
 
         [MenuItem("Window/cognitiveVR/Export Selected Dynamic Objects",priority = 105)]
-        static void ExportSelectedObjectsPrefab()
+        public static void ExportSelectedObjectsPrefab()
         {
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));

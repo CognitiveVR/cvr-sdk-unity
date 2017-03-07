@@ -14,39 +14,44 @@ namespace CognitiveVR
     {
         public override void OnInspectorGUI()
         {
-            var dynamic = target as DynamicObject;
-            
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
             serializedObject.Update();
             SerializedProperty prop = serializedObject.FindProperty("m_Script");
             EditorGUILayout.PropertyField(prop, true, new GUILayoutOption[0]);
-            serializedObject.ApplyModifiedProperties();
             EditorGUI.EndDisabledGroup();
 
             //Mesh
             GUILayout.Label("Mesh", EditorStyles.boldLabel);
 
-            EditorGUI.BeginDisabledGroup(dynamic.UseCustomMesh);
-            dynamic.CommonMesh = (DynamicObject.CommonDynamicMesh)EditorGUILayout.EnumPopup("Common Mesh", dynamic.CommonMesh);
+            var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
+            EditorGUI.BeginDisabledGroup(useCustomMesh.boolValue);
+
+            var commonMeshName = serializedObject.FindProperty("CommonMesh");
+            UnityEditor.EditorGUILayout.PropertyField(commonMeshName);
+
             EditorGUI.EndDisabledGroup();
 
-            if (string.IsNullOrEmpty(dynamic.MeshName))
+            var meshname = serializedObject.FindProperty("MeshName");
+
+            if (string.IsNullOrEmpty(meshname.stringValue))
             {
-                dynamic.MeshName = dynamic.gameObject.name.ToLower().Replace(" ", "");
+                meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "");
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             GUILayout.BeginHorizontal();
-            dynamic.UseCustomMesh = EditorGUILayout.Toggle("Use Custom Mesh", dynamic.UseCustomMesh);
-            EditorGUI.BeginDisabledGroup(!dynamic.UseCustomMesh);
-            dynamic.MeshName = EditorGUILayout.TextField(dynamic.MeshName);
             
-            //GUILayout.EndHorizontal();
+            UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
+            EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
+
+            UnityEditor.EditorGUILayout.PropertyField(meshname,new GUIContent(""));
+
+            
 
             if (GUILayout.Button("Export", GUILayout.MaxWidth(100)))
             {
-                ExportMesh(dynamic.transform);
+                MenuItems.ExportSelectedObjectsPrefab();
             }
             
             GUILayout.EndHorizontal();
@@ -54,63 +59,66 @@ namespace CognitiveVR
 
             //Setup
             GUILayout.Label("Setup", EditorStyles.boldLabel);
-            dynamic.SnapshotOnEnable = EditorGUILayout.Toggle(new GUIContent("Snapshot On Enable","Save the transform when this object is first enabled"), dynamic.SnapshotOnEnable);
-            EditorGUI.BeginDisabledGroup(!dynamic.SnapshotOnEnable);
-            dynamic.UpdateTicksOnEnable = EditorGUILayout.Toggle(new GUIContent("Update Ticks on Enable","Begin coroutine that saves the transform of this object when it moves"), dynamic.UpdateTicksOnEnable);
+            var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
+            UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
+            EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
+            var updateTicksOnEnable = serializedObject.FindProperty("UpdateTicksOnEnable");
+            UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
+
             EditorGUI.EndDisabledGroup();
 
 
 
             //Object ID
-            GUILayout.Label("IDs (Basic)", EditorStyles.boldLabel);
-            dynamic.ReleaseIdOnDisable = EditorGUILayout.Toggle(new GUIContent("Release Id OnDisable","Allow other objects to use this Id when this object is no longer active"), dynamic.ReleaseIdOnDisable);
-            dynamic.ReleaseIdOnDestroy = EditorGUILayout.Toggle(new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"), dynamic.ReleaseIdOnDestroy);
+            GUILayout.Label("Ids (Basic)", EditorStyles.boldLabel);
+
+            var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
+            EditorGUILayout.PropertyField(releaseOnDisable, new GUIContent("Release Id OnDisable", "Allow other objects to use this Id when this object is no longer active"));
+            var releaseOnDestroy = serializedObject.FindProperty("ReleaseIdOnDestroy");
+            EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"));
 
 
             GUILayout.Label("Ids (Advanced)", EditorStyles.boldLabel);
 
             GUILayout.BeginHorizontal();
-            dynamic.UseCustomId = EditorGUILayout.Toggle(new GUIContent("Use Custom Id","This is used to identify specific objects to aggregate the position across multiple play sessions"), dynamic.UseCustomId);
-            EditorGUI.BeginDisabledGroup(!dynamic.UseCustomId);
-            dynamic.CustomId = EditorGUILayout.IntField(dynamic.CustomId);
+            var useCustomID = serializedObject.FindProperty("UseCustomId");
+            EditorGUILayout.PropertyField(useCustomID, new GUIContent("Use Custom Id", "This is used to identify specific objects to aggregate the position across multiple play sessions"));
+            EditorGUI.BeginDisabledGroup(!useCustomID.boolValue);
+            var customId = serializedObject.FindProperty("CustomId");
+            EditorGUILayout.PropertyField(customId, new GUIContent(""));
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
 
-            dynamic.GroupName = EditorGUILayout.TextField(new GUIContent("Group Name","This is used to identify types of objects and combine aggregated data"), dynamic.GroupName);
-
+            var groupName = serializedObject.FindProperty("GroupName");
+            EditorGUILayout.PropertyField(groupName, new GUIContent("Group Name", "This is used to identify types of objects and combine aggregated data"));
 
             //Snapshot Threshold
             GUILayout.Label("Snapshot Threshold", EditorStyles.boldLabel);
 
-            dynamic.SyncWithPlayerUpdate = EditorGUILayout.Toggle(new GUIContent("Sync with Player Update","This is the Snapshot interval in the Tracker Options Window"), dynamic.SyncWithPlayerUpdate);
+            var syncWithPlayerUpdate = serializedObject.FindProperty("SyncWithPlayerUpdate");
+            EditorGUILayout.PropertyField(syncWithPlayerUpdate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
 
-            EditorGUI.BeginDisabledGroup(dynamic.SyncWithPlayerUpdate);
-            dynamic.UpdateRate = EditorGUILayout.FloatField(new GUIContent("Update Interval","Only active used if the object is set to 'Tick'. The delay before checking if the object moved beyond the threshold"), dynamic.UpdateRate);
-            dynamic.UpdateRate = Mathf.Max(0.1f, dynamic.UpdateRate);
+            EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
+            var updateRate = serializedObject.FindProperty("UpdateRate");
+            EditorGUILayout.PropertyField(updateRate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
+            updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
             EditorGUI.EndDisabledGroup();
 
-            dynamic.PositionThreshold = EditorGUILayout.FloatField(new GUIContent("Position Threshold","Meters the object must move to write a new snapshot. Checked each 'Tick'"), dynamic.PositionThreshold);
-            dynamic.PositionThreshold = Mathf.Max(0, dynamic.PositionThreshold);
-            dynamic.RotationThreshold = EditorGUILayout.FloatField(new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"), dynamic.RotationThreshold);
-            dynamic.RotationThreshold = Mathf.Max(0, dynamic.RotationThreshold);
+            var positionThreshold = serializedObject.FindProperty("PositionThreshold");
+            EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot. Checked each 'Tick'"));
+            positionThreshold.floatValue = Mathf.Max(0, positionThreshold.floatValue);
+            var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
+            EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
+            rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
             
 
             if (GUI.changed)
             {
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
-        }
 
-        void ExportMesh(Transform transform)
-        {
-            //spawn prefab into scene. if it's already in the scene, spawn a clone
-            var newPrefab = GameObject.Instantiate(transform.gameObject);
-
-            //export the object
-            CognitiveVR_SceneExplorerExporter.ExportEachSelectionToSingle(newPrefab.transform);
-
-            //destroy the temporary prefab
-            GameObject.DestroyImmediate(newPrefab);
+            serializedObject.ApplyModifiedProperties();
+            serializedObject.Update();
         }
     }
 }

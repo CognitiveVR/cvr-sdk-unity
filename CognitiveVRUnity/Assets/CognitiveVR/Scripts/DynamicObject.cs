@@ -40,13 +40,13 @@ namespace CognitiveVR
         public bool SnapshotOnEnable = true;
         public bool UpdateTicksOnEnable = true;
 
-        [Header("Thresholds")]
+        //[Header("Thresholds")]
         public float PositionThreshold = 0.25f;
         private Vector3 lastPosition;
         public float RotationThreshold = 45f;
         private Quaternion lastRotation;
 
-        [Header("IDs")]
+        //[Header("IDs")]
         public bool UseCustomId = false;
         public int CustomId;
         public bool ReleaseIdOnDestroy = true;
@@ -60,7 +60,7 @@ namespace CognitiveVR
         public CommonDynamicMesh CommonMesh;
         public string MeshName;
 
-        [Header("Updates")]
+        //[Header("Updates")]
         public bool SyncWithPlayerUpdate = false;
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
