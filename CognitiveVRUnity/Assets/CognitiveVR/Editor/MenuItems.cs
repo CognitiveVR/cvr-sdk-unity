@@ -7,8 +7,109 @@ namespace CognitiveVR
 {
     public class MenuItems
     {
+        [MenuItem("Window/cognitiveVR/Open Web Dashboard...", priority = 0)]
+        static void CognitiveVRDashboard()
+        {
+            Application.OpenURL("http://dashboard.cognitivevr.io");
+        }
+
+        [MenuItem("Window/cognitiveVR/Settings Window", priority = 5)]
+        static void CognitiveSettingsWindow()
+        {
+            CognitiveVR_Settings.Init();
+        }
+
+        [MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 10)]
+        static void CognitiveComponentWindow()
+        {
+            CognitiveVR_ComponentSetup.Init();
+        }
+
+        [MenuItem("Window/cognitiveVR/Scene Export Window", priority = 15)]
+        static void CognitiveExportWindow()
+        {
+            CognitiveVR_SceneExportWindow.Init();
+        }
+
+        [MenuItem("Window/cognitiveVR/Add cognitiveVR Manager", priority = 55)]
+        static void AddCognitiveVRManager()
+        {
+            CognitiveVR_ComponentSetup.AddCognitiveVRManager();
+        }
+
+        [MenuItem("Window/cognitiveVR/Export Selected Dynamic Objects",priority = 105)]
+        public static void ExportSelectedObjectsPrefab()
+        {
+            List<Transform> entireSelection = new List<Transform>();
+            entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
+
+            Debug.Log("Trying to export " + entireSelection.Count + " dynamic objects");
+
+            List<Transform> sceneObjects = new List<Transform>();
+            sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
+
+            List<Transform> prefabsToSpawn = new List<Transform>();
+
+            //add prefab objects to a list
+            foreach (var v in entireSelection)
+            {
+                if (!sceneObjects.Contains(v))
+                {
+                    prefabsToSpawn.Add(v);
+                }
+            }
+
+            //spawn prefabs
+            var temporarySpawnedPrefabs = new List<GameObject>();
+            foreach (var v in prefabsToSpawn)
+            {
+                var newPrefab = GameObject.Instantiate(v.gameObject);
+                temporarySpawnedPrefabs.Add(newPrefab);
+                sceneObjects.Add(newPrefab.transform);
+            }
+
+            //export all the objects
+            int successfullyExportedCount = 0;
+            foreach (var v in sceneObjects)
+            {
+                if (CognitiveVR_SceneExplorerExporter.ExportEachSelectionToSingle(v))
+                {
+                    successfullyExportedCount++;
+                }
+            }
+
+            //destroy the temporary prefabs
+            foreach (var v in temporarySpawnedPrefabs)
+            {
+                GameObject.DestroyImmediate(v);
+            }
+
+            EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects", "Ok");
+        }
+
+        [MenuItem("Window/cognitiveVR/Export Selected Dynamic Objects", true)]
+        static bool ValidateExportSelectedObjectsPrefab()
+        {
+            // Return false if no transform is selected.
+            return Selection.activeGameObject != null;
+            //return Selection.activeTransform != null;
+        }
+
+        [MenuItem("Window/cognitiveVR/Upload Dynamic Objects",priority = 110)]
+        static void UploadDynamicObjects()
+        {
+            CognitiveVR.CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+        }
+
+        [MenuItem("Window/cognitiveVR/Upload Dynamic Objects", true)]
+        static bool ValidateUploadDynamicObjects()
+        {
+            // Return false if no dynamic directory doesn't exist
+            return System.IO.Directory.Exists(System.IO.Directory.GetCurrentDirectory() + System.IO.Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + System.IO.Path.DirectorySeparatorChar + "Dynamic");
+        }
+
 #if CVR_FOVE
-        [MenuItem("cognitiveVR/Add Fove Prefab",priority=52)]
+        [MenuItem("Window/cognitiveVR/Add Fove Prefab",priority=60)]
         static void MakeFovePrefab()
         {
             GameObject player = new GameObject("Player");
@@ -40,15 +141,22 @@ namespace CognitiveVR
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
         }
-#endif
-        [MenuItem("cognitiveVR/Add cognitiveVR Manager", priority = 51)]
-        static void AddCognitiveVRManager()
+#else
+        [MenuItem("Window/cognitiveVR/Add Fove Prefab", priority = 60)]
+        static void MakeFovePrefab()
         {
-            CognitiveVR_ComponentSetup.AddCognitiveVRManager();
+
         }
 
+        [MenuItem("Window/cognitiveVR/Add Fove Prefab", true)]
+        static bool ValidateMakeFovePrefab()
+        {
+            return false;
+        }
+#endif
+
 #if CVR_PUPIL
-        [MenuItem("cognitiveVR/Add Pupil Labs Vive Prefab", priority = 53)]
+        [MenuItem("Window/cognitiveVR/Add Pupil Labs Vive Prefab", priority = 65)]
         static void AddPupilLabsVivePrefab()
         {
             GameObject maincam = new GameObject("Main Camera");
@@ -120,6 +228,18 @@ namespace CognitiveVR
             Undo.FlushUndoRecordObjects();
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+        }
+#else
+        [MenuItem("Window/cognitiveVR/Add Pupil Labs Vive Prefab", priority = 65)]
+        static void AddPupilLabsVivePrefab()
+        {
+
+        }
+
+        [MenuItem("Window/cognitiveVR/Add Pupil Labs Vive Prefab", true)]
+        static bool ValidateAddPupilLabsVivePrefab()
+        {
+            return false;
         }
 #endif
     }

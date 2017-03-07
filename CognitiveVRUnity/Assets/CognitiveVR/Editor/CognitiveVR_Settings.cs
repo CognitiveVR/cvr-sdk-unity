@@ -30,10 +30,10 @@ namespace CognitiveVR
 
         static string SdkVersionUrl = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
 
-        System.DateTime lastSdkUpdateDate; // when cvr_version was last set
+        static System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
 
-        [MenuItem("cognitiveVR/Settings Window", priority = 1)]
+        //[MenuItem("Window/cognitiveVR/Settings Window", priority = 1)]
         public static void Init()
         {
             EditorApplication.update -= EditorUpdate;
@@ -44,9 +44,10 @@ namespace CognitiveVR
             Instance.minSize = size;
             Instance.maxSize = size;
             Instance.Show();
+            SaveEditorVersion();
 
             //fix this. shouldn't have to re-read this value to parse it to the correct format
-            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
+            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out lastSdkUpdateDate))
             {
                 //Instance.lastSdkUpdateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
             }
@@ -95,6 +96,8 @@ namespace CognitiveVR
             show = false;
 #endif
 
+            SaveEditorVersion();
+
             string version = EditorPrefs.GetString("cvr_version");
             if (string.IsNullOrEmpty(version) || version != CognitiveVR.Core.SDK_Version)
             {
@@ -111,7 +114,8 @@ namespace CognitiveVR
                 Instance.Show();
 
 
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
+
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out lastSdkUpdateDate))
                 {
                     //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                 }
@@ -502,6 +506,11 @@ namespace CognitiveVR
                 SaveSettings();
             }
 
+            if (GUILayout.Button("Open Web Dashboard..."))
+            {
+                Application.OpenURL("http://dashboard.cognitivevr.io");
+            }
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.Label("Version: " + Core.SDK_Version);
@@ -515,7 +524,7 @@ namespace CognitiveVR
 
             if (lastSdkUpdateDate.Year < 100)
             {
-                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out Instance.lastSdkUpdateDate))
+                if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), out lastSdkUpdateDate))
                 {
                     //Instance.updateDate = System.DateTime.Parse(EditorPrefs.GetString("cvr_updateDate", "1/1/1971 00:00:01"), System.Globalization.CultureInfo.InvariantCulture);
                 }
@@ -579,7 +588,6 @@ namespace CognitiveVR
                 {
                     //loginResponse = "Could not log in!";
                     Debug.LogWarning("Could not log in to cognitiveVR SDK. Error: " + loginRequest.error);
-
                 }
                 if (!string.IsNullOrEmpty(loginRequest.text))
                 {
@@ -601,6 +609,7 @@ namespace CognitiveVR
                             }
 
                             AssetDatabase.SaveAssets();
+                            SaveEditorVersion();
                         }
                         else
                         {
@@ -613,6 +622,10 @@ namespace CognitiveVR
                         Debug.LogError("Cannot log in to cognitiveVR. Error: " + e.Message);
                         throw;
                     }
+                }
+                else
+                {
+                    Debug.LogWarning("Could not log in to cognitiveVR SDK. Password or Username incorrect");
                 }
 
                 EditorApplication.update -= CheckLoginResponse;
@@ -696,6 +709,8 @@ namespace CognitiveVR
         static WWW checkForUpdatesRequest;
         static void CheckForUpdates()
         {
+            SaveEditorVersion();
+
             checkForUpdatesRequest = new UnityEngine.WWW(SdkVersionUrl);
             EditorApplication.update += UpdateCheckForUpdates;
         }
@@ -768,6 +783,12 @@ namespace CognitiveVR
             EditorUtility.SetDirty(prefs);
             AssetDatabase.SaveAssets();
 
+            SaveEditorVersion();
+        }
+
+        private static void SaveEditorVersion()
+        {
+            //Debug.Log("save editor version. currentversion = "+ EditorPrefs.GetString("cvr_version")+ "        core version" + CognitiveVR.Core.SDK_Version);
             if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
             {
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);

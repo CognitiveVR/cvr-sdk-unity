@@ -52,15 +52,6 @@ namespace CognitiveVR
         public static event QuitHandler QuitEvent;
         public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
 
-        //TODO separately package and send data in 0.6.0
-        //public delegate void PackageDataHandler(); //package data
-        /// <summary>
-        /// this is called when data thresholds are reached/hmd is removed and just before level is loaded and application quit
-        /// puts data into reasonable sized byte[] to be uploaded to the server
-        /// </summary>
-        //public static event PackageDataHandler PackageDataEvent;
-        //public void OnPackageData() { if (PackageDataEvent != null) { PackageDataEvent(); } }
-
         public delegate void SendDataHandler(); //send data
         /// <summary>
         /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
@@ -76,6 +67,17 @@ namespace CognitiveVR
         public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
 
 #if CVR_STEAMVR
+        //1.1
+        /*
+        public delegate void PoseUpdateHandler(params object[] args);
+        /// <summary>
+        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
+        /// </summary>
+        public static event PoseUpdateHandler PoseUpdateEvent;
+        public void OnPoseUpdate(params object[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
+        */
+
+        //1.2
         public delegate void PoseUpdateHandler(params TrackedDevicePose_t[] args);
         /// <summary>
         /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
@@ -83,6 +85,7 @@ namespace CognitiveVR
         public static event PoseUpdateHandler PoseUpdateEvent;
         public void OnPoseUpdate(params TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
 
+        //1.1 and 1.2
         public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
         /// <summary>
         /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
@@ -289,6 +292,7 @@ namespace CognitiveVR
         #endregion
 
         private static CognitiveVR_Manager instance;
+        public static CognitiveVR_Manager Instance { get { return instance; } }
         YieldInstruction playerSnapshotInverval;
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]

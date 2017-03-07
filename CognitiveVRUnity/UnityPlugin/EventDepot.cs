@@ -10,6 +10,9 @@ namespace CognitiveVR
         private static int sReqTimeout;
         private static HttpRequest.Listener sRequestListener;
 
+        private static List<string> savedTransactions = new List<string>();
+        internal static int maxCachedTransactions = 16;
+
         /**
          * Initialize the event depot.
          *
@@ -25,6 +28,32 @@ namespace CognitiveVR
             sRequestListener = new SendEventRequestListener();
         }
 
+        internal static void SendCachedTransactions()
+        {
+            if (savedTransactions.Count == 0) { return; }
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("[");
+            builder.Append(Util.Timestamp());
+            builder.Append(",[");
+
+            foreach (var v in savedTransactions)
+            {
+                builder.Append(v);
+                builder.Append(",");
+            }
+            if (savedTransactions.Count > 0)
+            {
+                builder = builder.Remove(builder.Length - 1, 1);
+                //sendJson = sendJson.Remove(sendJson.Length-1, 1);
+            }
+            builder.Append("]]");
+
+            HttpRequest.executeAsync(sUri, sReqTimeout, builder.ToString(), sRequestListener);
+            savedTransactions.Clear();
+            InstrumentationSubsystem.SendTransactionsToSceneExplorer();
+        }
+
         /**
          * Store an event in the depot.
          *
@@ -36,9 +65,17 @@ namespace CognitiveVR
             List<object> allArgs = new List<object>(2);
             allArgs.Add(Util.Timestamp());
             allArgs.Add(new List<object> { eventData });
+            
+            string data = Json.Serialize(new List<object> { eventData });
+            data = data.Remove(data.Length-1, 1);
+            data = data.Remove(0, 1);
 
-            // Create a new request to send the data "asynchronously", but we're going to fire and forget in this implementation
-            HttpRequest.executeAsync(sUri, sReqTimeout, Json.Serialize(allArgs), sRequestListener);
+            savedTransactions.Add(data);
+
+            if (savedTransactions.Count >= maxCachedTransactions)
+            {
+                SendCachedTransactions();
+            }
 
             return Error.Success;
         }

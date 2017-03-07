@@ -9,133 +9,100 @@ namespace CognitiveVR
 {
     public static class SensorRecorder
     {
-        static int jsonPart = 1;
-        static Dictionary<string, List<SensorSnapshot>> CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
+        private static int jsonPart = 1;
+        private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
+        private static int currentSensorSnapshots = 0;
 
         static SensorRecorder()
         {
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-        }
-
-        private static void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.LoadSceneMode arg1)
-        {
-            //TODO tie this to data send, as opposed to scene load
-            jsonPart = 1;
+            CognitiveVR_Manager.SendDataEvent += SendData;
         }
 
         public static void RecordDataPoint(string category, float value)
         {
-            if (CachedSnapshots.Count == 0)
-            {
-                CognitiveVR_Manager.SendDataEvent += SendData;
-            }
-
             if (CachedSnapshots.ContainsKey(category))
             {
-                CachedSnapshots[category].Add(new SensorSnapshot(Util.Timestamp(), value));
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));
             }
             else
             {
-                CachedSnapshots.Add(category, new List<SensorSnapshot>());
-                CachedSnapshots[category].Add(new SensorSnapshot(Util.Timestamp(), value));
+                CachedSnapshots.Add(category, new List<string>());
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));
+            }
+            currentSensorSnapshots++;
+            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            {
+                SendData();
             }
         }
 
-        static void SendData()
+        public static void SendData()
         {
-            CognitiveVR_Manager.SendDataEvent -= SendData;
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             if (sceneSettings == null) { CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings"); return; }
 
-            byte[] serializedData = SerializeSensorData();
-            //www send
-            string sceneURLSensors = "https://sceneexplorer.com/api/sensors/" + sceneSettings.SceneId;
-            SendRequest(serializedData, sceneURLSensors);
+            StringBuilder sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append(JsonUtil.SetString("name", Core.UniqueID));
+            sb.Append(",");
+            sb.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+            sb.Append(",");
+            sb.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+            sb.Append(",");
+            sb.Append(JsonUtil.SetObject("part", jsonPart));
+            sb.Append(",");
+            jsonPart++;
 
-            //clear sensor data list
-            CachedSnapshots = new Dictionary<string, List<SensorSnapshot>>();
-        }
+            sb.Append("\"data\":[");
+            foreach (var k in CachedSnapshots.Keys)
+            {
+                sb.Append("{");
+                sb.Append(JsonUtil.SetString("name", k));
+                sb.Append(",");
+                sb.Append("\"data\":[");
+                foreach (var v in CachedSnapshots[k])
+                {
+                    sb.Append(v);
+                    sb.Append(",");
+                }
+                if (CachedSnapshots.Values.Count > 0)
+                    sb.Remove(sb.Length - 1, 1); //remove last comma from data array
+                sb.Append("]");
+                sb.Append("}");
+                sb.Append(",");
+            }
+            if (CachedSnapshots.Keys.Count > 0)
+            {
+                sb.Remove(sb.Length - 1, 1); //remove last comma from sensor object
+            }
+            sb.Append("]}");
 
-        //TODO use cognitivevrmanager's send json coroutine. get a response for debugging
-        private static void SendRequest(byte[] bytes, string url)
-        {
-            var headers = new Dictionary<string, string>();
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
+            CachedSnapshots.Clear();
+            currentSensorSnapshots = 0;
 
-            new UnityEngine.WWW(url, bytes, headers);
-            //because this is not a monobehaviour, this cannot hold a coroutine and get a response
+            string url = "https://sceneexplorer.com/api/sensors/" + sceneSettings.SceneId;
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
+            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
         }
 
         #region json
 
-        //TODO use the generic json append methods from the dynamic object branch
-        static byte[] SerializeSensorData()
+        //put this into the list of saved sensor data based on the name of the sensor
+        private static string GetSensorDataToString(double timestamp, double sensorvalue)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("{\"userid\": \"");
-            sb.Append(Core.userId);
-            sb.Append("\",\"sessionid\": \"");
-            sb.Append(CognitiveVR_Preferences.SessionID);
-            sb.Append("\",\"timestamp\": ");
-            sb.Append(CognitiveVR_Preferences.TimeStamp);
 
-            sb.Append(",\"part\":");
-            sb.Append(jsonPart);
-            jsonPart++;
+            sb.Append("[");
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(sensorvalue);
+            sb.Append("]");
 
-            sb.Append(",\"data\":[");
-
-            foreach (var kvp in CachedSnapshots)
-            {
-                AppendSensorData(kvp, sb);
-            }
-            if (CachedSnapshots.Count > 0)
-            {
-                sb.Remove(sb.Length - 1, 1); //remove the last comma
-            }
-            sb.Append("]}");
-
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
-            return outBytes;
-        }
-
-        static void AppendSensorData(KeyValuePair<string, List<SensorSnapshot>> kvp, StringBuilder sb)
-        {
-            sb.Append("{\"name\":\"");
-            sb.Append(kvp.Key);
-            sb.Append("\",\"data\":[");
-
-            //loop through list
-            for (int i = 0; i < kvp.Value.Count; i++)
-            {
-                sb.Append("[");
-                sb.Append(kvp.Value[i].timestamp);
-                sb.Append(",");
-                sb.Append(kvp.Value[i].sensorValue);
-                sb.Append("],");
-            }
-            if (kvp.Value.Count > 0)
-            {
-                sb.Remove(sb.Length - 1, 1); //remove the last comma
-            }
-            sb.Append("]},");
+            return sb.ToString();
         }
 
         #endregion
-
-        public class SensorSnapshot
-        {
-            public double timestamp;
-            public double sensorValue;
-
-            public SensorSnapshot(double time, double value)
-            {
-                timestamp = time;
-                sensorValue = value;
-            }
-        }
     }
 }

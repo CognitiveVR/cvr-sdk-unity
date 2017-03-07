@@ -57,27 +57,35 @@ namespace CognitiveVR
             return hypotenuseDist;
         }
 
-        public Vector3 GetGazePoint(Texture2D texTemp)
+        /// <summary>
+        /// ignores width and height if using gaze tracking from fove/pupil labs
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        public Vector3 GetGazePoint(int width, int height)
         {
-            texTemp = GetRTPixels((RenderTexture)Properties["renderDepth"]);
+#if CVR_GAZETRACK
             float relativeDepth = 0;
             Vector3 gazeWorldPoint;
-#if CVR_GAZETRACK
+
             Vector2 snapshotPixel = (Vector2)Properties["hmdGazePoint"];
 
             snapshotPixel *= Resolution;
 
-            snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution);
-            snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution);
+            snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution-1);
+            snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution-1);
+
+            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x, (int)snapshotPixel.y);
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {
-                relativeDepth = texTemp.GetPixel((int)snapshotPixel.x, (int)snapshotPixel.y).linear.r;
+                relativeDepth = color.linear.r;
             }
             else
             {
                 //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
-                relativeDepth = texTemp.GetPixel((int)snapshotPixel.x, (int)snapshotPixel.y).r;
+                relativeDepth = color.r;
             }
 
             float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["gazeDirection"], (Vector3)Properties["hmdForward"]);
@@ -88,12 +96,19 @@ namespace CognitiveVR
 
             return gazeWorldPoint;
 #else
+            float relativeDepth = 0;
+            Vector3 gazeWorldPoint;
+
+            var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
-                relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).linear.r;
+            {
+                relativeDepth = color.linear.r;
+
+            }
             else
             {
+                relativeDepth = color.r;
                 //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
-                relativeDepth = texTemp.GetPixel(texTemp.width / 2, texTemp.height / 2).r;
             }
 
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
@@ -101,19 +116,34 @@ namespace CognitiveVR
             return gazeWorldPoint;
 #endif
 
+
         }
 
-        public Texture2D GetRTPixels(RenderTexture rt)
+        static Texture2D tex;
+        public Color GetRTColor(RenderTexture rt, int x, int y)
         {
-            Texture2D tex = new Texture2D(rt.width, rt.height);
+            if (tex == null)
+            {
+#if CVR_GAZETRACK
+                tex = new Texture2D(Resolution, Resolution);
+#else
+                tex = new Texture2D(1,1);
+#endif
+            }
 
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+#if CVR_GAZETRACK //TODO read 1 pixel from the render texture where the request point is
+            tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
+            var color = tex.GetPixel(x,y);
+#else
+            tex.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
+            var color = tex.GetPixel(0,0);
+#endif
 
             RenderTexture.active = currentActiveRT;
-            return tex;
+            return color;
         }
     }
 }

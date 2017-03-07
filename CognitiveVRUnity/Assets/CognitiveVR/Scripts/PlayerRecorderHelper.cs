@@ -35,6 +35,18 @@ namespace CognitiveVR.Components
             return rt;
         }
 
+        YieldInstruction endOfFrame = new WaitForEndOfFrame();
+
+        public IEnumerator OnPostRender()
+        {
+            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+            {
+                yield return endOfFrame;
+                CognitiveVR_Manager.Instance.TickPostRender();
+            }
+            yield return null;
+        }
+
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             Graphics.Blit(source, destination, material);

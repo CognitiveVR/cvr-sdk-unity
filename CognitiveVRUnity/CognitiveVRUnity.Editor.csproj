@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ComponentSetup.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_DynamicObjectInspector.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ManagerInspector.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_NewProductPopup.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SceneExplorerExporter.cs" />

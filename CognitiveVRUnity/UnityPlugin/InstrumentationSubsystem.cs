@@ -2,7 +2,7 @@
 
 namespace CognitiveVR
 {
-    public class TransactionSnapshot
+    /*public class TransactionSnapshot
     {
         public string category;
         public Dictionary<string, object> properties;
@@ -16,19 +16,137 @@ namespace CognitiveVR
             position = pos;
             timestamp = time;
         }
-    }
+    }*/
 
     public static class InstrumentationSubsystem
     {
-        public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
+        //public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
+        //string builder for 'data'. put into container when 'packaged', then 'sent'
+        public static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
+
+        //used for unique identifier for sceneexplorer file names
+        private static int partCount = 1;
+
+        public static void SetMaxTransactions(int max)
+        {
+            EventDepot.maxCachedTransactions = max;
+        }
+
+        public static void SendCachedTransactions()
+        {
+            EventDepot.SendCachedTransactions();
+        }
+
         public static void init()
         {
             Util.cacheCurrencyInfo();
         }
 
+        /// <summary>
+        /// call this when threshold for transactions is reached
+        /// format transactions to be sent as the body of a webrequest
+        /// this can be called manually, but it is automatically called when
+        /// </summary>
+        private static string PackageData()
+        {
+            //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
+            string userid = CoreSubsystem.UniqueID;
+            double timestamp = CoreSubsystem.SessionTimeStamp;
+            string sessionId = CoreSubsystem.SessionID;
+
+            CognitiveVR.Util.logDebug("package transaction event data");
+            //when thresholds are reached, etc
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("{");
+
+            //header
+            builder.Append(JsonUtil.SetString("userid", userid));
+            builder.Append(",");
+
+            builder.Append(JsonUtil.SetObject("timestamp", timestamp));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetString("sessionid", sessionId));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetObject("part", partCount));
+            partCount++;
+            builder.Append(",");
+
+            //events
+            builder.Append("\"data\":[");
+
+            builder.Append(TransactionBuilder.ToString());
+
+            if (TransactionBuilder.Length > 0)
+                builder.Remove(builder.Length-1, 1); //remove the last comma
+            builder.Append("]");
+
+            builder.Append("}");
+
+            //clear the transaction builder
+            TransactionBuilder = new System.Text.StringBuilder();
+            return builder.ToString();
+        }
+
+        internal static void SendTransactionsToSceneExplorer()
+        {
+            string packagedEvents = PackageData();
+
+            if (string.IsNullOrEmpty(CoreSubsystem.CurrentSceneId))
+            {
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for scene! do not upload transactions to sceneexplorer");
+                return;
+            }
+
+            //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
+            string url = "https://sceneexplorer.com/api/events/" + CoreSubsystem.CurrentSceneId;
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
+
+            var headers = new Dictionary<string, string>();
+            headers.Add("Content-Type", "application/json");
+            headers.Add("X-HTTP-Method-Override", "POST");
+
+            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+
+            Util.logDebug("sent transaction event data. clear packaged bundles");
+        }
+
+        private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
+        {
+            TransactionBuilder.Append("{");
+            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetObject("time", timestamp));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+
+
+            if (properties != null && properties.Keys.Count > 0)
+            {
+                TransactionBuilder.Append(",");
+                TransactionBuilder.Append("\"properties\":{");
+                foreach (var v in properties)
+                {
+                    if (v.Value.GetType() == typeof(string))
+                    {
+                        TransactionBuilder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
+                    }
+                    else
+                    {
+                        TransactionBuilder.Append(JsonUtil.SetObject(v.Key, v.Value));
+                    }
+                    TransactionBuilder.Append(",");
+                }
+                TransactionBuilder.Remove(TransactionBuilder.Length - 1, 1); //remove last comma
+                TransactionBuilder.Append("}"); //close properties object
+            }
+
+            TransactionBuilder.Append("}"); //close transaction object
+            TransactionBuilder.Append(",");
+        }
+
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+            SetTransaction(category, properties, position, Util.Timestamp());
 
             new CoreSubsystem.DataPointBuilder("datacollector_beginTransaction")
             .setArg(category)
@@ -51,7 +169,7 @@ namespace CognitiveVR
 
         public static void endTransaction(string category, string result, string transactionId, Dictionary<string, object> properties, float[] position)
         {
-            CachedTransactions.Add(new TransactionSnapshot(category, properties, position, Util.Timestamp()));
+            SetTransaction(category, properties, position, Util.Timestamp());
 
             new CoreSubsystem.DataPointBuilder("datacollector_endTransaction")
             .setArg(category)

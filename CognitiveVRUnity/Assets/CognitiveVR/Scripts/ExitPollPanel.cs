@@ -150,7 +150,7 @@ namespace CognitiveVR
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, Vector3 position, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
+        public static void Initialize(System.Action closeAction, Vector3 position, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             if (CognitiveVR_Manager.HMD == null)
             {
@@ -166,11 +166,13 @@ namespace CognitiveVR
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
                 if (closeAction != null)
                     closeAction.Invoke();
-                _instance.Close(true);
+                if (_instance != null)
+                    _instance.Close(true);
                 return;
             }
 
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
+            _instance.ExitPollQuestion = QuestionName;
 
             _instance._transform.position = position;
 
@@ -182,7 +184,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
+        public static void Initialize(System.Action closeAction, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
         {
             if (CognitiveVR_Manager.HMD == null) //no hmd? fail
             {
@@ -198,11 +200,13 @@ namespace CognitiveVR
                 Util.logDebug("TuningVariable ExitPollEnabled==false");
                 if (closeAction != null)
                     closeAction.Invoke();
-                _instance.Close(true);
+                if (_instance != null)
+                    _instance.Close(true);
                 return;
             }
 
             _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
+            _instance.ExitPollQuestion = QuestionName;
 
             //set position and rotation
             Vector3 spawnPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
@@ -258,7 +262,7 @@ namespace CognitiveVR
             //initialize variables
             if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
             {
-                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, ExitPollPanelType.ExitPollMicrophonePanel);
+                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, "ExitPollQuestion", ExitPollPanelType.ExitPollMicrophonePanel);
                 _instance._finalCloseAction = closeAction;
                 _instance._closeAction = microphoneAction;
             }
@@ -300,7 +304,7 @@ namespace CognitiveVR
             {
                 //parse out title and question
                 string[] tuningQuestion = response.Split('|');
-                if (tuningQuestion.Length == 2)
+                if (tuningQuestion.Length == 2 && !string.IsNullOrEmpty(tuningQuestion[0]) && !string.IsNullOrEmpty(tuningQuestion[1]))
                 {
                     Title.text = tuningQuestion[0];
                     Question.text = tuningQuestion[1];
@@ -310,7 +314,7 @@ namespace CognitiveVR
                 {
                     //debug tuning variable incorrect format. should be title|question
                     Close(true);
-                    Util.logDebug("ExitPoll TuningVariable "+ ExitPollQuestion+" is in the wrong format! should be 'title|question'");
+                    Util.logDebug("ExitPoll TuningVariable " + ExitPollQuestion + " is in the wrong format! should be 'title|question'. Response is: " + response);
                 }
 
                 yield break;
@@ -494,7 +498,7 @@ namespace CognitiveVR
 
                 Util.logDebug("ExitPoll Request\n" + jsonResponse);
 
-                StartCoroutine(SendAnswer(bytes, url));
+                StartCoroutine(SendAnswer(bytes, url, Question.text, positive));
             }
             else
             {
@@ -502,7 +506,7 @@ namespace CognitiveVR
             }
         }
 
-        private IEnumerator SendAnswer(byte[] bytes, string url)
+        private IEnumerator SendAnswer(byte[] bytes, string url, string question, bool answer)
         {
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
@@ -519,7 +523,7 @@ namespace CognitiveVR
             else
             {
                 ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
-                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).beginAndEnd(transform.position);
+                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).setProperty("question", question).setProperty("answer", answer).beginAndEnd(transform.position); //this goes to scene explorer
                 PollID = response.pollId;
             }
 

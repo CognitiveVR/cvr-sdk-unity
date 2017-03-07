@@ -23,19 +23,21 @@ namespace CognitiveVR
         }
 
         //timestamp and session id
-        private static double _timeStamp;
-        public static double TimeStamp { get { if (_timeStamp < 1) _timeStamp = Util.Timestamp(); return _timeStamp; } }
+        //private static double _timeStamp;
+        public static double TimeStamp
+        {
+            get
+            {
+                return CoreSubsystem.SessionTimeStamp;
+            }
+        }
 
-        private static string _sessionId;
+        //private static string _sessionId;
         public static string SessionID
         {
             get
             {
-                if (string.IsNullOrEmpty(_sessionId))
-                {
-                    _sessionId = (int)TimeStamp + "_" + Core.UniqueID;
-                }
-                return _sessionId;
+                return CoreSubsystem.SessionID;
             }
         }
 
@@ -70,7 +72,7 @@ namespace CognitiveVR
 
         [Header("Player Tracking")]
         //player tracking
-        public float SnapshotInterval = 0.5f;
+        public float SnapshotInterval = 0.1f;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public bool TrackPosition = true;
@@ -80,11 +82,32 @@ namespace CognitiveVR
         public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]
-        public int SnapshotThreshold = 1000;
         public bool DebugWriteToFile = false;
 
+        //what is the cost of writing strings all the time?
+
+        //should be able to write json realtime
+        //should be able to save snapshots and write json on send
+        //should be able to 
+
+        //i have a powerful computer and i can do realtime stuff
+        //i can control my sessions and i can send data at the end
+
+        //gaze real time y/n
+        //json write dynamics realtime y/n
+        //
+
+        public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
+        public int GazeSnapshotCount = 64;
+
+        public bool WriteJsonRealtime = true; //sends data when these thresholds are reached. if false, only send when manually called or OnQuit,HMDRemove,LevelLoad or HotKey
+        //should be able to save snapshots and send when manually called
+        public int SensorSnapshotCount = 64; //beyond this threshold? write to json (if not realtime) and send
+        public int DynamicSnapshotCount = 64;
+        public int TransactionSnapshotCount = 64;
+
         public bool SendDataOnQuit = true;
-        public bool SendDataOnHMDRemove = false;
+        public bool SendDataOnHMDRemove = true;
         public bool SendDataOnLevelLoad = true;
         public bool SendDataOnHotkey = true;
         public bool HotkeyShift = true;

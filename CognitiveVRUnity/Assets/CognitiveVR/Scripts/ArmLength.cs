@@ -32,7 +32,7 @@ namespace CognitiveVR.Components
         private void CognitiveVR_Manager_OnUpdate()
         {
             var system = Valve.VR.OpenVR.System;
-            if (system != null && system.GetControllerState(0, ref controllerState, stateSize ))
+            if (system != null && system.GetControllerState(0, ref controllerState, stateSize )) //1.2. for steam 1.1, remove statesize variable
             {
                 ulong trigger = controllerState.ulButtonPressed & (1UL << ((int)Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger));
                 if (trigger > 0L)
