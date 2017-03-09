@@ -267,7 +267,7 @@ namespace CognitiveVR
 
         //dynamic object
         public static bool HasRequestedDynamicGazeRaycast { get; private set; }
-        public static bool hasHitDynamic = true;
+        public static bool HasHitDynamic = true;
         public static void RequestDynamicObjectGaze()
         {
             HasRequestedDynamicGazeRaycast = true;
@@ -280,7 +280,7 @@ namespace CognitiveVR
                 //pass an objectid into the snapshot properties
                 instance.TickPostRender(hit.transform.InverseTransformPoint(hit.point), dynamicHit.ObjectId.Id);
 
-                hasHitDynamic = true;
+                HasHitDynamic = true;
 
                 Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
                 Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
@@ -297,7 +297,7 @@ namespace CognitiveVR
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender(Vector3 localPos, int objectId = -1)
         {
-            if (hasHitDynamic) { return; }
+            if (HasHitDynamic) { return; }
             
             PlayerSnapshot snapshot = new PlayerSnapshot();
             if (objectId >= 0)
