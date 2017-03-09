@@ -42,7 +42,8 @@ namespace CognitiveVR.Components
             if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
             {
                 yield return endOfFrame;
-                CognitiveVR_Manager.Instance.TickPostRender();
+                CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
+                CognitiveVR_Manager.hasHitDynamic = false;
             }
             yield return null;
         }

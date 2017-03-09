@@ -36,6 +36,18 @@ namespace CognitiveVR
             }
         }
 
+        private Collider _c;
+        public Collider _collider
+        {
+            get
+            {
+                if (_c == null)
+                {
+                    _c = GetComponent<Collider>();
+                }
+                return _c;
+            }
+        }
 
         public bool SnapshotOnEnable = true;
         public bool UpdateTicksOnEnable = true;
@@ -64,6 +76,10 @@ namespace CognitiveVR
         public bool SyncWithPlayerUpdate = false;
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
+
+        public bool TrackGaze = false;
+
+
 
         //static variables
         private static int uniqueIdOffset = 1000;
@@ -198,6 +214,13 @@ namespace CognitiveVR
             {
                 NewSnapshot().UpdateTransform();
                 UpdateLastPositions();
+            }
+
+            if (TrackGaze)
+            {
+                if (CognitiveVR_Manager.HasRequestedDynamicGazeRaycast) { return; }
+
+                CognitiveVR_Manager.RequestDynamicObjectGaze();
             }
         }
 
@@ -469,6 +492,7 @@ namespace CognitiveVR
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             if (!ReleaseIdOnDisable) { return; }
+            if (TrackGaze) { return; }
             NewSnapshot().ReleaseUniqueId();
         }
 
@@ -476,6 +500,7 @@ namespace CognitiveVR
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             if (!ReleaseIdOnDestroy) { return; }
+            if (TrackGaze) { return; }
             NewSnapshot().ReleaseUniqueId();
         }
     }

@@ -29,6 +29,7 @@ namespace CognitiveVR
             var commonMeshName = serializedObject.FindProperty("CommonMesh");
             var meshname = serializedObject.FindProperty("MeshName");
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
+            var trackGaze = serializedObject.FindProperty("TrackGaze");
 
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
@@ -71,6 +72,7 @@ namespace CognitiveVR
             UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
             EditorGUI.EndDisabledGroup();
 
+            EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
 
 
             //Object ID
@@ -101,7 +103,7 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(syncWithPlayerUpdate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
 
             EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
-            EditorGUILayout.PropertyField(updateRate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
+            EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
             updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
             EditorGUI.EndDisabledGroup();
 
