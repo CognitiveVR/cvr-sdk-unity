@@ -737,16 +737,21 @@ namespace CognitiveVR
                     var version = split[0];
                     string summary = split[1];
 
-                    if (version != null)
+                    if (string.IsNullOrEmpty(version))
                     {
-                        if (EditorPrefs.GetString("cvr_skipVersion") == version)
+                        if (version != CognitiveVR.Core.SDK_Version)
+                        {
+                            //new version
+                            CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                        }
+                        else if (EditorPrefs.GetString("cvr_skipVersion") == version)
                         {
                             //skip this version. limit this check to once a day
                             EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                         }
                         else
                         {
-                            CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                            //up to date
                         }
                     }
                 }
@@ -788,7 +793,7 @@ namespace CognitiveVR
 
         private static void SaveEditorVersion()
         {
-            //Debug.Log("save editor version. currentversion = "+ EditorPrefs.GetString("cvr_version")+ "        core version" + CognitiveVR.Core.SDK_Version);
+            //Debug.Log("save editor version. currentversion = "+ EditorPrefs.GetString("cvr_version")+ "|        core version= " + CognitiveVR.Core.SDK_Version+"|");
             if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
             {
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);

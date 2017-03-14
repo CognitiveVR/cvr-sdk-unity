@@ -503,6 +503,18 @@ namespace CognitiveVR
             if (TrackGaze) { return; }
             NewSnapshot().ReleaseUniqueId();
         }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, transform.right);
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(transform.position, transform.up);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(transform.position, transform.forward);
+        }
     }
 
     public class DynamicObjectSnapshot
