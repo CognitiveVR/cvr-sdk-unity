@@ -282,7 +282,7 @@ namespace CognitiveVR
         }
 
 
-        private static string MeshToString(MeshFilter mf, Vector3 origin, Quaternion rotation)
+        private static string MeshToString(MeshFilter mf, Vector3 origin, Quaternion rotation, string textureName)
         {
             //TODO rotate mesh inverse of rotation
             //rotate the mf transform, export, then rotate it back?
@@ -332,8 +332,8 @@ namespace CognitiveVR
             sb.Append("\n");
 
             Vector2 textureScale = Vector3.one;
-            if (mats.Length > 0 && mats[0] != null && mats[0].HasProperty("_MainTex"))
-                textureScale = mats[0].GetTextureScale("_MainTex");
+            if (mats.Length > 0 && mats[0] != null && mats[0].HasProperty(textureName))
+                textureScale = mats[0].GetTextureScale(textureName);
 
             foreach (Vector3 v in m.uv)
             {
@@ -374,10 +374,14 @@ namespace CognitiveVR
 
                         objMaterial.name = mats[material].name;
 
-                        if (mats[material].mainTexture)
-                            objMaterial.textureName = AssetDatabase.GetAssetPath(mats[material].mainTexture);
+                        if (mats[material].HasProperty(textureName) && mats[material].GetTexture(textureName))
+                        {
+                            objMaterial.textureName = AssetDatabase.GetAssetPath(mats[material].GetTexture(textureName));
+                        }
                         else
+                        {
                             objMaterial.textureName = null;
+                        }
                         objMaterial.material = mats[material];
 
                         materialList.Add(objMaterial.name, objMaterial);
@@ -419,7 +423,8 @@ namespace CognitiveVR
             return new Dictionary<string, ObjMaterial>();
         }
 
-        private static bool MaterialsToFile(string filename, int textureDivisor)
+        //TODO pass around a struct with all the details about how to export meshes/materials/textures instead of all these args
+        private static bool MaterialsToFile(string filename, int textureDivisor, string textureName)
         {
             bool canceled = false;
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".mtl"))
@@ -472,16 +477,15 @@ namespace CognitiveVR
                         {
                             bool readable;
                             TextureImporterFormat format;
-                            if (GetTextureImportFormat((Texture2D)m.mainTexture, out readable, out format))
+                            if (GetTextureImportFormat((Texture2D)m.GetTexture(textureName), out readable, out format))
                             {
-                                Texture2D originalTexture = m.mainTexture as Texture2D;
+                                Texture2D originalTexture = m.GetTexture(textureName) as Texture2D;
 
                                 SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
                                 Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
-
+                                File.WriteAllBytes(destinationFile + m.GetTexture(textureName).name.Replace(' ', '_') + ".png", bytes);
                                 SetTextureImporterFormat(originalTexture, readable, format);
                             }
                             else
@@ -491,16 +495,16 @@ namespace CognitiveVR
                                 tex.SetPixel(1, 1, Color.grey);
 
                                 byte[] bytes = tex.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
+                                File.WriteAllBytes(destinationFile + m.GetTexture(textureName).name.Replace(' ', '_') + ".png", bytes);
                                 //this sometimes happens when exporting built-in unity textures, such as Default Checker
-                                Debug.LogWarning("CognitiveVR Scene Export could not find texture '" + m.mainTexture.name + "'. Creating placeholder texture");
+                                Debug.LogWarning("CognitiveVR Scene Export could not find texture '" + m.GetTexture(textureName).name + "'. Creating placeholder texture");
                             }
                         }
                         catch
                         {
 
                         }
-                        sw.Write("map_Kd {0}", m.mainTexture.name.Replace(' ', '_') + ".png");
+                        sw.Write("map_Kd {0}", m.GetTexture(textureName).name.Replace(' ', '_') + ".png");
                     }
 
                     sw.Write("\n\n\n");
@@ -515,7 +519,7 @@ namespace CognitiveVR
             return !canceled;
         }
 
-        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot)
+        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot,string textureName)
         {
             bool canceled = false;
             materialList = PrepareFileWrite();
@@ -563,7 +567,7 @@ namespace CognitiveVR
                             canceled = true;
                         }
                     }
-                    sw.Write(MeshToString(mf[i], origin, originRot));
+                    sw.Write(MeshToString(mf[i], origin, originRot,textureName));
                 }
             }
             EditorUtility.ClearProgressBar();
@@ -571,7 +575,7 @@ namespace CognitiveVR
             bool materialSuccess = false;
 
             if (includeTextures && !canceled)
-                materialSuccess = MaterialsToFile(filename, textureDivisor);
+                materialSuccess = MaterialsToFile(filename, textureDivisor,textureName);
 
             return materialSuccess && !canceled;
         }
@@ -609,7 +613,7 @@ namespace CognitiveVR
         /// <param name="minSize"></param>
         /// <param name="textureDivisor"></param>
         /// <returns></returns>
-        public static bool ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor)
+        public static bool ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor,string textureName)
         {
             if (!CreateTargetFolder(fullName))
             {
@@ -650,7 +654,7 @@ namespace CognitiveVR
                 mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity);
+                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity,textureName);
                 return success;
             }
             else
@@ -784,8 +788,9 @@ namespace CognitiveVR
 
             string objectName = dynamic.MeshName;
 
+            //TODO export texture name should reference exportWindow texture name
             folder = "CognitiveVR_SceneExplorerExport/Dynamic/" + objectName;
-            return MeshesToFile(meshfilter, objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation));
+            return MeshesToFile(meshfilter, objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation),"_MainTex");
         }
     }
 }

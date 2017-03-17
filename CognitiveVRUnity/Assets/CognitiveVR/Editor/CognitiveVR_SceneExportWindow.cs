@@ -252,6 +252,7 @@ namespace CognitiveVR
                 prefs.ExportSettings.MinExportGeoSize = EditorGUILayout.FloatField(new GUIContent("Minimum export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), prefs.ExportSettings.MinExportGeoSize);
                 prefs.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), prefs.ExportSettings.ExplorerMinimumFaceCount);
                 prefs.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), prefs.ExportSettings.ExplorerMaximumFaceCount);
+                prefs.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), prefs.ExportSettings.DiffuseTextureName);
 
                 GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth") };
                 int[] textureQualities = new int[] { 1, 2, 4, 8, 16 };
@@ -332,7 +333,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button(exportContent))
             {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName,prefs.ExportSettings.DiffuseTextureName);
             }
             GUILayout.EndHorizontal();
             
@@ -513,7 +514,7 @@ namespace CognitiveVR
 
         Rect selectedRect;
 
-        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID)
+        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID,string texturename)
         {
             if (blenderProcess != null)
             {
@@ -529,7 +530,7 @@ namespace CognitiveVR
 
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
 
-            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor);
+            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
 
             if (!successfulExport)
             {
