@@ -90,22 +90,29 @@ namespace CognitiveVR
             }
 
 
-            bool show = true;
+            bool displaySettings = true;
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
-            show = false;
-#endif
+            if (EditorPrefs.GetBool("CognitiveHasShownInit", false))
+            {
+                displaySettings = false;
+            }
+
+/*#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
+            displaySettings = false;
+#endif*/
+
+            EditorPrefs.SetBool("CognitiveHasShownInit", true);
 
             SaveEditorVersion();
 
             string version = EditorPrefs.GetString("cvr_version");
             if (string.IsNullOrEmpty(version) || version != CognitiveVR.Core.SDK_Version)
             {
-                show = true;
+                displaySettings = true;
                 //new version installed
             }
 
-            if (show)
+            if (displaySettings)
             {
                 Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
                 Vector2 size = new Vector2(300, 550);
