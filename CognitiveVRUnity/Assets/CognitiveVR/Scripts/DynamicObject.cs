@@ -79,6 +79,7 @@ namespace CognitiveVR
 
         public bool TrackGaze = false;
 
+        public bool RequiresManualEnable = false;
 
 
         //static variables
@@ -100,6 +101,10 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (RequiresManualEnable)
+            {
+                return;
+            }
             //set the 'custom mesh name' to be the lowercase of the common name
             if (!UseCustomMesh)
             {
@@ -115,6 +120,13 @@ namespace CognitiveVR
                     v.SetTick(true);
                 }
             }
+        }
+
+        //used to manually call 
+        public void Init()
+        {
+            RequiresManualEnable = false;
+            OnEnable();
         }
 
         //public so snapshot can begin this
@@ -491,16 +503,22 @@ namespace CognitiveVR
         void OnDisable()
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
-            if (!ReleaseIdOnDisable) { return; }
-            if (TrackGaze) { return; }
+            if (TrackGaze || !ReleaseIdOnDisable)
+            {
+                NewSnapshot().SetEnabled(false);
+                return;
+            }
             NewSnapshot().ReleaseUniqueId();
         }
 
         void OnDestroy()
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
-            if (!ReleaseIdOnDestroy) { return; }
-            if (TrackGaze) { return; }
+            if (TrackGaze || !ReleaseIdOnDestroy)
+            {
+                NewSnapshot().SetEnabled(false);
+                return;
+            }
             NewSnapshot().ReleaseUniqueId();
         }
 
