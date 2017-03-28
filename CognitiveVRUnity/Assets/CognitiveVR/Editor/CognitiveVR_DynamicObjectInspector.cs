@@ -30,6 +30,7 @@ namespace CognitiveVR
             var meshname = serializedObject.FindProperty("MeshName");
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var trackGaze = serializedObject.FindProperty("TrackGaze");
+            var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
@@ -73,6 +74,7 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
+            EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable","If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
 
 
             //Object ID
