@@ -591,7 +591,8 @@ namespace CognitiveVR
                 System.IO.Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
             }
 
-            string playerID = System.DateTime.Now.ToShortTimeString().Replace(':', '_').Replace(" ", "") + '_' + System.DateTime.Now.ToShortDateString().Replace('/', '_');
+            string playerID = System.DateTime.Now.ToString("d").Replace(':', '_').Replace(" ", "") + '_' + System.DateTime.Now.ToString("t").Replace('/', '_');
+
             string path = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "player" + playerID + appendFileName + ".json";
 
             if (File.Exists(path))
@@ -664,6 +665,6 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-        #endregion
+#endregion
     }
 }

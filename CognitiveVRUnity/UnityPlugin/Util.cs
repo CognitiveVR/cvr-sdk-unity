@@ -1,7 +1,9 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+#if !NETFX_CORE
 using System.Globalization;
+#endif
 using System.Text.RegularExpressions;
 
 namespace CognitiveVR
@@ -88,7 +90,7 @@ namespace CognitiveVR
             // Clear out any previously set data
             sValidCurrencyCodes.Clear();
             sCurrencyCodesBySymbol.Clear();
-
+#if !NETFX_CORE
             // Cache a set of valid ISO 4217 currency codes and a map of valid currency symbols to ISO 4217 currency codes
             foreach (CultureInfo info in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
             {
@@ -113,6 +115,7 @@ namespace CognitiveVR
                     // Not a valid culture name.  Ok, move along....
                 }
             }
+#endif
         }
 
         // Given an input currency string, return a string that is valid currency string.
@@ -120,6 +123,9 @@ namespace CognitiveVR
         // If one cannot be determined, this method returns "unknown"
         public static string getValidCurrencyString(string currency)
         {
+#if NETFX_CORE
+            return "NETFX_CORE";
+#else
             string validCurrencyStr;
 
             // First check if the string is already a valid ISO 4217 currency code (i.e., it's in the list of known codes)
@@ -173,6 +179,7 @@ namespace CognitiveVR
             }
 
             return validCurrencyStr;
+#endif
         }
 
         /// <summary>

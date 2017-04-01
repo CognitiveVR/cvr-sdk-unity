@@ -340,7 +340,8 @@ namespace CognitiveVR
             CognitiveVR.Core.init(initParams, OnInit);
 
             double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-            Instrumentation.Transaction("Session").begin(DEFAULT_TIMEOUT,Transaction.TimeoutMode.Any);
+            //TODO this should probably be cvr.session instead
+            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT,Transaction.TimeoutMode.Any);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
