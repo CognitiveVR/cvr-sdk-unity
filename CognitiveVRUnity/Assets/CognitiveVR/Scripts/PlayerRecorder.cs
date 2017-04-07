@@ -508,6 +508,8 @@ namespace CognitiveVR
                     builder.Append(JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
 #endif
                     builder.Append(",");
+                    builder.Append(JsonUtil.SetObject("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval));
+                    builder.Append(",");
 
 
                     //events

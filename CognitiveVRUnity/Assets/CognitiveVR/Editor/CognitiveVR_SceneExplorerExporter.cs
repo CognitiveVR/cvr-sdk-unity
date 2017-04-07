@@ -553,7 +553,7 @@ namespace CognitiveVR
             return !canceled;
         }
 
-        private static bool MeshesToFile(MeshContainer[] mc, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot, string textureName)
+        private static bool MeshesToFile(MeshContainer[] mc, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot, string textureName,bool skipTerrain)
         {
             bool canceled = false;
             materialList = PrepareFileWrite();
@@ -561,21 +561,22 @@ namespace CognitiveVR
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
             {
                 sw.Write("mtllib ./" + filename + ".mtl\n");
-
-                Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
-                for (int i = 0; i < terrains.Length; i++)
+                if (!skipTerrain)
                 {
-                    //EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
-                    if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mc[i].name + " Terrain", 0.05f))
+                    Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
+                    for (int i = 0; i < terrains.Length; i++)
                     {
-                        canceled = true;
-                        break;
-                    }
-                    if (terrains[i].terrainData != null)
-                    {
-                        sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
-                        if (includeTextures)
-                            WriteTerrainTexture(terrains[i].terrainData);
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mc[i].name + " Terrain", 0.05f))
+                        {
+                            canceled = true;
+                            break;
+                        }
+                        if (terrains[i].terrainData != null)
+                        {
+                            sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
+                            if (includeTextures)
+                                WriteTerrainTexture(terrains[i].terrainData);
+                        }
                     }
                 }
 
@@ -705,7 +706,7 @@ namespace CognitiveVR
                 mcList.RemoveAll(delegate (MeshContainer obj) { return string.IsNullOrEmpty(obj.mesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                success = MeshesToFile(mcList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity, textureName);
+                success = MeshesToFile(mcList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity, textureName,false);
                 return success;
             }
             else
@@ -857,7 +858,7 @@ namespace CognitiveVR
 
             folder = "CognitiveVR_SceneExplorerExport/Dynamic/" + objectName;
 
-            return MeshesToFile(meshContainers.ToArray(), objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation), "_MainTex");
+            return MeshesToFile(meshContainers.ToArray(), objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation), "_MainTex",true);
         }
     }
 }

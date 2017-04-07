@@ -725,9 +725,7 @@ namespace CognitiveVR
             UploadSceneSettings = null;
         }
 
-        static int uploadRequests = 0;
-        static WWW dynamicUploadWWW;
-
+        static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
 
         public static void UploadDynamicObjects()
         {
@@ -768,7 +766,7 @@ namespace CognitiveVR
                 System.Diagnostics.Process.Start("explorer.exe", path);
                 return;
             }
-
+            string objectNames="";
             foreach (var subdir in subdirectories)
             {
                 var filePaths = Directory.GetFiles(subdir);
@@ -784,24 +782,48 @@ namespace CognitiveVR
 
                 var dirname = new DirectoryInfo(subdir).Name;
 
-                Debug.Log("upload dynamic object: " + dirname);
+                objectNames += dirname + "\n";
 
-                dynamicUploadWWW = new WWW(uploadUrl + dirname, wwwForm);
-                uploadRequests++;
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl + dirname, wwwForm));
             }
 
-            if (uploadRequests > 0)
+            if (dynamicObjectForms.Count > 0)
             {
+                Debug.Log("upload dynamic objects: " + objectNames);
                 EditorApplication.update += UpdateUploadDynamics;
             }
         }
 
+        class DynamicObjectForm
+        {
+            public string Url;
+            public WWWForm Form;
+
+            public DynamicObjectForm(string url, WWWForm form)
+            {
+                Url = url;
+                Form = form;
+            }
+        }
+
+        static WWW dynamicUploadWWW;
         static void UpdateUploadDynamics()
         {
             if (dynamicUploadWWW == null)
             {
-                EditorApplication.update -= UpdateUploadDynamics;
-                return;
+                //get the next dynamic object to upload from forms
+                if (dynamicObjectForms.Count == 0)
+                {
+                    //DONE!
+                    Debug.Log("all dynamic object uploads complete!");
+                    EditorApplication.update -= UpdateUploadDynamics;
+                    return;
+                }
+                else
+                {
+                    dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    dynamicObjectForms.RemoveAt(0);
+                }
             }
 
             if (!dynamicUploadWWW.isDone) { return; }
@@ -810,16 +832,10 @@ namespace CognitiveVR
             {
                 Debug.LogError(dynamicUploadWWW.error);
             }
-            if (!string.IsNullOrEmpty(dynamicUploadWWW.text))
-            {
-                Debug.Log("dynamic object upload reponse text " + dynamicUploadWWW.text);
-            }
-            else
-            {
-                Debug.Log("dynamic object upload complete");
-            }
 
-            EditorApplication.update -= UpdateUploadDynamics;
+            Debug.Log("finished uploading dynamic object to " + dynamicUploadWWW.url);
+
+            dynamicUploadWWW = null;
         }
 
 

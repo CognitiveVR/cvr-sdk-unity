@@ -258,30 +258,67 @@ namespace CognitiveVR
 
         public static void AddCognitiveVRManager()
         {
-            UnityEngine.Object basicInit = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>("Assets/CognitiveVR/Resources/CognitiveVR_Manager.prefab");
-            if (basicInit)
-            {
-                GameObject newManager = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
-                Selection.activeGameObject = newManager;
-                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                AddTrackerComponents(newManager);
-            }
-            else
-            {
-                GameObject newManager = new GameObject("CognitiveVR_Manager");
-                Selection.activeGameObject = newManager;
+            GameObject newManager = new GameObject("CognitiveVR_Manager");
+            Selection.activeGameObject = newManager;
 
-                Selection.activeGameObject = newManager;
-                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                AddTrackerComponents(newManager);
-            }
+            Selection.activeGameObject = newManager;
+            Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+            newManager.AddComponent<CognitiveVR_Manager>();
+            AddTrackerComponents(newManager);
         }
 
         static void AddTrackerComponents(GameObject cognitiveManager)
         {
-            //remove all prefab components
             //go through all components that inherit from analytics component
-            //if def platform
+#if CVR_STEAMVR
+            cognitiveManager.AddComponent<CognitiveVR.Components.ArmLength>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.BoundaryEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.ControllerCollisionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDCollisionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDPresentEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDHeight>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.OcclusionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.RoomSize>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+            
+
+#elif CVR_OCULUS && !UNITY_ANDROID //rift
+
+            cognitiveManager.AddComponent<CognitiveVR.Components.ArmLength>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.BoundaryEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.ControllerCollisionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDCollisionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDPresentEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDHeight>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.OcclusionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.RoomSize>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.RecenterEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+
+#elif CVR_OCULUS && UNITY_ANDROID //gear
+
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDPresentEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HeadphoneState>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.BatteryLevel>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.ScreenResolution>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.RecenterEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+
+#elif CVR_FOVE
+
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDCollisionEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.HMDPresentEvent>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+
+#elif CVR_DEFAULT
+
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+#endif
         }
 
         void DisplayVideoRadioButtons()
