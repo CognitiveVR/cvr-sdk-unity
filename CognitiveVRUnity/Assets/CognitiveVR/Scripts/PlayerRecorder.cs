@@ -297,8 +297,8 @@ namespace CognitiveVR
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender(Vector3 localPos, int objectId = -1)
         {
-            if (HasHitDynamic) { return; }
-            
+            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime && HasHitDynamic) { return; }
+
             PlayerSnapshot snapshot = new PlayerSnapshot();
             if (objectId >= 0)
             {
@@ -564,7 +564,7 @@ namespace CognitiveVR
 
             yield return www;
 
-            Util.logDebug(url + " PostJsonRequest response - return error: " + www.error + " return text: " + www.text);
+            Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error) + "</color> <color=green>return text: " + www.text + "</color>");
         }
 
         void OnDestroyPlayerRecorder()

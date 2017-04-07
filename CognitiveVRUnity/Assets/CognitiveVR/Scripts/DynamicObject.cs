@@ -651,13 +651,14 @@ namespace CognitiveVR
         //releasing an id allows a new object with the same mesh to be used instead of bloating the object manifest
         public DynamicObjectSnapshot ReleaseUniqueId()
         {
-            var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
+            //var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
+            var foundId = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj) { return obj.Id == this.Id; });
             if (foundId != null)
             {
                 foundId.Used = false;
-                this.Dynamic.ObjectId = null;
-                this.SetEnabled(false);
             }
+            this.Dynamic.ObjectId = null;
+            this.SetEnabled(false);
             return this;
         }
     }

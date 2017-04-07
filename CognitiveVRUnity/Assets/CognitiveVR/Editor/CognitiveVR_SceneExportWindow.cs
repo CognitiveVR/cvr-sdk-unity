@@ -686,7 +686,7 @@ namespace CognitiveVR
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
                 UploadSceneSettings = null;
-                Debug.Log("Upload canceled!");
+                Debug.LogError("Upload canceled!");
                 return;
             }
 
@@ -721,6 +721,8 @@ namespace CognitiveVR
             {
                 Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneId);
             }
+
+            Debug.Log("<color=green>Scene Upload Complete!</color>");
 
             UploadSceneSettings = null;
         }
@@ -789,7 +791,7 @@ namespace CognitiveVR
 
             if (dynamicObjectForms.Count > 0)
             {
-                Debug.Log("upload dynamic objects: " + objectNames);
+                Debug.Log("Upload dynamic objects: " + objectNames);
                 EditorApplication.update += UpdateUploadDynamics;
             }
         }
@@ -815,7 +817,7 @@ namespace CognitiveVR
                 if (dynamicObjectForms.Count == 0)
                 {
                     //DONE!
-                    Debug.Log("all dynamic object uploads complete!");
+                    Debug.Log("<color=green>All dynamic object uploads complete!</color>");
                     EditorApplication.update -= UpdateUploadDynamics;
                     return;
                 }
@@ -833,7 +835,7 @@ namespace CognitiveVR
                 Debug.LogError(dynamicUploadWWW.error);
             }
 
-            Debug.Log("finished uploading dynamic object to " + dynamicUploadWWW.url);
+            Debug.Log("Finished uploading dynamic object to " + dynamicUploadWWW.url);
 
             dynamicUploadWWW = null;
         }
