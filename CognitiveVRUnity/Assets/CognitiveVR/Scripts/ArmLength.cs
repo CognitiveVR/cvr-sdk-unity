@@ -28,7 +28,7 @@ namespace CognitiveVR.Components
         }
 
         public Valve.VR.VRControllerState_t controllerState;
-        public uint stateSize;
+        uint stateSize;
         private void CognitiveVR_Manager_OnUpdate()
         {
             var system = Valve.VR.OpenVR.System;

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+//making a Windows universal build?
+//unityplugin rightclick->properties->build->conditional compilation symbols
+//add 'NETFX_CORE' and build the dll
+
 namespace CognitiveVR
 {
     public static class Constants

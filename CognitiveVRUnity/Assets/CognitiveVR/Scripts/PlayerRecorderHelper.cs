@@ -39,12 +39,12 @@ namespace CognitiveVR.Components
 
         public IEnumerator OnPostRender()
         {
+            yield return endOfFrame;
             if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
             {
-                yield return endOfFrame;
-                CognitiveVR_Manager.Instance.TickPostRender();
+                CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
             }
-            yield return null;
+            CognitiveVR_Manager.HasHitDynamic = false;
         }
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)

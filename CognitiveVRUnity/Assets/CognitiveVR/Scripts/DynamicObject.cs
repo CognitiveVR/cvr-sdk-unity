@@ -36,6 +36,18 @@ namespace CognitiveVR
             }
         }
 
+        private Collider _c;
+        public Collider _collider
+        {
+            get
+            {
+                if (_c == null)
+                {
+                    _c = GetComponent<Collider>();
+                }
+                return _c;
+            }
+        }
 
         public bool SnapshotOnEnable = true;
         public bool UpdateTicksOnEnable = true;
@@ -65,6 +77,11 @@ namespace CognitiveVR
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
 
+        public bool TrackGaze = false;
+
+        public bool RequiresManualEnable = false;
+
+
         //static variables
         private static int uniqueIdOffset = 1000;
         private static int currentUniqueId;
@@ -84,6 +101,10 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (RequiresManualEnable)
+            {
+                return;
+            }
             //set the 'custom mesh name' to be the lowercase of the common name
             if (!UseCustomMesh)
             {
@@ -99,6 +120,13 @@ namespace CognitiveVR
                     v.SetTick(true);
                 }
             }
+        }
+
+        //used to manually call 
+        public void Init()
+        {
+            RequiresManualEnable = false;
+            OnEnable();
         }
 
         //public so snapshot can begin this
@@ -198,6 +226,13 @@ namespace CognitiveVR
             {
                 NewSnapshot().UpdateTransform();
                 UpdateLastPositions();
+            }
+
+            if (TrackGaze)
+            {
+                if (CognitiveVR_Manager.HasRequestedDynamicGazeRaycast) { return; }
+
+                CognitiveVR_Manager.RequestDynamicObjectGaze();
             }
         }
 
@@ -468,15 +503,35 @@ namespace CognitiveVR
         void OnDisable()
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
-            if (!ReleaseIdOnDisable) { return; }
+            if (TrackGaze || !ReleaseIdOnDisable)
+            {
+                NewSnapshot().SetEnabled(false);
+                return;
+            }
             NewSnapshot().ReleaseUniqueId();
         }
 
         void OnDestroy()
         {
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
-            if (!ReleaseIdOnDestroy) { return; }
+            if (TrackGaze || !ReleaseIdOnDestroy)
+            {
+                NewSnapshot().SetEnabled(false);
+                return;
+            }
             NewSnapshot().ReleaseUniqueId();
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, transform.right);
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(transform.position, transform.up);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(transform.position, transform.forward);
         }
     }
 

@@ -264,6 +264,7 @@ namespace CognitiveVR
                 GameObject newManager = PrefabUtility.InstantiatePrefab(basicInit) as GameObject;
                 Selection.activeGameObject = newManager;
                 Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+                AddTrackerComponents(newManager);
             }
             else
             {
@@ -272,7 +273,15 @@ namespace CognitiveVR
 
                 Selection.activeGameObject = newManager;
                 Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+                AddTrackerComponents(newManager);
             }
+        }
+
+        static void AddTrackerComponents(GameObject cognitiveManager)
+        {
+            //remove all prefab components
+            //go through all components that inherit from analytics component
+            //if def platform
         }
 
         void DisplayVideoRadioButtons()

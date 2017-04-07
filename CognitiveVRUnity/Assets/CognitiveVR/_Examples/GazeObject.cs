@@ -10,6 +10,7 @@ using System.Collections;
 
 namespace CognitiveVR
 {
+    [System.Obsolete("Gaze is now supported on Dynamic Objects. This will NOT support visualization on SceneExplorer")]
     public class GazeObject : MonoBehaviour
     {
         //cached components
