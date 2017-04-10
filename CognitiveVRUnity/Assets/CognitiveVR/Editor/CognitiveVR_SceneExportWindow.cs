@@ -530,7 +530,7 @@ namespace CognitiveVR
 
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
 
-            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
+            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportScene(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
 
             if (!successfulExport)
             {
