@@ -43,7 +43,7 @@ namespace CognitiveVR
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
 
-            Debug.Log("Trying to export " + entireSelection.Count + " dynamic objects");
+            Debug.Log("Starting export of " + entireSelection.Count + " dynamic objects");
 
             List<Transform> sceneObjects = new List<Transform>();
             sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
@@ -70,11 +70,19 @@ namespace CognitiveVR
 
             //export all the objects
             int successfullyExportedCount = 0;
+            List<string> exportedMeshNames = new List<string>();
+
             foreach (var v in sceneObjects)
             {
-                if (CognitiveVR_SceneExplorerExporter.ExportEachSelectionToSingle(v))
+                if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
                 {
                     successfullyExportedCount++;
+                }
+                var dynamic = v.GetComponent<DynamicObject>();
+                if (dynamic == null) { continue; }
+                if (!exportedMeshNames.Contains(dynamic.MeshName))
+                {
+                    exportedMeshNames.Add(dynamic.MeshName);
                 }
             }
 
@@ -84,7 +92,14 @@ namespace CognitiveVR
                 GameObject.DestroyImmediate(v);
             }
 
-            EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects", "Ok");
+            if (successfullyExportedCount == 1 && entireSelection.Count == 1)
+            {
+                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + " dynamic object", "Ok");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
+            }
         }
 
         [MenuItem("Window/cognitiveVR/Export Selected Dynamic Objects", true)]

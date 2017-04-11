@@ -320,8 +320,16 @@ namespace CognitiveVR
             //rotate the mf transform, export, then rotate it back?
 
             Mesh m = mc.mesh;
-            if (m == null) return "";
-            if (!mc.active) { return ""; }
+            if (m == null)
+            {
+                Debug.Log("Mesh container has no mesh " + mc.name);
+                return "";
+            }
+            if (!mc.active)
+            {
+                Debug.Log("Mesh container is not active " + mc.name);
+                return "";
+            }
             //if (mc.GetComponent<MeshRenderer>() == null || !mc.GetComponent<MeshRenderer>().enabled || !mc.gameObject.activeInHierarchy) { return ""; }
 
             if (m.uv.Length == 0)
@@ -648,7 +656,7 @@ namespace CognitiveVR
         /// <param name="minSize"></param>
         /// <param name="textureDivisor"></param>
         /// <returns></returns>
-        public static bool ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor, string textureName)
+        public static bool ExportScene(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor, string textureName)
         {
             if (!CreateTargetFolder(fullName))
             {
@@ -680,21 +688,39 @@ namespace CognitiveVR
                 if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
 
                 exportedObjects++;
-                //mfList.Add(meshes[i]);
+                
                 mcList.Add(new MeshContainer(meshes[i]));
             }
 
             for (int i = 0; i < skinnedMeshes.Length; i++)
             {
+
+
                 if (staticGeoOnly && !skinnedMeshes[i].gameObject.isStatic) { nonstaticObjectCount++; continue; }
                 Renderer r = skinnedMeshes[i].GetComponent<Renderer>();
                 if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
 
                 exportedObjects++;
-                //mfList.Add(meshes[i]);
-                //Mesh tempMesh = new Mesh();
+                
+                Mesh tempMesh = new Mesh();
+                
+                //Vector3 scale = skinnedMeshes[i].transform.localScale;
+                //Quaternion rot = skinnedMeshes[i].transform.localRotation;
+                //Vector3 pos = skinnedMeshes[i].transform.localPosition;
+
+                skinnedMeshes[i].transform.localPosition = Vector3.zero;
+                skinnedMeshes[i].transform.localRotation = Quaternion.identity;
+                skinnedMeshes[i].transform.localScale = Vector3.one;
+
+                skinnedMeshes[i].BakeMesh(tempMesh);
+
+                //skinnedMeshes[i].transform.localPosition = pos;
+                //skinnedMeshes[i].transform.localRotation = rot;
+                //skinnedMeshes[i].transform.localScale = scale;
+
+                //meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled, tempMesh));
                 //skinnedMeshes[i].BakeMesh(tempMesh);
-                mcList.Add(new MeshContainer(skinnedMeshes[i],skinnedMeshes[i].sharedMesh));
+                mcList.Add(new MeshContainer(skinnedMeshes[i], tempMesh));
             }
 
             bool success = false;
@@ -703,7 +729,7 @@ namespace CognitiveVR
             {
                 mcList.RemoveAll(delegate (MeshContainer obj) { return obj == null; });
                 mcList.RemoveAll(delegate (MeshContainer obj) { return obj.mesh == null; });
-                mcList.RemoveAll(delegate (MeshContainer obj) { return string.IsNullOrEmpty(obj.mesh.name); });
+                //mcList.RemoveAll(delegate (MeshContainer obj) { return string.IsNullOrEmpty(obj.mesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
                 success = MeshesToFile(mcList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity, textureName,false);
@@ -791,7 +817,7 @@ namespace CognitiveVR
 
         //TODO remove doubles, decimate?
         //used to export dynamic objects
-        public static bool ExportEachSelectionToSingle(Transform transform)
+        public static bool ExportDynamicObject(Transform transform)
         {
             //TODO try exporting prefabs from project
             //Transform[] selection = Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab);
@@ -822,27 +848,56 @@ namespace CognitiveVR
                 return false;
             }
 
-            MeshFilter[] meshfilters = transform.GetComponentsInChildren<MeshFilter>();
+            MeshFilter[] meshfilters = transform.GetComponentsInChildren<MeshFilter>(true);
 
             List<MeshContainer> meshContainers = new List<MeshContainer>();
             foreach (var mf in meshfilters)
             {
-                meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled && mf.gameObject.activeInHierarchy, mf.sharedMesh));
+                meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled, mf.sharedMesh));
             }
 
-            SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
+            SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 
             foreach (var sm in skinnedMeshes)
             {
-                //Mesh tempMesh = new Mesh();
-                //sm.BakeMesh(tempMesh);
+                Mesh tempMesh = new Mesh();
 
-                meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled && sm.gameObject.activeInHierarchy, sm.sharedMesh));
+                //Vector3 scale = sm.transform.localScale;
+                //Quaternion rot = sm.transform.localRotation;
+                //Vector3 pos = sm.transform.localPosition;
+
+                sm.transform.localPosition = Vector3.zero;
+                sm.transform.localRotation = Quaternion.identity;
+                sm.transform.localScale = Vector3.one;
+
+                sm.BakeMesh(tempMesh);
+
+                //sm.transform.localPosition = pos;
+                //sm.transform.localRotation = rot;
+                //sm.transform.localScale = scale;
+
+                meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled, tempMesh));
             }
 
             if (meshfilters.Length + skinnedMeshes.Length == 0)
             {
                 Debug.Log("Skipping " + transform.gameObject + ". No mesh filter on gameobject or children");
+                return false;
+            }
+
+            bool hasActiveMeshContainers = false;
+            foreach (var v in meshContainers)
+            {
+                if (v.active)
+                {
+                    hasActiveMeshContainers = true;
+                    break;
+                }
+            }
+
+            if (!hasActiveMeshContainers)
+            {
+                Debug.Log("Skipping " + transform.gameObject + ". Could find active renderers");
                 return false;
             }
 
