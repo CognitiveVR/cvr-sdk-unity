@@ -5,101 +5,49 @@ using UnityEngine.UI;
 using CognitiveVR;
 using CognitiveVR.Json;
 
-//visibility changes in a coroutine
+//component for displaying the gui panel and returning the response to the exitpoll question set
 namespace CognitiveVR
 {
-    namespace Json
-    {
-        //these are filled/emptied from json, so may not be directly referenced
-#pragma warning disable 0649
-        class ExitPollRequest
-        {
-            public string sceneId;
-            public string customerId;
-            public string sessionId; //sessionID for scene explorer
-            public ExitPollTuningQuestion[] pollValues;
-            public int timestamp;
-            public ExitPollProperties[] properties = new ExitPollProperties[0];
-        }
-
-        [System.Serializable]
-        class ExitPollProperties
-        {
-            public string name;
-            public string value;
-        }
-
-        [System.Serializable]
-        class ExitPollTuningQuestion
-        {
-            public string question;
-            public string answer;
-        }
-
-        class ExitPollResponse
-        {
-            public string pollId;
-        }
-#pragma warning restore 0649
-    }
-
-    public enum ExitPollPanelType
-    {
-        ExitPollMicrophonePanel,
-        ExitPollQuestionPanel,
-    }
-
     public class ExitPollPanel : MonoBehaviour
     {
-        System.Action _finalCloseAction;
-        System.Action _closeAction;
-
-        public string ExitPollQuestion = "ExitPollQuestion";
-
         [Header("Components")]
         public Text Title;
         public Text Question;
-
-        public MonoBehaviour PositiveButtonScript;
-        public MonoBehaviour NegativeButtonScript;
-        public MonoBehaviour CloseButtonScript;
         public Image TimeoutBar;
 
         [Header("Display")]
-        [Tooltip("Try to position the ExitPoll Panel this many meters in front of the player")]
-        public float DisplayDistance = 3;
-        [Tooltip("If the position is invalid (ex, in a wall), the panel moves closer to the camera. If the distance is below this value, skip the question")]
-        public float MinimumDisplayDistance = 1;
-        [Tooltip("Mask for what things the exit poll will 'hit' and appear in front of if too close to a surface")]
-        public LayerMask LayerMask;
-        public float PopupTime = 0.2f;
         public AnimationCurve XScale;
         public AnimationCurve YScale;
+        float PopupTime = 0.2f;
+
+        [Header("Multiple Choice Settings")]
+        public GameObject AnswerButton;
+        public Transform ContentRoot;
+
+        [Header("Integer Settings")]
+        [Tooltip("Apply a gradient to the buttons")]
+        public Gradient IntegerGradient;
 
         //when the user finishes answering the question or finishes closing the window
-        bool _completed = false;
+        //bool _completed = false;
+        
+        //delays input so player can understand the popup interface before answering
+        float ResponseDelayTime = 2;
+        float NextResponseTime;
+        public bool NextResponseTimeValid
+        {
+            get
+            {
+                return NextResponseTime < Time.time;
+            }
+        }
 
-        public float ResponseDelayTime = 2;
-        public static float NextResponseTime { get; private set; }
+        ExitPollSet QuestionSet;
 
-        [Tooltip("Automatically close this window if there is no response after this many seconds")]
-        public float TimeOut = 10;
-        float _remainingTime;
-        bool _allowTimeout = true;
-
-        [Header("Display Options")]
-        [Tooltip("Use to HMD Y position instead of spawning the poll directly ahead of the player")]
-        public bool LockYPosition;
-
-        [Tooltip("Create a simple reticule while the ExitPoll Panel is visible")]
-        public bool DisplayReticule;
         GameObject _reticule;
-
-        [Tooltip("If this window is not in the player's line of sight, rotate around the player toward their facing")]
-        public bool RotateToStayOnScreen = false;
-
-        [Tooltip("Update the position of the Exit Poll prefab if the player teleports")]
-        public bool StickyWindow;
+        float _remainingTime; //before timeout
+        bool _isclosing; //has timed out/answered/skipped but still animating?
+        bool _allowTimeout; //used by microphone to disable timeout
 
         Transform _t;
         Transform _transform
@@ -114,8 +62,7 @@ namespace CognitiveVR
             }
         }
 
-        private static ExitPollPanel _instance;
-
+        //used when scaling and rotating
         Transform _p;
         Transform _panel
         {
@@ -129,6 +76,7 @@ namespace CognitiveVR
             }
         }
 
+        //used for sticky window - reposition window if player teleports
         Transform _root;
         Transform root
         {
@@ -142,195 +90,65 @@ namespace CognitiveVR
         }
         Vector3 _lastRootPosition;
 
-        public static string PollID { get; private set; }
-
         /// <summary>
         /// Instantiate and position the exit poll at an arbitrary point
         /// </summary>
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, Vector3 position, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
+        public void Initialize(Dictionary<string,string> properties, ExitPollSet questionset)
         {
-            if (CognitiveVR_Manager.HMD == null)
+            QuestionSet = questionset;
+            NextResponseTime = ResponseDelayTime + Time.time;
+            UpdateTimeoutBar();
+
+            _transform.rotation = Quaternion.LookRotation(_transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
+
+            //display question from properties
+
+            if (Title != null)
             {
-                if (closeAction != null)
-                    closeAction.Invoke();
-                _instance.Close(true);
-                return;
+                string title = "Title";
+                properties.TryGetValue("title", out title);
+                Title.text = title;
             }
 
-            bool enabled = Tuning.getVar<bool>("ExitPollEnabled", true);
-            if (!enabled)
+            if (Question != null)
             {
-                Util.logDebug("TuningVariable ExitPollEnabled==false");
-                if (closeAction != null)
-                    closeAction.Invoke();
-                if (_instance != null)
-                    _instance.Close(true);
-                return;
+                string question = "Question";
+                properties.TryGetValue("question", out question);
+                Question.text = question;
             }
 
-            _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
-            _instance.ExitPollQuestion = QuestionName;
-
-            _instance._transform.position = position;
-
-            PostInitialize(closeAction, exitpollType);
-        }
-
-        /// <summary>
-        /// Instantiate and position the exit poll in front of the player.
-        /// </summary>
-        /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
-        /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public static void Initialize(System.Action closeAction, string QuestionName = "ExitPollQuestion", ExitPollPanelType exitpollType = ExitPollPanelType.ExitPollQuestionPanel)
-        {
-            if (CognitiveVR_Manager.HMD == null) //no hmd? fail
+            if (properties["type"] == "multiple")
             {
-                if (closeAction != null)
-                    closeAction.Invoke();
-                _instance.Close(true);
-                return;
-            }
-
-            bool enabled = Tuning.getVar<bool>("ExitPollEnabled", true);
-            if (!enabled) //exit poll set to false? fail
-            {
-                Util.logDebug("TuningVariable ExitPollEnabled==false");
-                if (closeAction != null)
-                    closeAction.Invoke();
-                if (_instance != null)
-                    _instance.Close(true);
-                return;
-            }
-
-            _instance = Instantiate(Resources.Load<GameObject>(exitpollType.ToString())).GetComponent<ExitPollPanel>();
-            _instance.ExitPollQuestion = QuestionName;
-
-            //set position and rotation
-            Vector3 spawnPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * _instance.DisplayDistance;
-
-            if (_instance.LockYPosition)
-            {
-                Vector3 modifiedForward = CognitiveVR_Manager.HMD.forward;
-                modifiedForward.y = 0;
-                modifiedForward.Normalize();
-
-                spawnPosition = CognitiveVR_Manager.HMD.position + modifiedForward * _instance.DisplayDistance;
-            }
-
-            RaycastHit hit = new RaycastHit();
-
-            //test slightly in front of the player's hmd
-            Collider[] colliderHits = Physics.OverlapSphere(CognitiveVR_Manager.HMD.position + Vector3.forward * 0.5f, 0.5f, _instance.LayerMask);
-            if (colliderHits.Length > 0)
-            {
-                Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
-                //too close! just fail the popup and keep playing the game
-                if (closeAction != null)
-                    closeAction.Invoke();
-                _instance.Close(true);
-                return;
-            }
-
-            //ray from player's hmd position
-            if (Physics.SphereCast(CognitiveVR_Manager.HMD.position, 0.5f, spawnPosition - CognitiveVR_Manager.HMD.position, out hit, _instance.DisplayDistance, _instance.LayerMask))
-            {
-                if (hit.distance < _instance.MinimumDisplayDistance)
+                string[] split = properties["csvanswers"].Split('|');
+                List<GameObject> AnswerButtons = new List<GameObject>();
+                AnswerButtons.Add(AnswerButton);
+                for (int i = 1; i<split.Length; i++)
                 {
-                    Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
-                    //too close! just fail the popup and keep playing the game
-                    if (closeAction != null)
-                        closeAction.Invoke();
-                    _instance.Close(true);
-                    return;
+                    AnswerButtons.Add((GameObject)Instantiate(AnswerButton, ContentRoot));
                 }
-                else
+                for (int i = 0; i<split.Length; i++)
                 {
-                    spawnPosition = CognitiveVR_Manager.HMD.position + (spawnPosition - CognitiveVR_Manager.HMD.position).normalized * (hit.distance);
+                    SetMutltipleChoiceButton(split[i],AnswerButtons[i]);
                 }
             }
+            else if (properties["type"] == "integer")
+            {
+                //TODO set buttons based on max size
+                Debug.Log("TODO set number of buttons based on integer question maximum value (ex 1-5, 1-10)");
+            }
 
-            _instance._transform.position = spawnPosition;
-
-            PostInitialize(closeAction, exitpollType);
+            StartCoroutine(_SetVisible(true));
         }
 
-        static void PostInitialize(System.Action closeAction, ExitPollPanelType exitpollType)
+        void SetMutltipleChoiceButton(string text, GameObject button)
         {
-            //initialize variables
-            if (exitpollType == ExitPollPanelType.ExitPollQuestionPanel)
-            {
-                System.Action microphoneAction = () => ExitPollPanel.Initialize(closeAction, _instance._transform.position, "ExitPollQuestion", ExitPollPanelType.ExitPollMicrophonePanel);
-                _instance._finalCloseAction = closeAction;
-                _instance._closeAction = microphoneAction;
-            }
-            else
-            {
-                _instance._finalCloseAction = closeAction;
-                _instance._closeAction = closeAction;
-            }
-            
-            //_instance._closeAction = closeAction;
-            _instance.gameObject.SetActive(true);
-            NextResponseTime = _instance.ResponseDelayTime + Time.time;
-            _instance._remainingTime = _instance.TimeOut;
-            _instance._allowTimeout = true;
-            _instance.UpdateTimeoutBar();
-
-            //set position and rotation
-            //_instance.transform.position = _instance._transform.position;
-            _instance._panel.rotation = Quaternion.LookRotation(_instance._transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
-
-
-            //set up actions
-            _instance.PositiveButtonScript.enabled = true;
-            _instance.NegativeButtonScript.enabled = true;
-            if (_instance.CloseButtonScript)
-                _instance.CloseButtonScript.enabled = true;
-
-            //fetch a question
-            _instance.StartCoroutine(_instance.FetchQuestion());
-            _instance._lastRootPosition = _instance.root.position;
-        }
-
-        //close action is called immediately if fetching the question fails
-        IEnumerator FetchQuestion()
-        {
-            //tuning variable
-            string response = Tuning.getVar<string>(ExitPollQuestion, "");
-            if (!string.IsNullOrEmpty(response))
-            {
-                //parse out title and question
-                string[] tuningQuestion = response.Split('|');
-                if (tuningQuestion.Length == 2 && !string.IsNullOrEmpty(tuningQuestion[0]) && !string.IsNullOrEmpty(tuningQuestion[1]))
-                {
-                    Title.text = tuningQuestion[0];
-                    Question.text = tuningQuestion[1];
-                    SetVisible(true);
-                }
-                else
-                {
-                    //debug tuning variable incorrect format. should be title|question
-                    Close(true);
-                    Util.logDebug("ExitPoll TuningVariable " + ExitPollQuestion + " is in the wrong format! should be 'title|question'. Response is: " + response);
-                }
-
-                yield break;
-            }
-            else
-            {
-                //no question set up. use default from prefab
-                SetVisible(true);
-                yield break;
-            }
-        }
-
-        public void SetVisible(bool visible)
-        {
-            //runs x/y scale through animation curve
-            StartCoroutine(_SetVisible(visible));
+            var gb = button.GetComponentInChildren<GazeButton>();
+            UnityEngine.Events.UnityAction buttonclicked = () => { this.AnswerMultiple(text); };
+            gb.OnLook.AddListener(buttonclicked);
+            button.GetComponentInChildren<Text>().text = text;
         }
 
         IEnumerator _SetVisible(bool visible)
@@ -338,9 +156,9 @@ namespace CognitiveVR
             float normalizedTime = 0;
             if (visible)
             {
-                if (DisplayReticule)
+                if (QuestionSet.DisplayReticle)
                 {
-                    _reticule = Instantiate(Resources.Load<GameObject>("ExitPollReticule"));
+                    _reticule = Instantiate(ExitPoll.ExitPollReticle);
                     _reticule.transform.SetParent(CognitiveVR_Manager.HMD);
                     _reticule.transform.localPosition = Vector3.forward * (Vector3.Distance(_transform.position, CognitiveVR_Manager.HMD.position) - 0.5f);
                     _reticule.transform.localRotation = Quaternion.identity;
@@ -372,24 +190,24 @@ namespace CognitiveVR
             }
         }
 
+        //called from microphone button when activated
         public void DisableTimeout()
         {
             _allowTimeout = false;
-            _remainingTime = TimeOut;
+            _remainingTime = QuestionSet.Timeout;
             UpdateTimeoutBar();
         }
 
         void Update()
         {
-            //don't try to close again if the question has already started closing
-            if (_closeAction == null) { return; }
-            if (_completed) { return; }
+            //don't activate anything if the question has already started closing
+            if (_isclosing) { return; }
             if (CognitiveVR_Manager.HMD == null)
             {
-                Close(true);
+                Close();
                 return;
             }
-            if (_allowTimeout)
+            if (QuestionSet.UseTimeout && _allowTimeout)
             {
                 if (_remainingTime > 0)
                 {
@@ -401,12 +219,11 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    PollID = string.Empty;
                     Close();
                     return;
                 }
             }
-            if (StickyWindow)
+            if (QuestionSet.StickWindow)
             {
                 if (Vector3.SqrMagnitude(_lastRootPosition - root.position) > 0.1f)
                 {
@@ -416,12 +233,12 @@ namespace CognitiveVR
                     _lastRootPosition = root.position;
                 }
             }
-            if (RotateToStayOnScreen)
+            if (QuestionSet.RotateToStayOnScreen)
             {
                 float maxDot = 0.9f;
                 float maxRotSpeed = 360;
 
-                if (LockYPosition)
+                if (QuestionSet.LockYPosition)
                 {
                     Vector3 camforward = CognitiveVR_Manager.HMD.forward;
                     camforward.y = 0;
@@ -468,65 +285,72 @@ namespace CognitiveVR
         void UpdateTimeoutBar()
         {
             if (TimeoutBar)
-                TimeoutBar.fillAmount = _remainingTime / TimeOut;
+                TimeoutBar.fillAmount = _remainingTime / QuestionSet.Timeout;
         }
 
         //from buttons
-        public void Answer(bool positive)
+        public void AnswerBool(bool positive)
         {
-            if (_completed) { return; }
-            _completed = true;
-            //question
-            ExitPollTuningQuestion question = new ExitPollTuningQuestion();
-            question.answer = positive.ToString();
-            question.question = Question.text;
+            //write the answer over QuestionSet
 
-            var key = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            if (key != null)
-            {
-                //response details
-                ExitPollRequest response = new ExitPollRequest();
-                response.sceneId = key.SceneId;
-                response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
-                response.pollValues = new ExitPollTuningQuestion[1] { question };
-                response.timestamp = (int)CognitiveVR_Preferences.TimeStamp;
-                response.sessionId = CognitiveVR_Preferences.SessionID;
+            Dictionary<string, object> response = new Dictionary<string, object>();
+            response.Add("question", Question.text);
+            response.Add("answer", positive);
+            response.Add("close", "answer");
 
-                string url = "https://api.cognitivevr.io/polls";
-                string jsonResponse = JsonUtility.ToJson(response, true);
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(jsonResponse);
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", positive).beginAndEnd(transform.position); //this goes to scene explorer
 
-                Util.logDebug("ExitPoll Request\n" + jsonResponse);
-
-                StartCoroutine(SendAnswer(bytes, url, Question.text, positive));
-            }
-            else
-            {
-                Close();
-            }
+            QuestionSet.OnPanelClosed(response);
+            Close();
         }
 
-        private IEnumerator SendAnswer(byte[] bytes, string url, string question, bool answer)
+        //from buttons
+        public void AnswerInt(int value)
         {
-            var headers = new Dictionary<string, string>();
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
+            //write the answer over QuestionSet
 
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
-            yield return www; //10 second timeout by default on unity's www class
+            Dictionary<string, object> response = new Dictionary<string, object>();
+            response.Add("question", Question.text);
+            response.Add("answer", value);
+            response.Add("close", "answer");
 
-            if (!string.IsNullOrEmpty(www.error))
-            {
-                Util.logError("error response: " + www.error);
-                PollID = string.Empty;
-            }
-            else
-            {
-                ExitPollResponse response = JsonUtility.FromJson<ExitPollResponse>(www.text);
-                Instrumentation.Transaction("cvr.exitpoll").setProperty("pollId", response.pollId).setProperty("question", question).setProperty("answer", answer).beginAndEnd(transform.position); //this goes to scene explorer
-                PollID = response.pollId;
-            }
+            //question set id
+            //hookid
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", value).beginAndEnd(transform.position); //this goes to scene explorer
 
+            QuestionSet.OnPanelClosed(response);
+            Close();
+        }
+
+        //from buttons
+        public void AnswerMultiple(string answer)
+        {
+            //write the answer over QuestionSet
+
+            Dictionary<string, object> response = new Dictionary<string, object>();
+            response.Add("question", Question.text);
+            response.Add("answer", answer);
+            response.Add("close", "answer");
+
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", answer).beginAndEnd(transform.position); //this goes to scene explorer
+
+            QuestionSet.OnPanelClosed(response);
+            Close();
+        }
+
+        //called directly from MicrophoneButton when recording is complete
+        public void AnswerMicrophone(string base64wav)
+        {
+            //write the answer over QuestionSet
+
+            Dictionary<string, object> response = new Dictionary<string, object>();
+            response.Add("question", Question.text);
+            response.Add("answer", base64wav);
+            response.Add("close", "answer");
+
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).beginAndEnd(transform.position); //this goes to scene explorer
+
+            QuestionSet.OnPanelClosed(response);
             Close();
         }
 
@@ -535,49 +359,24 @@ namespace CognitiveVR
         /// </summary>
         public void CloseButton()
         {
-            PollID = string.Empty;
+            QuestionSet.OnPanelClosed(new Dictionary<string, object>() { { "close", "skip" } });
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("close", "skip").beginAndEnd(transform.position); //this goes to scene explorer
+
             Close();
         }
 
-        public void Close(bool immediate = false)
+        public void Timeout()
         {
-            //disable button actions
-            PositiveButtonScript.enabled = false;
-            NegativeButtonScript.enabled = false;
-            if (CloseButtonScript)
-                CloseButtonScript.enabled = false;
+            QuestionSet.OnPanelClosed(new Dictionary<string, object>() { { "close", "timeout" } });
+            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("close", "timeout").beginAndEnd(transform.position); //this goes to scene explorer
+            Close();
+        }
 
-            if (string.IsNullOrEmpty(PollID))
-            {
-                if (_finalCloseAction != null)
-                {
-                    _finalCloseAction.Invoke();
-                }
-            }
-            else
-            {
-                //call close action
-                if (_closeAction != null)
-                {
-                    _closeAction.Invoke();
-                }
-            }
-
-            _closeAction = null;
-
-            if (immediate)
-            {
-                gameObject.SetActive(false);
-                if (_reticule)
-                {
-                    Destroy(_reticule);
-                }
-                Destroy(gameObject);
-            }
-            else
-            {
-                SetVisible(false);
-            }
+        //close the window visually. informing the question set has already been completed
+        void Close()
+        {
+            _isclosing = true;
+            StartCoroutine(_SetVisible(false));
         }
     }
 }

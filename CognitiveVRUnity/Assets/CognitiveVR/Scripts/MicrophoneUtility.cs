@@ -65,7 +65,6 @@ namespace CognitiveVR
 
         static byte[] ConvertAndWrite(AudioClip clip)
         {
-
             var samples = new float[clip.samples];
 
             clip.GetData(samples, 0);
@@ -91,6 +90,7 @@ namespace CognitiveVR
 
         static byte[] WriteHeader(AudioClip clip, byte[] data)
         {
+            //could alternatively do this with a memorystream
             List<byte> returnBytes = new List<byte>();
 
             var hz = clip.frequency;
@@ -173,6 +173,16 @@ namespace CognitiveVR
 
             levelMax *= 128;
             return levelMax;
+        }
+
+        /// <summary>
+        /// encode wav bytes into base64 string
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string EncodeWav(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes);
         }
     }
 }
