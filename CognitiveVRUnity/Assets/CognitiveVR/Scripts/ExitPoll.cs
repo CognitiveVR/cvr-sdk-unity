@@ -107,71 +107,15 @@ namespace CognitiveVR
 
         public ExitPollPanel CurrentExitPollPanel;
 
-        //TODO include this in transactions
         string RequestQuestionHookName = "";
-        
+        string QuestionSetId;
+
         //get the json response from the server when Begin() is called. then construct the panel properties from the response
         public ExitPollSet LoadQuestionFromID(string name)
         {
             RequestQuestionHookName = name;
             return this;
         }
-
-        /*public ExitPollSet DisplayBoolQuestion(string title, string question)
-        {
-            Dictionary<string, string> tempdict = new Dictionary<string, string>();
-            tempdict.Add("type", "boolean");
-            tempdict.Add("title", title);
-            tempdict.Add("question", question);
-            panelProperties.Add(tempdict);
-            return this;
-        }
-
-        public ExitPollSet DisplayIntQuestion(string title, string question)
-        {
-            Dictionary<string, string> tempdict = new Dictionary<string, string>();
-            tempdict.Add("type", "integer");
-            tempdict.Add("title", title);
-            tempdict.Add("question", question);
-            panelProperties.Add(tempdict);
-            return this;
-        }
-
-        public ExitPollSet DisplayMultipleQuestion(string title, string question, params string[] choices)
-        {
-            Dictionary<string, string> tempdict = new Dictionary<string, string>();
-            tempdict.Add("type", "multiple");
-            tempdict.Add("title", title);
-            tempdict.Add("question", question);
-            string csvchoices = "";
-            foreach (var v in choices)
-            {
-                //how to put all choices in here? comma separated?
-                csvchoices += v + ",";
-            }
-            if (csvchoices.Length > 0)
-            {
-                csvchoices = csvchoices.Remove(csvchoices.Length - 1);
-            }
-            else
-            {
-                //return the question without adding a panel with no questions
-                return this;
-            }
-            tempdict.Add("choices", csvchoices);
-            panelProperties.Add(tempdict);
-            return this;
-        }
-
-        public ExitPollSet DisplayMicrophoneQuestion(string title, string question)
-        {
-            Dictionary<string, string> tempdict = new Dictionary<string, string>();
-            tempdict.Add("type", "voice");
-            tempdict.Add("title", title);
-            tempdict.Add("question", question);
-            panelProperties.Add(tempdict);
-            return this;
-        }*/
 
         public ExitPollSet SetEndAction(System.Action endAction)
         {
@@ -184,18 +128,20 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(RequestQuestionHookName))
             {
                 EndAction.Invoke();
-                Debug.Log("You haven't set requested question hook!");
+                Debug.Log("You haven't specified a question hook to request!");
                 return;
             }
 
-            //spiderboss/hooks/questionsets. ask hook by id what their questionset is
-            string url = "http://data.cognitivevr.io/customer/hooks/" + RequestQuestionHookName;
-            CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions(url));
+            CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
         }
 
         //build a collection of panel properties from the response
-        IEnumerator RequestQuestions(string url)
+        IEnumerator RequestQuestions()
         {
+            //spiderboss/hooks/questionsets. ask hook by id what their questionset is
+            //CognitiveVR_Preferences.Instance.CustomerID
+            string url = "http://data.cognitivevr.io/hooks/" + RequestQuestionHookName + "/questions";
+
             WWW www = new WWW(url);
 
             float time = 0;
@@ -220,16 +166,19 @@ namespace CognitiveVR
                     yield break;
                 }
 
-                foreach (var v in json.questions)
+                QuestionSetId = json.id;
+
+                //foreach (var question in json.questions)
+                for (int i = 0; i< json.questions.Length; i++)
                 {
                     Dictionary<string, string> questionVariables = new Dictionary<string, string>();
-                    questionVariables.Add("title", v.title);
-                    questionVariables.Add("type", v.type);
+                    questionVariables.Add("title", json.questions[i].title);
+                    questionVariables.Add("type", json.questions[i].type);
                     //put this into a csv string?
                     string csvMultipleAnswers = "";
-                    foreach (var a in v.answers)
+                    for (int j = 0; j< json.questions[i].answers.Length;j++)
                     {
-                        csvMultipleAnswers += a + "|";
+                        csvMultipleAnswers += json.questions[i].answers[j] + "|";
                     }
                     if (csvMultipleAnswers.Length > 0)
                     {
@@ -244,15 +193,31 @@ namespace CognitiveVR
         }
 
         //after a panel has been answered, the responses from each panel
-        List<Dictionary<string, object>> Responses = new List<Dictionary<string, object>>();
+
+        //these go to the dashboard
+        Dictionary<string, object> transactionProperties = new Dictionary<string, object>();
+        Dictionary<string, string> voiceResponses = new Dictionary<string, string>();
 
         //called from panel when a panel closes (after timeout, on close or on answer)
-        public void OnPanelClosed(Dictionary<string, object> questionResponse)
+        public void OnPanelClosed(string key, object objectValue)
         {
-            Responses.Add(questionResponse);
+            if (key != "voice")
+            {
+                transactionProperties.Add(key,objectValue);
+            }
+            else
+            {
+                transactionProperties.Add(key, "voice");
+            }
             IterateToNextQuestion();
         }
 
+        public void OnPanelClosedVoice(string key, string base64voice)
+        {
+            voiceResponses.Add(key, base64voice);
+        }
+
+        int PanelCount = 0;
         void IterateToNextQuestion()
         {
             bool useLastPanelPosition = false;
@@ -279,28 +244,60 @@ namespace CognitiveVR
             //if next question, display that
             if (panelProperties.Count > 0)
             {
-                DisplayPanel(panelProperties[0], lastPanelPosition);
+                DisplayPanel(panelProperties[0], PanelCount, lastPanelPosition);
                 panelProperties.RemoveAt(0);
             }
             else
             {
+                SendResponsesAsTransaction();
                 var responses = FormatResponses();
                 SendQuestionResponses(responses);
             }
+            PanelCount++;
         }
 
+        void SendResponsesAsTransaction()
+        {
+            var exitpoll = Instrumentation.Transaction("cvr.exitpoll");
+            exitpoll.setProperty("userId", CognitiveVR.Core.userId);
+            exitpoll.setProperty("questionSetId", QuestionSetId);
+            exitpoll.setProperty("hookName", RequestQuestionHookName);
+            
+            foreach (var property in transactionProperties)
+            {
+                exitpoll.setProperty(property.Key, property.Value);
+            }
+            exitpoll.beginAndEnd(CurrentExitPollPanel.transform.position);
+        }
+
+        //puts responses from questions into json
         string FormatResponses()
         {
-            /*response.sceneId = key.SceneId;
-            response.customerId = CognitiveVR_Preferences.Instance.CustomerID;
-            response.pollValues = new ExitPollTuningQuestion[1] { question };
-            response.timestamp = (int)CognitiveVR_Preferences.TimeStamp;
-            response.sessionId = CognitiveVR_Preferences.SessionID;*/
+            //overwrite base64 data into json
+            foreach (var response in voiceResponses)
+            {
+                transactionProperties[response.Key] = response.Value;
+            }
 
-            //TODO add user/session/timestamp data
-            string responesString = JsonUtility.ToJson(Responses);
-            //TODO format responses into json correctly
-            return responesString;
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Append("{");
+            builder.Append(JsonUtil.SetString("userId",CognitiveVR.Core.userId));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetString("questionSetId", QuestionSetId));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetString("hookName", RequestQuestionHookName));
+            foreach (var property in transactionProperties)
+            {
+                if (property.Value.GetType() == typeof(string))
+                    builder.Append(JsonUtil.SetString(property.Key, (string)property.Value));
+                else
+                    builder.Append(JsonUtil.SetObject(property.Key, property.Value));
+                builder.Append(",");
+            }
+            builder.Remove(builder.Length - 1,1); //remove comma
+            builder.Append("}");
+
+            return builder.ToString();
         }
 
         //the responses of all the questions in the set put together in a string and uploaded somewhere
@@ -309,7 +306,7 @@ namespace CognitiveVR
         {
             Debug.Log("all questions answered! format string and send responses!");
 
-            string url = "https://api.cognitivevr.io/polls" + "whatever session or sceneid";
+            string url = "https://api.cognitivevr.io/" + QuestionSetId + "/responses";
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             Debug.Log("ExitPoll Request\n" + responses);
@@ -331,7 +328,6 @@ namespace CognitiveVR
         /// <returns></returns>
         public ExitPollSet SetTimeout(bool allowTimeout, float timeout)
         {
-            //TODO set timeout variable for all panels
             UseTimeout = allowTimeout;
             Timeout = timeout;
             return this;
@@ -385,7 +381,7 @@ namespace CognitiveVR
             return this;
         }
 
-        void DisplayPanel(Dictionary<string, string> properties, Vector3 spawnPoint)
+        void DisplayPanel(Dictionary<string, string> properties,int panelId, Vector3 spawnPoint)
         {
             GameObject prefab = null;
             switch (properties["type"])
@@ -414,7 +410,7 @@ namespace CognitiveVR
             var newPanelGo = GameObject.Instantiate<GameObject>(prefab);
             var panel = newPanelGo.GetComponent<ExitPollPanel>();
 
-            panel.Initialize(properties, this);
+            panel.Initialize(properties, panelId, this);
         }
 
         float DisplayDistance = 3;
