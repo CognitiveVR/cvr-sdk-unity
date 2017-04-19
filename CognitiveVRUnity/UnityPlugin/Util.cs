@@ -213,10 +213,13 @@ namespace CognitiveVR
 
     public static class JsonUtil
     {
+        //only used for non-nested builds
+        static System.Text.StringBuilder builder = new System.Text.StringBuilder(64);
+
         /// <returns>"name":["obj","obj","obj"]</returns>
         public static string SetListString(string name, List<string> list)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -233,7 +236,7 @@ namespace CognitiveVR
         /// <returns>"name":[obj,obj,obj]</returns>
         public static string SetListObject<T>(string name, List<T> list)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":{");
@@ -250,7 +253,7 @@ namespace CognitiveVR
         /// <returns>"name":"stringval"</returns>
         public static string SetString(string name, string stringValue)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":");
@@ -265,7 +268,7 @@ namespace CognitiveVR
         /// <returns>"name":objectValue.ToString()</returns>
         public static string SetObject(string name, object objectValue)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":");
@@ -281,13 +284,10 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, float[] pos, bool centimeterLimit = true)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append( name );
             builder.Append("\":[");
-
-            //8th index
-            //missing either : or [
 
             if (centimeterLimit)
             {
@@ -316,7 +316,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, Vector3 pos, bool centimeterLimit = true)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -348,7 +348,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, Quaternion quat)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -372,7 +372,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, float[] quat)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
