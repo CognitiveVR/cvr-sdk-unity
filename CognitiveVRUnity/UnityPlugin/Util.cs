@@ -214,7 +214,7 @@ namespace CognitiveVR
     public static class JsonUtil
     {
         //only used for non-nested builds
-        static System.Text.StringBuilder builder = new System.Text.StringBuilder(64);
+        static System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
 
         /// <returns>"name":["obj","obj","obj"]</returns>
         public static string SetListString(string name, List<string> list)

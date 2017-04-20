@@ -272,7 +272,26 @@ namespace CognitiveVR
         {
             HasRequestedDynamicGazeRaycast = true;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(HMD.position, HMD.forward, out hit))
+            Vector3 gazeDirection = HMD.forward;
+#if CVR_GAZETRACK
+#if CVR_FOVE //direction
+            var eyeRays = FoveInterface.GetEyeRays();
+            var ray = eyeRays.left;
+            gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+            gazeDirection.Normalize();
+#endif //fove direction
+#if CVR_PUPIL //direction
+            var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
+
+            //if it doesn't find the eyes, skip this snapshot
+            if (PupilGazeTracker.Instance.Confidence > 0.1f)
+            {
+                var ray = instance.cam.ViewportPointToRay(v2);
+                gazeDirection = ray.direction.normalized;
+            } //else uses HMD forward
+#endif //pupil direction
+#endif
+            if (Physics.Raycast(HMD.position, gazeDirection, out hit))
             {
                 var dynamicHit = hit.collider.GetComponent<DynamicObject>();
                 if (dynamicHit == null) { return; }
@@ -584,7 +603,7 @@ namespace CognitiveVR
 #endif
         }
 
-        #region json
+#region json
 
         private static void WriteToFile(byte[] bytes, string appendFileName = "")
         {
