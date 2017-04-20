@@ -18,7 +18,6 @@ namespace CognitiveVR
 
         void ApplyGradient(ExitPollPanel panel)
         {
-            var grad = panel.IntegerGradient;
             var horizontal = panel.GetComponentInChildren<UnityEngine.UI.HorizontalLayoutGroup>();
             if (horizontal == null) { return; }
             Transform horizontalGroup = horizontal.transform;
@@ -30,7 +29,7 @@ namespace CognitiveVR
                 if (imagechild == null) { continue; }
                 var image = imagechild.GetComponent<UnityEngine.UI.Image>();
                 if (image == null) { continue; }
-                image.color = grad.Evaluate(i / (float)gazeButtonCount);
+                panel.SetIntegerButtonColor(image, i / (float)gazeButtonCount);
             }
             Debug.Log("Set " + gazeButtonCount + " colours on gaze buttons");
         }

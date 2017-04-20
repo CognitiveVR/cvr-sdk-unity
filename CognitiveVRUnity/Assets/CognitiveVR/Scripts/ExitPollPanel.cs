@@ -27,6 +27,7 @@ namespace CognitiveVR
         [Header("Integer Settings")]
         [Tooltip("Apply a gradient to the buttons")]
         public Gradient IntegerGradient;
+        public Image[] ColorableImages;
 
         //when the user finishes answering the question or finishes closing the window
         //bool _completed = false;
@@ -138,7 +139,17 @@ namespace CognitiveVR
             }
             else if (properties["type"] == "integer")
             {
-                Debug.Log("TODO set number of buttons based on integer question maximum value (ex 1-5, 1-10)");
+                //Debug.Log("TODO set number of buttons based on integer question maximum value (ex 1-5, 1-10)");
+                int result = 10;
+                int.TryParse(properties["integerMaxValue"], out result);
+                if (result == 0)
+                {
+                    CognitiveVR.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
+                    QuestionSet.OnPanelClosed("Answer" + PanelId, "skip");
+                    Destroy(gameObject);
+                    return;
+                }
+                SetIntegerCount(result);
             }
 
             StartCoroutine(_SetVisible(true));
@@ -150,6 +161,28 @@ namespace CognitiveVR
             UnityEngine.Events.UnityAction buttonclicked = () => { this.AnswerInt(id); };
             gb.OnLook.AddListener(buttonclicked);
             button.GetComponentInChildren<Text>().text = text;
+        }
+
+        void SetIntegerCount(int maxValue)
+        {
+            int totalCount = Mathf.Min(ContentRoot.childCount, maxValue);
+            for (int i = 0; i< ContentRoot.childCount;i++)
+            {
+                if (i >= maxValue)
+                {
+                    ContentRoot.GetChild(i).gameObject.SetActive(false);
+                }
+                else
+                {
+                    ContentRoot.GetChild(i).gameObject.SetActive(true);
+                    SetIntegerButtonColor(ColorableImages[i], (float)i / totalCount);
+                }
+            }
+        }
+
+        public void SetIntegerButtonColor(Image image, float gradientValue)
+        {
+            image.color = IntegerGradient.Evaluate(gradientValue);
         }
 
         IEnumerator _SetVisible(bool visible)
