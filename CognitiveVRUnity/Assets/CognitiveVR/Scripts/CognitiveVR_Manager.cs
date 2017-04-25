@@ -339,6 +339,10 @@ namespace CognitiveVR
             );
             CognitiveVR.Core.init(initParams, OnInit);
 
+            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
+            //TODO this should probably be cvr.session instead
+            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT,Transaction.TimeoutMode.Any);
+
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
 
@@ -418,8 +422,17 @@ namespace CognitiveVR
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
-            if (QuitEvent == null) { return; }
+            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            if (QuitEvent == null)
+            {
+                CognitiveVR.Util.logDebug("session length " + playtime);
+                Instrumentation.Transaction("cvr.session").setProperty("sessionlength",playtime).end();
+                return;
+            }
+
             if (hasCanceled) { return; }
+            CognitiveVR.Util.logDebug("session length " + playtime);
+            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
             Application.CancelQuit();
             hasCanceled = true;
             OnQuit();

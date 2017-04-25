@@ -42,6 +42,7 @@ namespace CognitiveVR
             Util.cacheCurrencyInfo();
         }
 
+        private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
         /// <summary>
         /// call this when threshold for transactions is reached
         /// format transactions to be sent as the body of a webrequest
@@ -49,6 +50,9 @@ namespace CognitiveVR
         /// </summary>
         private static string PackageData()
         {
+            //clear the transaction builder
+            builder.Length = 0;
+            TransactionBuilder.Length = 0;
             //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
             string userid = CoreSubsystem.UniqueID;
             double timestamp = CoreSubsystem.SessionTimeStamp;
@@ -56,7 +60,7 @@ namespace CognitiveVR
 
             CognitiveVR.Util.logDebug("package transaction event data");
             //when thresholds are reached, etc
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            
             builder.Append("{");
 
             //header
@@ -82,8 +86,7 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            //clear the transaction builder
-            TransactionBuilder = new System.Text.StringBuilder();
+            
             return builder.ToString();
         }
 

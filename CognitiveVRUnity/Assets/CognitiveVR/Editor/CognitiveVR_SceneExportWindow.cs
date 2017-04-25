@@ -252,6 +252,7 @@ namespace CognitiveVR
                 prefs.ExportSettings.MinExportGeoSize = EditorGUILayout.FloatField(new GUIContent("Minimum export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), prefs.ExportSettings.MinExportGeoSize);
                 prefs.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), prefs.ExportSettings.ExplorerMinimumFaceCount);
                 prefs.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), prefs.ExportSettings.ExplorerMaximumFaceCount);
+                prefs.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), prefs.ExportSettings.DiffuseTextureName);
 
                 GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth") };
                 int[] textureQualities = new int[] { 1, 2, 4, 8, 16 };
@@ -332,7 +333,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button(exportContent))
             {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName,prefs.ExportSettings.DiffuseTextureName);
             }
             GUILayout.EndHorizontal();
             
@@ -513,7 +514,7 @@ namespace CognitiveVR
 
         Rect selectedRect;
 
-        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID)
+        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID,string texturename)
         {
             if (blenderProcess != null)
             {
@@ -529,7 +530,7 @@ namespace CognitiveVR
 
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
 
-            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportWholeSelectionToSingle(fullName, includeTextures,staticGeometry,minSize,textureDivisor);
+            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportScene(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
 
             if (!successfulExport)
             {
@@ -547,7 +548,7 @@ namespace CognitiveVR
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + customerID + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+"\"}";
+            string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + customerID + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+ "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             //System.Diagnostics.Process.Start("http://google.com/search?q=" + "cat pictures");
@@ -685,7 +686,7 @@ namespace CognitiveVR
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
                 UploadSceneSettings = null;
-                Debug.Log("Upload canceled!");
+                Debug.LogError("Upload canceled!");
                 return;
             }
 
@@ -721,12 +722,12 @@ namespace CognitiveVR
                 Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneId);
             }
 
+            Debug.Log("<color=green>Scene Upload Complete!</color>");
+
             UploadSceneSettings = null;
         }
 
-        static int uploadRequests = 0;
-        static WWW dynamicUploadWWW;
-
+        static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
 
         public static void UploadDynamicObjects()
         {
@@ -767,7 +768,7 @@ namespace CognitiveVR
                 System.Diagnostics.Process.Start("explorer.exe", path);
                 return;
             }
-
+            string objectNames="";
             foreach (var subdir in subdirectories)
             {
                 var filePaths = Directory.GetFiles(subdir);
@@ -783,24 +784,48 @@ namespace CognitiveVR
 
                 var dirname = new DirectoryInfo(subdir).Name;
 
-                Debug.Log("upload dynamic object: " + dirname);
+                objectNames += dirname + "\n";
 
-                dynamicUploadWWW = new WWW(uploadUrl + dirname, wwwForm);
-                uploadRequests++;
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl + dirname, wwwForm));
             }
 
-            if (uploadRequests > 0)
+            if (dynamicObjectForms.Count > 0)
             {
+                Debug.Log("Upload dynamic objects: " + objectNames);
                 EditorApplication.update += UpdateUploadDynamics;
             }
         }
 
+        class DynamicObjectForm
+        {
+            public string Url;
+            public WWWForm Form;
+
+            public DynamicObjectForm(string url, WWWForm form)
+            {
+                Url = url;
+                Form = form;
+            }
+        }
+
+        static WWW dynamicUploadWWW;
         static void UpdateUploadDynamics()
         {
             if (dynamicUploadWWW == null)
             {
-                EditorApplication.update -= UpdateUploadDynamics;
-                return;
+                //get the next dynamic object to upload from forms
+                if (dynamicObjectForms.Count == 0)
+                {
+                    //DONE!
+                    Debug.Log("<color=green>All dynamic object uploads complete!</color>");
+                    EditorApplication.update -= UpdateUploadDynamics;
+                    return;
+                }
+                else
+                {
+                    dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    dynamicObjectForms.RemoveAt(0);
+                }
             }
 
             if (!dynamicUploadWWW.isDone) { return; }
@@ -809,16 +834,10 @@ namespace CognitiveVR
             {
                 Debug.LogError(dynamicUploadWWW.error);
             }
-            if (!string.IsNullOrEmpty(dynamicUploadWWW.text))
-            {
-                Debug.Log("dynamic object upload reponse text " + dynamicUploadWWW.text);
-            }
-            else
-            {
-                Debug.Log("dynamic object upload complete");
-            }
 
-            EditorApplication.update -= UpdateUploadDynamics;
+            Debug.Log("Finished uploading dynamic object to " + dynamicUploadWWW.url);
+
+            dynamicUploadWWW = null;
         }
 
 

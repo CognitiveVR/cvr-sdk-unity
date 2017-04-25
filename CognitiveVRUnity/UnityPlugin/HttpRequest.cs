@@ -84,9 +84,11 @@ namespace CognitiveVR
 
             switch (mState)
             {
+#if !NETFX_CORE
                 case State.FetchPolicy:
                     // See http://docs.unity3d.com/Documentation/Manual/SecuritySandbox.html
                     System.Uri uri = new System.Uri(mUrl);
+
                     System.Net.IPAddress[] addr = System.Net.Dns.GetHostAddresses(uri.Host);
                     if (addr.Length > 0)
                     {
@@ -116,6 +118,7 @@ namespace CognitiveVR
                         mState = State.Complete;
                     }
                     break;
+#endif
                 case State.Connect:
                     mState = State.ReadResponse;
 
@@ -166,7 +169,7 @@ namespace CognitiveVR
         private static GameObject sHubObj;
         private static bool sIsWebPlayer;
 
-        #region "public" methods
+#region "public" methods
         internal static void init(string hubObjName, bool isWebPlayer)
         {
             sHubObj = GameObject.Find(hubObjName);
@@ -183,9 +186,9 @@ namespace CognitiveVR
             req.mListener = listener;
             req.BeginHttpRequest();
         }
-        #endregion
+#endregion
 
-        #region helper classes/interfaces
+#region helper classes/interfaces
         internal class Result
         {
             internal Error ErrorCode { get; set; } // Result error code
@@ -202,6 +205,6 @@ namespace CognitiveVR
         {
             void onComplete(Result result);
         }
-        #endregion
+#endregion
     }
 }

@@ -24,6 +24,38 @@ namespace CognitiveVR
         public Material material;
     }
 
+    class MeshContainer
+    {
+        public Transform t;
+        public string name;
+        public bool active; //active in heirarchy and has renderer
+        public Mesh mesh;
+
+        public MeshContainer(string _name, Transform _t, bool _active, Mesh _mesh)
+        {
+            t = _t;
+            name = _name;
+            active = _active;
+            mesh = _mesh;
+        }
+
+        public MeshContainer(MeshFilter mf)
+        {
+            t = mf.transform;
+            name = mf.name;
+            active = mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled && mf.gameObject.activeInHierarchy;
+            mesh = mf.sharedMesh;
+        }
+
+        public MeshContainer(SkinnedMeshRenderer sm, Mesh snapshot)
+        {
+            t = sm.transform;
+            name = sm.name;
+            active = sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled && sm.gameObject.activeInHierarchy;
+            mesh = snapshot;
+        }
+    }
+
     public class CognitiveVR_SceneExplorerExporter
     {
         private static int vertexOffset = 0;
@@ -282,14 +314,23 @@ namespace CognitiveVR
         }
 
 
-        private static string MeshToString(MeshFilter mf, Vector3 origin, Quaternion rotation)
+        private static string MeshToString(MeshContainer mc, Vector3 origin, Quaternion rotation, string textureName)
         {
             //TODO rotate mesh inverse of rotation
             //rotate the mf transform, export, then rotate it back?
 
-            Mesh m = mf.sharedMesh;
-            if (m == null) return "";
-            if (mf.GetComponent<MeshRenderer>() == null || !mf.GetComponent<MeshRenderer>().enabled || !mf.gameObject.activeInHierarchy) { return ""; }
+            Mesh m = mc.mesh;
+            if (m == null)
+            {
+                Debug.Log("Mesh container has no mesh " + mc.name);
+                return "";
+            }
+            if (!mc.active)
+            {
+                Debug.Log("Mesh container is not active " + mc.name);
+                return "";
+            }
+            //if (mc.GetComponent<MeshRenderer>() == null || !mc.GetComponent<MeshRenderer>().enabled || !mc.gameObject.activeInHierarchy) { return ""; }
 
             if (m.uv.Length == 0)
             {
@@ -303,14 +344,15 @@ namespace CognitiveVR
                 Debug.LogWarning(m.name + " does not have normals data. Generating normal data could lead to artifacts!");
             }
 
-            Material[] mats = mf.GetComponent<Renderer>().sharedMaterials;
+            Material[] mats = mc.t.GetComponent<Renderer>().sharedMaterials;
 
             StringBuilder sb = new StringBuilder();
 
-            sb.Append("o ").Append(mf.name).Append("\n");
+            sb.Append("o ").Append(mc.name).Append("\n");
             foreach (Vector3 lv in m.vertices)
             {
-                Vector3 wv = mf.transform.TransformPoint(lv) - origin;
+                Vector3 wv = mc.t.TransformPoint(lv) - origin;
+                //TODO this doesn't take scale into account
 
                 //flips the vertex around by the rotation
                 wv = rotation * wv;
@@ -322,7 +364,7 @@ namespace CognitiveVR
 
             foreach (Vector3 lv in m.normals)
             {
-                Vector3 wv = mf.transform.TransformDirection(lv);
+                Vector3 wv = mc.t.TransformDirection(lv);
 
                 //flips the vertex around by the rotation
                 wv = rotation * wv;
@@ -332,8 +374,8 @@ namespace CognitiveVR
             sb.Append("\n");
 
             Vector2 textureScale = Vector3.one;
-            if (mats.Length > 0 && mats[0] != null && mats[0].HasProperty("_MainTex"))
-                textureScale = mats[0].GetTextureScale("_MainTex");
+            if (mats.Length > 0 && mats[0] != null && mats[0].HasProperty(textureName))
+                textureScale = mats[0].GetTextureScale(textureName);
 
             foreach (Vector3 v in m.uv)
             {
@@ -374,10 +416,14 @@ namespace CognitiveVR
 
                         objMaterial.name = mats[material].name;
 
-                        if (mats[material].mainTexture)
-                            objMaterial.textureName = AssetDatabase.GetAssetPath(mats[material].mainTexture);
+                        if (mats[material].HasProperty(textureName) && mats[material].GetTexture(textureName))
+                        {
+                            objMaterial.textureName = AssetDatabase.GetAssetPath(mats[material].GetTexture(textureName));
+                        }
                         else
+                        {
                             objMaterial.textureName = null;
+                        }
                         objMaterial.material = mats[material];
 
                         materialList.Add(objMaterial.name, objMaterial);
@@ -419,7 +465,8 @@ namespace CognitiveVR
             return new Dictionary<string, ObjMaterial>();
         }
 
-        private static bool MaterialsToFile(string filename, int textureDivisor)
+        //TODO pass around a struct with all the details about how to export meshes/materials/textures instead of all these args
+        private static bool MaterialsToFile(string filename, int textureDivisor, string textureName)
         {
             bool canceled = false;
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".mtl"))
@@ -472,16 +519,15 @@ namespace CognitiveVR
                         {
                             bool readable;
                             TextureImporterFormat format;
-                            if (GetTextureImportFormat((Texture2D)m.mainTexture, out readable, out format))
+                            if (GetTextureImportFormat((Texture2D)m.GetTexture(textureName), out readable, out format))
                             {
-                                Texture2D originalTexture = m.mainTexture as Texture2D;
+                                Texture2D originalTexture = m.GetTexture(textureName) as Texture2D;
 
                                 SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
                                 Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
-
+                                File.WriteAllBytes(destinationFile + m.GetTexture(textureName).name.Replace(' ', '_') + ".png", bytes);
                                 SetTextureImporterFormat(originalTexture, readable, format);
                             }
                             else
@@ -491,16 +537,16 @@ namespace CognitiveVR
                                 tex.SetPixel(1, 1, Color.grey);
 
                                 byte[] bytes = tex.EncodeToPNG();
-                                File.WriteAllBytes(destinationFile + m.mainTexture.name.Replace(' ', '_') + ".png", bytes);
+                                File.WriteAllBytes(destinationFile + m.GetTexture(textureName).name.Replace(' ', '_') + ".png", bytes);
                                 //this sometimes happens when exporting built-in unity textures, such as Default Checker
-                                Debug.LogWarning("CognitiveVR Scene Export could not find texture '" + m.mainTexture.name + "'. Creating placeholder texture");
+                                Debug.LogWarning("CognitiveVR Scene Export could not find texture '" + m.GetTexture(textureName).name + "'. Creating placeholder texture");
                             }
                         }
                         catch
                         {
 
                         }
-                        sw.Write("map_Kd {0}", m.mainTexture.name.Replace(' ', '_') + ".png");
+                        sw.Write("map_Kd {0}", m.GetTexture(textureName).name.Replace(' ', '_') + ".png");
                     }
 
                     sw.Write("\n\n\n");
@@ -515,7 +561,7 @@ namespace CognitiveVR
             return !canceled;
         }
 
-        private static bool MeshesToFile(MeshFilter[] mf, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot)
+        private static bool MeshesToFile(MeshContainer[] mc, string filename, bool includeTextures, int textureDivisor, Vector3 origin, Quaternion originRot, string textureName,bool skipTerrain)
         {
             bool canceled = false;
             materialList = PrepareFileWrite();
@@ -523,34 +569,35 @@ namespace CognitiveVR
             using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
             {
                 sw.Write("mtllib ./" + filename + ".mtl\n");
-
-                Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
-                for (int i = 0; i < terrains.Length; i++)
+                if (!skipTerrain)
                 {
-                    //EditorUtility.DisplayProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f);
-                    if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Terrain", 0.05f))
+                    Terrain[] terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
+                    for (int i = 0; i < terrains.Length; i++)
                     {
-                        canceled = true;
-                        break;
-                    }
-                    if (terrains[i].terrainData != null)
-                    {
-                        sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
-                        if (includeTextures)
-                            WriteTerrainTexture(terrains[i].terrainData);
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mc[i].name + " Terrain", 0.05f))
+                        {
+                            canceled = true;
+                            break;
+                        }
+                        if (terrains[i].terrainData != null)
+                        {
+                            sw.Write(Export(terrains[i].terrainData, terrains[i].transform.position, i));
+                            if (includeTextures)
+                                WriteTerrainTexture(terrains[i].terrainData);
+                        }
                     }
                 }
 
-                int meshCount = mf.Length;
+                int meshCount = mc.Length;
                 int currentMeshIndex = 0;
 
-                for (int i = 0; i < mf.Length; i++)
+                for (int i = 0; i < mc.Length; i++)
                 {
                     currentMeshIndex++;
                     if (includeTextures)
                     {
                         if (canceled) break;
-                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount) / 2))
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mc[i].name + " Mesh", (currentMeshIndex / (float)meshCount) / 2))
                         {
                             canceled = true;
                         }
@@ -558,12 +605,12 @@ namespace CognitiveVR
                     else
                     {
                         if (canceled) break;
-                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mf[i].name + " Mesh", (currentMeshIndex / (float)meshCount)))
+                        if (EditorUtility.DisplayCancelableProgressBar("Scene Explorer Export", mc[i].name + " Mesh", (currentMeshIndex / (float)meshCount)))
                         {
                             canceled = true;
                         }
                     }
-                    sw.Write(MeshToString(mf[i], origin, originRot));
+                    sw.Write(MeshToString(mc[i], origin, originRot,textureName));
                 }
             }
             EditorUtility.ClearProgressBar();
@@ -571,7 +618,7 @@ namespace CognitiveVR
             bool materialSuccess = false;
 
             if (includeTextures && !canceled)
-                materialSuccess = MaterialsToFile(filename, textureDivisor);
+                materialSuccess = MaterialsToFile(filename, textureDivisor,textureName);
 
             return materialSuccess && !canceled;
         }
@@ -609,7 +656,7 @@ namespace CognitiveVR
         /// <param name="minSize"></param>
         /// <param name="textureDivisor"></param>
         /// <returns></returns>
-        public static bool ExportWholeSelectionToSingle(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor)
+        public static bool ExportScene(string fullName, bool includeTextures, bool staticGeoOnly, float minSize, int textureDivisor, string textureName)
         {
             if (!CreateTargetFolder(fullName))
             {
@@ -619,7 +666,9 @@ namespace CognitiveVR
 
             MeshFilter[] meshes = UnityEngine.Object.FindObjectsOfType<MeshFilter>();
 
-            if (meshes.Length == 0)
+            SkinnedMeshRenderer[] skinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
+
+            if (meshes.Length + skinnedMeshes.Length == 0)
             {
                 EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "Ok");
                 return false;
@@ -629,7 +678,8 @@ namespace CognitiveVR
             int smallObjectCount = 0;
             int nonstaticObjectCount = 0;
 
-            List<MeshFilter> mfList = new List<MeshFilter>();
+            //List<MeshFilter> mfList = new List<MeshFilter>();
+            List<MeshContainer> mcList = new List<MeshContainer>();
 
             for (int i = 0; i < meshes.Length; i++)
             {
@@ -638,19 +688,51 @@ namespace CognitiveVR
                 if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
 
                 exportedObjects++;
-                mfList.Add(meshes[i]);
+                
+                mcList.Add(new MeshContainer(meshes[i]));
+            }
+
+            for (int i = 0; i < skinnedMeshes.Length; i++)
+            {
+
+
+                if (staticGeoOnly && !skinnedMeshes[i].gameObject.isStatic) { nonstaticObjectCount++; continue; }
+                Renderer r = skinnedMeshes[i].GetComponent<Renderer>();
+                if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
+
+                exportedObjects++;
+                
+                Mesh tempMesh = new Mesh();
+                
+                //Vector3 scale = skinnedMeshes[i].transform.localScale;
+                //Quaternion rot = skinnedMeshes[i].transform.localRotation;
+                //Vector3 pos = skinnedMeshes[i].transform.localPosition;
+
+                skinnedMeshes[i].transform.localPosition = Vector3.zero;
+                skinnedMeshes[i].transform.localRotation = Quaternion.identity;
+                skinnedMeshes[i].transform.localScale = Vector3.one;
+
+                skinnedMeshes[i].BakeMesh(tempMesh);
+
+                //skinnedMeshes[i].transform.localPosition = pos;
+                //skinnedMeshes[i].transform.localRotation = rot;
+                //skinnedMeshes[i].transform.localScale = scale;
+
+                //meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled, tempMesh));
+                //skinnedMeshes[i].BakeMesh(tempMesh);
+                mcList.Add(new MeshContainer(skinnedMeshes[i], tempMesh));
             }
 
             bool success = false;
 
             if (exportedObjects > 0)
             {
-                mfList.RemoveAll(delegate (MeshFilter obj) { return obj == null; });
-                mfList.RemoveAll(delegate (MeshFilter obj) { return obj.sharedMesh == null; });
-                mfList.RemoveAll(delegate (MeshFilter obj) { return string.IsNullOrEmpty(obj.sharedMesh.name); });
+                mcList.RemoveAll(delegate (MeshContainer obj) { return obj == null; });
+                mcList.RemoveAll(delegate (MeshContainer obj) { return obj.mesh == null; });
+                //mcList.RemoveAll(delegate (MeshContainer obj) { return string.IsNullOrEmpty(obj.mesh.name); });
 
                 folder = "CognitiveVR_SceneExplorerExport/" + fullName;
-                success = MeshesToFile(mfList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity);
+                success = MeshesToFile(mcList.ToArray(), fullName, includeTextures, textureDivisor, Vector3.zero, Quaternion.identity, textureName,false);
                 return success;
             }
             else
@@ -735,7 +817,7 @@ namespace CognitiveVR
 
         //TODO remove doubles, decimate?
         //used to export dynamic objects
-        public static bool ExportEachSelectionToSingle(Transform transform)
+        public static bool ExportDynamicObject(Transform transform)
         {
             //TODO try exporting prefabs from project
             //Transform[] selection = Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab);
@@ -766,11 +848,56 @@ namespace CognitiveVR
                 return false;
             }
 
-            MeshFilter[] meshfilter = transform.GetComponentsInChildren<MeshFilter>();
+            MeshFilter[] meshfilters = transform.GetComponentsInChildren<MeshFilter>(true);
 
-            if (meshfilter.Length == 0)
+            List<MeshContainer> meshContainers = new List<MeshContainer>();
+            foreach (var mf in meshfilters)
+            {
+                meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled, mf.sharedMesh));
+            }
+
+            SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+
+            foreach (var sm in skinnedMeshes)
+            {
+                Mesh tempMesh = new Mesh();
+
+                //Vector3 scale = sm.transform.localScale;
+                //Quaternion rot = sm.transform.localRotation;
+                //Vector3 pos = sm.transform.localPosition;
+
+                sm.transform.localPosition = Vector3.zero;
+                sm.transform.localRotation = Quaternion.identity;
+                sm.transform.localScale = Vector3.one;
+
+                sm.BakeMesh(tempMesh);
+
+                //sm.transform.localPosition = pos;
+                //sm.transform.localRotation = rot;
+                //sm.transform.localScale = scale;
+
+                meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled, tempMesh));
+            }
+
+            if (meshfilters.Length + skinnedMeshes.Length == 0)
             {
                 Debug.Log("Skipping " + transform.gameObject + ". No mesh filter on gameobject or children");
+                return false;
+            }
+
+            bool hasActiveMeshContainers = false;
+            foreach (var v in meshContainers)
+            {
+                if (v.active)
+                {
+                    hasActiveMeshContainers = true;
+                    break;
+                }
+            }
+
+            if (!hasActiveMeshContainers)
+            {
+                Debug.Log("Skipping " + transform.gameObject + ". Could find active renderers");
                 return false;
             }
 
@@ -785,7 +912,8 @@ namespace CognitiveVR
             string objectName = dynamic.MeshName;
 
             folder = "CognitiveVR_SceneExplorerExport/Dynamic/" + objectName;
-            return MeshesToFile(meshfilter, objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation));
+
+            return MeshesToFile(meshContainers.ToArray(), objectName, true, 1, transform.position, Quaternion.Inverse(transform.rotation), "_MainTex",true);
         }
     }
 }

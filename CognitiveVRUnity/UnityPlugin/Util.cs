@@ -1,7 +1,9 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+#if !NETFX_CORE
 using System.Globalization;
+#endif
 using System.Text.RegularExpressions;
 
 namespace CognitiveVR
@@ -88,7 +90,7 @@ namespace CognitiveVR
             // Clear out any previously set data
             sValidCurrencyCodes.Clear();
             sCurrencyCodesBySymbol.Clear();
-
+#if !NETFX_CORE
             // Cache a set of valid ISO 4217 currency codes and a map of valid currency symbols to ISO 4217 currency codes
             foreach (CultureInfo info in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
             {
@@ -113,6 +115,7 @@ namespace CognitiveVR
                     // Not a valid culture name.  Ok, move along....
                 }
             }
+#endif
         }
 
         // Given an input currency string, return a string that is valid currency string.
@@ -120,6 +123,9 @@ namespace CognitiveVR
         // If one cannot be determined, this method returns "unknown"
         public static string getValidCurrencyString(string currency)
         {
+#if NETFX_CORE
+            return "NETFX_CORE";
+#else
             string validCurrencyStr;
 
             // First check if the string is already a valid ISO 4217 currency code (i.e., it's in the list of known codes)
@@ -173,6 +179,7 @@ namespace CognitiveVR
             }
 
             return validCurrencyStr;
+#endif
         }
 
         /// <summary>
@@ -206,10 +213,13 @@ namespace CognitiveVR
 
     public static class JsonUtil
     {
+        //only used for non-nested builds
+        static System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
+
         /// <returns>"name":["obj","obj","obj"]</returns>
         public static string SetListString(string name, List<string> list)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -226,7 +236,7 @@ namespace CognitiveVR
         /// <returns>"name":[obj,obj,obj]</returns>
         public static string SetListObject<T>(string name, List<T> list)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":{");
@@ -243,7 +253,7 @@ namespace CognitiveVR
         /// <returns>"name":"stringval"</returns>
         public static string SetString(string name, string stringValue)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":");
@@ -258,7 +268,7 @@ namespace CognitiveVR
         /// <returns>"name":objectValue.ToString()</returns>
         public static string SetObject(string name, object objectValue)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":");
@@ -274,13 +284,10 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, float[] pos, bool centimeterLimit = true)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append( name );
             builder.Append("\":[");
-
-            //8th index
-            //missing either : or [
 
             if (centimeterLimit)
             {
@@ -309,7 +316,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, Vector3 pos, bool centimeterLimit = true)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -341,7 +348,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, Quaternion quat)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -365,7 +372,7 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, float[] quat)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");

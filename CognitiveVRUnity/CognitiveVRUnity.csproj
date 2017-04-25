@@ -86,6 +86,7 @@
     <Compile Include="Assets\CognitiveVR\Scripts\DisplaySettingAttribute.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\DynamicObject.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ExitPollPanel.cs" />
+    <Compile Include="Assets\CognitiveVR\Scripts\Framerate.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\GazeButton.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDCollisionEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDHeight.cs" />
@@ -105,7 +106,6 @@
     <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUser.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\TeleportEvent.cs" />
     <Compile Include="Assets\CognitiveVR\_Examples\GazeObject.cs" />
-    <Compile Include="Assets\SomeExitPollDealy.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\CognitiveVR\ExitPoll\SIL Open Font License.txt" />

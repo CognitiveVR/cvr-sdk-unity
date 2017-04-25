@@ -235,6 +235,7 @@ namespace CognitiveVR
         public int ExplorerMinimumFaceCount = 100;
         public int ExplorerMaximumFaceCount = 8000;
         public int TextureQuality = 4;
+        public string DiffuseTextureName = "_MainTex";
 
         public static bool Match(ExportSettings a, ExportSettings b)
         {
@@ -243,6 +244,7 @@ namespace CognitiveVR
             if (a.ExplorerMinimumFaceCount != b.ExplorerMinimumFaceCount) { return false; }
             if (a.ExplorerMaximumFaceCount != b.ExplorerMaximumFaceCount) { return false; }
             if (a.TextureQuality != b.TextureQuality) { return false; }
+            if (a.DiffuseTextureName != b.DiffuseTextureName) { return false; }
             return true;
         }
 
@@ -252,7 +254,9 @@ namespace CognitiveVR
                 MinExportGeoSize = target.MinExportGeoSize,
                 ExplorerMaximumFaceCount = target.ExplorerMaximumFaceCount,
                 ExplorerMinimumFaceCount = target.ExplorerMinimumFaceCount,
-                TextureQuality = target.TextureQuality };
+                TextureQuality = target.TextureQuality,
+                DiffuseTextureName = target.DiffuseTextureName
+            };
         }
     }
 }

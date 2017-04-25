@@ -25,7 +25,11 @@ namespace CognitiveVR.Plugins
 		public const double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
 
 		internal SessionTransaction() : base("Session", null) {}
-		public new void begin(double timeout = DEFAULT_TIMEOUT, Transaction.TimeoutMode mode = Transaction.TimeoutMode.Any) { base.begin(timeout, mode); }
+        [System.Obsolete("A Session transaction will automatically begin/end from cognitivevr manager")]
+        public new void begin(double timeout = DEFAULT_TIMEOUT, Transaction.TimeoutMode mode = Transaction.TimeoutMode.Any)
+        {
+            base.begin(timeout, mode);
+        }
 	}
 }
 
