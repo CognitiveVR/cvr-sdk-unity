@@ -31,6 +31,7 @@ namespace CognitiveVR
 
         public void PlayerRecorderInit(Error initError)
         {
+            if (initError != Error.Success) { return; }
             CheckCameraSettings();
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)

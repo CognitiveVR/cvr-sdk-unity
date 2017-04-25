@@ -123,7 +123,7 @@ namespace CognitiveVR
                 Question.text = question;
             }
 
-            if (properties["type"] == "multiple")
+            if (properties["type"] == "MULTIPLE")
             {
                 string[] split = properties["csvanswers"].Split('|');
                 List<GameObject> AnswerButtons = new List<GameObject>();
@@ -137,19 +137,26 @@ namespace CognitiveVR
                     SetMutltipleChoiceButton(split[i],i,AnswerButtons[i]);
                 }
             }
-            else if (properties["type"] == "integer")
+            else if (properties["type"] == "SCALE")
             {
-                //Debug.Log("TODO set number of buttons based on integer question maximum value (ex 1-5, 1-10)");
-                int result = 10;
-                int.TryParse(properties["integerMaxValue"], out result);
-                if (result == 0)
+                int resultend = 0;
+                int.TryParse(properties["endvalue"], out resultend);
+                if (resultend == 0)
                 {
                     CognitiveVR.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
-                    QuestionSet.OnPanelClosed("Answer" + PanelId, "skip");
+                    QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
                     Destroy(gameObject);
                     return;
                 }
-                SetIntegerCount(result);
+                SetIntegerCount(resultend);
+            }
+            else if (properties["type"] == "VOICE")
+            {
+                int result = 0;
+                int.TryParse(properties["maxResponseLength"], out result);
+
+                GetComponentInChildren<MicrophoneButton>().RecordTime = result;
+                
             }
 
             StartCoroutine(_SetVisible(true));
@@ -165,6 +172,7 @@ namespace CognitiveVR
 
         void SetIntegerCount(int maxValue)
         {
+            //TODO some check that minvalue < maxvalue
             int totalCount = Mathf.Min(ContentRoot.childCount, maxValue);
             for (int i = 0; i< ContentRoot.childCount;i++)
             {
@@ -204,9 +212,30 @@ namespace CognitiveVR
                     yield return null;
                 }
                 _panel.localScale = Vector3.one;
+                var gazeButtons = GetComponentsInChildren<GazeButton>(true);
+                for (int i = 0; i< gazeButtons.Length;i++)
+                {
+                    gazeButtons[i].enabled = true;
+                }
+                var microphoneButton = GetComponentInChildren<MicrophoneButton>(true);
+                if (microphoneButton != null)
+                {
+                    microphoneButton.enabled = true;
+                }
             }
             else
             {
+                var gazeButtons = GetComponentsInChildren<GazeButton>();
+                for (int i = 0; i < gazeButtons.Length; i++)
+                {
+                    gazeButtons[i].enabled = false;
+                }
+                var microphoneButton = GetComponentInChildren<MicrophoneButton>();
+                if (microphoneButton != null)
+                {
+                    microphoneButton.enabled = false;
+                }
+
                 normalizedTime = 1;
                 while (normalizedTime > 0)
                 {
@@ -325,67 +354,29 @@ namespace CognitiveVR
         //from buttons
         public void AnswerBool(bool positive)
         {
-            //write the answer over QuestionSet
-
-            //Dictionary<string, object> response = new Dictionary<string, object>();
-            //response.Add("question", Question.text);
-            //response.Add("answer", positive);
-            //response.Add("close", "answer");
-
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", positive).beginAndEnd(transform.position); //this goes to scene explorer
-
-            QuestionSet.OnPanelClosed("Answer" + PanelId, positive);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, positive);
             Close();
         }
 
         //from buttons
         public void AnswerInt(int value)
         {
-            //write the answer over QuestionSet
-
-            //Dictionary<string, object> response = new Dictionary<string, object>();
-            //response.Add("question", Question.text);
-            //response.Add("answer", value);
-            //response.Add("close", "answer");
-
-            //question set id
-            //hookid
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", value).beginAndEnd(transform.position); //this goes to scene explorer
-
-            QuestionSet.OnPanelClosed("Answer" + PanelId, value);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
             Close();
         }
 
         //from buttons
         public void AnswerString(string answer)
         {
-            //write the answer over QuestionSet
-
-            //Dictionary<string, object> response = new Dictionary<string, object>();
-            //response.Add("question", Question.text);
-            //response.Add("answer", answer);
-            //response.Add("close", "answer");
-
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("answer", answer).beginAndEnd(transform.position); //this goes to scene explorer
-
-            QuestionSet.OnPanelClosed("Answer"+ PanelId, answer);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, answer);
             Close();
         }
 
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
         {
-            //write the answer over QuestionSet
-
-            //Dictionary<string, object> response = new Dictionary<string, object>();
-            //response.Add("question", Question.text);
-            //response.Add("answer", base64wav);
-            //response.Add("close", "answer");
-
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).beginAndEnd(transform.position); //this goes to scene explorer
-
-            QuestionSet.OnPanelClosedVoice("Answer" + PanelId, base64wav);
-            QuestionSet.OnPanelClosed("Answer" + PanelId, "voice");
+            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64wav);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "voice");
             Close();
         }
 
@@ -394,18 +385,13 @@ namespace CognitiveVR
         /// </summary>
         public void CloseButton()
         {
-            QuestionSet.OnPanelClosed("Answer" + PanelId, "skip");
-            //QuestionSet.OnPanelClosed(new Dictionary<string, object>() { { "close", "skip" } });
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("close", "skip").beginAndEnd(transform.position); //this goes to scene explorer
-
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
             Close();
         }
 
         public void Timeout()
         {
-            QuestionSet.OnPanelClosed("Answer" + PanelId, "skip");
-            //QuestionSet.OnPanelClosed(new Dictionary<string, object>() { { "close", "timeout" } });
-            //Instrumentation.Transaction("cvr.exitpoll").setProperty("question", Question.text).setProperty("close", "timeout").beginAndEnd(transform.position); //this goes to scene explorer
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
             Close();
         }
 

@@ -164,7 +164,9 @@ namespace CognitiveVR
 					Util.logError("Error during HttpRequest: " + e.Message);
 					ret = Error.Generic;
 				}
-			}
+                _timestamp = Util.Timestamp();
+
+            }
 
             if ((Error.Success != ret) && (null != cb))
             {

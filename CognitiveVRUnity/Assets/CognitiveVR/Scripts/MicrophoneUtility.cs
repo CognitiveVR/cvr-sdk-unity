@@ -50,7 +50,7 @@ namespace CognitiveVR
             data.CopyTo(fileBytes, headers.Length);
         }
 
-        static FileStream CreateEmpty(string filepath)
+        /*static FileStream CreateEmpty(string filepath)
         {
             var fileStream = new FileStream(filepath, FileMode.Create);
             byte emptyByte = new byte();
@@ -61,7 +61,7 @@ namespace CognitiveVR
             }
 
             return fileStream;
-        }
+        }*/
 
         static byte[] ConvertAndWrite(AudioClip clip)
         {

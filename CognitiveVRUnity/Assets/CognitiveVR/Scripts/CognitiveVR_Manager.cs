@@ -300,6 +300,9 @@ namespace CognitiveVR
         [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 
+        [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
+        public bool SaveExitPollOnDevice = false;
+
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
         /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
@@ -339,9 +342,11 @@ namespace CognitiveVR
             );
             CognitiveVR.Core.init(initParams, OnInit);
 
+            ExitPoll.Initialize();
+
             double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
             //TODO this should probably be cvr.session instead
-            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT,Transaction.TimeoutMode.Any);
+            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
@@ -353,6 +358,8 @@ namespace CognitiveVR
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
         }
+
+
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
@@ -425,11 +432,13 @@ namespace CognitiveVR
             double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
             if (QuitEvent == null)
             {
+                CognitiveVR.Util.logDebug("totalPlayTime: " + playtime);
                 Instrumentation.Transaction("cvr.session").setProperty("sessionlength",playtime).end();
                 return;
             }
 
             if (hasCanceled) { return; }
+            CognitiveVR.Util.logDebug("totalPlayTime: " + playtime);
             Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
             Application.CancelQuit();
             hasCanceled = true;

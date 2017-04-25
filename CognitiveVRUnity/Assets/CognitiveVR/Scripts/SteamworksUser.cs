@@ -15,6 +15,7 @@ namespace CognitiveVR.Components
     {
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
             
             //Steamworks.SteamAPI.Init(); //doesn't have to be called here, but Steamworks must be Initialized before you call GetSteamID()

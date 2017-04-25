@@ -15,6 +15,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = FramerateTrackingInterval;
