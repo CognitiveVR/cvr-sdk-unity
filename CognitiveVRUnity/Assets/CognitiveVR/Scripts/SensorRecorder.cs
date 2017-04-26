@@ -43,7 +43,7 @@ namespace CognitiveVR
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             if (sceneSettings == null) { CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings"); return; }
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
             sb.Append(JsonUtil.SetString("name", Core.UniqueID));
             sb.Append(",");
@@ -92,7 +92,7 @@ namespace CognitiveVR
         //put this into the list of saved sensor data based on the name of the sensor
         private static string GetSensorDataToString(double timestamp, double sensorvalue)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(1024);
 
             sb.Append("[");
             sb.Append(timestamp);

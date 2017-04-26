@@ -431,13 +431,13 @@ namespace CognitiveVR
             double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
             if (QuitEvent == null)
             {
-                CognitiveVR.Util.logDebug("totalPlayTime: " + playtime);
+				CognitiveVR.Util.logDebug("session length " + playtime);
                 Instrumentation.Transaction("cvr.session").setProperty("sessionlength",playtime).end();
                 return;
             }
 
             if (hasCanceled) { return; }
-            CognitiveVR.Util.logDebug("totalPlayTime: " + playtime);
+			CognitiveVR.Util.logDebug("session length " + playtime);
             Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
             Application.CancelQuit();
             hasCanceled = true;

@@ -28,11 +28,13 @@ namespace CognitiveVR
             sRequestListener = new SendEventRequestListener();
         }
 
+        static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
+
         internal static void SendCachedTransactions()
         {
             if (savedTransactions.Count == 0) { return; }
 
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            builder.Length = 0;
             builder.Append("[");
             builder.Append(Util.Timestamp());
             builder.Append(",[");

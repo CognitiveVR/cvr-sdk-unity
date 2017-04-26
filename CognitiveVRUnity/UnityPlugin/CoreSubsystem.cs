@@ -165,7 +165,6 @@ namespace CognitiveVR
 					ret = Error.Generic;
 				}
                 _timestamp = Util.Timestamp();
-
             }
 
             if ((Error.Success != ret) && (null != cb))

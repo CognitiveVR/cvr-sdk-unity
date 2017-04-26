@@ -351,7 +351,7 @@ namespace CognitiveVR
                 return;
             }
 
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(512);
 
             builder.Append("{");
 
@@ -419,7 +419,7 @@ namespace CognitiveVR
 
         private static string SetManifestEntry(DynamicObjectManifestEntry entry)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
 
             builder.Append("\"");
             builder.Append(entry.Id);
@@ -462,7 +462,7 @@ namespace CognitiveVR
 
         private static string SetSnapshot(DynamicObjectSnapshot snap)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
             builder.Append(JsonUtil.SetObject("id", snap.Id));

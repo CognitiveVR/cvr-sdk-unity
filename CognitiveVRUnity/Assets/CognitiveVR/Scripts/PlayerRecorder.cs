@@ -273,7 +273,26 @@ namespace CognitiveVR
         {
             HasRequestedDynamicGazeRaycast = true;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(HMD.position, HMD.forward, out hit))
+            Vector3 gazeDirection = HMD.forward;
+#if CVR_GAZETRACK
+#if CVR_FOVE //direction
+            var eyeRays = FoveInterface.GetEyeRays();
+            var ray = eyeRays.left;
+            gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+            gazeDirection.Normalize();
+#endif //fove direction
+#if CVR_PUPIL //direction
+            var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
+
+            //if it doesn't find the eyes, skip this snapshot
+            if (PupilGazeTracker.Instance.Confidence > 0.1f)
+            {
+                var ray = instance.cam.ViewportPointToRay(v2);
+                gazeDirection = ray.direction.normalized;
+            } //else uses HMD forward
+#endif //pupil direction
+#endif
+            if (Physics.Raycast(HMD.position, gazeDirection, out hit))
             {
                 var dynamicHit = hit.collider.GetComponent<DynamicObject>();
                 if (dynamicHit == null) { return; }
@@ -487,7 +506,7 @@ namespace CognitiveVR
 
                 if (playerSnapshots.Count > 0)
                 {
-                    System.Text.StringBuilder builder = new System.Text.StringBuilder();
+                    System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
                     builder.Append("{");
 
@@ -585,7 +604,7 @@ namespace CognitiveVR
 #endif
         }
 
-        #region json
+#region json
 
         private static void WriteToFile(byte[] bytes, string appendFileName = "")
         {
@@ -612,7 +631,7 @@ namespace CognitiveVR
 
         private static string SetPreGazePoint(double time, Vector3 position, Quaternion rotation)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
             builder.Append(JsonUtil.SetObject("time", time));
@@ -631,7 +650,7 @@ namespace CognitiveVR
         //EvaluateGazeRealtime
         private static string SetPreGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 gazepos)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
             builder.Append(JsonUtil.SetObject("time", time));
@@ -650,7 +669,7 @@ namespace CognitiveVR
         //EvaluateGaze on a dynamic object
         private static string SetDynamicGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, int objectId)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
             builder.Append(JsonUtil.SetObject("time", time));
