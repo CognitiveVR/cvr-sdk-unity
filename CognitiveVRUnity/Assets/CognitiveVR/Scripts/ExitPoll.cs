@@ -410,6 +410,19 @@ namespace CognitiveVR
             IterateToNextQuestion();
         }
 
+        //if some error happened, such as HMD == null. something that cannot be recovered from
+        public void OnPanelError()
+        {
+            //SendResponsesAsTransaction(); //for personalization api
+            //var responses = FormatResponses();
+            //SendQuestionResponses(responses); //for exitpoll microservice
+            CurrentExitPollPanel = null;
+            if (EndAction != null)
+            {
+                EndAction.Invoke();
+            }
+        }
+
         int PanelCount = 0;
         void IterateToNextQuestion()
         {
@@ -449,6 +462,10 @@ namespace CognitiveVR
                 var responses = FormatResponses();
                 SendQuestionResponses(responses); //for exitpoll microservice
                 CurrentExitPollPanel = null;
+                if (EndAction != null)
+                {
+                    EndAction.Invoke();
+                }
             }
             PanelCount++;
         }
@@ -527,12 +544,12 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            Debug.Log("all questions answered! format string and send responses!");
+            //Debug.Log("all questions answered! format string and send responses!");
 
             string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + RequestQuestionHookName + "/"+ questionSetVersion + "/responses";
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
-            Debug.Log("ExitPoll Send Answers\n" + responses);
+            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl "+ url + "\n" + responses);
 
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
@@ -559,12 +576,12 @@ namespace CognitiveVR
         /// set a maximum time that a question will be displayed. if this is passed, the question closes automatically
         /// </summary>
         /// <param name="allowTimeout"></param>
-        /// <param name="timeout"></param>
+        /// <param name="secondsUntilTimeout"></param>
         /// <returns></returns>
-        public ExitPollSet SetTimeout(bool allowTimeout, float timeout)
+        public ExitPollSet SetTimeout(bool allowTimeout, float secondsUntilTimeout)
         {
             UseTimeout = allowTimeout;
-            Timeout = timeout;
+            Timeout = secondsUntilTimeout;
             return this;
         }
 

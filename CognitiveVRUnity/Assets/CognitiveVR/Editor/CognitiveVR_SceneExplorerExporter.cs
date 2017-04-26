@@ -819,9 +819,6 @@ namespace CognitiveVR
         //used to export dynamic objects
         public static bool ExportDynamicObject(Transform transform)
         {
-            //TODO try exporting prefabs from project
-            //Transform[] selection = Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab);
-
             if (transform == null)
             {
                 EditorUtility.DisplayDialog("No source object selected!", "Please select one or more dynamic objects", "Ok");

@@ -42,6 +42,8 @@ namespace CognitiveVR
             byte[] data;
             byte[] headers;
 
+            //TODO create thread for writing audioclip to byte[]
+            //http://stackoverflow.com/questions/19048492/notify-when-thread-is-complete-without-locking-calling-thread
             data = ConvertAndWrite(clip);
             headers = WriteHeader(clip, data);
 

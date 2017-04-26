@@ -84,7 +84,6 @@ namespace CognitiveVR
             }
             else
             {
-                //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
                 relativeDepth = color.r;
             }
 

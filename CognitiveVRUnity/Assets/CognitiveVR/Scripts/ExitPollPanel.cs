@@ -159,6 +159,9 @@ namespace CognitiveVR
                 
             }
 
+            _isclosing = false;
+            _allowTimeout = true;
+
             StartCoroutine(_SetVisible(true));
         }
 
@@ -172,7 +175,6 @@ namespace CognitiveVR
 
         void SetIntegerCount(int maxValue)
         {
-            //TODO some check that minvalue < maxvalue
             int totalCount = Mathf.Min(ContentRoot.childCount, maxValue);
             for (int i = 0; i< ContentRoot.childCount;i++)
             {
@@ -267,6 +269,7 @@ namespace CognitiveVR
             if (_isclosing) { return; }
             if (CognitiveVR_Manager.HMD == null)
             {
+                ExitPoll.CurrentExitPollSet.OnPanelError();
                 Close();
                 return;
             }
@@ -282,7 +285,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    Close();
+                    Timeout();
                     return;
                 }
             }
@@ -340,7 +343,6 @@ namespace CognitiveVR
                         _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                         _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, CognitiveVR_Manager.HMD.up), 0.1f);
                     }
-                    //TODO rotate so window stays relatively vertical
                 }
             }
         }
@@ -354,6 +356,7 @@ namespace CognitiveVR
         //from buttons
         public void AnswerBool(bool positive)
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, positive);
             Close();
         }
@@ -361,6 +364,7 @@ namespace CognitiveVR
         //from buttons
         public void AnswerInt(int value)
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
             Close();
         }
@@ -368,6 +372,7 @@ namespace CognitiveVR
         //from buttons
         public void AnswerString(string answer)
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, answer);
             Close();
         }
@@ -375,8 +380,8 @@ namespace CognitiveVR
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64wav);
-            //QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "voice");
             Close();
         }
 
@@ -385,12 +390,14 @@ namespace CognitiveVR
         /// </summary>
         public void CloseButton()
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
             Close();
         }
 
         public void Timeout()
         {
+            if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
             Close();
         }

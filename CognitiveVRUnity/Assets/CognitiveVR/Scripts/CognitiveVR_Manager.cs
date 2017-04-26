@@ -345,7 +345,6 @@ namespace CognitiveVR
             ExitPoll.Initialize();
 
             double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-            //TODO this should probably be cvr.session instead
             Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
