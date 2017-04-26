@@ -365,7 +365,6 @@ namespace CognitiveVR
                             if (json.questions[i].answers[j].answer.Length == 0) { continue; }
                             //TODO include support for custom icons on multiple choice answers
                             csvMultipleAnswers += json.questions[i].answers[j].answer + "|";
-                            Debug.Log("answer " + json.questions[i].answers[j].answer);
                         }
                     }
                     if (csvMultipleAnswers.Length > 0)
@@ -555,12 +554,12 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
             
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
+            //WWW www = new UnityEngine.WWW(url, bytes, headers);
 
-            //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
+            CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
         }
 
-        /*
+        
         IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
         {
             Debug.Log(url);
@@ -568,7 +567,7 @@ namespace CognitiveVR
             yield return www;
             Debug.Log("error: "+www.error);
             Debug.Log("text: "+www.text);
-        }*/
+        }
 
         public bool UseTimeout { get; private set; }
         public float Timeout { get; private set; }
