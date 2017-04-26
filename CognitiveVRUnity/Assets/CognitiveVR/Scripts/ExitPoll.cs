@@ -124,13 +124,14 @@ namespace CognitiveVR
         }
 
         public static ExitPollSet CurrentExitPollSet;
-        public static ExitPollSet NewExitPoll()
+        public static ExitPollSet NewExitPoll(string hookName)
         {
             if (CurrentExitPollSet != null)
             {
                 CurrentExitPollSet.EndQuestionSet();
             }
             CurrentExitPollSet = new ExitPollSet();
+            CurrentExitPollSet.RequestQuestionHookName = hookName;
             return CurrentExitPollSet;
         }
 
@@ -267,15 +268,9 @@ namespace CognitiveVR
 
         public ExitPollPanel CurrentExitPollPanel;
 
-        string RequestQuestionHookName = "";
+        public string RequestQuestionHookName = "";
         string QuestionSetId;
-
-        //get the json response from the server when Begin() is called. then construct the panel properties from the response
-        public ExitPollSet LoadQuestionFromID(string name)
-        {
-            RequestQuestionHookName = name;
-            return this;
-        }
+        int questionSetVersion; 
 
         public ExitPollSet SetEndAction(System.Action endAction)
         {
@@ -344,6 +339,7 @@ namespace CognitiveVR
                 }
 
                 QuestionSetId = json.id;
+                questionSetVersion = json.version;
 
                 //foreach (var question in json.questions)
                 for (int i = 0; i< json.questions.Length; i++)
@@ -402,22 +398,16 @@ namespace CognitiveVR
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, object objectValue)
         {
-            if (key != "voice")
-            {
-                transactionProperties.Add(key,objectValue);
-                responseProperties[panelId].ResponseValue = objectValue;
-            }
-            else
-            {
-                transactionProperties.Add(key, "voice");
-            }
+            transactionProperties.Add(key, objectValue);
+            responseProperties[panelId].ResponseValue = objectValue;
             IterateToNextQuestion();
         }
 
         public void OnPanelClosedVoice(int panelId, string key, string base64voice)
         {
-            //voiceResponses.Add(key, base64voice);
+            transactionProperties.Add(key, "voice");
             responseProperties[panelId].ResponseValue = base64voice;
+            IterateToNextQuestion();
         }
 
         int PanelCount = 0;
@@ -486,6 +476,8 @@ namespace CognitiveVR
             builder.Append(",");
             builder.Append(JsonUtil.SetString("questionSetId", QuestionSetId));
             builder.Append(",");
+            builder.Append(JsonUtil.SetString("sessionId", CognitiveVR_Preferences.SessionID));
+            builder.Append(",");
             builder.Append(JsonUtil.SetString("hook", RequestQuestionHookName));
             builder.Append(",");
 
@@ -537,7 +529,7 @@ namespace CognitiveVR
         {
             Debug.Log("all questions answered! format string and send responses!");
 
-            string url = "https://api.cognitivevr.io/" + CognitiveVR_Preferences.Instance.CustomerID + "/" + RequestQuestionHookName + "/responses";
+            string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + RequestQuestionHookName + "/"+ questionSetVersion + "/responses";
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             Debug.Log("ExitPoll Send Answers\n" + responses);
@@ -545,9 +537,21 @@ namespace CognitiveVR
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
-
+            
             WWW www = new UnityEngine.WWW(url, bytes, headers);
+
+            //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
         }
+
+        /*
+        IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
+        {
+            Debug.Log(url);
+            WWW www = new UnityEngine.WWW(url, bytes, headers);
+            yield return www;
+            Debug.Log("error: "+www.error);
+            Debug.Log("text: "+www.text);
+        }*/
 
         public bool UseTimeout { get; private set; }
         public float Timeout { get; private set; }

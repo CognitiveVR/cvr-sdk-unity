@@ -376,7 +376,7 @@ namespace CognitiveVR
         public void AnswerMicrophone(string base64wav)
         {
             QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64wav);
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "voice");
+            //QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "voice");
             Close();
         }
 
