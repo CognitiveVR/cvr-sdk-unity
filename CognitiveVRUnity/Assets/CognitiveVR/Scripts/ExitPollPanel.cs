@@ -103,7 +103,12 @@ namespace CognitiveVR
             QuestionSet = questionset;
             PanelId = panelId;
             NextResponseTime = ResponseDelayTime + Time.time;
-            UpdateTimeoutBar();
+
+            if (questionset.UseTimeout)
+            {
+                _remainingTime = questionset.Timeout;
+                UpdateTimeoutBar();
+            }
 
             _transform.rotation = Quaternion.LookRotation(_transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
 
@@ -399,6 +404,13 @@ namespace CognitiveVR
         {
             if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
+            Close();
+        }
+
+        //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
+        public void CloseError()
+        {
+            if (_isclosing) { return; }
             Close();
         }
 

@@ -290,14 +290,25 @@ namespace CognitiveVR
                 return;
             }
 
-            CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
+            if (CognitiveVR_Manager.Instance != null)
+            {
+                CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
+            }
+            else
+            {
+                if (EndAction != null)
+                {
+                    EndAction.Invoke();
+                }
+            }
         }
 
         //only called when requesting a new exit poll question set when one is already active
         public void EndQuestionSet()
         {
             panelProperties.Clear();
-            CurrentExitPollPanel.CloseButton();
+            CurrentExitPollPanel.CloseError();
+            OnPanelError();
         }
 
         //TODO this should grab a question received and cached on CognitiveVRManager Init
@@ -323,18 +334,34 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                yield break;
             }
             else
             {
-                Debug.Log("Exit Poll Question Response:\n" + www.text);
+                CognitiveVR.Util.logDebug("Exit Poll Question Response:\n" + www.text);
+                if (string.IsNullOrEmpty(www.text))
+                {
+                    if (EndAction != null)
+                    {
+                        EndAction.Invoke();
+                    }
+                    yield break;
+                }
+
+
                 //build all the panel properties
                 Json.ExitPollSetJson json = JsonUtility.FromJson<Json.ExitPollSetJson>(www.text);
                 //Json.ExitPollSetJson json = JsonUtility.FromJson<Json.ExitPollSetJson>(ExitPoll.GetExitPollQuestion(RequestQuestionHookName));
-                
+
 
                 if (json.questions == null || json.questions.Length == 0)
                 {
-                    Debug.Log("Exit poll Question response not formatted correctly!");
+                    CognitiveVR.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
+
+                    if (EndAction != null)
+                    {
+                        EndAction.Invoke();
+                    }
                     yield break;
                 }
 
@@ -342,7 +369,7 @@ namespace CognitiveVR
                 questionSetVersion = json.version;
 
                 //foreach (var question in json.questions)
-                for (int i = 0; i< json.questions.Length; i++)
+                for (int i = 0; i < json.questions.Length; i++)
                 {
                     Dictionary<string, string> questionVariables = new Dictionary<string, string>();
                     questionVariables.Add("title", json.questions[i].title);
@@ -440,7 +467,7 @@ namespace CognitiveVR
             {
                 if (!GetSpawnPosition(out lastPanelPosition))
                 {
-                    Debug.Log("no last position set. invoke endaction and exit");
+                    CognitiveVR.Util.logDebug("no last position set. invoke endaction");
                     if (EndAction != null)
                     {
                         EndAction.Invoke();
@@ -543,8 +570,6 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            //Debug.Log("all questions answered! format string and send responses!");
-
             string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + RequestQuestionHookName + "/"+ questionSetVersion + "/responses";
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
@@ -554,20 +579,19 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
             
-            //WWW www = new UnityEngine.WWW(url, bytes, headers);
+            new UnityEngine.WWW(url, bytes, headers);
 
-            CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
+            //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
         }
 
-        
-        IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
+        /*IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
         {
-            Debug.Log(url);
+            CognitiveVR.Util.logDebug(url);
             WWW www = new UnityEngine.WWW(url, bytes, headers);
             yield return www;
-            Debug.Log("error: "+www.error);
-            Debug.Log("text: "+www.text);
-        }
+            CognitiveVR.Util.logDebug("error: "+www.error);
+            CognitiveVR.Util.logDebug("text: "+www.text);
+        }*/
 
         public bool UseTimeout { get; private set; }
         public float Timeout { get; private set; }
