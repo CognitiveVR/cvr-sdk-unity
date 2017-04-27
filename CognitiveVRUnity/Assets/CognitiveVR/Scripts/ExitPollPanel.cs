@@ -24,7 +24,7 @@ namespace CognitiveVR
         public GameObject AnswerButton;
         public Transform ContentRoot;
 
-        [Header("Integer Settings")]
+        [Header("Scale Settings")]
         [Tooltip("Apply a gradient to the buttons")]
         public Gradient IntegerGradient;
         public Image[] ColorableImages;

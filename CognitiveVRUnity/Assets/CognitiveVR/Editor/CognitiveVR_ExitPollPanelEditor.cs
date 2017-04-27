@@ -22,6 +22,8 @@ namespace CognitiveVR
             if (horizontal == null) { return; }
             Transform horizontalGroup = horizontal.transform;
             int gazeButtonCount = horizontalGroup.childCount;
+            
+            //this should only colour enabled gameobjects
 
             for (int i = 0; i<gazeButtonCount; i++)
             {

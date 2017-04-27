@@ -255,29 +255,29 @@ namespace CognitiveVR
     //creates a series of exit poll panels from question set constructed on the dashboard
     public class ExitPollSet
     {
-        System.Action EndAction;
-        
-        //layermask should maybe be static and setable through public function
-        LayerMask PanelLayerMask = LayerMask.GetMask("Default", "World", "Ground");
-        //min display distance should maybe be static and setable through public function
-        float MinimumDisplayDistance = 1;
-        float DisplayDistance = 3;
-
-        //how to display all the panels and their properties. dictionary is <panelType,panelContent>
-        List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
-
         public ExitPollPanel CurrentExitPollPanel;
 
-        public string RequestQuestionHookName = "";
-        string QuestionSetId;
-        int questionSetVersion; 
-
+        System.Action EndAction;
         public ExitPollSet SetEndAction(System.Action endAction)
         {
             EndAction = endAction;
             return this;
         }
 
+        public ExitPollSet AddEndAction(System.Action endAction)
+        {
+            if (EndAction == null)
+            {
+                EndAction = endAction;
+            }
+            else
+            {
+                EndAction += endAction;
+            }
+            return this;
+        }
+
+        public string RequestQuestionHookName = "";
         public void Begin()
         {
             if (string.IsNullOrEmpty(RequestQuestionHookName))
@@ -303,13 +303,21 @@ namespace CognitiveVR
             }
         }
 
-        //only called when requesting a new exit poll question set when one is already active
+        /// <summary>
+        /// when you manually need to close the Exit Poll question set manually OR
+        /// when requesting a new exit poll question set when one is already active
+        /// </summary>
         public void EndQuestionSet()
         {
             panelProperties.Clear();
             CurrentExitPollPanel.CloseError();
             OnPanelError();
         }
+
+        //how to display all the panels and their properties. dictionary is <panelType,panelContent>
+        List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
+        string QuestionSetId;
+        int questionSetVersion;
 
         //TODO this should grab a question received and cached on CognitiveVRManager Init
         //build a collection of panel properties from the response
@@ -436,7 +444,6 @@ namespace CognitiveVR
             IterateToNextQuestion();
         }
 
-        //if some error happened, such as HMD == null. something that cannot be recovered from
         public void OnPanelError()
         {
             //SendResponsesAsTransaction(); //for personalization api
@@ -609,6 +616,54 @@ namespace CognitiveVR
             return this;
         }
 
+        private LayerMask _panelLayerMask = LayerMask.GetMask("Default", "World", "Ground");
+        public LayerMask PanelLayerMask
+        {
+            get
+            {
+                return _panelLayerMask;
+            }
+        }
+
+        //the prefered distance to display an exit poll
+        private float _defaultDisplayDistance = 3;
+        public float DisplayDistance
+        {
+            get
+            {
+                return _defaultDisplayDistance;
+            }
+        }
+
+        //the minimum distance to display an exit poll. below this value will cancel the exit poll and continue with gameplay
+        private float _defaultMinimumDisplayDistance = 1;
+        public float MinimumDisplayDistance
+        {
+            get
+            {
+                return _defaultMinimumDisplayDistance;
+            }
+        }
+
+        public ExitPollSet SetDisplayDistance(float preferedDistance, float minimumDistance)
+        {
+            _defaultMinimumDisplayDistance = Mathf.Max(minimumDistance,0);
+            _defaultDisplayDistance = Mathf.Max(minimumDistance, preferedDistance);
+            
+            return this;
+        }
+
+        /// <summary>
+        /// Set the layers the Exit Poll panel will avoid
+        /// </summary>
+        /// <param name="layers"></param>
+        /// <returns></returns>
+        public ExitPollSet SetPanelLayerMask(params string[] layers)
+        {
+            _panelLayerMask = LayerMask.GetMask(layers);
+            return this;
+        }
+
         public bool DisplayReticle { get; private set; }
         /// <summary>
         /// Create a simple reticle while the ExitPoll Panel is visible
@@ -754,4 +809,6 @@ namespace CognitiveVR
             return true;
         }
     }
+
+    
 }
