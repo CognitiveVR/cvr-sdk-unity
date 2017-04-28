@@ -320,6 +320,7 @@ namespace CognitiveVR
                     toCube.Normalize();
 
                     float dot = Vector3.Dot(camforward, toCube);
+
                     if (dot < maxDot)
                     {
                         Vector3 rotateAxis = Vector3.down;
@@ -333,7 +334,7 @@ namespace CognitiveVR
                         if (directionDot < 0)
                             rotateSpeed *= -1;
 
-                        _panel.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                     }
                 }
                 else
