@@ -300,6 +300,7 @@ namespace CognitiveVR
         [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 
+        [HideInInspector] //complete this option later
         [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
         public bool SaveExitPollOnDevice = false;
 
