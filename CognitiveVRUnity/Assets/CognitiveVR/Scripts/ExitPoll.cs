@@ -280,6 +280,7 @@ namespace CognitiveVR
         public string RequestQuestionHookName = "";
         public void Begin()
         {
+            currentPanelIndex = 0;
             if (string.IsNullOrEmpty(RequestQuestionHookName))
             {
                 if (EndAction != null)
@@ -439,7 +440,7 @@ namespace CognitiveVR
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, object objectValue)
         {
-            switch (panelProperties[panelIterator]["type"])
+            switch (panelProperties[currentPanelIndex]["type"])
             {
                 case "HAPPYSAD":
                     objectValue = objectValue.ToString();
@@ -473,7 +474,7 @@ namespace CognitiveVR
             }
             transactionProperties.Add(key, objectValue);
             responseProperties[panelId].ResponseValue = objectValue;
-            panelIterator++;
+            currentPanelIndex++;
             IterateToNextQuestion();
         }
 
@@ -481,7 +482,7 @@ namespace CognitiveVR
         {
             transactionProperties.Add(key, "voice");
             responseProperties[panelId].ResponseValue = base64voice;
-            panelIterator++;
+            currentPanelIndex++;
             IterateToNextQuestion();
         }
 
@@ -501,7 +502,8 @@ namespace CognitiveVR
             }
         }
 
-        int PanelCount = 0;
+        int currentPanelIndex = 0;
+        int panelCount = 0;
         void IterateToNextQuestion()
         {
             bool useLastPanelPosition = false;
@@ -529,9 +531,9 @@ namespace CognitiveVR
             }
 
             //if next question, display that
-            if (panelProperties.Count > 0 && panelIterator < panelProperties.Count)
+            if (panelProperties.Count > 0 && currentPanelIndex < panelProperties.Count)
             {
-                DisplayPanel(panelProperties[panelIterator], PanelCount, lastPanelPosition);
+                DisplayPanel(panelProperties[currentPanelIndex], panelCount, lastPanelPosition);
                 //panelProperties.RemoveAt(0);
             }
             else //finished everything format and send
@@ -545,10 +547,8 @@ namespace CognitiveVR
                     EndAction.Invoke();
                 }
             }
-            PanelCount++;
+            panelCount++;
         }
-
-        int panelIterator = 0;
 
         void SendResponsesAsTransaction()
         {
