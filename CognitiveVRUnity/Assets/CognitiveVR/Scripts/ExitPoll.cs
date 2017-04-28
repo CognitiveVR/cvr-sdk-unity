@@ -481,6 +481,7 @@ namespace CognitiveVR
         {
             transactionProperties.Add(key, "voice");
             responseProperties[panelId].ResponseValue = base64voice;
+            panelIterator++;
             IterateToNextQuestion();
         }
 
