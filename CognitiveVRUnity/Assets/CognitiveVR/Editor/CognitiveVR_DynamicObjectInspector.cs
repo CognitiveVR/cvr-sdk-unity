@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
 
-//TODO look into serializedproperty to support multiple object editing
-
 namespace CognitiveVR
 {
     [CustomEditor(typeof(CognitiveVR.DynamicObject))]

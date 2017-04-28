@@ -12,6 +12,7 @@ namespace CognitiveVR.Components
     {
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
 
             CognitiveVR.Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.screenresolution", Screen.height + " x " + Screen.width } });

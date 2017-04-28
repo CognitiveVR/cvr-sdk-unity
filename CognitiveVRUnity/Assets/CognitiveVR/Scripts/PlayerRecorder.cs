@@ -31,6 +31,7 @@ namespace CognitiveVR
 
         public void PlayerRecorderInit(Error initError)
         {
+            if (initError != Error.Success) { return; }
             CheckCameraSettings();
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
@@ -589,7 +590,7 @@ namespace CognitiveVR
         void OnDestroyPlayerRecorder()
         {
             //unsubscribe events
-            //TODO should i set all these events to null?
+            //should i set all these events to null?
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
             SendDataEvent -= SendPlayerGazeSnapshots;
             CognitiveVR_Manager.QuitEvent -= OnSendData;

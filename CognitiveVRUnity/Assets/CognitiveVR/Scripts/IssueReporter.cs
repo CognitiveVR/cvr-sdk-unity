@@ -46,6 +46,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
             _commonIssues.Add(new CommonIssue("Collision", "Object collision doesn't act as expected", ""));
             _commonIssues.Add(new CommonIssue("Typo", "There is a spelling or grammar error in text", ""));

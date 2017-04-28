@@ -18,6 +18,7 @@ namespace CognitiveVR.Components
 #endif
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
             SendBatteryLevel();
             CognitiveVR_Manager.QuitEvent += CognitiveVR_Manager_OnQuit;
