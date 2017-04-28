@@ -310,14 +310,20 @@ namespace CognitiveVR
         public void EndQuestionSet()
         {
             panelProperties.Clear();
-            CurrentExitPollPanel.CloseError();
+            if (CurrentExitPollPanel != null)
+            {
+                CurrentExitPollPanel.CloseError();
+            }
             OnPanelError();
         }
 
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
-        string QuestionSetId;
+
         int questionSetVersion;
+        string QuestionSetName;
+
+        string QuestionSetId; //questionsetname:questionsetversion
 
         //TODO this should grab a question received and cached on CognitiveVRManager Init
         //build a collection of panel properties from the response
@@ -374,6 +380,7 @@ namespace CognitiveVR
                 }
 
                 QuestionSetId = json.id;
+                QuestionSetName = json.name;
                 questionSetVersion = json.version;
 
                 //foreach (var question in json.questions)
@@ -432,8 +439,41 @@ namespace CognitiveVR
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, object objectValue)
         {
+            switch (panelProperties[panelIterator]["type"])
+            {
+                case "HAPPYSAD":
+                    objectValue = objectValue.ToString();
+                    break;
+                case "SCALE":
+                    string scaleString = objectValue as string;
+                    if (!string.IsNullOrEmpty(scaleString) && scaleString.ToLower() == "skip")
+                    {
+                        objectValue = short.MinValue;
+                    }
+                    //use actual value
+                    break;
+                case "MULTIPLE":
+                    string scaleMult = objectValue as string;
+                    if (!string.IsNullOrEmpty(scaleMult) && scaleMult.ToLower() == "skip")
+                    {
+                        objectValue = short.MinValue;
+                    }
+                    //use actual value
+                    break;
+                case "VOICE":
+                    //objectvalue == "voice" or "skip"
+                    break;
+                case "THUMBS":
+                    objectValue = objectValue.ToString();
+                    break;
+                case "BOOLEAN":
+                    objectValue = objectValue.ToString();
+
+                    break;
+            }
             transactionProperties.Add(key, objectValue);
             responseProperties[panelId].ResponseValue = objectValue;
+            panelIterator++;
             IterateToNextQuestion();
         }
 
@@ -444,6 +484,10 @@ namespace CognitiveVR
             IterateToNextQuestion();
         }
 
+        /// <summary>
+        /// Use EndQuestionSet to close the active panel and immediately end the question set
+        /// this sets the current panel to null and calls endaction. it assumes the panel closes itself
+        /// </summary>
         public void OnPanelError()
         {
             //SendResponsesAsTransaction(); //for personalization api
@@ -484,10 +528,10 @@ namespace CognitiveVR
             }
 
             //if next question, display that
-            if (panelProperties.Count > 0)
+            if (panelProperties.Count > 0 && panelIterator < panelProperties.Count)
             {
-                DisplayPanel(panelProperties[0], PanelCount, lastPanelPosition);
-                panelProperties.RemoveAt(0);
+                DisplayPanel(panelProperties[panelIterator], PanelCount, lastPanelPosition);
+                //panelProperties.RemoveAt(0);
             }
             else //finished everything format and send
             {
@@ -503,13 +547,15 @@ namespace CognitiveVR
             PanelCount++;
         }
 
+        int panelIterator = 0;
+
         void SendResponsesAsTransaction()
         {
             var exitpoll = Instrumentation.Transaction("cvr.exitpoll");
             exitpoll.setProperty("userId", CognitiveVR.Core.userId);
             exitpoll.setProperty("questionSetId", QuestionSetId);
             exitpoll.setProperty("hook", RequestQuestionHookName);
-            
+
             foreach (var property in transactionProperties)
             {
                 exitpoll.setProperty(property.Key, property.Value);
@@ -523,7 +569,7 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            builder.Append(JsonUtil.SetString("userId",CognitiveVR.Core.userId));
+            builder.Append(JsonUtil.SetString("userId", CognitiveVR.Core.userId));
             builder.Append(",");
             builder.Append(JsonUtil.SetString("questionSetId", QuestionSetId));
             builder.Append(",");
@@ -534,7 +580,7 @@ namespace CognitiveVR
 
             builder.Append("\"answers\":[");
 
-            for (int i = 0; i<responseProperties.Count; i++)
+            for (int i = 0; i < responseProperties.Count; i++)
             {
                 var valueString = responseProperties[i].ResponseValue as string;
                 if (!string.IsNullOrEmpty(valueString) && valueString == "skip")
@@ -567,7 +613,7 @@ namespace CognitiveVR
                     builder.Append("},");
                 }
             }
-            builder.Remove(builder.Length - 1,1); //remove comma
+            builder.Remove(builder.Length - 1, 1); //remove comma
             builder.Append("]");
             builder.Append("}");
 
@@ -578,15 +624,15 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + RequestQuestionHookName + "/"+ questionSetVersion + "/responses";
+            string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + QuestionSetName + "/" + questionSetVersion + "/responses";
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
-            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl "+ url + "\n" + responses);
+            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);
 
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
-            
+
             new UnityEngine.WWW(url, bytes, headers);
 
             //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
@@ -647,9 +693,9 @@ namespace CognitiveVR
 
         public ExitPollSet SetDisplayDistance(float preferedDistance, float minimumDistance)
         {
-            _defaultMinimumDisplayDistance = Mathf.Max(minimumDistance,0);
+            _defaultMinimumDisplayDistance = Mathf.Max(minimumDistance, 0);
             _defaultDisplayDistance = Mathf.Max(minimumDistance, preferedDistance);
-            
+
             return this;
         }
 
@@ -712,7 +758,7 @@ namespace CognitiveVR
             return this;
         }
 
-        void DisplayPanel(Dictionary<string, string> properties,int panelId, Vector3 spawnPoint)
+        void DisplayPanel(Dictionary<string, string> properties, int panelId, Vector3 spawnPoint)
         {
             GameObject prefab = null;
             switch (properties["type"])
@@ -809,6 +855,4 @@ namespace CognitiveVR
             return true;
         }
     }
-
-    
 }
