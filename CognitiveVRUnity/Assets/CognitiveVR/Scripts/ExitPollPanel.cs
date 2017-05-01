@@ -149,7 +149,7 @@ namespace CognitiveVR
                 if (resultend == 0)
                 {
                     CognitiveVR.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
-                    QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
+                    QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
                     Destroy(gameObject);
                     return;
                 }
@@ -363,7 +363,10 @@ namespace CognitiveVR
         public void AnswerBool(bool positive)
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, positive);
+            int responseValue = 0;
+            if (positive)
+                responseValue = 1;
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, responseValue);
             Close();
         }
 
@@ -376,10 +379,13 @@ namespace CognitiveVR
         }
 
         //from buttons
+        [System.Obsolete]
         public void AnswerString(string answer)
         {
+            CognitiveVR.Util.logError("Exit Poll Panel AnswerString should not be used!");
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, answer);
+
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, 0);
             Close();
         }
 
@@ -397,14 +403,14 @@ namespace CognitiveVR
         public void CloseButton()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
             Close();
         }
 
         public void Timeout()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, "skip");
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
             Close();
         }
 

@@ -438,9 +438,9 @@ namespace CognitiveVR
         Dictionary<string, object> transactionProperties = new Dictionary<string, object>();
 
         //called from panel when a panel closes (after timeout, on close or on answer)
-        public void OnPanelClosed(int panelId, string key, object objectValue)
+        public void OnPanelClosed(int panelId, string key, int objectValue)
         {
-            switch (panelProperties[currentPanelIndex]["type"])
+            /*switch (panelProperties[currentPanelIndex]["type"])
             {
                 case "HAPPYSAD":
                     objectValue = objectValue.ToString();
@@ -471,7 +471,7 @@ namespace CognitiveVR
                     objectValue = objectValue.ToString();
 
                     break;
-            }
+            }*/
             transactionProperties.Add(key, objectValue);
             responseProperties[panelId].ResponseValue = objectValue;
             currentPanelIndex++;
@@ -480,7 +480,7 @@ namespace CognitiveVR
 
         public void OnPanelClosedVoice(int panelId, string key, string base64voice)
         {
-            transactionProperties.Add(key, "voice");
+            transactionProperties.Add(key, 0);
             responseProperties[panelId].ResponseValue = base64voice;
             currentPanelIndex++;
             IterateToNextQuestion();
