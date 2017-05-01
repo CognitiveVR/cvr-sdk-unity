@@ -11,6 +11,7 @@ namespace CognitiveVR
 {
     public class MicrophoneButton : MonoBehaviour
     {
+        [Header("Gaze Settings")]
         public Image Button;
         public Image Fill;
 
@@ -25,20 +26,14 @@ namespace CognitiveVR
         float _angle;
         float _theta;
 
-        //call this after the recording sent response, or _maxUploadWaitTime seconds after sent request
-        public UnityEngine.EventSystems.EventTrigger.TriggerEvent OnFinishedRecording;
-
-        private int outputRate = 16000;// 44100;
-        //private int headerSize = 44; //default for uncompressed wav
-
+        [Header("Recording")]
+        public int RecordTime = 10;
+        private int outputRate = 16000;
         AudioClip clip;
-
         bool _recording;
         bool _finishedRecording;
-        float _maxUploadWaitTime = 2;
 
-        public int RecordTime = 10;
-
+        [Header("Visuals")]
         public Image MicrophoneImage;
         public Image MicrophoneBackgroundImage;
         public Color LowVolumeColor;
@@ -74,7 +69,7 @@ namespace CognitiveVR
         void Update()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            if (ExitPollPanel.NextResponseTime > Time.time) { return; }
+            if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (_finishedRecording) { return; }
 
             if (_recording)
@@ -88,7 +83,10 @@ namespace CognitiveVR
                 if (_currentRecordTime <= 0)
                 {
                     Microphone.End(null);
-                    StartCoroutine(UploadAudio());
+                    byte[] bytes;
+                    CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
+                    string encodedWav = MicrophoneUtility.EncodeWav(bytes);
+                    ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
                     _finishedRecording = true;
                 }
             }
@@ -122,32 +120,6 @@ namespace CognitiveVR
             }
         }
 
-        IEnumerator UploadAudio()
-        {
-            //customer id or something
-
-            string url = "https://api.cognitivevr.io/polls/"+ExitPollPanel.PollID+"/feedback";
-
-            byte[] bytes;
-            CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
-            
-            WWWForm form = new WWWForm();
-            form.headers.Add("X-HTTP-Method-Override", "POST");
-            form.AddBinaryData("feedback", bytes);
-            WWW www = new UnityEngine.WWW(url, form);
-
-
-            float startTime = 0;
-            while (startTime < _maxUploadWaitTime) //give 2 seconds to upload before closing panel. can still upload in the background
-            {
-                startTime += Time.deltaTime;
-                if (www.isDone) { break; }
-                yield return null;
-            }
-            
-            ActivateAction();
-        }
-
         void UpdateFillAmount()
         {
             if (_recording)
@@ -160,7 +132,7 @@ namespace CognitiveVR
             }
         }
 
-        public void ActivateAction()
+        /*public void ActivateAction()
         {
             OnFinishedRecording.Invoke(null);
         }
@@ -170,7 +142,7 @@ namespace CognitiveVR
             //_action = null;
             _currentLookTime = 0;
             UpdateFillAmount();
-        }
+        }*/
 
         void OnDrawGizmos()
         {

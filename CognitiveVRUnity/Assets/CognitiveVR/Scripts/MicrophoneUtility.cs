@@ -42,6 +42,8 @@ namespace CognitiveVR
             byte[] data;
             byte[] headers;
 
+            //TODO create thread for writing audioclip to byte[]
+            //http://stackoverflow.com/questions/19048492/notify-when-thread-is-complete-without-locking-calling-thread
             data = ConvertAndWrite(clip);
             headers = WriteHeader(clip, data);
 
@@ -50,7 +52,7 @@ namespace CognitiveVR
             data.CopyTo(fileBytes, headers.Length);
         }
 
-        static FileStream CreateEmpty(string filepath)
+        /*static FileStream CreateEmpty(string filepath)
         {
             var fileStream = new FileStream(filepath, FileMode.Create);
             byte emptyByte = new byte();
@@ -61,11 +63,10 @@ namespace CognitiveVR
             }
 
             return fileStream;
-        }
+        }*/
 
         static byte[] ConvertAndWrite(AudioClip clip)
         {
-
             var samples = new float[clip.samples];
 
             clip.GetData(samples, 0);
@@ -91,6 +92,7 @@ namespace CognitiveVR
 
         static byte[] WriteHeader(AudioClip clip, byte[] data)
         {
+            //could alternatively do this with a memorystream
             List<byte> returnBytes = new List<byte>();
 
             var hz = clip.frequency;
@@ -173,6 +175,16 @@ namespace CognitiveVR
 
             levelMax *= 128;
             return levelMax;
+        }
+
+        /// <summary>
+        /// encode wav bytes into base64 string
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string EncodeWav(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes);
         }
     }
 }

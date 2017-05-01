@@ -312,7 +312,7 @@ namespace CognitiveVR
 
                 if (organizations.Length > 0)
                 {
-                    //TODO fix this some other day
+                    //TODO fix out of range when logging in/out from account with multiple orgs
                     try
                     {
                         prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);

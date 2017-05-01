@@ -9,6 +9,7 @@ namespace CognitiveVR
 {
     public class GazeButton : MonoBehaviour
     {
+        [Header("Gaze Settings")]
         public Image Button;
         public Image Fill;
 
@@ -23,7 +24,7 @@ namespace CognitiveVR
         float _angle;
         float _theta;
 
-        public UnityEngine.EventSystems.EventTrigger.TriggerEvent OnLook;
+        public UnityEngine.Events.UnityEvent OnLook;
 
         Transform _t;
         Transform _transform
@@ -52,7 +53,7 @@ namespace CognitiveVR
         void Update()
         {
             if (CognitiveVR_Manager.HMD == null) { return; }
-            if (ExitPollPanel.NextResponseTime > Time.time) { return; }
+            if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (OnLook == null) { return; }
 
             if (Vector3.Dot(CognitiveVR_Manager.HMD.forward, (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
@@ -81,12 +82,11 @@ namespace CognitiveVR
 
         public void ActivateAction()
         {
-            OnLook.Invoke(null);
+            OnLook.Invoke();
         }
 
         public void ClearAction()
         {
-            //_action = null;
             _currentLookTime = 0;
             UpdateFillAmount();
         }

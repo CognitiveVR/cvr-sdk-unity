@@ -13,6 +13,7 @@ namespace CognitiveVR.Components
         string hmdpresentGUID;
         public override void CognitiveVR_Init(Error initError)
         {
+            if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
 #if CVR_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
