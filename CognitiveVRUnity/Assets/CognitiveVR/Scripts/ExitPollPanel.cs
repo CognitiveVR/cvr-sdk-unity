@@ -157,24 +157,30 @@ namespace CognitiveVR
                 }
 
                 //labels
-                if (properties.ContainsKey("minLabel"))
+                if (MinLabel != null)
                 {
-                    MinLabel.enabled = true;
-                    MinLabel.text = properties["minLabel"];
-                }
-                else
-                {
-                    MinLabel.enabled = false;
+                    if (properties.ContainsKey("minLabel"))
+                    {
+                        MinLabel.enabled = true;
+                        MinLabel.text = properties["minLabel"];
+                    }
+                    else
+                    {
+                        MinLabel.enabled = false;
+                    }
                 }
 
-                if (properties.ContainsKey("maxLabel"))
+                if (MaxLabel != null)
                 {
-                    MaxLabel.enabled = true;
-                    MaxLabel.text = properties["maxLabel"];
-                }
-                else
-                {
-                    MaxLabel.enabled = false;
+                    if (properties.ContainsKey("maxLabel"))
+                    {
+                        MaxLabel.enabled = true;
+                        MaxLabel.text = properties["maxLabel"];
+                    }
+                    else
+                    {
+                        MaxLabel.enabled = false;
+                    }
                 }
 
                 SetIntegerCount(resultend);
@@ -204,6 +210,10 @@ namespace CognitiveVR
 
         void SetIntegerCount(int maxValue)
         {
+            if (ContentRoot == null)
+            {
+                return;
+            }
             int totalCount = Mathf.Min(ContentRoot.childCount, maxValue);
             for (int i = 0; i< ContentRoot.childCount;i++)
             {
