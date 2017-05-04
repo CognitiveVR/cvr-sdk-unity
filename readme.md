@@ -4,8 +4,6 @@ Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, wh
 
 **This plugin requires Unity 5.4.1p4 or newer**
 
-Last Updated: Feb 24, 2017
-
 Quickstart
 =========
 ## Sign up
