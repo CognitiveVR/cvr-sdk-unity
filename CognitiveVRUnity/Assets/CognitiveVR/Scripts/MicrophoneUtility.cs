@@ -42,6 +42,12 @@ namespace CognitiveVR
             byte[] data;
             byte[] headers;
 
+            if (Microphone.devices.Length == 0)
+            {
+                fileBytes = new byte[0];
+                return;
+            }
+
             //TODO create thread for writing audioclip to byte[]
             //http://stackoverflow.com/questions/19048492/notify-when-thread-is-complete-without-locking-calling-thread
             data = ConvertAndWrite(clip);
@@ -67,6 +73,10 @@ namespace CognitiveVR
 
         static byte[] ConvertAndWrite(AudioClip clip)
         {
+            if (clip == null)
+            {
+                return new byte[0];
+            }
             var samples = new float[clip.samples];
 
             clip.GetData(samples, 0);
@@ -92,6 +102,10 @@ namespace CognitiveVR
 
         static byte[] WriteHeader(AudioClip clip, byte[] data)
         {
+            if (clip == null)
+            {
+                return new byte[0];
+            }
             //could alternatively do this with a memorystream
             List<byte> returnBytes = new List<byte>();
 
