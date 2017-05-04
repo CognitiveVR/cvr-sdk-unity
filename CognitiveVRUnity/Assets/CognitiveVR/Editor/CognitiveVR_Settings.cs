@@ -134,13 +134,18 @@ namespace CognitiveVR
             {
                 if (System.DateTime.UtcNow > remindDate)
                 {
+                    //Debug.Log("System.DateTime.UtcNow > cvr_updateRemindDate");
+                    EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                     CheckForUpdates();
                 }
             }
             else
             {
-                Debug.Log("CognitiveVR_Settings Failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
-                CheckForUpdates();
+                //Debug.Log("CognitiveVR_Settings Failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
+                //Debug.Log(EditorPrefs.GetString("cvr_updateRemindDate", "NO DATE"));
+                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                //Debug.Log(EditorPrefs.GetString("cvr_updateRemindDate", "NO DATE"));
+                //CheckForUpdates();
             }
 
             EditorApplication.update -= EditorUpdate;
@@ -744,7 +749,7 @@ namespace CognitiveVR
                     var version = split[0];
                     string summary = split[1];
 
-                    if (string.IsNullOrEmpty(version))
+                    if (!string.IsNullOrEmpty(version))
                     {
                         if (version != CognitiveVR.Core.SDK_Version)
                         {
@@ -755,10 +760,12 @@ namespace CognitiveVR
                         {
                             //skip this version. limit this check to once a day
                             EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                            //Debug.Log("Version " + version + ". Skip update");
                         }
                         else
                         {
                             //up to date
+                            Debug.Log("Version "+ version + ". You are up to date");
                         }
                     }
                 }
