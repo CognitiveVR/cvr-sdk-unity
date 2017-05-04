@@ -28,10 +28,12 @@ namespace CognitiveVR
         [Tooltip("Apply a gradient to the buttons")]
         public Gradient IntegerGradient;
         public Image[] ColorableImages;
+        public Text MinLabel;
+        public Text MaxLabel;
 
         //when the user finishes answering the question or finishes closing the window
         //bool _completed = false;
-        
+
         //delays input so player can understand the popup interface before answering
         float ResponseDelayTime = 2;
         float NextResponseTime;
@@ -153,6 +155,28 @@ namespace CognitiveVR
                     Destroy(gameObject);
                     return;
                 }
+
+                //labels
+                if (properties.ContainsKey("minLabel"))
+                {
+                    MinLabel.enabled = true;
+                    MinLabel.text = properties["minLabel"];
+                }
+                else
+                {
+                    MinLabel.enabled = false;
+                }
+
+                if (properties.ContainsKey("maxLabel"))
+                {
+                    MaxLabel.enabled = true;
+                    MaxLabel.text = properties["maxLabel"];
+                }
+                else
+                {
+                    MaxLabel.enabled = false;
+                }
+
                 SetIntegerCount(resultend);
             }
             else if (properties["type"] == "VOICE")

@@ -25,8 +25,13 @@ namespace CognitiveVR
             {
                 public string title;
                 public string type;
+                //voice
                 public int maxResponseLength;
+                //scale
+                public string minLabel;
+                public string maxLabel;
                 public ExitPollScaleRange range;
+                //multiple choice
                 public ExitPollSetJsonEntryAnswer[] answers;
 
                 [System.Serializable]
@@ -392,6 +397,11 @@ namespace CognitiveVR
                     questionVariables.Add("type", json.questions[i].type);
                     responseProperties.Add(new ResponseContext(json.questions[i].type));
                     questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
+
+                    if (!string.IsNullOrEmpty(json.questions[i].minLabel))
+                        questionVariables.Add("minLabel", json.questions[i].minLabel);
+                    if (!string.IsNullOrEmpty(json.questions[i].maxLabel))
+                        questionVariables.Add("maxLabel", json.questions[i].maxLabel);
                     //put this into a csv string?
 
                     if (json.questions[i].range != null)
@@ -440,38 +450,6 @@ namespace CognitiveVR
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, int objectValue)
         {
-            /*switch (panelProperties[currentPanelIndex]["type"])
-            {
-                case "HAPPYSAD":
-                    objectValue = objectValue.ToString();
-                    break;
-                case "SCALE":
-                    string scaleString = objectValue as string;
-                    if (!string.IsNullOrEmpty(scaleString) && scaleString.ToLower() == "skip")
-                    {
-                        objectValue = short.MinValue;
-                    }
-                    //use actual value
-                    break;
-                case "MULTIPLE":
-                    string scaleMult = objectValue as string;
-                    if (!string.IsNullOrEmpty(scaleMult) && scaleMult.ToLower() == "skip")
-                    {
-                        objectValue = short.MinValue;
-                    }
-                    //use actual value
-                    break;
-                case "VOICE":
-                    //objectvalue == "voice" or "skip"
-                    break;
-                case "THUMBS":
-                    objectValue = objectValue.ToString();
-                    break;
-                case "BOOLEAN":
-                    objectValue = objectValue.ToString();
-
-                    break;
-            }*/
             transactionProperties.Add(key, objectValue);
             responseProperties[panelId].ResponseValue = objectValue;
             currentPanelIndex++;
