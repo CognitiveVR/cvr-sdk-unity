@@ -146,8 +146,11 @@ namespace CognitiveVR
             }
             else if (properties["type"] == "SCALE")
             {
+                int resultbegin = 0;
+                int.TryParse(properties["start"], out resultbegin);
+
                 int resultend = 0;
-                int.TryParse(properties["endvalue"], out resultend);
+                int.TryParse(properties["end"], out resultend);
                 if (resultend == 0)
                 {
                     CognitiveVR.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
@@ -183,7 +186,7 @@ namespace CognitiveVR
                     }
                 }
 
-                SetIntegerCount(resultend);
+                SetIntegerCount(resultbegin, resultend);
             }
             else if (properties["type"] == "VOICE")
             {
@@ -208,16 +211,30 @@ namespace CognitiveVR
             button.GetComponentInChildren<Text>().text = text;
         }
 
-        void SetIntegerCount(int maxValue)
+        void SetIntegerCount(int minValue, int maxValue)
         {
             if (ContentRoot == null)
             {
                 return;
             }
+
             int totalCount = Mathf.Min(ContentRoot.childCount, maxValue);
-            for (int i = 0; i< ContentRoot.childCount;i++)
+
+            for (int i = 0; i < ContentRoot.childCount; i++)
             {
-                if (i >= maxValue)
+                if (minValue > i) //turn off
+                {
+                    ContentRoot.GetChild(i).gameObject.SetActive(false);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            for (int i = minValue; i< ContentRoot.childCount;i++)
+            {
+                if (i > maxValue)
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(false);
                 }
