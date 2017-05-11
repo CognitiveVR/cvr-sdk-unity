@@ -161,7 +161,7 @@ namespace CognitiveVR
             {
                 //begin request. on complete, save to disk
                 //persistentdatapath/exitpollquestions
-                CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
+                //CognitiveVR_Manager.Instance.StartCoroutine(RequestAllQuestions());
             }
             else
             {
@@ -196,8 +196,9 @@ namespace CognitiveVR
             }
         }
 
-        static IEnumerator RequestQuestions()
+        static IEnumerator RequestAllQuestions()
         {
+            //TODO finish caching questions on startup
             string url = "http://api.cognititivevr.io/customerid/allquestions";
             url = "nowhere";
             WWW responseRequest = new WWW(url);
@@ -406,8 +407,8 @@ namespace CognitiveVR
 
                     if (json.questions[i].range != null)
                     {
-                        questionVariables.Add("startvalue", json.questions[i].range.start.ToString());
-                        questionVariables.Add("endvalue", json.questions[i].range.end.ToString());
+                        questionVariables.Add("start", json.questions[i].range.start.ToString());
+                        questionVariables.Add("end", json.questions[i].range.end.ToString());
                     }
 
                     string csvMultipleAnswers = "";

@@ -21,7 +21,8 @@ namespace CognitiveVR
         {
             ViveController,
             OculusTouchLeft,
-            OculusTouchRight
+            OculusTouchRight,
+            ViveTracker
         }
 
         //instance variables    
