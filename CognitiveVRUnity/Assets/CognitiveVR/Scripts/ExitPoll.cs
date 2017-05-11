@@ -303,10 +303,12 @@ namespace CognitiveVR
             }
             else
             {
+                Debug.Log("cannot display exitpoll. cognitiveVRManager not present in scene");
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
                 }
+                }                
             }
         }
 
