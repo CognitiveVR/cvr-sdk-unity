@@ -307,7 +307,6 @@ namespace CognitiveVR
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
-                }
                 }                
             }
         }
@@ -481,6 +480,7 @@ namespace CognitiveVR
             {
                 EndAction.Invoke();
             }
+            CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
         int currentPanelIndex = 0;
