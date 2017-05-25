@@ -22,6 +22,9 @@ namespace CognitiveVR
         public static event CoreInitHandler InitEvent;
         public void OnInit(Error initError)
         {
+            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
+            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
             {
@@ -345,8 +348,7 @@ namespace CognitiveVR
 
             ExitPoll.Initialize();
 
-            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+            Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.Instance.TransactionSnapshotCount);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());

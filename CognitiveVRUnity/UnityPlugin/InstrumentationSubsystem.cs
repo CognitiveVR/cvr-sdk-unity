@@ -22,7 +22,7 @@ namespace CognitiveVR
     {
         //public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
         //string builder for 'data'. put into container when 'packaged', then 'sent'
-        public static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
+        
 
         //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
@@ -42,6 +42,7 @@ namespace CognitiveVR
             Util.cacheCurrencyInfo();
         }
 
+        private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
         /// <summary>
         /// call this when threshold for transactions is reached
@@ -58,7 +59,7 @@ namespace CognitiveVR
             double timestamp = CoreSubsystem.SessionTimeStamp;
             string sessionId = CoreSubsystem.SessionID;
 
-            CognitiveVR.Util.logDebug("package transaction event data");
+            CognitiveVR.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
             
             builder.Append("{");
@@ -146,6 +147,8 @@ namespace CognitiveVR
 
             TransactionBuilder.Append("}"); //close transaction object
             TransactionBuilder.Append(",");
+
+            Util.logDebug(TransactionBuilder.ToString());
         }
 
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)
