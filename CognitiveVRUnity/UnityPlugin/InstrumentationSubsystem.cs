@@ -92,6 +92,9 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+        internal static UnityEngine.GameObject wwwSendGameObject;
+        internal static WWWSender wwwSender;
+
         internal static void SendTransactionsToSceneExplorer()
         {
             string packagedEvents = PackageData();
@@ -110,9 +113,23 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+            if (wwwSendGameObject == null)
+            {
+                wwwSendGameObject = new UnityEngine.GameObject("CognitiveVR Transaction Helper");
+                UnityEngine.GameObject.DontDestroyOnLoad(wwwSendGameObject);
+                wwwSender = wwwSendGameObject.AddComponent<WWWSender>();
+            }
+            wwwSender.StartCoroutine(GetWWWReponse(url, outBytes, headers));
+            //UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
 
             Util.logDebug("sent transaction event data. clear packaged bundles");
+        }
+
+        public static System.Collections.IEnumerator GetWWWReponse(string url, byte[] outBytes, Dictionary<string,string> headers)
+        {
+            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+            yield return www; //have to wait until this is finished, otherwise it can get removed without finishing request?
+            //Util.logDebug("response" + www.text);
         }
 
         private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)
