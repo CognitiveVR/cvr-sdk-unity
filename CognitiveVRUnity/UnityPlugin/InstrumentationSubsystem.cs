@@ -52,7 +52,7 @@ namespace CognitiveVR
         {
             //clear the transaction builder
             builder.Length = 0;
-            TransactionBuilder.Length = 0;
+            
             //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
             string userid = CoreSubsystem.UniqueID;
             double timestamp = CoreSubsystem.SessionTimeStamp;
@@ -86,7 +86,8 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            
+            TransactionBuilder.Length = 0;
+
             return builder.ToString();
         }
 
