@@ -602,6 +602,8 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+        WWW exitPollResponses;
+
         //the responses of all the questions in the set put together in a string and uploaded somewhere
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
@@ -615,7 +617,7 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            new UnityEngine.WWW(url, bytes, headers);
+            exitPollResponses = new UnityEngine.WWW(url, bytes, headers);
 
             //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
         }
@@ -762,7 +764,6 @@ namespace CognitiveVR
                     break;
                 case "BOOLEAN":
                     prefab = ExitPoll.ExitPollTrueFalse;
-
                     break;
             }
             if (prefab == null)
