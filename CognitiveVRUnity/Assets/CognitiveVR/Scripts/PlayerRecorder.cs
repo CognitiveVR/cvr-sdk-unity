@@ -110,6 +110,7 @@ namespace CognitiveVR
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
+            DynamicObject.ObjectIds.Clear(); //don't recycle ids between scenes - otherwise ids wont be written into new scene's manifest
             if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad) { return; }
 
             Scene activeScene = arg0;
@@ -560,7 +561,7 @@ namespace CognitiveVR
                             WriteToFile(outBytes, "_GAZE_" + trackingSceneName);
                     }
 
-                    CognitiveVR.Util.logDebug(builder.ToString());
+                    //CognitiveVR.Util.logDebug(builder.ToString());
 
                     StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
                 }
