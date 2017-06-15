@@ -395,7 +395,11 @@ namespace CognitiveVR
                 for (int i = 0; i < json.questions.Length; i++)
                 {
                     Dictionary<string, string> questionVariables = new Dictionary<string, string>();
-                    questionVariables.Add("title", json.questions[i].title);
+                    if (!questionVariables.ContainsKey("title"))
+                    {
+                        questionVariables.Add("title", json.title);
+                    }
+                    questionVariables.Add("question", json.questions[i].title);
                     questionVariables.Add("type", json.questions[i].type);
                     responseProperties.Add(new ResponseContext(json.questions[i].type));
                     questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
