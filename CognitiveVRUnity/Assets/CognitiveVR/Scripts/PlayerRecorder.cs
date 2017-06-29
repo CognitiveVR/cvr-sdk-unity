@@ -30,8 +30,8 @@ namespace CognitiveVR
         private RenderTexture rt;
 
 #if CVR_FOVE
-        FoveInterface _foveInstance;
-        FoveInterface FoveInstance
+        static FoveInterface _foveInstance;
+        public static FoveInterface FoveInstance
         {
             get
             {
@@ -318,7 +318,7 @@ namespace CognitiveVR
             Vector3 gazeDirection = HMD.forward;
 #if CVR_GAZETRACK
 #if CVR_FOVE //direction
-            var eyeRays = Instance.FoveInstance.GetGazeRays();
+            var eyeRays = FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
             gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
             gazeDirection.Normalize();
