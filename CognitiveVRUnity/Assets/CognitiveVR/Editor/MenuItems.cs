@@ -127,31 +127,16 @@ namespace CognitiveVR
         [MenuItem("Window/cognitiveVR/Add Fove Prefab",priority=60)]
         static void MakeFovePrefab()
         {
-            GameObject player = new GameObject("Player");
-            GameObject foveInterface = new GameObject("Fove Interface");
-            GameObject cameraboth = new GameObject("Fove Eye Camera both");
-            GameObject cameraright = new GameObject("Fove Eye Camera right");
-            GameObject cameraleft = new GameObject("Fove Eye Camera left");
+            GameObject foveRigGo = new GameObject("Fove Rig");
+            GameObject foveInterfaceGo = new GameObject("Fove Interface");
 
-            foveInterface.transform.SetParent(player.transform);
+            foveInterfaceGo.transform.SetParent(foveRigGo.transform);
 
-            cameraboth.transform.SetParent(foveInterface.transform);
-            cameraright.transform.SetParent(foveInterface.transform);
-            cameraleft.transform.SetParent(foveInterface.transform);
-
-            var tempInterface = foveInterface.AddComponent<FoveInterface>();
-
-            var rightcam = cameraright.AddComponent<FoveEyeCamera>();
-            rightcam.whichEye = Fove.EFVR_Eye.Right;
-            //cameraright.AddComponent<Camera>();
-
-            var leftcam = cameraleft.AddComponent<FoveEyeCamera>();
-            leftcam.whichEye = Fove.EFVR_Eye.Left;
-            //cameraleft.AddComponent<Camera>();
-
-            cameraboth.AddComponent<Camera>();
-            cameraboth.tag = "MainCamera";
-            Undo.RecordObjects(new Object[] { player, foveInterface, cameraboth, cameraright, cameraleft }, "Create Fove Prefab");
+            foveInterfaceGo.AddComponent<FoveInterface>();
+            
+            foveInterfaceGo.AddComponent<Camera>();
+            foveInterfaceGo.tag = "MainCamera";
+            Undo.RecordObjects(new Object[] { foveRigGo, foveInterfaceGo }, "Create Fove Prefab");
             Undo.FlushUndoRecordObjects();
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

@@ -35,7 +35,7 @@ namespace CognitiveVR
 {
     public static class MicrophoneUtility
     {
-        const int HEADER_SIZE = 44;
+        //const int HEADER_SIZE = 44;
 
         public static void Save(AudioClip clip, out byte[] fileBytes)
         {

@@ -78,8 +78,6 @@ namespace CognitiveVR
 
             savedTransactions.Add(data);
 
-            Util.logDebug("store count " + savedTransactions.Count);
-
             if (savedTransactions.Count >= maxCachedTransactions)
             {
                 SendCachedTransactions();

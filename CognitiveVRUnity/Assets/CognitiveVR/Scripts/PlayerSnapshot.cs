@@ -33,11 +33,13 @@ namespace CognitiveVR
             //this is the maximum distance - looking directly at the edge of the frustrum
             //float edgeDistance = Mathf.Sqrt(Mathf.Pow(width * 0.5f, 2) + Mathf.Pow(cam.farClipPlane, 2));
 
-
+            //Vector3 position = CognitiveVR_Manager.HMD.position;
 
             //======= gaze (farclip distance)
             //Debug.DrawRay(position, gazeDir * far, Color.red, 0.1f);
             //Debug.DrawRay(position, camForward * far, new Color(0.5f, 0, 0), 0.1f);
+
+            //Debug.Log("get adjusted distance. gaze direction " + gazeDir + "      camera forward  " + camForward);
 
             //dot product to find projection of gaze with direction
             float fwdAmount = Vector3.Dot(gazeDir.normalized * far, camForward.normalized);
@@ -45,14 +47,20 @@ namespace CognitiveVR
             //Debug.DrawRay(fwdPoint, Vector3.up, Color.cyan, 0.1f);
             //Debug.DrawRay(gazeDir * far, Vector3.up, Color.yellow, 0.1f);
 
-
             //======= angle towards farPlane
             //get angle between center and gaze direction. cos(A) = b/c
             float gazeRads = Mathf.Acos(fwdAmount / far);
+            if (Mathf.Approximately(fwdAmount, far))
+            {
+                //when fwdAmount == far, Acos returns NaN for some reason
+                gazeRads = 0;
+            }
+            
             float dist = far * Mathf.Tan(gazeRads);
 
             float hypotenuseDist = Mathf.Sqrt(Mathf.Pow(dist, 2) + Mathf.Pow(far, 2));
 
+            //float missingDist = hypotenuseDist-far;
             //Debug.DrawRay(position + gazeDir * far, gazeDir * missingDist, Color.green, 0.1f); //appended distance to hit farPlane
             return hypotenuseDist;
         }
@@ -80,18 +88,25 @@ namespace CognitiveVR
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {
-                relativeDepth = color.linear.r;
+                relativeDepth = color.linear.r; //does running the color through this linear multiplier cause NaN issues? GetAdjustedDistance passed in essentially 0?
             }
             else
             {
                 relativeDepth = color.r;
             }
 
+            //Debug.Log("relativeDepth " + relativeDepth);
+
+            //how does this get the actual depth? missing an argument?
             float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["gazeDirection"], (Vector3)Properties["hmdForward"]);
+            //Debug.Log("actualDepth " + actualDepth); //adjusted for trigonometry
 
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], actualDepth, relativeDepth);
+            //Debug.Log("actualDistance " + actualDistance);
 
             gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
+
+            //Debug.Log("gazeWorldPoint " + gazeWorldPoint);
 
             return gazeWorldPoint;
 #else

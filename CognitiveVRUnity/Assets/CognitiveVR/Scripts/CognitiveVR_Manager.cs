@@ -22,6 +22,9 @@ namespace CognitiveVR
         public static event CoreInitHandler InitEvent;
         public void OnInit(Error initError)
         {
+            Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
+            InitResponse = initError;
+
             double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
             Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
 
@@ -307,6 +310,8 @@ namespace CognitiveVR
         [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
         public bool SaveExitPollOnDevice = false;
 
+        public static Error InitResponse { get; private set; }
+
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
         /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
@@ -318,6 +323,11 @@ namespace CognitiveVR
             return null;
         }
 
+        private void OnEnable()
+        {
+            InitResponse = Error.NotInitialized;
+        }
+
         void Start()
         {
             GameObject.DontDestroyOnLoad(gameObject);
@@ -327,8 +337,18 @@ namespace CognitiveVR
 
         public void Initialize()
         {
-            if (instance != null && instance != this) { Destroy(gameObject); return; } //destroy if there's already another manager
-            if (instance == this) { return; } //skip if this manage has already been initialized
+            Util.logDebug("CognitiveVR_Manager Initialize");
+            if (instance != null && instance != this)
+            {
+                Util.logDebug("CognitiveVR_Manager Initialize instance is not null and not this! Destroy");
+                Destroy(gameObject);
+                return;
+            } //destroy if there's already another manager
+            if (instance == this)
+            {
+                Util.logDebug("CognitiveVR_Manager Initialize instance is this! Skip Initialize");
+                return;
+            } //skip if this manage has already been initialized
             instance = this;
 
             if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
