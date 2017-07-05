@@ -78,6 +78,12 @@ namespace CognitiveVR
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
 
+        //video settings
+        public bool FlipVideo;
+        public string ExternalVideoSource;
+        float SendFrameTimeRemaining = 10; //counts down to 0 during tick. sends frame 
+        bool wasPlayingVideo = false;
+
         public bool TrackGaze = false;
 
         public bool RequiresManualEnable = false;
@@ -89,6 +95,7 @@ namespace CognitiveVR
         //static variables
         private static int uniqueIdOffset = 1000;
         private static int currentUniqueId;
+        //cleared between scenes so new snapshots will re-write to the manifest and get uploaded to the scene
         public static List<DynamicObjectId> ObjectIds = new List<DynamicObjectId>();
 
         //cumulative. all objects
@@ -103,12 +110,37 @@ namespace CognitiveVR
         //private static int maxSnapshotBatchCount = 64;
         private static int jsonpart = 1;
 
+#if UNITY_5_6_OR_NEWER
+        public UnityEngine.Video.VideoPlayer VideoPlayer;
+#endif
+        bool IsVideoPlayer
+        {
+            get
+            {
+#if UNITY_5_6_OR_NEWER
+                return VideoPlayer != null && !string.IsNullOrEmpty(ExternalVideoSource);
+#else
+                return false;
+#endif
+            }
+        }
+
         void OnEnable()
         {
             if (RequiresManualEnable)
             {
                 return;
             }
+
+            if (IsVideoPlayer)
+            {
+                VideoPlayer.started += VideoPlayer_started;
+                VideoPlayer.errorReceived += VideoPlayer_errorReceived;
+                VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
+
+                //TODO wait for first frame should set buffering to true for first snapshot
+            }
+
             //set the 'custom mesh name' to be the lowercase of the common name
             if (!UseCustomMesh)
             {
@@ -143,6 +175,21 @@ namespace CognitiveVR
             }
         }
 
+        private void VideoPlayer_prepareCompleted(UnityEngine.Video.VideoPlayer source)
+        {
+            //buffering complete?
+        }
+
+        private void VideoPlayer_errorReceived(UnityEngine.Video.VideoPlayer source, string message)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        private void VideoPlayer_started(UnityEngine.Video.VideoPlayer source)
+        {
+            NewSnapshot().SetProperty("videoplay", true);
+        }
+
         private void CognitiveVR_Manager_InitEvent(Error initError)
         {
             if (initError != Error.Success) { return; }
@@ -168,6 +215,7 @@ namespace CognitiveVR
             {
                 yield return updateTick;
                 CheckUpdate();
+                UpdateFrame(UpdateRate);
             }
         }
 
@@ -175,9 +223,27 @@ namespace CognitiveVR
         public void CognitiveVR_Manager_TickEvent()
         {
             CheckUpdate();
+            UpdateFrame(CognitiveVR_Preferences.Instance.SnapshotInterval);
         }
 
-        //puts outstanding snapshots (from last update) into json. this can't happen
+        void UpdateFrame(float timeSinceLastTick)
+        {
+            if (IsVideoPlayer)
+            {
+                if (VideoPlayer.isPlaying)
+                {
+                    SendFrameTimeRemaining -= timeSinceLastTick;
+                }
+            }
+            
+            if (SendFrameTimeRemaining < 0)
+            {
+                SendFrameTimeRemaining = 10;
+                NewSnapshot().SetProperty("videotime", (int)((VideoPlayer.frame/VideoPlayer.frameRate)*1000));
+            }
+        }
+
+        //puts outstanding snapshots (from last update) into json
         private static void CognitiveVR_Manager_Update()
         {
             WriteSnapshotsToString();
@@ -294,7 +360,7 @@ namespace CognitiveVR
                 if (!UseCustomId)
                 {
                     var recycledId = ObjectIds.Find(x => !x.Used && x.MeshName == mesh);
-                    if (recycledId != null)
+                    if (recycledId != null && !IsVideoPlayer) //do not allow video players to recycle ids - could point to different urls, making the manifest invalid
                     {
                         ObjectId = recycledId;
                         ObjectId.Used = true;
@@ -332,6 +398,12 @@ namespace CognitiveVR
                             }
                         }
 
+                        if (!string.IsNullOrEmpty(ExternalVideoSource))
+                        {
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "externalVideoSource", ExternalVideoSource } };
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "flipVideo", FlipVideo.ToString().ToLower() } };
+                        }
+
                         ObjectManifest.Add(manifestEntry);
                         NewObjectManifest.Add(manifestEntry);
                     }
@@ -344,8 +416,18 @@ namespace CognitiveVR
                     {
                         manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
                     }
+                    if (!string.IsNullOrEmpty(ExternalVideoSource))
+                    {
+                        manifestEntry.Properties = new Dictionary<string, object>() { { "externalVideoSource", ExternalVideoSource } };
+                        manifestEntry.Properties = new Dictionary<string, object>() { { "flipVideo", FlipVideo.ToString().ToLower() } };
+                    }
                     ObjectManifest.Add(manifestEntry);
                     NewObjectManifest.Add(manifestEntry);
+                }
+
+                if (IsVideoPlayer)
+                {
+                    CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
                 }
 
                 if (ObjectManifest.Count == 1)
@@ -361,8 +443,26 @@ namespace CognitiveVR
             {
                 snapshot.Buttons = ButtonStates.GetDirtyStates();
             }
+            if (IsVideoPlayer)
+            {
+                if (VideoPlayer.waitForFirstFrame)
+                {
+                    snapshot.Properties.Add("videoplayer", false);
+                }
+            }
             NewSnapshots.Add(snapshot);
             return snapshot;
+        }
+
+        //update on instance of dynamic game obejct
+        //only used when dynamic object is written to manifest as a video player
+        private void CognitiveVR_Manager_UpdateEvent()
+        {
+            if (VideoPlayer.isPlaying != wasPlayingVideo)
+            {
+                NewSnapshot().SetProperty("playing", VideoPlayer.isPlaying);
+                wasPlayingVideo = VideoPlayer.isPlaying;
+            }
         }
 
         public void UpdateLastPositions()
@@ -699,6 +799,26 @@ namespace CognitiveVR
             return this;
         }
 
+        public DynamicObjectSnapshot SetProperty(string key, object value)
+        {
+            if (Properties == null)
+            {
+                Properties = new Dictionary<string, object>();
+                Properties.Add(key, value);
+                return this;
+            }
+
+            if (Properties.ContainsKey(key))
+            {
+                Properties[key] = value;
+            }
+            else
+            {
+                Properties.Add(key, value);
+            }
+            return this;
+        }
+
         /// <summary>
         /// Append various properties on the snapshot without overwriting previous properties. Currently unused
         /// </summary>
@@ -745,8 +865,10 @@ namespace CognitiveVR
         }
     }
 
-    //holds info about which ids are used and what meshes they are held by
-    //used to 'release' unique ids so meshes can be pooled in scene explorer
+    /// <summary>
+    /// <para>holds info about which ids are used and what meshes they are held by</para> 
+    /// <para>used to 'release' unique ids so meshes can be pooled in scene explorer</para> 
+    /// </summary>
     public class DynamicObjectId
     {
         public int Id;
