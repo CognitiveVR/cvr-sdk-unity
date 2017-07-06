@@ -40,10 +40,24 @@ namespace CognitiveVR.Components
         public IEnumerator OnPostRender()
         {
             yield return endOfFrame;
-            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+            if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
-                CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
+                if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+                {
+                    CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
+                }
             }
+            CognitiveVR_Manager.HasHitDynamic = false;
+        }
+
+        /// <summary>
+        /// used for gaze in direction. does not do anything with rendering, but resets HasHitDynamic at the end of the frame
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator EndOfFrame()
+        {
+            Debug.Log("HELPER EndOfFrame");
+            yield return endOfFrame;
             CognitiveVR_Manager.HasHitDynamic = false;
         }
 
