@@ -54,6 +54,7 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (!Application.isPlaying) { return; }
             if (CognitiveVR_Manager.HMD == null) { return; }
             _currentLookTime = 0;
             UpdateFillAmount();

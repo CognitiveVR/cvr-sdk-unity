@@ -85,6 +85,7 @@ namespace CognitiveVR
         bool wasPlayingVideo = false;
 
         public bool TrackGaze = false;
+        float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
 
@@ -133,6 +134,7 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (!Application.isPlaying) { return; }
             if (RequiresManualEnable)
             {
                 return;
@@ -140,10 +142,11 @@ namespace CognitiveVR
 
             if (IsVideoPlayer)
             {
+#if UNITY_5_6_OR_NEWER
                 VideoPlayer.started += VideoPlayer_started;
                 VideoPlayer.errorReceived += VideoPlayer_errorReceived;
                 VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
-
+#endif
                 //TODO wait for first frame should set buffering to true for first snapshot
             }
 
@@ -178,6 +181,11 @@ namespace CognitiveVR
                 {
                     v.SetTick(true);
                 }
+            }
+
+            if (TrackGaze)
+            {
+                CognitiveVR_Manager.QuitEvent += CognitiveVR_Manager_QuitEvent;
             }
         }
 
@@ -238,6 +246,7 @@ namespace CognitiveVR
 
         void UpdateFrame(float timeSinceLastTick)
         {
+#if UNITY_5_6_OR_NEWER
             if (IsVideoPlayer)
             {
                 if (VideoPlayer.isPlaying)
@@ -251,6 +260,7 @@ namespace CognitiveVR
                 SendFrameTimeRemaining = 10;
                 NewSnapshot().SetProperty("videotime", (int)((VideoPlayer.frame/VideoPlayer.frameRate)*1000));
             }
+#endif
         }
 
         //puts outstanding snapshots (from last update) into json
@@ -278,6 +288,13 @@ namespace CognitiveVR
                 return;
             }
             WriteSnapshotsToString();
+        }
+
+        public void OnGaze(float time)
+        {
+            if (!TrackGaze){ return; }
+            TotalGazeDuration += time;
+            Debug.Log("total time " + TotalGazeDuration);
         }
 
         //write up to 4 dynamic object snapshots each frame
@@ -483,10 +500,12 @@ namespace CognitiveVR
             }
             if (IsVideoPlayer)
             {
+#if UNITY_5_6_OR_NEWER
                 if (VideoPlayer.waitForFirstFrame)
                 {
                     snapshot.Properties.Add("videoisbuffer", true);
                 }
+#endif
             }
             NewSnapshots.Add(snapshot);
             return snapshot;
@@ -496,11 +515,19 @@ namespace CognitiveVR
         //only used when dynamic object is written to manifest as a video player
         private void CognitiveVR_Manager_UpdateEvent()
         {
+            if (!IsVideoPlayer)
+            {
+                //likely video player was destroyed
+                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
+                return;
+            }
+#if UNITY_5_6_OR_NEWER
             if (VideoPlayer.isPlaying != wasPlayingVideo)
             {
                 NewSnapshot().SetProperty("playing", VideoPlayer.isPlaying);
                 wasPlayingVideo = VideoPlayer.isPlaying;
             }
+#endif
         }
 
         public void UpdateLastPositions()
@@ -726,13 +753,16 @@ namespace CognitiveVR
 
         void OnDisable()
         {
+            if (!Application.isPlaying) { return; }
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
             if (IsVideoPlayer)
             {
+#if UNITY_5_6_OR_NEWER
                 VideoPlayer.started -= VideoPlayer_started;
                 VideoPlayer.errorReceived -= VideoPlayer_errorReceived;
                 VideoPlayer.prepareCompleted -= VideoPlayer_prepareCompleted;
+#endif
             }
             if (TrackGaze || !ReleaseIdOnDisable)
             {
@@ -744,17 +774,26 @@ namespace CognitiveVR
 
         void OnDestroy()
         {
+            if (!Application.isPlaying) { return; }
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
             if (IsVideoPlayer)
             {
+#if UNITY_5_6_OR_NEWER
                 VideoPlayer.started -= VideoPlayer_started;
                 VideoPlayer.errorReceived -= VideoPlayer_errorReceived;
                 VideoPlayer.prepareCompleted -= VideoPlayer_prepareCompleted;
+#endif
             }
             if (TrackGaze || !ReleaseIdOnDestroy)
             {
                 NewSnapshot().SetEnabled(false);
+                if (TotalGazeDuration > 0)
+                {
+                    Debug.Log("destroy dynamic object");
+                    Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                    TotalGazeDuration = 0;
+                }
                 return;
             }
             NewSnapshot().ReleaseUniqueId();
@@ -770,6 +809,16 @@ namespace CognitiveVR
 
             Gizmos.color = Color.blue;
             Gizmos.DrawRay(transform.position, transform.forward);
+        }
+
+        private void CognitiveVR_Manager_QuitEvent()
+        {
+            if (TotalGazeDuration > 0)
+            {
+                Debug.Log("onquit dynamic object");
+                Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                TotalGazeDuration = 0; //reset to not send OnDestroy event
+            }
         }
     }
 

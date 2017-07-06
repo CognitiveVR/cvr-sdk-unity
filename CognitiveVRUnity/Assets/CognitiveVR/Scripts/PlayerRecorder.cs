@@ -52,8 +52,8 @@ namespace CognitiveVR
             }
             CheckCameraSettings();
 
-            if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
-                QuitEvent += OnSendData;
+            //if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
+                //QuitEvent += OnSendData;
 
             SendDataEvent += SendPlayerGazeSnapshots;
             SendDataEvent += InstrumentationSubsystem.SendCachedTransactions;
@@ -236,6 +236,8 @@ namespace CognitiveVR
 
         void UpdatePlayerRecorder()
         {
+            TimeSinceLastObjectGazeRequest += Time.deltaTime;
+
             if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
             if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
             {
@@ -274,6 +276,7 @@ namespace CognitiveVR
             instance.trackingSceneName = SceneManager.GetActiveScene().name;
         }
 
+        //delayed by PlayerSnapshotInterval
         private void CognitiveVR_Manager_OnTick()
         {
             HasRequestedDynamicGazeRaycast = false;
@@ -308,9 +311,13 @@ namespace CognitiveVR
             }
         }
 
+        //only used with gazedirection
+        static DynamicObject VideoSphere;
+
         //dynamic object
         public static bool HasRequestedDynamicGazeRaycast { get; private set; }
         public static bool HasHitDynamic = true;
+        static float TimeSinceLastObjectGazeRequest; //RequestDynamicObjectGaze is called from dynamic objects. called from the fastest dynamic object. this keeps track of time since last call
         public static void RequestDynamicObjectGaze()
         {
             HasRequestedDynamicGazeRaycast = true;
@@ -338,20 +345,38 @@ namespace CognitiveVR
             DynamicObjectId sphereId = null;
             if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
             {
-                //find the object with the preset video sphere id
-                //objectids get cleared and refreshed each scene change
-                sphereId = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj)
+                if (CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId > -1)
                 {
-                    return obj.Id == CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId;
-                });
+                    if (sphereId == null)
+                    {
+                        //find the object with the preset video sphere id
+                        //objectids get cleared and refreshed each scene change
+                        sphereId = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj)
+                        {
+                            return obj.Id == CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId;
+                        });
+                    }
+                }
 
-                Debug.Log("search " + DynamicObject.ObjectIds.Count + " object ids");
-                Debug.Log((sphereId==null) + " sphereId is null");
-                Debug.Log("VideoSphereDynamicObjectId " + CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
+                //Debug.Log("search " + DynamicObject.ObjectIds.Count + " object ids");
+                //Debug.Log((sphereId==null) + " sphereId is null");
+                //Debug.Log("VideoSphereDynamicObjectId " + CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
 
                 if (sphereId != null)
                 {
                     maxDistance = CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
+                    if (VideoSphere == null)
+                    {
+                        var dynamics = FindObjectsOfType<DynamicObject>();
+                        for (int i = 0; i < dynamics.Length; i++)
+                        {
+                            if (dynamics[i].ObjectId == sphereId)
+                            {
+                                VideoSphere = dynamics[i];
+                                break;
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -373,6 +398,8 @@ namespace CognitiveVR
                 Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
                 Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
 
+                dynamicHit.OnGaze(TimeSinceLastObjectGazeRequest);
+
                 //this gets the object and the 'physical' point on the object
                 //TODO this could use the depth buffer to get the point. or maybe average between the raycasthit.point and the world depth point?
                 //to do this, defer this into TickPostRender and check EvaluateGazeRealtime
@@ -381,8 +408,12 @@ namespace CognitiveVR
             {
                 if (sphereId != null)
                 {
-                    Debug.Log("-----------hit nothing, default to sphere");
+                    //Debug.Log("-----------hit nothing, default to sphere");
                     instance.TickPostRender(gazeDirection * maxDistance, CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
+                    if (VideoSphere != null)
+                    {
+                        VideoSphere.OnGaze(TimeSinceLastObjectGazeRequest);
+                    }
                     HasHitDynamic = true;
                 }
                 else
@@ -390,6 +421,7 @@ namespace CognitiveVR
                     Debug.Log("=========== no video sphere!");
                 }
             }
+            TimeSinceLastObjectGazeRequest = 0;
         }
 
 

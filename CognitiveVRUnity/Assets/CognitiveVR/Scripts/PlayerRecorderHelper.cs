@@ -56,7 +56,6 @@ namespace CognitiveVR.Components
         /// <returns></returns>
         public IEnumerator EndOfFrame()
         {
-            Debug.Log("HELPER EndOfFrame");
             yield return endOfFrame;
             CognitiveVR_Manager.HasHitDynamic = false;
         }
