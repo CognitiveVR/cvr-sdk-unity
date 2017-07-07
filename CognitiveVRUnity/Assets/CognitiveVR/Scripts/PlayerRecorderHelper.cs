@@ -47,7 +47,7 @@ namespace CognitiveVR.Components
                     CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
                 }
             }
-            CognitiveVR_Manager.HasHitDynamic = false;
+            //CognitiveVR_Manager.HasHitDynamic = false;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace CognitiveVR.Components
         public IEnumerator EndOfFrame()
         {
             yield return endOfFrame;
-            CognitiveVR_Manager.HasHitDynamic = false;
+            //CognitiveVR_Manager.HasHitDynamic = false;
         }
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)

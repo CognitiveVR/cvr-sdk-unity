@@ -471,10 +471,10 @@ namespace CognitiveVR
 
         IEnumerator SlowQuit()
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
                 OnSendData();
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1f);
             Application.Quit();
         }
         #endregion

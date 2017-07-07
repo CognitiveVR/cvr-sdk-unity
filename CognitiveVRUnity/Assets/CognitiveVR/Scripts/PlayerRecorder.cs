@@ -52,8 +52,11 @@ namespace CognitiveVR
             }
             CheckCameraSettings();
 
-            //if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
-                //QuitEvent += OnSendData;
+            if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
+            {
+                QuitEvent += OnSendData;
+                //QuitEvent += DynamicObject.SendAllSnapshots;
+            }
 
             SendDataEvent += SendPlayerGazeSnapshots;
             SendDataEvent += InstrumentationSubsystem.SendCachedTransactions;
@@ -236,7 +239,7 @@ namespace CognitiveVR
 
         void UpdatePlayerRecorder()
         {
-            TimeSinceLastObjectGazeRequest += Time.deltaTime;
+            //TimeSinceLastObjectGazeRequest += Time.deltaTime;
 
             if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
             if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
@@ -279,7 +282,7 @@ namespace CognitiveVR
         //delayed by PlayerSnapshotInterval
         private void CognitiveVR_Manager_OnTick()
         {
-            HasRequestedDynamicGazeRaycast = false;
+            //HasRequestedDynamicGazeRaycast = false;
             //hasHitDynamic = false;
 
             CheckCameraSettings();
@@ -290,6 +293,8 @@ namespace CognitiveVR
             //if (!Fove.FoveHeadset.GetHeadset().IsEyeTrackingCalibrated()) { return; }
             //TODO if eye tracking is not calibrated, use center of view as gaze
 #endif
+
+            RequestDynamicObjectGaze();
 
             if (CognitiveVR_Preferences.Instance.TrackGazePoint)
             {
@@ -307,7 +312,8 @@ namespace CognitiveVR
             }
             else
             {
-                StartCoroutine(periodicRenderer.EndOfFrame());
+                TickPostRender(Vector3.zero);
+                //StartCoroutine(periodicRenderer.EndOfFrame());
             }
         }
 
@@ -315,12 +321,10 @@ namespace CognitiveVR
         static DynamicObject VideoSphere;
 
         //dynamic object
-        public static bool HasRequestedDynamicGazeRaycast { get; private set; }
-        public static bool HasHitDynamic = true;
-        static float TimeSinceLastObjectGazeRequest; //RequestDynamicObjectGaze is called from dynamic objects. called from the fastest dynamic object. this keeps track of time since last call
-        public static void RequestDynamicObjectGaze()
+        static bool HasHitDynamic = true;
+        static void RequestDynamicObjectGaze()
         {
-            HasRequestedDynamicGazeRaycast = true;
+            HasHitDynamic = false;
             RaycastHit hit = new RaycastHit();
             Vector3 gazeDirection = HMD.forward;
 #if CVR_GAZETRACK
@@ -398,7 +402,7 @@ namespace CognitiveVR
                 Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
                 Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
 
-                dynamicHit.OnGaze(TimeSinceLastObjectGazeRequest);
+                dynamicHit.OnGaze(CognitiveVR_Preferences.Instance.SnapshotInterval);
 
                 //this gets the object and the 'physical' point on the object
                 //TODO this could use the depth buffer to get the point. or maybe average between the raycasthit.point and the world depth point?
@@ -408,11 +412,10 @@ namespace CognitiveVR
             {
                 if (sphereId != null)
                 {
-                    //Debug.Log("-----------hit nothing, default to sphere");
                     instance.TickPostRender(gazeDirection * maxDistance, CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
                     if (VideoSphere != null)
                     {
-                        VideoSphere.OnGaze(TimeSinceLastObjectGazeRequest);
+                        VideoSphere.OnGaze(CognitiveVR_Preferences.Instance.SnapshotInterval);
                     }
                     HasHitDynamic = true;
                 }
@@ -421,7 +424,6 @@ namespace CognitiveVR
                     Debug.Log("=========== no video sphere!");
                 }
             }
-            TimeSinceLastObjectGazeRequest = 0;
         }
 
 
@@ -429,9 +431,9 @@ namespace CognitiveVR
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender(Vector3 localPos, int objectId = -1)
         {
-            Debug.Log("TICK POST RENDER HasHitDynamic " + HasHitDynamic);
+            //Debug.Log("TICK POST RENDER HasHitDynamic " + HasHitDynamic);
 
-            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime && HasHitDynamic) { return; }
+            if (HasHitDynamic) { return; }
 
             PlayerSnapshot snapshot = new PlayerSnapshot();
             if (objectId >= 0)
@@ -511,7 +513,7 @@ namespace CognitiveVR
 
 
             playerSnapshots.Add(snapshot);
-            Debug.Log("add gaze snapshot");
+            //Debug.Log("add gaze snapshot");
             if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
             {
                 if (CognitiveVR_Preferences.Instance.TrackGazePoint)
@@ -581,6 +583,7 @@ namespace CognitiveVR
                 Util.logDebug("PlayerRecord SendPlayerGazeSnapshots has no snapshots to send");
                 return;
             }
+            Debug.Log("DEBUG------------------------------SEND SOME GAZEPOINTS");
 
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)

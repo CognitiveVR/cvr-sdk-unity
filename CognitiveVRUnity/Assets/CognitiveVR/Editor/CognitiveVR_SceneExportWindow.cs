@@ -649,6 +649,11 @@ namespace CognitiveVR
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
+            if (SceneExportDirExists)
+            {
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+            }
+
             //custom confirm upload popup windows
             if ((!SceneExportDirExists || filePaths.Length <= 1))
             {
