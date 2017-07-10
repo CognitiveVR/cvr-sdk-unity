@@ -130,7 +130,7 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(videoPlayer, new GUIContent("Video Player"));
 
             EditorGUILayout.PropertyField(externalVideoSource, new GUIContent("External Video Source", "The URL source of the video"));
-            EditorGUILayout.PropertyField(flipVideo, new GUIContent("Flip Video Horizontally"));
+            //EditorGUILayout.PropertyField(flipVideo, new GUIContent("Flip Video Horizontally"));
 #endif
 
             if (GUI.changed)

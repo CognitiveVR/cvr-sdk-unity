@@ -94,6 +94,19 @@ namespace CognitiveVR
         //used to append changes in button states to snapshots
         private DynamicObjectButtonStates ButtonStates = null;
 
+        public List<EngagementType> Engagements;
+        public class EngagementType
+        {
+            public bool Dirty;
+            public bool Active = true;
+            public string EngagementName;
+            public float EngagementTime = 0;
+
+            public EngagementType(string name)
+            {
+                EngagementName = name;
+            }
+        }
 
         //static variables
         private static int uniqueIdOffset = 1000;
@@ -247,7 +260,7 @@ namespace CognitiveVR
             while (true)
             {
                 yield return updateTick;
-                CheckUpdate();
+                CheckUpdate(UpdateRate);
                 UpdateFrame(UpdateRate);
             }
         }
@@ -255,7 +268,7 @@ namespace CognitiveVR
         //public so snapshot can tie cognitivevr_manager tick event to this. this is for syncing player tick and this tick
         public void CognitiveVR_Manager_TickEvent()
         {
-            CheckUpdate();
+            CheckUpdate(CognitiveVR_Preferences.Instance.SnapshotInterval);
             UpdateFrame(CognitiveVR_Preferences.Instance.SnapshotInterval);
         }
 
@@ -378,7 +391,7 @@ namespace CognitiveVR
         /// <summary>
         /// send a snapshot of the position and rotation if the object has moved beyond its threshold
         /// </summary>
-        public void CheckUpdate()
+        public void CheckUpdate(float deltaTime)
         {
             bool doWrite = false;
             if (Vector3.SqrMagnitude(_transform.position - lastPosition) > Mathf.Pow(PositionThreshold, 2))
@@ -389,10 +402,32 @@ namespace CognitiveVR
             {
                 doWrite = true;
             }
+
+            DynamicObjectSnapshot snapshot = null;
+
             if (doWrite)
             {
-                NewSnapshot().UpdateTransform();
+                snapshot = NewSnapshot().UpdateTransform();
                 UpdateLastPositions();
+            }
+
+            for (int i = 0; i< Engagements.Count; i++)
+            {
+                if (Engagements[i].Active)
+                {
+                    Engagements[i].EngagementTime += deltaTime;
+                    Engagements[i].Dirty = true;
+                }
+
+                if (Engagements[i].Dirty)
+                {
+                    if (snapshot == null)
+                    {
+                        snapshot = NewSnapshot();
+                    }
+                    snapshot.SetProperty(Engagements[i].EngagementName, Engagements[i].EngagementTime);
+                    Engagements[i].Dirty = false;
+                }
             }
 
             /*if (TrackGaze)
@@ -488,6 +523,29 @@ namespace CognitiveVR
                 {
                     ObjectId = new DynamicObjectId(CustomId, MeshName);
                     var manifestEntry = new DynamicObjectManifestEntry(ObjectId.Id, gameObject.name, MeshName);
+
+                    if (MeshName == "vivecontroller")
+                    {
+                        string controllerName = "left";
+                        if (transform == CognitiveVR_Manager.GetController(true) || name.Contains("right"))
+                        {
+                            controllerName = "right";
+                        }
+                        else if (transform == CognitiveVR_Manager.GetController(false) || name.Contains("left"))
+                        {
+                            controllerName = "left";
+                        }
+
+                        if (manifestEntry.Properties == null)
+                        {
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", controllerName } };
+                        }
+                        else
+                        {
+                            manifestEntry.Properties.Add("controller", controllerName);
+                        }
+                    }
+
                     if (!string.IsNullOrEmpty(GroupName))
                     {
                         manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
@@ -569,9 +627,36 @@ namespace CognitiveVR
             lastRotation = _transform.rotation;
         }
 
-        private static DynamicObjectId GetUniqueID(string MeshName)
+        public static DynamicObjectId GetUniqueID(string MeshName)
         {
-            currentUniqueId++;
+            if (!Application.isPlaying)
+            {
+                //in editor. possibly writing manifest for aggregation. get all dynamic objects and add them to objectids
+                foreach (var v in FindObjectsOfType<DynamicObject>())
+                {
+                    if (v.UseCustomId)
+                    {
+                        ObjectIds.Add(new DynamicObjectId(v.CustomId, v.MeshName));
+                    }
+                }
+            }
+
+            DynamicObjectId usedObjectId = null;
+            while (true)
+            {
+                //check each objectid. increment to next if id is found
+                currentUniqueId++;
+
+                usedObjectId = ObjectIds.Find(delegate (DynamicObjectId obj)
+                {
+                    return obj.Id == currentUniqueId + uniqueIdOffset;
+                });
+
+                if (usedObjectId == null)
+                {
+                    break;
+                }
+            }
             return new DynamicObjectId(currentUniqueId + uniqueIdOffset, MeshName);
         }
 
@@ -860,6 +945,42 @@ namespace CognitiveVR
                 Debug.Log("onquit dynamic object");
                 Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
+            }
+        }
+
+        public void BeginEngagement(string engagement = "default engagement")
+        {
+            var type = Engagements.Find(delegate (EngagementType obj)
+            {
+                return obj.EngagementName == engagement;
+            });
+
+            if (type != null)
+            {
+                type.Active = true;
+            }
+            else
+            {
+                Engagements.Add(new EngagementType(engagement));
+            }
+        }
+
+        public void EndEngagement(string engagement = "default engagement")
+        {
+            var type = Engagements.Find(delegate (EngagementType obj)
+            {
+                return obj.EngagementName == engagement;
+            });
+
+            if (type != null)
+            {
+                type.Active = false;
+            }
+            else
+            {
+                var end = new EngagementType(engagement);
+                end.Active = false;
+                Engagements.Add(end);
             }
         }
     }
