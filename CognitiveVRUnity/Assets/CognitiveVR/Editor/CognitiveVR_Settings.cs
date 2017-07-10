@@ -39,7 +39,7 @@ namespace CognitiveVR
             EditorApplication.update -= EditorUpdate;
 
             // Get existing open window or if none, make a new one:
-            Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
+            Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
             Vector2 size = new Vector2(300, 550);
             Instance.minSize = size;
             Instance.maxSize = size;

@@ -79,7 +79,7 @@ namespace CognitiveVR
         private YieldInstruction updateTick;
 
         //video settings
-        public bool FlipVideo;
+        bool FlipVideo = false;
         public string ExternalVideoSource;
         float SendFrameTimeRemaining; //counts down to 0 during update. sends video time if it hasn't been sent lately
         float MaxSendFrameTime = 5;

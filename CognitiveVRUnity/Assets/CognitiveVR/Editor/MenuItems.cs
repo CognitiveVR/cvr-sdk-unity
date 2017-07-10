@@ -13,13 +13,13 @@ namespace CognitiveVR
             Application.OpenURL("http://dashboard.cognitivevr.io");
         }
 
-        [MenuItem("Window/cognitiveVR/Settings Window", priority = 5)]
+        [MenuItem("Window/cognitiveVR/Account Settings Window", priority = 5)]
         static void CognitiveSettingsWindow()
         {
             CognitiveVR_Settings.Init();
         }
 
-        [MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 10)]
+        [MenuItem("Window/cognitiveVR/Preferences Window", priority = 10)]
         static void CognitiveComponentWindow()
         {
             CognitiveVR_ComponentSetup.Init();

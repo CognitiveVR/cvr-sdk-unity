@@ -24,7 +24,7 @@ namespace CognitiveVR
         //[MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 2)]
         public static void Init()
         {
-            CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");
+            CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Preferences");
             window.minSize = new Vector2(500,500);
             window.Show();
 
