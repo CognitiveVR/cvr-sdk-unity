@@ -214,12 +214,12 @@ namespace CognitiveVR
             if (VideoPlayer.isLooping)
             { 
                 //snapshot at end, then snapshot at beginning
-                NewSnapshot().SetProperty("videotime", 0);
+                NewSnapshot().UpdateTransform().SetProperty("videotime", 0);
                 Debug.Log("video player loop point reached to playing=" + VideoPlayer.isPlaying + " at frame " + 0);
             }
             else
             {
-                NewSnapshot().SetProperty("videoplay", false).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+                NewSnapshot().UpdateTransform().SetProperty("videoplay", false).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
                 Debug.Log("stop at loop point. frame " + (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
                 wasPlayingVideo = false;
             }
@@ -293,14 +293,14 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// makes a new snapshot and adds the video's current frame as a property
+        /// makes a new snapshot and adds the video's current frame as a property. also sets the current transform of the object
         /// </summary>
         /// <returns>returns the new snapshot</returns>
         public DynamicObjectSnapshot SendVideoTime()
         {
             SendFrameTimeRemaining = MaxSendFrameTime;
 #if UNITY_5_6_OR_NEWER
-            return NewSnapshot().SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+            return NewSnapshot().UpdateTransform().SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
 #else
             return NewSnapshot();
 #endif
@@ -626,7 +626,7 @@ namespace CognitiveVR
                 SendVideoTime().SetProperty("videoplay", VideoPlayer.isPlaying);
 
                 //NewSnapshot().SetProperty("videoplay", VideoPlayer.isPlaying).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
-                Debug.Log("video player changed to playing=" + VideoPlayer.isPlaying + " at frame " + (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+                //Debug.Log("video player changed to playing=" + VideoPlayer.isPlaying + " at frame " + (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
                 wasPlayingVideo = VideoPlayer.isPlaying;
             }
 #endif
