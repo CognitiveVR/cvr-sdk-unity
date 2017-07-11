@@ -75,6 +75,7 @@ namespace CognitiveVR
         public float SnapshotInterval = 0.1f;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
+        public int VideoSphereDynamicObjectId = 1000;
         public bool TrackPosition = true;
         public bool TrackGazePoint = true;
         public bool TrackGazeDirection = false;

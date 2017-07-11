@@ -9,7 +9,9 @@ public class GazeReticle : MonoBehaviour
     public float Speed = 0.3f;
     public float Distance = 3;
 
+#if CVR_GAZETRACK
     Vector3 LastLookDirection = Vector3.zero;
+#endif //cvr_gazetrack
 
 #if CVR_FOVE
     FoveInterface _foveInstance;
@@ -24,7 +26,7 @@ public class GazeReticle : MonoBehaviour
             return _foveInstance;
         }
     }
-#endif
+#endif //cvr_fove
 
     Transform _transform;
     Transform t

@@ -13,13 +13,13 @@ namespace CognitiveVR
             Application.OpenURL("http://dashboard.cognitivevr.io");
         }
 
-        [MenuItem("Window/cognitiveVR/Settings Window", priority = 5)]
+        [MenuItem("Window/cognitiveVR/Account Settings Window", priority = 5)]
         static void CognitiveSettingsWindow()
         {
             CognitiveVR_Settings.Init();
         }
 
-        [MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 10)]
+        [MenuItem("Window/cognitiveVR/Preferences Window", priority = 10)]
         static void CognitiveComponentWindow()
         {
             CognitiveVR_ComponentSetup.Init();
@@ -80,6 +80,16 @@ namespace CognitiveVR
                 }
                 var dynamic = v.GetComponent<DynamicObject>();
                 if (dynamic == null) { continue; }
+                
+                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+                {
+                    if (common.ToLower() == dynamic.MeshName.ToLower())
+                    {
+                        Debug.Log("don't export common dynamic meshes!");
+                        continue;
+                    } //don't export common meshes!
+                }
+                
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
                     exportedMeshNames.Add(dynamic.MeshName);
@@ -122,6 +132,73 @@ namespace CognitiveVR
             // Return false if no dynamic directory doesn't exist
             return System.IO.Directory.Exists(System.IO.Directory.GetCurrentDirectory() + System.IO.Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + System.IO.Path.DirectorySeparatorChar + "Dynamic");
         }
+
+        //set custom ids on dynamic objects in scene if not already set
+        //custom ids are used for aggregation
+        [MenuItem("Window/cognitiveVR/Update Dynamic Object Manifest", priority = 110)]
+        static void UpdateDynamicObjectManifest()
+        {
+            string objectIdManifest = "{\"objects\":[";
+
+            bool sceneHasDynamics = false;
+
+            //loop through all dynamic objects in scene
+            foreach (var dynamic in GameObject.FindObjectsOfType<DynamicObject>())
+            {
+                sceneHasDynamics = true;
+                //if custom id == 0 || not using custom id
+
+                if (!dynamic.UseCustomMesh)
+                {
+                    dynamic.MeshName = dynamic.CommonMesh.ToString().ToLower();
+                }
+
+                if (dynamic.CustomId == 0 || dynamic.UseCustomId == false)
+                {                    
+                    var customId = DynamicObject.GetUniqueID(dynamic.MeshName);
+                    dynamic.CustomId = customId.Id;
+                    dynamic.UseCustomId = true;
+                    //set custom id
+                }
+                //write json into aggregate manifest
+                objectIdManifest += "{";
+                objectIdManifest += "\"id\":\"" + dynamic.CustomId + "\",";
+                objectIdManifest += "\"mesh\":\"" + dynamic.MeshName + "\",";
+                objectIdManifest += "\"name\":\"" + dynamic.gameObject.name+"\"";
+                objectIdManifest += "},";
+            }
+
+            if (!sceneHasDynamics)
+            {
+                Debug.LogWarning("CognitiveVR cannot upload dynamic object manifest for aggregation - no dynamic objects in scene");
+                return;
+            }
+
+            objectIdManifest = objectIdManifest.Remove(objectIdManifest.Length - 1, 1);
+            objectIdManifest += "]}";
+
+            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            if (settings == null)
+            {
+                Debug.Log("settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                if (string.IsNullOrEmpty(s))
+                {
+                    s = "Unknown Scene";
+                }
+                EditorUtility.DisplayDialog("Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
+                return;
+            }
+
+            Debug.Log("objectIdManifest " + objectIdManifest);
+
+            //upload manifest
+            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(objectIdManifest);
+            manifestRequest = new WWW("sceneexplorer.com/api/objects/"+settings.SceneId+"?version=1", outBytes);
+        }
+
+        static WWW manifestRequest;
+
 
 #if CVR_FOVE
         [MenuItem("Window/cognitiveVR/Add Fove Prefab",priority=60)]

@@ -670,7 +670,7 @@ namespace CognitiveVR
 
             if (meshes.Length + skinnedMeshes.Length == 0)
             {
-                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "Ok");
+                EditorUtility.DisplayDialog("No meshes found!", "Scene has been exported with no models", "Ok");
                 return false;
             }
 
@@ -788,7 +788,7 @@ namespace CognitiveVR
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
-                tImporter.textureType = TextureImporterType.Advanced;
+                tImporter.textureType = TextureImporterType.Default;
 
                 isReadable = tImporter.isReadable;
                 format = tImporter.textureFormat;
@@ -805,7 +805,7 @@ namespace CognitiveVR
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
-                tImporter.textureType = TextureImporterType.Advanced;
+                tImporter.textureType = TextureImporterType.Default;
 
                 tImporter.isReadable = isReadable;
                 tImporter.textureFormat = format;

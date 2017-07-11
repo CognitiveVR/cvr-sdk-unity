@@ -298,7 +298,8 @@ namespace CognitiveVR
 #endif
 
             //this line can be simplified. editor disable groups stack nicely
-            EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath));
+            //EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath));
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath)); //you don't need blender to export empty 360 video scenes
 
             string exportButtonText = "Bake Scene \"" + currentSceneSettings.SceneName +"\"";
 
@@ -321,7 +322,7 @@ namespace CognitiveVR
             }
 
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
-            var exists = Directory.Exists(sceneExportDirectory);
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
 
 
@@ -329,7 +330,7 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
 
-            CognitiveVR_Settings.UserStartupBox("2", exists && Directory.GetFiles(sceneExportDirectory).Length > 0);
+            CognitiveVR_Settings.UserStartupBox("2", SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0);
 
             if (GUILayout.Button(exportContent))
             {
@@ -337,7 +338,7 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
             
-            if (!exists)
+            if (!SceneExportDirExists)
             {
                 uploadButtonContent.tooltip = "Directory doesn't exist! " + sceneExportDirectory;
             }
@@ -346,7 +347,8 @@ namespace CognitiveVR
                 uploadButtonContent.tooltip = "Directory doesn't contain any files " + sceneExportDirectory;
             }
 
-            EditorGUI.BeginDisabledGroup(!exists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
+            //can upload scenes with no models - 360 video projects. don't have to export first
+            //EditorGUI.BeginDisabledGroup(!SceneExportDirExists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
 
             System.DateTime revisionDate = System.DateTime.MinValue;
             revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
@@ -361,7 +363,7 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
-            EditorGUI.EndDisabledGroup();
+            //EditorGUI.EndDisabledGroup();
 
             EditorGUI.EndDisabledGroup();
 
@@ -541,7 +543,7 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(prefs.SavedBlenderPath) || !prefs.SavedBlenderPath.ToLower().EndsWith("blender.exe"))
             {
                 Debug.LogError("Blender.exe is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender.exe\nScene: "+ fullName+" exported to folder but not mesh decimated!");
-                return;
+                //return;
             }
 
             string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
@@ -559,6 +561,11 @@ namespace CognitiveVR
 
             EditorUtility.ClearProgressBar();
 
+            //use case for empty 360 video scenes
+            if (String.IsNullOrEmpty(prefs.SavedBlenderPath))
+            {
+                Debug.LogError("Blender.exe is not found during scene export! Scene is not being decimated");
+            }
 
             ProcessStartInfo processInfo;
 
@@ -634,14 +641,51 @@ namespace CognitiveVR
                 Debug.LogError("scene upload WWW is not null. please wait until your scene has finished uploading before uploading another!");
             }
 
-            if (EditorUtility.DisplayDialog("Upload Scene","Do you want to upload \""+ UploadSceneSettings.SceneName+"\" to your Dashboard?", "Yes", "No"))
+            bool uploadConfirmed = false;
+            string sceneName = UploadSceneSettings.SceneName;
+            string fullName = sceneName + appendName;
+            string[] filePaths = new string[] { };
+
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+
+            if (SceneExportDirExists)
             {
-                string sceneName = UploadSceneSettings.SceneName;
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+            }
 
-                string fullName = sceneName + appendName;
+            //custom confirm upload popup windows
+            if ((!SceneExportDirExists || filePaths.Length <= 1))
+            {
+                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + UploadSceneSettings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
+                {
+                    uploadConfirmed = true;
+                    //create a json.settings file in the directory
+                    string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
 
-                var filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+                    Directory.CreateDirectory(objPath);
 
+                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CustomerID + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+                }
+            }
+            else
+            {
+                if (EditorUtility.DisplayDialog("Upload Scene", "Do you want to upload \"" + UploadSceneSettings.SceneName + "\" to your Dashboard?", "Yes", "No"))
+                {
+                    uploadConfirmed = true;
+                }
+            }
+
+            //after confirmation because uploading an empty scene creates a settings.json file
+            if (Directory.Exists(sceneExportDirectory))
+            {
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+            }
+
+            //display warning that there's nothing to upload
+            if (uploadConfirmed)
+            {
                 string fileList = "Upload Files:\n";
 
                 WWWForm wwwForm = new WWWForm();
@@ -699,6 +743,17 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(sceneUploadWWW.error))
             {
                 Debug.LogError("Scene Upload Error:" + sceneUploadWWW.error);
+
+                sceneUploadWWW.Dispose();
+                sceneUploadWWW = null;
+                UploadSceneSettings = null;
+                return;
+            }
+
+            //response can be <!DOCTYPE html><html lang=en><head><meta charset=utf-8><title>Error</title></head><body><pre>Internal Server Error</pre></body></html>
+            if (sceneUploadWWW.text.Contains("Internal Server Error"))
+            {
+                Debug.LogError("Scene Upload Error:" + sceneUploadWWW.text);
 
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;

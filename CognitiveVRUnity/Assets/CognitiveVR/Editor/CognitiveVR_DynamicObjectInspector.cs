@@ -30,8 +30,15 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
-            //display script on component
-            EditorGUI.BeginDisabledGroup(true);
+            //video
+            var flipVideo = serializedObject.FindProperty("FlipVideo");
+            var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
+#if UNITY_5_6_OR_NEWER
+            var videoPlayer = serializedObject.FindProperty("VideoPlayer");
+#endif
+
+        //display script on component
+        EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
@@ -113,7 +120,18 @@ namespace CognitiveVR
             
             EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
             rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
-            
+
+#if !UNITY_5_6_OR_NEWER
+            GUILayout.Label("Video Settings", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Video Player requires Unity 5.6 or newer!", MessageType.Warning);
+#else
+            GUILayout.Label("Video Settings", EditorStyles.boldLabel);
+
+            EditorGUILayout.PropertyField(videoPlayer, new GUIContent("Video Player"));
+
+            EditorGUILayout.PropertyField(externalVideoSource, new GUIContent("External Video Source", "The URL source of the video"));
+            //EditorGUILayout.PropertyField(flipVideo, new GUIContent("Flip Video Horizontally"));
+#endif
 
             if (GUI.changed)
             {

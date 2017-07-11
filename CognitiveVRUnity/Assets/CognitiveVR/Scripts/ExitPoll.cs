@@ -606,7 +606,10 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+#pragma warning disable 414
+        //http request can be lost unless held in reference until completed
         WWW exitPollResponses;
+#pragma warning restore 414
 
         //the responses of all the questions in the set put together in a string and uploaded somewhere
         //each question is already sent as a transaction

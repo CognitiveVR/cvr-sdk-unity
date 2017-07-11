@@ -420,6 +420,7 @@ namespace CognitiveVR
 
         void OnDestroy()
         {
+            if (!Application.isPlaying) { return; }
             OnDestroyPlayerRecorder();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
@@ -470,7 +471,10 @@ namespace CognitiveVR
 
         IEnumerator SlowQuit()
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(0.1f);
+            if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
+                OnSendData();
+            yield return new WaitForSeconds(1f);
             Application.Quit();
         }
         #endregion
