@@ -788,7 +788,7 @@ namespace CognitiveVR
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
-                tImporter.textureType = TextureImporterType.Default;
+                tImporter.textureType = TextureImporterType.Advanced;
 
                 isReadable = tImporter.isReadable;
                 format = tImporter.textureFormat;
@@ -805,7 +805,7 @@ namespace CognitiveVR
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
-                tImporter.textureType = TextureImporterType.Default;
+                tImporter.textureType = TextureImporterType.Advanced;
 
                 tImporter.isReadable = isReadable;
                 tImporter.textureFormat = format;

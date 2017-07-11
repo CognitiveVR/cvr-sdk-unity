@@ -205,6 +205,7 @@ namespace CognitiveVR
             }
         }
 
+        #if UNITY_5_6_OR_NEWER
         private void VideoPlayer_loopPointReached(UnityEngine.Video.VideoPlayer source)
         {
             Debug.Log("loop point reached");
@@ -233,6 +234,7 @@ namespace CognitiveVR
                 wasBufferingVideo = false;
             }
         }
+#endif
 
         private void CognitiveVR_Manager_InitEvent(Error initError)
         {
@@ -297,7 +299,11 @@ namespace CognitiveVR
         public DynamicObjectSnapshot SendVideoTime()
         {
             SendFrameTimeRemaining = MaxSendFrameTime;
+#if UNITY_5_6_OR_NEWER
             return NewSnapshot().SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+#else
+            return NewSnapshot();
+#endif
         }
 
         //puts outstanding snapshots (from last update) into json

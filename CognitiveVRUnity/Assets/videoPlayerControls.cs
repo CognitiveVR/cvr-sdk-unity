@@ -1,10 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_5_6_OR_NEWER
 using UnityEngine.Video;
+#endif
 
 public class videoPlayerControls : MonoBehaviour {
 
+    #if UNITY_5_6_OR_NEWER
     public VideoPlayer Player;
 
 	// Use this for initialization
@@ -64,4 +67,5 @@ public class videoPlayerControls : MonoBehaviour {
             Player.GetComponent<CognitiveVR.DynamicObject>().SendVideoTime().SetProperty("videospeed", 3f);
         }
     }
+    #endif
 }
