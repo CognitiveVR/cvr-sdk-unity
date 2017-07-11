@@ -80,6 +80,16 @@ namespace CognitiveVR
                 }
                 var dynamic = v.GetComponent<DynamicObject>();
                 if (dynamic == null) { continue; }
+                
+                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+                {
+                    if (common.ToLower() == dynamic.MeshName.ToLower())
+                    {
+                        Debug.Log("don't export common dynamic meshes!");
+                        continue;
+                    } //don't export common meshes!
+                }
+                
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
                     exportedMeshNames.Add(dynamic.MeshName);
@@ -128,7 +138,7 @@ namespace CognitiveVR
         [MenuItem("Window/cognitiveVR/Update Dynamic Object Manifest", priority = 110)]
         static void UpdateDynamicObjectManifest()
         {
-            string objectIdManifest = "{\"Objects\":[";
+            string objectIdManifest = "{\"objects\":[";
 
             bool sceneHasDynamics = false;
 
@@ -137,12 +147,14 @@ namespace CognitiveVR
             {
                 sceneHasDynamics = true;
                 //if custom id == 0 || not using custom id
+
+                if (!dynamic.UseCustomMesh)
+                {
+                    dynamic.MeshName = dynamic.CommonMesh.ToString().ToLower();
+                }
+
                 if (dynamic.CustomId == 0 || dynamic.UseCustomId == false)
                 {                    
-                    if (!dynamic.UseCustomMesh)
-                    {
-                        dynamic.MeshName = dynamic.CommonMesh.ToString().ToLower();
-                    }
                     var customId = DynamicObject.GetUniqueID(dynamic.MeshName);
                     dynamic.CustomId = customId.Id;
                     dynamic.UseCustomId = true;
@@ -150,7 +162,7 @@ namespace CognitiveVR
                 }
                 //write json into aggregate manifest
                 objectIdManifest += "{";
-                objectIdManifest += "\"id\":" + dynamic.CustomId + ",";
+                objectIdManifest += "\"id\":\"" + dynamic.CustomId + "\",";
                 objectIdManifest += "\"mesh\":\"" + dynamic.MeshName + "\",";
                 objectIdManifest += "\"name\":\"" + dynamic.gameObject.name+"\"";
                 objectIdManifest += "},";

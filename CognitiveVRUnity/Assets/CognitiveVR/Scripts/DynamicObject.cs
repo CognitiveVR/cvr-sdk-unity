@@ -411,6 +411,11 @@ namespace CognitiveVR
                 UpdateLastPositions();
             }
 
+            if (Engagements == null)
+            {
+                return;
+            }
+
             for (int i = 0; i< Engagements.Count; i++)
             {
                 if (Engagements[i].Active)
@@ -950,6 +955,10 @@ namespace CognitiveVR
 
         public void BeginEngagement(string engagement = "default engagement")
         {
+            if (Engagements == null)
+            {
+                Engagements = new List<EngagementType>();
+            }
             var type = Engagements.Find(delegate (EngagementType obj)
             {
                 return obj.EngagementName == engagement;
@@ -967,6 +976,10 @@ namespace CognitiveVR
 
         public void EndEngagement(string engagement = "default engagement")
         {
+            if (Engagements == null)
+            {
+                Engagements = new List<EngagementType>();
+            }
             var type = Engagements.Find(delegate (EngagementType obj)
             {
                 return obj.EngagementName == engagement;
