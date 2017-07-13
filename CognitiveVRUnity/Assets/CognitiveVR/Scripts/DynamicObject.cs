@@ -116,7 +116,7 @@ namespace CognitiveVR
         //don't recycle ids between scenes - otherwise ids wont be written into new scene's manifest
         public static void ClearObjectIds()
         {
-            Debug.Log("========================clear object ids");
+            Util.logDebug("========================clear object ids");
             ObjectIds.Clear();
         }
 
@@ -640,18 +640,6 @@ namespace CognitiveVR
 
         public static DynamicObjectId GetUniqueID(string MeshName)
         {
-            if (!Application.isPlaying)
-            {
-                //in editor. possibly writing manifest for aggregation. get all dynamic objects and add them to objectids
-                foreach (var v in FindObjectsOfType<DynamicObject>())
-                {
-                    if (v.UseCustomId)
-                    {
-                        ObjectIds.Add(new DynamicObjectId(v.CustomId, v.MeshName));
-                    }
-                }
-            }
-
             DynamicObjectId usedObjectId = null;
             while (true)
             {

@@ -209,10 +209,43 @@ namespace CognitiveVR
 
             return keyFound;
         }
+
+        public static int GetResponseCode(Dictionary<string, string> headers)
+        {
+            int returnCode = -1;
+            if (headers.ContainsKey("STATUS"))
+            {
+                //Debug.Log(headers["STATUS"]);
+                //HTTP/1.1 200 OK
+                if (int.TryParse(headers["STATUS"].Substring(9).Remove(3),out returnCode))
+                {
+                    return returnCode;
+                }
+            }
+            else
+            {
+                Debug.Log("GetResponseCode could not find a status. Likely url is incorrect");
+            }
+            return returnCode;
+        }
     }
 
     public static class JsonUtil
     {
+        //https://forum.unity3d.com/threads/how-to-load-an-array-with-jsonutility.375735/
+        public static T[] GetJsonArray<T>(string json)
+        {
+            string newJson = "{\"array\":" + json + "}";
+            Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
+            return wrapper.array;
+        }
+
+        [Serializable]
+        private class Wrapper<T>
+        {
+            public T[] array;
+        }
+
         //only used for non-nested builds
         static System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
 

@@ -135,10 +135,10 @@ namespace CognitiveVR
 
         //set custom ids on dynamic objects in scene if not already set
         //custom ids are used for aggregation
-        [MenuItem("Window/cognitiveVR/Update Dynamic Object Manifest", priority = 110)]
+        [MenuItem("Window/cognitiveVR/Update Dynamic Object Manifest...", priority = 110)]
         static void UpdateDynamicObjectManifest()
         {
-            CognitiveVR.CognitiveVR_SceneExportWindow.UploadDynamicObjectManifest();
+            CognitiveVR_ObjectManifestWindow.Init();
         }
 
 

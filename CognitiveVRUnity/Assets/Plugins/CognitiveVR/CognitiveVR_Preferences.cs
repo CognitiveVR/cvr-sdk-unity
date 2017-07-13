@@ -62,7 +62,9 @@ namespace CognitiveVR
         [HideInInspector]
         public string sessionID;
         [HideInInspector]
-        public string fullToken;
+        public string sessionToken;
+        [HideInInspector]
+        public string authToken;
 
         [Header("User")]
         public string UserName;
@@ -139,6 +141,19 @@ namespace CognitiveVR
             return sceneSettings.Find(x => x.ScenePath == scenePath);
         }
 
+        public static SceneSettings FindCurrentScene()
+        {
+            SceneSettings returnSettings = null;
+
+            returnSettings = Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+
+            if (returnSettings == null)
+            {
+                Debug.LogWarning("Can't find SceneSettings for current scene " + UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            }
+
+            return returnSettings;
+        }
 
         /// <summary>
         /// get organization by name. returns null if no organization matches or no organizations are found
