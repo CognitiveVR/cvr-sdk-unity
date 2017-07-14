@@ -258,24 +258,27 @@ namespace CognitiveVR
             EditorStyles.label.wordWrap = true;
             EditorStyles.label.richText = true;
 
+            int titleSize = 175;
+            int contentSize = 125;
+
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("New Dynamics Objects:", GUILayout.Width(175));
-            EditorGUILayout.LabelField("<color=green>+" + GetNewDynamicObjects().Count + "</color>", GUILayout.Width(25));
+            EditorGUILayout.LabelField("New Dynamics Objects:", GUILayout.Width(titleSize));
+            EditorGUILayout.LabelField("<color=green>+" + GetNewDynamicObjects().Count + "</color>", GUILayout.Width(contentSize));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Deleted Dynamics Objects:", GUILayout.Width(175));
-            EditorGUILayout.LabelField("<color=red>-" + GetDeletedObjects().Count + "</color>",GUILayout.Width(25));
+            EditorGUILayout.LabelField("Deleted Dynamics Objects:", GUILayout.Width(titleSize));
+            EditorGUILayout.LabelField("<color=red>-" + GetDeletedObjects().Count + "</color>",GUILayout.Width(contentSize));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Dynamics Objects in scene:", GUILayout.Width(175));
-            EditorGUILayout.LabelField(GetDynamicObjectsInScene().Count.ToString(), GUILayout.Width(25));
+            EditorGUILayout.LabelField("Dynamics Objects in scene:", GUILayout.Width(titleSize));
+            EditorGUILayout.LabelField(GetDynamicObjectsInScene().Count.ToString(), GUILayout.Width(contentSize));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Total Dynamics Objects:", GUILayout.Width(175));
-            EditorGUILayout.LabelField((GetDynamicObjectsInScene().Count + GetDeletedObjects().Count).ToString(), GUILayout.Width(25));
+            EditorGUILayout.LabelField("Total Dynamics Objects:", GUILayout.Width(titleSize));
+            EditorGUILayout.LabelField((GetDynamicObjectsInScene().Count + GetDeletedObjects().Count).ToString(), GUILayout.Width(contentSize));
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(10);
