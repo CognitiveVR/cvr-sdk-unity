@@ -362,10 +362,6 @@ namespace CognitiveVR
                     }
                 }
 
-                //Debug.Log("search " + DynamicObject.ObjectIds.Count + " object ids");
-                //Debug.Log((sphereId==null) + " sphereId is null");
-                //Debug.Log("VideoSphereDynamicObjectId " + CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
-
                 if (sphereId != null)
                 {
                     maxDistance = CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
@@ -419,10 +415,6 @@ namespace CognitiveVR
                     }
                     HasHitDynamic = true;
                 }
-                else
-                {
-                    Debug.Log("=========== no video sphere!");
-                }
             }
         }
 
@@ -431,8 +423,6 @@ namespace CognitiveVR
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender(Vector3 localPos, int objectId = -1)
         {
-            //Debug.Log("TICK POST RENDER HasHitDynamic " + HasHitDynamic);
-
             if (HasHitDynamic) { return; }
 
             PlayerSnapshot snapshot = new PlayerSnapshot();
@@ -513,7 +503,6 @@ namespace CognitiveVR
 
 
             playerSnapshots.Add(snapshot);
-            //Debug.Log("add gaze snapshot");
             if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
             {
                 if (CognitiveVR_Preferences.Instance.TrackGazePoint)
@@ -583,7 +572,6 @@ namespace CognitiveVR
                 Util.logDebug("PlayerRecord SendPlayerGazeSnapshots has no snapshots to send");
                 return;
             }
-            Debug.Log("DEBUG------------------------------SEND SOME GAZEPOINTS");
 
             var sceneSettings = CognitiveVR_Preferences.Instance.FindScene(trackingSceneName);
             if (sceneSettings == null)
@@ -688,15 +676,7 @@ namespace CognitiveVR
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
 
-                    /*if (CognitiveVR_Preferences.Instance.DebugWriteToFile)
-                    {
-                        Debug.LogWarning("Player Recorder writing player data to file!");
-
-                        if (playerSnapshots.Count > 0)
-                            WriteToFile(outBytes, "_GAZE_" + trackingSceneName);
-                    }*/
-
-                    CognitiveVR.Util.logDebug(builder.ToString());
+                    //CognitiveVR.Util.logDebug(builder.ToString());
 
                     StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
                 }

@@ -78,6 +78,7 @@ namespace CognitiveVR
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
 
+#if UNITY_5_6_OR_NEWER
         //video settings
         bool FlipVideo = false;
         public string ExternalVideoSource;
@@ -85,6 +86,7 @@ namespace CognitiveVR
         float MaxSendFrameTime = 5;
         bool wasPlayingVideo = false;
         bool wasBufferingVideo = false;
+#endif
 
         public bool TrackGaze = false;
         float TotalGazeDuration;
@@ -174,17 +176,11 @@ namespace CognitiveVR
                 {
                     if (CognitiveVR_Manager.InitResponse == Error.Success)
                     {
-                        Debug.Log("dynamic object as init success");
                         CognitiveVR_Manager_InitEvent(Error.Success);
                     }
                     else if(CognitiveVR_Manager.InitResponse == Error.NotInitialized)
                     {
-                        Debug.Log("dynamic object listen for init");
                         CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
-                    }
-                    else
-                    {
-                        Debug.Log("dynamic object not registering!");
                     }
                 }
                 MeshName = CommonMesh.ToString().ToLower();
@@ -208,19 +204,16 @@ namespace CognitiveVR
         #if UNITY_5_6_OR_NEWER
         private void VideoPlayer_loopPointReached(UnityEngine.Video.VideoPlayer source)
         {
-            Debug.Log("loop point reached");
             SendVideoTime();
 
             if (VideoPlayer.isLooping)
             { 
                 //snapshot at end, then snapshot at beginning
                 NewSnapshot().UpdateTransform().SetProperty("videotime", 0);
-                Debug.Log("video player loop point reached to playing=" + VideoPlayer.isPlaying + " at frame " + 0);
             }
             else
             {
                 NewSnapshot().UpdateTransform().SetProperty("videoplay", false).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
-                Debug.Log("stop at loop point. frame " + (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
                 wasPlayingVideo = false;
             }
         }
@@ -298,8 +291,8 @@ namespace CognitiveVR
         /// <returns>returns the new snapshot</returns>
         public DynamicObjectSnapshot SendVideoTime()
         {
-            SendFrameTimeRemaining = MaxSendFrameTime;
 #if UNITY_5_6_OR_NEWER
+            SendFrameTimeRemaining = MaxSendFrameTime;
             return NewSnapshot().UpdateTransform().SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
 #else
             return NewSnapshot();
@@ -417,27 +410,31 @@ namespace CognitiveVR
                 UpdateLastPositions();
             }
 
-            if (Engagements == null)
+            if (Engagements != null)
             {
-                return;
-            }
-
-            for (int i = 0; i< Engagements.Count; i++)
-            {
-                if (Engagements[i].Active)
+                for (int i = 0; i < Engagements.Count; i++)
                 {
-                    Engagements[i].EngagementTime += deltaTime;
-                    Engagements[i].Dirty = true;
-                }
-
-                if (Engagements[i].Dirty)
-                {
-                    if (snapshot == null)
+                    if (Engagements[i].Active)
                     {
-                        snapshot = NewSnapshot();
+                        Engagements[i].EngagementTime += deltaTime;
+                        Engagements[i].Dirty = true;
                     }
-                    snapshot.SetProperty(Engagements[i].EngagementName, Engagements[i].EngagementTime);
-                    Engagements[i].Dirty = false;
+
+                    if (Engagements[i].Dirty)
+                    {
+                        if (snapshot == null)
+                        {
+                            snapshot = NewSnapshot().UpdateTransform();
+                            UpdateLastPositions();
+                        }
+                        snapshot.SetProperty(Engagements[i].EngagementName, Engagements[i].EngagementTime);
+                        Engagements[i].Dirty = false;
+
+                        if (Engagements[i].EngagementName == "grab")
+                        {
+                            Debug.LogWarning("update grab engagement");
+                        }
+                    }
                 }
             }
 
@@ -519,11 +516,13 @@ namespace CognitiveVR
                             }
                         }
 
+                        #if UNITY_5_6_OR_NEWER
                         if (!string.IsNullOrEmpty(ExternalVideoSource))
                         {
                             manifestEntry.videoURL = ExternalVideoSource;
                             manifestEntry.videoFlipped = FlipVideo;
                         }
+#endif
 
                         ObjectIds.Add(ObjectId);
                         ObjectManifest.Add(manifestEntry);
@@ -561,15 +560,16 @@ namespace CognitiveVR
                     {
                         manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
                     }
+#if UNITY_5_6_OR_NEWER
                     if (!string.IsNullOrEmpty(ExternalVideoSource))
                     {
                         manifestEntry.videoURL = ExternalVideoSource;
                         manifestEntry.videoFlipped = FlipVideo;
                     }
+#endif
                     ObjectIds.Add(ObjectId);
                     ObjectManifest.Add(manifestEntry);
                     NewObjectManifest.Add(manifestEntry);
-                    Debug.Log("added " + MeshName + " id " + CustomId + " to objectid list");
                 }
 
                 if (IsVideoPlayer)
@@ -626,7 +626,6 @@ namespace CognitiveVR
                 SendVideoTime().SetProperty("videoplay", VideoPlayer.isPlaying);
 
                 //NewSnapshot().SetProperty("videoplay", VideoPlayer.isPlaying).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
-                //Debug.Log("video player changed to playing=" + VideoPlayer.isPlaying + " at frame " + (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
                 wasPlayingVideo = VideoPlayer.isPlaying;
             }
 #endif
@@ -916,7 +915,6 @@ namespace CognitiveVR
                 NewSnapshot().SetEnabled(false);
                 if (TotalGazeDuration > 0)
                 {
-                    Debug.Log("destroy dynamic object");
                     Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
                     TotalGazeDuration = 0;
                 }
@@ -941,7 +939,6 @@ namespace CognitiveVR
         {
             if (TotalGazeDuration > 0)
             {
-                Debug.Log("onquit dynamic object");
                 Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
             }
@@ -1080,8 +1077,6 @@ namespace CognitiveVR
             if (Properties == null)
             {
                 Properties = new Dictionary<string, object>();
-                Properties.Add(key, value);
-                return this;
             }
 
             if (Properties.ContainsKey(key))
@@ -1261,6 +1256,7 @@ namespace CognitiveVR
         }
 
 #if CVR_STEAMVR
+        int Id;
         //TODO if controller is not present at cognitivevrmanager init, it doesn't initialize input tracking
         public void ButtonStateInit(Transform transform)
         {
@@ -1270,12 +1266,10 @@ namespace CognitiveVR
                 bool right = i == 0 ? true : false;
                 if (CognitiveVR_Manager.GetController(right) == null)
                 {
-                    //Debug.LogError("controller is null!");
                     continue;
                 }
                 if (CognitiveVR_Manager.GetController(right) != transform)
                 {
-                    //Debug.LogError("controller is not this!");
                     continue;
                 }
 

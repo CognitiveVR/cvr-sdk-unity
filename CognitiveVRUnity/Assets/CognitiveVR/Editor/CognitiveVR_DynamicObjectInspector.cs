@@ -30,15 +30,15 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
+#if UNITY_5_6_OR_NEWER
             //video
             var flipVideo = serializedObject.FindProperty("FlipVideo");
             var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
-#if UNITY_5_6_OR_NEWER
             var videoPlayer = serializedObject.FindProperty("VideoPlayer");
 #endif
 
-        //display script on component
-        EditorGUI.BeginDisabledGroup(true);
+            //display script on component
+            EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 

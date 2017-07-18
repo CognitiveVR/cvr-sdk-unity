@@ -665,7 +665,7 @@ namespace CognitiveVR
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CustomerID + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CompanyProductName + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
                 }
             }

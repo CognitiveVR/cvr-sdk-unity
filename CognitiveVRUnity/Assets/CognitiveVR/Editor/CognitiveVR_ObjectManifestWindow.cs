@@ -255,6 +255,16 @@ namespace CognitiveVR
                 return;
             }
 
+            if (GUILayout.Button("Print Manifest to Console"))
+            {
+                string manifest = "";
+                foreach (var entry in Manifest.objects)
+                {
+                    manifest += entry.ToString() + "\n";
+                }
+                Debug.Log("Dynamic Object Manifest:\n"+manifest);
+            }
+
             EditorStyles.label.wordWrap = true;
             EditorStyles.label.richText = true;
 
@@ -374,7 +384,6 @@ namespace CognitiveVR
             return ObjectsInManifest;
         }
         
-        //either loaded from disk or response from SE
         void BuildManifest(string json)
         {
             Util.logDebug("Build Manifest from json: " + json);
@@ -382,11 +391,6 @@ namespace CognitiveVR
             var allEntries = JsonUtil.GetJsonArray<AggregationManifest.AggregationManifestEntry>(json);
 
             Debug.Log("Number of Dynamic Objects in current Manifest: " + allEntries.Length);
-
-            /*foreach (var v in allEntries)
-            {
-                Debug.Log(v.ToString());
-            }*/
 
             Manifest = new AggregationManifest();
 

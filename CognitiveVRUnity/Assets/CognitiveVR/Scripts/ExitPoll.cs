@@ -293,7 +293,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
-                Debug.Log("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
+                Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
                 return;
             }
 
@@ -303,7 +303,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("cannot display exitpoll. cognitiveVRManager not present in scene");
+                Util.logDebug("Cannot display exitpoll. cognitiveVRManager not present in scene");
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
@@ -775,7 +775,7 @@ namespace CognitiveVR
             }
             if (prefab == null)
             {
-                Debug.Log("couldn't find prefab " + properties["type"]);
+                Util.logError("couldn't find prefab " + properties["type"]);
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
