@@ -164,8 +164,6 @@ namespace CognitiveVR
 
             TransactionBuilder.Append("}"); //close transaction object
             TransactionBuilder.Append(",");
-
-            Util.logDebug(TransactionBuilder.ToString());
         }
 
         public static void beginTransaction(string category, string timeoutMode, double timeout, string transactionId, Dictionary<string, object> properties, float[] position)

@@ -85,16 +85,16 @@ namespace CognitiveVR
                 {
                     BeginPlayerRecording();
                     CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                    Util.logDebug("PlayerRecorder Init begin recording scene " + sceneSettings.SceneName);
+                    Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
                 {
-                    Util.logDebug("PlayerRecorder Init SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
+                    Util.logDebug("<color=red>PlayerRecorder Init SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording</color>");
                 }
             }
             else
             {
-                Util.logDebug("PlayerRecorder Init couldn't find scene " + sceneName + ". Not recording");
+                Util.logDebug("<color=red>PlayerRecorder Init couldn't find scene " + sceneName + ". Not recording</color>");
             }
             trackingSceneName = SceneManager.GetActiveScene().name;
             rt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
@@ -700,7 +700,7 @@ namespace CognitiveVR
 
             yield return www;
 
-            Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error) + "</color> <color=green>return text: " + www.text + "</color>");
+            Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error+ "</color>") + " <color=green>return text: " + www.text + "</color>");
         }
 
         void OnDestroyPlayerRecorder()

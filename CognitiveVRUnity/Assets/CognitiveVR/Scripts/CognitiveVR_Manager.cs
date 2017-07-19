@@ -177,38 +177,48 @@ namespace CognitiveVR
 
         static void InitializeControllers()
         {
+            //OnEnable order breaks everything. just read the controller variables from controller manager - cannot compare indexes
+
+            SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
+            if (cm == null)
+            {
+                Util.logError("Can't find SteamVR_ControllerManager. Unable to initialize controllers");
+                return;
+            }
+
+            if (controllers[0] == null)
+            {
+                controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false };
+            }
+
             if (controllers[0].id < 0)
             {
-                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
-                if (cm != null)
+                if (cm.left != null)
                 {
-                    if (cm.left != null)
+                    int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
+                    if (controllerIndex > 0)
                     {
-                        int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
-                        if (controllerIndex > 0)
-                        {
-                            controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false, id = controllerIndex };
-                        }
+                        controllers[0].id = controllerIndex;
                     }
                 }
+            }
+
+            if (controllers[1] == null)
+            {
+                controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true };
             }
             if (controllers[1].id < 0)
             {
-                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
-                if (cm != null)
+                if (cm.right != null)
                 {
-                    if (cm.right != null)
+
+                    int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
+                    if (controllerIndex > 0)
                     {
-                        int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
-                        if (controllerIndex > 0)
-                        {
-                            controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true, id = controllerIndex };
-                        }
+                        controllers[1].id = controllerIndex;
                     }
                 }
             }
-
-
         }
 
         public class ControllerInfo
@@ -218,7 +228,7 @@ namespace CognitiveVR
             public int id = -1;
         }
 
-        static ControllerInfo[] controllers = new ControllerInfo[2] { new ControllerInfo(), new ControllerInfo() };
+        static ControllerInfo[] controllers = new ControllerInfo[2];
 
         public static ControllerInfo GetControllerInfo(int deviceID)
         {
@@ -251,7 +261,6 @@ namespace CognitiveVR
         {
 #if CVR_STEAMVR
             InitializeControllers();
-
             if (right == controllers[0].isRight) { return controllers[0].transform; }
             if (right == controllers[1].isRight) { return controllers[1].transform; }
             return null;

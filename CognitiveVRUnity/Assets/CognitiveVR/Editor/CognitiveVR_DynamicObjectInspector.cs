@@ -74,9 +74,9 @@ namespace CognitiveVR
             
             UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
 
-            EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
+            //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
             UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
-            EditorGUI.EndDisabledGroup();
+            //EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
             EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable","If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
@@ -110,7 +110,14 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(syncWithPlayerUpdate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
 
             EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
-            EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
+            if (syncWithPlayerUpdate.boolValue)
+            {
+                EditorGUILayout.FloatField(new GUIContent("Update Rate", "Synced with Player Update.\nThe interval between checking for modified position and rotation"), CognitiveVR_Preferences.Instance.SnapshotInterval);
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
+            }
             updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
             EditorGUI.EndDisabledGroup();
 

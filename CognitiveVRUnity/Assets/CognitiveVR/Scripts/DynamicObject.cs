@@ -103,6 +103,7 @@ namespace CognitiveVR
             public bool Active = true;
             public string EngagementName;
             public float EngagementTime = 0;
+            public int EngagementCount = 1;
 
             public EngagementType(string name)
             {
@@ -186,12 +187,30 @@ namespace CognitiveVR
                 MeshName = CommonMesh.ToString().ToLower();
             }
 
+            DynamicObjectSnapshot enableSnapshot = null;
             if (SnapshotOnEnable)
             {
-                var v = NewSnapshot().UpdateTransform().SetEnabled(true);
-                if (UpdateTicksOnEnable || IsVideoPlayer)
+                enableSnapshot = NewSnapshot().UpdateTransform().SetEnabled(true);
+            }
+
+            if (UpdateTicksOnEnable || IsVideoPlayer)
+            {
+                if (enableSnapshot == null)
                 {
-                    v.SetTick(true);
+                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+                    StopAllCoroutines();
+                    if (SyncWithPlayerUpdate)
+                    {
+                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
+                    }
+                    else
+                    {
+                        StartCoroutine(UpdateTick());
+                    }
+                }
+                else
+                {
+                    enableSnapshot.SetTick(true);
                 }
             }
 
@@ -427,13 +446,9 @@ namespace CognitiveVR
                             snapshot = NewSnapshot().UpdateTransform();
                             UpdateLastPositions();
                         }
-                        snapshot.SetProperty(Engagements[i].EngagementName, Engagements[i].EngagementTime);
+                        snapshot.SetProperty(Engagements[i].EngagementName+ "_time", Engagements[i].EngagementTime);
+                        snapshot.SetProperty(Engagements[i].EngagementName+"_count", Engagements[i].EngagementCount);
                         Engagements[i].Dirty = false;
-
-                        if (Engagements[i].EngagementName == "grab")
-                        {
-                            Debug.LogWarning("update grab engagement");
-                        }
                     }
                 }
             }
@@ -497,11 +512,11 @@ namespace CognitiveVR
                         if (MeshName == "vivecontroller")
                         {
                             string controllerName = "left";
-                            if (transform == CognitiveVR_Manager.GetController(true) || name.Contains("right"))
+                            if (transform == CognitiveVR_Manager.GetController(true))
                             {
                                 controllerName = "right";
                             }
-                            else if (transform == CognitiveVR_Manager.GetController(false) || name.Contains("left"))
+                            else if (transform == CognitiveVR_Manager.GetController(false))
                             {
                                 controllerName = "left";
                             }
@@ -753,9 +768,7 @@ namespace CognitiveVR
 
             string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
 
-            CognitiveVR.Util.logDebug("send dynamic data to " + url);
-            CognitiveVR.Util.logDebug(builder.ToString());
-
+            //CognitiveVR.Util.logDebug(builder.ToString());
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
@@ -944,7 +957,7 @@ namespace CognitiveVR
             }
         }
 
-        public void BeginEngagement(string engagement = "default engagement")
+        public void BeginEngagement(string engagementName = "default engagement")
         {
             if (Engagements == null)
             {
@@ -952,20 +965,21 @@ namespace CognitiveVR
             }
             var type = Engagements.Find(delegate (EngagementType obj)
             {
-                return obj.EngagementName == engagement;
+                return obj.EngagementName == engagementName;
             });
 
             if (type != null)
             {
                 type.Active = true;
+                type.EngagementCount++;
             }
             else
             {
-                Engagements.Add(new EngagementType(engagement));
+                Engagements.Add(new EngagementType(engagementName));
             }
         }
 
-        public void EndEngagement(string engagement = "default engagement")
+        public void EndEngagement(string engagementName = "default engagement")
         {
             if (Engagements == null)
             {
@@ -973,7 +987,7 @@ namespace CognitiveVR
             }
             var type = Engagements.Find(delegate (EngagementType obj)
             {
-                return obj.EngagementName == engagement;
+                return obj.EngagementName == engagementName;
             });
 
             if (type != null)
@@ -982,7 +996,7 @@ namespace CognitiveVR
             }
             else
             {
-                var end = new EngagementType(engagement);
+                var end = new EngagementType(engagementName);
                 end.Active = false;
                 Engagements.Add(end);
             }
@@ -1266,6 +1280,7 @@ namespace CognitiveVR
                 bool right = i == 0 ? true : false;
                 if (CognitiveVR_Manager.GetController(right) == null)
                 {
+                    Util.logDebug("Dynamic Object Controller - Button State Init cannot get "+ (right?"right":"left") + " controller");
                     continue;
                 }
                 if (CognitiveVR_Manager.GetController(right) != transform)
@@ -1277,7 +1292,7 @@ namespace CognitiveVR
 
                 if (controller == null)
                 {
-                    Util.logDebug("Must have a SteamVR_TrackedController component to capture inputs!");
+                    Util.logDebug("------------------Must have a SteamVR_TrackedController component to capture inputs!");
                     continue;
                 }
                 //controller = CognitiveVR_Manager.GetController(right).gameObject.AddComponent<SteamVR_TrackedController>(); //need to have start called and set controllerindex
