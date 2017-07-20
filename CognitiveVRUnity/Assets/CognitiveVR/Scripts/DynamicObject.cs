@@ -96,18 +96,31 @@ namespace CognitiveVR
         //used to append changes in button states to snapshots
         private DynamicObjectButtonStates ButtonStates = null;
 
-        public List<EngagementType> Engagements;
-        public class EngagementType
-        {
-            public bool Dirty;
-            public bool Active = true;
-            public string EngagementName;
-            public float EngagementTime = 0;
-            public int EngagementCount = 1;
+        //engagement name, engagement event. cleared when snapshots sent
+        List<EngagementEvent> DirtyEngagements = null;
 
-            public EngagementType(string name)
+        //engagement name, engagement event
+        List<EngagementEvent> Engagements = null;
+
+        //each engagement event
+        //public List<EngagementEvent> Engagements;
+        public class EngagementEvent
+        {
+            //internal
+            public bool Active = true;
+
+            //written to snapshot
+            public string EngagementType;
+            public int Parent = -1;
+            public float EngagementTime = 0;
+            public int EngagementNumber;
+            //public int EngagementCount = 1; count is figured out by list.count in engagementsDict
+
+            public EngagementEvent(string name, int parent, int engagementNumber)
             {
-                EngagementName = name;
+                EngagementType = name;
+                Parent = parent;
+                EngagementNumber = engagementNumber;
             }
         }
 
@@ -429,36 +442,23 @@ namespace CognitiveVR
                 UpdateLastPositions();
             }
 
-            if (Engagements != null)
+            if (DirtyEngagements != null)
             {
-                for (int i = 0; i < Engagements.Count; i++)
+                if (DirtyEngagements.Count > 0)
                 {
-                    if (Engagements[i].Active)
-                    {
-                        Engagements[i].EngagementTime += deltaTime;
-                        Engagements[i].Dirty = true;
-                    }
-
-                    if (Engagements[i].Dirty)
+                    for (int i = 0; i < DirtyEngagements.Count; i++)
                     {
                         if (snapshot == null)
                         {
                             snapshot = NewSnapshot().UpdateTransform();
                             UpdateLastPositions();
                         }
-                        snapshot.SetProperty(Engagements[i].EngagementName+ "_time", Engagements[i].EngagementTime);
-                        snapshot.SetProperty(Engagements[i].EngagementName+"_count", Engagements[i].EngagementCount);
-                        Engagements[i].Dirty = false;
+                        DirtyEngagements[i].EngagementTime += deltaTime;
                     }
+                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
                 }
+                DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
             }
-
-            /*if (TrackGaze)
-            {
-                if (CognitiveVR_Manager.HasRequestedDynamicGazeRaycast) { return; }
-
-                CognitiveVR_Manager.RequestDynamicObjectGaze();
-            }*/
         }
 
         public DynamicObjectSnapshot NewSnapshot()
@@ -502,7 +502,6 @@ namespace CognitiveVR
                     else
                     {
                         ObjectId = GetUniqueID(MeshName);
-                        //ObjectId = new DynamicObjectId(newId, MeshName);
                         var manifestEntry = new DynamicObjectManifestEntry(ObjectId.Id, gameObject.name, MeshName);
                         if (!string.IsNullOrEmpty(GroupName))
                         {
@@ -531,7 +530,7 @@ namespace CognitiveVR
                             }
                         }
 
-                        #if UNITY_5_6_OR_NEWER
+#if UNITY_5_6_OR_NEWER
                         if (!string.IsNullOrEmpty(ExternalVideoSource))
                         {
                             manifestEntry.videoURL = ExternalVideoSource;
@@ -605,6 +604,15 @@ namespace CognitiveVR
             {
                 snapshot.Buttons = ButtonStates.GetDirtyStates();
             }
+//            if (DirtyEngagements != null)
+//            {
+//                if (DirtyEngagements.Count > 0)
+//                {
+//                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
+//                }
+//                DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
+//            }
+
             if (IsVideoPlayer)
             {
 #if UNITY_5_6_OR_NEWER
@@ -768,7 +776,7 @@ namespace CognitiveVR
 
             string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
 
-            //CognitiveVR.Util.logDebug(builder.ToString());
+            CognitiveVR.Util.logDebug(builder.ToString());
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
@@ -883,6 +891,27 @@ namespace CognitiveVR
                     builder.Append("}");
                 }
             }
+            if (snap.Engagements != null)
+            {
+                if (snap.Engagements.Count > 0)
+                {
+                    builder.Append(",");
+                    builder.Append("\"engagements\":[");
+
+                    for(int i = 0; i<snap.Engagements.Count; i++)
+                    {
+                        builder.Append("{\"engagementtype\":\"" + snap.Engagements[i].EngagementType + "\",");
+                        if (snap.Engagements[i].Parent > -1)
+                        {
+                            builder.Append("\"engagementparent\":" + snap.Engagements[i].Parent + ",");
+                        }
+                        builder.Append("\"engagement_time\":" + snap.Engagements[i].EngagementTime + ",");
+                        builder.Append("\"engagement_count\":" + snap.Engagements[i].EngagementNumber + "},");
+                    }
+                    builder.Remove(builder.Length - 1, 1); //remove last comma
+                    builder.Append("]");
+                }
+            }
 
             builder.Append("}"); //close object snapshot
 
@@ -957,37 +986,52 @@ namespace CognitiveVR
             }
         }
 
-        public void BeginEngagement(string engagementName = "default engagement")
+        /// <summary>
+        /// parentDynamicObjectId is optional but recommended. it will use a dynamic object id to identify what is engaging with this object - likely a controller
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="parentDynamicObjectId"></param>
+        public void BeginEngagement(string engagementName = "default", int parentDynamicObjectId = -1)
         {
+            if (DirtyEngagements == null)
+            {
+                DirtyEngagements = new List<EngagementEvent>();
+            }
             if (Engagements == null)
             {
-                Engagements = new List<EngagementType>();
+                Engagements = new List<EngagementEvent>();
             }
-            var type = Engagements.Find(delegate (EngagementType obj)
+
+            var previousEngagementsOfType = Engagements.FindAll(delegate (EngagementEvent obj)
             {
-                return obj.EngagementName == engagementName;
+                return obj.EngagementType == engagementName;
             });
 
-            if (type != null)
-            {
-                type.Active = true;
-                type.EngagementCount++;
-            }
-            else
-            {
-                Engagements.Add(new EngagementType(engagementName));
-            }
+            EngagementEvent newEngagement = new EngagementEvent(engagementName, parentDynamicObjectId, previousEngagementsOfType.Count+1);
+
+            DirtyEngagements.Add(newEngagement);
+            Engagements.Add(newEngagement);
         }
 
-        public void EndEngagement(string engagementName = "default engagement")
+        /// <summary>
+        /// parentDynamicObjectId is optional. it is used to identify an engagement if there are multiple engagements with the same type occuring
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="parentDynamicObjectId"></param>
+        public void EndEngagement(string engagementName = "default", int parentDynamicObjectId = -1)
         {
+            if (DirtyEngagements == null)
+            {
+                DirtyEngagements = new List<EngagementEvent>();
+            }
             if (Engagements == null)
             {
-                Engagements = new List<EngagementType>();
+                Engagements = new List<EngagementEvent>();
             }
-            var type = Engagements.Find(delegate (EngagementType obj)
+
+            var type = DirtyEngagements.Find(delegate (EngagementEvent obj)
             {
-                return obj.EngagementName == engagementName;
+                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1); ;
             });
 
             if (type != null)
@@ -996,10 +1040,17 @@ namespace CognitiveVR
             }
             else
             {
-                var end = new EngagementType(engagementName);
-                end.Active = false;
-                Engagements.Add(end);
+                var previousEngagementsOfType = Engagements.FindAll(delegate (EngagementEvent obj)
+                {
+                    return obj.EngagementType == engagementName;
+                });
+                EngagementEvent newEngagement = new EngagementEvent(engagementName, parentDynamicObjectId, previousEngagementsOfType.Count + 1);
+                DirtyEngagements.Add(newEngagement);
+                Engagements.Add(newEngagement);
             }
+
+
+            
         }
     }
 
@@ -1009,6 +1060,7 @@ namespace CognitiveVR
         public int Id;
         public Dictionary<string, object> Properties;
         public Dictionary<string, DynamicObjectButtonStates.ButtonState> Buttons;
+        public List<DynamicObject.EngagementEvent> Engagements;
         public float[] Position = new float[3] { 0, 0, 0 };
         public float[] Rotation = new float[4] { 0, 0, 0, 1 };
         public double Timestamp;
@@ -1192,6 +1244,7 @@ namespace CognitiveVR
         }
     }
 
+    //deals with writing new controller inputs into snapshot
     public class DynamicObjectButtonStates
     {
         public class ButtonState

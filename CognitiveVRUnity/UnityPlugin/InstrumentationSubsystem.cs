@@ -2,28 +2,8 @@
 
 namespace CognitiveVR
 {
-    /*public class TransactionSnapshot
-    {
-        public string category;
-        public Dictionary<string, object> properties;
-        public float[] position = new float[3] { 0, 0, 0 };
-        public double timestamp;
-
-        public TransactionSnapshot(string cat, Dictionary<string, object> props, float[] pos, double time)
-        {
-            category = cat;
-            properties = props;
-            position = pos;
-            timestamp = time;
-        }
-    }*/
-
     public static class InstrumentationSubsystem
     {
-        //public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
-        //string builder for 'data'. put into container when 'packaged', then 'sent'
-        
-
         //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
 
