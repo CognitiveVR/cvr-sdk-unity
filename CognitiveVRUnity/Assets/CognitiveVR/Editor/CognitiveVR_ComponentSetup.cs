@@ -118,6 +118,8 @@ namespace CognitiveVR
                 prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
                 prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
 
+                prefs.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Collider Parent", "When capturing gaze on a dynamic object, also search in the collider's parent for the dynamic object component"), prefs.DynamicObjectSearchInParent);
+
                 GUILayout.Space(10);
                 GUILayout.Label("<size=12><b>Batching Data</b></size>");
 

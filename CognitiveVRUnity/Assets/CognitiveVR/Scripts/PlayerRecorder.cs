@@ -386,7 +386,16 @@ namespace CognitiveVR
 
             if (Physics.Raycast(HMD.position, gazeDirection, out hit, maxDistance))
             {
-                var dynamicHit = hit.collider.GetComponent<DynamicObject>();
+                DynamicObject dynamicHit = null;
+                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                {
+                    dynamicHit = hit.collider.GetComponentInParent<DynamicObject>();
+                }
+                else
+                {
+                    dynamicHit = hit.collider.GetComponent<DynamicObject>();
+                }
+
                 if (dynamicHit == null) { return; }
 
                 //pass an objectid into the snapshot properties
