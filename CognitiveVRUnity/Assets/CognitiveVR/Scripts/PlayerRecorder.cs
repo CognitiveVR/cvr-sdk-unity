@@ -703,12 +703,13 @@ namespace CognitiveVR
             Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error+ "</color>") + " <color=green>return text: " + www.text + "</color>");
         }
 
-        void OnDestroyPlayerRecorder()
+        void CleanupPlayerRecorderEvents()
         {
             //unsubscribe events
             //should i set all these events to null?
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
             SendDataEvent -= SendPlayerGazeSnapshots;
+            SendDataEvent -= InstrumentationSubsystem.SendCachedTransactions;
             CognitiveVR_Manager.QuitEvent -= OnSendData;
             SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
 #if CVR_STEAMVR

@@ -353,9 +353,9 @@ namespace CognitiveVR
                 Destroy(gameObject);
                 return;
             } //destroy if there's already another manager
-            if (instance == this)
+            if (instance == this && CoreSubsystem.Initialized)
             {
-                Util.logDebug("CognitiveVR_Manager Initialize instance is this! Skip Initialize");
+                Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
                 return;
             } //skip if this manage has already been initialized
             instance = this;
@@ -427,10 +427,31 @@ namespace CognitiveVR
 #endif
         }
 
+        /// <summary>
+        /// End the cognitivevr session. sends any outstanding data to dashboard and sceneexplorer
+        /// requires calling Initialize to create a new session id and begin recording analytics again
+        /// </summary>
+        public void EndSession()
+        {
+            OnSendData();
+
+            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+
+            Destroy(FindObjectOfType<CognitiveVR_Manager>());
+
+            CoreSubsystem.reset();
+        }
+
         void OnDestroy()
         {
             if (!Application.isPlaying) { return; }
-            OnDestroyPlayerRecorder();
+            CleanupEvents();
+        }
+
+        void CleanupEvents()
+        {
+            CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
 
