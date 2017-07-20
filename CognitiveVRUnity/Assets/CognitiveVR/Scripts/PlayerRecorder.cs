@@ -513,21 +513,29 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        Vector3 calcGazePoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
+                        Vector3 calcGazePoint;
+                        bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
 
-                        if (!float.IsNaN(calcGazePoint.x))
+                        if (!validPoint)
                         {
-                            savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, calcGazePoint));
+                            savedGazeSnapshots.Add(SetFarplaneGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation));
+                        }
+                        else
+                        {
+                            if (!float.IsNaN(calcGazePoint.x))
+                            {
+                                savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, calcGazePoint));
 #if CVR_DEBUG
                             Debug.DrawLine(HMD.position, calcGazePoint, Color.yellow, 5);
                             Debug.DrawRay(calcGazePoint, Vector3.up, Color.green, 5);
                             Debug.DrawRay(calcGazePoint, Vector3.right, Color.red, 5);
                             Debug.DrawRay(calcGazePoint, Vector3.forward, Color.blue, 5);
 #endif
-                        }
-                        else
-                        {
-                            snapshot = null;
+                            }
+                            else
+                            {
+                                snapshot = null;
+                            }
                         }
                     }
                 }
@@ -592,21 +600,31 @@ namespace CognitiveVR
                 {
                     for (int i = 0; i < playerSnapshots.Count; i++)
                     {
-                        Vector3 calcGazePoint = playerSnapshots[i].GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
-                        if (!float.IsNaN(calcGazePoint.x))
+                        Vector3 calcGazePoint;
+                        bool validPoint = playerSnapshots[i].GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
+
+                        if (!validPoint)
                         {
-                            playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
-                            savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", calcGazePoint));
+                            savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace(",GAZE", "");
+                        }
+                        else
+                        {
+                            //Vector3 calcGazePoint = playerSnapshots[i].GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
+                            if (!float.IsNaN(calcGazePoint.x))
+                            {
+                                playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
+                                savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", calcGazePoint));
 #if CVR_DEBUG
                             Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
                             Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
 #endif
-                        }
-                        else
-                        {
-                            playerSnapshots[i] = null;
+                            }
+                            else
+                            {
+                                playerSnapshots[i] = null;
+                            }
                         }
                     }
                 }
@@ -670,8 +688,6 @@ namespace CognitiveVR
                     builder.Append("]");
 
                     builder.Append("}");
-
-
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
@@ -777,6 +793,22 @@ namespace CognitiveVR
             builder.Append(JsonUtil.SetQuat("r", rotation));
             builder.Append(",");
             builder.Append(JsonUtil.SetVector("g", gazepos));
+
+            builder.Append("}");
+
+            return builder.ToString();
+        }
+
+        private static string SetFarplaneGazePoint(double time, Vector3 position, Quaternion rotation)
+        {
+            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
+            builder.Append("{");
+
+            builder.Append(JsonUtil.SetObject("time", time));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetVector("p", position));
+            builder.Append(",");
+            builder.Append(JsonUtil.SetQuat("r", rotation));
 
             builder.Append("}");
 

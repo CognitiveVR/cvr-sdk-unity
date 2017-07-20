@@ -67,11 +67,12 @@ namespace CognitiveVR
 
         /// <summary>
         /// ignores width and height if using gaze tracking from fove/pupil labs
+        /// returns true if it hit a valid point. false if the point is at the farplane
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Vector3 GetGazePoint(int width, int height)
+        public bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint)
         {
 #if CVR_GAZETRACK
             float relativeDepth = 0;
@@ -95,6 +96,12 @@ namespace CognitiveVR
                 relativeDepth = color.r;
             }
 
+            if (relativeDepth > 0.99f)
+            {
+                gazeWorldPoint = Vector3.zero;
+                return false;
+            }
+
             //Debug.Log("relativeDepth " + relativeDepth);
 
             //how does this get the actual depth? missing an argument?
@@ -108,10 +115,10 @@ namespace CognitiveVR
 
             //Debug.Log("gazeWorldPoint " + gazeWorldPoint);
 
-            return gazeWorldPoint;
+            return true;
 #else
             float relativeDepth = 0;
-            Vector3 gazeWorldPoint;
+            //Vector3 gazeWorldPoint;
 
             var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
@@ -125,9 +132,15 @@ namespace CognitiveVR
                 //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
             }
 
+            if (relativeDepth > 0.99f)
+            {
+                gazeWorldPoint = Vector3.zero;
+                return false;
+            }
+
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
             gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["hmdForward"] * actualDistance;
-            return gazeWorldPoint;
+            return true;
 #endif
 
 
