@@ -39,7 +39,7 @@ namespace CognitiveVR
             EditorApplication.update -= EditorUpdate;
 
             // Get existing open window or if none, make a new one:
-            Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Settings");
+            Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
             Vector2 size = new Vector2(300, 550);
             Instance.minSize = size;
             Instance.maxSize = size;
@@ -613,7 +613,7 @@ namespace CognitiveVR
                             {
                                 if (v.Key == "SET-COOKIE")
                                 {
-                                    GetPreferences().fullToken = v.Value;
+                                    GetPreferences().sessionToken = v.Value;
                                     //split semicolons. ignore everything except split[0]
                                     string[] split = v.Value.Split(';');
                                     GetPreferences().sessionID = split[0].Substring(18);
@@ -659,7 +659,7 @@ namespace CognitiveVR
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
-            headers.Add("Cookie", GetPreferences().fullToken);
+            headers.Add("Cookie", GetPreferences().sessionToken);
 
             productName = productName.Replace("\"", "\\\"");
 
@@ -694,6 +694,18 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(NewProductRequest.error))
                 {
+                    var response = Util.GetResponseCode(NewProductRequest.responseHeaders);
+
+                    if (response == 401)
+                    {
+                        //session token not authorized
+                        /*Vector2 size = new Vector2(300, 550);
+                        Instance.minSize = size;
+                        Instance.maxSize = size;
+                        Instance.Show();*/
+                        Instance.Logout();
+                    }
+
                     Debug.LogError("New Product Error: " + NewProductRequest.error);
                 }
                 else if (!string.IsNullOrEmpty(NewProductRequest.text))
@@ -783,6 +795,9 @@ namespace CognitiveVR
             password = string.Empty;
             prefs.SelectedOrganization = new Json.Organization();
             prefs.SelectedProduct = new Json.Product();
+
+            prefs.authToken = string.Empty;
+            prefs.sessionToken = string.Empty;
             //you do not need to stay logged in to keep your customerid for your product.
             AssetDatabase.SaveAssets();
         }
@@ -994,6 +1009,70 @@ namespace CognitiveVR
                 GUILayout.Box(CognitiveVR_Settings.GreyTextColorString + number + "</color>", GUILayout.Width(20));
                 EditorGUI.EndDisabledGroup();
             }
+        }
+
+        public delegate void ResponseHandler(int responseCode);
+        public static event ResponseHandler AuthResponse;
+        public static void OnAuthResponse(int responseCode) { if (AuthResponse != null) { AuthResponse(responseCode); } }
+
+        //auth token
+
+        static WWW authTokenRequest;
+
+        public static void RequestAuthToken(string url)
+        {
+            Util.logDebug("request auth token");
+            var headers = new Dictionary<string, string>();
+            headers.Add("X-HTTP-Method-Override", "POST");
+            headers.Add("Cookie", CognitiveVR.CognitiveVR_Preferences.Instance.sessionToken);
+
+            authTokenRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+            EditorApplication.update += UpdateGetAuthToken;
+        }
+
+        static void UpdateGetAuthToken()
+        {
+            if (!authTokenRequest.isDone) { return; }
+            EditorApplication.update -= UpdateGetAuthToken;
+
+            var responseCode = Util.GetResponseCode(authTokenRequest.responseHeaders);
+
+            Util.logDebug("auth token response code " + responseCode);
+
+            if (responseCode >= 500)
+            {
+                //internal server error
+                OnAuthResponse(responseCode);
+            }
+            else if (responseCode >= 400)
+            {
+                if (responseCode == 401)
+                {
+                    //session token not authorized
+                    Debug.Log("session token not authorized to get auth token. please log in");
+
+                    Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
+                    Vector2 size = new Vector2(300, 550);
+                    Instance.minSize = size;
+                    Instance.maxSize = size;
+                    Instance.Show();
+                    Instance.Logout();
+
+                    OnAuthResponse(responseCode);
+                }
+                else
+                {
+                    //request is wrong
+                    OnAuthResponse(responseCode);
+                }
+            }
+
+            //authTokenRequest.text = {"token":"yJe....hMb"}
+            string authtoken = authTokenRequest.text.Replace("{\"token\":\"", "").Replace("\"}", "");
+            CognitiveVR_Preferences.Instance.authToken = authtoken;
+
+            authTokenRequest = null;
+            OnAuthResponse(responseCode);
         }
     }
 }

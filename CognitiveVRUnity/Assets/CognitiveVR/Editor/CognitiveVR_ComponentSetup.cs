@@ -24,7 +24,7 @@ namespace CognitiveVR
         //[MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 2)]
         public static void Init()
         {
-            CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Tracker Options");
+            CognitiveVR_ComponentSetup window = (CognitiveVR_ComponentSetup)EditorWindow.GetWindow(typeof(CognitiveVR_ComponentSetup),true, "cognitiveVR Preferences");
             window.minSize = new Vector2(500,500);
             window.Show();
 
@@ -117,6 +117,8 @@ namespace CognitiveVR
             {
                 prefs.SnapshotInterval = EditorGUILayout.FloatField(new GUIContent("Interval for Player Snapshots", "Delay interval for:\nArm Length\nHMD Height\nController Collision\nHMD Collision"), prefs.SnapshotInterval);
                 prefs.SnapshotInterval = Mathf.Max(prefs.SnapshotInterval, 0.1f);
+
+                prefs.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Collider Parent", "When capturing gaze on a dynamic object, also search in the collider's parent for the dynamic object component"), prefs.DynamicObjectSearchInParent);
 
                 GUILayout.Space(10);
                 GUILayout.Label("<size=12><b>Batching Data</b></size>");
@@ -368,16 +370,13 @@ namespace CognitiveVR
 
             if (prefs.PlayerDataType == 0) //3d content
             {
-                //EditorGUI.BeginDisabledGroup(true);
-                //GUILayout.Label(new GUIContent("360 Video Sphere Radius"));
-                //EditorGUI.EndDisabledGroup();
             }
             else //video content
             {
-                EditorGUI.BeginDisabledGroup(prefs.PlayerDataType != 1);
                 prefs.GazeDirectionMultiplier = EditorGUILayout.FloatField(new GUIContent("360 Video Sphere Radius", "Multiplies the normalized GazeDirection"), prefs.GazeDirectionMultiplier);
                 prefs.GazeDirectionMultiplier = Mathf.Max(0.1f, prefs.GazeDirectionMultiplier);
-                EditorGUI.EndDisabledGroup();
+                prefs.VideoSphereDynamicObjectId = EditorGUILayout.IntField(new GUIContent("360 Video Sphere Custom ID", "The Custom ID used to identify the video sphere\n-1 means there is no video sphere"), prefs.VideoSphereDynamicObjectId);
+                prefs.VideoSphereDynamicObjectId = Mathf.Clamp(prefs.VideoSphereDynamicObjectId, -1, 1000);
             }
         }
 

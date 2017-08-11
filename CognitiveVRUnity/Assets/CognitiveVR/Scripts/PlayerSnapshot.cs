@@ -33,11 +33,13 @@ namespace CognitiveVR
             //this is the maximum distance - looking directly at the edge of the frustrum
             //float edgeDistance = Mathf.Sqrt(Mathf.Pow(width * 0.5f, 2) + Mathf.Pow(cam.farClipPlane, 2));
 
-
+            //Vector3 position = CognitiveVR_Manager.HMD.position;
 
             //======= gaze (farclip distance)
             //Debug.DrawRay(position, gazeDir * far, Color.red, 0.1f);
             //Debug.DrawRay(position, camForward * far, new Color(0.5f, 0, 0), 0.1f);
+
+            //Debug.Log("get adjusted distance. gaze direction " + gazeDir + "      camera forward  " + camForward);
 
             //dot product to find projection of gaze with direction
             float fwdAmount = Vector3.Dot(gazeDir.normalized * far, camForward.normalized);
@@ -45,25 +47,32 @@ namespace CognitiveVR
             //Debug.DrawRay(fwdPoint, Vector3.up, Color.cyan, 0.1f);
             //Debug.DrawRay(gazeDir * far, Vector3.up, Color.yellow, 0.1f);
 
-
             //======= angle towards farPlane
             //get angle between center and gaze direction. cos(A) = b/c
             float gazeRads = Mathf.Acos(fwdAmount / far);
+            if (Mathf.Approximately(fwdAmount, far))
+            {
+                //when fwdAmount == far, Acos returns NaN for some reason
+                gazeRads = 0;
+            }
+            
             float dist = far * Mathf.Tan(gazeRads);
 
             float hypotenuseDist = Mathf.Sqrt(Mathf.Pow(dist, 2) + Mathf.Pow(far, 2));
 
+            //float missingDist = hypotenuseDist-far;
             //Debug.DrawRay(position + gazeDir * far, gazeDir * missingDist, Color.green, 0.1f); //appended distance to hit farPlane
             return hypotenuseDist;
         }
 
         /// <summary>
         /// ignores width and height if using gaze tracking from fove/pupil labs
+        /// returns true if it hit a valid point. false if the point is at the farplane
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Vector3 GetGazePoint(int width, int height)
+        public bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint)
         {
 #if CVR_GAZETRACK
             float relativeDepth = 0;
@@ -80,23 +89,36 @@ namespace CognitiveVR
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {
-                relativeDepth = color.linear.r;
+                relativeDepth = color.linear.r; //does running the color through this linear multiplier cause NaN issues? GetAdjustedDistance passed in essentially 0?
             }
             else
             {
                 relativeDepth = color.r;
             }
 
+            if (relativeDepth > 0.99f)
+            {
+                gazeWorldPoint = Vector3.zero;
+                return false;
+            }
+
+            //Debug.Log("relativeDepth " + relativeDepth);
+
+            //how does this get the actual depth? missing an argument?
             float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["gazeDirection"], (Vector3)Properties["hmdForward"]);
+            //Debug.Log("actualDepth " + actualDepth); //adjusted for trigonometry
 
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], actualDepth, relativeDepth);
+            //Debug.Log("actualDistance " + actualDistance);
 
             gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
 
-            return gazeWorldPoint;
+            //Debug.Log("gazeWorldPoint " + gazeWorldPoint);
+
+            return true;
 #else
             float relativeDepth = 0;
-            Vector3 gazeWorldPoint;
+            //Vector3 gazeWorldPoint;
 
             var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
@@ -110,9 +132,15 @@ namespace CognitiveVR
                 //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
             }
 
+            if (relativeDepth > 0.99f)
+            {
+                gazeWorldPoint = Vector3.zero;
+                return false;
+            }
+
             float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
             gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["hmdForward"] * actualDistance;
-            return gazeWorldPoint;
+            return true;
 #endif
 
 

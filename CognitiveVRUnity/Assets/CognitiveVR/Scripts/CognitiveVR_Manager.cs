@@ -22,6 +22,12 @@ namespace CognitiveVR
         public static event CoreInitHandler InitEvent;
         public void OnInit(Error initError)
         {
+            Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
+            InitResponse = initError;
+
+            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
+            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
             {
@@ -29,6 +35,12 @@ namespace CognitiveVR
             }
             PlayerRecorderInit(initError);
             if (InitEvent != null) { InitEvent(initError); }
+
+			//required for when restarting cognitiveVR manager
+            /*foreach (var d in InitEvent.GetInvocationList())
+            {
+                InitEvent -= (CoreInitHandler)d;
+            }*/
         }
 
         public delegate void UpdateHandler();
@@ -171,38 +183,48 @@ namespace CognitiveVR
 
         static void InitializeControllers()
         {
+            //OnEnable order breaks everything. just read the controller variables from controller manager - cannot compare indexes
+
+            SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
+            if (cm == null)
+            {
+                Util.logError("Can't find SteamVR_ControllerManager. Unable to initialize controllers");
+                return;
+            }
+
+            if (controllers[0] == null)
+            {
+                controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false };
+            }
+
             if (controllers[0].id < 0)
             {
-                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
-                if (cm != null)
+                if (cm.left != null)
                 {
-                    if (cm.left != null)
+                    int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
+                    if (controllerIndex > 0)
                     {
-                        int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
-                        if (controllerIndex > 0)
-                        {
-                            controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false, id = controllerIndex };
-                        }
+                        controllers[0].id = controllerIndex;
                     }
                 }
+            }
+
+            if (controllers[1] == null)
+            {
+                controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true };
             }
             if (controllers[1].id < 0)
             {
-                SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
-                if (cm != null)
+                if (cm.right != null)
                 {
-                    if (cm.right != null)
+
+                    int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
+                    if (controllerIndex > 0)
                     {
-                        int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
-                        if (controllerIndex > 0)
-                        {
-                            controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true, id = controllerIndex };
-                        }
+                        controllers[1].id = controllerIndex;
                     }
                 }
             }
-
-
         }
 
         public class ControllerInfo
@@ -212,7 +234,7 @@ namespace CognitiveVR
             public int id = -1;
         }
 
-        static ControllerInfo[] controllers = new ControllerInfo[2] { new ControllerInfo(), new ControllerInfo() };
+        static ControllerInfo[] controllers = new ControllerInfo[2];
 
         public static ControllerInfo GetControllerInfo(int deviceID)
         {
@@ -245,7 +267,6 @@ namespace CognitiveVR
         {
 #if CVR_STEAMVR
             InitializeControllers();
-
             if (right == controllers[0].isRight) { return controllers[0].transform; }
             if (right == controllers[1].isRight) { return controllers[1].transform; }
             return null;
@@ -304,6 +325,8 @@ namespace CognitiveVR
         [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
         public bool SaveExitPollOnDevice = false;
 
+        public static Error InitResponse { get; private set; }
+
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
         /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
@@ -315,6 +338,11 @@ namespace CognitiveVR
             return null;
         }
 
+        private void OnEnable()
+        {
+            InitResponse = Error.NotInitialized;
+        }
+
         void Start()
         {
             GameObject.DontDestroyOnLoad(gameObject);
@@ -324,8 +352,18 @@ namespace CognitiveVR
 
         public void Initialize()
         {
-            if (instance != null && instance != this) { Destroy(gameObject); return; } //destroy if there's already another manager
-            if (instance == this) { return; } //skip if this manage has already been initialized
+            Util.logDebug("CognitiveVR_Manager Initialize");
+            if (instance != null && instance != this)
+            {
+                Util.logDebug("CognitiveVR_Manager Initialize instance is not null and not this! Destroy");
+                Destroy(gameObject);
+                return;
+            } //destroy if there's already another manager
+            if (instance == this && CoreSubsystem.Initialized)
+            {
+                Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
+                return;
+            } //skip if this manage has already been initialized
             instance = this;
 
             if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
@@ -345,8 +383,7 @@ namespace CognitiveVR
 
             ExitPoll.Initialize();
 
-            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+            Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.Instance.TransactionSnapshotCount);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
             StartCoroutine(Tick());
@@ -396,9 +433,31 @@ namespace CognitiveVR
 #endif
         }
 
+        /// <summary>
+        /// End the cognitivevr session. sends any outstanding data to dashboard and sceneexplorer
+        /// requires calling Initialize to create a new session id and begin recording analytics again
+        /// </summary>
+        public void EndSession()
+        {
+            OnSendData();
+
+            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+
+            Destroy(FindObjectOfType<CognitiveVR_Manager>());
+
+            CoreSubsystem.reset();
+        }
+
         void OnDestroy()
         {
-            OnDestroyPlayerRecorder();
+            if (!Application.isPlaying) { return; }
+            CleanupEvents();
+        }
+
+        void CleanupEvents()
+        {
+            CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
 
@@ -448,7 +507,10 @@ namespace CognitiveVR
 
         IEnumerator SlowQuit()
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(0.1f);
+            if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
+                OnSendData();
+            yield return new WaitForSeconds(1f);
             Application.Quit();
         }
         #endregion

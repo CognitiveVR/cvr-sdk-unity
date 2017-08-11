@@ -31,6 +31,10 @@ namespace CognitiveVR
         public Text MinLabel;
         public Text MaxLabel;
 
+        public bool UseDynamicSpacing = true;
+        public float MinimumSpacing = 0.01f;
+        public float MaximumSpacing = 0.4f;
+
         //when the user finishes answering the question or finishes closing the window
         //bool _completed = false;
 
@@ -242,6 +246,15 @@ namespace CognitiveVR
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(true);
                     SetIntegerButtonColor(ColorableImages[i], (float)i / totalCount);
+                }
+            }
+
+            if (UseDynamicSpacing)
+            {
+                var group = ContentRoot.GetComponent<HorizontalLayoutGroup>();
+                if (group != null)
+                {
+                    group.spacing = Mathf.Lerp(MaximumSpacing, MinimumSpacing, (maxValue - minValue+1) / 11f);
                 }
             }
         }

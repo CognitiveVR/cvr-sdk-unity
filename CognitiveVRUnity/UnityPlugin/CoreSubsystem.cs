@@ -63,7 +63,7 @@ namespace CognitiveVR
             SimpleHMDName = name;
         }*/
 
-        internal static bool Initialized { get; private set; }
+        public static bool Initialized { get; private set; }
 		internal static int ReqTimeout { get; private set; }
 		internal static string Host { get; private set; }
 
@@ -334,7 +334,7 @@ namespace CognitiveVR
         // Private helper methods //
         // //////////////////////////
 
-        private static void reset()
+        public static void reset()
         {
             // Reset all of the static vars to their default values
             sCustomerId = null;
@@ -343,8 +343,11 @@ namespace CognitiveVR
             ReqTimeout = 0;
             Host = null;
             UserId = null;
+            _sessionId = null;
+            _timestamp = 0;
             DeviceId = null;
             Initialized = false;
+            CurrentSceneId = null;
         }
 
 

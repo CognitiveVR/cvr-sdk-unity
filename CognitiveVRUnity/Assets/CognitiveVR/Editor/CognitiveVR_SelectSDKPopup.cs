@@ -77,7 +77,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_FOVE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Fove VR 0.9.2"))
+            if (GUILayout.Button("Fove VR 1.3.1"))
             {
                 if (option.Contains("CVR_FOVE"))
                 {

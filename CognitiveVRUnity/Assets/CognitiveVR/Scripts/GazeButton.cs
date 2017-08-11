@@ -56,7 +56,7 @@ namespace CognitiveVR
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (OnLook == null) { return; }
 
-            if (Vector3.Dot(CognitiveVR_Manager.HMD.forward, (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
+            if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
             {
                 _currentLookTime += Time.deltaTime;
                 UpdateFillAmount();
@@ -89,6 +89,28 @@ namespace CognitiveVR
         {
             _currentLookTime = 0;
             UpdateFillAmount();
+        }
+
+        public Vector3 GetHMDForward()
+        {
+#if CVR_GAZETRACK
+
+#if CVR_FOVE
+            if (CognitiveVR_Manager.FoveInstance != null)
+            {
+                var ray = CognitiveVR_Manager.FoveInstance.GetGazeRays();
+                return ray.left.direction;
+            }
+#endif
+
+#if CVR_PUPIL
+            //TODO return pupil labs gaze direction
+#endif
+
+            return CognitiveVR_Manager.HMD.forward;
+#else
+            return CognitiveVR_Manager.HMD.forward;
+#endif
         }
 
         void OnDrawGizmos()

@@ -2,28 +2,8 @@
 
 namespace CognitiveVR
 {
-    /*public class TransactionSnapshot
-    {
-        public string category;
-        public Dictionary<string, object> properties;
-        public float[] position = new float[3] { 0, 0, 0 };
-        public double timestamp;
-
-        public TransactionSnapshot(string cat, Dictionary<string, object> props, float[] pos, double time)
-        {
-            category = cat;
-            properties = props;
-            position = pos;
-            timestamp = time;
-        }
-    }*/
-
     public static class InstrumentationSubsystem
     {
-        //public static List<TransactionSnapshot> CachedTransactions = new List<TransactionSnapshot>();
-        //string builder for 'data'. put into container when 'packaged', then 'sent'
-        public static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
-
         //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
 
@@ -42,6 +22,7 @@ namespace CognitiveVR
             Util.cacheCurrencyInfo();
         }
 
+        private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
         /// <summary>
         /// call this when threshold for transactions is reached
@@ -52,13 +33,13 @@ namespace CognitiveVR
         {
             //clear the transaction builder
             builder.Length = 0;
-            TransactionBuilder.Length = 0;
+            
             //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
             string userid = CoreSubsystem.UniqueID;
             double timestamp = CoreSubsystem.SessionTimeStamp;
             string sessionId = CoreSubsystem.SessionID;
 
-            CognitiveVR.Util.logDebug("package transaction event data");
+            CognitiveVR.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
             
             builder.Append("{");
@@ -86,9 +67,13 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            
+            TransactionBuilder.Length = 0;
+
             return builder.ToString();
         }
+
+        internal static UnityEngine.GameObject wwwSendGameObject;
+        internal static WWWSender wwwSender;
 
         internal static void SendTransactionsToSceneExplorer()
         {
@@ -108,9 +93,23 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+            if (wwwSendGameObject == null)
+            {
+                wwwSendGameObject = new UnityEngine.GameObject("CognitiveVR Transaction Helper");
+                UnityEngine.GameObject.DontDestroyOnLoad(wwwSendGameObject);
+                wwwSender = wwwSendGameObject.AddComponent<WWWSender>();
+            }
+            wwwSender.StartCoroutine(GetWWWReponse(url, outBytes, headers));
+            //UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
 
             Util.logDebug("sent transaction event data. clear packaged bundles");
+        }
+
+        public static System.Collections.IEnumerator GetWWWReponse(string url, byte[] outBytes, Dictionary<string,string> headers)
+        {
+            UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
+            yield return www; //have to wait until this is finished, otherwise it can get removed without finishing request?
+            //Util.logDebug("response" + www.text);
         }
 
         private static void SetTransaction(string category, Dictionary<string, object>  properties, float[] position, double timestamp)

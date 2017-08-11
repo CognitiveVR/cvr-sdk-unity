@@ -13,13 +13,13 @@ namespace CognitiveVR
             Application.OpenURL("http://dashboard.cognitivevr.io");
         }
 
-        [MenuItem("Window/cognitiveVR/Settings Window", priority = 5)]
+        [MenuItem("Window/cognitiveVR/Account Settings Window", priority = 5)]
         static void CognitiveSettingsWindow()
         {
             CognitiveVR_Settings.Init();
         }
 
-        [MenuItem("Window/cognitiveVR/Tracker Options Window", priority = 10)]
+        [MenuItem("Window/cognitiveVR/Preferences Window", priority = 10)]
         static void CognitiveComponentWindow()
         {
             CognitiveVR_ComponentSetup.Init();
@@ -80,6 +80,16 @@ namespace CognitiveVR
                 }
                 var dynamic = v.GetComponent<DynamicObject>();
                 if (dynamic == null) { continue; }
+                
+                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+                {
+                    if (common.ToLower() == dynamic.MeshName.ToLower())
+                    {
+                        Debug.Log("don't export common dynamic meshes!");
+                        continue;
+                    } //don't export common meshes!
+                }
+                
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
                     exportedMeshNames.Add(dynamic.MeshName);
@@ -123,35 +133,29 @@ namespace CognitiveVR
             return System.IO.Directory.Exists(System.IO.Directory.GetCurrentDirectory() + System.IO.Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + System.IO.Path.DirectorySeparatorChar + "Dynamic");
         }
 
+        //set custom ids on dynamic objects in scene if not already set
+        //custom ids are used for aggregation
+        [MenuItem("Window/cognitiveVR/Update Dynamic Object Manifest...", priority = 110)]
+        static void UpdateDynamicObjectManifest()
+        {
+            CognitiveVR_ObjectManifestWindow.Init();
+        }
+
+
 #if CVR_FOVE
         [MenuItem("Window/cognitiveVR/Add Fove Prefab",priority=60)]
         static void MakeFovePrefab()
         {
-            GameObject player = new GameObject("Player");
-            GameObject foveInterface = new GameObject("Fove Interface");
-            GameObject cameraboth = new GameObject("Fove Eye Camera both");
-            GameObject cameraright = new GameObject("Fove Eye Camera right");
-            GameObject cameraleft = new GameObject("Fove Eye Camera left");
+            GameObject foveRigGo = new GameObject("Fove Rig");
+            GameObject foveInterfaceGo = new GameObject("Fove Interface");
 
-            foveInterface.transform.SetParent(player.transform);
+            foveInterfaceGo.transform.SetParent(foveRigGo.transform);
 
-            cameraboth.transform.SetParent(foveInterface.transform);
-            cameraright.transform.SetParent(foveInterface.transform);
-            cameraleft.transform.SetParent(foveInterface.transform);
-
-            var tempInterface = foveInterface.AddComponent<FoveInterface>();
-
-            var rightcam = cameraright.AddComponent<FoveEyeCamera>();
-            rightcam.whichEye = Fove.EFVR_Eye.Right;
-            //cameraright.AddComponent<Camera>();
-
-            var leftcam = cameraleft.AddComponent<FoveEyeCamera>();
-            leftcam.whichEye = Fove.EFVR_Eye.Left;
-            //cameraleft.AddComponent<Camera>();
-
-            cameraboth.AddComponent<Camera>();
-            cameraboth.tag = "MainCamera";
-            Undo.RecordObjects(new Object[] { player, foveInterface, cameraboth, cameraright, cameraleft }, "Create Fove Prefab");
+            foveInterfaceGo.AddComponent<FoveInterface>();
+            
+            foveInterfaceGo.AddComponent<Camera>();
+            foveInterfaceGo.tag = "MainCamera";
+            Undo.RecordObjects(new Object[] { foveRigGo, foveInterfaceGo }, "Create Fove Prefab");
             Undo.FlushUndoRecordObjects();
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

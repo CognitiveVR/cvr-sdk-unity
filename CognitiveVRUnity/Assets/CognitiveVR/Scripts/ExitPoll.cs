@@ -293,7 +293,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
-                Debug.Log("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
+                Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
                 return;
             }
 
@@ -303,10 +303,11 @@ namespace CognitiveVR
             }
             else
             {
+                Util.logDebug("Cannot display exitpoll. cognitiveVRManager not present in scene");
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
-                }
+                }                
             }
         }
 
@@ -394,7 +395,11 @@ namespace CognitiveVR
                 for (int i = 0; i < json.questions.Length; i++)
                 {
                     Dictionary<string, string> questionVariables = new Dictionary<string, string>();
-                    questionVariables.Add("title", json.questions[i].title);
+                    if (!questionVariables.ContainsKey("title"))
+                    {
+                        questionVariables.Add("title", json.title);
+                    }
+                    questionVariables.Add("question", json.questions[i].title);
                     questionVariables.Add("type", json.questions[i].type);
                     responseProperties.Add(new ResponseContext(json.questions[i].type));
                     questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
@@ -479,6 +484,7 @@ namespace CognitiveVR
             {
                 EndAction.Invoke();
             }
+            CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
         int currentPanelIndex = 0;
@@ -600,6 +606,11 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
+#pragma warning disable 414
+        //http request can be lost unless held in reference until completed
+        WWW exitPollResponses;
+#pragma warning restore 414
+
         //the responses of all the questions in the set put together in a string and uploaded somewhere
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
@@ -613,7 +624,7 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            new UnityEngine.WWW(url, bytes, headers);
+            exitPollResponses = new UnityEngine.WWW(url, bytes, headers);
 
             //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
         }
@@ -760,12 +771,11 @@ namespace CognitiveVR
                     break;
                 case "BOOLEAN":
                     prefab = ExitPoll.ExitPollTrueFalse;
-
                     break;
             }
             if (prefab == null)
             {
-                Debug.Log("couldn't find prefab " + properties["type"]);
+                Util.logError("couldn't find prefab " + properties["type"]);
                 if (EndAction != null)
                 {
                     EndAction.Invoke();

@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
+    public class WWWSender : UnityEngine.MonoBehaviour
+    {
+
+    }
+
     internal class HttpRequest : MonoBehaviour
     {
         private enum State

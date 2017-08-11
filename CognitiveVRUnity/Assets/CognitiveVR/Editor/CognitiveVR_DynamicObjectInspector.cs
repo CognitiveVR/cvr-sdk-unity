@@ -30,6 +30,13 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
+#if UNITY_5_6_OR_NEWER
+            //video
+            var flipVideo = serializedObject.FindProperty("FlipVideo");
+            var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
+            var videoPlayer = serializedObject.FindProperty("VideoPlayer");
+#endif
+
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
@@ -67,9 +74,9 @@ namespace CognitiveVR
             
             UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
 
-            EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
+            //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
             UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
-            EditorGUI.EndDisabledGroup();
+            //EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
             EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable","If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
@@ -103,7 +110,14 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(syncWithPlayerUpdate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
 
             EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
-            EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
+            if (syncWithPlayerUpdate.boolValue)
+            {
+                EditorGUILayout.FloatField(new GUIContent("Update Rate", "Synced with Player Update.\nThe interval between checking for modified position and rotation"), CognitiveVR_Preferences.Instance.SnapshotInterval);
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
+            }
             updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
             EditorGUI.EndDisabledGroup();
 
@@ -113,7 +127,18 @@ namespace CognitiveVR
             
             EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
             rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
-            
+
+#if !UNITY_5_6_OR_NEWER
+            GUILayout.Label("Video Settings", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Video Player requires Unity 5.6 or newer!", MessageType.Warning);
+#else
+            GUILayout.Label("Video Settings", EditorStyles.boldLabel);
+
+            EditorGUILayout.PropertyField(videoPlayer, new GUIContent("Video Player"));
+
+            EditorGUILayout.PropertyField(externalVideoSource, new GUIContent("External Video Source", "The URL source of the video"));
+            //EditorGUILayout.PropertyField(flipVideo, new GUIContent("Flip Video Horizontally"));
+#endif
 
             if (GUI.changed)
             {

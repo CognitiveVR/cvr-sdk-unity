@@ -32,7 +32,11 @@ namespace CognitiveVR
 
         internal static void SendCachedTransactions()
         {
-            if (savedTransactions.Count == 0) { return; }
+            if (savedTransactions.Count == 0)
+            {
+                Util.logDebug("EventDepot SendCachedTransactions - no saved transactions. do not send");
+                return;
+            }
 
             builder.Length = 0;
             builder.Append("[");

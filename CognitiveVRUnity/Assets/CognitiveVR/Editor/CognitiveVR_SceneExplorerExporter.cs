@@ -670,7 +670,7 @@ namespace CognitiveVR
 
             if (meshes.Length + skinnedMeshes.Length == 0)
             {
-                EditorUtility.DisplayDialog("No meshes found!", "Please add a mesh filter to the scene", "Ok");
+                EditorUtility.DisplayDialog("No meshes found!", "Scene has been exported with no models", "Ok");
                 return false;
             }
 

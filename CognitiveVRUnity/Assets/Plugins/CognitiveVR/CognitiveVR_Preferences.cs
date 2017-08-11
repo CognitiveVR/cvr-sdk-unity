@@ -62,7 +62,9 @@ namespace CognitiveVR
         [HideInInspector]
         public string sessionID;
         [HideInInspector]
-        public string fullToken;
+        public string sessionToken;
+        [HideInInspector]
+        public string authToken;
 
         [Header("User")]
         public string UserName;
@@ -73,8 +75,10 @@ namespace CognitiveVR
         [Header("Player Tracking")]
         //player tracking
         public float SnapshotInterval = 0.1f;
+        public bool DynamicObjectSearchInParent = false;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
+        public int VideoSphereDynamicObjectId = 1000;
         public bool TrackPosition = true;
         public bool TrackGazePoint = true;
         public bool TrackGazeDirection = false;
@@ -138,6 +142,19 @@ namespace CognitiveVR
             return sceneSettings.Find(x => x.ScenePath == scenePath);
         }
 
+        public static SceneSettings FindCurrentScene()
+        {
+            SceneSettings returnSettings = null;
+
+            returnSettings = Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+
+            if (returnSettings == null)
+            {
+                Debug.LogWarning("Can't find SceneSettings for current scene " + UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            }
+
+            return returnSettings;
+        }
 
         /// <summary>
         /// get organization by name. returns null if no organization matches or no organizations are found
