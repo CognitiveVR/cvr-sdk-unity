@@ -35,6 +35,12 @@ namespace CognitiveVR
             }
             PlayerRecorderInit(initError);
             if (InitEvent != null) { InitEvent(initError); }
+
+			//required for when restarting cognitiveVR manager
+            /*foreach (var d in InitEvent.GetInvocationList())
+            {
+                InitEvent -= (CoreInitHandler)d;
+            }*/
         }
 
         public delegate void UpdateHandler();
