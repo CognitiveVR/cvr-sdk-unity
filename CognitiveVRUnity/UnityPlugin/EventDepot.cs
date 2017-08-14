@@ -53,7 +53,9 @@ namespace CognitiveVR
                 builder = builder.Remove(builder.Length - 1, 1);
                 //sendJson = sendJson.Remove(sendJson.Length-1, 1);
             }
-            builder.Append("]]");
+            builder.Append("],\"");
+            builder.Append(CoreSubsystem.SessionID);
+            builder.Append("\"]");
 
             HttpRequest.executeAsync(sUri, sReqTimeout, builder.ToString(), sRequestListener);
             savedTransactions.Clear();
