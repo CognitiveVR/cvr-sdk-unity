@@ -611,7 +611,7 @@ namespace CognitiveVR
 
                             foreach (var v in loginRequest.responseHeaders)
                             {
-                                if (v.Key == "SET-COOKIE")
+                                if (v.Key.ToUpper() == "SET-COOKIE")
                                 {
                                     GetPreferences().sessionToken = v.Value;
                                     //split semicolons. ignore everything except split[0]

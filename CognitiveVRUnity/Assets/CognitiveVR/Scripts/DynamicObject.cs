@@ -54,9 +54,9 @@ namespace CognitiveVR
         public bool UpdateTicksOnEnable = true;
 
         //[Header("Thresholds")]
-        public float PositionThreshold = 0.25f;
+        public float PositionThreshold = 0.0f;
         private Vector3 lastPosition;
-        public float RotationThreshold = 45f;
+        public float RotationThreshold = 0.0f;
         private Quaternion lastRotation;
 
         //[Header("IDs")]
@@ -74,7 +74,7 @@ namespace CognitiveVR
         public string MeshName;
 
         //[Header("Updates")]
-        public bool SyncWithPlayerUpdate = false;
+        public bool SyncWithPlayerUpdate = true;
         public float UpdateRate = 0.5f;
         private YieldInstruction updateTick;
 
@@ -1045,12 +1045,10 @@ namespace CognitiveVR
                     return obj.EngagementType == engagementName;
                 });
                 EngagementEvent newEngagement = new EngagementEvent(engagementName, parentDynamicObjectId, previousEngagementsOfType.Count + 1);
+                newEngagement.Active = false;
                 DirtyEngagements.Add(newEngagement);
                 Engagements.Add(newEngagement);
             }
-
-
-            
         }
     }
 
