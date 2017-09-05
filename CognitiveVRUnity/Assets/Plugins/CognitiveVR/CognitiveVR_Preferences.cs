@@ -75,7 +75,7 @@ namespace CognitiveVR
         [Header("Player Tracking")]
         //player tracking
         public float SnapshotInterval = 0.1f;
-        public bool DynamicObjectSearchInParent = false;
+        public bool DynamicObjectSearchInParent = true;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public int VideoSphereDynamicObjectId = 1000;
