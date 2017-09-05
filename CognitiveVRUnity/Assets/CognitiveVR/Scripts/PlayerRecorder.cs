@@ -399,7 +399,7 @@ namespace CognitiveVR
                 if (dynamicHit == null) { return; }
 
                 //pass an objectid into the snapshot properties
-                instance.TickPostRender(hit.transform.InverseTransformPoint(hit.point), dynamicHit.ObjectId.Id);
+                instance.TickPostRender(hit.transform.InverseTransformPointUnscaled(hit.point), dynamicHit.ObjectId.Id);
 
                 HasHitDynamic = true;
 
@@ -848,3 +848,19 @@ namespace CognitiveVR
 #endregion
     }
 }
+
+//scale points extention menthods
+public static class UnscaledTransformPoints
+ {
+ 	public static Vector3 TransformPointUnscaled(this Transform transform, Vector3 position)
+ 	{
+ 		var localToWorldMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+ 		return localToWorldMatrix.MultiplyPoint3x4(position);
+ 	}
+ 
+ 	public static Vector3 InverseTransformPointUnscaled(this Transform transform, Vector3 position)
+ 	{
+ 		var worldToLocalMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one).inverse;
+ 		return worldToLocalMatrix.MultiplyPoint3x4(position);
+ 	}
+ }
