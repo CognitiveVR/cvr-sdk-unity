@@ -687,6 +687,8 @@ namespace CognitiveVR
                 Renderer r = meshes[i].GetComponent<Renderer>();
                 if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
 
+                if (meshes[i].GetComponentInParent<DynamicObject>()) { continue; }
+
                 exportedObjects++;
                 
                 mcList.Add(new MeshContainer(meshes[i]));
@@ -699,6 +701,8 @@ namespace CognitiveVR
                 if (staticGeoOnly && !skinnedMeshes[i].gameObject.isStatic) { nonstaticObjectCount++; continue; }
                 Renderer r = skinnedMeshes[i].GetComponent<Renderer>();
                 if (r == null || r.bounds.size.magnitude < minSize) { smallObjectCount++; continue; }
+
+                if (skinnedMeshes[i].GetComponentInParent<DynamicObject>()) { continue; }
 
                 exportedObjects++;
                 
