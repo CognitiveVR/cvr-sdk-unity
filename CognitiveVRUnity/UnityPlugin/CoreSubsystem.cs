@@ -28,7 +28,7 @@ namespace CognitiveVR
         {
             get
             {
-                if (string.IsNullOrEmpty(UserId))
+                if (!string.IsNullOrEmpty(UserId))
                 {
                     return UserId;
                 }

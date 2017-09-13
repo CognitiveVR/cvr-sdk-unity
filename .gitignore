@@ -22,7 +22,6 @@ ExportedObj/
 
 # Unity3D generated meta files
 *.pidb.meta
-*.meta
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
@@ -31,3 +30,4 @@ sysinfo.txt
 **/.DS_Store
 .DS_Store
 CognitiveVRUnity/Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset
+CognitiveVRUnity/Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset.meta
