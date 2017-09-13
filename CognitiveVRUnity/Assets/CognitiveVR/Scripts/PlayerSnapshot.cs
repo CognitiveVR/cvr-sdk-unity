@@ -76,7 +76,6 @@ namespace CognitiveVR
         {
 #if CVR_GAZETRACK
             float relativeDepth = 0;
-            Vector3 gazeWorldPoint;
 
             Vector2 snapshotPixel = (Vector2)Properties["hmdGazePoint"];
 
