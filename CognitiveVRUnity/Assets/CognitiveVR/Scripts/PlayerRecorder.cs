@@ -77,7 +77,10 @@ namespace CognitiveVR
 
             string sceneName = SceneManager.GetActiveScene().name;
 
+            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
+
             CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+
             if (sceneSettings != null)
             {
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
@@ -95,7 +98,6 @@ namespace CognitiveVR
             {
                 Util.logDebug("<color=red>PlayerRecorder Init couldn't find scene " + sceneName + ". Not recording</color>");
             }
-            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
             rt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
         }
 
@@ -675,6 +677,10 @@ namespace CognitiveVR
 
 #if CVR_FOVE
                     builder.Append(JsonUtil.SetString("hmdtype", "fove"));
+#elif CVR_ARKIT
+                    builder.Append(JsonUtil.SetString("hmdtype", "arkit"));
+#elif CVR_ARCORE
+                    builder.Append(JsonUtil.SetString("hmdtype", "arcore"));
 #else
                     builder.Append(JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
 #endif

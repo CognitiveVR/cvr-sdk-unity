@@ -149,7 +149,7 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data
+        /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data. can return null
         /// </summary>
         /// <returns></returns>
         public static SceneSettings FindTrackingScene()
@@ -157,11 +157,6 @@ namespace CognitiveVR
             SceneSettings returnSettings = null;
 
             returnSettings = Instance.FindScene(TrackingSceneName);
-
-            if (returnSettings == null)
-            {
-                Debug.LogWarning("Can't find SceneSettings for current scene " + TrackingSceneName);
-            }
 
             return returnSettings;
         }
