@@ -573,6 +573,10 @@ namespace CognitiveVR
             processInfo.UseShellExecute = true;
             processInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + prefs.ExportSettings.ExplorerMinimumFaceCount + " " + prefs.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
 
+#if UNITY_EDITOR_OSX
+            processInfo.UseShellExecute = false;
+#endif
+
             //changing scene while blender is decimating the level will break the file that will be automatically uploaded
             blenderProcess = Process.Start(processInfo);
             BlenderRequest = true;
