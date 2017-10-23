@@ -90,13 +90,28 @@ namespace CognitiveVR
                     dyn = serializedObject.targetObjects[i] as DynamicObject;
                     if (dyn)
                     {
-                        if (!dyn.GetComponent<Collider>())
+                        if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                         {
-                            missingCollider++;
-                            if (missingCollider > 25)
+                            if (!dyn.GetComponentInChildren<Collider>())
                             {
-                                lots = true;
-                                break;
+                                missingCollider++;
+                                if (missingCollider > 25)
+                                {
+                                    lots = true;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!dyn.GetComponent<Collider>())
+                            {
+                                missingCollider++;
+                                if (missingCollider > 25)
+                                {
+                                    lots = true;
+                                    break;
+                                }
                             }
                         }
                     }
