@@ -229,11 +229,23 @@ namespace CognitiveVR
 
             if (TrackGaze)
             {
-                if (GetComponent<Collider>() == null)
+                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {
-                    //util.logwarning doesn't have logs set at OnEnable
-                    Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
+                    if (GetComponentInChildren<Collider>() == null)
+                    {
+                        //util.logwarning doesn't have logs set at OnEnable
+                        Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
+                    }
                 }
+                else
+                {
+                    if (GetComponent<Collider>() == null)
+                    {
+                        Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
+                    }
+
+                }
+
                 CognitiveVR_Manager.QuitEvent += SendGazeDurationOnQuit;
             }
         }
