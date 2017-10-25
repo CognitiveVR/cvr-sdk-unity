@@ -9,7 +9,7 @@ namespace CognitiveVR
     {
         public override Vector2 GetWindowSize()
         {
-            return new Vector2(292, 170);
+            return new Vector2(292, 280);
         }
 
         public override void OnOpen()
@@ -32,6 +32,12 @@ namespace CognitiveVR
 #if CVR_PUPIL
             option.Add("CVR_PUPIL");
 #endif
+#if CVR_ARKIT //apple
+            option.Add("CVR_ARKIT");
+#endif
+#if CVR_ARCORE //google
+            option.Add("CVR_ARCORE");
+#endif
         }
 
         public override void OnClose()
@@ -46,6 +52,27 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.Label("<b>Please Select your VR SDK</b>");
             GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Unity Default"))
+            {
+                if (option.Contains("CVR_DEFAULT"))
+                    option.Remove("CVR_DEFAULT");
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_DEFAULT");
+                }
+            }
+            GUI.color = Color.white;
+
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            GUILayout.Label("VR", GUILayout.Width(20));
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.EndHorizontal();
 
             if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
@@ -112,20 +139,45 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Unity Default VR"))
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            GUILayout.Label("AR",GUILayout.Width(20));
+            GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
+            GUILayout.EndHorizontal();
+
+            if (option.Contains("CVR_ARKIT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Apple ARKit"))
             {
-                if (option.Contains("CVR_DEFAULT"))
-                    option.Remove("CVR_DEFAULT");
+                if (option.Contains("CVR_ARKIT"))
+                {
+                    option.Remove("CVR_ARKIT");
+                }
                 else
                 {
                     if (!Event.current.shift)
                         option.Clear();
-                    option.Add("CVR_DEFAULT");
+                    option.Add("CVR_ARKIT");
                 }
             }
             GUI.color = Color.white;
 
+            if (option.Contains("CVR_ARCORE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Google ARCore"))
+            {
+                if (option.Contains("CVR_ARCORE"))
+                {
+                    option.Remove("CVR_ARCORE");
+                }
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_ARCORE");
+                }
+            }
+            GUI.color = Color.white;
+            
             GUILayout.Space(5);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(5);

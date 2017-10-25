@@ -76,7 +76,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + CognitiveVR.CognitiveVR_Preferences.Instance.authToken);
 
-            var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -122,7 +122,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + CognitiveVR.CognitiveVR_Preferences.Instance.authToken);
 
-            var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -187,7 +187,7 @@ namespace CognitiveVR
 
                     Debug.LogWarning("GetManifestResponse not authorized. Requesting Auth Token");
 
-                    var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+                    var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
                     if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
                     {
                         return;

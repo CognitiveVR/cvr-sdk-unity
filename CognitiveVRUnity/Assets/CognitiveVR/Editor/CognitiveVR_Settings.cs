@@ -442,7 +442,7 @@ namespace CognitiveVR
                 GUILayout.BeginHorizontal();
 
 
-#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
+#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL || CVR_ARKIT || CVR_ARCORE
                 UserStartupBox("4", true);
 #else
                 UserStartupBox("4", false);

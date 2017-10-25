@@ -79,6 +79,57 @@ namespace CognitiveVR
             //EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
+
+            if (trackGaze.boolValue)
+            {
+                DynamicObject dyn = null;
+                int missingCollider = 0;
+                bool lots = false;
+                for (int i = 0;i< serializedObject.targetObjects.Length;i++)
+                {
+                    dyn = serializedObject.targetObjects[i] as DynamicObject;
+                    if (dyn)
+                    {
+                        if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                        {
+                            if (!dyn.GetComponentInChildren<Collider>())
+                            {
+                                missingCollider++;
+                                if (missingCollider > 25)
+                                {
+                                    lots = true;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!dyn.GetComponent<Collider>())
+                            {
+                                missingCollider++;
+                                if (missingCollider > 25)
+                                {
+                                    lots = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (lots)
+                {
+                    EditorGUILayout.HelpBox("Lots of objects requires a collider to Track Gaze!", MessageType.Warning);
+                }
+                else if (missingCollider == 1)
+                {
+                    EditorGUILayout.HelpBox("This object requires a collider to Track Gaze!", MessageType.Warning);
+                }
+                else if (missingCollider > 1)
+                {
+                    EditorGUILayout.HelpBox(missingCollider + " objects requires a collider to Track Gaze!", MessageType.Warning);
+                }
+            }
+
             EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable","If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
 
 

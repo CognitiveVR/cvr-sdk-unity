@@ -309,6 +309,13 @@ namespace CognitiveVR
             cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
             cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
 
+#elif CVR_ARKIT || CVR_ARCORE
+
+            cognitiveManager.AddComponent<CognitiveVR.Components.BatteryLevel>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.ScreenResolution>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Framerate>();
+            cognitiveManager.AddComponent<CognitiveVR.Components.Comfort>();
+
 #elif CVR_FOVE
 
             cognitiveManager.AddComponent<CognitiveVR.Components.HMDCollisionEvent>();

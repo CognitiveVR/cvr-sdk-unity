@@ -142,16 +142,21 @@ namespace CognitiveVR
             return sceneSettings.Find(x => x.ScenePath == scenePath);
         }
 
-        public static SceneSettings FindCurrentScene()
+        public static string TrackingSceneName { get; private set; }
+        public static void SetTrackingSceneName(string sceneName)
+        {
+            TrackingSceneName = sceneName;
+        }
+
+        /// <summary>
+        /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data. can return null
+        /// </summary>
+        /// <returns></returns>
+        public static SceneSettings FindTrackingScene()
         {
             SceneSettings returnSettings = null;
 
-            returnSettings = Instance.FindScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-
-            if (returnSettings == null)
-            {
-                Debug.LogWarning("Can't find SceneSettings for current scene " + UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-            }
+            returnSettings = Instance.FindScene(TrackingSceneName);
 
             return returnSettings;
         }

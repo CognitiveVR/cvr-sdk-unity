@@ -229,6 +229,23 @@ namespace CognitiveVR
 
             if (TrackGaze)
             {
+                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                {
+                    if (GetComponentInChildren<Collider>() == null)
+                    {
+                        //util.logwarning doesn't have logs set at OnEnable
+                        Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
+                    }
+                }
+                else
+                {
+                    if (GetComponent<Collider>() == null)
+                    {
+                        Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
+                    }
+
+                }
+
                 CognitiveVR_Manager.QuitEvent += SendGazeDurationOnQuit;
             }
         }
@@ -334,12 +351,10 @@ namespace CognitiveVR
         //puts outstanding snapshots (from last update) into json
         private static void CognitiveVR_Manager_Update()
         {
-            //TODO check performance on this - how performant is clearing an empty dictionary?
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (sceneSettings == null)
             {
-                CognitiveVR.Util.logDebug("Dynamic Object Update - scene settings are null " + sceneName);
+                CognitiveVR.Util.logDebug("Dynamic Object Update - scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 NewSnapshots.Clear();
                 NewObjectManifest.Clear();
                 savedDynamicManifest.Clear();
@@ -422,7 +437,7 @@ namespace CognitiveVR
         /// <summary>
         /// send a snapshot of the position and rotation if the object has moved beyond its threshold
         /// </summary>
-        public void CheckUpdate(float deltaTime)
+        public void CheckUpdate(float timeSinceLastCheck)
         {
             bool doWrite = false;
             if (Vector3.SqrMagnitude(_transform.position - lastPosition) > Mathf.Pow(PositionThreshold, 2))
@@ -453,7 +468,7 @@ namespace CognitiveVR
                             snapshot = NewSnapshot().UpdateTransform();
                             UpdateLastPositions();
                         }
-                        DirtyEngagements[i].EngagementTime += deltaTime;
+                        DirtyEngagements[i].EngagementTime += timeSinceLastCheck;
                     }
                     snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
                 }
@@ -693,13 +708,12 @@ namespace CognitiveVR
         public static void SendSavedSnapshots()
         {
             if (savedDynamicManifest.Count == 0 && savedDynamicSnapshots.Count == 0) { return; }
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             //redundant? checked when writing snapshots to string
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
             if (sceneSettings == null)
             {
-                CognitiveVR.Util.logDebug("scene settings are null " + sceneName);
+                CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 NewSnapshots.Clear();
                 NewObjectManifest.Clear();
                 savedDynamicManifest.Clear();

@@ -24,8 +24,19 @@ namespace CognitiveVR
 			sLogEnabled = value;
 		}
 
-		// Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
-		public static void logDebug(string msg)
+        public static void logWarning(string msg, UnityEngine.Object context = null)
+        {
+            if (sLogEnabled)
+            {
+                if (context != null)
+                    Debug.LogWarning(LOG_TAG + msg, context);
+                else
+                    Debug.LogWarning(LOG_TAG + msg);
+            }
+        }
+
+        // Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
+        public static void logDebug(string msg)
 		{
 			if (sLogEnabled)
 			{
@@ -82,6 +93,7 @@ namespace CognitiveVR
             if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
             if (rawHMDName.Contains("rift cv1")) { return "rift"; }
             if (rawHMDName.Contains("samsung")) { return "gear"; }
+
             return "unknown";
         }
 
