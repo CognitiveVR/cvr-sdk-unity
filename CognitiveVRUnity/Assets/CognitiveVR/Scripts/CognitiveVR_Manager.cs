@@ -317,7 +317,7 @@ namespace CognitiveVR
         YieldInstruction playerSnapshotInverval;
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
-        public bool EnableLogging = false;
+        public bool EnableLogging = true;
         [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 

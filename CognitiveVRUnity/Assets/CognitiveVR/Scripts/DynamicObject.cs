@@ -437,7 +437,7 @@ namespace CognitiveVR
         /// <summary>
         /// send a snapshot of the position and rotation if the object has moved beyond its threshold
         /// </summary>
-        public void CheckUpdate(float deltaTime)
+        public void CheckUpdate(float timeSinceLastCheck)
         {
             bool doWrite = false;
             if (Vector3.SqrMagnitude(_transform.position - lastPosition) > Mathf.Pow(PositionThreshold, 2))
@@ -468,7 +468,7 @@ namespace CognitiveVR
                             snapshot = NewSnapshot().UpdateTransform();
                             UpdateLastPositions();
                         }
-                        DirtyEngagements[i].EngagementTime += deltaTime;
+                        DirtyEngagements[i].EngagementTime += timeSinceLastCheck;
                     }
                     snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
                 }
