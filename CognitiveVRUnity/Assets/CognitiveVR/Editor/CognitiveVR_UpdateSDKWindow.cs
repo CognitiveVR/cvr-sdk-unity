@@ -28,7 +28,8 @@ namespace CognitiveVR
             GUILayout.Label("Current Version:<b>" + Core.SDK_Version + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
 
-            GUILayout.Label("Changes and fixes", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.Label("Notes", CognitiveVR_Settings.HeaderStyle);
+            GUI.skin.label.wordWrap = true;
             GUILayout.Label(sdkSummary);
 
             GUILayout.FlexibleSpace();
