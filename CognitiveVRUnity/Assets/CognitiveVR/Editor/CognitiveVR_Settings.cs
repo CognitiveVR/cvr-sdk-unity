@@ -28,7 +28,14 @@ namespace CognitiveVR
             }
         }
 
-        static string SdkVersionUrl = "https://s3.amazonaws.com/cvr-test/sdkversion.txt";
+        public class ReleaseInfo
+        {
+            public string tag_name;
+            public string body;
+            public string created_at;
+        }
+
+        static string SdkVersionUrl = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
 
         static System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
@@ -754,12 +761,10 @@ namespace CognitiveVR
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
                 {
-                    //TODO check that the text is in the right format
+                    var info = JsonUtility.FromJson<ReleaseInfo>(checkForUpdatesRequest.text);
 
-                    string[] split = checkForUpdatesRequest.text.Split('|');
-
-                    var version = split[0];
-                    string summary = split[1];
+                    var version = info.tag_name;
+                    string summary = info.body;
 
                     if (!string.IsNullOrEmpty(version))
                     {

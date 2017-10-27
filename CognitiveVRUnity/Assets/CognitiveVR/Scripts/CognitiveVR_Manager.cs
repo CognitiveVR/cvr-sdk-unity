@@ -25,6 +25,8 @@ namespace CognitiveVR
             Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
             InitResponse = initError;
 
+            OutstandingInitRequest = false;
+
             double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
             Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
 
@@ -326,6 +328,7 @@ namespace CognitiveVR
         public bool SaveExitPollOnDevice = false;
 
         public static Error InitResponse { get; private set; }
+        bool OutstandingInitRequest = false;
 
         /// <summary>
         /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
@@ -341,6 +344,7 @@ namespace CognitiveVR
         private void OnEnable()
         {
             InitResponse = Error.NotInitialized;
+            instance = this;
         }
 
         void Start()
@@ -350,7 +354,13 @@ namespace CognitiveVR
                 Initialize();
         }
 
-        public void Initialize()
+        public void Initialize(string userName, Dictionary<string,object> userProperties = null)
+        {
+            var user = EntityInfo.createUserInfo(userName, userProperties);
+            Initialize(user);
+        }
+
+        public void Initialize(EntityInfo user = null)
         {
             Util.logDebug("CognitiveVR_Manager Initialize");
             if (instance != null && instance != this)
@@ -364,22 +374,32 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
                 return;
             } //skip if this manage has already been initialized
-            instance = this;
 
             if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
             {
                 if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
                 return;
             }
+            if (OutstandingInitRequest)
+            {
+                Util.logDebug("CognitiveVR_Manager Initialize already called. Waiting for response");
+                return;
+            }
+
+            EntityInfo initializeUser = user;
+            if (initializeUser == null)
+            {
+                initializeUser = GetUniqueEntityID();
+            }
 
             CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
             (
                 customerId: CognitiveVR_Preferences.Instance.CustomerID,
                 logEnabled: EnableLogging,
-                userInfo: GetUniqueEntityID()
-
+                userInfo: initializeUser
             );
             CognitiveVR.Core.init(initParams, OnInit);
+            OutstandingInitRequest = true;
 
             ExitPoll.Initialize();
 
