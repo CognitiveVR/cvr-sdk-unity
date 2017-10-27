@@ -354,7 +354,7 @@ namespace CognitiveVR
                 Initialize();
         }
 
-        public void Initialize(string userName, Dictionary<string,object> userProperties)
+        public void Initialize(string userName, Dictionary<string,object> userProperties = null)
         {
             var user = EntityInfo.createUserInfo(userName, userProperties);
             Initialize(user);
