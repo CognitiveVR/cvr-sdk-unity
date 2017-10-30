@@ -5,6 +5,12 @@ using System;
 
 namespace CognitiveVR
 {
+    public enum ReleaseType
+    {
+        Test,
+        Prod
+    }
+
     public class CognitiveVR_Preferences : ScriptableObject
     {
         static CognitiveVR_Preferences instance;
@@ -41,36 +47,39 @@ namespace CognitiveVR
             }
         }
 
-        public string CustomerID = "";
-
         /// <summary>
-        /// companyname1234-productname
+        /// companyname1234-productname. used in sceneexportwindow
         /// </summary>
-        public string CompanyProductName
+        public string CompanyProduct = "";
+
+        [System.NonSerialized]
+        private string customerid = "";
+        public string CustomerID
         {
             get
             {
-                string customerid = CustomerID;
-                if (customerid.EndsWith("-test") || customerid.EndsWith("-prod"))
+                if (customerid.Length < 6) //ie, -test or -prod
                 {
-                    customerid = customerid.Substring(0, customerid.Length - 5);
+                    customerid = CompanyProduct + "-" + ReleaseType.ToString().ToLower();
                 }
                 return customerid;
             }
         }
 
-        [HideInInspector]
-        public string sessionID;
-        [HideInInspector]
-        public string sessionToken;
-        [HideInInspector]
-        public string authToken;
+        public bool IsCustomerIDValid
+        {
+            get
+            {
+                return CustomerID.Length > 5;
+            }
+        }
 
-        [Header("User")]
-        public string UserName;
-        public CognitiveVR.Json.UserData UserData;
-        public Json.Organization SelectedOrganization;
-        public Json.Product SelectedProduct;
+        public ReleaseType ReleaseType;
+
+
+        //used to display dummy dropdowns on account settings window
+        public string OrgName;
+        public string ProductName;
 
         [Header("Player Tracking")]
         //player tracking
@@ -87,19 +96,6 @@ namespace CognitiveVR
 
         [Header("Send Data")]
         public bool DebugWriteToFile = false;
-
-        //what is the cost of writing strings all the time?
-
-        //should be able to write json realtime
-        //should be able to save snapshots and write json on send
-        //should be able to 
-
-        //i have a powerful computer and i can do realtime stuff
-        //i can control my sessions and i can send data at the end
-
-        //gaze real time y/n
-        //json write dynamics realtime y/n
-        //
 
         public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
         public int GazeSnapshotCount = 64;
@@ -126,9 +122,6 @@ namespace CognitiveVR
         public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 2, ExplorerMaximumFaceCount = 1000, ExplorerMinimumFaceCount = 20, TextureQuality = 8 };
         public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 1, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 100, TextureQuality = 4 };
         public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 400, TextureQuality = 2 };
-
-
-
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
@@ -159,29 +152,6 @@ namespace CognitiveVR
             returnSettings = Instance.FindScene(TrackingSceneName);
 
             return returnSettings;
-        }
-
-        /// <summary>
-        /// get organization by name. returns null if no organization matches or no organizations are found
-        /// </summary>
-        /// <param name="organizationName"></param>
-        /// <returns></returns>
-        public Json.Organization GetOrganization(string organizationName)
-        {
-            for (int i = 0; i < UserData.organizations.Length; i++)
-            {
-                if (UserData.organizations[i].name == organizationName) { return UserData.organizations[i]; }
-            }
-            return null;
-        }
-
-        public Json.Product GetProduct(string productName)
-        {
-            for (int i = 0; i < UserData.products.Length; i++)
-            {
-                if (UserData.products[i].name == productName) { return UserData.products[i]; }
-            }
-            return null;
         }
 
         [Serializable]

@@ -299,20 +299,20 @@ namespace CognitiveVR
 
             //this line can be simplified. editor disable groups stack nicely
             //EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath));
-            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath)); //you don't need blender to export empty 360 video scenes
+            EditorGUI.BeginDisabledGroup(!prefs.IsCustomerIDValid || string.IsNullOrEmpty(currentSceneSettings.ScenePath)); //you don't need blender to export empty 360 video scenes
 
             string exportButtonText = "Bake Scene \"" + currentSceneSettings.SceneName +"\"";
 
             GUIContent exportContent = new GUIContent(exportButtonText, "Exports the scene to Blender and reduces polygons. This also exports required textures at a reduced resolution");
 
-            if (string.IsNullOrEmpty(prefs.CustomerID))
+            if (!prefs.IsCustomerIDValid)
             {
                 exportContent.tooltip = "You must have a valid CustomerID to export a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
             }
 
 
             var uploadButtonContent = new GUIContent("Upload baked \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
-            if (string.IsNullOrEmpty(prefs.CustomerID))
+            if (!prefs.IsCustomerIDValid)
             {
                 uploadButtonContent.tooltip = "You must have a valid CustomerID to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
             }
@@ -334,7 +334,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button(exportContent))
             {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProductName,prefs.ExportSettings.DiffuseTextureName);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProduct,prefs.ExportSettings.DiffuseTextureName);
             }
             GUILayout.EndHorizontal();
             
@@ -669,7 +669,7 @@ namespace CognitiveVR
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CompanyProductName + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CompanyProduct + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
                 }
             }
@@ -790,6 +790,8 @@ namespace CognitiveVR
 
         public static void UploadDynamicObjects()
         {
+            
+
             string fileList = "Upload Files:\n";
 
             var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);

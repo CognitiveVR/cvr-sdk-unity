@@ -74,7 +74,7 @@ namespace CognitiveVR
         {
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "GET");
-            headers.Add("Authorization", "Bearer " + CognitiveVR.CognitiveVR_Preferences.Instance.authToken);
+            headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
             var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
@@ -120,7 +120,7 @@ namespace CognitiveVR
         {
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "GET");
-            headers.Add("Authorization", "Bearer " + CognitiveVR.CognitiveVR_Preferences.Instance.authToken);
+            headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
             var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null

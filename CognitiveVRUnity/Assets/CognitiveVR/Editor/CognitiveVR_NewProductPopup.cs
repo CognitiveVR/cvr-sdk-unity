@@ -15,11 +15,12 @@ namespace CognitiveVR
 
         public override void OnGUI(Rect rect)
         {           
+            
             GUILayout.Label("New Product", EditorStyles.boldLabel);
-
-            if (CognitiveVR_Preferences.Instance.UserData.organizations.Length > 1)
+            
+            if (CognitiveVR_Settings.Instance.UserData.organizations.Length > 1)
             {
-                GUILayout.Label("Current Organization: " + CognitiveVR_Preferences.Instance.SelectedOrganization.name);
+                GUILayout.Label("Current Organization: " + CognitiveVR_Settings.Instance.SelectedOrganization.name);
             }
 
             productName = CognitiveVR_Settings.GhostTextField("MyProductName", "", productName);
@@ -49,6 +50,7 @@ namespace CognitiveVR
             }
 
             GUILayout.EndHorizontal();
+            
         }
         
         public void RequestNewProduct()

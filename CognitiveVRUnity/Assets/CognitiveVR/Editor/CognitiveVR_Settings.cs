@@ -15,6 +15,11 @@ namespace CognitiveVR
 
         public static CognitiveVR_Settings Instance;
 
+        public string UserName;
+        public CognitiveVR.Json.UserData UserData;
+        public Json.Organization SelectedOrganization;
+        public Json.Product SelectedProduct;
+
         /// <summary>
         /// used for 'step' box text
         /// </summary>
@@ -71,7 +76,6 @@ namespace CognitiveVR
 
         static void EditorUpdate()
         {
-
             //HACK there is a bug with serializing the cognitivevr_preferences file
             //this will check if the cognitivevr file exists but cannot be loaded - if that is the case, it will recompile the scripts which will fix this
 
@@ -103,10 +107,6 @@ namespace CognitiveVR
             {
                 displaySettings = false;
             }
-
-/*#if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL
-            displaySettings = false;
-#endif*/
 
             EditorPrefs.SetBool("CognitiveHasShownInit", true);
 
@@ -141,18 +141,13 @@ namespace CognitiveVR
             {
                 if (System.DateTime.UtcNow > remindDate)
                 {
-                    //Debug.Log("System.DateTime.UtcNow > cvr_updateRemindDate");
                     EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                     CheckForUpdates();
                 }
             }
             else
             {
-                //Debug.Log("CognitiveVR_Settings Failed to parse cvr_updateRemindDate " + EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"));
-                //Debug.Log(EditorPrefs.GetString("cvr_updateRemindDate", "NO DATE"));
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                //Debug.Log(EditorPrefs.GetString("cvr_updateRemindDate", "NO DATE"));
-                //CheckForUpdates();
             }
 
             EditorApplication.update -= EditorUpdate;
@@ -177,10 +172,8 @@ namespace CognitiveVR
         static int productIndex = 0; //used in dropdown menu
         static int organizationIndex = 0; //used in dropdown menu
         string password;
-        Rect productRect;
         Rect sdkRect;
-
-        int testprodSelection = -1;
+        Rect productRect;
 
         public void OnGUI()
         {
@@ -190,16 +183,8 @@ namespace CognitiveVR
 
             CognitiveVR.CognitiveVR_Preferences prefs = GetPreferences();
 
-            if (prefs.SelectedOrganization == null) { prefs.SelectedOrganization = new Json.Organization(); }
-            if (prefs.SelectedProduct == null) { prefs.SelectedProduct = new Json.Product(); }
-
-            if (testprodSelection == -1)
-            {
-                if (prefs.CustomerID.EndsWith("-prod"))
-                    testprodSelection = 1;
-                if (prefs.CustomerID.EndsWith("-test"))
-                    testprodSelection = 0;
-            }
+            if (SelectedOrganization == null) { SelectedOrganization = new Json.Organization(); }
+            if (SelectedProduct == null) { SelectedProduct = new Json.Product(); }
 
             //LOGO
             var resourcePath = GetResourcePath();
@@ -218,32 +203,20 @@ namespace CognitiveVR
             //Authenticate
             //=========================
 
-
-
             GUILayout.BeginHorizontal();
-
             UserStartupBox("1", IsUserLoggedIn());
-
-
             GUILayout.FlexibleSpace();
-
             GUILayout.Label("<size=14><b>Authenticate</b></size>");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             EditorGUI.BeginDisabledGroup(IsUserLoggedIn());
-
-            prefs.UserName = GhostTextField("name@email.com", "", prefs.UserName);
-
+            UserName = GhostTextField("name@email.com", "", UserName);
             if (Event.current.character == '\n' && Event.current.type == EventType.KeyDown)
             {
-                RequestLogin(prefs.UserName, password);
+                RequestLogin(UserName, password);
             }
-
             password = GhostPasswordField("password", "", password);
-
-
-
             EditorGUI.EndDisabledGroup();
 
             if (IsUserLoggedIn())
@@ -257,28 +230,8 @@ namespace CognitiveVR
             {
                 if (GUILayout.Button("Login"))
                 {
-                    RequestLogin(prefs.UserName, password);
+                    RequestLogin(UserName, password);
                 }
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
-                if (EditorGUIUtility.isProSkin)
-                {
-                    GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
-                    s.normal.textColor = new Color(0.6f, 0.6f, 1);
-                    if (GUILayout.Button("Create Account", s))
-                        Application.OpenURL("https://dashboard.cognitivevr.io/#/login");
-                }
-                else
-                {
-                    GUIStyle s = new GUIStyle(EditorStyles.whiteLabel);
-                    s.normal.textColor = Color.blue;
-                    if (GUILayout.Button("Create Account", s))
-                        Application.OpenURL("https://dashboard.cognitivevr.io/#/login");
-                }
-
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
             }
 
             GUILayout.Space(10);
@@ -289,146 +242,193 @@ namespace CognitiveVR
             //=========================
             //Select organization
             //=========================
-            if (IsUserLoggedIn())
+            if (IsUserLoggedIn() || prefs.IsCustomerIDValid)
             {
-                EditorGUI.BeginDisabledGroup(!IsUserLoggedIn());
-
-                EditorGUILayout.BeginHorizontal();
-
-                UserStartupBox("2", !string.IsNullOrEmpty(prefs.CustomerID) || (prefs.SelectedOrganization != null && !string.IsNullOrEmpty(prefs.SelectedOrganization.name)));
-
+                GUILayout.BeginHorizontal();
+                UserStartupBox("2", prefs.IsCustomerIDValid);
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("Select Organization", CognitiveVR_Settings.HeaderStyle);
+                GUILayout.Label("<size=14><b>Select Product</b></size>");
                 GUILayout.FlexibleSpace();
-                EditorGUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();
 
-                string lastOrganization = prefs.SelectedOrganization.name; //used to check if organizations changed. for displaying products
-                if (!string.IsNullOrEmpty(prefs.SelectedOrganization.name))
+                if (OrganizationsCached())
                 {
-                    for (int i = 0; i < prefs.UserData.organizations.Length; i++)
+                    string lastOrganization = prefs.OrgName; //used to check if organizations changed. for displaying products
+
+                    //=========================
+                    //select organization
+                    //=========================
+
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("Organization", GUILayout.Width(80));
+                    
+                    if (!string.IsNullOrEmpty(SelectedOrganization.name))
                     {
-                        if (prefs.UserData.organizations[i].name == prefs.SelectedOrganization.name)
+                        for (int i = 0; i < UserData.organizations.Length; i++)
                         {
-                            organizationIndex = i;
-                            break;
-                        }
-                    }
-                }
-
-                string[] organizations = GetUserOrganizations();
-                if (organizations.Length <= 0 && IsUserLoggedIn())
-                    GUILayout.Label("No Organizations Exist!", new GUIStyle(EditorStyles.popup));
-                else
-                    organizationIndex = EditorGUILayout.Popup(organizationIndex, organizations);
-
-
-                if (organizations.Length > 0)
-                {
-                    //TODO fix out of range when logging in/out from account with multiple orgs
-                    try
-                    {
-                        prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[organizationIndex]);
-                    }
-                    catch
-                    {
-                        organizationIndex = 0;
-                        prefs.SelectedOrganization = GetPreferences().GetOrganization(organizations[0]);
-                    }
-                }
-
-                //=========================
-                //select product
-                //=========================
-
-                EditorGUILayout.BeginHorizontal();
-
-                UserStartupBox("3", !string.IsNullOrEmpty(prefs.CustomerID) || (prefs.SelectedProduct != null && !string.IsNullOrEmpty(prefs.SelectedProduct.name)));
-
-                GUILayout.FlexibleSpace();
-                GUILayout.Label("Select Product", CognitiveVR_Settings.HeaderStyle);
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.EndHorizontal();
-
-
-
-                string organizationName = "";
-                if (organizations.Length > 0)
-                    organizationName = organizations[organizationIndex];
-
-                string[] products = GetVRProductNames(organizationName);
-
-                if (lastOrganization != prefs.SelectedOrganization.name)
-                {
-                    //ie, changed organization
-                    prefs.SelectedProduct = null;
-                    productIndex = 0;
-                }
-                else
-                {
-                    if (prefs.SelectedProduct != null && !string.IsNullOrEmpty(prefs.SelectedProduct.name))
-                    {
-                        for (int i = 0; i < products.Length; i++)
-                        {
-                            if (products[i] == prefs.SelectedProduct.name)
+                            if (UserData.organizations[i].name == SelectedOrganization.name)
                             {
-                                productIndex = i;
+                                organizationIndex = i;
                                 break;
                             }
                         }
                     }
+
+                    //display that any orgs exist
+                    string[] organizations = GetUserOrganizations();
+                    if (organizations.Length <= 0 && IsUserLoggedIn())
+                        GUILayout.Label("No Organizations Exist!", new GUIStyle(EditorStyles.popup));
+                    else
+                        organizationIndex = EditorGUILayout.Popup(organizationIndex, organizations);
+
+
+                    if (organizations.Length > 0)
+                    {
+                        SelectedOrganization = GetOrganization(organizations[organizationIndex]);
+                        if (SelectedOrganization != null)
+                        {
+                            prefs.OrgName = SelectedOrganization.name;
+                        }
+                        else
+                        {
+                            organizationIndex = 0;
+                            SelectedOrganization = GetOrganization(organizations[0]);
+                            prefs.OrgName = SelectedOrganization.name;
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    //=========================
+                    //select product
+                    //=========================
+
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("Product", GUILayout.Width(80));
+                    string organizationName = "";
+                    string lastProduct = SelectedProduct.name;
+                    if (organizations.Length > 0)
+                        organizationName = organizations[organizationIndex];
+
+                    string[] products = GetProductNames(organizationName);
+
+                    
+                    if (lastOrganization != SelectedOrganization.name) //ie, changed organization
+                    {
+                        Debug.Log("changed organization! from " + lastOrganization + " to " + SelectedOrganization.name);
+                        SelectedProduct = null;
+                        productIndex = 0;
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(SelectedProduct.name))
+                        {
+                            for (int i = 0; i < products.Length; i++)
+                            {
+                                if (products[i] == SelectedProduct.name)
+                                {
+                                    productIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (products.Length <= 0 && IsUserLoggedIn())
+                    {
+                        GUILayout.Label("No Products Exist!", new GUIStyle(EditorStyles.popup));
+                        prefs.ProductName = "";
+                    }
+                    else
+                        productIndex = EditorGUILayout.Popup(productIndex, products);
+
+                    if (products.Length > 0)
+                    {
+                        SelectedProduct = GetProduct(products[productIndex]);
+                        prefs.ProductName = SelectedProduct.name;
+                    }
+
+                    //=========================
+                    //new product
+                    //=========================
+
+                    if (GUILayout.Button("New", GUILayout.Width(40), GUILayout.Height(15)))
+                    {
+                        productRect.y -= 20;
+                        productRect.x += 50;
+                        PopupWindow.Show(productRect, new CognitiveVR_NewProductPopup());
+                    }
+                    if (Event.current.type == EventType.Repaint) productRect = GUILayoutUtility.GetLastRect();
+
+                    EditorGUILayout.EndHorizontal();
+
+                    //=========================
+                    //test / prod
+                    //=========================
+
+                    DrawTestProdButtons(products.Length > 0);
+
+                    if (SelectedProduct != null && lastProduct != SelectedProduct.name)
+                    {
+                        //'soft save'
+
+                        prefs.OrgName = SelectedOrganization.name;
+                        prefs.ProductName = SelectedProduct.name;
+                        prefs.CompanyProduct = SelectedProduct.customerId;
+                        
+                        EditorUtility.SetDirty(prefs);
+                        AssetDatabase.SaveAssets();
+
+                        SaveEditorVersion();
+
+                    }
+
+                    GUILayout.Space(10);
+                    if (GUILayout.Button("Save"))
+                    {
+                        SaveSettings(SelectedProduct.customerId);
+
+                        //clear organization and product name
+                        //set customerid
+                    }                    
+                    EditorGUI.EndDisabledGroup();
+
                 }
-
-                GUILayout.BeginHorizontal();
-
-                if (products.Length <= 0 && IsUserLoggedIn())
-                    GUILayout.Label("No Products Exist!", new GUIStyle(EditorStyles.popup));
-                else
-                    productIndex = EditorGUILayout.Popup(productIndex, products);
-                //productIndex = EditorGUILayout.Popup(productIndex, products);
-
-                if (products.Length > 0)
-                    prefs.SelectedProduct = GetPreferences().GetProduct(products[productIndex]);
-
-                if (GUILayout.Button("New", GUILayout.Width(40)))
+                else //organizations are empty
                 {
-                    productRect.y -= 20;
-                    productRect.x += 50;
-                    PopupWindow.Show(productRect, new CognitiveVR_NewProductPopup());
-                }
-                if (Event.current.type == EventType.Repaint) productRect = GUILayoutUtility.GetLastRect();
+                    EditorGUI.BeginDisabledGroup(true);
 
-                GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Organization", GUILayout.Width(80));
+                    EditorGUILayout.Popup(0, new string[1]{ prefs.OrgName});
+                    GUILayout.EndHorizontal();
 
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Product", GUILayout.Width(80));
+                    EditorGUILayout.Popup(0, new string[1] { prefs.ProductName });
+                    GUILayout.Button("New", GUILayout.Width(40), GUILayout.Height(15));
+                    GUILayout.EndHorizontal();
 
-                //=========================
-                //test prod
-                //=========================
-                GUILayout.BeginHorizontal();
-                EditorGUI.BeginDisabledGroup(products.Length <= 0);
-                GUIStyle testStyle = new GUIStyle(EditorStyles.miniButtonLeft);
-                GUIStyle prodStyle = new GUIStyle(EditorStyles.miniButtonRight);
-                if (testprodSelection == 0)
-                {
-                    testStyle.normal = testStyle.active;
-                }
-                else if (testprodSelection == 1)
-                {
-                    prodStyle.normal = prodStyle.active;
-                }
+                    EditorGUI.EndDisabledGroup();
 
-                if (GUILayout.Button(new GUIContent("Test", "Send data to your internal development server"), testStyle))
-                {
-                    testprodSelection = 0;
-                    SaveSettings();
-                }
+                    DrawTestProdButtons(true);
 
-                if (GUILayout.Button(new GUIContent("Prod", "Send data to your server for players"), prodStyle))
-                {
-                    testprodSelection = 1;
-                    SaveSettings();
+                    GUILayout.Space(10);
+                    if ((string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(password)) || !EditorPrefs.HasKey("sessionId"))
+                    {
+                        //can't log in
+                        EditorGUI.BeginDisabledGroup(true);
+                        var gc = new GUIContent("Change Product", "Must log in to change id");
+                        GUILayout.Button(gc);
+                        EditorGUI.EndDisabledGroup();
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Change Product"))
+                        {
+                            RequestLogin(UserName, password);
+                        }
+                    }
                 }
-                GUILayout.EndHorizontal();
-                EditorGUI.EndDisabledGroup();
             }
             else
             {
@@ -439,23 +439,19 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
-            if ((prefs.SelectedProduct != null && !string.IsNullOrEmpty(prefs.SelectedProduct.name) && !string.IsNullOrEmpty(prefs.SelectedOrganization.name) && !string.IsNullOrEmpty(prefs.CustomerID)))
+            if (prefs.IsCustomerIDValid)
             {
-                EditorGUI.BeginDisabledGroup(prefs.SelectedProduct == null || string.IsNullOrEmpty(prefs.SelectedProduct.name) || string.IsNullOrEmpty(prefs.SelectedOrganization.name));
-
                 //=========================
                 //select vr sdk
                 //=========================
+
                 GUILayout.BeginHorizontal();
-
-
 #if CVR_STEAMVR || CVR_OCULUS || CVR_GOOGLEVR || CVR_DEFAULT || CVR_FOVE || CVR_PUPIL || CVR_ARKIT || CVR_ARCORE
-                UserStartupBox("4", true);
+                UserStartupBox("3", true);
 #else
-                UserStartupBox("4", false);
+                UserStartupBox("3", false);
 #endif
-
-                if (GUILayout.Button("Select SDK"))
+                if (GUILayout.Button("Select VR/AR SDK"))
                 {
                     sdkRect.x += 280;
                     sdkRect.y -= 20;
@@ -470,38 +466,33 @@ namespace CognitiveVR
                 //=========================
 
                 GUILayout.BeginHorizontal();
-                CognitiveVR_Manager manager = FindObjectOfType<CognitiveVR_Manager>();
 
-                UserStartupBox("5", manager != null);
+                UserStartupBox("4", FindObjectOfType<CognitiveVR_Manager>() != null);
 
                 if (GUILayout.Button("Track Player Actions"))
                 {
                     CognitiveVR_ComponentSetup.Init();
                 }
-
                 GUILayout.EndHorizontal();
 
+                //=========================
+                //scene export
+                //=========================
 
                 GUILayout.BeginHorizontal();
-
-                var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-
-                UserStartupBox("6", scenedata != null && scenedata.LastRevision > 0);
-
+                UserStartupBox("5", prefs.sceneSettings.Find(x => x.SceneId != "") != null);
                 if (GUILayout.Button("Upload Scene"))
                 {
                     CognitiveVR_SceneExportWindow.Init();
                 }
                 GUILayout.EndHorizontal();
-
-                EditorGUI.EndDisabledGroup();
             }
             else
             {
                 GUILayout.Space(67);
             }
 
-            EditorGUI.EndDisabledGroup();
+            //EditorGUI.EndDisabledGroup();
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
@@ -520,10 +511,10 @@ namespace CognitiveVR
             //version
             //=========================
 
-            if (GUILayout.Button("Save"))
-            {
-                SaveSettings();
-            }
+            //if (GUILayout.Button("Save"))
+            //{
+                //SaveSettings();
+            //}
 
             if (GUILayout.Button("Open Web Dashboard..."))
             {
@@ -562,6 +553,35 @@ namespace CognitiveVR
             }
 
             GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        void DrawTestProdButtons(bool enabled)
+        {
+            GUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(!enabled);
+            GUIStyle testStyle = new GUIStyle(EditorStyles.miniButtonLeft);
+            GUIStyle prodStyle = new GUIStyle(EditorStyles.miniButtonRight);
+            var prefs = GetPreferences();
+
+            if (prefs.ReleaseType == ReleaseType.Test)
+            {
+                testStyle.normal = testStyle.active;
+            }
+            else
+            {
+                prodStyle.normal = prodStyle.active;
+            }
+
+            if (GUILayout.Button(new GUIContent("Test", "development dashboard"), testStyle))
+            {
+                prefs.ReleaseType = ReleaseType.Test;
+            }
+
+            if (GUILayout.Button(new GUIContent("Prod", "live dashboard"), prodStyle))
+            {
+                prefs.ReleaseType = ReleaseType.Prod;
+            }
             GUILayout.EndHorizontal();
         }
 
@@ -614,16 +634,18 @@ namespace CognitiveVR
                     {
                         if (!string.IsNullOrEmpty(loginRequest.text))
                         {
-                            GetPreferences().UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
+                            UserData = JsonUtility.FromJson<Json.UserData>(loginRequest.text);
 
                             foreach (var v in loginRequest.responseHeaders)
                             {
                                 if (v.Key.ToUpper() == "SET-COOKIE")
                                 {
-                                    GetPreferences().sessionToken = v.Value;
+                                    EditorPrefs.SetString("sessionToken", v.Value);
+                                    //GetPreferences().sessionToken = v.Value;
                                     //split semicolons. ignore everything except split[0]
                                     string[] split = v.Value.Split(';');
-                                    GetPreferences().sessionID = split[0].Substring(18);
+                                    //GetPreferences().sessionID = split[0].Substring(18);
+                                    EditorPrefs.SetString("sessionId", split[0].Substring(18));
                                 }
                             }
 
@@ -648,6 +670,11 @@ namespace CognitiveVR
                 }
 
                 EditorApplication.update -= CheckLoginResponse;
+
+                //try to set organization and product from preferences
+                SelectedOrganization = GetOrganization(CognitiveVR_Preferences.Instance.OrgName);
+                SelectedProduct = GetProduct(CognitiveVR_Preferences.Instance.ProductName);
+
                 Repaint();
             }
         }
@@ -662,11 +689,11 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://api.cognitivevr.io/organizations/" + GetPreferences().SelectedOrganization.prefix + "/products";
+            var url = "https://api.cognitivevr.io/organizations/" + SelectedOrganization.prefix + "/products";
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
-            headers.Add("Cookie", GetPreferences().sessionToken);
+            headers.Add("Cookie", EditorPrefs.GetString("sessionToken"));
 
             productName = productName.Replace("\"", "\\\"");
 
@@ -682,8 +709,8 @@ namespace CognitiveVR
 
             NewProduct = new Json.Product();
             NewProduct.name = productName;
-            NewProduct.orgId = GetPreferences().SelectedOrganization.id;
-            NewProduct.customerId = GetPreferences().SelectedOrganization.prefix + "-" + productName;
+            NewProduct.orgId = SelectedOrganization.id;
+            NewProduct.customerId = SelectedOrganization.prefix + "-" + productName;
             NewProduct.customerId = NewProduct.customerId.ToLower().Replace(" ", "");
 
             EditorApplication.update += UpdateNewProductRequest;
@@ -722,9 +749,9 @@ namespace CognitiveVR
                     Json.Product responseProduct = JsonUtility.FromJson<Json.Product>(NewProductRequest.text);
                     responseProduct.orgId = NewProduct.orgId;
 
-                    var AddedProduct = GetPreferences().UserData.AddProduct(responseProduct.name, responseProduct.customerId, responseProduct.orgId, responseProduct.id);
-                    GetPreferences().SelectedProduct = AddedProduct;
-                    SaveSettings();
+                    var AddedProduct = UserData.AddProduct(responseProduct.name, responseProduct.customerId, responseProduct.orgId, responseProduct.id);
+                    SelectedProduct = AddedProduct;
+                    //SaveSettings();
                 }
                 else
                 {
@@ -793,31 +820,36 @@ namespace CognitiveVR
 
         public void Logout()
         {
-            var prefs = GetPreferences();
-            prefs.UserData = Json.UserData.Empty;
-            prefs.sessionID = string.Empty;
-            prefs.UserName = string.Empty;
+            //var prefs = GetPreferences();
+            UserData = Json.UserData.Empty;
+            //prefs.sessionID = string.Empty;
+            UserName = string.Empty;
             password = string.Empty;
-            prefs.SelectedOrganization = new Json.Organization();
-            prefs.SelectedProduct = new Json.Product();
+            SelectedOrganization = new Json.Organization();
+            SelectedProduct = new Json.Product();
+            EditorPrefs.DeleteKey("sessionId");
+            EditorPrefs.DeleteKey("authToken");
+            EditorPrefs.DeleteKey("sessionToken");
 
-            prefs.authToken = string.Empty;
-            prefs.sessionToken = string.Empty;
+            //prefs.authToken = string.Empty;
+            //prefs.sessionToken = string.Empty;
             //you do not need to stay logged in to keep your customerid for your product.
             AssetDatabase.SaveAssets();
         }
 
-        public void SaveSettings()
+        public void SaveSettings(string customerid)
         {
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
-            if (prefs.SelectedProduct != null && testprodSelection > -1)
-            {
-                prefs.CustomerID = prefs.SelectedProduct.customerId;
-                if (testprodSelection == 0)
-                    prefs.CustomerID += "-test";
-                if (testprodSelection == 1)
-                    prefs.CustomerID += "-prod";
-            }
+
+            prefs.OrgName = SelectedOrganization.name;
+            prefs.ProductName = SelectedProduct.name;
+
+            UserData = null;
+
+            prefs.CompanyProduct = SelectedProduct.customerId;
+
+            SelectedOrganization = null;
+            SelectedProduct = null;
 
             EditorUtility.SetDirty(prefs);
             AssetDatabase.SaveAssets();
@@ -840,27 +872,31 @@ namespace CognitiveVR
         {
             List<string> organizationNames = new List<string>();
 
-            for (int i = 0; i < GetPreferences().UserData.organizations.Length; i++)
+            if (UserData == null)
             {
-                organizationNames.Add(GetPreferences().UserData.organizations[i].name);
+                //get organizations again from session callback or whatever
+                return organizationNames.ToArray();
+            }
+
+            for (int i = 0; i < UserData.organizations.Length; i++)
+            {
+                organizationNames.Add(UserData.organizations[i].name);
             }
 
             return organizationNames.ToArray();
         }
 
-        public string[] GetVRProductNames(string organization)
+        public string[] GetProductNames(string organization)
         {
             List<string> productNames = new List<string>();
 
-            CognitiveVR.CognitiveVR_Preferences prefs = GetPreferences();
-
-            Json.Organization org = prefs.GetOrganization(organization);
+            Json.Organization org = GetOrganization(organization);
             if (org == null) { return productNames.ToArray(); }
 
-            for (int i = 0; i < GetPreferences().UserData.products.Length; i++)
+            for (int i = 0; i < UserData.products.Length; i++)
             {
-                if (prefs.UserData.products[i].orgId == org.id)
-                    productNames.Add(prefs.UserData.products[i].name);
+                if (UserData.products[i].orgId == org.id)
+                    productNames.Add(UserData.products[i].name);
             }
 
             return productNames.ToArray();
@@ -937,9 +973,19 @@ namespace CognitiveVR
             return asset;
         }
 
+        //userdata contains any organization data
+        public bool OrganizationsCached()
+        {
+            if (GetUserOrganizations().Length == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public bool IsUserLoggedIn()
         {
-            if (string.IsNullOrEmpty(GetPreferences().sessionID))
+            if (string.IsNullOrEmpty(EditorPrefs.GetString("sessionId")))
             {
                 return false;
             }
@@ -1029,7 +1075,7 @@ namespace CognitiveVR
             Util.logDebug("request auth token");
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "POST");
-            headers.Add("Cookie", CognitiveVR.CognitiveVR_Preferences.Instance.sessionToken);
+            headers.Add("Cookie", EditorPrefs.GetString("sessionToken"));
 
             authTokenRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
             EditorApplication.update += UpdateGetAuthToken;
@@ -1074,10 +1120,39 @@ namespace CognitiveVR
 
             //authTokenRequest.text = {"token":"yJe....hMb"}
             string authtoken = authTokenRequest.text.Replace("{\"token\":\"", "").Replace("\"}", "");
-            CognitiveVR_Preferences.Instance.authToken = authtoken;
+            //CognitiveVR_Preferences.Instance.authToken = authtoken;
+            EditorPrefs.SetString("authToken", authtoken);
 
             authTokenRequest = null;
             OnAuthResponse(responseCode);
+        }
+
+
+        /// <summary>
+        /// get organization by name. returns null if no organization matches or no organizations are found
+        /// </summary>
+        /// <param name="organizationName"></param>
+        /// <returns></returns>
+        public Json.Organization GetOrganization(string organizationName)
+        {
+            if (UserData == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < UserData.organizations.Length; i++)
+            {
+                if (UserData.organizations[i].name == organizationName) { return UserData.organizations[i]; }
+            }
+            return null;
+        }
+
+        public Json.Product GetProduct(string productName)
+        {
+            for (int i = 0; i < UserData.products.Length; i++)
+            {
+                if (UserData.products[i].name == productName) { return UserData.products[i]; }
+            }
+            return null;
         }
     }
 }
