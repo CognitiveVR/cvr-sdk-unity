@@ -19,8 +19,9 @@ namespace CognitiveVR
         public static void Init()
         {
             CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");
-            window.minSize = new Vector2(500, 500);
+            window.minSize = new Vector2(600, 600);
             window.Show();
+            window.screenshot = null;
         }
 
         bool exportOptionsFoldout = false;
@@ -64,7 +65,12 @@ namespace CognitiveVR
             GUI.skin.label.richText = true;
             GUI.skin.box.richText = true;
             GUI.skin.textField.richText = true;
-            
+
+            //repaint if the cursor is in the scene selection area - make sure buttons and labels appear on the selected scene correctly
+            if (Event.current.mousePosition.y<240 && Event.current.mousePosition.x > 0 && Event.current.mousePosition.x < position.width)
+            {
+                Repaint();
+            }
 
             prefs = CognitiveVR_Settings.GetPreferences();
 
@@ -99,6 +105,11 @@ namespace CognitiveVR
                 if (!string.IsNullOrEmpty(searchString) && !v.SceneName.ToLower().Contains(searchString.ToLower())) { continue; }
                 DisplaySceneSettings(v);
             }
+            if (DebugSize)
+            {
+                Repaint();
+            }
+            //((SceneView)(SceneView.sceneViews[0])).Focus();
 
             GUILayout.EndScrollView();
 
@@ -184,7 +195,13 @@ namespace CognitiveVR
 
             EditorGUI.BeginDisabledGroup(!sceneIsSaved);
 
-            //compression amount
+
+            //===========================
+            //Scene Export Settings
+            //===========================
+
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(GUILayout.Width(position.width - 286));                
 
             GUILayout.Space(10);
 
@@ -332,7 +349,7 @@ namespace CognitiveVR
 
             CognitiveVR_Settings.UserStartupBox("2", SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0);
 
-            if (GUILayout.Button(exportContent))
+            if (GUILayout.Button(exportContent)) //export scene
             {
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProduct,prefs.ExportSettings.DiffuseTextureName);
             }
@@ -361,6 +378,98 @@ namespace CognitiveVR
             {
                 UploadDecimatedScene(true);
             }
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical();
+            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.Width(1) });
+            GUILayout.Label("", new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.Width(10) });
+            GUILayout.EndVertical();
+
+            //===========================
+            //scene snapshot
+            //===========================
+            GUILayout.BeginVertical();
+
+            Texture2D tex;
+            string loadType = LoadScreenshot(currentSceneSettings.SceneName, screenshot, out tex);
+
+            string title = "";
+            if (loadType == "file")
+            {
+                title = "Screenshot from file";
+            }
+            else if (loadType == "fallback")
+            {
+                title = "New screenshot (unsaved)";
+            }
+            else
+            {
+                title = "No screenshot";
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(title);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            SceneView sceneview = (SceneView)SceneView.sceneViews[0];
+            sceneview.Focus();
+
+            //try to load snapshot from file, if it exists
+            //var logo = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/CognitiveVR/Textures/logo.png");
+
+            
+            //GUI.Box(new Rect())
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            //GUILayout.Label(tex, GUILayout.Width(128), GUILayout.Height(128));
+            GUILayout.Box(tex, GUILayout.Width(128), GUILayout.Height(128));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            if (DebugSize)
+                GUI.color = GetSnapshotRatingColor(sceneview.position.width, sceneview.position.height - 20);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("X:" + sceneview.position.width + "  Y:" + sceneview.position.height))
+            {
+                DebugSize = !DebugSize;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUI.color = Color.white;
+
+            EditorGUI.BeginDisabledGroup(DebugSize);
+            if (GUILayout.Button("Take Screenshot from Scene View"))
+            {
+                sceneview.Focus();
+                takeScreenshot = true;
+                saved = false;
+            }
+            EditorGUI.EndDisabledGroup();
+
+            string saveButtonText = "Save Screenshot";
+            if (saved)
+                saveButtonText = "Saved!";
+
+            EditorGUI.BeginDisabledGroup(screenshot == null);
+            if (GUILayout.Button(saveButtonText))
+            {
+                SaveScreenshot(currentSceneSettings.SceneName, screenshot);
+                screenshot = null;
+            }
+            EditorGUI.EndDisabledGroup();
+
+            GUILayout.Button("Upload Screenshot");
+
+            GUILayout.EndVertical();
+
             GUILayout.EndHorizontal();
 
             //EditorGUI.EndDisabledGroup();
@@ -400,6 +509,123 @@ namespace CognitiveVR
             {
                 EditorUtility.SetDirty(prefs);
             }
+        }
+
+        private void Update()
+        {
+            if (takeScreenshot)
+            {
+                screenshot = Snapshot();
+                takeScreenshot = false;
+            }
+        }
+
+        bool takeScreenshot;
+        bool DebugSize;
+        bool saved;
+        Texture2D screenshot;
+
+        Color GetSnapshotRatingColor(float x, float y)
+        {
+            if (x > y)
+            {
+                if (x * 0.95f < y)
+                {
+                    return Color.green;
+                }
+                else if (x * 0.6f < y)
+                {
+                    return Color.yellow;
+                }
+                else
+                {
+                    return Color.red;
+                }
+            }
+            else
+            {
+                if (y * 0.95f < x)
+                {
+                    return Color.green;
+                }
+                else if (y * 0.6f < x)
+                {
+                    return Color.yellow;
+                }
+                else
+                {
+                    return Color.red;
+                }
+            }
+        }
+
+        Texture2D Snapshot()
+        {
+
+            var sceneview = (SceneView)SceneView.sceneViews[0];
+
+            //focus doesn't seem to do anything
+            sceneview.Focus();
+
+            //create a camera
+            GameObject cameraGo = new GameObject("Temp_Camera");
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //put camera in editor camera position
+
+            cameraGo.transform.rotation = sceneview.rotation;
+            cameraGo.transform.position = sceneview.camera.transform.position;
+
+            //create render texture and assign to camera
+            RenderTexture rt = new RenderTexture((int)sceneview.position.width, (int)sceneview.position.height - 20, 16);
+            cam.targetTexture = rt;
+
+            //camera.DoRender
+            cam.Render();
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D((int)sceneview.position.width, (int)sceneview.position.height - 20);
+            tex.ReadPixels(new Rect(0, 0, (int)sceneview.position.width, (int)sceneview.position.height - 20), 0, 0);
+            tex.Apply();
+
+            //delete stuff
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+
+            return tex;
+        }
+
+        string LoadScreenshot(string sceneName, Texture2D fallback, out Texture2D returnTexture)
+        {
+            if (fallback != null)
+            {
+                returnTexture = fallback;
+                return "fallback";
+            }
+            //if file exists
+            if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName))
+            {
+                if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName+"/screenshot.png"))
+                {
+                    //load texture from file
+                    Texture2D tex = new Texture2D(1, 1);
+                    tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + "/screenshot.png"));
+                    returnTexture = tex;
+                    return "file";
+                }
+            }
+            returnTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/CognitiveVR/Textures/logo.png");
+            return "default";
+        }
+
+        void SaveScreenshot(string sceneName, Texture2D tex)
+        {
+            //create directory
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+
+            //save file
+            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot.png",tex.EncodeToPNG());
+            saved = true;
         }
 
         void DisplaySceneSettings(CognitiveVR_Preferences.SceneSettings settings)
@@ -496,6 +722,7 @@ namespace CognitiveVR
             {
                 UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
+                Repaint();
             }
             GUILayout.EndHorizontal();
 
@@ -509,7 +736,8 @@ namespace CognitiveVR
                     selectedRect.width += 4;
                     selectedRect.height += 4;
 
-                    Repaint();
+                    //if (!takeScreenshot)
+                        //Repaint();
                 }
             }
         }
