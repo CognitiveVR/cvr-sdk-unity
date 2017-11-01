@@ -19,6 +19,7 @@ namespace CognitiveVR.Components
 
 #if CVR_STEAMVR
             CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
+            //CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateEvent; //1.1
 #elif CVR_OCULUS
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
@@ -79,9 +80,15 @@ namespace CognitiveVR.Components
             public string ConnectedTransID = string.Empty;
         }
 
+        //steam 1.1
+        private void CognitiveVR_Manager_PoseUpdateEvent(params object[] args)
+        {
+            CognitiveVR_Manager_PoseUpdateHandler((Valve.VR.TrackedDevicePose_t[])args[0]);
+        }
+
+        //steam 1.2
         private void CognitiveVR_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
         {
-            //var poses = (Valve.VR.TrackedDevicePose_t[])args[0]; //steamvr 1.1. replace 'args' variable with 'poses'
             for (int i = 0; i < 16; i++)
             {
                 if (args.Length <= i) { break; }
@@ -156,6 +163,7 @@ namespace CognitiveVR.Components
         {
 #if CVR_STEAMVR
             CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateHandler; //1.2
+            //CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateEvent; //1.1
 #endif
 #if CVR_OCULUS
             OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;

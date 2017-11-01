@@ -460,7 +460,7 @@ namespace CognitiveVR
                 else
                 {
                     // Request failure (likely a timeout), pass it through
-                    Util.logError("Initialization call failed: code " + result.ErrorCode);
+                    Util.logError("Initialization call failed: code " + result.ErrorCode + " Response: " + result.Response);
                     retError = result.ErrorCode;
                 }
 

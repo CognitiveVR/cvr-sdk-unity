@@ -472,6 +472,12 @@ namespace CognitiveVR
         void OnDestroy()
         {
             if (!Application.isPlaying) { return; }
+
+            if (CoreSubsystem.Initialized)
+            {
+                CoreSubsystem.reset();
+            }
+
             CleanupEvents();
         }
 

@@ -143,10 +143,15 @@ namespace CognitiveVR
                     if (mWWW.isDone)
                     {
                         mState = State.Complete;
-                        if (mWWW.error != null)
+                        if (!string.IsNullOrEmpty(mWWW.error))
+                        {
+                            mResult.Response = mWWW.error + " | " + mWWW.text;
                             mResult.ErrorCode = Error.Generic;
+                        }
                         else
+                        {
                             mResult.Response = mWWW.text;
+                        }
                     }
                     break;
                 case State.Complete:

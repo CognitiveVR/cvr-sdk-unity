@@ -187,6 +187,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
             if (!Application.isPlaying) { return; }
+            if (!CoreSubsystem.Initialized) { return; }
 #if CVR_STEAMVR
             SteamVR_TrackedController controller;
             for (int i = 0; i < 2; i++)
