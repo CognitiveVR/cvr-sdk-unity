@@ -354,7 +354,7 @@ namespace CognitiveVR
             CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (sceneSettings == null)
             {
-                CognitiveVR.Util.logDebug("Dynamic Object Update - scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
+                CognitiveVR.Util.logWarning("Dynamic Object Update - scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 NewSnapshots.Clear();
                 NewObjectManifest.Clear();
                 savedDynamicManifest.Clear();
@@ -363,7 +363,7 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                CognitiveVR.Util.logDebug("Dynamic Object Update - sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logWarning("Dynamic Object Update - sceneid is empty. do not send dynamic objects to sceneexplorer");
                 NewSnapshots.Clear();
                 NewObjectManifest.Clear();
                 savedDynamicManifest.Clear();

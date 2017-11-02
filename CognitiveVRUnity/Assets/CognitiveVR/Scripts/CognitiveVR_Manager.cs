@@ -403,6 +403,10 @@ namespace CognitiveVR
 
             ExitPoll.Initialize();
 
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
+
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.Instance.TransactionSnapshotCount);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);

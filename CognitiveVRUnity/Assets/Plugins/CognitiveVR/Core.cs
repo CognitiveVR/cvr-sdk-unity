@@ -10,7 +10,7 @@ namespace CognitiveVR
     public class Core
     {
         private const string SDK_NAME_PREFIX = "unity";
-        private const string SDK_VERSION = "0.6.19";
+        private const string SDK_VERSION = "0.6.21";
         public static string SDK_Version { get { return SDK_VERSION; } }
         internal const string HUB_OBJECT = "CognitiveVR_Manager";
 
