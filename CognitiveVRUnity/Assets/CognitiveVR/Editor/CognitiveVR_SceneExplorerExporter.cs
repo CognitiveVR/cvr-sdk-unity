@@ -819,6 +819,46 @@ namespace CognitiveVR
             }
         }
 
+        private static List<MeshFilter> RecursivelyGetMeshes(Transform transform)
+        {
+            List<MeshFilter> filters = new List<MeshFilter>();
+
+            var filter = transform.GetComponent<MeshFilter>();
+            if (filter != null)
+            {
+                filters.Add(filter);
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                if (transform.GetChild(i).GetComponent<DynamicObject>() != null){ continue; }
+
+                filters.AddRange(RecursivelyGetMeshes(transform.GetChild(i)));
+            }
+
+            return filters;
+        }
+
+        private static List<SkinnedMeshRenderer> RecursivelyGetSkinnedMeshes(Transform transform)
+        {
+            List<SkinnedMeshRenderer> skinnedMeshes = new List<SkinnedMeshRenderer>();
+
+            var filter = transform.GetComponent<SkinnedMeshRenderer>();
+            if (filter != null)
+            {
+                skinnedMeshes.Add(filter);
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+
+                skinnedMeshes.AddRange(RecursivelyGetSkinnedMeshes(transform.GetChild(i)));
+            }
+
+            return skinnedMeshes;
+        }
+
         //TODO remove doubles, decimate?
         //used to export dynamic objects
         public static bool ExportDynamicObject(Transform transform)
@@ -849,7 +889,8 @@ namespace CognitiveVR
                 return false;
             }
 
-            MeshFilter[] meshfilters = transform.GetComponentsInChildren<MeshFilter>(true);
+            //recusively loop thorugh children, adding mesh filters unless dynamic object is found
+            MeshFilter[] meshfilters = RecursivelyGetMeshes(transform).ToArray();
 
             List<MeshContainer> meshContainers = new List<MeshContainer>();
             foreach (var mf in meshfilters)
@@ -857,7 +898,8 @@ namespace CognitiveVR
                 meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled, mf.sharedMesh));
             }
 
-            SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            //recusively loop thorugh children, adding mesh filters unless dynamic object is found
+            SkinnedMeshRenderer[] skinnedMeshes = RecursivelyGetSkinnedMeshes(transform).ToArray();
 
             foreach (var sm in skinnedMeshes)
             {
