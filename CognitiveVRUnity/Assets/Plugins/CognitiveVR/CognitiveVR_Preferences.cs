@@ -22,7 +22,9 @@ namespace CognitiveVR
                 {
                     instance = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
                     if (instance == null)
+                    {
                         instance = CreateInstance<CognitiveVR_Preferences>();
+                    }
                 }
                 return instance;
             }
@@ -50,35 +52,58 @@ namespace CognitiveVR
         /// <summary>
         /// companyname1234-productname. used in sceneexportwindow
         /// </summary>
-        public string CompanyProduct = "";
-
-        [System.NonSerialized]
-        private string customerid = "";
-        public string CustomerID
+        public string CompanyProduct
         {
             get
             {
-                if (customerid.Length < 6) //ie, -test or -prod
-                {
-                    customerid = CompanyProduct + "-" + ReleaseType.ToString().ToLower();
-                }
-                return customerid;
+                return CustomerID.Substring(0, CustomerID.Length - 5);
             }
         }
+
+        public ReleaseType ReleaseType
+        {
+            get
+            {
+                if (CustomerID.Length < 5) { return ReleaseType.Test; }
+                return CustomerID.Substring(CustomerID.Length - 5) == "-prod" ? ReleaseType.Prod : ReleaseType.Test;
+            }
+        }
+
+        //replace -test or -prod in customerid
+        public void SetReleaseType(ReleaseType releaseType)
+        {
+            if (CustomerID.Length < 5)
+            {
+                CustomerID += "-" + releaseType.ToString().ToLower();
+                return;
+            }
+            string suffix = CustomerID.Substring(CustomerID.Length - 5);
+            if (suffix == "-test" || suffix == "-prod")
+            {
+                CustomerID = CustomerID.Substring(0, CustomerID.Length - 5);
+            }
+            CustomerID += "-" + releaseType.ToString().ToLower();
+        }
+
+        /// <summary>
+        /// companyname1234-productname-test
+        /// </summary>
+        public string CustomerID = "";
 
         public bool IsCustomerIDValid
         {
             get
             {
-                return CustomerID.Length > 5;
+                return CustomerID.Length > 7; //at least a-b-test
             }
         }
 
-        public ReleaseType ReleaseType;
+        //public ReleaseType ReleaseType;
 
 
-        //used to display dummy dropdowns on account settings window
+        //used to display dummy organization on account settings window. should never be used to determine current selection
         public string OrgName;
+        //used to display dummy product on account settings window. should never be used to determine current selection
         public string ProductName;
 
         [Header("Player Tracking")]
@@ -188,7 +213,7 @@ namespace CognitiveVR
             public string id;
             public string name;
             public string orgId;
-            public string customerId;
+            public string customerId = "";
         }
         [System.Serializable]
         public class UserData

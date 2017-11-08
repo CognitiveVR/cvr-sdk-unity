@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using UnityEditor.SceneManagement;
 
 namespace CognitiveVR
 {
@@ -69,14 +70,14 @@ namespace CognitiveVR
         int SceneVersion;
 
         WWW getRequest;
-        
+
         void GetManifest()
         {
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -122,7 +123,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -135,7 +136,7 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = "https://sceneexplorer.com/api/scenes/" + currentSceneSettings.SceneId+"/settings";
+            string url = "https://sceneexplorer.com/api/scenes/" + currentSceneSettings.SceneId + "/settings";
 
             getRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
 
@@ -173,9 +174,9 @@ namespace CognitiveVR
 
                 //also hit settings to get the current version of the scene
                 GetSceneVersion();
-                
+
             }
-            else if(responsecode >= 500)
+            else if (responsecode >= 500)
             {
                 //some server error
             }
@@ -187,7 +188,7 @@ namespace CognitiveVR
 
                     Debug.LogWarning("GetManifestResponse not authorized. Requesting Auth Token");
 
-                    var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+                    var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
                     if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
                     {
                         return;
@@ -236,6 +237,31 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
+            if (CognitiveVR_Preferences.Instance.sceneSettings.Count == 0)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("No scene settings.\nDid you export this scene?");
+                if (GUILayout.Button("Open Scene Export\nWindow"))
+                {
+                    CognitiveVR_SceneExportWindow.Init();
+                }
+                GUILayout.EndHorizontal();
+                return;
+            }
+
+            var currentSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(EditorSceneManager.GetActiveScene().path);
+            if (currentSettings == null || string.IsNullOrEmpty(currentSettings.SceneId))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("No SceneId.\nDid you export this scene?");
+                if (GUILayout.Button("Open Scene Export\nWindow"))
+                {
+                    CognitiveVR_SceneExportWindow.Init();
+                }
+                GUILayout.EndHorizontal();
+                return;
+            }
+
             if (Manifest == null)
             {
                 if (!gettingManifest)
@@ -262,7 +288,7 @@ namespace CognitiveVR
                 {
                     manifest += entry.ToString() + "\n";
                 }
-                Debug.Log("Dynamic Object Manifest:\n"+manifest);
+                Debug.Log("Dynamic Object Manifest:\n" + manifest);
             }
 
             EditorStyles.label.wordWrap = true;
@@ -278,7 +304,7 @@ namespace CognitiveVR
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Deleted Dynamics Objects:", GUILayout.Width(titleSize));
-            EditorGUILayout.LabelField("<color=red>-" + GetDeletedObjects().Count + "</color>",GUILayout.Width(contentSize));
+            EditorGUILayout.LabelField("<color=red>-" + GetDeletedObjects().Count + "</color>", GUILayout.Width(contentSize));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
@@ -383,7 +409,7 @@ namespace CognitiveVR
             }
             return ObjectsInManifest;
         }
-        
+
         void BuildManifest(string json)
         {
             Util.logDebug("Build Manifest from json: " + json);
@@ -462,62 +488,53 @@ namespace CognitiveVR
                 return;
             }
 
-            foreach (var dynamic in GameObject.FindObjectsOfType<DynamicObject>())
+            var allDynamics = GameObject.FindObjectsOfType<DynamicObject>();
+            List<int> usedIds = new List<int>();
+            List<DynamicObject> unassignedDynamics = new List<DynamicObject>();
+
+            //add used dynamic ids
+            foreach (var dyn in allDynamics)
             {
-                if (!dynamic.UseCustomMesh)
+                if (usedIds.Contains(dyn.CustomId))
                 {
-                    dynamic.MeshName = dynamic.CommonMesh.ToString().ToLower();
+                    unassignedDynamics.Add(dyn);
                 }
-
-                if (dynamic.CustomId == 0 || dynamic.UseCustomId == false)
+                else
                 {
-                    //set unique object ids should include looking through objectmanifest, not just other dynamics in the scene
-                    var customId = GetUniqueIDEditor(dynamic.MeshName);
-                    dynamic.CustomId = customId.Id;
-                    dynamic.UseCustomId = true;
-                    //set custom id
-                }
-            }
-        }
-
-        static int currentUniqueId = 0;
-        public static DynamicObjectId GetUniqueIDEditor(string MeshName)
-        {
-
-            //in editor. probably writing manifest for aggregation. get all dynamic objects and add them to objectids
-            foreach (var v in FindObjectsOfType<DynamicObject>())
-            {
-                if (v.UseCustomId)
-                {
-                    DynamicObject.ObjectIds.Add(new DynamicObjectId(v.CustomId, v.MeshName));
+                    usedIds.Add(dyn.CustomId);
                 }
             }
 
-            DynamicObjectId usedObjectIdEditor = null;
-            AggregationManifest.AggregationManifestEntry usedEntry = null;
-            while (true)
+            int currentUniqueId = 1;
+            int changedIds = 0;
+
+            //assign all duplicated/unassigned
+            foreach (var dyn in unassignedDynamics)
             {
-                //check each objectid. increment to next if id is found
-                currentUniqueId++;
-
-                usedObjectIdEditor = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj)
+                for (; currentUniqueId < 1000; currentUniqueId++)
                 {
-                    return obj.Id == currentUniqueId;
-                });
-
-                if (usedObjectIdEditor != null) { continue; }
-
-                usedEntry = Instance.Manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj)
-                {
-                    return obj.id == currentUniqueId.ToString();
-                });
-
-                if (usedObjectIdEditor == null && usedEntry == null)
-                {
-                    break;
+                    if (usedIds.Contains(currentUniqueId))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        usedIds.Add(currentUniqueId);
+                        dyn.CustomId = currentUniqueId;
+                        EditorUtility.SetDirty(dyn);
+                        changedIds++;
+                        dyn.UseCustomId = true;
+                        break;
+                    }
                 }
             }
-            return new DynamicObjectId(currentUniqueId, MeshName);
+
+            if (changedIds > 0)
+            {
+                //mark stuff + scene dirty
+                Debug.Log("set " + changedIds + " new ids");
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            }
         }
 
         string ManifestToJson()
@@ -538,13 +555,13 @@ namespace CognitiveVR
             return objectIdManifest;
         }
 
-        void SendManifest(string json,int version)
+        void SendManifest(string json, int version)
         {
-            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
-                Debug.LogWarning("settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-                string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                Debug.LogWarning("settings are null " + EditorSceneManager.GetActiveScene().path);
+                string s = EditorSceneManager.GetActiveScene().name;
                 if (string.IsNullOrEmpty(s))
                 {
                     s = "Unknown Scene";
@@ -567,7 +584,7 @@ namespace CognitiveVR
 
             EditorApplication.update += ManifestResposne;
         }
-        
+
         WWW manifestRequest;
 
         void ManifestResposne()

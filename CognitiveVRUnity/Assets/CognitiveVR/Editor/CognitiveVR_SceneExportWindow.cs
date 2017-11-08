@@ -21,7 +21,7 @@ namespace CognitiveVR
             CognitiveVR_SceneExportWindow window = (CognitiveVR_SceneExportWindow)GetWindow(typeof(CognitiveVR_SceneExportWindow), true, "cognitiveVR Scene Export");
             window.minSize = new Vector2(600, 600);
             window.Show();
-            window.screenshot = null;
+            window.cachedScreenshot = null;
         }
 
         bool exportOptionsFoldout = false;
@@ -34,30 +34,33 @@ namespace CognitiveVR
 
 
         bool loadedScenes = false;
-        List<string> sceneNames = new List<string>();
 
-        void AddAllScenes()
+        List<string> AddAllScenes()
         {
             //add all scenes
             string[] guidList = AssetDatabase.FindAssets("t:scene");
+            List<string> allSceneNames = new List<string>();
+
+            //sceneNames.Clear();
 
             foreach (var v in guidList)
             {
                 string path = AssetDatabase.GUIDToAssetPath(v);
                 string name = path.Substring(path.LastIndexOf('/') + 1);
                 name = name.Substring(0, name.Length - 6);
-
-                sceneNames.Add(name);
+                allSceneNames.Add(name);
+                //sceneNames.Add(name);
             }
+            return allSceneNames;
         }
 
+        Texture2D refreshTexture;
 
         void OnGUI()
         {
             if (!loadedScenes)
             {
                 UpdateSceneNames();
-                AddAllScenes();
                 loadedScenes = true;
             }
 
@@ -77,7 +80,23 @@ namespace CognitiveVR
             //scene select
             //=========================
 
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
             GUILayout.Label("Scene Export Manager", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.FlexibleSpace();
+            
+            if (refreshTexture == null)
+            {
+                refreshTexture = EditorGUIUtility.FindTexture("d_RotateTool On");
+            }
+
+            if (GUILayout.Button(refreshTexture, GUILayout.Width(32)))
+            {
+                UpdateSceneNames();
+                currentSceneSettings = null;
+                cachedScreenshot = null;
+            }
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
 
@@ -104,21 +123,15 @@ namespace CognitiveVR
                 if (!string.IsNullOrEmpty(searchString) && !v.SceneName.ToLower().Contains(searchString.ToLower())) { continue; }
                 DisplaySceneSettings(v);
             }
-            if (DebugSize)
-            {
-                Repaint();
-            }
-            //((SceneView)(SceneView.sceneViews[0])).Focus();
 
             GUILayout.EndScrollView();
-
 
             //GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
 
-            currentSceneSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            currentSceneSettings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
 
             if (currentSceneSettings == null)
             {
@@ -126,9 +139,22 @@ namespace CognitiveVR
             }
 
 
+            if (!prefs.IsCustomerIDValid)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("No CustomerID set. Have you logged in?");
+                if (GUILayout.Button("Open Account Settings Window"))
+                {
+                    CognitiveVR_Settings.Init();
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.Space(10);
+            }
+
             GUILayout.BeginHorizontal();
 
             bool sceneIsSaved = !string.IsNullOrEmpty(currentSceneSettings.ScenePath);
+
 
 
             
@@ -175,7 +201,6 @@ namespace CognitiveVR
 
             GUI.skin.textField.alignment = TextAnchor.MiddleLeft;
 
-            //GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             if (!sceneIsSaved)
@@ -200,13 +225,19 @@ namespace CognitiveVR
             //Scene Export Settings
             //===========================
 
+            EditorGUI.BeginDisabledGroup(!prefs.IsCustomerIDValid);
+
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(position.width - 286));                
+            GUILayout.BeginVertical(GUILayout.Width(position.width - 286));
 
             GUILayout.Space(10);
 
             GUILayout.Label("Scene Export Quality",CognitiveVR_Settings.HeaderStyle);
 
+
+
+
+            //export settings
             GUILayout.BeginHorizontal();
 
             bool lowSettings = false;
@@ -283,14 +314,17 @@ namespace CognitiveVR
             GUILayout.Space(20);
 
 
-            //Export Buttons
+           
+
+
+            //find blender
+            GUILayout.BeginHorizontal();
 
             if (string.IsNullOrEmpty(prefs.SavedBlenderPath))
             {
                 FindBlender();
             }
 
-            GUILayout.BeginHorizontal();
 #if UNITY_EDITOR_WIN
             GUIContent blenderButtonContent = new GUIContent("Select Blender.exe");
 #elif UNITY_EDITOR_OSX
@@ -301,8 +335,6 @@ namespace CognitiveVR
                 blenderButtonContent.tooltip = prefs.SavedBlenderPath;
 
             CognitiveVR_Settings.UserStartupBox("1", IsBlenderPathValid());
-            
-
             if (GUILayout.Button(blenderButtonContent))
             {
 #if UNITY_EDITOR_WIN
@@ -312,21 +344,36 @@ namespace CognitiveVR
 #endif
             }
             GUILayout.EndHorizontal();
+            
 
-            //this line can be simplified. editor disable groups stack nicely
-            //EditorGUI.BeginDisabledGroup(!validBlenderPath || string.IsNullOrEmpty(prefs.CustomerID) || string.IsNullOrEmpty(currentSceneSettings.ScenePath));
-            EditorGUI.BeginDisabledGroup(!prefs.IsCustomerIDValid || string.IsNullOrEmpty(currentSceneSettings.ScenePath)); //you don't need blender to export empty 360 video scenes
 
-            string exportButtonText = "Bake Scene \"" + currentSceneSettings.SceneName +"\"";
+
+
+
+
+
+            //export scene
+            GUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(currentSceneSettings.ScenePath)); //you don't need blender to export empty 360 video scenes
+            string exportButtonText = "Export Scene \"" + currentSceneSettings.SceneName + "\"";
 
             GUIContent exportContent = new GUIContent(exportButtonText, "Exports the scene to Blender and reduces polygons. This also exports required textures at a reduced resolution");
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+            CognitiveVR_Settings.UserStartupBox("2", SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0);
 
-            if (!prefs.IsCustomerIDValid)
+            if (GUILayout.Button(exportContent))
             {
-                exportContent.tooltip = "You must have a valid CustomerID to export a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProduct,prefs.ExportSettings.DiffuseTextureName);
             }
+            GUILayout.EndHorizontal();
 
 
+
+
+
+            //upload
+            GUILayout.BeginHorizontal();
             var uploadButtonContent = new GUIContent("Upload baked \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
             if (!prefs.IsCustomerIDValid)
             {
@@ -336,24 +383,6 @@ namespace CognitiveVR
             {
                 uploadButtonContent.tooltip = "Upload files in " + Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             }
-
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
-            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
-
-
-
-            
-
-            GUILayout.BeginHorizontal();
-
-            CognitiveVR_Settings.UserStartupBox("2", SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0);
-
-            if (GUILayout.Button(exportContent)) //export scene
-            {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProduct,prefs.ExportSettings.DiffuseTextureName);
-            }
-            GUILayout.EndHorizontal();
-            
             if (!SceneExportDirExists)
             {
                 uploadButtonContent.tooltip = "Directory doesn't exist! " + sceneExportDirectory;
@@ -362,15 +391,8 @@ namespace CognitiveVR
             {
                 uploadButtonContent.tooltip = "Directory doesn't contain any files " + sceneExportDirectory;
             }
-
-            //can upload scenes with no models - 360 video projects. don't have to export first
-            //EditorGUI.BeginDisabledGroup(!SceneExportDirExists || Directory.GetFiles(sceneExportDirectory).Length <= 0);
-
             System.DateTime revisionDate = System.DateTime.MinValue;
             revisionDate = DateTime.FromBinary(currentSceneSettings.LastRevision);
-
-            GUILayout.BeginHorizontal();
-
             CognitiveVR_Settings.UserStartupBox("3", revisionDate.Year > 1000);
 
             if (GUILayout.Button(uploadButtonContent))
@@ -379,35 +401,49 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
+
             GUILayout.EndVertical();
 
+            EditorGUI.EndDisabledGroup(); //scene path is valid
+            EditorGUI.EndDisabledGroup(); //valid customer id
+
+            //===========================
+            //vertical space
+            //===========================
             GUILayout.BeginVertical();
-            //GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.Width(1) });
             GUILayout.Label("", new GUILayoutOption[] { GUILayout.ExpandHeight(true), GUILayout.Width(10) });
             GUILayout.EndVertical();
-
-            EditorGUI.EndDisabledGroup(); //valid customer id and scene path
 
             //===========================
             //scene snapshot
             //===========================
             GUILayout.BeginVertical();
 
+
+            RenderTexture sceneRT = null;
             Texture2D tex;
-            string loadType = LoadScreenshot(currentSceneSettings.SceneName, screenshot, out tex);
+            var loadedScreenshotFromFile = LoadScreenshot(currentSceneSettings.SceneName, out tex);
 
             string title = "";
-            if (loadType == "file")
+            if (loadedScreenshotFromFile)
             {
                 title = "Screenshot from file";
             }
-            else if (loadType == "fallback")
-            {
-                title = "New screenshot (unsaved)";
-            }
             else
             {
-                title = "No screenshot";
+                title = "Not Saved";
+
+                if (SceneView.lastActiveSceneView != null)
+                {
+                    System.Reflection.FieldInfo[] fields = typeof(SceneView).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    foreach (var v in fields)
+                    {
+                        if (v.Name == "m_SceneTargetTexture")
+                        {
+                            sceneRT = v.GetValue(SceneView.lastActiveSceneView) as RenderTexture;
+                        }
+                    }
+                }
             }
 
             GUILayout.BeginHorizontal();
@@ -416,56 +452,57 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            SceneView sceneview = (SceneView)SceneView.sceneViews[0];
-            sceneview.Focus();
-
-            //try to load snapshot from file, if it exists
-            //var logo = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/CognitiveVR/Textures/logo.png");
-
-            
-            //GUI.Box(new Rect())
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            //GUILayout.Label(tex, GUILayout.Width(128), GUILayout.Height(128));
-            GUILayout.Box(tex, GUILayout.Width(128), GUILayout.Height(128));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            if (DebugSize)
-                GUI.color = GetSnapshotRatingColor(sceneview.position.width, sceneview.position.height - 20);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("X:" + sceneview.position.width + "  Y:" + sceneview.position.height))
+            if (loadedScreenshotFromFile)
             {
-                DebugSize = !DebugSize;
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Box(tex, GUILayout.Width(128), GUILayout.Height(128));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUI.color = Color.white;
-
-            EditorGUI.BeginDisabledGroup(DebugSize);
-            if (GUILayout.Button("Take Screenshot from Scene View"))
+            else if (sceneRT == null)
             {
-                sceneview.Focus();
-                takeScreenshot = true;
-                saved = false;
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Box("No Scene View!", GUILayout.Width(128), GUILayout.Height(128));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
-            EditorGUI.EndDisabledGroup();
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Box(sceneRT, GUILayout.Width(128), GUILayout.Height(128));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
 
             string saveButtonText = "Save Screenshot";
-            if (saved)
-                saveButtonText = "Saved!";
+            if (loadedScreenshotFromFile)
+                saveButtonText = "Replace Screenshot";
 
-            EditorGUI.BeginDisabledGroup(screenshot == null);
+            //EditorGUI.BeginDisabledGroup(screenshot == null);
+            EditorGUI.BeginDisabledGroup(SceneView.lastActiveSceneView == null);
             if (GUILayout.Button(saveButtonText))
             {
-                SaveScreenshot(currentSceneSettings.SceneName, screenshot);
-                screenshot = null;
+                if (sceneRT == null)
+                {
+                    System.Reflection.FieldInfo[] fields = typeof(SceneView).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    foreach (var v in fields)
+                    {
+                        if (v.Name == "m_SceneTargetTexture")
+                        {
+                            sceneRT = v.GetValue(SceneView.lastActiveSceneView) as RenderTexture;
+                        }
+                    }
+                }
+
+                SaveScreenshot(currentSceneSettings.SceneName, ConvertRenderTexture(sceneRT));
+                cachedScreenshot = null;
             }
             EditorGUI.EndDisabledGroup();
+
+            //EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(currentSceneSettings.SceneId) || !HasSavedScreenshot(currentSceneSettings.SceneName));
             if (GUILayout.Button("Upload Screenshot"))
@@ -511,6 +548,17 @@ namespace CognitiveVR
             }
         }
 
+        Texture2D ConvertRenderTexture(RenderTexture rt)
+        {
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(rt.width, rt.height);
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+            return tex;
+        }
+
         //returns true if savedblenderpath ends with blender.exe/app
         static bool IsBlenderPathValid()
         {
@@ -526,93 +574,17 @@ namespace CognitiveVR
 
         private void Update()
         {
-            if (takeScreenshot)
-            {
-                screenshot = Snapshot();
-                takeScreenshot = false;
-            }
+            Repaint();
         }
 
-        bool takeScreenshot;
-        bool DebugSize;
-        bool saved;
-        Texture2D screenshot;
+        Texture2D cachedScreenshot;
 
-        Color GetSnapshotRatingColor(float x, float y)
+        bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
         {
-            if (x > y)
+            if (cachedScreenshot)
             {
-                if (x * 0.95f < y)
-                {
-                    return Color.green;
-                }
-                else if (x * 0.6f < y)
-                {
-                    return Color.yellow;
-                }
-                else
-                {
-                    return Color.red;
-                }
-            }
-            else
-            {
-                if (y * 0.95f < x)
-                {
-                    return Color.green;
-                }
-                else if (y * 0.6f < x)
-                {
-                    return Color.yellow;
-                }
-                else
-                {
-                    return Color.red;
-                }
-            }
-        }
-
-        Texture2D Snapshot()
-        {
-
-            var sceneview = (SceneView)SceneView.sceneViews[0];
-
-            //focus doesn't seem to do anything
-            sceneview.Focus();
-
-            //create a camera
-            GameObject cameraGo = new GameObject("Temp_Camera");
-            Camera cam = cameraGo.AddComponent<Camera>();
-
-            //put camera in editor camera position
-
-            cameraGo.transform.rotation = sceneview.rotation;
-            cameraGo.transform.position = sceneview.camera.transform.position;
-
-            //create render texture and assign to camera
-            RenderTexture rt = new RenderTexture((int)sceneview.position.width, (int)sceneview.position.height - 20, 16);
-            cam.targetTexture = rt;
-
-            //camera.DoRender
-            cam.Render();
-
-            //write rendertexture to png
-            Texture2D tex = new Texture2D((int)sceneview.position.width, (int)sceneview.position.height - 20);
-            tex.ReadPixels(new Rect(0, 0, (int)sceneview.position.width, (int)sceneview.position.height - 20), 0, 0);
-            tex.Apply();
-
-            //delete stuff
-            UnityEngine.Object.DestroyImmediate(cameraGo);
-
-            return tex;
-        }
-
-        string LoadScreenshot(string sceneName, Texture2D fallback, out Texture2D returnTexture)
-        {
-            if (fallback != null)
-            {
-                returnTexture = fallback;
-                return "fallback";
+                returnTexture = cachedScreenshot;
+                return true;
             }
             //if file exists
             if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
@@ -623,11 +595,12 @@ namespace CognitiveVR
                     Texture2D tex = new Texture2D(1, 1);
                     tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar  + "screenshot.png"));
                     returnTexture = tex;
-                    return "file";
+                    cachedScreenshot = returnTexture;
+                    return true;
                 }
             }
-            returnTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/CognitiveVR/Textures/logo.png");
-            return "default";
+            returnTexture = null;
+            return false;
         }
 
         bool HasSavedScreenshot(string sceneName)
@@ -646,7 +619,6 @@ namespace CognitiveVR
 
             //save file
             File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png",tex.EncodeToPNG());
-            saved = true;
         }
 
         void DisplaySceneSettings(CognitiveVR_Preferences.SceneSettings settings)
@@ -726,7 +698,7 @@ namespace CognitiveVR
             }
 
             EditorGUI.BeginDisabledGroup(!KeyIsValid(settings.SceneId));
-            GUIContent sceneExplorerLink = new GUIContent("View on Dashboard");
+            GUIContent sceneExplorerLink = new GUIContent("View in Web Browser");
             if (KeyIsValid(settings.SceneId))
             {
                 sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + settings.SceneId;
@@ -739,7 +711,7 @@ namespace CognitiveVR
 
             EditorGUI.EndDisabledGroup();
 
-            if (GUILayout.Button("Select"))
+            if (GUILayout.Button("Load Scene"))
             {
                 UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(settings.ScenePath);
@@ -916,7 +888,7 @@ namespace CognitiveVR
         {
             if (fetchNewCurrentScene)
             {
-                UploadSceneSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                UploadSceneSettings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             }
             if (UploadSceneSettings == null) { return; }
 
@@ -1071,6 +1043,8 @@ namespace CognitiveVR
             sceneUploadWWW.Dispose();
             sceneUploadWWW = null;
 
+            //TODO after scene upload response, hit another route to get the version of the scene
+
             GUI.FocusControl("NULL");
 
             AssetDatabase.SaveAssets();
@@ -1089,11 +1063,9 @@ namespace CognitiveVR
 
         public static void UploadDynamicObjects()
         {
-            
-
             string fileList = "Upload Files:\n";
 
-            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var settings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
                 Debug.Log("settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
@@ -1230,7 +1202,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
                         {
-                            CognitiveVR_Preferences.Instance.SavedBlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
+                            prefs.SavedBlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
                         }
                     }
                 }
@@ -1243,7 +1215,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe"))
                         {
-                            CognitiveVR_Preferences.Instance.SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
+                            prefs.SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
                         }
                     }
                 }
@@ -1256,7 +1228,7 @@ namespace CognitiveVR
                 {
                     if (File.Exists(@"/Applications/Blender/blender.app"))
                     {
-                        CognitiveVR_Preferences.Instance.SavedBlenderPath = @"/Applications/Blender/blender.app";
+                        prefs.SavedBlenderPath = @"/Applications/Blender/blender.app";
                     }
                 }
             }
@@ -1266,15 +1238,20 @@ namespace CognitiveVR
         private static void UpdateSceneNames()
         {
             //save these to a temp list
+            if (prefs == null)
+            {
+                prefs = CognitiveVR_Settings.GetPreferences();
+            }
+
             List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
-            foreach (var v in CognitiveVR_Preferences.Instance.sceneSettings)
+            foreach (var v in prefs.sceneSettings)
             {
                 oldSettings.Add(v);
             }
 
 
             //clear then rebuild the list in preferences
-            CognitiveVR_Preferences.Instance.sceneSettings.Clear();
+            prefs.sceneSettings.Clear();
 
             //add all scenes
             string[] guidList = AssetDatabase.FindAssets("t:scene");
@@ -1285,13 +1262,13 @@ namespace CognitiveVR
                 string name = path.Substring(path.LastIndexOf('/') + 1);
                 name = name.Substring(0, name.Length - 6);
 
-                CognitiveVR_Preferences.Instance.sceneSettings.Add(new CognitiveVR_Preferences.SceneSettings(name, path));
+                prefs.sceneSettings.Add(new CognitiveVR_Preferences.SceneSettings(name, path));
             }
 
             //match up dictionary keys from temp list
             foreach (var oldSetting in oldSettings)
             {
-                foreach (var newSetting in CognitiveVR_Preferences.Instance.sceneSettings)
+                foreach (var newSetting in prefs.sceneSettings)
                 {
                     if (newSetting.SceneName == oldSetting.SceneName)
                     {
