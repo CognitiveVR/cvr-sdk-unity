@@ -252,10 +252,13 @@ namespace CognitiveVR
             return wrapper.array;
         }
 
+        //used for serializing object manifest data
         [Serializable]
         private class Wrapper<T>
         {
+#pragma warning disable 0649
             public T[] array;
+#pragma warning restore 0649
         }
 
         //only used for non-nested builds

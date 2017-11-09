@@ -375,7 +375,7 @@ namespace CognitiveVR
                 return;
             } //skip if this manage has already been initialized
 
-            if (string.IsNullOrEmpty(CognitiveVR_Preferences.Instance.CustomerID))
+            if (!CognitiveVR_Preferences.Instance.IsCustomerIDValid)
             {
                 if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
                 return;
@@ -402,6 +402,10 @@ namespace CognitiveVR
             OutstandingInitRequest = true;
 
             ExitPoll.Initialize();
+
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
 
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.Instance.TransactionSnapshotCount);
 
@@ -472,6 +476,12 @@ namespace CognitiveVR
         void OnDestroy()
         {
             if (!Application.isPlaying) { return; }
+
+            if (CoreSubsystem.Initialized)
+            {
+                CoreSubsystem.reset();
+            }
+
             CleanupEvents();
         }
 
@@ -480,29 +490,6 @@ namespace CognitiveVR
             CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
-
-#if UNITY_EDITOR
-        //replace with this in unity 5.6
-        //http://answers.unity3d.com/questions/495007/editor-script-that-executes-before-build.html
-        //class PreBuildProcess : UnityEditor.Build.IPreprocessBuild{}
-
-        [UnityEditor.Callbacks.PostProcessScene()]
-        public static void OnPostProcessScene()
-        {
-            if (UnityEditor.BuildPipeline.isBuildingPlayer)
-            {
-                Debug.Log("cognitiveVR Preferences clearing non-essential info");
-                CognitiveVR_Preferences asset = UnityEditor.AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
-                if (asset == null) { return; }
-                //remove any potentially sensitive data from preferences as the asset is being built
-                asset.sessionID = string.Empty;
-                asset.UserName = string.Empty;
-                asset.UserData = new Json.UserData();
-                asset.SelectedOrganization = new Json.Organization();
-                asset.SelectedProduct = new Json.Product();
-            }
-        }
-#endif
 
         #region Application Quit
         bool hasCanceled = false;

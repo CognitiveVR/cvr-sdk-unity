@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using CognitiveVR.External.MiniJSON; 
 
 namespace CognitiveVR
 {
@@ -148,7 +147,7 @@ namespace CognitiveVR
 				
 				try
 				{
-                    HttpRequest.executeAsync(new Uri(url), ReqTimeout, Json.Serialize(allArgs), new InitRequestListener(tuningUpdater, userProperties, deviceProperties, cb));
+                    HttpRequest.executeAsync(new Uri(url), ReqTimeout, External.MiniJSON.Json.Serialize(allArgs), new InitRequestListener(tuningUpdater, userProperties, deviceProperties, cb));
 				}
 				catch (WebException e)
 				{
@@ -206,7 +205,7 @@ namespace CognitiveVR
                 try
                 {
                     // Create an (async) request to add the user. The callback will be triggered when the request is completed
-                    HttpRequest.executeAsync(new Uri(url), ReqTimeout, Json.Serialize(allArgs), new InitRequestListener(tuningUpdater, userProperties, null, cb));
+                    HttpRequest.executeAsync(new Uri(url), ReqTimeout, External.MiniJSON.Json.Serialize(allArgs), new InitRequestListener(tuningUpdater, userProperties, null, cb));
 				}
 				catch (WebException e)
 				{
@@ -383,7 +382,7 @@ namespace CognitiveVR
                 {
                     try
                     {
-                        var dict = Json.Deserialize(result.Response) as Dictionary<string, object>;
+                        var dict = External.MiniJSON.Json.Deserialize(result.Response) as Dictionary<string, object>;
                         if (dict.ContainsKey("error") && (Error.Success == (Error)Enum.ToObject(typeof(Error), dict["error"])))
                         {
                             if (dict.ContainsKey("data"))
@@ -461,7 +460,7 @@ namespace CognitiveVR
                 else
                 {
                     // Request failure (likely a timeout), pass it through
-                    Util.logError("Initialization call failed: code " + result.ErrorCode);
+                    Util.logError("Initialization call failed: code " + result.ErrorCode + " Response: " + result.Response);
                     retError = result.ErrorCode;
                 }
 

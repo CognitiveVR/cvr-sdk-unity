@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using CognitiveVR.External.MiniJSON;
 
 namespace CognitiveVR
 {
@@ -25,11 +24,7 @@ namespace CognitiveVR
          */
         public static void init(Callback cb)
         {
-            sCacheVars = LocalStorage.Load<TuningValues>(CACHE_FILENAME, false);
-            if (null == sCacheVars)
-            {
-                sCacheVars = new TuningValues();
-            }
+            sCacheVars = new TuningValues();
 
             if (null != cb) cb(Error.Success);
         }
@@ -52,7 +47,7 @@ namespace CognitiveVR
                 try
                 {
                     // Create an (async) request to retrieve the tuning variables.  The callback will be triggered when the request is completed
-                    HttpRequest.executeAsync(new Uri(url), CoreSubsystem.ReqTimeout, Json.Serialize(allArgs), new RefreshRequestListener(cb));
+                    HttpRequest.executeAsync(new Uri(url), CoreSubsystem.ReqTimeout, External.MiniJSON.Json.Serialize(allArgs), new RefreshRequestListener(cb));
                 }
                 catch (WebException e)
 				{
@@ -154,7 +149,6 @@ namespace CognitiveVR
                 if (mDirty)
                 {
                     // Cache off the tuning variables
-                    LocalStorage.Save(CACHE_FILENAME, sCacheVars);
                     mDirty = false;
                 }
             }
@@ -179,7 +173,7 @@ namespace CognitiveVR
                     TuningUpdater updater = new Updater();
                     try
                     {
-                        var dict = Json.Deserialize(result.Response) as Dictionary<string, object>;
+                        var dict = External.MiniJSON.Json.Deserialize(result.Response) as Dictionary<string, object>;
                         error = Error.Unknown;
                         if (dict.ContainsKey("error"))
                         {

@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Runtime.InteropServices;
 
-using CognitiveVR.External.MiniJSON; 
-
 namespace CognitiveVR
 {
 	/// <summary>

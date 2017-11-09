@@ -75,11 +75,7 @@ namespace CognitiveVR
 #endif
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            string sceneName = SceneManager.GetActiveScene().name;
-
-            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
-
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.Instance.FindScene(sceneName);
+            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
 
             if (sceneSettings != null)
             {
@@ -96,7 +92,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logDebug("<color=red>PlayerRecorder Init couldn't find scene " + sceneName + ". Not recording</color>");
+                Util.logDebug("<color=red>PlayerRecorder Init couldn't find scene " + SceneManager.GetActiveScene().name + ". Not recording</color>");
             }
             rt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
         }

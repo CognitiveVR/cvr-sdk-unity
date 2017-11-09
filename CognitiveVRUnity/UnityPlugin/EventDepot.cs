@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CognitiveVR.External.MiniJSON; 
 
 namespace CognitiveVR
 {
@@ -74,7 +73,7 @@ namespace CognitiveVR
             allArgs.Add(Util.Timestamp());
             allArgs.Add(new List<object> { eventData });
             
-            string data = Json.Serialize(new List<object> { eventData });
+            string data = External.MiniJSON.Json.Serialize(new List<object> { eventData });
             data = data.Remove(data.Length-1, 1);
             data = data.Remove(0, 1);
 
@@ -118,7 +117,7 @@ namespace CognitiveVR
             {
                 try
                 {
-                    Dictionary<string, object> response = Json.Deserialize(responseStr) as Dictionary<string, object>;
+                    Dictionary<string, object> response = External.MiniJSON.Json.Deserialize(responseStr) as Dictionary<string, object>;
                     if (response.ContainsKey("error"))
                     {
                         Error err = (Error)Enum.ToObject(typeof(Error), response["error"]);

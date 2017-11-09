@@ -90,7 +90,7 @@ namespace CognitiveVR
                     dyn = serializedObject.targetObjects[i] as DynamicObject;
                     if (dyn)
                     {
-                        if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                        if (CognitiveVR_Settings.GetPreferences().DynamicObjectSearchInParent)
                         {
                             if (!dyn.GetComponentInChildren<Collider>())
                             {
@@ -163,7 +163,7 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
             if (syncWithPlayerUpdate.boolValue)
             {
-                EditorGUILayout.FloatField(new GUIContent("Update Rate", "Synced with Player Update.\nThe interval between checking for modified position and rotation"), CognitiveVR_Preferences.Instance.SnapshotInterval);
+                EditorGUILayout.FloatField(new GUIContent("Update Rate", "Synced with Player Update.\nThe interval between checking for modified position and rotation"), CognitiveVR_Settings.GetPreferences().SnapshotInterval);
             }
             else
             {
