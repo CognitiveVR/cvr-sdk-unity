@@ -85,9 +85,9 @@ namespace CognitiveVR
                 {
                     if (common.ToLower() == dynamic.MeshName.ToLower())
                     {
-                        Debug.Log("don't export common dynamic meshes!");
+                        //don't export common meshes!
                         continue;
-                    } //don't export common meshes!
+                    }
                 }
                 
                 if (!exportedMeshNames.Contains(dynamic.MeshName))

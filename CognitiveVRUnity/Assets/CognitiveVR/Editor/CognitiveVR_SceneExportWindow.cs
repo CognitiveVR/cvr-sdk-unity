@@ -958,17 +958,52 @@ namespace CognitiveVR
 
             string fileList = "Upload Files:\n";
 
+            string mtlFilepath = "";
+            string objFilepath = "";
+
             WWWForm wwwForm = new WWWForm();
             foreach (var f in filePaths)
             {
-                if (f.Contains(".obj") && !f.Contains("_decimated.obj")){ continue; }
-                if (f.Contains(".mtl") && !f.Contains("_decimated.mtl")){ continue; }
+                //set obj file. prefer decimated
+                if (f.Contains(".obj"))
+                {
+                    if (f.Contains("_decimated.obj"))
+                    {
+                        objFilepath = f;
+                    }
+                    else if (string.IsNullOrEmpty(objFilepath))
+                    {
+                        objFilepath = f;
+                    }
+                    continue;
+                }
+                
+                //set mtl file. prefer decimated
+                if (f.Contains(".mtl"))
+                {
+                    if (f.Contains("_decimated.mtl"))
+                    {
+                        mtlFilepath = f;
+                    }
+                    else if (string.IsNullOrEmpty(mtlFilepath))
+                    {
+                        mtlFilepath = f;
+                    }
+                    continue;
+                }
 
                 fileList += f + "\n";
 
                 var data = File.ReadAllBytes(f);
                 wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
             }
+
+            //add obj and mtl files
+            wwwForm.AddBinaryData("file", File.ReadAllBytes(objFilepath), Path.GetFileName(objFilepath));
+            fileList += objFilepath + "\n";
+            wwwForm.AddBinaryData("file", File.ReadAllBytes(mtlFilepath), Path.GetFileName(mtlFilepath));
+            fileList += mtlFilepath + "\n";
+
             Debug.Log(fileList);
 
             if (screenshotPath.Length == 0)

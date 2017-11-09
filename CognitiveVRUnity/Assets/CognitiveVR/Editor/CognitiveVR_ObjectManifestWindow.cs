@@ -77,7 +77,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
+            var currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -123,7 +123,7 @@ namespace CognitiveVR
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-            var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
+            var currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(EditorSceneManager.GetActiveScene().name);
             if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
             {
                 currentState = "no scene settings!";
@@ -188,7 +188,7 @@ namespace CognitiveVR
 
                     Debug.LogWarning("GetManifestResponse not authorized. Requesting Auth Token");
 
-                    var currentSceneSettings = CognitiveVR_Preferences.Instance.FindScene(EditorSceneManager.GetActiveScene().name);
+                    var currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(EditorSceneManager.GetActiveScene().name);
                     if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
                     {
                         return;
@@ -237,11 +237,22 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
-            if (CognitiveVR_Preferences.Instance.sceneSettings.Count == 0)
+            if (string.IsNullOrEmpty(CognitiveVR_Settings.GetPreferences().CustomerID))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("No Customer ID.\nDid you log in?");
+                if (GUILayout.Button("Open\nAccount Settings", GUILayout.Width(120)))
+                {
+                    CognitiveVR_Settings.Init();
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            if (CognitiveVR_Settings.GetPreferences().sceneSettings.Count == 0)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("No scene settings.\nDid you export this scene?");
-                if (GUILayout.Button("Open Scene Export\nWindow"))
+                if (GUILayout.Button("Open Scene Export\nWindow",GUILayout.Width(120)))
                 {
                     CognitiveVR_SceneExportWindow.Init();
                 }
@@ -249,12 +260,12 @@ namespace CognitiveVR
                 return;
             }
 
-            var currentSettings = CognitiveVR_Preferences.Instance.FindSceneByPath(EditorSceneManager.GetActiveScene().path);
+            var currentSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(EditorSceneManager.GetActiveScene().path);
             if (currentSettings == null || string.IsNullOrEmpty(currentSettings.SceneId))
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("No SceneId.\nDid you export this scene?");
-                if (GUILayout.Button("Open Scene Export\nWindow"))
+                if (GUILayout.Button("Open Scene Export\nWindow", GUILayout.Width(120)))
                 {
                     CognitiveVR_SceneExportWindow.Init();
                 }
@@ -491,7 +502,6 @@ namespace CognitiveVR
             var allDynamics = GameObject.FindObjectsOfType<DynamicObject>();
             List<int> usedIds = new List<int>();
             List<DynamicObject> unassignedDynamics = new List<DynamicObject>();
-
             //add used dynamic ids
             foreach (var dyn in allDynamics)
             {
@@ -502,12 +512,12 @@ namespace CognitiveVR
                 else
                 {
                     usedIds.Add(dyn.CustomId);
+                    dyn.UseCustomId = true;
                 }
             }
 
             int currentUniqueId = 1;
             int changedIds = 0;
-
             //assign all duplicated/unassigned
             foreach (var dyn in unassignedDynamics)
             {
@@ -557,7 +567,7 @@ namespace CognitiveVR
 
         void SendManifest(string json, int version)
         {
-            var settings = CognitiveVR_Preferences.Instance.FindSceneByPath(EditorSceneManager.GetActiveScene().path);
+            var settings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
                 Debug.LogWarning("settings are null " + EditorSceneManager.GetActiveScene().path);

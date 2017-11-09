@@ -272,7 +272,6 @@ namespace CognitiveVR
                     if (newOrganizationIndex != lastOrganizationIndex || string.IsNullOrEmpty(prefs.OrgName))
                     {
                         prefs.OrgName = GetUserOrganization(newOrganizationIndex).name;
-                        //Debug.Log("selected organization changed! to " + prefs.OrgName);
                         lastOrganizationIndex = newOrganizationIndex;
                         shouldsave = true;
                     }
@@ -305,7 +304,6 @@ namespace CognitiveVR
                         lastProductIndex = newProductIndex;
                         var product = GetUserProduct(GetUserOrganization(newOrganizationIndex), newProductIndex);
                         prefs.CustomerID = product.customerId;
-                        //Debug.Log("new product selected " + prefs.ProductName);
                         shouldsave = true;
                     }
 
@@ -611,10 +609,8 @@ namespace CognitiveVR
                             }
 
                             lastOrganizationIndex = GetOrganizationIndex(GetPreferences().OrgName);
-                            //Debug.Log("last organization " + GetUserOrganization(lastOrganizationIndex).name + " index: " + lastOrganizationIndex);
 
                             lastProductIndex = GetProductIndex(lastOrganizationIndex, GetPreferences().ProductName);
-                            //Debug.Log("last product " + GetUserProduct(GetUserOrganization(lastOrganizationIndex), lastProductIndex).name + " index: " + lastProductIndex);
 
                             AssetDatabase.SaveAssets();
                             SaveEditorVersion();
@@ -682,7 +678,6 @@ namespace CognitiveVR
                         {
                             //skip this version. limit this check to once a day
                             EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                            //Debug.Log("Version " + version + ". Skip update");
                         }
                         else
                         {
@@ -698,21 +693,13 @@ namespace CognitiveVR
 
         public void Logout()
         {
-            //var prefs = GetPreferences();
             UserData = Json.UserData.Empty;
-            //prefs.sessionID = string.Empty;
             UserName = string.Empty;
             password = string.Empty;
-            //SelectedOrganization = new Json.Organization();
-            //SelectedProduct = new Json.Product();
             EditorPrefs.DeleteKey("sessionId");
             EditorPrefs.DeleteKey("authToken");
             EditorPrefs.DeleteKey("sessionToken");
             IsUserLoggedIn = false;
-
-            //prefs.authToken = string.Empty;
-            //prefs.sessionToken = string.Empty;
-            //you do not need to stay logged in to keep your customerid for your product.
             AssetDatabase.SaveAssets();
         }
 
@@ -733,7 +720,6 @@ namespace CognitiveVR
 
         private static void SaveEditorVersion()
         {
-            //Debug.Log("save editor version. currentversion = "+ EditorPrefs.GetString("cvr_version")+ "|        core version= " + CognitiveVR.Core.SDK_Version+"|");
             if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
             {
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
@@ -969,8 +955,6 @@ namespace CognitiveVR
 
             var responseCode = Util.GetResponseCode(authTokenRequest.responseHeaders);
 
-            Debug.Log("cognitivevr - auth token response code " + responseCode);
-
             if (responseCode >= 500)
             {
                 //internal server error
@@ -999,13 +983,16 @@ namespace CognitiveVR
                 }
             }
 
-            //authTokenRequest.text = {"token":"yJe....hMb"}
-            string authtoken = authTokenRequest.text.Replace("{\"token\":\"", "").Replace("\"}", "");
-            //CognitiveVR_Preferences.Instance.authToken = authtoken;
-            EditorPrefs.SetString("authToken", authtoken);
+            var tokenResponse = JsonUtility.FromJson<AuthTokenResponse>(authTokenRequest.text);
+            EditorPrefs.SetString("authToken", tokenResponse.token);
 
             authTokenRequest = null;
             OnAuthResponse(responseCode);
+        }
+
+        public class AuthTokenResponse
+        {
+            public string token;
         }
 
         //index is local to organization. so 2 orgs with 2 products would each be 0 and 1
@@ -1029,7 +1016,7 @@ namespace CognitiveVR
 
         public Json.Organization GetUserOrganization(int index)
         {
-            //Debug.Log("OUT get user organization. index " + index + " " + UserData.organizations[index].name);
+            if (UserData.organizations == null || UserData.organizations.Length < index) { return new Json.Organization(); }
             return UserData.organizations[index];
         }
 
@@ -1042,7 +1029,6 @@ namespace CognitiveVR
             {
                 if (UserData.organizations[i].name.ToLower() == orgNameLower)
                 {
-                    //Debug.Log("OUT get organization index. name " + orgNameLower + " org index: " + orgIndex);
                     return orgIndex;
                 }
                 orgIndex++;

@@ -23,6 +23,7 @@ namespace CognitiveVR
                     instance = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
                     if (instance == null)
                     {
+                        Debug.LogWarning("Could not find CognitiveVR_Preferences in Resources. Settings will be incorrect!");
                         instance = CreateInstance<CognitiveVR_Preferences>();
                     }
                 }
