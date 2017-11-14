@@ -25,7 +25,7 @@ namespace CognitiveVR.Components
 
         private void OVRManager_HMDMounted()
         {
-            hmdpresentGUID = System.Guid.NewGuid().ToString();
+            hmdpresentGUID = Util.GetUniqueId();
             Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
         }
 
@@ -40,7 +40,7 @@ namespace CognitiveVR.Components
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
-                hmdpresentGUID = System.Guid.NewGuid().ToString();
+                hmdpresentGUID = Util.GetUniqueId();
                 Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
             }
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)

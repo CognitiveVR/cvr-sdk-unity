@@ -13,11 +13,15 @@ namespace CognitiveVR
 
     public class CognitiveVR_Preferences : ScriptableObject
     {
+        static bool IsSet = false;
         static CognitiveVR_Preferences instance;
         public static CognitiveVR_Preferences Instance
         {
             get
             {
+                if (IsSet)
+                    return instance;
+
                 if (instance == null)
                 {
                     instance = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
@@ -26,6 +30,7 @@ namespace CognitiveVR
                         Debug.LogWarning("Could not find CognitiveVR_Preferences in Resources. Settings will be incorrect!");
                         instance = CreateInstance<CognitiveVR_Preferences>();
                     }
+                    IsSet = true;
                 }
                 return instance;
             }

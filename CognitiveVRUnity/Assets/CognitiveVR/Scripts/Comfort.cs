@@ -86,7 +86,7 @@ namespace CognitiveVR.Components
             if (lastFps < LowFramerateThreshold && !lowFramerate)
             {
                 lowFramerate = true;
-                fpsTransactionID = System.Guid.NewGuid().ToString();
+                fpsTransactionID = Util.GetUniqueId();
                 Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
                 Util.logDebug("low framerate");
             }

@@ -151,17 +151,9 @@ namespace CognitiveVR
 #if UNITY_5_6_OR_NEWER
         public UnityEngine.Video.VideoPlayer VideoPlayer;
 #endif
-        bool IsVideoPlayer
-        {
-            get
-            {
-#if UNITY_5_6_OR_NEWER
-                return VideoPlayer != null && !string.IsNullOrEmpty(ExternalVideoSource);
-#else
-                return false;
-#endif
-            }
-        }
+
+        //used for a quick check instead of comparing objects
+        bool IsVideoPlayer;
 
         void OnEnable()
         {
@@ -171,16 +163,12 @@ namespace CognitiveVR
                 return;
             }
 
-            if (IsVideoPlayer)
-            {
 #if UNITY_5_6_OR_NEWER
-                //VideoPlayer.started += VideoPlayer_started;
-                //VideoPlayer.errorReceived += VideoPlayer_errorReceived;
-                VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
-                VideoPlayer.loopPointReached += VideoPlayer_loopPointReached;
-#endif
-                //TODO wait for first frame should set buffering to true for first snapshot
+            if (VideoPlayer != null && !string.IsNullOrEmpty(ExternalVideoSource))
+            {
+                SetVideoPlayer(ExternalVideoSource);
             }
+#endif
 
             //set the 'custom mesh name' to be the lowercase of the common name
             if (!UseCustomMesh)
@@ -250,7 +238,19 @@ namespace CognitiveVR
             }
         }
 
-        #if UNITY_5_6_OR_NEWER
+#if UNITY_5_6_OR_NEWER
+
+        public void SetVideoPlayer(string externalUrl)
+        {
+            ExternalVideoSource = externalUrl;
+            IsVideoPlayer = true;
+            //VideoPlayer.started += VideoPlayer_started;
+            //VideoPlayer.errorReceived += VideoPlayer_errorReceived;
+            VideoPlayer.prepareCompleted += VideoPlayer_prepareCompleted;
+            VideoPlayer.loopPointReached += VideoPlayer_loopPointReached;
+            //TODO wait for first frame should set buffering to true for first snapshot
+        }
+
         private void VideoPlayer_loopPointReached(UnityEngine.Video.VideoPlayer source)
         {
             SendVideoTime();
@@ -325,11 +325,10 @@ namespace CognitiveVR
                 {
                     SendFrameTimeRemaining -= timeSinceLastTick;
                 }
-            }
-            
-            if (SendFrameTimeRemaining < 0)
-            {
-                SendVideoTime();
+                if (SendFrameTimeRemaining < 0)
+                {
+                    SendVideoTime();
+                }
             }
 #endif
         }
@@ -550,6 +549,7 @@ namespace CognitiveVR
                         {
                             manifestEntry.videoURL = ExternalVideoSource;
                             manifestEntry.videoFlipped = FlipVideo;
+                            IsVideoPlayer = true;
                         }
 #endif
 
@@ -594,6 +594,7 @@ namespace CognitiveVR
                     {
                         manifestEntry.videoURL = ExternalVideoSource;
                         manifestEntry.videoFlipped = FlipVideo;
+                        IsVideoPlayer = true;
                     }
 #endif
                     ObjectIds.Add(ObjectId);

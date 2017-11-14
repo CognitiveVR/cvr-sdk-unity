@@ -60,6 +60,16 @@ namespace CognitiveVR
 			}
 		}
 
+        static int uniqueId;
+        /// <summary>
+        /// this should be used instead of System.Guid.NewGuid(). these only need to be unique, not complicated
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUniqueId()
+        {
+            return uniqueId++.ToString();
+        }
+
         internal static void cacheDeviceAndAppInfo()
         {
             // Clear out any previously set data

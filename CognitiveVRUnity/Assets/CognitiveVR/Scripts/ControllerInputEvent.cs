@@ -81,7 +81,7 @@ namespace CognitiveVR.Components
         {
             Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
 
-            string transactionID = System.Guid.NewGuid().ToString();
+            string transactionID = Util.GetUniqueId();
             Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
             inTransaction.setProperty("type", type).setProperty("device", rightController?"right controller": "left controller").setProperty("state","begin");
             inTransaction.begin(pos);
