@@ -13,7 +13,7 @@ using System;
 //http://wiki.unity3d.com/index.php/TextureScale Eric Haines (Eric5h5)
 //CC BY SA 3.0
 
-//TODO clean up this nightmare
+//TODO clean up inputs. make an interface for different formats
 
 namespace CognitiveVR
 {

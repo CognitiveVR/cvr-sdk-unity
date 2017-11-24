@@ -40,11 +40,11 @@ namespace CognitiveVR.Components
         public IEnumerator OnPostRender()
         {
             yield return endOfFrame;
-            if (CognitiveVR_Preferences.Instance.TrackGazePoint)
+            if (CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+                if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
                 {
-                    CognitiveVR_Manager.Instance.TickPostRender(Vector3.zero);
+                    CognitiveVR_Manager.Instance.TickPostRender(Util.vector_zero);
                 }
             }
             //CognitiveVR_Manager.HasHitDynamic = false;

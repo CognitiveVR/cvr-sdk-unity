@@ -50,6 +50,8 @@ namespace CognitiveVR
         //// The WWW request
         private WWW mWWW;
 
+        private Dictionary<string, string> mHeaders = new Dictionary<string, string>();
+
         internal void BeginHttpRequest()
         {
             mResult = new Result();
@@ -133,11 +135,11 @@ namespace CognitiveVR
                         { "ssf-contents-not-url-encoded", "true" }
                     };
                     */
-                    Dictionary<string, string> headers = new Dictionary<string, string>();
-                    headers.Add("ssf-use-positional-post-params", "true");
-                    headers.Add("ssf-contents-not-url-encoded", "true");
+                    //Dictionary<string, string> headers = new Dictionary<string, string>();
+                    //headers.Add("ssf-use-positional-post-params", "true");
+                    //headers.Add("ssf-contents-not-url-encoded", "true");
 
-                    mWWW = new WWW(mUrl, System.Text.Encoding.UTF8.GetBytes(mSendData), headers);
+                    mWWW = new WWW(mUrl, System.Text.Encoding.UTF8.GetBytes(mSendData), mHeaders);
                     break;
                 case State.ReadResponse:
                     if (mWWW.isDone)
@@ -186,6 +188,18 @@ namespace CognitiveVR
             sIsWebPlayer = isWebPlayer;
         }
 
+        internal static void executeAsync(string url, string sendData)
+        {
+            HttpRequest req = sHubObj.AddComponent<HttpRequest>();
+            req.mUrl = url;
+            req.mSendData = sendData;
+
+            req.mHeaders.Add("Content-Type", "application/json");
+            req.mHeaders.Add("X-HTTP-Method-Override", "POST");
+
+            req.BeginHttpRequest();
+        }
+
         internal static void executeAsync(System.Uri uri, int requestTimeout, string sendData, Listener listener)
         {
             // Create the request and add it to the Hub Object so that it gets updated
@@ -194,6 +208,10 @@ namespace CognitiveVR
             req.mTimeout = requestTimeout;
             req.mSendData = sendData;
             req.mListener = listener;
+
+            req.mHeaders.Add("ssf-use-positional-post-params", "true");
+            req.mHeaders.Add("ssf-contents-not-url-encoded", "true");
+
             req.BeginHttpRequest();
         }
 #endregion

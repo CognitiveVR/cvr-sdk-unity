@@ -319,6 +319,11 @@ namespace CognitiveVR
             }
         }
 
+        public static void SendOnQuitRequest(string url, string data)
+        {
+            HttpRequest.executeAsync(url, data);
+        }
+
         private static bool isValidId(string id)
 		{
 			return !string.IsNullOrEmpty(id);
