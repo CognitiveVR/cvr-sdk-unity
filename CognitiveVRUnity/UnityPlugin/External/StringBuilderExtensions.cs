@@ -8,6 +8,8 @@
 // Copyright (c) Gavin Pugh 2010 - Released under the zlib license: http://www.opensource.org/licenses/zlib-license.php
 
 //modified namespace and added doubles
+//FIXED decimal values on floats ignores 0 if it's the first decimal
+//TODO BUG some float values are not correctly written to negative. noticably quaternion values. issue with small (<1) values?
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +140,7 @@ namespace CognitiveVR.External
 				// No decimal places, just round up and print it as an int
 
 				// Agh, Math.Floor() just works on doubles/decimals. Don't want to cast! Let's do this the old-fashioned way.
-				int int_val;
+				/*int int_val;
 				if ( float_val >= 0.0f )
 				{
 					// Round up
@@ -148,9 +150,9 @@ namespace CognitiveVR.External
 				{
 					// Round down for negative numbers
 					int_val = (int)( float_val - 0.5f );
-				}
+				}*/
 
-				string_builder.Concat( int_val, pad_amount, pad_char, 10 );
+                string_builder.Concat(UnityEngine.Mathf.FloorToInt(float_val), pad_amount, pad_char, 10 );
 			}
 			else
 			{
@@ -170,11 +172,16 @@ namespace CognitiveVR.External
 				{
 					remainder *= 10;
 					decimal_places--;
+                    if (remainder<1)
+                    {
+                        //values was a 0, write to string builder because it will be clipped when multiplying the remainder
+                        string_builder.Concat(0, 0, '0', 10);
+                    }
 				}
 				while ( decimal_places > 0 );
 
 				// Round up. It's guaranteed to be a positive number, so no extra work required here.
-				remainder += 0.5f;
+				//remainder += 0.5f;
 
 				// All done, print that as an int!
 				string_builder.Concat( (uint)remainder, 0, '0', 10 );
@@ -207,7 +214,7 @@ namespace CognitiveVR.External
 
         //doubles
         //! Convert a given double value to a string and concatenate onto the stringbuilder
-        public static StringBuilder Concat(this StringBuilder string_builder, double double_val, uint decimal_places, uint pad_amount, char pad_char)
+        public static StringBuilder ConcatDouble(this StringBuilder string_builder, double double_val, uint decimal_places, uint pad_amount, char pad_char)
         {
             Debug.Assert(pad_amount >= 0);
 
@@ -248,11 +255,16 @@ namespace CognitiveVR.External
                 {
                     remainder *= 10;
                     decimal_places--;
+                    if (remainder < 1)
+                    {
+                        //values was a 0, write to string builder because it will be clipped when multiplying the remainder
+                        string_builder.Concat(0, 0, '0', 10);
+                    }
                 }
                 while (decimal_places > 0);
 
                 // Round up. It's guaranteed to be a positive number, so no extra work required here.
-                remainder += 0.5f;
+                //remainder += 0.5f;
 
                 // All done, print that as an int!
                 string_builder.Concat((uint)remainder, 0, '0', 10);
@@ -261,9 +273,9 @@ namespace CognitiveVR.External
         }
 
         //! Convert a given float value to a string and concatenate onto the stringbuilder. Assumes five decimal places, and no padding.
-        public static StringBuilder Concat(this StringBuilder string_builder, double double_val)
+        public static StringBuilder ConcatDouble(this StringBuilder string_builder, double double_val)
         {
-            string_builder.Concat(double_val, ms_default_decimal_places, 0, ms_default_pad_char);
+            string_builder.ConcatDouble(double_val, ms_default_decimal_places, 0, ms_default_pad_char);
             return string_builder;
         }
 

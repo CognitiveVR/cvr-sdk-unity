@@ -96,9 +96,11 @@ namespace CognitiveVR
             StringBuilder sb = new StringBuilder(1024);
 
             sb.Append("[");
-            sb.Concat(timestamp);
+            //sb.ConcatDouble(timestamp);
+            sb.Append(sensorvalue);
             sb.Append(",");
-            sb.Concat(sensorvalue);
+            //sb.ConcatDouble(sensorvalue);
+            sb.Append(sensorvalue);
             sb.Append("]");
 
             return sb.ToString();

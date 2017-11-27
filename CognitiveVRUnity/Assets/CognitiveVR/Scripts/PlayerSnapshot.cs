@@ -23,7 +23,7 @@ namespace CognitiveVR
 
         public double timestamp;
         //public Dictionary<string, object> Properties = new Dictionary<string, object>();
-        public int ObjectId;
+        public int ObjectId = -1;
         public Vector3 LocalGaze;
         public Vector3 Position;
         public Vector3 HMDForward;

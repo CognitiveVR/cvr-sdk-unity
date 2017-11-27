@@ -458,9 +458,9 @@ namespace CognitiveVR
 
                 if (Util.IsLoggingEnabled)
                 {
-                    Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
-                    Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
-                    Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
+                    //Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
+                    //Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
+                    //Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
                 }
 
                 dynamicHit.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
@@ -587,15 +587,13 @@ namespace CognitiveVR
 #endif //gazetracker
 
 
-
-            playerSnapshots.Add(snapshot);
-
             //get gaze point (unless snapshot is whatever. maybe write the type of snapshot here? world, dynamic, sky)
             //wait until enough have been done, then batch the string.write or whatever in a thread
 
             if (snapshot.ObjectId > -1)
             {
                 snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
+                Debug.Log("dynamic hit "+snapshot.ObjectId);
             }
             else
             {
@@ -604,6 +602,7 @@ namespace CognitiveVR
                 if (!validPoint)
                 {
                     snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
+                    Debug.DrawRay(snapshot.Position, HMD.forward* 1000, Color.cyan, 1);
                 }
                 else if (!float.IsNaN(calcGazePoint.x))
                 {
@@ -615,10 +614,17 @@ namespace CognitiveVR
                         Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
                         Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
                         Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
-                        Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.yellow, 1);
+                        Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
                     }
                 }
+                else
+                {
+                    //looked at world, but invalid gaze point
+                    return;
+                }
             }
+
+            playerSnapshots.Add(snapshot);
 
             if (playerSnapshots.Count >= CognitiveVR_Preferences.S_GazeSnapshotCount)
             {
@@ -883,15 +889,13 @@ namespace CognitiveVR
         public IEnumerator PostJsonRequest(byte[] bytes, string url)
         {
             WWW www = new UnityEngine.WWW(url, bytes, headers);
+            
+            yield return www;
 
             if (Util.IsLoggingEnabled == false)
             {
-                yield break;
+                Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error + "</color>") + " <color=green>return text: " + www.text + "</color>");
             }
-
-            yield return www;
-
-            Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error+ "</color>") + " <color=green>return text: " + www.text + "</color>");
         }
 
         void CleanupPlayerRecorderEvents()
