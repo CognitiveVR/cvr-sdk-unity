@@ -24,15 +24,20 @@ namespace CognitiveVR
         public double timestamp;
         //public Dictionary<string, object> Properties = new Dictionary<string, object>();
         public int ObjectId = -1;
+        //used instead of GazePoint when looking at dynamic object
         public Vector3 LocalGaze;
+        //position of HMD
         public Vector3 Position;
+        //direction of hmd forward
         public Vector3 HMDForward;
         public float NearDepth;
         public float FarDepth;
         public RenderTexture RTex;
         public Quaternion HMDRotation;
         public Vector3 GazeDirection;
+        //world gaze point. used when looking at world, not dynamic or sky
         public Vector3 GazePoint;
+        //xy of screen when tracking eyes
         public Vector3 HMDGazePoint;
 
         public PlayerSnapshot(int framecount)

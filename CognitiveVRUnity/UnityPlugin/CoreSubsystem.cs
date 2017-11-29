@@ -23,22 +23,31 @@ namespace CognitiveVR
 		public static string UserId { get; private set; }
 		public static string DeviceId { get; private set; }
 
+        static string _uniqueId;
         public static string UniqueID
         {
             get
             {
-                if (!string.IsNullOrEmpty(UserId))
+                if (string.IsNullOrEmpty(_uniqueId))
                 {
-                    return UserId;
+                    if (!string.IsNullOrEmpty(UserId))
+                        _uniqueId = UserId;
+                    else
+                        _uniqueId = DeviceId;
                 }
-                return DeviceId;
+                return _uniqueId;
             }
         }
 
         private static double _timestamp;
         public static double SessionTimeStamp
         {
-             get { if (_timestamp < 1) _timestamp = Util.Timestamp(); return _timestamp; }
+             get
+            {
+                if (_timestamp < 1)
+                    _timestamp = Util.Timestamp();
+                return _timestamp;
+            }
         }
 
         private static string _sessionId;
@@ -163,7 +172,7 @@ namespace CognitiveVR
 					Util.logError("Error during HttpRequest: " + e.Message);
 					ret = Error.Generic;
 				}
-                _timestamp = Util.Timestamp();
+                //_timestamp = Util.Timestamp();
             }
 
             if ((Error.Success != ret) && (null != cb))

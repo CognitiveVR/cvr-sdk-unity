@@ -39,13 +39,13 @@ namespace CognitiveVR
             double timestamp = CoreSubsystem.SessionTimeStamp;
             string sessionId = CoreSubsystem.SessionID;
 
-            CognitiveVR.Util.logDebug("package transaction event data " + partCount);
+            //CognitiveVR.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
             
             builder.Append("{");
 
             //header
-            builder.Append(JsonUtil.SetString("userid", userid));
+            builder.Append(JsonUtil.SetString("userid", CoreSubsystem.UniqueID));
             builder.Append(",");
 
             builder.Append(JsonUtil.SetObject("timestamp", timestamp));
@@ -102,7 +102,7 @@ namespace CognitiveVR
             wwwSender.StartCoroutine(GetWWWReponse(url, outBytes, headers));
             //UnityEngine.WWW www = new UnityEngine.WWW(url, outBytes, headers);
 
-            Util.logDebug("sent transaction event data. clear packaged bundles");
+            //Util.logDebug("sent transaction event data. clear packaged bundles");
         }
 
         public static System.Collections.IEnumerator GetWWWReponse(string url, byte[] outBytes, Dictionary<string,string> headers)

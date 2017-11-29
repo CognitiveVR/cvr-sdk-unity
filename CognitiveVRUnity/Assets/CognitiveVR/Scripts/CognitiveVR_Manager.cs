@@ -364,8 +364,15 @@ namespace CognitiveVR
 
         private void OnEnable()
         {
-            InitResponse = Error.NotInitialized;
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             instance = this;
+
+            InitResponse = Error.NotInitialized;
 
             for (int i = 0; i < 1000; i++)
             {
@@ -445,15 +452,58 @@ namespace CognitiveVR
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+            SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
 
 
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            DynamicObject.ClearObjectIds();
+            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
+                OnLevelLoaded();
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.TrackingSceneName))
+            {
+                CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+                if (lastSceneSettings != null)
+                {
+                    if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
+                    {
+                        Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
+                        OnSendData();
+                        //SendPlayerGazeSnapshots();
+                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+                    }
+                }
+
+                CoreSubsystem.CurrentSceneId = string.Empty;
+
+                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
+                if (sceneSettings != null)
+                {
+                    if (!string.IsNullOrEmpty(sceneSettings.SceneId))
+                    {
+                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
+                    }
+                    else
+                    {
+                        Util.logWarning("PlayerRecorder sceneLoaded SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
+                    }
+                }
+                else
+                {
+                    Util.logWarning("PlayerRecorder sceneLoaded couldn't find scene " + scene.name + ". Not recording");
+                }
+            }
+
+            CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
             OnLevelLoaded();
-            
-            //DynamicObject.ObjectManifestDict
         }
 
         public static int frameCount;
@@ -471,7 +521,7 @@ namespace CognitiveVR
         void Update()
         {
 
-            doPostRender = false;
+            //doPostRender = false;
 
             OnUpdate();
             UpdatePlayerRecorder();
@@ -539,14 +589,13 @@ namespace CognitiveVR
 
 
             DynamicObjectSnapshot[] tempSnapshots = new DynamicObjectSnapshot[SendObjectSnapshots.Count];
-            SendObjectSnapshots.CopyTo(tempSnapshots,0);
-            int count = SendObjectSnapshots.Count;
-            for (int i = 0; i < count; i++)
-            {
-                SendObjectSnapshots.Dequeue().ReturnToPool();
-                //SendObjectSnapshots[i].ReturnToPool();
-            }
-            SendObjectSnapshots.Clear();
+            SendObjectSnapshots.CopyTo(tempSnapshots, 0);
+
+            //for (int i = 0; i<tempSnapshots.Length; i++)
+            //{
+            //    var s = DynamicObject.SetSnapshot(tempSnapshots[i]);
+            //    Debug.Log(">>>>>>>>>>>>>queue snapshot  " + s);
+            //}
 
 
             //write manifest entries to thread
@@ -592,6 +641,11 @@ namespace CognitiveVR
                 }
             }
 
+            while (SendObjectSnapshots.Count > 0)
+            {
+                SendObjectSnapshots.Dequeue().ReturnToPool();
+            }
+
             DynamicObject.SendSavedSnapshots(manifestEntries, snapshots);
         }
 
@@ -618,7 +672,7 @@ namespace CognitiveVR
             CoreSubsystem.reset();
 
 
-            Camera.onPostRender -= MyPostRender;
+            //Camera.onPostRender -= MyPostRender;
             //OnQuit();
             StartCoroutine(SlowQuit());
         }

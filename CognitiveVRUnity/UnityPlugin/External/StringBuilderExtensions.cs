@@ -174,7 +174,7 @@ namespace CognitiveVR.External
 					decimal_places--;
                     if (remainder<1)
                     {
-                        //values was a 0, write to string builder because it will be clipped when multiplying the remainder
+                        //value was a 0, write to string builder because it will be clipped when multiplying the remainder
                         string_builder.Concat(0, 0, '0', 10);
                     }
 				}

@@ -40,26 +40,15 @@ namespace CognitiveVR.Components
         public IEnumerator OnPostRender()
         {
             yield return endOfFrame;
+            //Debug.Log("post render end of frame");
             if (CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
-                {
-                    CognitiveVR_Manager.Instance.TickPostRender(Util.vector_zero);
-                }
+                CognitiveVR_Manager.Instance.TickPostRender(Util.vector_zero);
             }
             //CognitiveVR_Manager.HasHitDynamic = false;
         }
 
-        /// <summary>
-        /// used for gaze in direction. does not do anything with rendering, but resets HasHitDynamic at the end of the frame
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator EndOfFrame()
-        {
-            yield return endOfFrame;
-            //CognitiveVR_Manager.HasHitDynamic = false;
-        }
-
+        //steamvr freezes unity if this is enabled in unity 5.4
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             Graphics.Blit(source, destination, material);

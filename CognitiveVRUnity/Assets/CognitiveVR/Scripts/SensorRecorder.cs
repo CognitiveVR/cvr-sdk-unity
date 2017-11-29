@@ -50,7 +50,7 @@ namespace CognitiveVR
             sb.Append(",");
             JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, sb);
             sb.Append(",");
-            JsonUtil.SetDouble("timestamp", CognitiveVR_Preferences.TimeStamp, sb);
+            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, sb);
             sb.Append(",");
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");

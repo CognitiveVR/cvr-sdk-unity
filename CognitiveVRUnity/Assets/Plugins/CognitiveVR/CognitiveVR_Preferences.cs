@@ -37,7 +37,7 @@ namespace CognitiveVR
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_TrackGazePoint = instance.TrackGazePoint;
-                    S_GazePointFromDirection = instance.GazePointFromDirection;
+                    //S_GazePointFromDirection = instance.GazePointFromDirection;
                     S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
                     S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
@@ -144,14 +144,16 @@ namespace CognitiveVR
         //used in component setup to conviently set all the necessary 360 options
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public int VideoSphereDynamicObjectId = 1000;
-        public bool TrackPosition = true;
+        
+        //obsolete - does nothing
+        //public bool TrackPosition = true;
         public bool TrackGazePoint = true;
-        public bool TrackGazeDirection = false;
-        public bool GazePointFromDirection = false;
+        //public bool TrackGazeDirection = false;
+        //public bool GazePointFromDirection = false;
         public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]
-        public bool DebugWriteToFile = false;
+        //public bool DebugWriteToFile = false;
 
         public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
         public int GazeSnapshotCount = 64;

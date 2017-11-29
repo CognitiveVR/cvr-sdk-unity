@@ -220,7 +220,7 @@ namespace CognitiveVR
 
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static double lastTime;
-        static int lastFrame;
+        static int lastFrame = -1;
 
         public static double Timestamp(int frame)
         {
@@ -546,11 +546,14 @@ namespace CognitiveVR
             }
             else
             {
-                builder.Concat(pos[0]);
+                //builder.Concat(pos[0]);
+                builder.Append(pos[0]);
                 builder.Append(",");
-                builder.Concat(pos[1]);
+                //builder.Concat(pos[1]);
+                builder.Append(pos[1]);
                 builder.Append(",");
-                builder.Concat(pos[2]);
+                //builder.Concat(pos[2]);
+                builder.Append(pos[2]);
             }
 
             builder.Append("]");
@@ -577,11 +580,14 @@ namespace CognitiveVR
             }
             else
             {
-                builder.Concat(pos[0]);
+                //builder.Concat(pos[0]);
+                builder.Append(pos[0]);
                 builder.Append(",");
-                builder.Concat(pos[1]);
+                //builder.Concat(pos[1]);
+                builder.Append(pos[1]);
                 builder.Append(",");
-                builder.Concat(pos[2]);
+                //builder.Concat(pos[2]);
+                builder.Append(pos[2]);
             }
 
             builder.Append("]");
@@ -609,11 +615,14 @@ namespace CognitiveVR
             }
             else
             {
-                builder.Concat(pos.x);
+                //builder.Concat(pos.x);
+                builder.Append(pos.x);
                 builder.Append(",");
-                builder.Concat(pos.y);
+                //builder.Concat(pos.y);
+                builder.Append(pos.y);
                 builder.Append(",");
-                builder.Concat(pos.z);
+                //builder.Concat(pos.z);
+                builder.Append(pos.z);
             }
 
             builder.Append("]");
@@ -662,13 +671,17 @@ namespace CognitiveVR
             builder.Append(name);
             builder.Append("\":[");
 
-            builder.Concat(quat.x);
+            //builder.Concat(quat.x);
+            builder.Append(quat.x);
             builder.Append(",");
-            builder.Concat(quat.y);
+            //builder.Concat(quat.y);
+            builder.Append(quat.y);
             builder.Append(",");
-            builder.Concat(quat.z);
+            //builder.Concat(quat.z);
+            builder.Append(quat.z);
             builder.Append(",");
-            builder.Concat(quat.w);
+            //builder.Concat(quat.w);
+            builder.Append(quat.w);
 
             builder.Append("]");
             return builder.ToString();
@@ -705,13 +718,17 @@ namespace CognitiveVR
             builder.Append(name);
             builder.Append("\":[");
 
-            builder.Concat(quat[0]);
+            //builder.Concat(quat[0]);
+            builder.Append(quat[0]);
             builder.Append(",");
-            builder.Concat(quat[1]);
+            //builder.Concat(quat[1]);
+            builder.Append(quat[1]);
             builder.Append(",");
-            builder.Concat(quat[2]);
+            //builder.Concat(quat[2]);
+            builder.Append(quat[2]);
             builder.Append(",");
-            builder.Concat(quat[3]);
+            //builder.Concat(quat[3]);
+            builder.Append(quat[3]);
 
             builder.Append("]");
             return builder.ToString();
@@ -724,13 +741,17 @@ namespace CognitiveVR
             builder.Append(name);
             builder.Append("\":[");
 
-            builder.Concat(quat[0]);
+            //builder.Concat(quat[0]);
+            builder.Append(quat[0]);
             builder.Append(",");
-            builder.Concat(quat[1]);
+            //builder.Concat(quat[1]);
+            builder.Append(quat[1]);
             builder.Append(",");
-            builder.Concat(quat[2]);
+            //builder.Concat(quat[2]);
+            builder.Append(quat[2]);
             builder.Append(",");
-            builder.Concat(quat[3]);
+            //builder.Concat(quat[3]);
+            builder.Append(quat[3]);
 
             builder.Append("]");
             return builder;
