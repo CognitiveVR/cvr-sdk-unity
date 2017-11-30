@@ -13,11 +13,15 @@ namespace CognitiveVR
 
     public class CognitiveVR_Preferences : ScriptableObject
     {
+        static bool IsSet = false;
         static CognitiveVR_Preferences instance;
         public static CognitiveVR_Preferences Instance
         {
             get
             {
+                if (IsSet)
+                    return instance;
+
                 if (instance == null)
                 {
                     instance = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
@@ -26,10 +30,35 @@ namespace CognitiveVR
                         Debug.LogWarning("Could not find CognitiveVR_Preferences in Resources. Settings will be incorrect!");
                         instance = CreateInstance<CognitiveVR_Preferences>();
                     }
+                    IsSet = true;
+                    S_SnapshotInterval = instance.SnapshotInterval;
+                    S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
+                    S_GazeSnapshotCount = instance.GazeSnapshotCount;
+                    S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
+                    S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
+                    S_TrackGazePoint = instance.TrackGazePoint;
+                    //S_GazePointFromDirection = instance.GazePointFromDirection;
+                    S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
+                    S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
+                    S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
+                    S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
                 return instance;
             }
         }
+
+        public static float S_SnapshotInterval;
+        public static bool S_EvaluateGazeRealtime;
+        public static int S_GazeSnapshotCount;
+        public static int S_DynamicSnapshotCount;
+        public static int S_TransactionSnapshotCount;
+        public static int S_SensorSnapshotCount;
+
+        public static bool S_DynamicObjectSearchInParent;
+        public static bool S_TrackGazePoint;
+        public static bool S_GazePointFromDirection;
+        public static int S_VideoSphereDynamicObjectId;
+        public static float S_GazeDirectionMultiplier;
 
         //timestamp and session id
         //private static double _timeStamp;
@@ -112,16 +141,19 @@ namespace CognitiveVR
         public float SnapshotInterval = 0.1f;
         public bool DynamicObjectSearchInParent = false;
 
+        //used in component setup to conviently set all the necessary 360 options
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public int VideoSphereDynamicObjectId = 1000;
-        public bool TrackPosition = true;
+        
+        //obsolete - does nothing
+        //public bool TrackPosition = true;
         public bool TrackGazePoint = true;
-        public bool TrackGazeDirection = false;
-        public bool GazePointFromDirection = false;
+        //public bool TrackGazeDirection = false;
+        //public bool GazePointFromDirection = false;
         public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]
-        public bool DebugWriteToFile = false;
+        //public bool DebugWriteToFile = false;
 
         public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
         public int GazeSnapshotCount = 64;

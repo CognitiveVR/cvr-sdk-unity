@@ -8,20 +8,41 @@ namespace CognitiveVR
 {
     public class PlayerSnapshot
     {
+        public enum SnapshotType
+        {
+            World,
+            Dynamic,
+            Sky
+        }
+        public SnapshotType snapshotType;
+
+
         public static int Resolution = 64;
 
+        public static ColorSpace colorSpace = ColorSpace.Linear;
+
         public double timestamp;
-        public Dictionary<string, object> Properties = new Dictionary<string, object>();
+        //public Dictionary<string, object> Properties = new Dictionary<string, object>();
+        public int ObjectId = -1;
+        //used instead of GazePoint when looking at dynamic object
+        public Vector3 LocalGaze;
+        //position of HMD
+        public Vector3 Position;
+        //direction of hmd forward
+        public Vector3 HMDForward;
+        public float NearDepth;
+        public float FarDepth;
+        public RenderTexture RTex;
+        public Quaternion HMDRotation;
+        public Vector3 GazeDirection;
+        //world gaze point. used when looking at world, not dynamic or sky
+        public Vector3 GazePoint;
+        //xy of screen when tracking eyes
+        public Vector3 HMDGazePoint;
 
-        public PlayerSnapshot()
+        public PlayerSnapshot(int framecount)
         {
-            timestamp = Util.Timestamp();
-        }
-
-        public PlayerSnapshot(Dictionary<string, object> properties)
-        {
-            Properties = properties;
-            timestamp = Util.Timestamp();
+            timestamp = Util.Timestamp(framecount);
         }
 
         public float GetAdjustedDistance(float far, Vector3 gazeDir, Vector3 camForward)
@@ -119,8 +140,9 @@ namespace CognitiveVR
             float relativeDepth = 0;
             //Vector3 gazeWorldPoint;
 
-            var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
-            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+            //var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
+            var color = GetRTColor(RTex, width / 2, height / 2);
+            if (colorSpace == ColorSpace.Linear)
             {
                 relativeDepth = color.linear.r;
 
@@ -128,24 +150,28 @@ namespace CognitiveVR
             else
             {
                 relativeDepth = color.r;
-                //TODO gamma lighting doesn't correctly sample the greyscale depth value, but very close. not sure why
             }
 
             if (relativeDepth > 0.99f)
             {
-                gazeWorldPoint = Vector3.zero;
+                gazeWorldPoint = Util.vector_zero;
                 return false;
             }
 
-            float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
-            gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["hmdForward"] * actualDistance;
+
+            //float actualDistance = Mathf.Lerp(NearDepth, FarDepth, relativeDepth);
+            float actualDistance = NearDepth + (FarDepth - NearDepth) * relativeDepth;
+            gazeWorldPoint = Position + HMDForward * actualDistance;
+
+            //float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], (float)Properties["farDepth"], relativeDepth);
+            //gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["hmdForward"] * actualDistance;
             return true;
 #endif
 
 
         }
 
-        static Texture2D tex;
+        public static Texture2D tex;
         public Color GetRTColor(RenderTexture rt, int x, int y)
         {
             if (tex == null)

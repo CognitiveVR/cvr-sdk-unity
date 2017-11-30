@@ -29,7 +29,7 @@ namespace CognitiveVR.Components
             if (hit && string.IsNullOrEmpty(HMDGuid))
             {
                 Util.logDebug("hmd collision");
-                HMDGuid = System.Guid.NewGuid().ToString();
+                HMDGuid = Util.GetUniqueId();
                 Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").setProperty("state", "begin").begin();
             }
             else if (!hit && !string.IsNullOrEmpty(HMDGuid))

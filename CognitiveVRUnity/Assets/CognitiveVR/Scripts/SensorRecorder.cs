@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CognitiveVR;
 using CognitiveVR.Plugins;
 using System.Text;
+using CognitiveVR.External;
 
 namespace CognitiveVR
 {
@@ -45,13 +46,13 @@ namespace CognitiveVR
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
-            sb.Append(JsonUtil.SetString("name", Core.UniqueID));
+            JsonUtil.SetString("name", Core.UniqueID, sb);
             sb.Append(",");
-            sb.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+            JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, sb);
             sb.Append(",");
-            sb.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, sb);
             sb.Append(",");
-            sb.Append(JsonUtil.SetObject("part", jsonPart));
+            JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
             jsonPart++;
 
@@ -59,7 +60,7 @@ namespace CognitiveVR
             foreach (var k in CachedSnapshots.Keys)
             {
                 sb.Append("{");
-                sb.Append(JsonUtil.SetString("name", k));
+                JsonUtil.SetString("name", k, sb);
                 sb.Append(",");
                 sb.Append("\"data\":[");
                 foreach (var v in CachedSnapshots[k])
@@ -95,8 +96,10 @@ namespace CognitiveVR
             StringBuilder sb = new StringBuilder(1024);
 
             sb.Append("[");
-            sb.Append(timestamp);
+            //sb.ConcatDouble(timestamp);
+            sb.Append(sensorvalue);
             sb.Append(",");
+            //sb.ConcatDouble(sensorvalue);
             sb.Append(sensorvalue);
             sb.Append("]");
 

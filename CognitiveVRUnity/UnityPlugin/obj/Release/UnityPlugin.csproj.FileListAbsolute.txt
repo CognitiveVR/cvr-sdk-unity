@@ -15,3 +15,4 @@ C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\
 C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\bin\Release\CognitiveVR.pdb
 C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.dll
 C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\CognitiveVR.pdb
+C:\Users\calder\Documents\GitHub\cvr-sdk-unity\CognitiveVRUnity\UnityPlugin\obj\Release\UnityPlugin.csprojResolveAssemblyReference.cache

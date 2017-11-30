@@ -23,12 +23,23 @@ namespace CognitiveVR
         public void OnInit(Error initError)
         {
             Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
+            if (initError == Error.AlreadyInitialized)
+            {
+                return;
+            }
             InitResponse = initError;
 
             OutstandingInitRequest = false;
 
-            double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-            Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+            if (initError == Error.Success)
+            {
+                double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
+                Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+            }
+            else //some failure
+            {
+                StopAllCoroutines();
+            }
 
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
@@ -315,7 +326,17 @@ namespace CognitiveVR
         #endregion
 
         private static CognitiveVR_Manager instance;
-        public static CognitiveVR_Manager Instance { get { return instance; } }
+        public static CognitiveVR_Manager Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindObjectOfType<CognitiveVR_Manager>();
+                }
+                return instance;
+            }
+        }
         YieldInstruction playerSnapshotInverval;
 
         [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
@@ -343,8 +364,21 @@ namespace CognitiveVR
 
         private void OnEnable()
         {
-            InitResponse = Error.NotInitialized;
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             instance = this;
+
+            InitResponse = Error.NotInitialized;
+
+            //TODO expose this value to initialize a pool when writing lots of dynamic objects
+            for (int i = 0; i < 100; i++)
+            {
+                DynamicObjectSnapshot.snapshotQueue.Enqueue(new DynamicObjectSnapshot());
+            }
         }
 
         void Start()
@@ -407,9 +441,9 @@ namespace CognitiveVR
 
             CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
 
-            Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.Instance.TransactionSnapshotCount);
+            Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
 
-            playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval);
+            playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
             StartCoroutine(Tick());
 
 #if CVR_STEAMVR
@@ -418,26 +452,77 @@ namespace CognitiveVR
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+            SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
 
 
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            DynamicObject.ClearObjectIds();
+            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
+                OnLevelLoaded();
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.TrackingSceneName))
+            {
+                CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+                if (lastSceneSettings != null)
+                {
+                    if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
+                    {
+                        Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
+                        OnSendData();
+                        //SendPlayerGazeSnapshots();
+                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+                    }
+                }
+
+                CoreSubsystem.CurrentSceneId = string.Empty;
+
+                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
+                if (sceneSettings != null)
+                {
+                    if (!string.IsNullOrEmpty(sceneSettings.SceneId))
+                    {
+                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
+                    }
+                    else
+                    {
+                        Util.logWarning("PlayerRecorder sceneLoaded SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
+                    }
+                }
+                else
+                {
+                    Util.logWarning("PlayerRecorder sceneLoaded couldn't find scene " + scene.name + ". Not recording");
+                }
+            }
+
+            CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
             OnLevelLoaded();
         }
 
+        public static int frameCount;
+
         IEnumerator Tick()
         {
-            while (true)
+            while (Application.isPlaying)
             {
                 yield return playerSnapshotInverval;
+                frameCount = Time.frameCount;
                 OnTick();
             }
         }
 
         void Update()
         {
+
+            //doPostRender = false;
+
             OnUpdate();
             UpdatePlayerRecorder();
 
@@ -477,6 +562,9 @@ namespace CognitiveVR
         {
             if (!Application.isPlaying) { return; }
 
+            OnQuit();
+            //OnSendData();
+
             if (CoreSubsystem.Initialized)
             {
                 CoreSubsystem.reset();
@@ -491,10 +579,82 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
         }
 
+        //writes manifest entry and object snapshot to string then send http request
+        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots)
+        {
+            //save and clear snapshots and manifest entries
+            DynamicObjectManifestEntry[] tempObjectManifest = new DynamicObjectManifestEntry[SendObjectManifest.Count];
+            SendObjectManifest.CopyTo(tempObjectManifest,0);
+            SendObjectManifest.Clear();
+
+
+            DynamicObjectSnapshot[] tempSnapshots = new DynamicObjectSnapshot[SendObjectSnapshots.Count];
+            SendObjectSnapshots.CopyTo(tempSnapshots, 0);
+
+            //for (int i = 0; i<tempSnapshots.Length; i++)
+            //{
+            //    var s = DynamicObject.SetSnapshot(tempSnapshots[i]);
+            //    Debug.Log(">>>>>>>>>>>>>queue snapshot  " + s);
+            //}
+
+
+            //write manifest entries to thread
+            List<string> manifestEntries = new List<string>();
+            bool done = true;
+            if (tempObjectManifest.Length > 0)
+            {
+                done = false;
+                new System.Threading.Thread(() =>
+                {
+                    for (int i = 0; i < tempObjectManifest.Length; i++)
+                    {
+                        manifestEntries.Add(DynamicObject.SetManifestEntry(tempObjectManifest[i]));
+                    }
+                    done = true;
+                }).Start();
+
+                while (!done)
+                {
+                    yield return null;
+                }
+            }
+
+
+
+            List<string> snapshots = new List<string>();
+            if (tempSnapshots.Length > 0)
+            {
+                done = false;
+                new System.Threading.Thread(() =>
+                {
+                    for (int i = 0; i < tempSnapshots.Length; i++)
+                    {
+                        snapshots.Add(DynamicObject.SetSnapshot(tempSnapshots[i]));
+                    }
+                    System.GC.Collect();
+                    done = true;
+                }).Start();
+
+                while (!done)
+                {
+                    yield return null;
+                }
+            }
+
+            while (SendObjectSnapshots.Count > 0)
+            {
+                SendObjectSnapshots.Dequeue().ReturnToPool();
+            }
+
+            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots);
+        }
+
         #region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            if (hasCanceled) { return; }
+
             double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
             if (QuitEvent == null)
             {
@@ -503,21 +663,24 @@ namespace CognitiveVR
                 return;
             }
 
-            if (hasCanceled) { return; }
 			CognitiveVR.Util.logDebug("session length " + playtime);
             Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
             Application.CancelQuit();
-            hasCanceled = true;
-            OnQuit();
+
+
+            OnSendData();
+            CoreSubsystem.reset();
+
+
+            //Camera.onPostRender -= MyPostRender;
+            //OnQuit();
             StartCoroutine(SlowQuit());
         }
 
         IEnumerator SlowQuit()
         {
-            yield return new WaitForSeconds(0.1f);
-            if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
-                OnSendData();
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.5f);
+            hasCanceled = true;            
             Application.Quit();
         }
         #endregion

@@ -37,7 +37,7 @@ namespace CognitiveVR.Components
                 if (hit && string.IsNullOrEmpty(controller0GUID))
                 {
                     Util.logDebug("controller collision");
-                    controller0GUID = System.Guid.NewGuid().ToString();
+                    controller0GUID = Util.GetUniqueId();
                     Instrumentation.Transaction("cvr.collision", controller0GUID).setProperty("device", "left controller").setProperty("state","begin").begin();
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller0GUID))
@@ -58,7 +58,7 @@ namespace CognitiveVR.Components
                 if (hit && string.IsNullOrEmpty(controller1GUID))
                 {
                     Util.logDebug("controller collision");
-                    controller1GUID = System.Guid.NewGuid().ToString();
+                    controller1GUID = Util.GetUniqueId();
                     Instrumentation.Transaction("cvr.collision", controller1GUID).setProperty("device", "right controller").setProperty("state", "begin").begin();
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller1GUID))

@@ -143,7 +143,7 @@ namespace CognitiveVR
                 GUILayout.Space(10);
                 GUILayout.Label("<size=12><b>Debug</b></size>");
 
-                prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
+                //prefs.DebugWriteToFile = EditorGUILayout.Toggle(new GUIContent("DEBUG - Write snapshots to file", "Write snapshots to file AND upload to SceneExplorer"), prefs.DebugWriteToFile);
                 prefs.SendDataOnHotkey = EditorGUILayout.Toggle(new GUIContent("DEBUG - Send Data on Hotkey", "Press a hotkey to send data"), prefs.SendDataOnHotkey);
 
                 EditorGUI.BeginDisabledGroup(!prefs.SendDataOnHotkey);
@@ -361,17 +361,17 @@ namespace CognitiveVR
             {
                 if (prefs.PlayerDataType == 0) //3d content
                 {
-                    prefs.TrackPosition = true;
+                    //prefs.TrackPosition = true;
                     prefs.TrackGazePoint = true;
-                    prefs.TrackGazeDirection = false;
-                    prefs.GazePointFromDirection = false;
+                    //prefs.TrackGazeDirection = false;
+                    //prefs.GazePointFromDirection = false;
                 }
                 else //video content
                 {
-                    prefs.TrackPosition = true;
+                    //prefs.TrackPosition = true;
                     prefs.TrackGazePoint = false;
-                    prefs.TrackGazeDirection = false;
-                    prefs.GazePointFromDirection = true;
+                    //prefs.TrackGazeDirection = false;
+                    //prefs.GazePointFromDirection = true;
                 }
             }
 

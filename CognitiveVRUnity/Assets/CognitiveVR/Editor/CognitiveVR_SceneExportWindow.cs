@@ -562,11 +562,11 @@ namespace CognitiveVR
         //returns true if savedblenderpath ends with blender.exe/app
         static bool IsBlenderPathValid()
         {
-            if (string.IsNullOrEmpty(prefs.SavedBlenderPath)) { return false; }
+            if (string.IsNullOrEmpty(CognitiveVR_Settings.GetPreferences().SavedBlenderPath)) { return false; }
 #if UNITY_EDITOR_WIN
-            return prefs.SavedBlenderPath.ToLower().EndsWith("blender.exe");
+            return CognitiveVR_Settings.GetPreferences().SavedBlenderPath.ToLower().EndsWith("blender.exe");
 #elif UNITY_EDITOR_OSX
-            return prefs.SavedBlenderPath.ToLower().EndsWith("blender.app");
+            return CognitiveVR_Settings.GetPreferences().SavedBlenderPath.ToLower().EndsWith("blender.app");
 #else
             return false;
 #endif
@@ -998,11 +998,14 @@ namespace CognitiveVR
                 wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
             }
 
-            //add obj and mtl files
-            wwwForm.AddBinaryData("file", File.ReadAllBytes(objFilepath), Path.GetFileName(objFilepath));
-            fileList += objFilepath + "\n";
-            wwwForm.AddBinaryData("file", File.ReadAllBytes(mtlFilepath), Path.GetFileName(mtlFilepath));
-            fileList += mtlFilepath + "\n";
+            if (!string.IsNullOrEmpty(objFilepath))
+            {
+                //add obj and mtl files
+                wwwForm.AddBinaryData("file", File.ReadAllBytes(objFilepath), Path.GetFileName(objFilepath));
+                fileList += objFilepath + "\n";
+                wwwForm.AddBinaryData("file", File.ReadAllBytes(mtlFilepath), Path.GetFileName(mtlFilepath));
+                fileList += mtlFilepath + "\n";
+            }
 
             Debug.Log(fileList);
 
@@ -1100,7 +1103,7 @@ namespace CognitiveVR
         {
             string fileList = "Upload Files:\n";
 
-            var settings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var settings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
                 Debug.Log("settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
@@ -1237,7 +1240,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
                         {
-                            prefs.SavedBlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
+                            CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
                         }
                     }
                 }
@@ -1250,7 +1253,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe"))
                         {
-                            prefs.SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
+                            CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
                         }
                     }
                 }
@@ -1263,7 +1266,7 @@ namespace CognitiveVR
                 {
                     if (File.Exists(@"/Applications/Blender/blender.app"))
                     {
-                        prefs.SavedBlenderPath = @"/Applications/Blender/blender.app";
+                        CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"/Applications/Blender/blender.app";
                     }
                 }
             }

@@ -555,13 +555,13 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            builder.Append(JsonUtil.SetString("userId", CognitiveVR.Core.userId));
+            JsonUtil.SetString("userId", CognitiveVR.Core.userId, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("questionSetId", QuestionSetId));
+            JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionId", CognitiveVR_Preferences.SessionID));
+            JsonUtil.SetString("sessionId", CognitiveVR_Preferences.SessionID, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("hook", RequestQuestionHookName));
+            JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
 
             builder.Append("\"answers\":[");
@@ -576,12 +576,14 @@ namespace CognitiveVR
                 else
                 {
                     builder.Append("{");
-                    builder.Append(JsonUtil.SetString("type", responseProperties[i].QuestionType));
+                    JsonUtil.SetString("type", responseProperties[i].QuestionType, builder);
                     builder.Append(",\"value\":");
 
                     if (!string.IsNullOrEmpty(valueString))
                     {
-                        builder.Append("\"" + valueString + "\"");
+                        builder.Append("\"");
+                        builder.Append(valueString);
+                        builder.Append("\"");
                     }
                     else if (responseProperties[i].ResponseValue is bool)
                     {

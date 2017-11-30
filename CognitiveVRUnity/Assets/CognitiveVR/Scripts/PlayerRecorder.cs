@@ -18,7 +18,8 @@ namespace CognitiveVR
         private List<PlayerSnapshot> playerSnapshots = new List<PlayerSnapshot>();
 
         //a list of snapshots already formated to string
-        private List<string> savedGazeSnapshots = new List<string>();
+        //ONLY USED IN THREAD WHEN SENDING
+        //private List<string> savedGazeSnapshots = new List<string>();
         private int jsonpart = 1;
         //public bool EvaluateGazeRealtime = true;
 
@@ -51,6 +52,13 @@ namespace CognitiveVR
             }
             CheckCameraSettings();
 
+            PlayerSnapshot.colorSpace = QualitySettings.activeColorSpace;
+#if CVR_GAZETRACK
+            PlayerSnapshot.tex = new Texture2D(Resolution, Resolution);
+#else
+            PlayerSnapshot.tex = new Texture2D(1, 1);
+#endif
+
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
             {
                 QuitEvent += OnSendData;
@@ -73,7 +81,7 @@ namespace CognitiveVR
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #endif
-            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+            //SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
             CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
 
@@ -113,23 +121,44 @@ namespace CognitiveVR
 
         void CheckCameraSettings()
         {
-            if (CognitiveVR_Manager.HMD == null)
+            var hmd = HMD;
+            if (hmd == null)
             {
                 Util.logDebug("PlayerRecorder CheckCameraSettings HMD is null");
                 return;
             }
 
-            if (periodicRenderer == null)
+            if (periodicRenderer == null) //should get rid of this?
             {
-                periodicRenderer = CognitiveVR_Manager.HMD.GetComponent<PlayerRecorderHelper>();
+                periodicRenderer = hmd.GetComponent<PlayerRecorderHelper>();
                 if (periodicRenderer == null)
                 {
-                    periodicRenderer = CognitiveVR_Manager.HMD.gameObject.AddComponent<PlayerRecorderHelper>();
+                    periodicRenderer = hmd.gameObject.AddComponent<PlayerRecorderHelper>();
                     periodicRenderer.enabled = false;
                 }
             }
+
             if (cam == null)
-                cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
+            {
+                cam = hmd.GetComponent<Camera>();
+                //do command buffer stuff
+                UnityEngine.Rendering.CommandBuffer buf = new UnityEngine.Rendering.CommandBuffer();
+                buf.name = "Cognitive Analytics Buffer";
+
+                //forward rendering
+                /*if (cam.actualRenderingPath == RenderingPath.Forward)
+                {
+                    cam.AddCommandBuffer(UnityEngine.Rendering.CameraEvent.AfterForwardOpaque, buf);
+                    buf.Blit(UnityEngine.Rendering.BuiltinRenderTextureType.CurrentActive, rt);
+                    //buf.SetRenderTarget(rt);
+                    //buf.
+                }
+
+                Camera.onPostRender -= MyPostRender;
+                Camera.onPostRender += MyPostRender;
+                tex = new Texture2D(Screen.width,Screen.height);
+                //sourceRect = new Rect(Screen.width / 2, Screen.height / 2, 1, 1);*/
+            }
 
 #if CVR_FOVE
             if (cam.cullingMask != -1)
@@ -138,50 +167,6 @@ namespace CognitiveVR
 
             if (cam.depthTextureMode != DepthTextureMode.Depth)
                 cam.depthTextureMode = DepthTextureMode.Depth;
-        }
-
-        private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
-        {
-            DynamicObject.ClearObjectIds();
-            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad) { return; }
-
-            Scene activeScene = arg0;
-
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.TrackingSceneName))
-            {
-                CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
-                if (lastSceneSettings != null)
-                {
-                    if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
-                    {
-                        OnSendData();
-                        //SendPlayerGazeSnapshots();
-                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-                    }
-                }
-
-                CoreSubsystem.CurrentSceneId = string.Empty;
-
-                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(activeScene.name);
-                if (sceneSettings != null)
-                {
-                    if (!string.IsNullOrEmpty(sceneSettings.SceneId))
-                    {
-                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                    }
-                    else
-                    {
-                        Util.logDebug("PlayerRecorder sceneLoaded SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
-                    }
-                }
-                else
-                {
-                    Util.logDebug("PlayerRecorder sceneLoaded couldn't find scene " + arg0.name + ". Not recording");
-                }
-            }
-
-            CognitiveVR_Preferences.SetTrackingSceneName(activeScene.name);
         }
 
 #if CVR_STEAMVR
@@ -238,16 +223,16 @@ namespace CognitiveVR
         {
             //TimeSinceLastObjectGazeRequest += Time.deltaTime;
 
-            if (!CognitiveVR_Preferences.Instance.SendDataOnHotkey) { return; }
-            if (Input.GetKeyDown(CognitiveVR_Preferences.Instance.SendDataHotkey))
-            {
-                CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
+            CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
 
+            if (!prefs.SendDataOnHotkey) { return; }
+            if (Input.GetKeyDown(prefs.SendDataHotkey))
+            {
                 if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
                 if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
                 if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
 
-                SendPlayerRecording();
+                OnSendData();
             }
         }
 
@@ -291,26 +276,18 @@ namespace CognitiveVR
             //if (!Fove.FoveHeadset.GetHeadset().IsEyeTrackingCalibrated()) { return; }
             //TODO if eye tracking is not calibrated, use center of view as gaze
 #endif
-
+            //doPostRender = true;
             RequestDynamicObjectGaze();
 
-            if (CognitiveVR_Preferences.Instance.TrackGazePoint)
+            if (CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
-                {
-                    periodicRenderer.enabled = true;
-                    rt = periodicRenderer.DoRender(rt);
-                    periodicRenderer.enabled = false;
-                    return;
-                }
-                else
-                {
-                    TickPostRender(Vector3.zero);
-                }
+                periodicRenderer.enabled = true;
+                rt = periodicRenderer.DoRender(rt);
+                periodicRenderer.enabled = false;
             }
             else
             {
-                TickPostRender(Vector3.zero);
+                TickPostRender(Util.vector_zero);
                 //StartCoroutine(periodicRenderer.EndOfFrame());
             }
         }
@@ -322,9 +299,11 @@ namespace CognitiveVR
         static bool HasHitDynamic = true;
         static void RequestDynamicObjectGaze()
         {
+            var hmd = HMD;
+
             HasHitDynamic = false;
             RaycastHit hit = new RaycastHit();
-            Vector3 gazeDirection = HMD.forward;
+            Vector3 gazeDirection = hmd.forward;
 #if CVR_GAZETRACK
 #if CVR_FOVE //direction
             var eyeRays = FoveInstance.GetGazeRays();
@@ -345,24 +324,25 @@ namespace CognitiveVR
 #endif
             float maxDistance = 1000;
             DynamicObjectId sphereId = null;
-            if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
+            if (!CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                if (CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId > -1)
+                if (CognitiveVR_Preferences.S_VideoSphereDynamicObjectId > -1)
                 {
                     if (sphereId == null)
                     {
                         //find the object with the preset video sphere id
                         //objectids get cleared and refreshed each scene change
+
                         sphereId = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj)
                         {
-                            return obj.Id == CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId;
+                            return obj.Id == CognitiveVR_Preferences.S_VideoSphereDynamicObjectId;
                         });
                     }
                 }
 
                 if (sphereId != null)
                 {
-                    maxDistance = CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
+                    maxDistance = CognitiveVR_Preferences.S_GazeDirectionMultiplier;
                     if (VideoSphere == null)
                     {
                         var dynamics = FindObjectsOfType<DynamicObject>();
@@ -382,10 +362,10 @@ namespace CognitiveVR
                 }
             }
 
-            if (Physics.Raycast(HMD.position, gazeDirection, out hit, maxDistance))
+            if (Physics.Raycast(hmd.position, gazeDirection, out hit, maxDistance))
             {
                 DynamicObject dynamicHit = null;
-                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
                     dynamicHit = hit.collider.GetComponentInParent<DynamicObject>();
                 }
@@ -401,11 +381,14 @@ namespace CognitiveVR
 
                 HasHitDynamic = true;
 
-                Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
-                Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
-                Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
+                if (Util.IsLoggingEnabled)
+                {
+                    //Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
+                    //Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
+                    //Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
+                }
 
-                dynamicHit.OnGaze(CognitiveVR_Preferences.Instance.SnapshotInterval);
+                dynamicHit.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
 
                 //this gets the object and the 'physical' point on the object
                 //TODO this could use the depth buffer to get the point. or maybe average between the raycasthit.point and the world depth point?
@@ -418,45 +401,77 @@ namespace CognitiveVR
                     instance.TickPostRender(gazeDirection * maxDistance, CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId);
                     if (VideoSphere != null)
                     {
-                        VideoSphere.OnGaze(CognitiveVR_Preferences.Instance.SnapshotInterval);
+                        VideoSphere.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
                     }
                     HasHitDynamic = true;
                 }
             }
         }
 
-
+        Vector3 vector_forward = new Vector3(0, 0, 1);
 
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender(Vector3 localPos, int objectId = -1)
         {
             if (HasHitDynamic) { return; }
 
-            PlayerSnapshot snapshot = new PlayerSnapshot();
+            //TODO pool player snapshots
+            PlayerSnapshot snapshot = new PlayerSnapshot(frameCount);
             if (objectId >= 0)
             {
-                snapshot.Properties.Add("objectId", objectId);
-                snapshot.Properties.Add("localGaze", localPos);
+                //snapshot.Properties.Add("objectId", objectId);
+                snapshot.ObjectId = objectId;
+                //snapshot.Properties.Add("localGaze", localPos);
+                snapshot.LocalGaze = localPos;
             }
 
-            snapshot.Properties.Add("position", cam.transform.position);
-            snapshot.Properties.Add("hmdForward", cam.transform.forward);
-            snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
-            snapshot.Properties.Add("farDepth", cam.farClipPlane);
-            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+            //update ensures camera is not null. if null here, this means something changes before post render, possibly scene change
+            if (cam == null)
             {
-                snapshot.Properties.Add("renderDepth", rt); //this is constantly getting overwritten
+                return;
+            }
+
+
+
+            var camTransform = cam.transform;
+            var camPos = camTransform.position;
+            var camRot = camTransform.rotation;
+
+            //snapshot.Properties.Add("position", camPos);
+            snapshot.Position = camPos;
+            //snapshot.Properties.Add("hmdForward", camTransform.forward);
+            //snapshot.HMDForward = camTransform.forward;
+            snapshot.HMDForward = camRot * vector_forward;
+
+            //timestamp set in snapshot constructor
+            //snapshot.timestamp = Util.Timestamp(frameCount);
+
+
+            //snapshot.Properties.Add("nearDepth", cam.nearClipPlane);
+            snapshot.NearDepth = cam.nearClipPlane;
+            //snapshot.Properties.Add("farDepth", cam.farClipPlane);
+            snapshot.FarDepth = cam.farClipPlane;
+            if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
+            {
+                //snapshot.Properties.Add("renderDepth", rt); //this is constantly getting overwritten
+                snapshot.RTex = rt;
             }
             else
             {
-                periodicRenderer.enabled = true;
+                //make a copy of rt and save to napshot
                 RenderTexture newrt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
-                newrt = periodicRenderer.DoRender(newrt);
-                periodicRenderer.enabled = false;
-                snapshot.Properties.Add("renderDepth", newrt);
+                //Graphics.CopyTexture(rt, newrt);
+                Graphics.Blit(rt, newrt);
+
+                //periodicRenderer.enabled = true;
+                //RenderTexture newrt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
+                //newrt = periodicRenderer.DoRender(newrt);
+                //periodicRenderer.enabled = false;
+                snapshot.RTex = newrt;
             }
 
-            snapshot.Properties.Add("hmdRotation", cam.transform.rotation);
+            //snapshot.Properties.Add("hmdRotation", camRot);
+            snapshot.HMDRotation = camRot;
 
 #if CVR_GAZETRACK
 
@@ -483,7 +498,8 @@ namespace CognitiveVR
             worldGazeDirection = ray.direction.normalized;
 #endif //pupil direction
 
-            snapshot.Properties.Add("gazeDirection", worldGazeDirection);
+            //snapshot.Properties.Add("gazeDirection", worldGazeDirection);
+            snapshot.GazeDirection = worldGazeDirection;
 
 
             Vector2 screenGazePoint = Vector2.one * 0.5f;
@@ -504,89 +520,151 @@ namespace CognitiveVR
             screenGazePoint = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes);
 #endif //pupil screenpoint
 
-            snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
+            //snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
+            snapshot.HMDGazePoint = screenGazePoint;
 #endif //gazetracker
 
 
+            //get gaze point (unless snapshot is whatever. maybe write the type of snapshot here? world, dynamic, sky)
+            //wait until enough have been done, then batch the string.write or whatever in a thread
+
+            if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
+            {
+                if (snapshot.ObjectId > -1)
+                {
+                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
+
+                    /*Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
+                    Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
+                    Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);*/
+                    Debug.DrawLine(snapshot.Position, snapshot.HMDForward*100, Color.yellow, 1);
+                }
+                else
+                {
+                    Vector3 calcGazePoint;
+                    bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
+                    if (!validPoint)
+                    {
+                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
+                        Debug.DrawRay(snapshot.Position, HMD.forward * 1000, Color.cyan, 1);
+                    }
+                    else if (!float.IsNaN(calcGazePoint.x))
+                    {
+                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
+                        snapshot.GazePoint = calcGazePoint;
+
+                        if (Util.IsLoggingEnabled)
+                        {
+                            Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
+                            Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
+                            Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
+                            Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
+                        }
+                    }
+                    else
+                    {
+                        //looked at world, but invalid gaze point
+                        return;
+                    }
+                }
+            }
 
             playerSnapshots.Add(snapshot);
-            if (CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
+
+            if (playerSnapshots.Count >= CognitiveVR_Preferences.S_GazeSnapshotCount)
             {
-                if (CognitiveVR_Preferences.Instance.TrackGazePoint)
+                PlayerSnapshot[] tempSnapshots = new PlayerSnapshot[playerSnapshots.Count];
+                playerSnapshots.CopyTo(tempSnapshots);
+
+                playerSnapshots.Clear();
+
+                StartCoroutine(Threaded_SendGaze(tempSnapshots));
+
+                //SendPlayerGazeSnapshots();
+                //OnSendData();
+            }
+        }
+        //bool doneSendGaze = false;
+        //bool waitingForThread = false;
+        IEnumerator Threaded_SendGaze(PlayerSnapshot[] tempSnapshots)
+        {
+            bool doneSendGaze = false;
+            if (!CognitiveVR_Preferences.S_EvaluateGazeRealtime)
+            {
+                foreach (var snapshot in tempSnapshots)
                 {
-                    if (snapshot.Properties.ContainsKey("objectId"))
+                    if (snapshot.ObjectId > -1)
                     {
-                        savedGazeSnapshots.Add(SetDynamicGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, (Vector3)snapshot.Properties["localGaze"], (int)snapshot.Properties["objectId"]));
+                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
                     }
                     else
                     {
                         Vector3 calcGazePoint;
                         bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
-
                         if (!validPoint)
                         {
-                            savedGazeSnapshots.Add(SetFarplaneGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation));
+                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
+                            Debug.DrawRay(snapshot.Position, HMD.forward * 1000, Color.cyan, 1);
+                        }
+                        else if (!float.IsNaN(calcGazePoint.x))
+                        {
+                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
+                            snapshot.GazePoint = calcGazePoint;
+
+                            if (Util.IsLoggingEnabled)
+                            {
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
+                                Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
+                            }
                         }
                         else
                         {
-                            if (!float.IsNaN(calcGazePoint.x))
-                            {
-                                savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, calcGazePoint));
-#if CVR_DEBUG
-                            Debug.DrawLine(HMD.position, calcGazePoint, Color.yellow, 5);
-                            Debug.DrawRay(calcGazePoint, Vector3.up, Color.green, 5);
-                            Debug.DrawRay(calcGazePoint, Vector3.right, Color.red, 5);
-                            Debug.DrawRay(calcGazePoint, Vector3.forward, Color.blue, 5);
-#endif
-                            }
-                            else
-                            {
-                                snapshot = null;
-                            }
+                            //looked at world, but invalid gaze point
+                            continue;
                         }
                     }
                 }
-                else if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
-                {
-                    if (snapshot.Properties.ContainsKey("objectId"))
-                    {
-                        savedGazeSnapshots.Add(SetDynamicGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, (Vector3)snapshot.Properties["localGaze"], (int)snapshot.Properties["objectId"]));
-                    }
-                    else
-                    {
-                        Vector3 position = (Vector3)snapshot.Properties["position"] + (Vector3)snapshot.Properties["hmdForward"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
-                        savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, position));
-                    }
-                }
-            }
-            else //cache and save evaluation for later
-            {
-                if (snapshot.Properties.ContainsKey("objectId"))
-                {
-                    savedGazeSnapshots.Add(SetDynamicGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation, (Vector3)snapshot.Properties["localGaze"], (int)snapshot.Properties["objectId"]));
-                }
-                else
-                {
-                    savedGazeSnapshots.Add(SetPreGazePoint(Util.Timestamp(), cam.transform.position, cam.transform.rotation));
-                }
             }
 
-            if (playerSnapshots.Count >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            List<string> stringGazeSnapshots = new List<string>();
+            new System.Threading.Thread(() =>
             {
-                OnSendData();
+                for (int i = 0; i < tempSnapshots.Length; i++)
+                {
+                    if (tempSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.Dynamic)
+                    {
+                        stringGazeSnapshots.Add(SetDynamicGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].LocalGaze, tempSnapshots[i].ObjectId));
+                    }
+                    else if (tempSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.World)
+                    {
+                        stringGazeSnapshots.Add(SetPreGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GazePoint));
+                    }
+                    else// if (t_snaphots[i].snapshotType == PlayerSnapshot.SnapshotType.Sky)
+                    {
+                        stringGazeSnapshots.Add(SetFarplaneGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation));
+                    }
+                }
+                System.GC.Collect();
+                doneSendGaze = true;
+            }).Start();
+
+            while (!doneSendGaze)
+            {
+                yield return null;
             }
+            
+            SendPlayerGazeSnapshots(stringGazeSnapshots);
         }
 
-        /// <summary>
-        /// registered to OnSendData
-        /// </summary>
-        public void SendPlayerGazeSnapshots()
+        public void SendPlayerGazeSnapshots(List<string> stringGazeSnapshots)
         {
-            if (playerSnapshots.Count == 0)
+            /*if (playerSnapshots.Count == 0)
             {
                 Util.logDebug("PlayerRecord SendPlayerGazeSnapshots has no snapshots to send");
                 return;
-            }
+            }*/
 
             var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (sceneSettings == null)
@@ -596,100 +674,212 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                playerSnapshots.Clear();
+                //playerSnapshots.Clear();
                 CognitiveVR.Util.logDebug("sceneid is empty. do not send gaze objects to sceneexplorer");
                 return;
-            }
-
-            if (!CognitiveVR_Preferences.Instance.EvaluateGazeRealtime)
-            {
-                if (CognitiveVR_Preferences.Instance.TrackGazePoint)
-                {
-                    for (int i = 0; i < playerSnapshots.Count; i++)
-                    {
-                        Vector3 calcGazePoint;
-                        bool validPoint = playerSnapshots[i].GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
-
-                        if (!validPoint)
-                        {
-                            savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace(",GAZE", "");
-                        }
-                        else
-                        {
-                            //Vector3 calcGazePoint = playerSnapshots[i].GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
-                            if (!float.IsNaN(calcGazePoint.x))
-                            {
-                                playerSnapshots[i].Properties.Add("gazePoint", calcGazePoint);
-                                savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", calcGazePoint));
-#if CVR_DEBUG
-                            Debug.DrawLine((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["gazePoint"], Color.yellow, 5);
-                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.up, Color.green, 5);
-                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.right, Color.red, 5);
-                            Debug.DrawRay((Vector3)playerSnapshots[i].Properties["gazePoint"], Vector3.forward, Color.blue, 5);
-#endif
-                            }
-                            else
-                            {
-                                playerSnapshots[i] = null;
-                            }
-                        }
-                    }
-                }
-                else if (CognitiveVR_Preferences.Instance.GazePointFromDirection)
-                {
-                    for (int i = 0; i < playerSnapshots.Count; i++)
-                    {
-                        Vector3 position = (Vector3)playerSnapshots[i].Properties["position"] + (Vector3)playerSnapshots[i].Properties["hmdForward"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier;
-
-                        Debug.DrawRay((Vector3)playerSnapshots[i].Properties["position"], (Vector3)playerSnapshots[i].Properties["hmdForward"] * CognitiveVR_Preferences.Instance.GazeDirectionMultiplier, Color.yellow, 5);
-
-                        playerSnapshots[i].Properties.Add("gazePoint", position);
-                        savedGazeSnapshots[i] = savedGazeSnapshots[i].Replace("GAZE", JsonUtil.SetVector("g", position));
-                    }
-                }
             }
 
             if (sceneSettings != null)
             {
                 Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
 
-                if (playerSnapshots.Count > 0)
+                if (stringGazeSnapshots.Count > 0)
                 {
                     System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
                     builder.Append("{");
 
                     //header
-                    builder.Append(JsonUtil.SetString("userid", Core.userId));
+                    JsonUtil.SetString("userid", Core.userId, builder);
                     builder.Append(",");
 
-                    builder.Append(JsonUtil.SetObject("timestamp", CognitiveVR_Preferences.TimeStamp));
+                    JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
                     builder.Append(",");
-                    builder.Append(JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID));
+                    JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
                     builder.Append(",");
-                    builder.Append(JsonUtil.SetObject("part", jsonpart));
+                    JsonUtil.SetInt("part", jsonpart, builder);
                     jsonpart++;
                     builder.Append(",");
 
 #if CVR_FOVE
-                    builder.Append(JsonUtil.SetString("hmdtype", "fove"));
+                    JsonUtil.SetString("hmdtype", "fove", builder);
 #elif CVR_ARKIT
-                    builder.Append(JsonUtil.SetString("hmdtype", "arkit"));
+                    JsonUtil.SetString("hmdtype", "arkit", builder);
 #elif CVR_ARCORE
-                    builder.Append(JsonUtil.SetString("hmdtype", "arcore"));
+                    JsonUtil.SetString("hmdtype", "arcore", builder);
 #else
-                    builder.Append(JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName()));
+                    JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), builder);
 #endif
                     builder.Append(",");
-                    builder.Append(JsonUtil.SetObject("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval));
+                    JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval, builder);
                     builder.Append(",");
 
 
                     //events
                     builder.Append("\"data\":[");
-                    for (int i = 0; i < playerSnapshots.Count; i++)
+                    for (int i = 0; i < stringGazeSnapshots.Count; i++)
                     {
-                        if (playerSnapshots[i] == null) { continue; }
+                        //if (playerSnapshots[i] == null) { continue; }
+                        //builder.Append(SetGazePont(playerSnapshots[i]));
+                        builder.Append(stringGazeSnapshots[i]);
+                        builder.Append(",");
+                    }
+                    if (stringGazeSnapshots.Count > 0)
+                        builder.Remove(builder.Length - 1, 1);
+                    builder.Append("]");
+
+                    builder.Append("}");
+
+                    byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
+                    string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
+                    
+                    //Debug.Log(stringGazeSnapshots.Count +" gaze " + builder.ToString());
+
+                    StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
+                }
+            }
+            else
+            {
+                Util.logError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + CognitiveVR_Preferences.TrackingSceneName + "!");
+            }
+
+            playerSnapshots.Clear();
+            //savedGazeSnapshots.Clear();
+        }
+
+        /// <summary>
+        /// registered to OnSendData
+        /// </summary>
+        public void SendPlayerGazeSnapshots()
+        {
+            if (playerSnapshots.Count == 0)
+            {
+                return;
+            }
+
+            List<string> savedGazeSnapshots = new List<string>();
+
+            if (!CognitiveVR_Preferences.S_EvaluateGazeRealtime)
+            {
+                //evaluate gaze from snapshots then send
+                foreach( var snapshot in playerSnapshots)
+                {
+                    if (snapshot.ObjectId > -1)
+                    {
+                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
+                    }
+                    else
+                    {
+                        Vector3 calcGazePoint;
+                        bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
+                        if (!validPoint)
+                        {
+                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
+                            Debug.DrawRay(snapshot.Position, HMD.forward * 1000, Color.cyan, 1);
+                        }
+                        else if (!float.IsNaN(calcGazePoint.x))
+                        {
+                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
+                            snapshot.GazePoint = calcGazePoint;
+
+                            if (Util.IsLoggingEnabled)
+                            {
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
+                                Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
+                                Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
+                            }
+                        }
+                        else
+                        {
+                            //looked at world, but invalid gaze point
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < playerSnapshots.Count; i++)
+            {
+                if (playerSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.Dynamic)
+                {
+                    savedGazeSnapshots.Add(SetDynamicGazePoint(playerSnapshots[i].timestamp, playerSnapshots[i].Position, playerSnapshots[i].HMDRotation, playerSnapshots[i].LocalGaze, playerSnapshots[i].ObjectId));
+
+                    //Debug.DrawRay(hit.point, Vector3.up, Color.green, 1);
+                    //Debug.DrawRay(hit.point, Vector3.right, Color.red, 1);
+                    //Debug.DrawRay(hit.point, Vector3.forward, Color.blue, 1);
+                }
+                else if (playerSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.World)
+                {
+                    savedGazeSnapshots.Add(SetPreGazePoint(playerSnapshots[i].timestamp, playerSnapshots[i].Position, playerSnapshots[i].HMDRotation, playerSnapshots[i].GazePoint));
+                }
+                else// if (t_snaphots[i].snapshotType == PlayerSnapshot.SnapshotType.Sky)
+                {
+                    savedGazeSnapshots.Add(SetFarplaneGazePoint(playerSnapshots[i].timestamp, playerSnapshots[i].Position, playerSnapshots[i].HMDRotation));
+                    Debug.DrawRay(playerSnapshots[i].Position, vector_forward, Color.magenta);
+                }
+            }
+
+            /*if (playerSnapshots.Count == 0)
+            {
+                Util.logDebug("PlayerRecord SendPlayerGazeSnapshots has no snapshots to send");
+                return;
+            }*/
+
+            var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (sceneSettings == null)
+            {
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + CognitiveVR_Preferences.TrackingSceneName + "! Cancel Data Upload");
+                return;
+            }
+            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            {
+                //playerSnapshots.Clear();
+                CognitiveVR.Util.logDebug("sceneid is empty. do not send gaze objects to sceneexplorer");
+                return;
+            }
+
+            if (sceneSettings != null)
+            {
+                //Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
+
+                if (savedGazeSnapshots.Count > 0)
+                {
+                    System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
+
+                    builder.Append("{");
+
+                    //header
+                    JsonUtil.SetString("userid", Core.UniqueID, builder);
+                    builder.Append(",");
+
+                    JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
+                    builder.Append(",");
+                    JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
+                    builder.Append(",");
+                    JsonUtil.SetInt("part", jsonpart, builder);
+                    jsonpart++;
+                    builder.Append(",");
+
+#if CVR_FOVE
+                    JsonUtil.SetString("hmdtype", "fove", builder);
+#elif CVR_ARKIT
+                    JsonUtil.SetString("hmdtype", "arkit", builder);
+#elif CVR_ARCORE
+                    JsonUtil.SetString("hmdtype", "arcore", builder);
+#else
+                    JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), builder);
+#endif
+                    builder.Append(",");
+                    JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, builder);
+                    builder.Append(",");
+
+
+                    //events
+                    builder.Append("\"data\":[");
+                    for (int i = 0; i < savedGazeSnapshots.Count; i++)
+                    {
+                        //if (playerSnapshots[i] == null) { continue; }
                         //builder.Append(SetGazePont(playerSnapshots[i]));
                         builder.Append(savedGazeSnapshots[i]);
                         builder.Append(",");
@@ -703,7 +893,7 @@ namespace CognitiveVR
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
 
-                    //CognitiveVR.Util.logDebug(builder.ToString());
+                    CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 
                     StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
                 }
@@ -714,20 +904,20 @@ namespace CognitiveVR
             }
 
             playerSnapshots.Clear();
-            savedGazeSnapshots.Clear();
         }
 
+        Dictionary<string, string> headers = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" } };
+        
         public IEnumerator PostJsonRequest(byte[] bytes, string url)
         {
-            var headers = new Dictionary<string, string>();
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
-
             WWW www = new UnityEngine.WWW(url, bytes, headers);
-
+            
             yield return www;
 
-            Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error+ "</color>") + " <color=green>return text: " + www.text + "</color>");
+            if (Util.IsLoggingEnabled)
+            {
+                Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error + "</color>") + " <color=green>return text: " + www.text + "</color>");
+            }
         }
 
         void CleanupPlayerRecorderEvents()
@@ -738,7 +928,7 @@ namespace CognitiveVR
             SendDataEvent -= SendPlayerGazeSnapshots;
             SendDataEvent -= InstrumentationSubsystem.SendCachedTransactions;
             CognitiveVR_Manager.QuitEvent -= OnSendData;
-            SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+            //SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
 #if CVR_STEAMVR
             CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;
 #endif
@@ -778,11 +968,11 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            builder.Append(JsonUtil.SetObject("time", time));
+            JsonUtil.SetDouble("time", time, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("p", position));
+            JsonUtil.SetVector("p", position, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetQuat("r", rotation));
+            JsonUtil.SetQuat("r", rotation, builder);
             builder.Append(",");
             builder.Append("GAZE");
 
@@ -797,13 +987,13 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            builder.Append(JsonUtil.SetObject("time", time));
+            JsonUtil.SetDouble("time", time, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("p", position));
+            JsonUtil.SetVector("p", position, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetQuat("r", rotation));
+            JsonUtil.SetQuat("r", rotation, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("g", gazepos));
+            JsonUtil.SetVector("g", gazepos, builder);
 
             builder.Append("}");
 
@@ -815,11 +1005,11 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            builder.Append(JsonUtil.SetObject("time", time));
+            JsonUtil.SetDouble("time", time, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("p", position));
+            JsonUtil.SetVector("p", position, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetQuat("r", rotation));
+            JsonUtil.SetQuat("r", rotation, builder);
 
             builder.Append("}");
 
@@ -832,15 +1022,15 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            builder.Append(JsonUtil.SetObject("time", time));
+            JsonUtil.SetDouble("time", time, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetObject("o", objectId));
+            JsonUtil.SetInt("o", objectId, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("p", position));
+            JsonUtil.SetVector("p", position, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetQuat("r", rotation));
+            JsonUtil.SetQuat("r", rotation, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetVector("g", localGazePos));
+            JsonUtil.SetVector("g", localGazePos, builder);
 
             builder.Append("}");
 
