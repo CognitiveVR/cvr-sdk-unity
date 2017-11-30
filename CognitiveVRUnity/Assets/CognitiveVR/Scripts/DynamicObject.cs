@@ -180,6 +180,13 @@ namespace CognitiveVR
                 return;
             }
 
+            //set the 'custom mesh name' to be the lowercase of the common name
+            if (!UseCustomMesh)
+            {
+                UseCustomMesh = true;
+                MeshName = CommonMesh.ToString().ToLower();
+            }
+
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != CognitiveVR_Preferences.TrackingSceneName)
             {
                 //register to a post scene load event
@@ -199,13 +206,6 @@ namespace CognitiveVR
                 //TODO wait for first frame should set buffering to true for first snapshot
             }
 #endif
-
-            //set the 'custom mesh name' to be the lowercase of the common name
-            if (!UseCustomMesh)
-            {
-                UseCustomMesh = true;
-                MeshName = CommonMesh.ToString().ToLower();
-            }
 
             if (CognitiveVR_Manager.InitResponse == Error.Success)
             {
@@ -667,17 +667,23 @@ namespace CognitiveVR
 #if CVR_STEAMVR
             if (ButtonStates != null)
             {
-                snapshot.Buttons = ButtonStates.GetDirtyStates();
+                //snapshot.Buttons = ButtonStates.GetDirtyStates();
+                snapshot.Buttons = new Dictionary<string, DynamicObjectButtonStates.ButtonState>();
+                var dirtyButtonStates = ButtonStates.GetDirtyStates();
+                foreach (var v in dirtyButtonStates)
+                {
+                    snapshot.Buttons.Add(v.Key, v.Value);
+                }
             }
 #endif
-//            if (DirtyEngagements != null)
-//            {
-//                if (DirtyEngagements.Count > 0)
-//                {
-//                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
-//                }
-//                DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
-//            }
+            //            if (DirtyEngagements != null)
+            //            {
+            //                if (DirtyEngagements.Count > 0)
+            //                {
+            //                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
+            //                }
+            //                DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
+            //            }
 
             if (IsVideoPlayer)
             {
@@ -1708,6 +1714,9 @@ namespace CognitiveVR
                 controller.MenuButtonClicked += Controller_MenuButtonClicked;
                 controller.MenuButtonUnclicked += Controller_MenuButtonUnclicked;
 
+                controller.TriggerClicked += Controller_TriggerClicked;
+                controller.TriggerUnclicked += Controller_TriggerUnclicked;
+
                 controller.Gripped += Controller_Gripped;
                 controller.Ungripped += Controller_Ungripped;
 
@@ -1717,7 +1726,7 @@ namespace CognitiveVR
                 controller.PadClicked += Controller_PadClicked;
                 controller.PadUnclicked += Controller_PadUnclicked;
 
-                CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
+                //CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
             }
 
             LastStates.Add("vive_menubtn", new ButtonState(0));
@@ -1733,9 +1742,14 @@ namespace CognitiveVR
             CurrentStates.Add("vive_trigger", new ButtonState(0));
         }
 
-        private void CognitiveVR_Manager_TickEvent()
+        private void Controller_TriggerUnclicked(object sender, ClickedEventArgs e)
         {
-            CurrentStates["vive_trigger"].ButtonPercent = (int)(SteamVR_Controller.Input(Id).GetState().rAxis1.x * 100);//trigger
+            CurrentStates["vive_trigger"].ButtonPercent = 0;//trigger
+        }
+
+        private void Controller_TriggerClicked(object sender, ClickedEventArgs e)
+        {
+            CurrentStates["vive_trigger"].ButtonPercent = 100;//trigger
         }
 
         private void Controller_PadUnclicked(object sender, ClickedEventArgs e)

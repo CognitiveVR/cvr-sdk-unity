@@ -374,9 +374,9 @@ namespace CognitiveVR
 
             InitResponse = Error.NotInitialized;
 
-            for (int i = 0; i < 1000; i++)
+            //TODO expose this value to initialize a pool when writing lots of dynamic objects
+            for (int i = 0; i < 100; i++)
             {
-                //DynamicObjectSnapshot.snapshotPool.Add(new DynamicObjectSnapshot());
                 DynamicObjectSnapshot.snapshotQueue.Enqueue(new DynamicObjectSnapshot());
             }
         }
