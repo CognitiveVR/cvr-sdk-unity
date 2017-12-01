@@ -24,40 +24,40 @@ namespace CognitiveVR
         public Material material;
     }
 
-    class MeshContainer
-    {
-        public Transform t;
-        public string name;
-        public bool active; //active in heirarchy and has renderer
-        public Mesh mesh;
-
-        public MeshContainer(string _name, Transform _t, bool _active, Mesh _mesh)
-        {
-            t = _t;
-            name = _name;
-            active = _active;
-            mesh = _mesh;
-        }
-
-        public MeshContainer(MeshFilter mf)
-        {
-            t = mf.transform;
-            name = mf.name;
-            active = mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled && mf.gameObject.activeInHierarchy;
-            mesh = mf.sharedMesh;
-        }
-
-        public MeshContainer(SkinnedMeshRenderer sm, Mesh snapshot)
-        {
-            t = sm.transform;
-            name = sm.name;
-            active = sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled && sm.gameObject.activeInHierarchy;
-            mesh = snapshot;
-        }
-    }
-
     public class CognitiveVR_SceneExplorerExporter
     {
+        public class MeshContainer
+        {
+            public Transform t;
+            public string name;
+            public bool active; //active in heirarchy and has renderer
+            public Mesh mesh;
+
+            public MeshContainer(string _name, Transform _t, bool _active, Mesh _mesh)
+            {
+                t = _t;
+                name = _name;
+                active = _active;
+                mesh = _mesh;
+            }
+
+            public MeshContainer(MeshFilter mf)
+            {
+                t = mf.transform;
+                name = mf.name;
+                active = mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled && mf.gameObject.activeInHierarchy;
+                mesh = mf.sharedMesh;
+            }
+
+            public MeshContainer(SkinnedMeshRenderer sm, Mesh snapshot)
+            {
+                t = sm.transform;
+                name = sm.name;
+                active = sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled && sm.gameObject.activeInHierarchy;
+                mesh = snapshot;
+            }
+        }
+
         private static int vertexOffset = 0;
         private static int normalOffset = 0;
         private static int uvOffset = 0;
@@ -313,6 +313,11 @@ namespace CognitiveVR
             return outputStringBuilder.ToString();
         }
 
+        //reads the mesh and writes obj verts, normals and uvs to string
+        public static string GetObjContentsFromMesh(MeshContainer mc, Vector3 origin, Quaternion rotation)
+        {
+            return MeshToString(mc, origin, rotation, "");
+        }
 
         private static string MeshToString(MeshContainer mc, Vector3 origin, Quaternion rotation, string textureName)
         {
@@ -456,6 +461,96 @@ namespace CognitiveVR
             vertexOffset = 0;
             normalOffset = 0;
             uvOffset = 0;
+        }
+
+        private static string MeshToString(MeshContainer mc, string materialName)
+        {
+            //TODO rotate mesh inverse of rotation
+            //rotate the mf transform, export, then rotate it back?
+
+            Mesh m = mc.mesh;
+            if (m == null)
+            {
+                Debug.Log("Mesh container has no mesh " + mc.name);
+                return "";
+            }
+            if (!mc.active)
+            {
+                Debug.Log("Mesh container is not active " + mc.name);
+                return "";
+            }
+            //if (mc.GetComponent<MeshRenderer>() == null || !mc.GetComponent<MeshRenderer>().enabled || !mc.gameObject.activeInHierarchy) { return ""; }
+
+            if (m.uv.Length == 0)
+            {
+                m.uv = new Vector2[m.vertexCount];
+                Debug.LogWarning(m.name + " does not have UV data. Generating uv data could lead to artifacts!");
+            }
+
+            if (m.normals.Length == 0)
+            {
+                m.normals = new Vector3[m.vertexCount];
+                Debug.LogWarning(m.name + " does not have normals data. Generating normal data could lead to artifacts!");
+            }
+
+            //Material[] mats = mc.t.GetComponent<Renderer>().sharedMaterials;
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("o ").Append(mc.name).Append("\n");
+            foreach (Vector3 lv in m.vertices)
+            {
+                Vector3 wv = lv;
+                //TODO this doesn't take scale into account
+
+                //flips the vertex around by the rotation
+                //wv = wv;
+
+                //invert x axis
+                sb.Append(string.Format("v {0} {1} {2}\n", -wv.x, wv.y, wv.z));
+            }
+            sb.Append("\n");
+
+            foreach (Vector3 lv in m.normals)
+            {
+                Vector3 wv = lv;
+
+                //flips the vertex around by the rotation
+                //wv = wv;
+
+                sb.Append(string.Format("vn {0} {1} {2}\n", -wv.x, wv.y, wv.z));
+            }
+            sb.Append("\n");
+
+            Vector2 textureScale = Vector3.one;
+            //if (mat != null && mat.HasProperty(textureName))
+            //    textureScale = mats[0].GetTextureScale(textureName);
+
+            foreach (Vector3 v in m.uv)
+            {
+                //scale uvs to deal with tiled textures
+                sb.Append(string.Format("vt {0} {1}\n", v.x, v.y));
+            }
+
+            for (int material = 0; material < m.subMeshCount; material++)
+            {
+                sb.Append("\n");
+                sb.Append("usemtl ").Append(materialName).Append("\n");
+
+                int[] triangles = m.GetTriangles(material);
+                for (int i = 0; i < triangles.Length; i += 3)
+                {
+                    //Because we inverted the x-component, we also needed to alter the triangle winding.
+                    sb.Append(string.Format("f {1}/{1}/{1} {0}/{0}/{0} {2}/{2}/{2}\n",
+                        triangles[i] + 1 + vertexOffset, triangles[i + 1] + 1 + normalOffset, triangles[i + 2] + 1 + uvOffset));
+                }
+            }
+
+            vertexOffset += m.vertices.Length;
+            normalOffset += m.normals.Length;
+            uvOffset += m.uv.Length;
+
+            return sb.ToString();
         }
 
         private static Dictionary<string, ObjMaterial> PrepareFileWrite()
@@ -859,6 +954,199 @@ namespace CognitiveVR
             return skinnedMeshes;
         }
 
+        private static List<Canvas> RecursivelyGetCanvases(Transform transform)
+        {
+            List<Canvas> canvases = new List<Canvas>();
+
+            var filter = transform.GetComponent<Canvas>();
+            if (filter != null)
+            {
+                canvases.Add(filter);
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+
+                canvases.AddRange(RecursivelyGetCanvases(transform.GetChild(i)));
+            }
+
+            return canvases;
+        }
+
+        /// <summary>
+        /// write canvas mesh to file
+        /// write material and texture to file
+        /// </summary>
+        /// <param name="mesh"></param>
+        /// <param name="meshName"></param>
+        /// <param name="tex"></param>
+        /// <param name="uniqueMaterialId">id for material and texture names. if there are multiple canvases as children</param>
+        public static void ExportDynamicObject(Mesh mesh, string meshName, Texture2D tex, string uniqueMaterialId)
+        {
+            //write mesh verts/uvs/whatever to string
+            string meshString = MeshToString(new MeshContainer(meshName, null, true, mesh), "GeneratedUIMaterial" + uniqueMaterialId);
+
+            //write meshstring to file
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshName + Path.DirectorySeparatorChar);
+            File.WriteAllText("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshName + Path.DirectorySeparatorChar + meshName + ".obj", meshString);
+
+            //write material to string
+            StringBuilder sb = new StringBuilder();
+            sb.Append("\n");
+            sb.Append("newmtl GeneratedUIMaterial" + uniqueMaterialId + "\n");
+            sb.Append("Ka  0.6 0.6 0.6\n");
+            sb.Append("Kd  1.0 1.0 1.0\n");
+            sb.Append("Ks  0.0 0.0 0.0\n");
+            sb.Append("d  1.0\n");
+            sb.Append("Ns  96.0\n");
+            sb.Append("Ni  1.0\n");
+            sb.Append("illum 1\n");
+            sb.Append("map_Kd GeneratedUITexture_" + uniqueMaterialId + ".png");
+            string materialString = sb.ToString();
+
+            //write materialstring to file
+            File.WriteAllText("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshName + Path.DirectorySeparatorChar + meshName + ".mtl", materialString);
+
+            //save texture to file. likely already there from snapshot but whatever
+            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshName + Path.DirectorySeparatorChar + "GeneratedUITexture_" + uniqueMaterialId + ".png", tex.EncodeToPNG());
+        }
+
+        public static Mesh ExportQuad(string meshName, float width, float height, Transform transform, string sceneName, Texture2D tex = null)
+        {
+            //this writes data into a mesh class then passes it through to dynamic object exporter. to futureproof when we move from obj to gltf
+
+            Vector3 size = new Vector3(width, height, 0);
+            Vector3 pivot = size / 2;
+
+            Mesh m = new Mesh();
+
+            //GameObject go = new GameObject("TEMP_MESH");
+            //go.AddComponent<MeshFilter>().mesh = m;
+
+            /*//DEBUGGING
+            go.AddComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
+            if (tex != null)
+            {
+                go.GetComponent<MeshRenderer>().material.mainTexture = tex;
+                go.GetComponent<MeshRenderer>().material.SetInt("_Mode", 2);
+            }
+            */
+
+            var verts = new Vector3[4];
+            verts[0] = new Vector3(0, 0, 0) - pivot;
+            verts[1] = new Vector3(width, 0, 0) - pivot;
+            verts[2] = new Vector3(0, height, 0) - pivot;
+            verts[3] = new Vector3(width, height, 0) - pivot;
+            m.vertices = verts;
+
+            var tris = new int[6];
+            tris[0] = 0;
+            tris[1] = 2;
+            tris[2] = 1;
+            tris[3] = 2;
+            tris[4] = 3;
+            tris[5] = 1;
+            m.triangles = tris;
+
+            var norms = new Vector3[4];
+            norms[0] = -Vector3.forward;
+            norms[1] = -Vector3.forward;
+            norms[2] = -Vector3.forward;
+            norms[3] = -Vector3.forward;
+            m.normals = norms;
+
+            //if width == height, 0-1 uvs are fine
+            if (Mathf.Approximately(width, height))
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(1, 0);
+                uvs[2] = new Vector2(0, 1);
+                uvs[3] = new Vector2(1, 1);
+                m.uv = uvs;
+            }
+            else if (height > width)
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(width / height, 0);
+                uvs[2] = new Vector2(0, 1);
+                uvs[3] = new Vector2(width / height, 1);
+                m.uv = uvs;
+            }
+            else
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(1, 0);
+                uvs[2] = new Vector2(0, height / width);
+                uvs[3] = new Vector2(1, height / width);
+                m.uv = uvs;
+            }
+
+            return m;
+        }
+
+        public static Texture2D Snapshot(Transform target, int resolution = 128)
+        {
+            //var sceneview = (SceneView)SceneView.sceneViews[0];
+            //target = Selection.activeTransform;
+
+            GameObject cameraGo = new GameObject("Temp_Camera");
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //put camera in editor camera position
+
+            cameraGo.transform.rotation = target.rotation;
+            cameraGo.transform.position = target.position - target.forward * 0.05f;
+
+            var width = target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x;
+            var height = target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y;
+            if (Mathf.Approximately(width, height))
+            {
+                //whatever. centered
+            }
+            else if (height > width) //tall
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
+            }
+            else //wide
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+            }
+
+            cam.nearClipPlane = 0.04f;
+            cam.farClipPlane = 0.06f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
+            cam.clearFlags = CameraClearFlags.Depth;
+
+            //create render texture and assign to camera
+            RenderTexture rt = new RenderTexture(resolution, resolution, 16);
+            cam.targetTexture = rt;
+
+            cam.Render();
+
+            //TODO write non-square textures, do full 0-1 uvs
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = rt;
+
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+
+            RenderTexture.active = null;
+
+            //delete stuff
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+
+            return tex;
+        }
+
         //TODO remove doubles, decimate?
         //used to export dynamic objects
         public static bool ExportDynamicObject(Transform transform)
@@ -897,6 +1185,31 @@ namespace CognitiveVR
             {
                 meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled, mf.sharedMesh));
             }
+
+
+            //recursively loop through children, adding canvases unless dynamic is found
+            //exporting nested canvases requires some rework to these utilities
+
+            /*Canvas[] canvases = RecursivelyGetCanvases(transform).ToArray();
+
+            List<MeshContainer> canvasContainers = new List<MeshContainer>();
+            foreach (var c in canvases)
+            {
+                //meshContainers.Add(new MeshContainer(mf.name, mf.transform, mf.GetComponent<Renderer>() != null && mf.GetComponent<Renderer>().enabled, mf.sharedMesh));
+                //meshcon
+
+                
+
+                var width = c.GetComponent<RectTransform>().sizeDelta.x * transform.localScale.x;
+                var height = c.GetComponent<RectTransform>().sizeDelta.y * c.transform.localScale.y;
+
+                var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(c.transform);
+
+                var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, c.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                string randomId = UnityEngine.Random.Range(0, 10000).ToString();
+                CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, randomId);
+            }*/
+
 
             //recusively loop thorugh children, adding mesh filters unless dynamic object is found
             SkinnedMeshRenderer[] skinnedMeshes = RecursivelyGetSkinnedMeshes(transform).ToArray();

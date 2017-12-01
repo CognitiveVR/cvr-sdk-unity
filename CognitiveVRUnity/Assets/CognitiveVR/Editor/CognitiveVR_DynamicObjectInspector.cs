@@ -80,7 +80,7 @@ namespace CognitiveVR
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
 
-            if (trackGaze.boolValue)
+            if (trackGaze.boolValue && ((DynamicObject)serializedObject.targetObjects[0]).GetComponent<Canvas>() == null)
             {
                 DynamicObject dyn = null;
                 int missingCollider = 0;
