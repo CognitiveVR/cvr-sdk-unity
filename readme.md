@@ -1,6 +1,6 @@
-The cognitiveVR SDK for Unity
+The Cognitive3D SDK for Unity
 =========
-Welcome!  This SDK allows you to integrate your Unity games with cognitiveVR, which provides analytics and insights about your Unity project.  In addition, cognitiveVR empowers you with the ability to take actions that will improve users' engagement with your experience.
+Welcome!  This SDK allows you to integrate your Unity games with Cognitive3D, which provides analytics and insights about your Unity project.  In addition, Cognitive3D empowers you with the ability to take actions that will improve users' engagement with your experience.
 
 **This plugin requires Unity 5.6.3p2 or newer**
 
@@ -16,14 +16,14 @@ You can clone this git repo to stay up to date with fixes and changes. You can a
 ## Import SDK
 Follow the standard unity package import process. You can import a custom package from the Assets>Import Package>Custom Package... menu option.
 
-![Importing the Custom Package for the cognitiveVR SDK](doc/25_import_custom_package_bubblepop.png)
+![Importing the Custom Package for the Cognitive3D SDK](doc/25_import_custom_package_bubblepop.png)
 
-## CognitiveVR Settings window
+## Cognitive3D Settings window
 If everything has imported correctly, this Settings window should appear automatically.
 
-![cognitiveVR Settings Popup](doc/settings_window.png)
+![Cognitive3D Settings Popup](doc/settings_window.png)
 
-cognitiveVR Documentation
+Cognitive3D Documentation
 =========
 The documentation explains how to login to the SDK, track your users' experience and how to export your scene to view on SceneExplorer.com
 
