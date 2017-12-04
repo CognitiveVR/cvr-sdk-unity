@@ -338,6 +338,7 @@ namespace CognitiveVR
 			return !string.IsNullOrEmpty(id);
 		}
 
+        //TODO cache this on init
 		internal static string getQueryParms()
 		{
 			return "?ssf_ws_version=" + WS_VERSION + "&ssf_cust_id=" + sCustomerId + "&ssf_output=json&ssf_sdk=" + sSDKName + "&ssf_sdk_version=" + sSDKVersion;

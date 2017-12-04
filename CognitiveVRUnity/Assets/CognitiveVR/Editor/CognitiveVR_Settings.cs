@@ -40,7 +40,7 @@ namespace CognitiveVR
             public string created_at;
         }
 
-        static string SdkVersionUrl = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
+        
 
         static System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
@@ -313,7 +313,7 @@ namespace CognitiveVR
 
                     if (GUILayout.Button("New", GUILayout.Width(40), GUILayout.Height(15)))
                     {
-                        Application.OpenURL("https://dashboard.cognitivevr.io/admin/products/create");
+                        Application.OpenURL(Constants.DASH_NEWPRODUCT);
                     }
 
                     EditorGUILayout.EndHorizontal();
@@ -555,7 +555,7 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://api.cognitivevr.io/sessions";
+            var url = Constants.API_SESSIONS;
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -643,7 +643,7 @@ namespace CognitiveVR
         {
             SaveEditorVersion();
 
-            checkForUpdatesRequest = new UnityEngine.WWW(SdkVersionUrl);
+            checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
             EditorApplication.update += UpdateCheckForUpdates;
         }
 

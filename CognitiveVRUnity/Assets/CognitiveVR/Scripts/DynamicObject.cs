@@ -251,12 +251,12 @@ namespace CognitiveVR
 
             if (TrackGaze)
             {
-
-                if (GetComponent<Canvas>())
+                //tracking gaze on UI doesn't work with builtin input/event system in VR
+                /*if (GetComponent<Canvas>())
                 {
                     //tracking gaze on UI
                 }
-                else if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
+                else */if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
                     if (GetComponentInChildren<Collider>() == null)
                     {
@@ -898,7 +898,7 @@ namespace CognitiveVR
             //savedDynamicManifest.Clear();
             //savedDynamicSnapshots.Clear();
 
-            string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+            string url = Constants.DYNAMICS_URL + sceneSettings.SceneId;
 
             string content = sendSnapshotBuilder.ToString();
 
@@ -1011,7 +1011,7 @@ namespace CognitiveVR
             //savedDynamicManifest.Clear();
             //savedDynamicSnapshots.Clear();
 
-            string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+            string url = Constants.DYNAMICS_URL + sceneSettings.SceneId;
 
             string content = builder.ToString();
 

@@ -90,7 +90,7 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = "https://sceneexplorer.com/api/objects/" + currentSceneSettings.SceneId;
+            string url = Constants.SCENEEXPLORERAPI_OBJECTS + currentSceneSettings.SceneId;
 
             getRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
 
@@ -136,7 +136,7 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = "https://sceneexplorer.com/api/scenes/" + currentSceneSettings.SceneId + "/settings";
+            string url = Constants.SCENEEXPLORERAPI_SCENES + currentSceneSettings.SceneId + "/settings";
 
             getRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
 
@@ -199,7 +199,7 @@ namespace CognitiveVR
                         return;
                     }
 
-                    string url = "https://sceneexplorer.com/api/tokens/" + currentSceneSettings.SceneId;
+                    string url = Constants.SCENEEXPLORERAPI_TOKENS + currentSceneSettings.SceneId;
 
                     //request authorization
                     CognitiveVR_Settings.RequestAuthToken(url);
@@ -580,7 +580,7 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = "https://sceneexplorer.com/api/objects/" + settings.SceneId + "?version=" + version;
+            string url = Constants.SCENEEXPLORERAPI_OBJECTS + settings.SceneId + "?version=" + version;
             Util.logDebug("Manifest Url: " + url);
             Util.logDebug("Manifest Contents: " + json);
 

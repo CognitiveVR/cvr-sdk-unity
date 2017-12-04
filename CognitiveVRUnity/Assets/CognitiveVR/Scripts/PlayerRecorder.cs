@@ -358,13 +358,15 @@ namespace CognitiveVR
             //check UI
             float UIHitDistance = Instance.cam.farClipPlane;
             Vector3 UIHitPoint = Vector3.zero;
-            float camNearDistance = Instance.cam.nearClipPlane;
+            List<UnityEngine.EventSystems.RaycastResult> results = new List<UnityEngine.EventSystems.RaycastResult>();
+
+            //maybe salvagable, but at the moment UI gaze should be done with a collider on the canvas
+
+            /*float camNearDistance = Instance.cam.nearClipPlane;
             UnityEngine.EventSystems.PointerEventData gazeData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
             gazeData.position = Instance.cam.WorldToScreenPoint(gazeDirection);
 
             gazeData.position = new Vector2(Screen.width / 2, Screen.height / 2);
-
-            List<UnityEngine.EventSystems.RaycastResult> results = new List<UnityEngine.EventSystems.RaycastResult>();
 
             UnityEngine.EventSystems.EventSystem.current.RaycastAll(gazeData, results);
             if (results.Count > 0)
@@ -375,7 +377,7 @@ namespace CognitiveVR
                     UIHitDistance = results[0].distance + camNearDistance;
                     UIHitPoint = HMD.position + gazeDirection * (results[0].distance + camNearDistance);
                 }
-            }
+            }*/
 
             float PhysicsHitDistance = Instance.cam.farClipPlane;
             Vector3 PhysicsHitPoint = Vector3.zero;
@@ -840,7 +842,7 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
+                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId;
                     
                     //Debug.Log(stringGazeSnapshots.Count +" gaze " + builder.ToString());
 
@@ -1000,7 +1002,7 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = "https://sceneexplorer.com/api/gaze/" + sceneSettings.SceneId;
+                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId;
 
                     CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 

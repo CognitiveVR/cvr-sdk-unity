@@ -701,12 +701,12 @@ namespace CognitiveVR
             GUIContent sceneExplorerLink = new GUIContent("View in Web Browser");
             if (KeyIsValid(settings.SceneId))
             {
-                sceneExplorerLink.tooltip = "https://sceneexplorer.com/scene/" + settings.SceneId;
+                sceneExplorerLink.tooltip = Constants.SCENEEXPLORER_SCENE + settings.SceneId;
             }
 
             if (GUILayout.Button(sceneExplorerLink))
             {
-                Application.OpenURL("https://sceneexplorer.com/scene/" + settings.SceneId);
+                Application.OpenURL(Constants.SCENEEXPLORER_SCENE + settings.SceneId);
             }
 
             EditorGUI.EndDisabledGroup();
@@ -876,7 +876,7 @@ namespace CognitiveVR
             }
 
             int version = 1;
-            string url = "https://sceneexplorer.com/api/scenes/" + sceneid + "/screenshot?version=" + version;
+            string url = Constants.SCENEEXPLORERAPI_SCENES + sceneid + "/screenshot?version=" + version;
 
 
             WWWForm wwwForm = new WWWForm();
@@ -1018,7 +1018,7 @@ namespace CognitiveVR
                 wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
             }
 
-            sceneUploadWWW = new WWW("https://sceneexplorer.com/api/scenes/", wwwForm);
+            sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES, wwwForm);
 
             EditorApplication.update += UpdateUploadData;
         }
@@ -1089,7 +1089,7 @@ namespace CognitiveVR
 
             if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?","Open on SceneExplorer","Close"))
             {
-                Application.OpenURL("https://sceneexplorer.com/scene/" + UploadSceneSettings.SceneId);
+                Application.OpenURL(Constants.SCENEEXPLORER_SCENE + UploadSceneSettings.SceneId);
             }
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
@@ -1124,7 +1124,7 @@ namespace CognitiveVR
                 return;
             }
 
-            string uploadUrl = "https://sceneexplorer.com/api/objects/" + sceneid + "/";
+            string uploadUrl = Constants.SCENEEXPLORERAPI_OBJECTS + sceneid + "/";
 
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
