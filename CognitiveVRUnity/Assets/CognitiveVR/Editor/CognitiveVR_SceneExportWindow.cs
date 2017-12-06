@@ -18,6 +18,22 @@ namespace CognitiveVR
         public string customerId;
         public string sceneName;
         public bool isPublic;
+
+        public SceneVersion GetLatestVersion()
+        {
+            int latest = 0;
+            SceneVersion latestscene = null;
+            if (versions == null) { return null; }
+            for (int i = 0; i<versions.Length;i++)
+            {
+                if (versions[i].versionNumber > latest)
+                {
+                    latest = versions[i].versionNumber;
+                    latestscene = versions[i];
+                }
+            }
+            return latestscene;
+        }
     }
 
     //a specific version of a scene
@@ -507,6 +523,9 @@ namespace CognitiveVR
                 GUILayout.EndHorizontal();
             }
 
+
+
+
             string saveButtonText = "Save Screenshot";
             if (loadedScreenshotFromFile)
                 saveButtonText = "Replace Screenshot";
@@ -547,8 +566,19 @@ namespace CognitiveVR
 
             GUILayout.BeginVertical();
             GUILayout.FlexibleSpace();
+
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Refresh Scene Versions"))
+            {
+                RefreshSceneVersion();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            //refresh scene version
             if (revisionDate.Year > 1000)
             {
                 GUI.color = CognitiveVR_Settings.GreenButton;
@@ -679,52 +709,17 @@ namespace CognitiveVR
 
             GUILayout.BeginHorizontal();
 
-            if (EditorGUIUtility.isProSkin)
-            {
-                GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
+            GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
 
-                DateTime dt = DateTime.FromBinary(settings.LastRevision);
-                if (dt.Year < 1000)
-                {
-                    GUILayout.Label("Never", GUILayout.Width(sceneWidth));
-                }
-                else
-                {
-                    string dtString = dt.ToShortDateString();
-                    GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
-                }
+            DateTime dt = DateTime.FromBinary(settings.LastRevision);
+            if (dt.Year < 1000)
+            {
+                GUILayout.Label("Never", GUILayout.Width(sceneWidth));
             }
             else
             {
-                if (isCurrentScene)
-                {
-                    GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
-
-                    DateTime dt = DateTime.FromBinary(settings.LastRevision);
-                    if (dt.Year < 1000)
-                    {
-                        GUILayout.Label("Never", GUILayout.Width(sceneWidth));
-                    }
-                    else
-                    {
-                        string dtString = dt.ToShortDateString();
-                        GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
-                    }
-                }
-                else
-                {
-                    GUILayout.Label(settings.SceneName, GUILayout.Width(sceneWidth));
-                    DateTime dt = DateTime.FromBinary(settings.LastRevision);
-                    if (dt.Year < 1000)
-                    {
-                        GUILayout.Label("Never", GUILayout.Width(sceneWidth));
-                    }
-                    else
-                    {
-                        string dtString = dt.ToShortDateString();
-                        GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
-                    }
-                }
+                string dtString = dt.ToShortDateString();
+                GUILayout.Label(dtString, GUILayout.Width(sceneWidth));
             }
 
             EditorGUI.BeginDisabledGroup(!KeyIsValid(settings.SceneId));
@@ -1058,10 +1053,12 @@ namespace CognitiveVR
                 byte[] rawData = wwwForm.data;
                 headers.Add("X-HTTP-Method-Override", "PUT");
                 sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId, rawData, headers);
+                Debug.Log("scene exists with sceneid - put to " + Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId);
             }
             else
             {
                 sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES, wwwForm);
+                Debug.Log("new scene - post to " + Constants.SCENEEXPLORERAPI_SCENES);
             }
 
             EditorApplication.update += UpdateUploadData;
@@ -1126,7 +1123,9 @@ namespace CognitiveVR
             sceneUploadWWW = null;
 
             //TODO after scene upload response, hit version route to get the version of the scene
-            //string getSceneVersion = Constants.SCENEEXPLORERAPI_SCENES + UploadSceneSettings.SceneId + "/settings";
+            string getSceneVersionurl = Constants.SCENEEXPLORERAPI_SCENES + UploadSceneSettings.SceneId + "/settings";
+
+            SendSceneVersionRequest(UploadSceneSettings);
 
             GUI.FocusControl("NULL");
 
@@ -1138,9 +1137,154 @@ namespace CognitiveVR
             }
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
-
-            UploadSceneSettings = null;
         }
+
+        static void SendSceneVersionRequest(CognitiveVR_Preferences.SceneSettings settings)
+        {
+            var headers = new Dictionary<string, string>();
+            headers.Add("X-HTTP-Method-Override", "GET");
+            headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
+
+            if (settings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
+            {
+                Debug.Log("SendSceneVersionRequest no scene settings!");
+                return;
+            }
+            if (string.IsNullOrEmpty(settings.SceneId))
+            {
+                Debug.LogWarning("SendSceneVersionRequest Current scene doesn't have an id!");
+                return;
+            }
+
+            string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/settings";
+
+            GetSceneVersionWWW = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+
+            Debug.Log("SendSceneVersionRequest request sent");
+            EditorApplication.update += GetSettingsResponse;
+        }
+
+        static void GetSettingsResponse()
+        {
+            if (!GetSceneVersionWWW.isDone) { return; }
+            EditorApplication.update -= GetSettingsResponse;
+
+            var responsecode = Util.GetResponseCode(GetSceneVersionWWW.responseHeaders);
+            Util.logDebug("GetSettingsResponse responseCode: " + responsecode);
+
+            if (responsecode >= 500)
+            {
+                //internal server error
+                Debug.LogError("GetSettingsResponse - 500 internal server error");
+                return;
+            }
+            else if (responsecode >= 400)
+            {
+                if (responsecode == 401)
+                {
+                    //not authorized. get auth token then try to get the scene version again
+                    string url = Constants.SCENEEXPLORERAPI_TOKENS + UploadSceneSettings.SceneId;
+
+                    Debug.LogError("GetSettingsResponse - unauthorized. get auth token");
+
+                    //request authorization
+                    SendAuthTokenRequest(url);
+                    return;
+                }
+                else
+                {
+                    //some other error
+                    Debug.LogError("GetSettingsResponse - some error" + responsecode);
+                    return;
+                }
+            }
+
+            Debug.Log("GetSettingsResponse - got response with scene version");
+            Debug.Log("GetSceneVersionWWW.text: " + GetSceneVersionWWW.text);
+            var collection = JsonUtility.FromJson<SceneVersionCollection>(GetSceneVersionWWW.text);
+
+            UploadSceneSettings.Version = collection.GetLatestVersion().versionNumber;
+            AssetDatabase.SaveAssets();
+            Util.logDebug("Scene Version " + collection.versions);
+            UploadSceneSettings = null;
+            GetSceneVersionWWW = null;
+        }
+
+        public static void SendAuthTokenRequest(string url)
+        {
+            Debug.Log("SendAuthTokenRequest - request auth token");
+            var headers = new Dictionary<string, string>();
+            headers.Add("X-HTTP-Method-Override", "POST");
+            headers.Add("Cookie", EditorPrefs.GetString("sessionToken"));
+
+            authTokenRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+            EditorApplication.update += GetAuthTokenResponse;
+        }
+
+        static void GetAuthTokenResponse()
+        {
+            if (!authTokenRequest.isDone) { return; }
+            EditorApplication.update -= GetAuthTokenResponse;
+
+            var responseCode = Util.GetResponseCode(authTokenRequest.responseHeaders);
+
+            if (responseCode >= 500)
+            {
+                //internal server error
+                //OnAuthResponse(responseCode);
+                Debug.LogError("GetAuthTokenResponse - 500 internal server error");
+                return;
+            }
+            else if (responseCode >= 400)
+            {
+                if (responseCode == 401)
+                {
+                    //session token not authorized
+                    Debug.LogWarning("GetAuthTokenResponse Session token not authorized to get auth token. Please log in");
+
+                    CognitiveVR_Settings.Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
+                    Vector2 size = new Vector2(300, 550);
+                    CognitiveVR_Settings.Instance.minSize = size;
+                    CognitiveVR_Settings.Instance.maxSize = size;
+                    CognitiveVR_Settings.Instance.Show();
+                    CognitiveVR_Settings.Instance.Logout();
+                    authTokenRequest = null;
+                    UploadSceneSettings = null;
+                    GetSceneVersionWWW = null;
+                    return;
+                }
+                else
+                {
+                    //request is wrong
+                    Debug.LogError("GetAuthTokenResponse - some other error " + responseCode);
+                    return;
+                }
+            }
+
+
+            Debug.Log("GetAuthTokenResponse - response. get scene version now");
+
+            var tokenResponse = JsonUtility.FromJson<CognitiveVR_Settings.AuthTokenResponse>(authTokenRequest.text);
+            EditorPrefs.SetString("authToken", tokenResponse.token);
+
+            authTokenRequest = null;
+
+            SendSceneVersionRequest(UploadSceneSettings);
+
+        }
+
+        public static void RefreshSceneVersion()
+        {
+            //gets the scene version from api and sets it to the current scene
+            var currentSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+            if (currentSettings != null)
+            {
+                SendSceneVersionRequest(currentSettings);
+            }
+        }
+
+        static WWW GetSceneVersionWWW;
+        static WWW authTokenRequest;
 
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
 
