@@ -274,7 +274,7 @@ namespace CognitiveVR
             }
             else
             {
-                TickPostRender(Util.vector_zero);
+                TickPostRender();
                 //StartCoroutine(periodicRenderer.EndOfFrame());
             }
         }
@@ -504,17 +504,17 @@ namespace CognitiveVR
             UI
         }
         DynamicHitType hitType = DynamicHitType.None;
+        //local position of gaze relative to dynamic object
         Vector3 postRenderHitPos;
+        //used for debugging and calculating distance of UI compared to world gaze point
         Vector3 postRenderHitWorldPos;
         int postRenderId = -1;
         float postRenderDist;
         DynamicObject uiDynamicHit;
 
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
-        public void TickPostRender(Vector3 localPos)
+        public void TickPostRender()
         {
-
-
             //TODO pool player snapshots
             PlayerSnapshot snapshot = new PlayerSnapshot(frameCount);
             if (postRenderId >= 0 && hitType == DynamicHitType.Physics)
@@ -522,7 +522,7 @@ namespace CognitiveVR
                 //snapshot.Properties.Add("objectId", objectId);
                 snapshot.ObjectId = postRenderId;
                 //snapshot.Properties.Add("localGaze", localPos);
-                snapshot.LocalGaze = localPos;
+                snapshot.LocalGaze = postRenderHitPos;
             }
 
             //update ensures camera is not null. if null here, this means something changes before post render, possibly scene change
@@ -641,10 +641,10 @@ namespace CognitiveVR
                     Vector3 calcGazePoint;
                     bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
 
-                    float gazeDistance = Vector3.SqrMagnitude(calcGazePoint - snapshot.Position);
-                    float uiDistance = Vector3.SqrMagnitude(snapshot.Position - postRenderHitWorldPos);
+                    //float gazeDistance = Vector3.SqrMagnitude(calcGazePoint - snapshot.Position);
+                    //float uiDistance = Vector3.SqrMagnitude(snapshot.Position - postRenderHitWorldPos);
 
-                    if (hitType == DynamicHitType.UI && gazeDistance > uiDistance)
+                    /*if (hitType == DynamicHitType.UI && gazeDistance > uiDistance)
                     {
                         Debug.DrawLine(snapshot.Position, postRenderHitWorldPos, Color.cyan, 1);
                         snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
@@ -653,7 +653,7 @@ namespace CognitiveVR
                         //KNOWN BUG if not evaluating world hit point at the end of the frame (and waiting for later) this check cannot happen - dynamic possibly destroyed
                     }
                     else
-                    {
+                    {*/
                         if (!validPoint)
                         {
                             snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
@@ -677,7 +677,7 @@ namespace CognitiveVR
                             //looked at world, but invalid gaze point
                             return;
                         }
-                    }
+                    //}
                 }
             }
 
