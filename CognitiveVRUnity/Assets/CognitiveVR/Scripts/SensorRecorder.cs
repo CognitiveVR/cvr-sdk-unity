@@ -83,7 +83,7 @@ namespace CognitiveVR
             CachedSnapshots.Clear();
             currentSensorSnapshots = 0;
 
-            string url = Constants.SENSORS_URL + sceneSettings.SceneId;
+            string url = Constants.SENSORS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
         }

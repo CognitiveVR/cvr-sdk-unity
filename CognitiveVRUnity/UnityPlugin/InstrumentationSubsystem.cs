@@ -86,7 +86,7 @@ namespace CognitiveVR
             }
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = Constants.EVENTS_URL + CoreSubsystem.CurrentSceneId;
+            string url = Constants.EVENTS_URL + CoreSubsystem.CurrentSceneId + "?version=" + CoreSubsystem.CurrentSceneVersion;
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
 
             var headers = new Dictionary<string, string>();

@@ -80,6 +80,7 @@ namespace CognitiveVR
         {
             //HACK there is a bug with serializing the cognitivevr_preferences file
             //this will check if the cognitivevr file exists but cannot be loaded - if that is the case, it will recompile the scripts which will fix this
+            //this can happen if there is a compile error
 
             //without this, you may LOSE YOUR SAVED PREFERENCES, including sceneIDs used to upload to scene explorer
 
@@ -827,7 +828,7 @@ namespace CognitiveVR
         /// <returns>Preferences</returns>
         public static CognitiveVR_Preferences GetPreferences()
         {
-            CognitiveVR_Preferences asset = AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+            CognitiveVR_Preferences asset = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
             if (asset == null)
             {
                 asset = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
@@ -982,7 +983,6 @@ namespace CognitiveVR
                     OnAuthResponse(responseCode);
                 }
             }
-
             var tokenResponse = JsonUtility.FromJson<AuthTokenResponse>(authTokenRequest.text);
             EditorPrefs.SetString("authToken", tokenResponse.token);
 

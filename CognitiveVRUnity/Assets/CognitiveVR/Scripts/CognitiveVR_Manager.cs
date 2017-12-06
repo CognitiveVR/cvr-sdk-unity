@@ -482,6 +482,7 @@ namespace CognitiveVR
                 }
 
                 CoreSubsystem.CurrentSceneId = string.Empty;
+                CoreSubsystem.CurrentSceneVersion = 0;
 
                 CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
                 if (sceneSettings != null)
@@ -490,6 +491,7 @@ namespace CognitiveVR
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
                         CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
+                        CoreSubsystem.CurrentSceneVersion = sceneSettings.Version;
                     }
                     else
                     {

@@ -91,6 +91,7 @@ namespace CognitiveVR
                 {
                     BeginPlayerRecording();
                     CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
+                    CoreSubsystem.CurrentSceneVersion = sceneSettings.Version;
                     Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
@@ -842,7 +843,7 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId;
+                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
                     
                     //Debug.Log(stringGazeSnapshots.Count +" gaze " + builder.ToString());
 
@@ -1002,7 +1003,7 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId;
+                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
 
                     CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 

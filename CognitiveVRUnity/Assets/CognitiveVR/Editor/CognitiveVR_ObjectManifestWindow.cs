@@ -423,7 +423,7 @@ namespace CognitiveVR
 
         void BuildManifest(string json)
         {
-            Util.logDebug("Build Manifest from json: " + json);
+            Debug.Log("Build Manifest from json: " + json);
 
             var allEntries = JsonUtil.GetJsonArray<AggregationManifest.AggregationManifestEntry>(json);
 

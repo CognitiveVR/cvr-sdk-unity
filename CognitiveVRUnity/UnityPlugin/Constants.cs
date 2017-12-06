@@ -35,6 +35,7 @@ namespace CognitiveVR
         //GET scene settings and read scene version             Constants.SCENEEXPLORERAPI_SCENES :sceneId / settings
         //POST scene screenshot                                 Constants.SCENEEXPLORERAPI_SCENES :sceneid / screenshot?version= :version
         //POST upload decimated scene                           Constants.SCENEEXPLORERAPI_SCENES
+        //PUT upload and replace existing scene                 Constants.SCENEEXPLORERAPI_SCENES :sceneid
 
         public const string SCENEEXPLORERAPI_TOKENS = "https://sceneexplorer.com/api/tokens/";
         //GET auth token from dynamic object manifest response  Constants.SCENEEXPLORERAPI_TOKENS :sceneId
@@ -62,20 +63,20 @@ namespace CognitiveVR
 
 
         public const string DYNAMICS_URL = "https://sceneexplorer.com/api/dynamics/";
-        //POST dynamics json data to scene explorer             Constants.DYNAMICS_URL :sceneId
+        //POST dynamics json data to scene explorer             Constants.DYNAMICS_URL :sceneId ?version= :version
 
         public const string GAZE_URL = "https://sceneexplorer.com/api/gaze/";
-        //POST gaze json data to scene explorer                 Constants.GAZE_URL :sceneId
+        //POST gaze json data to scene explorer                 Constants.GAZE_URL :sceneId ?version= :version
 
         public const string EVENTS_URL = "https://sceneexplorer.com/api/events/";
-        //POST event json data to scene explorer                Constants.EVENTS_URL :sceneId
+        //POST event json data to scene explorer                Constants.EVENTS_URL :sceneId ?version= :version
 
         public const string SENSORS_URL = "https://sceneexplorer.com/api/sensors/";
-        //POST sensor json data to scene explorer               Constants.SENSORS_URL :sceneId
+        //POST sensor json data to scene explorer               Constants.SENSORS_URL :sceneId ?version= :version
 
         public const string DATA_HOST = "https://data.cognitivevr.io";
         //POST used in core initialization, personalization (tuning), data collector
-        //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS CAN NOT CHANGE DURING RUNTIME
+        //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS SHOULD NOT CHANGE DURING RUNTIME
 
         public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
         //unused

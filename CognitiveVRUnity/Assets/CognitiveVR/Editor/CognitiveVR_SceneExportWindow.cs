@@ -8,6 +8,31 @@ using System;
 
 namespace CognitiveVR
 {
+    //returned from get scene version. contains info about all versions of scene
+    public class SceneVersionCollection
+    {
+        public long createdAt;
+        public long updatedAt;
+        public string id;
+        public SceneVersion[] versions;
+        public string customerId;
+        public string sceneName;
+        public bool isPublic;
+    }
+
+    //a specific version of a scene
+    public class SceneVersion
+    {
+        public long createdAt;
+        public long updatedAt;
+        public int id;
+        public int versionNumber;
+        public float scale;
+        public string sdkVersion;
+        public int sessionCount;
+    }
+
+
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
         static string appendName = "";
@@ -369,12 +394,16 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
 
-
+            bool SceneIDExist = !string.IsNullOrEmpty(currentSceneSettings.SceneId);
 
 
             //upload
             GUILayout.BeginHorizontal();
-            var uploadButtonContent = new GUIContent("Upload baked \"" + currentSceneSettings.SceneName + "\" scene files to Dashboard");
+            var uploadButtonContent = new GUIContent("Upload new scene \"" + currentSceneSettings.SceneName + "\"");
+            if (SceneIDExist)
+            {
+                uploadButtonContent.text = "Update existing scene \"" + currentSceneSettings.SceneName + "\"";
+            }
             if (!prefs.IsCustomerIDValid)
             {
                 uploadButtonContent.tooltip = "You must have a valid CustomerID to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
@@ -397,7 +426,8 @@ namespace CognitiveVR
 
             if (GUILayout.Button(uploadButtonContent))
             {
-                UploadDecimatedScene(true);
+                UploadSceneSettings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                UploadDecimatedScene(UploadSceneSettings);
             }
             GUILayout.EndHorizontal();
 
@@ -507,7 +537,7 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(currentSceneSettings.SceneId) || !HasSavedScreenshot(currentSceneSettings.SceneName));
             if (GUILayout.Button("Upload Screenshot"))
             {
-                UploadScreenshot(currentSceneSettings.SceneId, currentSceneSettings.SceneName);
+                UploadScreenshot(currentSceneSettings);
             }
             EditorGUI.EndDisabledGroup();
 
@@ -850,18 +880,20 @@ namespace CognitiveVR
                     HasOpenedBlender = false;
                     blenderProcess = null;
                     EditorUtility.ClearProgressBar();
-                    UploadDecimatedScene();
+
+                    var blenderSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                    UploadDecimatedScene(blenderSceneSettings);
                 }
             }
         }
 
-        static void UploadScreenshot(string sceneid, string sceneName)
+        static void UploadScreenshot(CognitiveVR_Preferences.SceneSettings settings)
         {
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
             string[] screenshotPath = new string[0];
             if (Directory.Exists(sceneExportDirectory + "screenshot"))
             {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot");
             }
             else
             {
@@ -875,8 +907,7 @@ namespace CognitiveVR
                 return;
             }
 
-            int version = 1;
-            string url = Constants.SCENEEXPLORERAPI_SCENES + sceneid + "/screenshot?version=" + version;
+            string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/screenshot?version=" + settings.Version;
 
 
             WWWForm wwwForm = new WWWForm();
@@ -884,21 +915,24 @@ namespace CognitiveVR
             new WWW(url, wwwForm);
         }
 
-        static void UploadDecimatedScene(bool fetchNewCurrentScene = false)
+        //displays popup window confirming upload, then uploads the files
+        static void UploadDecimatedScene(CognitiveVR_Preferences.SceneSettings settings)
         {
-            if (fetchNewCurrentScene)
-            {
-                UploadSceneSettings = prefs.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-            }
-            if (UploadSceneSettings == null) { return; }
+            //if uploadNewScene POST
+            //else PUT to sceneexplorer/sceneid
+
+            if (settings == null) { return; }
 
             if (sceneUploadWWW != null)
             {
                 Debug.LogError("scene upload WWW is not null. please wait until your scene has finished uploading before uploading another!");
+                return;
             }
 
+            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
+
             bool uploadConfirmed = false;
-            string sceneName = UploadSceneSettings.SceneName;
+            string sceneName = settings.SceneName;
             string fullName = sceneName + appendName;
             string[] filePaths = new string[] { };
 
@@ -913,7 +947,7 @@ namespace CognitiveVR
             //custom confirm upload popup windows
             if ((!SceneExportDirExists || filePaths.Length <= 1))
             {
-                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + UploadSceneSettings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
+                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + settings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
                 {
                     uploadConfirmed = true;
                     //create a json.settings file in the directory
@@ -927,7 +961,7 @@ namespace CognitiveVR
             }
             else
             {
-                if (EditorUtility.DisplayDialog("Upload Scene", "Do you want to upload \"" + UploadSceneSettings.SceneName + "\" to your Dashboard?", "Yes", "No"))
+                if (EditorUtility.DisplayDialog("Upload Scene", "Do you want to upload \"" + settings.SceneName + "\" to your Dashboard?", "Yes", "No"))
                 {
                     uploadConfirmed = true;
                 }
@@ -1018,7 +1052,17 @@ namespace CognitiveVR
                 wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
             }
 
-            sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES, wwwForm);
+            if (hasExistingSceneId)
+            {
+                Dictionary<string, string> headers = wwwForm.headers;
+                byte[] rawData = wwwForm.data;
+                headers.Add("X-HTTP-Method-Override", "PUT");
+                sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId, rawData, headers);
+            }
+            else
+            {
+                sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES, wwwForm);
+            }
 
             EditorApplication.update += UpdateUploadData;
         }
@@ -1081,7 +1125,8 @@ namespace CognitiveVR
             sceneUploadWWW.Dispose();
             sceneUploadWWW = null;
 
-            //TODO after scene upload response, hit another route to get the version of the scene
+            //TODO after scene upload response, hit version route to get the version of the scene
+            //string getSceneVersion = Constants.SCENEEXPLORERAPI_SCENES + UploadSceneSettings.SceneId + "/settings";
 
             GUI.FocusControl("NULL");
 
