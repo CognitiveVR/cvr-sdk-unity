@@ -362,6 +362,8 @@ namespace CognitiveVR
             return null;
         }
 
+        public float StartupDelayTime = 2;
+
         private void OnEnable()
         {
             if (instance != null && instance != this)
@@ -381,11 +383,21 @@ namespace CognitiveVR
             }
         }
 
-        void Start()
+        IEnumerator Start()
         {
             GameObject.DontDestroyOnLoad(gameObject);
+            if (StartupDelayTime > 0)
+            {
+                yield return new WaitForSeconds(StartupDelayTime);
+            }
             if (InitializeOnStart)
                 Initialize();
+        }
+
+        private void OnValidate()
+        {
+            if (StartupDelayTime < 0) { StartupDelayTime = 0;}
+            Util.setLogEnabled(EnableLogging);
         }
 
         public void Initialize(string userName, Dictionary<string,object> userProperties = null)

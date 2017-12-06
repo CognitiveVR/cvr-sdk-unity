@@ -503,7 +503,9 @@ namespace CognitiveVR
             UI
         }
         DynamicHitType hitType = DynamicHitType.None;
+        //local position of gaze relative to dynamic object
         Vector3 postRenderHitPos;
+        //used for debugging and calculating distance of UI compared to world gaze point
         Vector3 postRenderHitWorldPos;
         int postRenderId = -1;
         float postRenderDist;
