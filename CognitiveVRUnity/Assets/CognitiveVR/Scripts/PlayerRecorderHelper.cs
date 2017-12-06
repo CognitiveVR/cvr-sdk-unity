@@ -43,7 +43,7 @@ namespace CognitiveVR.Components
             //Debug.Log("post render end of frame");
             if (CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                CognitiveVR_Manager.Instance.TickPostRender(Util.vector_zero);
+                CognitiveVR_Manager.Instance.TickPostRender();
             }
             //CognitiveVR_Manager.HasHitDynamic = false;
         }
