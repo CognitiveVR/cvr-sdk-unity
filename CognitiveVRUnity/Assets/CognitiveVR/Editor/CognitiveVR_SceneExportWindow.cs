@@ -1108,11 +1108,11 @@ namespace CognitiveVR
 
             if (hasExistingSceneId)
             {
-                Dictionary<string, string> headers = wwwForm.headers;
-                byte[] rawData = wwwForm.data;
-                headers.Add("X-HTTP-Method-Override", "PUT");
-                sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), rawData, headers);
-                Debug.Log("scene exists with sceneid - put to " + Constants.POSTUPDATESCENE(settings.SceneId));
+                //Dictionary<string, string> headers = wwwForm.headers;
+                //byte[] rawData = wwwForm.data;
+                //headers.Add("X-HTTP-Method-Override", "PUT");
+                sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm);
+                Debug.Log("scene exists with sceneid - post to " + Constants.POSTUPDATESCENE(settings.SceneId));
             }
             else
             {
@@ -1176,8 +1176,15 @@ namespace CognitiveVR
                 return;
             }
 
-            string responseText = sceneUploadWWW.text;
-            UploadSceneSettings.SceneId = responseText.Replace("\"","");
+            string responseText = sceneUploadWWW.text.Replace("\"", "");
+            if (string.IsNullOrEmpty(responseText))
+            {
+                Debug.Log("reponse text is null or empty. scene version update?");
+            }
+            else
+            {
+                UploadSceneSettings.SceneId = responseText;
+            }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
             sceneUploadWWW.Dispose();

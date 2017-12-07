@@ -264,12 +264,6 @@ namespace CognitiveVR
                 return;
             }
 
-            if (SceneVersionCollection == null)
-            {
-                //TODO if manifest is also null, display warning that scene probably hasn't been uploaded!
-                GUILayout.Label("SCENE VERSION CONLLECTION IS NULL");
-            }
-
             if (Manifest == null)
             {
                 if (!gettingManifest)
@@ -286,6 +280,19 @@ namespace CognitiveVR
             if (Manifest == null)
             {
                 EditorGUILayout.LabelField("loading manifest");
+                return;
+            }
+
+            if (SceneVersionCollection == null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("No saved version for scene.\nDid you upload this scene?");
+                if (GUILayout.Button("Scene Export", GUILayout.Width(120)))
+                {
+                    CognitiveVR_SceneExportWindow.Init();
+                }
+                //TODO if manifest is also null, display warning that scene probably hasn't been uploaded!
+                GUILayout.EndHorizontal();
                 return;
             }
 
