@@ -898,7 +898,8 @@ namespace CognitiveVR
             //savedDynamicManifest.Clear();
             //savedDynamicSnapshots.Clear();
 
-            string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
+            //string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.VersionNumber;
+            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
 
@@ -1011,7 +1012,8 @@ namespace CognitiveVR
             //savedDynamicManifest.Clear();
             //savedDynamicSnapshots.Clear();
 
-            string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
+            //string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.VersionNumber;
+            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = builder.ToString();
 

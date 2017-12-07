@@ -91,7 +91,7 @@ namespace CognitiveVR
                 {
                     BeginPlayerRecording();
                     CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                    CoreSubsystem.CurrentSceneVersion = sceneSettings.Version;
+                    CoreSubsystem.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
@@ -843,11 +843,12 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
+                    //string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId + "?version=" + sceneSettings.VersionNumber;
+                    string url = Constants.POSTGAZEDATA(sceneSettings.SceneId,sceneSettings.VersionNumber);
                     
                     //Debug.Log(stringGazeSnapshots.Count +" gaze " + builder.ToString());
 
-                    StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
+                    StartCoroutine(PostJsonRequest(outBytes, url));
                 }
             }
             else
@@ -1003,11 +1004,11 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string SceneURLGaze = Constants.GAZE_URL + sceneSettings.SceneId + "?version=" + sceneSettings.Version;
+                    string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
                     CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 
-                    StartCoroutine(PostJsonRequest(outBytes, SceneURLGaze));
+                    StartCoroutine(PostJsonRequest(outBytes, url));
                 }
             }
             else

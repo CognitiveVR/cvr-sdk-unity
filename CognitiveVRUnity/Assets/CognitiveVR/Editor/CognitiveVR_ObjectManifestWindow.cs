@@ -53,21 +53,10 @@ namespace CognitiveVR
             //public string SceneId;
         }
 
-        [System.Serializable]
-        public class SceneSettings
-        {
-            public class ImageTypes
-            {
-                public bool large;
-                public bool small;
-            }
-            public ImageTypes images;
-            public int latestVersion;
-        }
-
         //only need id, mesh and name
         AggregationManifest Manifest;
-        int SceneVersion;
+        //int SceneVersion;
+        SceneVersionCollection SceneVersionCollection;
 
         WWW getRequest;
 
@@ -90,11 +79,12 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = Constants.SCENEEXPLORERAPI_OBJECTS + currentSceneSettings.SceneId;
+            //string url = Constants.SCENEEXPLORERAPI_OBJECTS + currentSceneSettings.SceneId;
+            string url = Constants.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
 
-            getRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+            getRequest = new WWW(url, null, headers);
 
-            Util.logDebug("GetManifest request sent");
+            Debug.Log("GetManifest request sent to " + url);
 
             EditorApplication.update += GetManifestResponse;
         }
@@ -136,11 +126,12 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = Constants.SCENEEXPLORERAPI_SCENES + currentSceneSettings.SceneId + "/settings";
+            //string url = Constants.SCENEEXPLORERAPI_SCENES + currentSceneSettings.SceneId + "/settings";
+            string url = Constants.GETSCENEVERSIONS(currentSceneSettings.SceneId);
 
-            getRequest = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+            getRequest = new WWW(url, null, headers);
 
-            Util.logDebug("GetSceneVersion request sent");
+            Debug.Log("GetSceneVersion request sent");
             EditorApplication.update += GetSettingsResponse;
         }
 
@@ -154,11 +145,10 @@ namespace CognitiveVR
             var responsecode = Util.GetResponseCode(getRequest.responseHeaders);
             Util.logDebug("GetSettingsResponse responseCode: " + responsecode);
 
-            // getRequest.text = {"images":{"large":false,"small":false},"latestVersion":1}
-            var sceneSettings = JsonUtility.FromJson<SceneSettings>(getRequest.text);
+            SceneVersionCollection = JsonUtility.FromJson<SceneVersionCollection>(getRequest.text);
 
-            SceneVersion = sceneSettings.latestVersion;
-            Util.logDebug("Scene Version " + SceneVersion);
+            //var sv = SceneVersionCollection.GetLatestVersion();
+            //Debug.Log(sv.versionNumber);
         }
 
         void GetManifestResponse()
@@ -199,7 +189,8 @@ namespace CognitiveVR
                         return;
                     }
 
-                    string url = Constants.SCENEEXPLORERAPI_TOKENS + currentSceneSettings.SceneId;
+                    //string url = Constants.SCENEEXPLORERAPI_TOKENS + currentSceneSettings.SceneId;
+                    string url = Constants.POSTAUTHTOKEN(currentSceneSettings.SceneId);
 
                     //request authorization
                     CognitiveVR_Settings.RequestAuthToken(url);
@@ -271,6 +262,12 @@ namespace CognitiveVR
                 }
                 GUILayout.EndHorizontal();
                 return;
+            }
+
+            if (SceneVersionCollection == null)
+            {
+                //TODO if manifest is also null, display warning that scene probably hasn't been uploaded!
+                GUILayout.Label("SCENE VERSION CONLLECTION IS NULL");
             }
 
             if (Manifest == null)
@@ -348,7 +345,7 @@ namespace CognitiveVR
                 UpdateManifest();
                 Refresh();
             }
-
+            /*
             GUILayout.Space(10);
 
             EditorGUILayout.LabelField("A new Manifest will contain only the current Dynamic Objects in the scene. Useful when you have made significant changes and don't want to aggregate deleted Dynamic Objects");
@@ -357,7 +354,7 @@ namespace CognitiveVR
             {
                 UploadNewManifest();
                 Refresh();
-            }
+            }*/
         }
 
         List<DynamicObject> ObjectsInScene;
@@ -423,7 +420,7 @@ namespace CognitiveVR
 
         void BuildManifest(string json)
         {
-            Debug.Log("Build Manifest from json: " + json);
+            Debug.Log("Build Manifest from existing scene explorer data: " + json);
 
             var allEntries = JsonUtil.GetJsonArray<AggregationManifest.AggregationManifestEntry>(json);
 
@@ -435,12 +432,16 @@ namespace CognitiveVR
             Repaint();
         }
 
-        void AddOrReplaceDynamic(DynamicObject dynamic)
+        void AddOrReplaceDynamic(AggregationManifest manifest, DynamicObject dynamic)
         {
-            var replaceEntry = Manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
+            var replaceEntry = manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
             if (replaceEntry == null)
             {
-                Manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                //don't include meshes with empty mesh names in manifest
+                if (!string.IsNullOrEmpty(dynamic.MeshName))
+                {
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                }
             }
             else
             {
@@ -453,32 +454,17 @@ namespace CognitiveVR
         {
             foreach (var v in GetDynamicObjectsInScene())
             {
-                AddOrReplaceDynamic(v);
+                AddOrReplaceDynamic(Manifest, v);
             }
             var json = ManifestToJson();
+            Debug.Log(json);
             if (string.IsNullOrEmpty(json))
             {
                 Debug.LogWarning("could not write dynamics and manifest to json");
                 return;
             }
-            SendManifest(json, SceneVersion);
-        }
-
-        void UploadNewManifest()
-        {
-            Manifest.objects.Clear();
-
-            foreach (var v in GetDynamicObjectsInScene())
-            {
-                AddOrReplaceDynamic(v);
-            }
-            var json = ManifestToJson();
-            if (string.IsNullOrEmpty(json))
-            {
-                Debug.LogWarning("could not write dynamics and manifest to json");
-                return;
-            }
-            SendManifest(json, SceneVersion + 1);
+            //TODO where did id 1188 come from?
+            SendManifest(json, SceneVersionCollection.GetLatestVersion());
         }
 
         void SetUniqueObjectIds()
@@ -565,7 +551,7 @@ namespace CognitiveVR
             return objectIdManifest;
         }
 
-        void SendManifest(string json, int version)
+        void SendManifest(string json, SceneVersion sceneversion)
         {
             var settings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(EditorSceneManager.GetActiveScene().path);
             if (settings == null)
@@ -580,7 +566,8 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = Constants.SCENEEXPLORERAPI_OBJECTS + settings.SceneId + "?version=" + version;
+            //string url = Constants.SCENEEXPLORERAPI_OBJECTS + settings.SceneId + "?version=" + version;
+            string url = Constants.POSTDYNAMICMANIFEST(settings.SceneId, sceneversion.versionNumber);
             Util.logDebug("Manifest Url: " + url);
             Util.logDebug("Manifest Contents: " + json);
 

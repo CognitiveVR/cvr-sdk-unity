@@ -14,7 +14,7 @@ namespace CognitiveVR
         public long createdAt;
         public long updatedAt;
         public string id;
-        public SceneVersion[] versions;
+        public List<SceneVersion> versions = new List<SceneVersion>();
         public string customerId;
         public string sceneName;
         public bool isPublic;
@@ -23,8 +23,8 @@ namespace CognitiveVR
         {
             int latest = 0;
             SceneVersion latestscene = null;
-            if (versions == null) { return null; }
-            for (int i = 0; i<versions.Length;i++)
+            if (versions == null) { Debug.LogError("SceneVersionCollection versions is null!"); return null; }
+            for (int i = 0; i<versions.Count;i++)
             {
                 if (versions[i].versionNumber > latest)
                 {
@@ -34,9 +34,16 @@ namespace CognitiveVR
             }
             return latestscene;
         }
+
+        public SceneVersion GetVersion(int versionnumber)
+        {
+            var sceneversion = versions.Find(delegate (SceneVersion obj) { return obj.versionNumber == versionnumber; });
+            return sceneversion;
+        }
     }
 
     //a specific version of a scene
+    [System.Serializable]
     public class SceneVersion
     {
         public long createdAt;
@@ -523,7 +530,42 @@ namespace CognitiveVR
                 GUILayout.EndHorizontal();
             }
 
+            if (DisplayScreenshotTip || tempDisabledCameras.Count > 0)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox("Something look wrong?\nDisable cameras in your scene and try again",MessageType.Info);
 
+                if (tempDisabledCameras.Count == 0)
+                {
+                    if (GUILayout.Button("Disable\nCameras",GUILayout.Width(100),GUILayout.Height(60)))
+                    {
+                        foreach (var c in FindObjectsOfType<Camera>())
+                        {
+                            if (c.enabled && c.gameObject.activeInHierarchy)
+                            {
+                                c.enabled = false;
+                                tempDisabledCameras.Add(c);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (GUILayout.Button("Enable\nCameras", GUILayout.Width(100), GUILayout.Height(60)))
+                    {
+                        foreach (var c in tempDisabledCameras)
+                        {
+                            c.enabled = true;
+                        }
+                        tempDisabledCameras.Clear();
+                    }
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+            }
 
 
             string saveButtonText = "Save Screenshot";
@@ -608,6 +650,9 @@ namespace CognitiveVR
             }
         }
 
+        bool DisplayScreenshotTip = false;
+        List<Camera> tempDisabledCameras = new List<Camera>();
+
         Texture2D ConvertRenderTexture(RenderTexture rt)
         {
             //write rendertexture to png
@@ -616,6 +661,18 @@ namespace CognitiveVR
             tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
             tex.Apply();
             RenderTexture.active = null;
+
+            var color = tex.GetPixel(0, 0);
+            if (color.a < 0.9f)
+            {
+                //KNOWN BUG - sometimes having active cameras in the scene does weird things to scenert
+                DisplayScreenshotTip = true;
+            }
+            else
+            {
+                DisplayScreenshotTip = false;
+            }
+
             return tex;
         }
 
@@ -902,8 +959,10 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/screenshot?version=" + settings.Version;
+            //string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/screenshot?version=" + settings.VersionNumber;
+            string url = Constants.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
 
+            Debug.Log("upload screenshot to " + url);
 
             WWWForm wwwForm = new WWWForm();
             wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
@@ -1052,13 +1111,14 @@ namespace CognitiveVR
                 Dictionary<string, string> headers = wwwForm.headers;
                 byte[] rawData = wwwForm.data;
                 headers.Add("X-HTTP-Method-Override", "PUT");
-                sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId, rawData, headers);
-                Debug.Log("scene exists with sceneid - put to " + Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId);
+                sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), rawData, headers);
+                Debug.Log("scene exists with sceneid - put to " + Constants.POSTUPDATESCENE(settings.SceneId));
             }
             else
             {
-                sceneUploadWWW = new WWW(Constants.SCENEEXPLORERAPI_SCENES, wwwForm);
-                Debug.Log("new scene - post to " + Constants.SCENEEXPLORERAPI_SCENES);
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
+                Debug.Log("new scene - post to " + Constants.POSTNEWSCENE());
             }
 
             EditorApplication.update += UpdateUploadData;
@@ -1096,7 +1156,8 @@ namespace CognitiveVR
             //response
             if (!string.IsNullOrEmpty(sceneUploadWWW.error))
             {
-                Debug.LogError("Scene Upload Error:" + sceneUploadWWW.error);
+                
+                Debug.LogError("Scene Upload Error "+ Util.GetResponseCode(sceneUploadWWW.responseHeaders)+":" + sceneUploadWWW.error);
 
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
@@ -1122,8 +1183,8 @@ namespace CognitiveVR
             sceneUploadWWW.Dispose();
             sceneUploadWWW = null;
 
-            //TODO after scene upload response, hit version route to get the version of the scene
-            string getSceneVersionurl = Constants.SCENEEXPLORERAPI_SCENES + UploadSceneSettings.SceneId + "/settings";
+            //after scene upload response, hit version route to get the version of the scene
+            string getSceneVersionurl = Constants.GETSCENEVERSIONS(UploadSceneSettings.SceneId);
 
             SendSceneVersionRequest(UploadSceneSettings);
 
@@ -1156,11 +1217,12 @@ namespace CognitiveVR
                 return;
             }
 
-            string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/settings";
+            //string url = Constants.SCENEEXPLORERAPI_SCENES + settings.SceneId + "/settings";
+            string url = Constants.GETSCENEVERSIONS(settings.SceneId);
 
-            GetSceneVersionWWW = new WWW(url, new System.Text.UTF8Encoding(true).GetBytes("ignored"), headers);
+            GetSceneVersionWWW = new WWW(url, null, headers);
 
-            Debug.Log("SendSceneVersionRequest request sent");
+            Debug.Log("SendSceneVersionRequest request sent " + GetSceneVersionWWW.url);
             EditorApplication.update += GetSettingsResponse;
         }
 
@@ -1183,7 +1245,12 @@ namespace CognitiveVR
                 if (responsecode == 401)
                 {
                     //not authorized. get auth token then try to get the scene version again
-                    string url = Constants.SCENEEXPLORERAPI_TOKENS + UploadSceneSettings.SceneId;
+                    //string url = Constants.SCENEEXPLORERAPI_TOKENS + UploadSceneSettings.SceneId;
+                    if (UploadSceneSettings == null)
+                    {
+                        UploadSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                    }
+                    string url = Constants.POSTAUTHTOKEN(UploadSceneSettings.SceneId);
 
                     Debug.LogError("GetSettingsResponse - unauthorized. get auth token");
 
@@ -1203,9 +1270,19 @@ namespace CognitiveVR
             Debug.Log("GetSceneVersionWWW.text: " + GetSceneVersionWWW.text);
             var collection = JsonUtility.FromJson<SceneVersionCollection>(GetSceneVersionWWW.text);
 
-            UploadSceneSettings.Version = collection.GetLatestVersion().versionNumber;
+            //SceneVersionCollection collection = External.MiniJSON.Json.Deserialize(GetSceneVersionWWW.text) as SceneVersionCollection;
+
+            Debug.Log("collection " + collection);
+            Debug.Log("collection versions " + collection.versions.Count);
+
+            if (UploadSceneSettings == null)
+            {
+                Debug.LogWarning("upload scene settings null - use current scene");
+                UploadSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            }
+            UploadSceneSettings.VersionNumber = collection.GetLatestVersion().versionNumber;
+            UploadSceneSettings.VersionId = collection.GetLatestVersion().id;
             AssetDatabase.SaveAssets();
-            Util.logDebug("Scene Version " + collection.versions);
             UploadSceneSettings = null;
             GetSceneVersionWWW = null;
         }
@@ -1313,7 +1390,8 @@ namespace CognitiveVR
                 return;
             }
 
-            string uploadUrl = Constants.SCENEEXPLORERAPI_OBJECTS + sceneid + "/";
+            //string uploadUrl = Constants.SCENEEXPLORERAPI_OBJECTS + sceneid + "/";
+            //string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId,settings.VersionId)
 
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
@@ -1350,12 +1428,16 @@ namespace CognitiveVR
 
                 objectNames += dirname + "\n";
 
-                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl + dirname, wwwForm));
+                string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
+
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm));
             }
 
             if (dynamicObjectForms.Count > 0)
             {
                 Debug.Log("Upload dynamic objects: " + objectNames);
+                DynamicUploadTotal = dynamicObjectForms.Count;
+                DynamicUploadSuccess = 0;
                 EditorApplication.update += UpdateUploadDynamics;
             }
         }
@@ -1372,6 +1454,9 @@ namespace CognitiveVR
             }
         }
 
+        static int DynamicUploadTotal;
+        static int DynamicUploadSuccess;
+
         static WWW dynamicUploadWWW;
         static void UpdateUploadDynamics()
         {
@@ -1381,7 +1466,7 @@ namespace CognitiveVR
                 if (dynamicObjectForms.Count == 0)
                 {
                     //DONE!
-                    Debug.Log("<color=green>All dynamic object uploads complete!</color>");
+                    Debug.Log("Dynamic Object uploads complete. " + DynamicUploadSuccess + "/" + DynamicUploadTotal + " succeeded");
                     EditorApplication.update -= UpdateUploadDynamics;
                     return;
                 }
@@ -1397,6 +1482,10 @@ namespace CognitiveVR
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
             {
                 Debug.LogError(dynamicUploadWWW.error);
+            }
+            else
+            {
+                DynamicUploadSuccess++;
             }
 
             Debug.Log("Finished uploading dynamic object to " + dynamicUploadWWW.url);
@@ -1508,6 +1597,18 @@ namespace CognitiveVR
             }
         }
 
-#endregion
+        #endregion
+
+        private void OnDestroy()
+        {
+            if (tempDisabledCameras.Count > 0)
+            {
+                foreach (var c in tempDisabledCameras)
+                {
+                    c.enabled = true;
+                }
+                tempDisabledCameras.Clear();
+            }
+        }
     }
 }
