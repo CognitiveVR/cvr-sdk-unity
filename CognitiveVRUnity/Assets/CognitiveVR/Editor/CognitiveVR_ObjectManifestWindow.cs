@@ -75,16 +75,15 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
             {
                 currentState = "scene missing id!";
-                Debug.LogWarning("current scene doesn't have an id!");
+                Util.logWarning("Get Manifest current scene doesn't have an id!");
                 return;
             }
 
-            //string url = Constants.SCENEEXPLORERAPI_OBJECTS + currentSceneSettings.SceneId;
             string url = Constants.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
 
             getRequest = new WWW(url, null, headers);
 
-            Debug.Log("GetManifest request sent to " + url);
+            Util.logDebug("GetManifest request sent to " + url);
 
             EditorApplication.update += GetManifestResponse;
         }
@@ -103,7 +102,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.LogWarning("Get Manifest -> Get Auth Response retured code " + responseCode);
+                Util.logWarning("Get Manifest -> Get Auth Response retured code " + responseCode);
             }
         }
 
@@ -122,16 +121,15 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
             {
                 currentState = "scene missing id!";
-                Debug.LogWarning("Cannot Get Scene Version. Current scene doesn't have an id!");
+                Util.logWarning("Cannot Get Scene Version. Current scene doesn't have an id!");
                 return;
             }
 
-            //string url = Constants.SCENEEXPLORERAPI_SCENES + currentSceneSettings.SceneId + "/settings";
             string url = Constants.GETSCENEVERSIONS(currentSceneSettings.SceneId);
 
             getRequest = new WWW(url, null, headers);
 
-            Debug.Log("GetSceneVersion request sent");
+            Util.logDebug("GetSceneVersion request sent");
             EditorApplication.update += GetSettingsResponse;
         }
 
@@ -147,8 +145,8 @@ namespace CognitiveVR
 
             SceneVersionCollection = JsonUtility.FromJson<SceneVersionCollection>(getRequest.text);
 
-            //var sv = SceneVersionCollection.GetLatestVersion();
-            //Debug.Log(sv.versionNumber);
+            var sv = SceneVersionCollection.GetLatestVersion();
+            Util.logDebug(sv.versionNumber.ToString());
         }
 
         void GetManifestResponse()
@@ -176,7 +174,7 @@ namespace CognitiveVR
                 {
                     //not authorized
 
-                    Debug.LogWarning("GetManifestResponse not authorized. Requesting Auth Token");
+                    Util.logWarning("GetManifestResponse not authorized. Requesting Auth Token");
 
                     var currentSceneSettings = CognitiveVR_Settings.GetPreferences().FindScene(EditorSceneManager.GetActiveScene().name);
                     if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
@@ -185,11 +183,10 @@ namespace CognitiveVR
                     }
                     if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
                     {
-                        Debug.LogWarning("Cannot Get Manifest Response. Current scene doesn't have an id!");
+                        Util.logWarning("Cannot Get Manifest Response. Current scene doesn't have an id!");
                         return;
                     }
 
-                    //string url = Constants.SCENEEXPLORERAPI_TOKENS + currentSceneSettings.SceneId;
                     string url = Constants.POSTAUTHTOKEN(currentSceneSettings.SceneId);
 
                     //request authorization
@@ -198,7 +195,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    Debug.LogWarning("GetManifestResponse retured code " + responsecode);
+                    Util.logWarning("GetManifestResponse retured code " + responsecode);
                 }
             }
         }
@@ -303,7 +300,7 @@ namespace CognitiveVR
                 {
                     manifest += entry.ToString() + "\n";
                 }
-                Debug.Log("Dynamic Object Manifest:\n" + manifest);
+                Util.logDebug("Dynamic Object Manifest:\n" + manifest);
             }
 
             EditorStyles.label.wordWrap = true;
@@ -427,7 +424,7 @@ namespace CognitiveVR
 
         void BuildManifest(string json)
         {
-            Debug.Log("Build Manifest from existing scene explorer data: " + json);
+            Util.logDebug("Build Manifest from existing scene explorer data: " + json);
 
             var allEntries = JsonUtil.GetJsonArray<AggregationManifest.AggregationManifestEntry>(json);
 
@@ -464,13 +461,12 @@ namespace CognitiveVR
                 AddOrReplaceDynamic(Manifest, v);
             }
             var json = ManifestToJson();
-            Debug.Log(json);
+            Util.logDebug(json);
             if (string.IsNullOrEmpty(json))
             {
-                Debug.LogWarning("could not write dynamics and manifest to json");
+                Debug.LogWarning("UpdateManifest - could not write dynamics and manifest from empty json");
                 return;
             }
-            //TODO where did id 1188 come from?
             SendManifest(json, SceneVersionCollection.GetLatestVersion());
         }
 
@@ -478,17 +474,17 @@ namespace CognitiveVR
         {
             if (Instance == null)
             {
-                Debug.LogWarning("instance is null");
+                Util.logDebug("Object Manifest Window is null");
                 return;
             }
             if (Instance.Manifest == null)
             {
-                Debug.LogWarning("instance Manifest is null");
+                Util.logDebug("Object Manifest Window Manifest is null");
                 return;
             }
             if (Instance.Manifest.objects == null)
             {
-                Debug.LogWarning("instance Manifest Objects is null");
+                Util.logDebug("Object Manifest Window Manifest Objects is null");
                 return;
             }
 
@@ -535,7 +531,7 @@ namespace CognitiveVR
             if (changedIds > 0)
             {
                 //mark stuff + scene dirty
-                Debug.Log("set " + changedIds + " new ids");
+                Debug.Log("Set Unique Ids changed " + changedIds + " new object ids");
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             }
         }
@@ -563,7 +559,7 @@ namespace CognitiveVR
             var settings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
-                Debug.LogWarning("settings are null " + EditorSceneManager.GetActiveScene().path);
+                Debug.LogWarning("Send Manifest settings are null " + EditorSceneManager.GetActiveScene().path);
                 string s = EditorSceneManager.GetActiveScene().name;
                 if (string.IsNullOrEmpty(s))
                 {
@@ -573,7 +569,6 @@ namespace CognitiveVR
                 return;
             }
 
-            //string url = Constants.SCENEEXPLORERAPI_OBJECTS + settings.SceneId + "?version=" + version;
             string url = Constants.POSTDYNAMICMANIFEST(settings.SceneId, sceneversion.versionNumber);
             Util.logDebug("Manifest Url: " + url);
             Util.logDebug("Manifest Contents: " + json);
@@ -595,7 +590,7 @@ namespace CognitiveVR
         {
             if (!manifestRequest.isDone) { return; }
             EditorApplication.update -= ManifestResposne;
-            Debug.Log("Manifest upload complete. response: " + manifestRequest.text + " error: " + manifestRequest.error);
+            Util.logDebug("Manifest upload complete. response: " + manifestRequest.text + " error: " + manifestRequest.error);
         }
     }
 }

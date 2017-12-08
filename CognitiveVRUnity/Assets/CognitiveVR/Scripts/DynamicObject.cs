@@ -895,15 +895,9 @@ namespace CognitiveVR
 
             sendSnapshotBuilder.Append("}");
 
-            //savedDynamicManifest.Clear();
-            //savedDynamicSnapshots.Clear();
-
-            //string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.VersionNumber;
             string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
-
-            //CognitiveVR.Util.logDebug(sceneSettings.SceneName + " dynamics " + content);
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
@@ -1009,22 +1003,15 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            //savedDynamicManifest.Clear();
-            //savedDynamicSnapshots.Clear();
-
-            //string url = Constants.DYNAMICS_URL + sceneSettings.SceneId + "?version=" + sceneSettings.VersionNumber;
             string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = builder.ToString();
-
-            //CognitiveVR.Util.logDebug(sceneSettings.SceneName + " dynamics FORCE " + content);
 
             if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
             {
                 byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
                 CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             }
-            //CoreSubsystem.SendOnQuitRequest(url, builder.ToString());
         }
 
         public static string SetManifestEntry(DynamicObjectManifestEntry entry)

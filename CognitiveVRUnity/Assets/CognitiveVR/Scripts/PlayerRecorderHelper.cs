@@ -40,12 +40,10 @@ namespace CognitiveVR.Components
         public IEnumerator OnPostRender()
         {
             yield return endOfFrame;
-            //Debug.Log("post render end of frame");
             if (CognitiveVR_Preferences.S_TrackGazePoint)
             {
                 CognitiveVR_Manager.Instance.TickPostRender();
             }
-            //CognitiveVR_Manager.HasHitDynamic = false;
         }
 
         //steamvr freezes unity if this is enabled in unity 5.4

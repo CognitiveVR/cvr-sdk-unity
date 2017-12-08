@@ -940,7 +940,6 @@ namespace CognitiveVR
 
         public static void RequestAuthToken(string url)
         {
-            Debug.Log("cognitivevr - request auth token");
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "POST");
             headers.Add("Cookie", EditorPrefs.GetString("sessionToken"));
@@ -966,7 +965,7 @@ namespace CognitiveVR
                 if (responseCode == 401)
                 {
                     //session token not authorized
-                    Debug.Log("Session token not authorized to get auth token. Please log in");
+                    Debug.LogWarning("Session token not authorized to get auth token. Please log in");
 
                     Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
                     Vector2 size = new Vector2(300, 550);
