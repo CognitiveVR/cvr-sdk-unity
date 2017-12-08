@@ -220,6 +220,8 @@ namespace CognitiveVR
             public string SceneId = "";
             public string ScenePath = "";
             public long LastRevision;
+            public int VersionNumber = 1;
+            public int VersionId;
 
             public SceneSettings(string name, string path)
             {

@@ -26,62 +26,118 @@ namespace CognitiveVR
 
 
         //editor urls
-        public const string SCENEEXPLORERAPI_OBJECTS = "https://sceneexplorer.com/api/objects/";
-        //GET dynamic object manifest                           Constants.SCENEEXPLORERAPI_OBJECTS :sceneId
-        //POST dynamic object manifest                          Constants.SCENEEXPLORERAPI_OBJECTS :sceneId ?version= :version
-        //POST dynamic object mesh data                         Constants.SCENEEXPLORERAPI_OBJECTS :sceneId / :exportDirectory
+        //GET dynamic object manifest
+        public static string GETDYNAMICMANIFEST(int versionid)
+        {
+            return String.Concat("https://api.sceneexplorer.com/versions/", versionid, "/objects");
+        }
 
-        public const string SCENEEXPLORERAPI_SCENES = "https://sceneexplorer.com/api/scenes/";
-        //GET scene settings and read scene version             Constants.SCENEEXPLORERAPI_SCENES :sceneId / settings
-        //POST scene screenshot                                 Constants.SCENEEXPLORERAPI_SCENES :sceneid / screenshot?version= :version
-        //POST upload decimated scene                           Constants.SCENEEXPLORERAPI_SCENES
+        //POST dynamic object manifest
+        public static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
+        {
+            return String.Concat("https://data.sceneexplorer.com/objects/",sceneid,"?version=", versionnumber);
+        }
+        //POST dynamic object mesh data
+        public static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
+        {
+            return String.Concat("https://data.sceneexplorer.com/objects/",sceneid,"/",exportdirectory,"?version=", versionnumber);
+        }
 
-        public const string SCENEEXPLORERAPI_TOKENS = "https://sceneexplorer.com/api/tokens/";
-        //GET auth token from dynamic object manifest response  Constants.SCENEEXPLORERAPI_TOKENS :sceneId
 
+        //GET scene settings and read scene version
+        public static string GETSCENEVERSIONS(string sceneid)
+        {
+            return String.Concat("https://api.sceneexplorer.com/scenes/", sceneid);
+        }
+
+        //POST scene screenshot
+        public static string POSTSCREENSHOT(string sceneid, int versionnumber)
+        {
+            return String.Concat("https://data.sceneexplorer.com/scenes/",sceneid,"/screenshot?version=", versionnumber);
+        }
+
+        //POST upload decimated scene
+        public static string POSTNEWSCENE()
+        {
+            return "https://data.sceneexplorer.com/scenes";
+        }
+
+        //POST upload and replace existing scene
+        public static string POSTUPDATESCENE(string sceneid)
+        {
+            return String.Concat("https://data.sceneexplorer.com/scenes/",sceneid);
+        }
+        
+        //POST get auth token from dynamic object manifest response
+        public static string POSTAUTHTOKEN(string sceneid)
+        {
+            return String.Concat("https://api.sceneexplorer.com/tokens/", sceneid);
+        }
+
+        //UNITY used to open scenes on sceneexplorer
         public const string SCENEEXPLORER_SCENE = "https://sceneexplorer.com/scene/";
-        //UNITY used to open scenes on sceneexplorer            Constants.SCENEEXPLORER_SCENE :sceneId
 
-        public const string API_SESSIONS = "https://api.cognitivevr.io/sessions";
         //POST used to log into the editor
+        public const string API_SESSIONS = "https://api.cognitivevr.io/sessions";
 
-        public const string DASH_NEWPRODUCT = "https://dashboard.cognitivevr.io/admin/products/create";
         //UNITY opens dashboard page to create a new product
+        public const string DASH_NEWPRODUCT = "https://dashboard.cognitivevr.io/admin/products/create";
 
-        
-        
-        public const string GITHUB_SDKVERSION = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
+
+
         //GET github api to get latest release data
+        public const string GITHUB_SDKVERSION = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
 
-        public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
         //UNITY where the user goes to download the sdk
+        public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
+
 
 
 
         //session urls
 
 
-        public const string DYNAMICS_URL = "https://sceneexplorer.com/api/dynamics/";
-        //POST dynamics json data to scene explorer             Constants.DYNAMICS_URL :sceneId
+        //POST dynamics json data to scene explorer
+        public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
+        {
+            return string.Concat("https://data.sceneexplorer.com/dynamics/", sceneid, "?version=",versionnumber);
+        }
 
-        public const string GAZE_URL = "https://sceneexplorer.com/api/gaze/";
-        //POST gaze json data to scene explorer                 Constants.GAZE_URL :sceneId
+        //POST gaze json data to scene explorer
+        public static string POSTGAZEDATA(string sceneid, int versionnumber)
+        {
+            return string.Concat("https://data.sceneexplorer.com/gaze/", sceneid, "?version=", versionnumber);
+        }
 
-        public const string EVENTS_URL = "https://sceneexplorer.com/api/events/";
-        //POST event json data to scene explorer                Constants.EVENTS_URL :sceneId
+        //POST event json data to scene explorer
+        public static string POSTEVENTDATA(string sceneid, int versionnumber)
+        {
+            return string.Concat("https://data.sceneexplorer.com/events/", sceneid, "?version=", versionnumber);
+        }
 
-        public const string SENSORS_URL = "https://sceneexplorer.com/api/sensors/";
-        //POST sensor json data to scene explorer               Constants.SENSORS_URL :sceneId
+        //POST sensor json data to scene explorer
+        public static string POSTSENSORDATA(string sceneid, int versionnumber)
+        {
+            return string.Concat("https://data.sceneexplorer.com/sensors/", sceneid, "?version=", versionnumber);
+        }
 
-        public const string DATA_HOST = "https://data.cognitivevr.io";
         //POST used in core initialization, personalization (tuning), data collector
-        //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS CAN NOT CHANGE DURING RUNTIME
+        //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS SHOULD NOT CHANGE DURING RUNTIME
+        public const string DATA_HOST = "https://data.cognitivevr.io";
 
-        public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
         //unused
+        public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
 
-        public const string API_PRODUCTS = "https://api.cognitivevr.io/products/";
-        //GET request question set                              Constants.API_PRODUCTS :customerID / questionSetHooks / :hookName / questionSet
-        //POST question set responses                           Constants.API_PRODUCTS :customerID / questionSets / :questionSetName / :questionSetVersion / responses
+
+        //GET request question set
+        public static string GETEXITPOLLQUESTIONSET(string customerid, string hookname)
+        {
+            return string.Concat("https://api.cognitivevr.io/products/", customerid, "/questionSetHooks/", hookname, "/questionset");
+        }
+        //POST question set responses
+        public static string POSTEXITPOLLRESPONSES(string customerid, string questionsetname, int questionsetversion)
+        {
+            return string.Concat("https://api.cognitivevr.io/products/", customerid, "/questionSets/", questionsetname, "/",questionsetversion, "/responses");
+        }
     }
 }

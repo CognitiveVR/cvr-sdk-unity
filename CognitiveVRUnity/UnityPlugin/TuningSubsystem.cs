@@ -3,14 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 
+//handles recieving, parsing and accessing tuning variables
+//also updates the dashboard when a tuning variable is used - helps to keep track of which variables are not part of a test
+
 namespace CognitiveVR
 {
-    /**
-     * <p>Tuning Subsystem</p>
-     *
-     * @author Copyright 2015 Knetik, Inc.
-     * @version 1.0
-     */
     public class TuningSubsystem
     {
         private const string CACHE_FILENAME = "cognitivevr_tuningCache";

@@ -14,6 +14,7 @@ using System;
 //CC BY SA 3.0
 
 //TODO clean up inputs. make an interface for different formats
+//this should not have any references to directories or where to save files
 
 namespace CognitiveVR
 {
