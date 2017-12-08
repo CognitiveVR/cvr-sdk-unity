@@ -338,7 +338,7 @@ namespace CognitiveVR
         IEnumerator RequestQuestions()
         {
             //hooks/questionsets. ask hook by id what their questionset is
-            string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSetHooks/" + RequestQuestionHookName + "/questionSet";
+            string url = Constants.GETEXITPOLLQUESTIONSET(CognitiveVR_Preferences.Instance.CustomerID, RequestQuestionHookName);
 
             WWW www = new WWW(url);
 
@@ -617,7 +617,7 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            string url = "https://api.cognitivevr.io/products/" + CognitiveVR_Preferences.Instance.CustomerID + "/questionSets/" + QuestionSetName + "/" + questionSetVersion + "/responses";
+            string url = Constants.POSTEXITPOLLRESPONSES(CognitiveVR_Preferences.Instance.CustomerID, QuestionSetName, questionSetVersion);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);

@@ -38,9 +38,9 @@
 			EntityInfo deviceInfo = null,
 			EntityInfo userInfo = null,
 			int requestTimeout = Constants.INIT_TIMEOUT,
-			string host = "https://data.cognitivevr.io",
+			string host = Constants.DATA_HOST,
 			bool logEnabled = false,
-			string notificationHost = "https://notification.cognitivevr.io",
+			string notificationHost = Constants.NOTIFICATIONS_HOST,
 			bool notificationDisableAutoClear = false,
 			int notificationSmallIcon = 0,
 			bool notificationAlwaysPost = false) 

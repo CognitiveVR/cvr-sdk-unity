@@ -43,7 +43,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Download Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {
-                Application.OpenURL("https://github.com/CognitiveVR/cvr-sdk-unity/releases");
+                Application.OpenURL(Constants.GITHUB_RELEASES);
             }
 
             GUI.color = Color.white;

@@ -40,7 +40,7 @@ namespace CognitiveVR
             public string created_at;
         }
 
-        static string SdkVersionUrl = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
+        
 
         static System.DateTime lastSdkUpdateDate; // when cvr_version was last set
         //cvr_skipVersion - EditorPref if newVersion == skipVersion, don't show update window
@@ -80,6 +80,7 @@ namespace CognitiveVR
         {
             //HACK there is a bug with serializing the cognitivevr_preferences file
             //this will check if the cognitivevr file exists but cannot be loaded - if that is the case, it will recompile the scripts which will fix this
+            //this can happen if there is a compile error
 
             //without this, you may LOSE YOUR SAVED PREFERENCES, including sceneIDs used to upload to scene explorer
 
@@ -313,7 +314,7 @@ namespace CognitiveVR
 
                     if (GUILayout.Button("New", GUILayout.Width(40), GUILayout.Height(15)))
                     {
-                        Application.OpenURL("https://dashboard.cognitivevr.io/admin/products/create");
+                        Application.OpenURL(Constants.DASH_NEWPRODUCT);
                     }
 
                     EditorGUILayout.EndHorizontal();
@@ -555,7 +556,7 @@ namespace CognitiveVR
                 return;
             }
 
-            var url = "https://api.cognitivevr.io/sessions";
+            var url = Constants.API_SESSIONS;
             var headers = new Dictionary<string, string>();
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
@@ -643,7 +644,7 @@ namespace CognitiveVR
         {
             SaveEditorVersion();
 
-            checkForUpdatesRequest = new UnityEngine.WWW(SdkVersionUrl);
+            checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
             EditorApplication.update += UpdateCheckForUpdates;
         }
 
@@ -827,7 +828,7 @@ namespace CognitiveVR
         /// <returns>Preferences</returns>
         public static CognitiveVR_Preferences GetPreferences()
         {
-            CognitiveVR_Preferences asset = AssetDatabase.LoadAssetAtPath<CognitiveVR_Preferences>("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+            CognitiveVR_Preferences asset = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
             if (asset == null)
             {
                 asset = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
@@ -939,7 +940,6 @@ namespace CognitiveVR
 
         public static void RequestAuthToken(string url)
         {
-            Debug.Log("cognitivevr - request auth token");
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "POST");
             headers.Add("Cookie", EditorPrefs.GetString("sessionToken"));
@@ -965,7 +965,7 @@ namespace CognitiveVR
                 if (responseCode == 401)
                 {
                     //session token not authorized
-                    Debug.Log("Session token not authorized to get auth token. Please log in");
+                    Debug.LogWarning("Session token not authorized to get auth token. Please log in");
 
                     Instance = GetWindow<CognitiveVR_Settings>(true, "cognitiveVR Account Settings");
                     Vector2 size = new Vector2(300, 550);
@@ -982,7 +982,6 @@ namespace CognitiveVR
                     OnAuthResponse(responseCode);
                 }
             }
-
             var tokenResponse = JsonUtility.FromJson<AuthTokenResponse>(authTokenRequest.text);
             EditorPrefs.SetString("authToken", tokenResponse.token);
 

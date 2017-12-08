@@ -251,7 +251,12 @@ namespace CognitiveVR
 
             if (TrackGaze)
             {
-                if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
+                //tracking gaze on UI doesn't work with builtin input/event system in VR
+                /*if (GetComponent<Canvas>())
+                {
+                    //tracking gaze on UI
+                }
+                else */if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
                     if (GetComponentInChildren<Collider>() == null)
                     {
@@ -265,7 +270,6 @@ namespace CognitiveVR
                     {
                         Debug.LogWarning("Tracking Gaze on Dynamic Object " + name + " requires a collider!", this);
                     }
-
                 }
 
                 CognitiveVR_Manager.QuitEvent += SendGazeDurationOnQuit;
@@ -409,16 +413,6 @@ namespace CognitiveVR
                 //savedDynamicSnapshots.Clear();
                 return;
             }
-
-            //TODO limit thread to not start until at least X snapshots can be written
-
-            //WriteSnapshotsToString();
-
-            //list
-            /*if ((NewObjectManifest.Count + NewSnapshots.Count) > CognitiveVR_Preferences.Instance.DynamicSnapshotCount)
-            {
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifest,NewSnapshots));
-            }*/
 
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
@@ -901,14 +895,9 @@ namespace CognitiveVR
 
             sendSnapshotBuilder.Append("}");
 
-            //savedDynamicManifest.Clear();
-            //savedDynamicSnapshots.Clear();
-
-            string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
-
-            //CognitiveVR.Util.logDebug(sceneSettings.SceneName + " dynamics " + content);
 
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
             CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
@@ -1014,21 +1003,15 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            //savedDynamicManifest.Clear();
-            //savedDynamicSnapshots.Clear();
-
-            string url = "https://sceneexplorer.com/api/dynamics/" + sceneSettings.SceneId;
+            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             string content = builder.ToString();
-
-            //CognitiveVR.Util.logDebug(sceneSettings.SceneName + " dynamics FORCE " + content);
 
             if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
             {
                 byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
                 CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             }
-            //CoreSubsystem.SendOnQuitRequest(url, builder.ToString());
         }
 
         public static string SetManifestEntry(DynamicObjectManifestEntry entry)

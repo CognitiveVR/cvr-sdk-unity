@@ -74,13 +74,26 @@ namespace CognitiveVR
 
             foreach (var v in sceneObjects)
             {
-                if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
+                var dynamic = v.GetComponent<DynamicObject>();
+                if (dynamic == null) { continue; }
+                if (v.GetComponent<Canvas>() != null)
+                {
+                    //TODO merge this deeper in the export process. do this recurively ignoring child dynamics
+                    //take a snapshot
+                    var width = v.GetComponent<RectTransform>().sizeDelta.x * v.localScale.x;
+                    var height = v.GetComponent<RectTransform>().sizeDelta.y * v.localScale.y;
+
+                    var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(v);
+
+                    var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, v, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                    CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
+                    successfullyExportedCount++;
+                }
+                else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
                 {
                     successfullyExportedCount++;
                 }
-                var dynamic = v.GetComponent<DynamicObject>();
-                if (dynamic == null) { continue; }
-                
+
                 foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
                 {
                     if (common.ToLower() == dynamic.MeshName.ToLower())

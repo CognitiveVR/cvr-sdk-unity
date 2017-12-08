@@ -64,6 +64,8 @@ namespace CognitiveVR
         }
 
         public static string CurrentSceneId;
+        public static int CurrentSceneVersionNumber;
+        public static int CurrensSceneVersionId;
 
         /*public static string SimpleHMDName { get; private set; }
         public static void SetSimpleHMDName(string name)
@@ -338,6 +340,7 @@ namespace CognitiveVR
 			return !string.IsNullOrEmpty(id);
 		}
 
+        //TODO cache this on init
 		internal static string getQueryParms()
 		{
 			return "?ssf_ws_version=" + WS_VERSION + "&ssf_cust_id=" + sCustomerId + "&ssf_output=json&ssf_sdk=" + sSDKName + "&ssf_sdk_version=" + sSDKVersion;
@@ -361,6 +364,7 @@ namespace CognitiveVR
             DeviceId = null;
             Initialized = false;
             CurrentSceneId = null;
+            CurrentSceneVersionNumber = 0;
         }
 
 

@@ -84,9 +84,9 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for scene! do not upload transactions to sceneexplorer");
                 return;
             }
-
+            
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = "https://sceneexplorer.com/api/events/" + CoreSubsystem.CurrentSceneId;
+            string url = Constants.POSTEVENTDATA(CoreSubsystem.CurrentSceneId, CoreSubsystem.CurrentSceneVersionNumber);
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
 
             var headers = new Dictionary<string, string>();
