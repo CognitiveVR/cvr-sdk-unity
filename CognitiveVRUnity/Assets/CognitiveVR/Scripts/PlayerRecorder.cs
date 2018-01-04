@@ -811,6 +811,8 @@ namespace CognitiveVR
                     JsonUtil.SetString("hmdtype", "arkit", builder);
 #elif CVR_ARCORE
                     JsonUtil.SetString("hmdtype", "arcore", builder);
+#elif CVR_META
+                    JsonUtil.SetString("hmdtype", "meta", builder);
 #else
                     JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), builder);
 #endif
@@ -956,6 +958,8 @@ namespace CognitiveVR
                     JsonUtil.SetString("hmdtype", "arkit", builder);
 #elif CVR_ARCORE
                     JsonUtil.SetString("hmdtype", "arcore", builder);
+#elif CVR_META
+                    JsonUtil.SetString("hmdtype", "meta", builder);
 #else
                     JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), builder);
 #endif

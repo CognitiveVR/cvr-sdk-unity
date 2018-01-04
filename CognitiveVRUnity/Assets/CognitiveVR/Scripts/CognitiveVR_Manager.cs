@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using Valve.VR;
 #endif
 
+#if CVR_META
+using System.Runtime.InteropServices;
+#endif
+
 /// <summary>
 /// initializes CognitiveVR analytics. Add components to track additional events
 /// </summary>
@@ -14,6 +18,12 @@ namespace CognitiveVR
 {
     public partial class CognitiveVR_Manager : MonoBehaviour
     {
+
+#if CVR_META
+        [DllImport("MetaVisionDLL", EntryPoint = "getSerialNumberAndCalibration")]
+        internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
+#endif
+
         #region Events
         public delegate void CoreInitHandler(Error initError);
         /// <summary>
@@ -49,11 +59,23 @@ namespace CognitiveVR
             PlayerRecorderInit(initError);
             if (InitEvent != null) { InitEvent(initError); }
 
-			//required for when restarting cognitiveVR manager
+            //required for when restarting cognitiveVR manager
             /*foreach (var d in InitEvent.GetInvocationList())
             {
                 InitEvent -= (CoreInitHandler)d;
             }*/
+
+#if CVR_META
+            string serialnumber;
+            string xml;
+            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
+            {              
+                var metaProperties = new Dictionary<string,object>();
+                metaProperties.Add("cvr.vr.serialnumber",serialnumber);
+
+                Instrumentation.updateDeviceState(metaProperties);
+            }
+#endif
         }
 
         public delegate void UpdateHandler();
@@ -119,9 +141,9 @@ namespace CognitiveVR
         public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
 
 #endif
-        #endregion
+#endregion
 
-        #region HMD and Controllers
+#region HMD and Controllers
 
 
 #if CVR_OCULUS
@@ -323,7 +345,7 @@ namespace CognitiveVR
 #endif
         }
 
-        #endregion
+#endregion
 
         private static CognitiveVR_Manager instance;
         public static CognitiveVR_Manager Instance
@@ -466,8 +488,6 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
-
-
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
@@ -665,7 +685,7 @@ namespace CognitiveVR
             DynamicObject.SendSavedSnapshots(manifestEntries, snapshots);
         }
 
-        #region Application Quit
+#region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
@@ -699,6 +719,6 @@ namespace CognitiveVR
             hasCanceled = true;            
             Application.Quit();
         }
-        #endregion
+#endregion
     }
 }
