@@ -9,7 +9,7 @@ namespace CognitiveVR
     {
         public override Vector2 GetWindowSize()
         {
-            return new Vector2(292, 280);
+            return new Vector2(292, 310);
         }
 
         public override void OnOpen()
@@ -37,6 +37,9 @@ namespace CognitiveVR
 #endif
 #if CVR_ARCORE //google
             option.Add("CVR_ARCORE");
+#endif
+#if CVR_META 
+            option.Add("CVR_META");
 #endif
         }
 
@@ -76,7 +79,7 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
 
             if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Steam VR 1.2.0+"))
+            if (GUILayout.Button("Steam VR 1.2.0"))
             {
                 if (option.Contains("CVR_STEAMVR"))
                     option.Remove("CVR_STEAMVR");
@@ -90,7 +93,7 @@ namespace CognitiveVR
             GUI.color = Color.white;
 
             if (option.Contains("CVR_OCULUS")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
-            if (GUILayout.Button("Oculus Utilities 1.9.0+"))
+            if (GUILayout.Button("Oculus Utilities 1.9.0"))
             {
                 if (option.Contains("CVR_OCULUS"))
                     option.Remove("CVR_OCULUS");
@@ -177,7 +180,23 @@ namespace CognitiveVR
                 }
             }
             GUI.color = Color.white;
-            
+
+            if (option.Contains("CVR_META")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (GUILayout.Button("Meta SDK v2.4.1.49"))
+            {
+                if (option.Contains("CVR_META"))
+                {
+                    option.Remove("CVR_META");
+                }
+                else
+                {
+                    if (!Event.current.shift)
+                        option.Clear();
+                    option.Add("CVR_META");
+                }
+            }
+            GUI.color = Color.white;
+
             GUILayout.Space(5);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(5);

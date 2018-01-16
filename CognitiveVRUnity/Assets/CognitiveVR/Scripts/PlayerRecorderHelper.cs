@@ -22,15 +22,17 @@ namespace CognitiveVR.Components
             }
         }
 
+        RenderTexture lastTexture;
         public RenderTexture DoRender(RenderTexture rt)
         {
             if (cam == null)
             {
                 cam = GetComponent<Camera>();
             }
+            lastTexture = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
-            cam.targetTexture = null;
+            cam.targetTexture = lastTexture;
 
             return rt;
         }
