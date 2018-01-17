@@ -852,6 +852,9 @@ namespace CognitiveVR
             float ratioX;
             float ratioY;
 
+            newHeight = Mathf.Max(1, newHeight);
+            newWidth = Mathf.Max(1, newWidth);
+
             texColors = tex.GetPixels();
             newColors = new Color[newWidth * newHeight];
             ratioX = ((float)tex.width) / newWidth;
