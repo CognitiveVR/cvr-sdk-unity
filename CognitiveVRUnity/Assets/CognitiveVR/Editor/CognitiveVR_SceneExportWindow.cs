@@ -904,7 +904,17 @@ namespace CognitiveVR
         static void UpdateProcess()
         {
             currentBlenderTime = (float)(EditorApplication.timeSinceStartup - blenderStartTime);
-            EditorUtility.DisplayProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", currentBlenderTime / maxBlenderTime);
+            if (EditorUtility.DisplayCancelableProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", currentBlenderTime / maxBlenderTime))
+            {
+                Debug.Log("Cancel Blender process");
+                blenderProcess.Kill();
+                blenderProcess.Close();
+                EditorApplication.update -= UpdateProcess;
+                HasOpenedBlender = false;
+                blenderProcess = null;
+                EditorUtility.ClearProgressBar();
+                return;
+            }
 
             //could probably clean up some of this
             Process[] blenders;
