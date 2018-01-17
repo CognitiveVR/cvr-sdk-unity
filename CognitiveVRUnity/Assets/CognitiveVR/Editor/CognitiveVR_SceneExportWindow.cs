@@ -419,8 +419,6 @@ namespace CognitiveVR
 
             bool SceneIDExist = !string.IsNullOrEmpty(currentSceneSettings.SceneId);
 
-
-            //upload
             GUILayout.BeginHorizontal();
             var uploadButtonContent = new GUIContent("Upload new scene \"" + currentSceneSettings.SceneName + "\"");
             if (SceneIDExist)
@@ -913,6 +911,7 @@ namespace CognitiveVR
                 HasOpenedBlender = false;
                 blenderProcess = null;
                 EditorUtility.ClearProgressBar();
+                UploadSceneSettings = null;
                 return;
             }
 
@@ -931,16 +930,22 @@ namespace CognitiveVR
             if (HasOpenedBlender)
             {
                 blenders = Process.GetProcessesByName("blender");
-                if (blenders.Length > 0)
-                {
-                    //Debug.Log("BLENDER - do work");
-                }
-                else
+                if (blenderProcess.HasExited)
                 {
                     //Debug.Log("BLENDER - finished work");
                     EditorApplication.update -= UpdateProcess;
                     HasOpenedBlender = false;
+
+                    if (blenderProcess.ExitCode != 0)
+                    {
+                        blenderProcess = null;
+                        EditorUtility.ClearProgressBar();
+                        UploadSceneSettings = null;
+                        return;
+                    }
+
                     blenderProcess = null;
+                    
                     EditorUtility.ClearProgressBar();
 
                     var blenderSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
@@ -1357,6 +1362,7 @@ namespace CognitiveVR
         static WWW authTokenRequest;
 
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
+        static string currentDynamicUploadName;
 
         public static void UploadDynamicObjects()
         {
@@ -1419,7 +1425,7 @@ namespace CognitiveVR
 
                 string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
 
-                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm));
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname));
             }
 
             if (dynamicObjectForms.Count > 0)
@@ -1434,11 +1440,13 @@ namespace CognitiveVR
         {
             public string Url;
             public WWWForm Form;
+            public string Name;
 
-            public DynamicObjectForm(string url, WWWForm form)
+            public DynamicObjectForm(string url, WWWForm form, string name)
             {
                 Url = url;
                 Form = form;
+                Name = name;
             }
         }
 
@@ -1456,14 +1464,19 @@ namespace CognitiveVR
                     //DONE!
                     Debug.Log("Dynamic Object uploads complete. " + DynamicUploadSuccess + "/" + DynamicUploadTotal + " succeeded");
                     EditorApplication.update -= UpdateUploadDynamics;
+                    EditorUtility.ClearProgressBar();
+                    currentDynamicUploadName = string.Empty;
                     return;
                 }
                 else
                 {
                     dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    currentDynamicUploadName = dynamicObjectForms[0].Name;
                     dynamicObjectForms.RemoveAt(0);
                 }
             }
+
+            EditorUtility.DisplayProgressBar("Upload Dynamic Object", currentDynamicUploadName, dynamicUploadWWW.uploadProgress);
 
             if (!dynamicUploadWWW.isDone) { return; }
 
@@ -1476,7 +1489,7 @@ namespace CognitiveVR
                 DynamicUploadSuccess++;
             }
 
-            Debug.Log("Finished uploading dynamic object to " + dynamicUploadWWW.url);
+            Debug.Log("Finished uploading dynamic object " + currentDynamicUploadName);
 
             dynamicUploadWWW = null;
         }
