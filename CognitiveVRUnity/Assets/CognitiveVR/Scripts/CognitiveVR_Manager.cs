@@ -22,6 +22,17 @@ namespace CognitiveVR
 #if CVR_META
         [DllImport("MetaVisionDLL", EntryPoint = "getSerialNumberAndCalibration")]
         internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
+#elif CVR_STEAMVR
+        string GetStringProperty(CVRSystem system, uint deviceId, ETrackedDeviceProperty prop)
+        {
+            var error = ETrackedPropertyError.TrackedProp_Success;
+            var result = new System.Text.StringBuilder();
+
+            var capacity = system.GetStringTrackedDeviceProperty(deviceId, prop, result, 64, ref error);
+            if (capacity > 0)
+                return result.ToString();
+            return string.Empty;
+        }
 #endif
 
         #region Events
@@ -74,6 +85,16 @@ namespace CognitiveVR
                 metaProperties.Add("cvr.vr.serialnumber",serialnumber);
 
                 Instrumentation.updateDeviceState(metaProperties);
+            }
+#elif CVR_STEAMVR
+            var serialnumber = GetStringProperty(OpenVR.System, 0, ETrackedDeviceProperty.Prop_SerialNumber_String);
+
+            if (!string.IsNullOrEmpty(serialnumber))
+            {
+                var properties = new Dictionary<string, object>();
+                properties.Add("cvr.vr.serialnumber", serialnumber);
+
+                Instrumentation.updateDeviceState(properties);
             }
 #endif
         }
