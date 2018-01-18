@@ -104,19 +104,29 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Add("cvr.device.graphics.memory", SystemInfo.graphicsMemorySize);
             sDeviceAndAppInfo.Add("cvr.device.processor", SystemInfo.processorType);
             sDeviceAndAppInfo.Add("cvr.device.memory", SystemInfo.systemMemorySize);
+#if UNITY_2017_2_OR_NEWER
+            sDeviceAndAppInfo.Add("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
+            sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
+            sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
+#else
             sDeviceAndAppInfo.Add("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
             sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
             sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
+#endif
 
         }
 
         //returns vive/rift/gear/unknown based on hmd model name
         public static string GetSimpleHMDName()
         {
+#if UNITY_2017_2_OR_NEWER
+            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+#else
             string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
-            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
+#endif
+            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
             if (rawHMDName.Contains("rift cv1")) { return "rift"; }
-            if (rawHMDName.Contains("samsung")) { return "gear"; }
+            if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { return "gear"; }
 
             return "unknown";
         }
