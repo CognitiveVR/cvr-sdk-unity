@@ -1213,6 +1213,12 @@ namespace CognitiveVR
 
         static void SendSceneVersionRequest(CognitiveVR_Preferences.SceneSettings settings)
         {
+            if (GetSceneVersionWWW != null || authTokenRequest != null)
+            {
+                Debug.Log("SendSceneVersionRequest waiting for SceneVersionRequest or AuthTokenRequest");
+                return;
+            }
+
             var headers = new Dictionary<string, string>();
             headers.Add("X-HTTP-Method-Override", "GET");
             headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
@@ -1238,6 +1244,12 @@ namespace CognitiveVR
 
         static void GetSettingsResponse()
         {
+            if (GetSceneVersionWWW == null)
+            {
+                EditorApplication.update -= GetSettingsResponse;
+                return;
+            }
+
             if (!GetSceneVersionWWW.isDone) { return; }
             EditorApplication.update -= GetSettingsResponse;
 
@@ -1301,6 +1313,11 @@ namespace CognitiveVR
 
         static void GetAuthTokenResponse()
         {
+            if (authTokenRequest == null)
+            {
+                EditorApplication.update -= GetAuthTokenResponse;
+                return;
+            }
             if (!authTokenRequest.isDone) { return; }
             EditorApplication.update -= GetAuthTokenResponse;
 
