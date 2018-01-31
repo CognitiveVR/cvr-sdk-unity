@@ -48,7 +48,7 @@ namespace CognitiveVR
             {
                 return;
             }
-            InitResponse = initError;
+            initResponse = initError;
 
             OutstandingInitRequest = false;
 
@@ -391,7 +391,8 @@ namespace CognitiveVR
         [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
         public bool SaveExitPollOnDevice = false;
 
-        public static Error InitResponse { get; private set; }
+        static Error initResponse = Error.NotInitialized;
+        public static Error InitResponse { get { return initResponse; } }
         bool OutstandingInitRequest = false;
 
         /// <summary>
@@ -416,8 +417,6 @@ namespace CognitiveVR
             }
 
             instance = this;
-
-            InitResponse = Error.NotInitialized;
 
             //TODO expose this value to initialize a pool when writing lots of dynamic objects
             for (int i = 0; i < 100; i++)
@@ -565,9 +564,10 @@ namespace CognitiveVR
 
         public static int frameCount;
 
+        //start after successful init callback
         IEnumerator Tick()
         {
-            while (Application.isPlaying)
+            while (Application.isPlaying) //cognitive manager is destroyed on end session, which will stop this
             {
                 yield return playerSnapshotInverval;
                 frameCount = Time.frameCount;
@@ -577,6 +577,10 @@ namespace CognitiveVR
 
         void Update()
         {
+            if (initResponse != Error.Success)
+            {
+                return;
+            }
 
             //doPostRender = false;
 
@@ -613,6 +617,7 @@ namespace CognitiveVR
             Destroy(FindObjectOfType<CognitiveVR_Manager>());
 
             CoreSubsystem.reset();
+            initResponse = Error.NotInitialized;
         }
 
         void OnDestroy()
@@ -634,6 +639,7 @@ namespace CognitiveVR
         {
             CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+            initResponse = Error.NotInitialized;
         }
 
         //writes manifest entry and object snapshot to string then send http request
@@ -711,6 +717,8 @@ namespace CognitiveVR
         void OnApplicationQuit()
         {
             if (hasCanceled) { return; }
+
+            if (InitResponse != Error.Success) { return; }
 
             double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
             if (QuitEvent == null)

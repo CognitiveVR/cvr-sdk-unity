@@ -1066,10 +1066,16 @@ namespace CognitiveVR
             WWWForm wwwForm = new WWWForm();
             foreach (var f in filePaths)
             {
-                //set obj file. prefer decimated
-                if (f.Contains(".obj"))
+                if (f.ToLower().EndsWith(".ds_store"))
                 {
-                    if (f.Contains("_decimated.obj"))
+                    Debug.Log("skip file " + f);
+                    continue;
+                }
+
+                //set obj file. prefer decimated
+                if (f.EndsWith(".obj"))
+                {
+                    if (f.EndsWith("_decimated.obj"))
                     {
                         objFilepath = f;
                     }
@@ -1081,9 +1087,9 @@ namespace CognitiveVR
                 }
                 
                 //set mtl file. prefer decimated
-                if (f.Contains(".mtl"))
+                if (f.EndsWith(".mtl"))
                 {
-                    if (f.Contains("_decimated.mtl"))
+                    if (f.EndsWith("_decimated.mtl"))
                     {
                         mtlFilepath = f;
                     }
@@ -1430,6 +1436,12 @@ namespace CognitiveVR
                 WWWForm wwwForm = new WWWForm();
                 foreach (var f in filePaths)
                 {
+                    if (f.ToLower().EndsWith(".ds_store"))
+                    {
+                        Debug.Log("skip file " + f);
+                        continue;
+                    }
+
                     fileList += f + "\n";
 
                     var data = File.ReadAllBytes(f);
