@@ -86,8 +86,10 @@ namespace CognitiveVR
 
         public bool RequiresManualEnable = false;
 
+#if CVR_STEAMVR
         //used to append changes in button states to snapshots
         private DynamicObjectButtonStates ButtonStates = null;
+#endif
 
         //engagement name, engagement event. cleared when snapshots sent
         List<EngagementEvent> DirtyEngagements = null;
