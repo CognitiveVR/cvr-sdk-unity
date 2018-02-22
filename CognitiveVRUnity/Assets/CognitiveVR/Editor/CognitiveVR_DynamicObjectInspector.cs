@@ -32,7 +32,7 @@ namespace CognitiveVR
 
 #if UNITY_5_6_OR_NEWER
             //video
-            var flipVideo = serializedObject.FindProperty("FlipVideo");
+            //var flipVideo = serializedObject.FindProperty("FlipVideo");
             var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
             var videoPlayer = serializedObject.FindProperty("VideoPlayer");
 #endif

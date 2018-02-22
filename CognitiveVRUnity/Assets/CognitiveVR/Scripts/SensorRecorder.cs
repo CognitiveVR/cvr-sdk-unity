@@ -97,7 +97,7 @@ namespace CognitiveVR
 
             sb.Append("[");
             //sb.ConcatDouble(timestamp);
-            sb.Append(sensorvalue);
+            sb.Append(timestamp);
             sb.Append(",");
             //sb.ConcatDouble(sensorvalue);
             sb.Append(sensorvalue);

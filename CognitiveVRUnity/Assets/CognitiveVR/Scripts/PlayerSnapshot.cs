@@ -98,14 +98,14 @@ namespace CognitiveVR
 #if CVR_GAZETRACK
             float relativeDepth = 0;
 
-            Vector2 snapshotPixel = (Vector2)Properties["hmdGazePoint"];
+            Vector2 snapshotPixel = HMDGazePoint;
 
             snapshotPixel *= Resolution;
 
             snapshotPixel.x = Mathf.Clamp(snapshotPixel.x, 0, Resolution-1);
             snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution-1);
 
-            var color = GetRTColor((RenderTexture)Properties["renderDepth"], (int)snapshotPixel.x, (int)snapshotPixel.y);
+            var color = GetRTColor(RTex, (int)snapshotPixel.x, (int)snapshotPixel.y);
 
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
             {
@@ -125,13 +125,13 @@ namespace CognitiveVR
             //Debug.Log("relativeDepth " + relativeDepth);
 
             //how does this get the actual depth? missing an argument?
-            float actualDepth = GetAdjustedDistance((float)Properties["farDepth"], (Vector3)Properties["gazeDirection"], (Vector3)Properties["hmdForward"]);
+            float actualDepth = GetAdjustedDistance(FarDepth, GazeDirection, HMDForward);
             //Debug.Log("actualDepth " + actualDepth); //adjusted for trigonometry
 
-            float actualDistance = Mathf.Lerp((float)Properties["nearDepth"], actualDepth, relativeDepth);
+            float actualDistance = Mathf.Lerp(NearDepth, actualDepth, relativeDepth);
             //Debug.Log("actualDistance " + actualDistance);
 
-            gazeWorldPoint = (Vector3)Properties["position"] + (Vector3)Properties["gazeDirection"] * actualDistance;
+            gazeWorldPoint = Position + GazeDirection * actualDistance;
 
             //Debug.Log("gazeWorldPoint " + gazeWorldPoint);
 
