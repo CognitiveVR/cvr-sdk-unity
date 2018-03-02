@@ -1622,6 +1622,8 @@ namespace CognitiveVR
                         newSetting.LastRevision = oldSetting.LastRevision;
                         newSetting.SceneName = oldSetting.SceneName;
                         newSetting.ScenePath = oldSetting.ScenePath;
+                        newSetting.VersionId = oldSetting.VersionId;
+                        newSetting.VersionNumber = oldSetting.VersionNumber;
                     }
                 }
             }
