@@ -572,6 +572,13 @@ namespace CognitiveVR
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
 
+            var scene = CognitiveVR_Preferences.FindTrackingScene();
+            if (scene != null)
+            {
+                JsonUtil.SetString("sceneId", scene.SceneId, builder);
+                builder.Append(",");
+            }
+
             builder.Append("\"answers\":[");
 
             for (int i = 0; i < responseProperties.Count; i++)
@@ -663,7 +670,7 @@ namespace CognitiveVR
             return this;
         }
 
-        private LayerMask _panelLayerMask = LayerMask.GetMask("Default", "World", "Ground");
+        private LayerMask _panelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
         public LayerMask PanelLayerMask
         {
             get
