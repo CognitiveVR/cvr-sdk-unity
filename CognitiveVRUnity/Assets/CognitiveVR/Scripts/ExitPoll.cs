@@ -293,6 +293,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                ExitPoll.CurrentExitPollSet = null;
                 Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
                 return;
             }
@@ -307,7 +308,8 @@ namespace CognitiveVR
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
-                }                
+                }
+                ExitPoll.CurrentExitPollSet = null;
             }
         }
 
@@ -356,6 +358,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                ExitPoll.CurrentExitPollSet = null;
                 yield break;
             }
             else
@@ -367,6 +370,7 @@ namespace CognitiveVR
                     {
                         EndAction.Invoke();
                     }
+                    ExitPoll.CurrentExitPollSet = null;
                     yield break;
                 }
 
@@ -384,6 +388,7 @@ namespace CognitiveVR
                     {
                         EndAction.Invoke();
                     }
+                    ExitPoll.CurrentExitPollSet = null;
                     yield break;
                 }
 
@@ -484,6 +489,7 @@ namespace CognitiveVR
             {
                 EndAction.Invoke();
             }
+            ExitPoll.CurrentExitPollSet = null;
             CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
@@ -511,6 +517,7 @@ namespace CognitiveVR
                     {
                         EndAction.Invoke();
                     }
+                    ExitPoll.CurrentExitPollSet = null;
                     return;
                 }
             }
@@ -531,6 +538,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                ExitPoll.CurrentExitPollSet = null;
             }
             panelCount++;
         }
@@ -563,6 +571,13 @@ namespace CognitiveVR
             builder.Append(",");
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
+
+            var scene = CognitiveVR_Preferences.FindTrackingScene();
+            if (scene != null)
+            {
+                JsonUtil.SetString("sceneId", scene.SceneId, builder);
+                builder.Append(",");
+            }
 
             builder.Append("\"answers\":[");
 
@@ -655,7 +670,7 @@ namespace CognitiveVR
             return this;
         }
 
-        private LayerMask _panelLayerMask = LayerMask.GetMask("Default", "World", "Ground");
+        private LayerMask _panelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
         public LayerMask PanelLayerMask
         {
             get
@@ -782,6 +797,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                ExitPoll.CurrentExitPollSet = null;
                 return;
             }
 
