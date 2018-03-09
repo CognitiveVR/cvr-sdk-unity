@@ -550,12 +550,18 @@ namespace CognitiveVR
             exitpoll.setProperty("questionSetId", QuestionSetId);
             exitpoll.setProperty("hook", RequestQuestionHookName);
 
+            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
+            {
+                exitpoll.setProperty("sceneId", scenesettings.SceneId);
+            }
+
             foreach (var property in transactionProperties)
             {
                 exitpoll.setProperty(property.Key, property.Value);
             }
             exitpoll.beginAndEnd(CurrentExitPollPanel.transform.position);
-            InstrumentationSubsystem.SendCachedTransactions();
+            InstrumentationSubsystem.SendTransactions();
         }
 
         //puts responses from questions into json for exitpoll microservice
@@ -571,6 +577,13 @@ namespace CognitiveVR
             builder.Append(",");
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
+
+            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
+            {
+                JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);
+                builder.Append(",");
+            }
 
             builder.Append("\"answers\":[");
 
@@ -621,7 +634,7 @@ namespace CognitiveVR
         WWW exitPollResponses;
 #pragma warning restore 414
 
-        //the responses of all the questions in the set put together in a string and uploaded somewhere
+        //the responses of all the questions in the set put together in a string and uploaded to the microservice at api.cognitivevr.io
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {

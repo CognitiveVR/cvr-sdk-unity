@@ -140,16 +140,16 @@
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_DynamicObjectInspector.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ExitPollPanelEditor.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ManagerInspector.cs" />
-    <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_NewProductPopup.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ObjectManifestWindow.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SceneExplorerExporter.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SceneExportWindow.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SelectSDKPopup.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_Settings.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_UpdateSDKWindow.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\EditorCore.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\InitWizard.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\MenuItems.cs" />
     <Compile Include="Assets\Editor\Builder.cs" />
-    <Compile Include="Assets\Editor\CognitiveVRPostProcessBuild.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\CognitiveVR\ExitPoll\SIL Open Font License.txt" />

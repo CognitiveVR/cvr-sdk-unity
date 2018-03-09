@@ -205,35 +205,22 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            EditorGUI.BeginDisabledGroup(IsUserLoggedIn && !string.IsNullOrEmpty(UserName));
-            UserName = GhostTextField("name@email.com", "", UserName);
-            if (Event.current.character == '\n' && Event.current.type == EventType.KeyDown)
-            {
-                RequestLogin(UserName, password);
-            }
-            password = GhostPasswordField("password", "", password);
-            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.TextField("Developer Key", "1234-6578");
+            EditorGUILayout.TextField("Product Key", "abcd-efgh");
 
-            if (IsUserLoggedIn)
+            GUI.color = CognitiveVR_Settings.GreenButton;
+
+            if (GUILayout.Button("Save", GUILayout.Height(40)))
             {
-                if (GUILayout.Button("Logout"))
-                {
-                    Logout();
-                }
+                //save developer key to editor preferences
             }
-            else
-            {
-                if (GUILayout.Button("Login"))
-                {
-                    RequestLogin(UserName, password);
-                }
-            }
+            GUI.color = Color.white;
 
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
 
-
+            /*
             //=========================
             //Select organization
             //=========================
@@ -323,7 +310,7 @@ namespace CognitiveVR
                     //test / prod
                     //=========================
 
-                    DrawTestProdButtons(products.Length > 0);
+                    //DrawTestProdButtons(products.Length > 0);
 
                     //saved product or saved organization
                     if (shouldsave)
@@ -331,11 +318,6 @@ namespace CognitiveVR
 
                         prefs.OrgName = GetUserOrganization(newOrganizationIndex).name;
                         prefs.ProductName = GetUserProduct(GetUserOrganization(newOrganizationIndex), newProductIndex).name;
-
-                        //'soft save'
-                        var release = prefs.ReleaseType;
-                        
-                        prefs.SetReleaseType(release);
 
                         EditorUtility.SetDirty(prefs);
                         AssetDatabase.SaveAssets();
@@ -373,7 +355,7 @@ namespace CognitiveVR
 
                     EditorGUI.EndDisabledGroup();
 
-                    DrawTestProdButtons(true);
+                    //DrawTestProdButtons(true);
 
                     GUILayout.Space(10);
                     if (!IsUserLoggedIn || string.IsNullOrEmpty(UserName) || string.IsNullOrEmpty(password))
@@ -397,11 +379,11 @@ namespace CognitiveVR
             {
                 GUILayout.Space(89);
             }
-
+            
             GUILayout.Space(10);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
-
+            */
             if (prefs.IsCustomerIDValid)
             {
                 //=========================
@@ -514,8 +496,10 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
         }
 
+        /*
         void DrawTestProdButtons(bool enabled)
         {
+            
             GUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(!enabled);
             GUIStyle testStyle = new GUIStyle(EditorStyles.miniButtonLeft);
@@ -541,7 +525,7 @@ namespace CognitiveVR
                 prefs.SetReleaseType(ReleaseType.Prod);
             }
             GUILayout.EndHorizontal();
-        }
+        }*/
 
         public void RequestLogin(string userEmail, string password)
         {
@@ -709,9 +693,9 @@ namespace CognitiveVR
             CognitiveVR.CognitiveVR_Preferences prefs = CognitiveVR_Settings.GetPreferences();
 
             UserData = null;
-            var release = prefs.ReleaseType;
+            //var release = prefs.ReleaseType;
             prefs.CustomerID = customerid;
-            prefs.SetReleaseType(release);
+            //prefs.SetReleaseType(release);
 
             EditorUtility.SetDirty(prefs);
             AssetDatabase.SaveAssets();

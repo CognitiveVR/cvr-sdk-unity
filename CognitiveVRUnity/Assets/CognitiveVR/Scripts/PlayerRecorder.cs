@@ -66,7 +66,7 @@ namespace CognitiveVR
             }
 
             SendDataEvent += SendPlayerGazeSnapshots;
-            SendDataEvent += InstrumentationSubsystem.SendCachedTransactions;
+            SendDataEvent += InstrumentationSubsystem.SendTransactions;
 
 #if CVR_PUPIL
             PupilTools.OnCalibrationStarted += PupilGazeTracker_OnCalibrationStarted;
@@ -751,7 +751,7 @@ namespace CognitiveVR
                         stringGazeSnapshots.Add(SetFarplaneGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation));
                     }
                 }
-                System.GC.Collect();
+                //System.GC.Collect();
                 doneSendGaze = true;
             }).Start();
 
@@ -820,6 +820,47 @@ namespace CognitiveVR
                     builder.Append(",");
                     JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval, builder);
                     builder.Append(",");
+
+
+                    var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties();
+                    if (deviceProperties.Count > 0)
+                    {
+                        builder.Append("\"device\":[");
+                        foreach (var kvp in deviceProperties)
+                        {
+                            if (kvp.Value.GetType() == typeof(string))
+                            {
+                                JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
+                            }
+                            else
+                            {
+                                JsonUtil.SetObject(kvp.Key, kvp.Value,builder);
+                            }
+                            builder.Append(",");
+                        }
+                        builder.Remove(builder.Length - 1, 1); //remove comma
+                        builder.Append("],");
+                    }
+
+                    var userProperties = CognitiveVR_Manager.GetNewUserProperties();
+                    if (userProperties.Count > 0)
+                    {
+                        builder.Append("\"user\":[");
+                        foreach (var kvp in userProperties)
+                        {
+                            if (kvp.Value.GetType() == typeof(string))
+                            {
+                                JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
+                            }
+                            else
+                            {
+                                JsonUtil.SetObject(kvp.Key, kvp.Value, builder);
+                            }
+                            builder.Append(",");
+                        }
+                        builder.Remove(builder.Length - 1, 1); //remove comma
+                        builder.Append("],");
+                    }
 
 
                     //events
@@ -1020,7 +1061,7 @@ namespace CognitiveVR
             //should i set all these events to null?
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
             SendDataEvent -= SendPlayerGazeSnapshots;
-            SendDataEvent -= InstrumentationSubsystem.SendCachedTransactions;
+            SendDataEvent -= InstrumentationSubsystem.SendTransactions;
             CognitiveVR_Manager.QuitEvent -= OnSendData;
             //SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
 #if CVR_STEAMVR

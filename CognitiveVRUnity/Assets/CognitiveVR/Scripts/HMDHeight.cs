@@ -36,7 +36,7 @@ namespace CognitiveVR.Components
                 {
                     float averageHeight = hmdAccumHeight / samples;
                     Util.logDebug("head height " + averageHeight);
-                    Instrumentation.updateUserState(new Dictionary<string, object> { { "height", averageHeight } });
+                    CognitiveVR_Manager.UpdateUserState(new Dictionary<string, object> { { "height", averageHeight } });
                     CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }

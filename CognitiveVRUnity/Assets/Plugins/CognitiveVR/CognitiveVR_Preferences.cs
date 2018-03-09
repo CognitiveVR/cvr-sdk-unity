@@ -5,12 +5,6 @@ using System;
 
 namespace CognitiveVR
 {
-    public enum ReleaseType
-    {
-        Test,
-        Prod
-    }
-
     public class CognitiveVR_Preferences : ScriptableObject
     {
         static bool IsSet = false;
@@ -88,31 +82,6 @@ namespace CognitiveVR
             {
                 return CustomerID.Substring(0, CustomerID.Length - 5);
             }
-        }
-
-        public ReleaseType ReleaseType
-        {
-            get
-            {
-                if (CustomerID.Length < 5) { return ReleaseType.Test; }
-                return CustomerID.Substring(CustomerID.Length - 5) == "-prod" ? ReleaseType.Prod : ReleaseType.Test;
-            }
-        }
-
-        //replace -test or -prod in customerid
-        public void SetReleaseType(ReleaseType releaseType)
-        {
-            if (CustomerID.Length < 5)
-            {
-                CustomerID += "-" + releaseType.ToString().ToLower();
-                return;
-            }
-            string suffix = CustomerID.Substring(CustomerID.Length - 5);
-            if (suffix == "-test" || suffix == "-prod")
-            {
-                CustomerID = CustomerID.Substring(0, CustomerID.Length - 5);
-            }
-            CustomerID += "-" + releaseType.ToString().ToLower();
         }
 
         /// <summary>

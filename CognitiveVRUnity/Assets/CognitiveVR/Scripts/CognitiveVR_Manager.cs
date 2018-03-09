@@ -2,6 +2,7 @@
 using CognitiveVR;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 #if CVR_STEAMVR
 using Valve.VR;
 #endif
@@ -83,8 +84,8 @@ namespace CognitiveVR
             {              
                 var metaProperties = new Dictionary<string,object>();
                 metaProperties.Add("cvr.vr.serialnumber",serialnumber);
-
-                Instrumentation.updateDeviceState(metaProperties);
+                UpdateDeviceState(metaProperties);
+                //Instrumentation.updateDeviceState(metaProperties);
             }
 #elif CVR_STEAMVR
             var serialnumber = GetStringProperty(OpenVR.System, 0, ETrackedDeviceProperty.Prop_SerialNumber_String);
@@ -94,7 +95,8 @@ namespace CognitiveVR
                 var properties = new Dictionary<string, object>();
                 properties.Add("cvr.vr.serialnumber", serialnumber);
 
-                Instrumentation.updateDeviceState(properties);
+                UpdateDeviceState(properties);
+                //Instrumentation.updateDeviceState(properties);
             }
 #endif
         }
@@ -395,17 +397,6 @@ namespace CognitiveVR
         public static Error InitResponse { get { return initResponse; } }
         bool OutstandingInitRequest = false;
 
-        /// <summary>
-        /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
-        /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
-        /// </summary>
-        EntityInfo GetUniqueEntityID()
-        {
-            if (GetComponent<CognitiveVR.Components.SteamworksUser>() == null)
-                return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
-            return null;
-        }
-
         public float StartupDelayTime = 2;
 
         private void OnEnable()
@@ -473,20 +464,7 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_Manager Initialize already called. Waiting for response");
                 return;
             }
-
-            EntityInfo initializeUser = user;
-            if (initializeUser == null)
-            {
-                initializeUser = GetUniqueEntityID();
-            }
-
-            CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
-            (
-                customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: EnableLogging,
-                userInfo: initializeUser
-            );
-            CognitiveVR.Core.init(initParams, OnInit);
+            
             OutstandingInitRequest = true;
 
             ExitPoll.Initialize();
@@ -507,6 +485,10 @@ namespace CognitiveVR
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+            CognitiveVR.Core.init(CognitiveVR_Preferences.Instance.CustomerID,user,null,OnInit); //TODO return errors from init method, not callback
+            UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
+            UpdateUserState(user.Properties);
         }
 
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -694,7 +676,7 @@ namespace CognitiveVR
                     {
                         snapshots.Add(DynamicObject.SetSnapshot(tempSnapshots[i]));
                     }
-                    System.GC.Collect();
+                    //System.GC.Collect();
                     done = true;
                 }).Start();
 
@@ -748,6 +730,111 @@ namespace CognitiveVR
             hasCanceled = true;            
             Application.Quit();
         }
-#endregion
+
+
+        public static Dictionary<string, object> GetNewDeviceProperties()
+        {
+            Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
+            newDeviceProperties.Clear();
+            return returndict;
+        }
+        static Dictionary<string, object> newDeviceProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> knownDeviceProperties = new Dictionary<string, object>();
+        internal static void UpdateDeviceState(Dictionary<string, object> dictionary)
+        {
+            foreach(var kvp in dictionary)
+            {
+                if (knownDeviceProperties.ContainsKey(kvp.Key) && knownDeviceProperties[kvp.Key] != kvp.Value) //update value
+                {
+                    if (newDeviceProperties.ContainsKey(kvp.Key))
+                    {
+                        newDeviceProperties[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        newDeviceProperties.Add(kvp.Key, kvp.Value);
+                    }
+                    knownDeviceProperties[kvp.Key] = kvp.Value;
+                }
+                else if (!knownDeviceProperties.ContainsKey(kvp.Key)) //add value
+                {
+                    knownDeviceProperties.Add(kvp.Key, kvp.Value);
+                    newDeviceProperties.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+        internal static void UpdateDeviceState(string key, object value)
+        {
+            if (knownDeviceProperties.ContainsKey(key) && knownDeviceProperties[key]!=value) //update value
+            {
+                if (newDeviceProperties.ContainsKey(key))
+                {
+                    newDeviceProperties[key] = value;
+                }
+                else
+                {
+                    newDeviceProperties.Add(key, value);
+                }
+                knownDeviceProperties[key] = value;
+            }
+            else if(!knownDeviceProperties.ContainsKey(key)) //add value
+            {
+                knownDeviceProperties.Add(key, value);
+                newDeviceProperties.Add(key, value);
+            }
+        }
+
+        public static Dictionary<string,object> GetNewUserProperties()
+        {
+            Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
+            newUserProperties.Clear();
+            return returndict;
+        }
+        static Dictionary<string, object> newUserProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> knownUserProperties = new Dictionary<string, object>();
+        internal static void UpdateUserState(Dictionary<string, object> dictionary)
+        {
+            foreach (var kvp in dictionary)
+            {
+                if (knownUserProperties.ContainsKey(kvp.Key) && knownUserProperties[kvp.Key] != kvp.Value) //update value
+                {
+                    if (newUserProperties.ContainsKey(kvp.Key))
+                    {
+                        newUserProperties[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        newUserProperties.Add(kvp.Key, kvp.Value);
+                    }
+                    knownUserProperties[kvp.Key] = kvp.Value;
+                }
+                else if (!knownUserProperties.ContainsKey(kvp.Key)) //add value
+                {
+                    knownUserProperties.Add(kvp.Key, kvp.Value);
+                    newUserProperties.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+        internal static void UpdateUserState(string key, object value)
+        {
+            if (knownUserProperties.ContainsKey(key) && knownUserProperties[key] != value) //update value
+            {
+                if (newUserProperties.ContainsKey(key))
+                {
+                    newUserProperties[key] = value;
+                }
+                else
+                {
+                    newUserProperties.Add(key, value);
+                }
+                knownUserProperties[key] = value;
+            }
+            else if (!knownUserProperties.ContainsKey(key)) //add value
+            {
+                knownUserProperties.Add(key, value);
+                newUserProperties.Add(key, value);
+            }
+        }
+        #endregion
     }
 }

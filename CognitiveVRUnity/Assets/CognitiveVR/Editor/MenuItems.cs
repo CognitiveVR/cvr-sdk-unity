@@ -7,6 +7,46 @@ namespace CognitiveVR
 {
     public class MenuItems
     {
+        [MenuItem("cognitive3D/Add Cognitive Manager", priority = 0)]
+        static void Cognitive3DManager()
+        {
+            //spawn prefab
+            CognitiveVR_ComponentSetup.AddCognitiveVRManager();
+        }
+
+        [MenuItem("cognitive3D/Open Web Dashboard...", priority = 5)]
+        static void Cognitive3DDashboard()
+        {
+            Application.OpenURL("http://dashboard.cognitivevr.io");
+        }
+
+        [MenuItem("cognitive3D/Scene Setup", priority = 55)]
+        static void Cognitive3DSceneSetup()
+        {
+            //open window
+            InitWizard.Init();
+        }
+
+        [MenuItem("cognitive3D/Manage Dynamic Objects", priority = 60)]
+        static void Cognitive3DManageDynamicObjects()
+        {
+            //open window
+            CognitiveVR_ObjectManifestWindow.Init();
+        }
+
+        [MenuItem("cognitive3D/Advanced Options", priority = 65)]
+        static void Cognitive3DOptions()
+        {
+            //open window
+            CognitiveVR_ComponentSetup.Init();
+            CognitiveVR_Settings.Init();
+        }
+
+
+        //--------------old 
+
+
+
         [MenuItem("Window/cognitiveVR/Open Web Dashboard...", priority = 0)]
         static void CognitiveVRDashboard()
         {

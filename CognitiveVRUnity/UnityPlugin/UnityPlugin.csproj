@@ -43,16 +43,11 @@
     <Compile Include="Constants.cs" />
     <Compile Include="CoreSubsystem.cs" />
     <Compile Include="Error.cs" />
-    <Compile Include="EventDepot.cs" />
     <Compile Include="External\StringBuilderExtensions.cs" />
     <Compile Include="HttpRequest.cs" />
     <Compile Include="External\MiniJSON.cs" />
     <Compile Include="InstrumentationSubsystem.cs" />
-    <Compile Include="LocalStorage.cs" />
-    <Compile Include="Prefs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TuningSubsystem.cs" />
-    <Compile Include="TuningUpdater.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

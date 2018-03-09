@@ -81,7 +81,7 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
-            InstrumentationSubsystem.beginTransaction(_category, (TimeoutMode.Any == mode) ? "ANY" : "TXN", timeout, _transactionId, _state, pos);
+            InstrumentationSubsystem.beginTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
@@ -101,7 +101,7 @@ namespace CognitiveVR
             pos[1] = HMD.position.y;
             pos[2] = HMD.position.z;
 
-            InstrumentationSubsystem.beginTransaction(_category, (TimeoutMode.Any == mode) ? "ANY" : "TXN", timeout, _transactionId, _state, pos);
+            InstrumentationSubsystem.beginTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
@@ -112,7 +112,7 @@ namespace CognitiveVR
         /// <param name="progress">A value between 1 and 99, which should increase between subsequent calls to update</param>
         public void update(int progress)
         {
-            InstrumentationSubsystem.updateTransaction(_category, progress, _transactionId, _state);
+            InstrumentationSubsystem.updateTransaction(_category, progress, _state);
 
             _state = new Dictionary<string, object>();
         }
@@ -121,7 +121,7 @@ namespace CognitiveVR
         /// Send telemetry to report an end to a transaction, including any state properties which have been set.
         /// </summary>
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
-        public void end(string result = Constants.TXN_SUCCESS)
+        public void end()
         {
             if (HMD == null) { return; }
 
@@ -131,7 +131,7 @@ namespace CognitiveVR
             pos[1] = HMD.position.y;
             pos[2] = HMD.position.z;
 
-            InstrumentationSubsystem.endTransaction(_category, result, _transactionId, _state, pos);
+            InstrumentationSubsystem.endTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
@@ -141,7 +141,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="position">Overload the position of this event for Scene Explorer</param>
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
-        public void end(Vector3 position, string result = Constants.TXN_SUCCESS)
+        public void end(Vector3 position)
         {
             float[] pos = new float[3] { 0, 0, 0 };
 
@@ -149,7 +149,7 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
-            InstrumentationSubsystem.endTransaction(_category, result, _transactionId, _state, pos);
+            InstrumentationSubsystem.endTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
@@ -158,7 +158,7 @@ namespace CognitiveVR
         /// Send telemetry to report an instantaneous transaction, including any state properties which have been set.
         /// </summary>
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
-        public void beginAndEnd(string result = Constants.TXN_SUCCESS)
+        public void beginAndEnd()
         {
             if (HMD == null) { return; }
 
@@ -168,7 +168,7 @@ namespace CognitiveVR
             pos[1] = HMD.position.y;
             pos[2] = HMD.position.z;
 
-            InstrumentationSubsystem.endTransaction(_category, result, _transactionId, _state, pos);
+            InstrumentationSubsystem.endTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
@@ -178,7 +178,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="position">Overload the position of this event for Scene Explorer</param>
         /// <param name="result">CognitiveVR.Constants.TXN_SUCCESS, CognitiveVR.Constants.TXN_ERROR, or any application defined string describing the result</param>
-        public void beginAndEnd(Vector3 position, string result = Constants.TXN_SUCCESS)
+        public void beginAndEnd(Vector3 position)
         {
             float[] pos = new float[3] { 0, 0, 0 };
 
@@ -186,16 +186,15 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
-            InstrumentationSubsystem.endTransaction(_category, result, _transactionId, _state, pos);
+            InstrumentationSubsystem.endTransaction(_category, _state, pos);
 
             _state = new Dictionary<string, object>();
         }
 
         protected string _category = null;
-        protected string _transactionId = null;
         protected Dictionary<string, object> _state = new Dictionary<string, object>();
 
-        internal Transaction(string category, string transactionId = null) { this._category = category; this._transactionId = transactionId; }
+        internal Transaction(string category, string transactionId = null) { this._category = category;}
     }
 
     /// <summary>

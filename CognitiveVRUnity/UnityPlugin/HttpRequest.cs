@@ -8,6 +8,8 @@ namespace CognitiveVR
 
     }
 
+    //TODO replace this with a proper network interface
+
     internal class HttpRequest : MonoBehaviour
     {
         private enum State

@@ -11,18 +11,18 @@ namespace CognitiveVR
 {
     public static class Constants
     {
-        public const int DEFAULT_REQUEST_TIMEOUT = 3000; // in ms
-        public const int INIT_TIMEOUT = 10000; // in ms
-        public const string TXN_SUCCESS = "success";
-        public const string TXN_ERROR = "error";
+        //public const int DEFAULT_REQUEST_TIMEOUT = 3000; // in ms
+        //public const int INIT_TIMEOUT = 10000; // in ms
+        //public const string TXN_SUCCESS = "success";
+        //public const string TXN_ERROR = "error";
         public const string ENTITY_TYPE_USER = "USER";
         public const string ENTITY_TYPE_DEVICE = "DEVICE";
 
-        public const string TIMEOUT_MODE_TRANSACTION = "TXN";
-        public const string TIMEOUT_MODE_ANY = "ANY";
+        //public const string TIMEOUT_MODE_TRANSACTION = "TXN";
+        //public const string TIMEOUT_MODE_ANY = "ANY";
 
-        public const string PROPERTY_ISNEW = "_COGNITIVEVR_isNew";
-        internal const double TIME_RECORDAGAIN = 8.0*60.0*60.0;  // only record each 8 hours
+        //public const string PROPERTY_ISNEW = "_COGNITIVEVR_isNew";
+        //internal const double TIME_RECORDAGAIN = 8.0*60.0*60.0;  // only record each 8 hours
 
 
         //editor urls
@@ -123,10 +123,10 @@ namespace CognitiveVR
 
         //POST used in core initialization, personalization (tuning), data collector
         //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS SHOULD NOT CHANGE DURING RUNTIME
-        public const string DATA_HOST = "https://data.cognitivevr.io";
+        //public const string DATA_HOST = "https://data.cognitivevr.io";
 
         //unused
-        public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
+        //public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
 
 
         //GET request question set

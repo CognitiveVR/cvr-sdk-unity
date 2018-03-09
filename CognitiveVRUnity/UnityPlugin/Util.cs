@@ -18,12 +18,12 @@ namespace CognitiveVR
 
         private const string LOG_TAG = "com.cvr.cognitivevr: ";
 		private static bool sLogEnabled = false;
-		private static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
-        internal static IDictionary<string, object> getDeviceAndAppInfo() { return sDeviceAndAppInfo; }
+		internal static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
+        public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
         internal static string getSDKName(string namePrefix) { return namePrefix; }
 
-        private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
-        private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
+        //private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
+        //private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
 
 		public static void setLogEnabled(bool value)
 		{
@@ -130,7 +130,7 @@ namespace CognitiveVR
 
             return "unknown";
         }
-
+        /*
         internal static void cacheCurrencyInfo()
         {
             // Clear out any previously set data
@@ -226,7 +226,7 @@ namespace CognitiveVR
 
             return validCurrencyStr;
 #endif
-        }
+        }*/
 
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static double lastTime;

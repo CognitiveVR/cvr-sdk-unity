@@ -19,36 +19,6 @@ namespace CognitiveVR
             return new CognitiveVR.Transaction(category, transactionId);
 		}
 
-		/// <summary>
-		/// Updates state information about a device
-		/// </summary>
-		/// <param name="state">A key-value object representing the device state we want to update. This can be a nested object structure.</param>
-		public static void updateDeviceState(Dictionary<string, object> state) 
-		{
-            InstrumentationSubsystem.updateDeviceState(state);
-		}
-
-		/// <summary>
-		/// Updates state information about a user
-		/// </summary>
-		/// <param name="state">A key-value object representing the user state we want to update. This can be a nested object structure.</param>
-		public static void updateUserState(Dictionary<string, object> state) 
-		{
-            InstrumentationSubsystem.updateUserState(state);
-		}
-
-		/// <summary>
-		/// Update a collection balance for the current entity
-		/// </summary>
-		/// <param name="name">The application-supplied name for the collection</param>
-		/// <param name="balance">Current balance</param>
-		/// <param name="balanceModification">The amount that the balance is changing by (if known)</param>
-		/// <param name="isCurrency">If set to <c>true</c> the collection is treated as an in-app virtual currency</param>
-		public static void updateCollection(string name, double balance, double balanceModification, bool isCurrency) 
-		{
-            InstrumentationSubsystem.updateCollection(name, balance, balanceModification, isCurrency);
-		}
-
         public static void SetMaxTransactions(int max)
         {
             InstrumentationSubsystem.SetMaxTransactions(max);
@@ -60,7 +30,7 @@ namespace CognitiveVR
         /// </summary>
         public static void SendCachedTransactions()
         {
-            InstrumentationSubsystem.SendCachedTransactions();
+            InstrumentationSubsystem.SendTransactions();
         }
     }
 }
