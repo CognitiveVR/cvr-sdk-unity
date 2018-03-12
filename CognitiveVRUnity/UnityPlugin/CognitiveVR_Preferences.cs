@@ -56,7 +56,7 @@ namespace CognitiveVR
 
         //timestamp and session id
         //private static double _timeStamp;
-        public static double TimeStamp
+        /*public static double TimeStamp
         {
             get
             {
@@ -71,12 +71,12 @@ namespace CognitiveVR
             {
                 return CoreSubsystem.SessionID;
             }
-        }
+        }*/
 
         /// <summary>
         /// companyname1234-productname. used in sceneexportwindow
         /// </summary>
-        public string CompanyProduct
+        /*public string CompanyProduct
         {
             get
             {
@@ -95,30 +95,37 @@ namespace CognitiveVR
             {
                 return CustomerID.Length > 7; //at least a-b-test
             }
-        }
+        }*/
 
         //public ReleaseType ReleaseType;
 
 
         //used to display dummy organization on account settings window. should never be used to determine current selection
-        public string OrgName;
+        //public string OrgName;
         //used to display dummy product on account settings window. should never be used to determine current selection
-        public string ProductName;
+        //public string ProductName;
+
+        public bool IsAPIKeyValid
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(APIKey);
+            }
+        }
+
+        public string APIKey;
+
+        public bool EnableLogging = true;
 
         [Header("Player Tracking")]
         //player tracking
+        
         public float SnapshotInterval = 0.1f;
-        public bool DynamicObjectSearchInParent = false;
+        public bool DynamicObjectSearchInParent = true;
+        public bool TrackGazePoint = true;
 
-        //used in component setup to conviently set all the necessary 360 options
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public int VideoSphereDynamicObjectId = 1000;
-        
-        //obsolete - does nothing
-        //public bool TrackPosition = true;
-        public bool TrackGazePoint = true;
-        //public bool TrackGazeDirection = false;
-        //public bool GazePointFromDirection = false;
         public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]
@@ -143,12 +150,6 @@ namespace CognitiveVR
         public KeyCode SendDataHotkey = KeyCode.F9;
 
         [Header("Scene Export")]
-        public string SavedBlenderPath = "";
-        public ExportSettings ExportSettings;
-
-        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 2, ExplorerMaximumFaceCount = 1000, ExplorerMinimumFaceCount = 20, TextureQuality = 8 };
-        public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 1, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 100, TextureQuality = 4 };
-        public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 400, TextureQuality = 2 };
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
@@ -177,6 +178,15 @@ namespace CognitiveVR
             SceneSettings returnSettings = null;
 
             returnSettings = Instance.FindScene(TrackingSceneName);
+
+            return returnSettings;
+        }
+
+        public static SceneSettings FindCurrentScene()
+        {
+            SceneSettings returnSettings = null;
+
+            returnSettings = Instance.FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
 
             return returnSettings;
         }
@@ -251,12 +261,16 @@ namespace CognitiveVR
     [System.Serializable]
     public class ExportSettings
     {
-        public bool ExportStaticOnly = true;
+        public bool ExportStaticOnly = false;
         public float MinExportGeoSize = 1;
         public int ExplorerMinimumFaceCount = 100;
         public int ExplorerMaximumFaceCount = 8000;
         public int TextureQuality = 4;
         public string DiffuseTextureName = "_MainTex";
+
+        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 0.5f, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 1000, TextureQuality = 4 };
+        public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 0.25f, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 2000, TextureQuality = 2 };
+        public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 131072, ExplorerMinimumFaceCount = 65536, TextureQuality = 1 };
 
         public static bool Match(ExportSettings a, ExportSettings b)
         {

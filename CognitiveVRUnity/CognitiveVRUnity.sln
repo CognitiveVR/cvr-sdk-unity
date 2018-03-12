@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CognitiveVRUnity.Plugins", "CognitiveVRUnity.Plugins.csproj", "{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CognitiveVRUnity", "CognitiveVRUnity.csproj", "{E043B98E-288A-0092-5749-5C5064408108}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CognitiveVRUnity.Editor", "CognitiveVRUnity.Editor.csproj", "{BB53722F-01F9-3C6B-81D9-FA272E5EF695}"
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E043B98E-288A-0092-5749-5C5064408108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E043B98E-288A-0092-5749-5C5064408108}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E043B98E-288A-0092-5749-5C5064408108}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -31,15 +31,18 @@ namespace CognitiveVR
         static void Cognitive3DManageDynamicObjects()
         {
             //open window
-            CognitiveVR_ObjectManifestWindow.Init();
+            ManageDynamicObjects.Init();
+            //CognitiveVR_ObjectManifestWindow.Init();
         }
 
         [MenuItem("cognitive3D/Advanced Options", priority = 65)]
         static void Cognitive3DOptions()
         {
             //open window
-            CognitiveVR_ComponentSetup.Init();
-            CognitiveVR_Settings.Init();
+            Selection.activeObject = EditorCore.GetPreferences();
+
+            //CognitiveVR_ComponentSetup.Init();
+            //CognitiveVR_Settings.Init();
         }
 
 

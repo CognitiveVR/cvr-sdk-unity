@@ -656,15 +656,16 @@ namespace CognitiveVR
                         {
                             snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
                             snapshot.GazePoint = calcGazePoint;
-
-                            if (Util.IsLoggingEnabled)
+#if UNITY_EDITOR
+                            if (CognitiveVR_Preferences.Instance.EnableLogging)
                             {
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
                                 Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
                             }
-                        }
+#endif
+                    }
                         else
                         {
                             //looked at world, but invalid gaze point
@@ -716,13 +717,15 @@ namespace CognitiveVR
                             snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
                             snapshot.GazePoint = calcGazePoint;
 
-                            if (Util.IsLoggingEnabled)
+#if UNITY_EDITOR
+                            if (CognitiveVR_Preferences.Instance.EnableLogging)
                             {
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
                                 Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
                             }
+#endif
                         }
                         else
                         {
@@ -798,9 +801,9 @@ namespace CognitiveVR
                     JsonUtil.SetString("userid", Core.userId, builder);
                     builder.Append(",");
 
-                    JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
+                    JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
                     builder.Append(",");
-                    JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
+                    JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
                     builder.Append(",");
                     JsonUtil.SetInt("part", jsonpart, builder);
                     jsonpart++;
@@ -928,13 +931,15 @@ namespace CognitiveVR
                             snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
                             snapshot.GazePoint = calcGazePoint;
 
-                            if (Util.IsLoggingEnabled)
+#if UNITY_EDITOR
+                            if (CognitiveVR_Preferences.Instance.EnableLogging)
                             {
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
                                 Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
                                 Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
                             }
+#endif
                         }
                         else
                         {
@@ -986,9 +991,9 @@ namespace CognitiveVR
                     JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
 
-                    JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
+                    JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
                     builder.Append(",");
-                    JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
+                    JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
                     builder.Append(",");
                     JsonUtil.SetInt("part", jsonpart, builder);
                     jsonpart++;
@@ -1049,10 +1054,12 @@ namespace CognitiveVR
             
             yield return www;
 
-            if (Util.IsLoggingEnabled)
+#if UNITY_EDITOR
+            if (CognitiveVR_Preferences.Instance.EnableLogging)
             {
                 Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error + "</color>") + " <color=green>return text: " + www.text + "</color>");
             }
+#endif
         }
 
         void CleanupPlayerRecorderEvents()

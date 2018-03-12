@@ -187,7 +187,7 @@ namespace CognitiveVR
             }
 
 
-            if (!prefs.IsCustomerIDValid)
+            if (!EditorCore.IsDeveloperKeyValid)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("No CustomerID set. Have you logged in?");
@@ -273,7 +273,7 @@ namespace CognitiveVR
             //Scene Export Settings
             //===========================
 
-            EditorGUI.BeginDisabledGroup(!prefs.IsCustomerIDValid);
+            EditorGUI.BeginDisabledGroup(!EditorCore.IsDeveloperKeyValid);
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(position.width - 286));
@@ -293,15 +293,15 @@ namespace CognitiveVR
             bool highSettings = false;
             bool customSettings = false;
 
-            if (ExportSettings.Match(CognitiveVR_Preferences.LowSettings, prefs.ExportSettings))
+            if (ExportSettings.Match(ExportSettings.LowSettings, EditorCore.ExportSettings))
             {
                 lowSettings = true;
             }
-            else if (ExportSettings.Match(CognitiveVR_Preferences.DefaultSettings, prefs.ExportSettings))
+            else if (ExportSettings.Match(ExportSettings.DefaultSettings, EditorCore.ExportSettings))
             {
                 defaultSettings = true;
             }
-            else if (ExportSettings.Match(CognitiveVR_Preferences.HighSettings, prefs.ExportSettings))
+            else if (ExportSettings.Match(ExportSettings.HighSettings, EditorCore.ExportSettings))
             {
                 highSettings = true;
             }
@@ -312,19 +312,19 @@ namespace CognitiveVR
 
             if (GUILayout.Toggle(lowSettings, "Low", EditorStyles.radioButton))
             {
-                prefs.ExportSettings = ExportSettings.Copy(CognitiveVR_Preferences.LowSettings);
+                EditorCore.ExportSettings = ExportSettings.Copy(ExportSettings.LowSettings);
                 defaultSettings = false;
                 highSettings = false;
             }
             if (GUILayout.Toggle(defaultSettings, "Default", EditorStyles.radioButton))
             {
-                prefs.ExportSettings = ExportSettings.Copy(CognitiveVR_Preferences.DefaultSettings);
+                EditorCore.ExportSettings = ExportSettings.Copy(ExportSettings.DefaultSettings);
                 lowSettings = false;
                 highSettings = false;
             }
             if (GUILayout.Toggle(highSettings, "High", EditorStyles.radioButton))
             {
-                prefs.ExportSettings = ExportSettings.Copy(CognitiveVR_Preferences.HighSettings);
+                EditorCore.ExportSettings = ExportSettings.Copy(ExportSettings.HighSettings);
                 defaultSettings = false;
                 highSettings = false;
             }
@@ -342,20 +342,20 @@ namespace CognitiveVR
             EditorGUI.indentLevel++;
             if (exportOptionsFoldout)
             {
-                prefs.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Meshes Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), prefs.ExportSettings.ExportStaticOnly);
-                prefs.ExportSettings.MinExportGeoSize = EditorGUILayout.FloatField(new GUIContent("Minimum export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), prefs.ExportSettings.MinExportGeoSize);
-                prefs.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), prefs.ExportSettings.ExplorerMinimumFaceCount);
-                prefs.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), prefs.ExportSettings.ExplorerMaximumFaceCount);
-                prefs.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), prefs.ExportSettings.DiffuseTextureName);
+                EditorCore.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Meshes Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), EditorCore.ExportSettings.ExportStaticOnly);
+                EditorCore.ExportSettings.MinExportGeoSize = EditorGUILayout.FloatField(new GUIContent("Minimum export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), EditorCore.ExportSettings.MinExportGeoSize);
+                EditorCore.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), EditorCore.ExportSettings.ExplorerMinimumFaceCount);
+                EditorCore.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), EditorCore.ExportSettings.ExplorerMaximumFaceCount);
+                EditorCore.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), EditorCore.ExportSettings.DiffuseTextureName);
 
                 GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth") };
                 int[] textureQualities = new int[] { 1, 2, 4, 8, 16 };
-                prefs.ExportSettings.TextureQuality = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), prefs.ExportSettings.TextureQuality, textureQualityNames, textureQualities);
+                EditorCore.ExportSettings.TextureQuality = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), EditorCore.ExportSettings.TextureQuality, textureQualityNames, textureQualities);
 
-                if (prefs.ExportSettings.MinExportGeoSize < 0) { prefs.ExportSettings.MinExportGeoSize = 0; }
-                if (prefs.ExportSettings.ExplorerMinimumFaceCount < 0) { prefs.ExportSettings.ExplorerMinimumFaceCount = 0; }
-                if (prefs.ExportSettings.ExplorerMaximumFaceCount < 1) { prefs.ExportSettings.ExplorerMaximumFaceCount = 1; }
-                if (prefs.ExportSettings.ExplorerMinimumFaceCount > prefs.ExportSettings.ExplorerMaximumFaceCount) { prefs.ExportSettings.ExplorerMinimumFaceCount = prefs.ExportSettings.ExplorerMaximumFaceCount; }
+                if (EditorCore.ExportSettings.MinExportGeoSize < 0) { EditorCore.ExportSettings.MinExportGeoSize = 0; }
+                if (EditorCore.ExportSettings.ExplorerMinimumFaceCount < 0) { EditorCore.ExportSettings.ExplorerMinimumFaceCount = 0; }
+                if (EditorCore.ExportSettings.ExplorerMaximumFaceCount < 1) { EditorCore.ExportSettings.ExplorerMaximumFaceCount = 1; }
+                if (EditorCore.ExportSettings.ExplorerMinimumFaceCount > EditorCore.ExportSettings.ExplorerMaximumFaceCount) { EditorCore.ExportSettings.ExplorerMinimumFaceCount = EditorCore.ExportSettings.ExplorerMaximumFaceCount; }
             }
             EditorGUI.indentLevel--;
 
@@ -368,7 +368,7 @@ namespace CognitiveVR
             //find blender
             GUILayout.BeginHorizontal();
 
-            if (string.IsNullOrEmpty(prefs.SavedBlenderPath))
+            if (string.IsNullOrEmpty(EditorCore.BlenderPath))
             {
                 FindBlender();
             }
@@ -380,13 +380,13 @@ namespace CognitiveVR
 #endif
 
             if (IsBlenderPathValid())
-                blenderButtonContent.tooltip = prefs.SavedBlenderPath;
+                blenderButtonContent.tooltip = EditorCore.BlenderPath;
 
             CognitiveVR_Settings.UserStartupBox("1", IsBlenderPathValid());
             if (GUILayout.Button(blenderButtonContent))
             {
 #if UNITY_EDITOR_WIN
-                prefs.SavedBlenderPath = EditorUtility.OpenFilePanel(blenderButtonContent.text, string.IsNullOrEmpty(prefs.SavedBlenderPath) ? "c:\\" : prefs.SavedBlenderPath, "");
+                EditorCore.BlenderPath = EditorUtility.OpenFilePanel(blenderButtonContent.text, string.IsNullOrEmpty(EditorCore.BlenderPath) ? "c:\\" : EditorCore.BlenderPath, "");
 #elif UNITY_EDITOR_OSX
                 prefs.SavedBlenderPath = EditorUtility.OpenFilePanel(blenderButtonContent.text, string.IsNullOrEmpty(prefs.SavedBlenderPath) ? "/Applications/" : prefs.SavedBlenderPath, "");
 #endif
@@ -412,7 +412,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button(exportContent))
             {
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, prefs.ExportSettings.ExportStaticOnly, prefs.ExportSettings.MinExportGeoSize, prefs.ExportSettings.TextureQuality,prefs.CompanyProduct,prefs.ExportSettings.DiffuseTextureName);
+                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality,EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
             }
             GUILayout.EndHorizontal();
 
@@ -425,9 +425,9 @@ namespace CognitiveVR
             {
                 uploadButtonContent.text = "Update existing scene \"" + currentSceneSettings.SceneName + "\"";
             }
-            if (!prefs.IsCustomerIDValid)
+            if (!EditorCore.IsDeveloperKeyValid)
             {
-                uploadButtonContent.tooltip = "You must have a valid CustomerID to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
+                uploadButtonContent.tooltip = "You must have a valid DeveloperKey to upload a scene. Please register at cogntivevr.co and follow the setup instructions at docs.cognitivevr.io";
             }
             else
             {
@@ -677,9 +677,9 @@ namespace CognitiveVR
         //returns true if savedblenderpath ends with blender.exe/app
         static bool IsBlenderPathValid()
         {
-            if (string.IsNullOrEmpty(CognitiveVR_Settings.GetPreferences().SavedBlenderPath)) { return false; }
+            if (string.IsNullOrEmpty(EditorCore.BlenderPath)) { return false; }
 #if UNITY_EDITOR_WIN
-            return CognitiveVR_Settings.GetPreferences().SavedBlenderPath.ToLower().EndsWith("blender.exe");
+            return EditorCore.BlenderPath.ToLower().EndsWith("blender.exe");
 #elif UNITY_EDITOR_OSX
             return CognitiveVR_Settings.GetPreferences().SavedBlenderPath.ToLower().EndsWith("blender.app");
 #else
@@ -817,7 +817,7 @@ namespace CognitiveVR
 
         Rect selectedRect;
 
-        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string customerID,string texturename)
+        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string developerkey,string texturename)
         {
             if (blenderProcess != null)
             {
@@ -851,7 +851,7 @@ namespace CognitiveVR
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + customerID + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+ "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+            string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + developerkey + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+ "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             //System.Diagnostics.Process.Start("http://google.com/search?q=" + "cat pictures");
@@ -863,16 +863,16 @@ namespace CognitiveVR
             EditorUtility.ClearProgressBar();
 
             //use case for empty 360 video scenes
-            if (String.IsNullOrEmpty(prefs.SavedBlenderPath))
+            if (String.IsNullOrEmpty(EditorCore.BlenderPath))
             {
                 Debug.LogError("Blender is not found during scene export! Scene is not being decimated");
             }
 
             ProcessStartInfo processInfo;
 #if UNITY_EDITOR_WIN
-            processInfo = new ProcessStartInfo(prefs.SavedBlenderPath);
+            processInfo = new ProcessStartInfo(EditorCore.BlenderPath);
             processInfo.UseShellExecute = true;
-            processInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + prefs.ExportSettings.ExplorerMinimumFaceCount + " " + prefs.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
+            processInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + EditorCore.ExportSettings.ExplorerMinimumFaceCount + " " + EditorCore.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
 
 #elif UNITY_EDITOR_OSX
             processInfo = new ProcessStartInfo("open");
@@ -1023,7 +1023,7 @@ namespace CognitiveVR
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"customerId\":\"" + prefs.CompanyProduct + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + EditorCore.DeveloperKey + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
                 }
             }
@@ -1548,7 +1548,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
                         {
-                            CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
+                            EditorCore.BlenderPath = @"C:/Program Files/Blender Foundation/Blender/blender.exe";
                         }
                     }
                 }
@@ -1561,7 +1561,7 @@ namespace CognitiveVR
                     {
                         if (File.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe"))
                         {
-                            CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
+                            EditorCore.BlenderPath = @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
                         }
                     }
                 }
@@ -1574,7 +1574,7 @@ namespace CognitiveVR
                 {
                     if (File.Exists(@"/Applications/Blender/blender.app"))
                     {
-                        CognitiveVR_Settings.GetPreferences().SavedBlenderPath = @"/Applications/Blender/blender.app";
+                        EditorCore.BlenderPath = @"/Applications/Blender/blender.app";
                     }
                 }
             }

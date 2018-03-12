@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using System;
 using CognitiveVR;
+using System.IO;
 
 //contains functions for button/label styles
 //references to editor prefs
@@ -41,9 +42,87 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         {
             if (_checkmark == null)
             {
-                _checkmark = EditorGUIUtility.FindTexture("Collab");
+                _checkmark = Resources.Load<Texture2D>("nice_checkmark");
             }
             return _checkmark;
+        }
+    }
+
+    private static Texture2D _alert;
+    public static Texture2D Alert
+    {
+        get
+        {
+            if (_alert == null)
+            {
+                _alert = Resources.Load<Texture2D>("alert");
+            }
+            return _alert;
+        }
+    }
+
+    private static Texture2D _emptycheckmark;
+    public static Texture2D EmptyCheckmark
+    {
+        get
+        {
+            if (_emptycheckmark == null)
+            {
+                _emptycheckmark = Resources.Load<Texture2D>("grey_circle");
+            }
+            return _emptycheckmark;
+        }
+    }
+
+    private static Texture2D _sceneHighlight;
+    public static Texture2D SceneHighlight
+    {
+        get
+        {
+            if (_sceneHighlight == null)
+            {
+                _sceneHighlight = Resources.Load<Texture2D>("scene_blue");
+            }
+            return _sceneHighlight;
+        }
+    }
+
+    private static Texture2D _sceneBackground;
+    public static Texture2D SceneBackground
+    {
+        get
+        {
+            if (_sceneBackground == null)
+            {
+                _sceneBackground = Resources.Load<Texture2D>("scene_grey");
+            }
+            return _sceneBackground;
+        }
+    }
+
+    private static Texture2D _objectsHighlight;
+    public static Texture2D ObjectsHightlight
+    {
+        get
+        {
+            if (_objectsHighlight == null)
+            {
+                _objectsHighlight = Resources.Load<Texture2D>("objects_blue");
+            }
+            return _objectsHighlight;
+        }
+    }
+
+    private static Texture2D _objectsBackground;
+    public static Texture2D ObjectsBackground
+    {
+        get
+        {
+            if (_objectsBackground == null)
+            {
+                _objectsBackground = Resources.Load<Texture2D>("objects_grey");
+            }
+            return _objectsBackground;
         }
     }
 
@@ -57,6 +136,41 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
                 _wizardGuiSkin = Resources.Load<GUISkin>("WizardGUISkin");
             }
             return _wizardGuiSkin;
+        }
+    }
+
+    private static string _blenderPath;
+    public static string BlenderPath
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_blenderPath))
+            {
+                _blenderPath = FindBlender();
+            }
+            return _blenderPath;
+        }
+        set
+        {
+            _blenderPath = value;
+        }
+    }
+
+    public static ExportSettings ExportSettings = ExportSettings.HighSettings;
+
+    public static bool IsDeveloperKeyValid
+    {
+        get
+        {
+            return EditorPrefs.HasKey("developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("developerkey"));
+        }
+    }
+
+    public static string DeveloperKey
+    {
+        get
+        {
+            return EditorPrefs.GetString("developerkey");
         }
     }
 
@@ -136,6 +250,60 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
         return asset;
     }
+
+    #region Editor Screenshot
+
+    static RenderTexture sceneRT = null;
+    public static RenderTexture GetSceneRenderTexture()
+    {
+        if (SceneView.lastActiveSceneView != null)
+        {
+            System.Reflection.FieldInfo[] fields = typeof(SceneView).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            foreach (var v in fields)
+            {
+                if (v.Name == "m_SceneTargetTexture")
+                {
+                    sceneRT = v.GetValue(SceneView.lastActiveSceneView) as RenderTexture;
+                }
+            }
+        }
+        return sceneRT;
+    }
+
+    Texture2D cachedScreenshot;
+
+    bool HasSavedScreenshot(string sceneName)
+    {
+        if (!Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot")) { return false; }
+        if (!File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png")) { return false; }
+        return true;
+    }
+
+    bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
+    {
+        if (cachedScreenshot)
+        {
+            returnTexture = cachedScreenshot;
+            return true;
+        }
+        //if file exists
+        if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
+        {
+            if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
+            {
+                //load texture from file
+                Texture2D tex = new Texture2D(1, 1);
+                tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"));
+                returnTexture = tex;
+                cachedScreenshot = returnTexture;
+                return true;
+            }
+        }
+        returnTexture = null;
+        return false;
+    }
+
+#endregion
 
     #region GUI
     /// <summary>
@@ -219,6 +387,62 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     #endregion
 
+    public static bool HasExportedCurrentScene()
+    {
+        return false;
+    }
+
+    public static List<string> GetExportedDynamicObjectNames()
+    {
+        //read folder
+        return new List<string>();
+    }
+
+    static string FindBlender()
+    {
+#if UNITY_EDITOR_WIN
+        if (Directory.Exists(@"C:/Program Files/"))
+        {
+            if (Directory.Exists(@"C:/Program Files/Blender Foundation/"))
+            {
+                if (Directory.Exists(@"C:/Program Files/Blender Foundation/Blender"))
+                {
+                    if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
+                    {
+                        return @"C:/Program Files/Blender Foundation/Blender/blender.exe";
+                    }
+                }
+            }
+        }
+        else if (Directory.Exists(@"C:/Program Files (x86)"))
+        {
+            if (Directory.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64"))
+            {
+                if (Directory.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64"))
+                {
+                    if (File.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe"))
+                    {
+                        return @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
+                    }
+                }
+            }
+        }
+#elif UNITY_EDITOR_OSX
+            //check /Applications/Blender/blender.app
+            if (Directory.Exists(@"/Applications/"))
+            {
+                if (Directory.Exists(@"/Applications/Blender/"))
+                {
+                    if (File.Exists(@"/Applications/Blender/blender.app"))
+                    {
+                        return @"/Applications/Blender/blender.app";
+                    }
+                }
+            }
+#endif
+        return "";
+    }
+
     #region Build Callbacks
 
     public int callbackOrder
@@ -231,7 +455,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     public void OnPostprocessBuild(BuildTarget target, string path)
     {
-        
+        //TODO send dynamic object manifest from local json file
     }
 
     public void OnPreprocessBuild(BuildTarget target, string path)

@@ -24,9 +24,6 @@ using System.Collections.Generic;
 //list of controller objects
 
 //iterate through and write updates
-
-
-
 namespace CognitiveVR
 {
     public class DynamicObject : MonoBehaviour
@@ -46,14 +43,14 @@ namespace CognitiveVR
         public bool UpdateTicksOnEnable = true;
 
         //[Header("Thresholds")]
-        public float PositionThreshold = 0.0f;
+        public float PositionThreshold = 0.001f;
         public Vector3 lastPosition;
-        public float RotationThreshold = 0.0f;
+        public float RotationThreshold = 0.1f;
         public Quaternion lastRotation;
 
         //[Header("IDs")]
-        public bool UseCustomId = false;
-        public int CustomId;
+        public bool UseCustomId = true;
+        public int CustomId = -1;
         public bool ReleaseIdOnDestroy = true;
         public bool ReleaseIdOnDisable = true;
 
@@ -81,7 +78,7 @@ namespace CognitiveVR
         bool wasBufferingVideo = false;
 #endif
 
-        public bool TrackGaze = false;
+        public bool TrackGaze = true;
         float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
@@ -855,9 +852,9 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", Core.UniqueID, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, sendSnapshotBuilder);
+            JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, sendSnapshotBuilder);
+            JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             JsonUtil.SetInt("part", jsonpart, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
@@ -957,9 +954,9 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", Core.UniqueID, builder);
             builder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
+            JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", jsonpart, builder);
             builder.Append(",");
@@ -1217,6 +1214,34 @@ namespace CognitiveVR
             if (CognitiveVR_Manager.Instance != null)
                 NewSnapshot().ReleaseUniqueId();
         }
+
+#if UNITY_EDITOR
+        public bool HasCollider()
+        {
+            if (TrackGaze)
+            {
+                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                {
+                    var collider = GetComponentInParent<Collider>();
+                    if (collider == null)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+                else
+                {
+                    var collider = GetComponent<Collider>();
+                    if (collider == null)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return true;
+        }
+#endif
 
         private void OnDrawGizmosSelected()
         {

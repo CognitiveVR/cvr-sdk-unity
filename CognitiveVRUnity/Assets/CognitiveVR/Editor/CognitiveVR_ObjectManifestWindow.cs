@@ -225,7 +225,7 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
-            if (string.IsNullOrEmpty(CognitiveVR_Settings.GetPreferences().CustomerID))
+            if (string.IsNullOrEmpty(EditorCore.DeveloperKey))
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("No Customer ID.\nDid you log in?");

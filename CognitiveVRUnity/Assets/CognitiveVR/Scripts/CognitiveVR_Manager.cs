@@ -384,8 +384,6 @@ namespace CognitiveVR
         }
         YieldInstruction playerSnapshotInverval;
 
-        [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
-        public bool EnableLogging = true;
         [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
         public bool InitializeOnStart = true;
 
@@ -430,7 +428,6 @@ namespace CognitiveVR
         private void OnValidate()
         {
             if (StartupDelayTime < 0) { StartupDelayTime = 0;}
-            Util.setLogEnabled(EnableLogging);
         }
 
         public void Initialize(string userName, Dictionary<string,object> userProperties = null)
@@ -454,9 +451,8 @@ namespace CognitiveVR
                 return;
             } //skip if this manage has already been initialized
 
-            if (!CognitiveVR_Preferences.Instance.IsCustomerIDValid)
+            if (!CognitiveVR_Preferences.Instance.IsAPIKeyValid)
             {
-                if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
                 return;
             }
             if (OutstandingInitRequest)
@@ -486,7 +482,7 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
 
-            CognitiveVR.Core.init(CognitiveVR_Preferences.Instance.CustomerID,user,null,OnInit); //TODO return errors from init method, not callback
+            CognitiveVR.Core.init(CognitiveVR_Preferences.Instance.APIKey,user,null,OnInit); //TODO return errors from init method, not callback
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
             UpdateUserState(user.Properties);
         }
@@ -593,7 +589,7 @@ namespace CognitiveVR
         {
             OnSendData();
 
-            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            double playtime = Util.Timestamp() - CoreSubsystem.SessionTimeStamp;
             Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
 
             Destroy(FindObjectOfType<CognitiveVR_Manager>());
@@ -702,7 +698,7 @@ namespace CognitiveVR
 
             if (InitResponse != Error.Success) { return; }
 
-            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            double playtime = Util.Timestamp() - CoreSubsystem.SessionTimeStamp;
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);

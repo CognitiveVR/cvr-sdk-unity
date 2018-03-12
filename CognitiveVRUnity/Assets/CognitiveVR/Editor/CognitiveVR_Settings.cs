@@ -384,7 +384,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(10);
             */
-            if (prefs.IsCustomerIDValid)
+            if (EditorCore.IsDeveloperKeyValid)
             {
                 //=========================
                 //select vr sdk
@@ -593,9 +593,9 @@ namespace CognitiveVR
                                 }
                             }
 
-                            lastOrganizationIndex = GetOrganizationIndex(GetPreferences().OrgName);
+                            //lastOrganizationIndex = GetOrganizationIndex(GetPreferences().OrgName);
 
-                            lastProductIndex = GetProductIndex(lastOrganizationIndex, GetPreferences().ProductName);
+                            //lastProductIndex = GetProductIndex(lastOrganizationIndex, GetPreferences().ProductName);
 
                             AssetDatabase.SaveAssets();
                             SaveEditorVersion();
@@ -694,7 +694,7 @@ namespace CognitiveVR
 
             UserData = null;
             //var release = prefs.ReleaseType;
-            prefs.CustomerID = customerid;
+            //prefs.CustomerID = customerid;
             //prefs.SetReleaseType(release);
 
             EditorUtility.SetDirty(prefs);
