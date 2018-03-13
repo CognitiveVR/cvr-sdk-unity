@@ -20,6 +20,13 @@ namespace CognitiveVR
             Application.OpenURL("http://dashboard.cognitivevr.io");
         }
 
+        [MenuItem("cognitive3D/Check for Updates...", priority = 10)]
+        static void CognitiveCheckUpdates()
+        {
+            EditorCore.ForceCheckUpdates();
+            //Application.OpenURL("http://dashboard.cognitivevr.io");
+        }
+
         [MenuItem("cognitive3D/Scene Setup", priority = 55)]
         static void Cognitive3DSceneSetup()
         {

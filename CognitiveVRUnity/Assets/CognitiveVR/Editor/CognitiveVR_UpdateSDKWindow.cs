@@ -24,11 +24,11 @@ namespace CognitiveVR
         void OnGUI()
         {
             GUI.skin.label.richText = true;
-            GUILayout.Label("cognitiveVR SDK - New Version", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.Label("cognitiveVR SDK - New Version", EditorCore.HeaderStyle);
             GUILayout.Label("Current Version:<b>" + Core.SDK_Version + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
 
-            GUILayout.Label("Notes", CognitiveVR_Settings.HeaderStyle);
+            GUILayout.Label("Notes", EditorCore.HeaderStyle);
             GUI.skin.label.wordWrap = true;
             GUILayout.Label(sdkSummary);
 
@@ -39,7 +39,7 @@ namespace CognitiveVR
 
             GUILayout.BeginVertical();
 
-            GUI.color = CognitiveVR_Settings.GreenButton;
+            GUI.color = EditorCore.GreenButton;
 
             if (GUILayout.Button("Download Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {

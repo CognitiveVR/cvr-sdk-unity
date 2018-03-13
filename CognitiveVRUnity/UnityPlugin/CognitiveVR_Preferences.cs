@@ -148,9 +148,8 @@ namespace CognitiveVR
         public bool HotkeyCtrl = false;
         public bool HotkeyAlt = false;
         public KeyCode SendDataHotkey = KeyCode.F9;
-
-        [Header("Scene Export")]
-
+        
+        [Header("Scene Settings")]
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
         public SceneSettings FindScene(string sceneName)
@@ -161,6 +160,11 @@ namespace CognitiveVR
         public SceneSettings FindSceneByPath(string scenePath)
         {
             return sceneSettings.Find(x => x.ScenePath == scenePath);
+        }
+
+        public SceneSettings FindSceneById(string sceneid)
+        {
+            return sceneSettings.Find(x => x.SceneId == sceneid);
         }
 
         public static string TrackingSceneName { get; private set; }

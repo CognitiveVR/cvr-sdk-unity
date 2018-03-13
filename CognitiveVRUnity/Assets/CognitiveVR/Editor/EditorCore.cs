@@ -19,7 +19,28 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     static EditorCore()
     {
         //Debug.Log("CognitiveVR EditorCore constructor");
+        
         //check sdk versions
+        CheckForUpdates();
+    }
+
+    public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
+
+    static GUIStyle headerStyle;
+    public static GUIStyle HeaderStyle
+    {
+        get
+        {
+            if (headerStyle == null)
+            {
+                headerStyle = new GUIStyle(EditorStyles.largeLabel);
+                headerStyle.fontSize = 14;
+                headerStyle.alignment = TextAnchor.UpperCenter;
+                headerStyle.fontStyle = FontStyle.Bold;
+                headerStyle.richText = true;
+            }
+            return headerStyle;
+        }
     }
 
     private static Texture2D _logo;
@@ -156,6 +177,21 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
     }
 
+    public static bool IsBlenderPathValid
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(BlenderPath)) { return false; }
+#if UNITY_EDITOR_WIN
+            return BlenderPath.ToLower().EndsWith("blender.exe");
+#elif UNITY_EDITOR_OSX
+            return CBlenderPath.ToLower().EndsWith("blender.app");
+#else
+            return false;
+#endif
+        }
+    }
+
     public static ExportSettings ExportSettings = ExportSettings.HighSettings;
 
     public static bool IsDeveloperKeyValid
@@ -235,20 +271,24 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     }
 
+    static CognitiveVR_Preferences _prefs;
     /// <summary>
     /// Gets the cognitivevr_preferences or creates and returns new default preferences
     /// </summary>
     /// <returns>Preferences</returns>
     public static CognitiveVR_Preferences GetPreferences()
     {
-        CognitiveVR_Preferences asset = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
-        if (asset == null)
+        if (_prefs == null)
         {
-            asset = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
-            AssetDatabase.CreateAsset(asset, "Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
-            AssetDatabase.Refresh();
+            _prefs = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
+            if (_prefs == null)
+            {
+                _prefs = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
+                AssetDatabase.CreateAsset(_prefs, "Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+                AssetDatabase.Refresh();
+            }
         }
-        return asset;
+        return _prefs;
     }
 
     #region Editor Screenshot
@@ -270,7 +310,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return sceneRT;
     }
 
-    Texture2D cachedScreenshot;
+    static Texture2D cachedScreenshot;
 
     bool HasSavedScreenshot(string sceneName)
     {
@@ -279,7 +319,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return true;
     }
 
-    bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
+    public static bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
     {
         if (cachedScreenshot)
         {
@@ -303,7 +343,124 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return false;
     }
 
-#endregion
+    static List<Camera> tempDisabledCameras = new List<Camera>();
+    //static RenderTexture saveRenderTexture;
+    static string saveScreenshotSceneName;
+    static int delay = 0;
+    static System.Action SaveScreenshotComplete;
+
+    public static void SaveCurrentScreenshot(string sceneName, System.Action saveScreenshotComplete)
+    {
+        delay = 0;
+        saveScreenshotSceneName = sceneName;
+        SaveScreenshotComplete = saveScreenshotComplete;
+        EditorApplication.update += DelaySaveScreenshot;
+    }
+
+    static void DelaySaveScreenshot()
+    {
+        foreach (var c in UnityEngine.Object.FindObjectsOfType<Camera>())
+        {
+            if (c.enabled && c.gameObject.activeInHierarchy)
+            {
+                c.enabled = false;
+                tempDisabledCameras.Add(c);
+            }
+        }
+        if (delay < 1) { delay++; return; } //disable cameras for 2 frames - fixes issue with scene render texture and multiple cameras
+
+        var saveRenderTexture = GetSceneRenderTexture();
+
+        //write rendertexture to png
+        Texture2D tex = new Texture2D(saveRenderTexture.width, saveRenderTexture.height);
+        RenderTexture.active = saveRenderTexture;
+        tex.ReadPixels(new Rect(0, 0, saveRenderTexture.width, saveRenderTexture.height), 0, 0);
+        tex.Apply();
+        RenderTexture.active = null;
+        
+
+        EditorApplication.update -= DelaySaveScreenshot;
+
+        foreach (var c in tempDisabledCameras)
+        {
+            c.enabled = true;
+        }
+        tempDisabledCameras.Clear();
+
+        //create directory
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
+
+        //save file
+        File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+        //use editor update to delay teh screenshot 1 frame?
+
+        if (SaveScreenshotComplete != null)
+            SaveScreenshotComplete.Invoke();
+        SaveScreenshotComplete = null;
+    }
+
+    #endregion
+
+    public static void RefreshSceneVersion()
+    {
+        //gets the scene version from api and sets it to the current scene
+        var currentSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+        if (currentSettings != null)
+        {
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            if (currentSettings == null)
+            {
+                Debug.Log("SendSceneVersionRequest no scene settings!");
+                return;
+            }
+            if (string.IsNullOrEmpty(currentSettings.SceneId))
+            {
+                Debug.LogWarning("SendSceneVersionRequest Current scene doesn't have an id!");
+                return;
+            }
+
+            string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
+
+            EditorNetwork.Get(url, GetSceneVersionResponse, true, "Get Scene Version");
+        }
+    }
+
+    private static void GetSceneVersionResponse(int responsecode, string error, string text)
+    {
+        if (responsecode >= 500)
+        {
+            //internal server error
+            Util.logDebug("GetSettingsResponse - 500 internal server error");
+            return;
+        }
+        else if (responsecode >= 400)
+        {
+            if (responsecode == 401)
+            {
+                Util.logDebug("GetSettingsResponse - unauthorized. Get auth token");
+                return;
+            }
+            else
+            {
+                //some other error
+                Util.logDebug("GetSettingsResponse - some error" + responsecode);
+                return;
+            }
+        }
+
+        Debug.Log("GetSettingsResponse - got response with scene version");
+        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+
+        var settings = GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+        if (settings == null) { return; }
+        settings.VersionId = collection.GetLatestVersion().id;
+        settings.VersionNumber = collection.GetLatestVersion().versionNumber;
+        
+        AssetDatabase.SaveAssets();
+    }
 
     #region GUI
     /// <summary>
@@ -387,15 +544,25 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     #endregion
 
-    public static bool HasExportedCurrentScene()
-    {
-        return false;
-    }
-
+    public static List<string> ExportedDynamicObjects;
     public static List<string> GetExportedDynamicObjectNames()
     {
+        if (ExportedDynamicObjects != null)
+        {
+            return ExportedDynamicObjects;
+        }
         //read folder
-        return new List<string>();
+        string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+        var subdirectories = Directory.GetDirectories(path);
+
+        List<string> ObjectNames = new List<string>();
+
+        foreach (var subdir in subdirectories)
+        {
+            var dirname = new DirectoryInfo(subdir).Name;
+            ObjectNames.Add(dirname);
+        }
+        return ObjectNames;
     }
 
     static string FindBlender()
@@ -461,6 +628,117 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     public void OnPreprocessBuild(BuildTarget target, string path)
     {
         
+    }
+    #endregion
+
+
+    #region Updates
+
+    //data about the last sdk release on github
+    public class ReleaseInfo
+    {
+        public string tag_name;
+        public string body;
+        public string created_at;
+    }
+
+    static DateTime lastSdkUpdateDate;
+    private static void SaveEditorVersion()
+    {
+        if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
+        {
+            EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
+            EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            lastSdkUpdateDate = System.DateTime.UtcNow;
+        }
+    }
+
+    public static void ForceCheckUpdates()
+    {
+        EditorApplication.update -= UpdateCheckForUpdates;
+        EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        SaveEditorVersion();
+
+        checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+        EditorApplication.update += UpdateCheckForUpdates;
+    }
+
+    static WWW checkForUpdatesRequest;
+    static void CheckForUpdates()
+    {
+        Debug.Log("check for updates");
+        System.DateTime remindDate; //current date must be this or beyond to show popup window
+
+        if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
+        {
+            if (System.DateTime.UtcNow > remindDate)
+            {
+                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                SaveEditorVersion();
+
+                checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+                EditorApplication.update += UpdateCheckForUpdates;
+            }
+        }
+        else
+        {
+            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+    }
+
+    static void UpdateCheckForUpdates()
+    {
+        if (!checkForUpdatesRequest.isDone)
+        {
+            //check for timeout
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(checkForUpdatesRequest.error))
+            {
+                Debug.Log("Check for cognitiveVR SDK version update error: " + checkForUpdatesRequest.error);
+            }
+
+            if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
+            {
+                var info = JsonUtility.FromJson<ReleaseInfo>(checkForUpdatesRequest.text);
+
+                var version = info.tag_name;
+                string summary = info.body;
+
+                if (!string.IsNullOrEmpty(version))
+                {
+                    if (version != CognitiveVR.Core.SDK_Version)
+                    {
+                        //new version
+                        CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                    }
+                    else if (EditorPrefs.GetString("cvr_skipVersion") == version)
+                    {
+                        //skip this version. limit this check to once a day
+                        EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        //up to date
+                        Debug.Log("Version " + version + ". You are up to date");
+                    }
+                }
+            }
+            EditorApplication.update -= UpdateCheckForUpdates;
+        }
+    }
+
+    #endregion
+
+    #region Scene Export
+    public static bool HasSceneExportFiles(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+    {
+        if (currentSceneSettings == null) { return false; }
+        string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+        var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+        
+        return SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0;
     }
     #endregion
 }

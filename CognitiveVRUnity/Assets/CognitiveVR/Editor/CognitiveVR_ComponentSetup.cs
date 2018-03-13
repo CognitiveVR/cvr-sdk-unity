@@ -12,6 +12,7 @@ using System.Collections.Generic;
 
 namespace CognitiveVR
 {
+    [Obsolete]
     public class CognitiveVR_ComponentSetup : EditorWindow
     {
         static bool remapHotkey;

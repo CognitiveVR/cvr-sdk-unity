@@ -93,6 +93,9 @@ public class InitWizard : EditorWindow
     {
         EditorPrefs.SetString("developerkey", developerkey);
         EditorCore.GetPreferences().APIKey = apikey;
+
+        EditorUtility.SetDirty(EditorCore.GetPreferences());
+        AssetDatabase.SaveAssets();
     }
 
     void LoadKeys()
@@ -166,6 +169,7 @@ public class InitWizard : EditorWindow
     private void OnFocus()
     {
         RefreshSceneDynamics();
+        EditorCore.ExportedDynamicObjects = null; //force refresh
     }
     
     void RefreshSceneDynamics()
@@ -229,7 +233,16 @@ public class InitWizard : EditorWindow
         {
             GUI.Label(collider, new GUIContent(EditorCore.Alert,"Tracking Gaze requires a collider"), "image_centered");
         }
-        GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+
+        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName))
+        {
+            GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+        }
+        else
+        {
+            GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
+        }
+        
     }
 
     #endregion
@@ -311,8 +324,8 @@ public class InitWizard : EditorWindow
 
             CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
         }
-        
-        if (EditorCore.HasExportedCurrentScene())
+
+        if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
         {
             GUI.Label(new Rect(300, 400, 24, 40), EditorCore.Checkmark, "image_centered");
         }
@@ -352,7 +365,7 @@ public class InitWizard : EditorWindow
 
         var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
-            GUI.Box(new Rect(175, 230, 150, 150), sceneRT, "image_centered");
+            GUI.Box(new Rect(175, 230, 150, 150), sceneRT, "image_centeredboxed");
 
         GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete", "normallabel");
     }
@@ -405,10 +418,24 @@ public class InitWizard : EditorWindow
                 //buttonDisabled = true;
                 break;
             case "upload":
+                //onclick += () => EditorCore.RefreshSceneVersion();
                 text = "I understand, Continue";
                 buttonrect = new Rect(290, 460, 200, 30);
                 break;
             case "uploadsummary":
+
+                System.Action completeSceneUpload = delegate () {
+                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+                };
+
+                System.Action completeScreenshot = delegate(){
+                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                };
+
+                onclick = () => EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                
                 text = "Upload";
                 break;
         }

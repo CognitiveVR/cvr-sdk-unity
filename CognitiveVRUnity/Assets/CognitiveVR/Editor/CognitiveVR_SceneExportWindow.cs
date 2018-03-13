@@ -8,7 +8,7 @@ using System;
 
 namespace CognitiveVR
 {
-    //returned from get scene version. contains info about all versions of scene
+    //returned from get scene version. contains info about all versions of a single scene
     public class SceneVersionCollection
     {
         public long createdAt;
@@ -58,8 +58,6 @@ namespace CognitiveVR
 
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
-        static string appendName = "";
-
         static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
 
@@ -104,7 +102,7 @@ namespace CognitiveVR
 
         Texture2D refreshTexture;
 
-        void OnGUI()
+        /*void OnGUI()
         {
             if (!loadedScenes)
             {
@@ -122,7 +120,7 @@ namespace CognitiveVR
                 Repaint();
             }
 
-            prefs = CognitiveVR_Settings.GetPreferences();
+            prefs = EditorCore.GetPreferences();
 
             //=========================
             //scene select
@@ -611,7 +609,7 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Refresh Scene Versions"))
             {
-                RefreshSceneVersion();
+                //RefreshSceneVersion();
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -646,7 +644,9 @@ namespace CognitiveVR
             {
                 EditorUtility.SetDirty(prefs);
             }
-        }
+        }*/
+
+        #region Screenshot
 
         bool DisplayScreenshotTip = false;
         List<Camera> tempDisabledCameras = new List<Camera>();
@@ -674,6 +674,82 @@ namespace CognitiveVR
             return tex;
         }
 
+        Texture2D cachedScreenshot;
+
+        bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
+        {
+            if (cachedScreenshot)
+            {
+                returnTexture = cachedScreenshot;
+                return true;
+            }
+            //if file exists
+            if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
+            {
+                if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
+                {
+                    //load texture from file
+                    Texture2D tex = new Texture2D(1, 1);
+                    tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"));
+                    returnTexture = tex;
+                    cachedScreenshot = returnTexture;
+                    return true;
+                }
+            }
+            returnTexture = null;
+            return false;
+        }
+
+        bool HasSavedScreenshot(string sceneName)
+        {
+            if (!Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot")) { return false; }
+            if (!File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png")) { return false; }
+            return true;
+        }
+
+        public void SaveScreenshot(string sceneName, Texture2D tex)
+        {
+            //create directory
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+
+            //save file
+            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+        }
+
+        static void UploadScreenshot(CognitiveVR_Preferences.SceneSettings settings)
+        {
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
+            string[] screenshotPath = new string[0];
+            if (Directory.Exists(sceneExportDirectory + "screenshot"))
+            {
+                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot");
+            }
+            else
+            {
+                Debug.Log("SceneExportWindow Upload can't find directory to screenshot");
+                return;
+            }
+
+            if (screenshotPath.Length == 0)
+            {
+                Debug.Log("SceneExportWindow can't load data from screenshot directory");
+                return;
+            }
+
+            string url = Constants.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
+
+            Debug.Log("SceneExportWIndow upload screenshot to " + url);
+
+            WWWForm wwwForm = new WWWForm();
+            wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
+            new WWW(url, wwwForm);
+        }
+
+        #endregion
+
+
         //returns true if savedblenderpath ends with blender.exe/app
         static bool IsBlenderPathValid()
         {
@@ -692,51 +768,9 @@ namespace CognitiveVR
             Repaint();
         }
 
-        Texture2D cachedScreenshot;
 
-        bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
-        {
-            if (cachedScreenshot)
-            {
-                returnTexture = cachedScreenshot;
-                return true;
-            }
-            //if file exists
-            if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
-            {
-                if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
-                {
-                    //load texture from file
-                    Texture2D tex = new Texture2D(1, 1);
-                    tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar  + "screenshot.png"));
-                    returnTexture = tex;
-                    cachedScreenshot = returnTexture;
-                    return true;
-                }
-            }
-            returnTexture = null;
-            return false;
-        }
 
-        bool HasSavedScreenshot(string sceneName)
-        {
-            if (!Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot")) { return false; }
-            if (!File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png")) { return false; }         
-            return true;
-        }
-
-        void SaveScreenshot(string sceneName, Texture2D tex)
-        {
-            //create directory
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
-
-            //save file
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png",tex.EncodeToPNG());
-        }
-
-        void DisplaySceneSettings(CognitiveVR_Preferences.SceneSettings settings)
+        /*void DisplaySceneSettings(CognitiveVR_Preferences.SceneSettings settings)
         {
             bool isCurrentScene = false;
             if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path == settings.ScenePath)
@@ -815,7 +849,9 @@ namespace CognitiveVR
             }
         }
 
-        Rect selectedRect;
+        Rect selectedRect;*/
+
+        #region Export Scene
 
         public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string developerkey,string texturename)
         {
@@ -831,8 +867,9 @@ namespace CognitiveVR
                 return;
             }
 
-            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name + appendName;
+            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
 
+            //export scene from unity
             bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportScene(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
 
             if (!successfulExport)
@@ -841,7 +878,9 @@ namespace CognitiveVR
                 return;
             }
 
-            if (!IsBlenderPathValid())
+
+            //begin scene decimation
+            if (EditorCore.IsBlenderPathValid)
             {
                 Debug.LogError("Blender is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender\nScene: "+ fullName+" exported to folder but not mesh decimated!");
                 //return;
@@ -851,10 +890,8 @@ namespace CognitiveVR
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + developerkey + "\",\"sceneName\":\""+ currentSceneSettings.SceneName+ "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+            string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + developerkey + "\",\"sceneName\":\""+ fullName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-            //System.Diagnostics.Process.Start("http://google.com/search?q=" + "cat pictures");
 
             decimateScriptPath = decimateScriptPath.Replace(" ", "\" \"");
             objPath = objPath.Replace(" ", "\" \"");
@@ -948,43 +985,18 @@ namespace CognitiveVR
                     
                     EditorUtility.ClearProgressBar();
 
-                    var blenderSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-                    UploadDecimatedScene(blenderSceneSettings);
+                    //var blenderSceneSettings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                    //UploadDecimatedScene(blenderSceneSettings);
                 }
             }
         }
 
-        static void UploadScreenshot(CognitiveVR_Preferences.SceneSettings settings)
-        {
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
-            string[] screenshotPath = new string[0];
-            if (Directory.Exists(sceneExportDirectory + "screenshot"))
-            {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot");
-            }
-            else
-            {
-                Debug.Log("SceneExportWindow Upload can't find directory to screenshot");
-                return;
-            }
-            
-            if (screenshotPath.Length == 0)
-            {
-                Debug.Log("SceneExportWindow can't load data from screenshot directory");
-                return;
-            }
+        #endregion
 
-            string url = Constants.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
-
-            Debug.Log("SceneExportWIndow upload screenshot to " + url);
-
-            WWWForm wwwForm = new WWWForm();
-            wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
-            new WWW(url, wwwForm);
-        }
-
+        #region Upload Scene
         //displays popup window confirming upload, then uploads the files
-        static void UploadDecimatedScene(CognitiveVR_Preferences.SceneSettings settings)
+        static System.Action UploadComplete;
+        public static void UploadDecimatedScene(CognitiveVR_Preferences.SceneSettings settings, System.Action uploadComplete)
         {
             //if uploadNewScene POST
             //else PUT to sceneexplorer/sceneid
@@ -1001,7 +1013,6 @@ namespace CognitiveVR
 
             bool uploadConfirmed = false;
             string sceneName = settings.SceneName;
-            string fullName = sceneName + appendName;
             string[] filePaths = new string[] { };
 
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
@@ -1009,7 +1020,7 @@ namespace CognitiveVR
 
             if (SceneExportDirExists)
             {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
             }
 
             //custom confirm upload popup windows
@@ -1019,7 +1030,7 @@ namespace CognitiveVR
                 {
                     uploadConfirmed = true;
                     //create a json.settings file in the directory
-                    string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+                    string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(sceneName);
 
                     Directory.CreateDirectory(objPath);
 
@@ -1045,13 +1056,13 @@ namespace CognitiveVR
             //after confirmation because uploading an empty scene creates a settings.json file
             if (Directory.Exists(sceneExportDirectory))
             {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar);
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
             }
 
             string[] screenshotPath = new string[0];
             if (Directory.Exists(sceneExportDirectory + "screenshot"))
             {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar + "screenshot");
+                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
             }
             else
             {
@@ -1085,7 +1096,7 @@ namespace CognitiveVR
                     }
                     continue;
                 }
-                
+
                 //set mtl file. prefer decimated
                 if (f.EndsWith(".mtl"))
                 {
@@ -1137,6 +1148,8 @@ namespace CognitiveVR
                 Debug.Log("Upload new scene");
             }
 
+            UploadComplete = uploadComplete;
+
             EditorApplication.update += UpdateUploadData;
         }
 
@@ -1153,7 +1166,7 @@ namespace CognitiveVR
                 return;
             }
 
-            if (EditorUtility.DisplayCancelableProgressBar("Uploading","Uploading scene data to sceneExplorer.com",sceneUploadWWW.uploadProgress))
+            if (EditorUtility.DisplayCancelableProgressBar("Uploading", "Uploading scene data to sceneExplorer.com", sceneUploadWWW.uploadProgress))
             {
                 EditorApplication.update -= UpdateUploadData;
                 EditorUtility.ClearProgressBar();
@@ -1172,8 +1185,8 @@ namespace CognitiveVR
             //response
             if (!string.IsNullOrEmpty(sceneUploadWWW.error))
             {
-                
-                Debug.LogError("Scene Upload Error "+ Util.GetResponseCode(sceneUploadWWW.responseHeaders)+":" + sceneUploadWWW.error);
+
+                Debug.LogError("Scene Upload Error " + Util.GetResponseCode(sceneUploadWWW.responseHeaders) + ":" + sceneUploadWWW.error);
 
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
@@ -1203,20 +1216,26 @@ namespace CognitiveVR
             sceneUploadWWW = null;
 
             //after scene upload response, hit version route to get the version of the scene
-            SendSceneVersionRequest(UploadSceneSettings);
+            //SendSceneVersionRequest(UploadSceneSettings);
 
             GUI.FocusControl("NULL");
 
             AssetDatabase.SaveAssets();
 
-            if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?","Open on SceneExplorer","Close"))
+            if (UploadComplete != null)
+                UploadComplete.Invoke();
+            UploadComplete = null;
+
+            /*if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?", "Open on SceneExplorer", "Close"))
             {
                 Application.OpenURL(Constants.SCENEEXPLORER_SCENE + UploadSceneSettings.SceneId);
-            }
+            }*/
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
         }
+        #endregion
 
+        /*
         static void SendSceneVersionRequest(CognitiveVR_Preferences.SceneSettings settings)
         {
             if (GetSceneVersionWWW != null || authTokenRequest != null)
@@ -1275,7 +1294,7 @@ namespace CognitiveVR
                     //not authorized. get auth token then try to get the scene version again
                     if (UploadSceneSettings == null)
                     {
-                        UploadSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                        UploadSceneSettings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
                     }
                     string url = Constants.POSTAUTHTOKEN(UploadSceneSettings.SceneId);
 
@@ -1298,7 +1317,7 @@ namespace CognitiveVR
 
             if (UploadSceneSettings == null)
             {
-                UploadSceneSettings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+                UploadSceneSettings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             }
             UploadSceneSettings.VersionNumber = collection.GetLatestVersion().versionNumber;
             UploadSceneSettings.VersionId = collection.GetLatestVersion().id;
@@ -1382,16 +1401,18 @@ namespace CognitiveVR
         }
 
         static WWW GetSceneVersionWWW;
-        static WWW authTokenRequest;
+        static WWW authTokenRequest;*/
+
+        #region Upload Dynamic Objects
 
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
         static string currentDynamicUploadName;
 
-        public static void UploadDynamicObjects()
+        public static void UploadDynamicObjects(bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 
-            var settings = CognitiveVR_Settings.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var settings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             if (settings == null)
             {
                 string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
@@ -1414,19 +1435,22 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
 
-            int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + subdirectories.Length + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + ")?", "Ok", "Cancel","Open Directory");
-            if (option == 0) { } //ok
-            else if (option == 1){return; } //cancel
-            else
+            if (ShowPopupWindow)
             {
+                int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + subdirectories.Length + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + ")?", "Ok", "Cancel", "Open Directory");
+                if (option == 0) { } //ok
+                else if (option == 1) { return; } //cancel
+                else
+                {
 #if UNITY_EDITOR_WIN
-                //open directory
-                System.Diagnostics.Process.Start("explorer.exe", path);
-                return;
+                    //open directory
+                    System.Diagnostics.Process.Start("explorer.exe", path);
+                    return;
 #elif UNITY_EDITOR_OSX
                 System.Diagnostics.Process.Start("open", path);
                 return;
 #endif
+                }
             }
             string objectNames="";
             foreach (var subdir in subdirectories)
@@ -1522,11 +1546,11 @@ namespace CognitiveVR
 
             dynamicUploadWWW = null;
         }
+        #endregion
 
+        #region Utility
 
-#region Utility
-
-        bool KeyIsValid(string key)
+        /*bool KeyIsValid(string key)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
 
@@ -1535,9 +1559,9 @@ namespace CognitiveVR
             string pattern = @"[A-Za-z0-9\-+]{" + key.Length + "}";
             bool regexPass = System.Text.RegularExpressions.Regex.IsMatch(key, pattern);
             return regexPass;
-        }
+        }*/
 
-        static void FindBlender()
+        /*static void FindBlender()
         {
 #if UNITY_EDITOR_WIN
             if (Directory.Exists(@"C:/Program Files/"))
@@ -1579,14 +1603,15 @@ namespace CognitiveVR
                 }
             }
 #endif
-        }
+        }*/
 
-        private static void UpdateSceneNames()
+        //add all the scenes in the project to the scene editor window. keep all the scene settings from preferences
+        /*private static void UpdateSceneNames()
         {
             //save these to a temp list
             if (prefs == null)
             {
-                prefs = CognitiveVR_Settings.GetPreferences();
+                prefs = EditorCore.GetPreferences();
             }
 
             List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
@@ -1627,7 +1652,7 @@ namespace CognitiveVR
                     }
                 }
             }
-        }
+        }*/
 
         #endregion
 

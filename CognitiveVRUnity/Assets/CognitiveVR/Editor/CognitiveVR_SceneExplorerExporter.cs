@@ -931,6 +931,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null){ continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 filters.AddRange(RecursivelyGetMeshes(transform.GetChild(i)));
             }
@@ -951,6 +952,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 skinnedMeshes.AddRange(RecursivelyGetSkinnedMeshes(transform.GetChild(i)));
             }
@@ -971,6 +973,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 canvases.AddRange(RecursivelyGetCanvases(transform.GetChild(i)));
             }

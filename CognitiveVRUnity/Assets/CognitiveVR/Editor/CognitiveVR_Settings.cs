@@ -6,6 +6,7 @@ using System;
 namespace CognitiveVR
 {
     [InitializeOnLoad]
+    [Obsolete]
     public class CognitiveVR_Settings : EditorWindow
     {
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
