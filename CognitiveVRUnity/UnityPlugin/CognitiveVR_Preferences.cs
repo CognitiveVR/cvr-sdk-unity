@@ -186,6 +186,10 @@ namespace CognitiveVR
             return returnSettings;
         }
 
+        /// <summary>
+        /// return the scene settings for whichever scene is currently open and active
+        /// </summary>
+        /// <returns></returns>
         public static SceneSettings FindCurrentScene()
         {
             SceneSettings returnSettings = null;

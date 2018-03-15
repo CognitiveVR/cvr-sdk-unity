@@ -110,7 +110,7 @@ namespace CognitiveVR
                 UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
                 if (GUILayout.Button("Export", GUILayout.MaxWidth(100)))
                 {
-                    MenuItems.ExportSelectedObjectsPrefab();
+                    CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
                 }
                 EditorGUI.EndDisabledGroup();
 

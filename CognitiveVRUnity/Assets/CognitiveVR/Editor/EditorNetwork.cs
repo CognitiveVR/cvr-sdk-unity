@@ -28,6 +28,16 @@ public class EditorNetwork
 
     static List<EditorWebRequest> EditorWebRequests = new List<EditorWebRequest>();
 
+    public static void Get(string url, Response callback, Dictionary<string,string> headers, bool blocking, string requestName = "Get", string requestInfo = "")
+    {
+        WWW www = new WWW(url,null, headers);
+
+        EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking, requestName, requestInfo));
+
+        EditorApplication.update -= EditorUpdate;
+        EditorApplication.update += EditorUpdate;
+    }
+
     public static void Get(string url, Response callback, bool blocking, string requestName = "Get", string requestInfo = "")
     {
         WWW www = new WWW(url);

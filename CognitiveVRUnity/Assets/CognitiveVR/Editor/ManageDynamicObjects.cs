@@ -143,106 +143,237 @@ public class ManageDynamicObjects : EditorWindow
 
         //DrawNextButton();
     }
-    /*
-    void DrawNextButton()
+
+    //from manifest window. might have some duplicated logic
+
+
+
+    void GetManifest()
     {
-        bool buttonDisabled = false;
-        string text = "Next";
-        System.Action onclick = () => currentPage++;
-        Rect buttonrect = new Rect(410, 460, 80, 30);
+        var headers = new Dictionary<string, string>();
+        headers.Add("X-HTTP-Method-Override", "GET");
+        headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-        switch (pageids[currentPage])
+        var currentSceneSettings = EditorCore.GetPreferences().FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+        if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
         {
-            case "welcome":
-                break;
-            case "authenticate":
-                buttonrect = new Rect(350, 460, 140, 30);
-                onclick += () => SaveKeys();
-                buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
-                if (buttonDisabled)
-                {
-                    text = "Keys Required";
-                }
-                else
-                {
-                    text = "Keys Accepted";
-                }
-                break;
-            case "tagdynamics":
-                break;
-            case "listdynamics":
-
-                int dynamiccount = GetDynamicObjects.Length;
-
-                text = dynamiccount +"/" + dynamiccount + " Uploaded";
-                buttonrect = new Rect(350, 460, 140, 30);
-                break;
-            case "uploadscene":
-                //buttonDisabled = true;
-                break;
-            case "upload":
-                text = "I understand, Continue";
-                buttonrect = new Rect(290, 460, 200, 30);
-                break;
-            case "uploadsummary":
-                text = "Upload";
-                break;
+            return;
+        }
+        if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
+        {
+            Util.logWarning("Get Manifest current scene doesn't have an id!");
+            return;
         }
 
-        if (buttonDisabled)
+        string url = Constants.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
+
+        EditorNetwork.Get(url, GetManifestResponse, false);
+    }
+
+
+    void GetManifestResponse(int responsecode, string error, string text)
+    {
+        Util.logDebug("GetManifestResponse responseCode: " + responsecode);
+        if (responsecode == 200)
         {
-            GUI.Button(buttonrect, text, "button_disabled");
+            //BuildManifest(getRequest.text);
+
+            //also hit settings to get the current version of the scene
+            GetSceneVersion();
+
         }
-        else
+        else if (responsecode >= 500)
         {
-            if (GUI.Button(buttonrect, text))
+            //some server error
+            Util.logWarning("GetManifestResponse 500");
+        }
+        else if (responsecode >= 400)
+        {
+            if (responsecode == 401)
             {
-                onclick.Invoke();
+                Util.logWarning("GetManifestResponse not authorized. Requesting Auth Token");
+                //not authorized
+                /*
+
+                var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+                if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
+                {
+                    return;
+                }
+                if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
+                {
+                    Util.logWarning("Cannot Get Manifest Response. Current scene doesn't have an id!");
+                    return;
+                }*/
+            }
+            else
+            {
+                Util.logWarning("GetManifestResponse retured code " + responsecode);
             }
         }
     }
 
-    void DrawBackButton()
+    //send an http request to get the different versions of a scene
+    void GetSceneVersion()
     {
-        bool buttonDisabled = false;
-        string text = "Back";
-        System.Action onclick = () => currentPage--;
-        Rect buttonrect = new Rect(320, 460, 80, 30);
+        var headers = new Dictionary<string, string>();
+        headers.Add("X-HTTP-Method-Override", "GET");
+        headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
 
-        switch (pageids[currentPage])
+        var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+        if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
         {
-            case "welcome": buttonDisabled = true; break;
-            case "authenticate":
-                //buttonDisabled = true;
-                text = "Back";
-                buttonrect = new Rect(260, 460, 80, 30);
-                break;
-            case "listdynamics":
-                //buttonDisabled = true;
-                text = "Back";
-                buttonrect = new Rect(260, 460, 80, 30);
-                break;
-            case "upload":
-                //buttonDisabled = true;
-                text = "Back";
-                buttonrect = new Rect(200, 460, 80, 30);
-                break;
-            case "uploadsummary":
-                //buttonDisabled = true;
-                text = "Cancel";
-                break;
+            return;
+        }
+        if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
+        {
+            Util.logWarning("Cannot Get Scene Version. Current scene doesn't have an id!");
+            return;
         }
 
-        if (buttonDisabled)
+        string url = Constants.GETSCENEVERSIONS(currentSceneSettings.SceneId);
+
+        EditorNetwork.Get(url, GetSceneSettingsResponse, false);
+        Util.logDebug("GetSceneVersion request sent");
+    }
+
+    void GetSceneSettingsResponse(int responsecode, string error, string text)
+    {
+        Util.logDebug("GetSettingsResponse responseCode: " + responsecode);
+
+        SceneVersionCollection = JsonUtility.FromJson<SceneVersionCollection>(text);
+
+        var sv = SceneVersionCollection.GetLatestVersion();
+        Util.logDebug(sv.versionNumber.ToString());
+    }
+
+
+
+
+
+
+
+    List<DynamicObject> ObjectsInScene;
+    public List<DynamicObject> GetDynamicObjectsInScene()
+    {
+        if (ObjectsInScene == null)
         {
-            GUI.Button(buttonrect, text, "button_disabledtext");
+            ObjectsInScene = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+        }
+        return ObjectsInScene;
+    }
+
+    [System.Serializable]
+    public class AggregationManifest
+    {
+        [System.Serializable]
+        public class AggregationManifestEntry
+        {
+            public string name;
+            public string mesh;
+            public string id;
+            public AggregationManifestEntry(string _name, string _mesh, string _id)
+            {
+                name = _name;
+                mesh = _mesh;
+                id = _id;
+            }
+            public override string ToString()
+            {
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\"}";
+            }
+        }
+        public List<AggregationManifestEntry> objects;
+        //public int Version;
+        //public string SceneId;
+    }
+
+    //only need id, mesh and name
+    AggregationManifest Manifest;
+    SceneVersionCollection SceneVersionCollection;
+
+    void UpdateManifest()
+    {
+        foreach (var v in GetDynamicObjectsInScene())
+        {
+            AddOrReplaceDynamic(Manifest, v);
+        }
+        var json = ManifestToJson();
+        Util.logDebug(json);
+        if (string.IsNullOrEmpty(json))
+        {
+            Debug.LogWarning("UpdateManifest - could not write dynamics and manifest from empty json");
+            return;
+        }
+        SendManifest(json, SceneVersionCollection.GetLatestVersion());
+    }
+
+    string ManifestToJson()
+    {
+        string objectIdManifest = "{\"objects\":[";
+
+        foreach (var entry in Manifest.objects)
+        {
+            objectIdManifest += "{";
+            objectIdManifest += "\"id\":\"" + entry.id + "\",";
+            objectIdManifest += "\"mesh\":\"" + entry.mesh + "\",";
+            objectIdManifest += "\"name\":\"" + entry.name + "\"";
+            objectIdManifest += "},";
+        }
+
+        objectIdManifest = objectIdManifest.Remove(objectIdManifest.Length - 1, 1);
+        objectIdManifest += "]}";
+        return objectIdManifest;
+    }
+
+    void SendManifest(string json, SceneVersion sceneversion)
+    {
+        var settings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+        if (settings == null)
+        {
+            Debug.LogWarning("Send Manifest settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+            if (string.IsNullOrEmpty(s))
+            {
+                s = "Unknown Scene";
+            }
+            EditorUtility.DisplayDialog("Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
+            return;
+        }
+
+        string url = Constants.POSTDYNAMICMANIFEST(settings.SceneId, sceneversion.versionNumber);
+        Util.logDebug("Manifest Url: " + url);
+        Util.logDebug("Manifest Contents: " + json);
+
+        //upload manifest
+        byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(json);
+
+        var headers = new Dictionary<string, string>();
+        headers.Add("Content-Type", "application/json");
+
+        EditorNetwork.Post(url, outBytes, PostManifestResponse,false);
+    }
+
+    void PostManifestResponse(int responsecode, string error, string text)
+    {
+        Util.logDebug("Manifest upload complete. response: " + text + " error: " + error);
+    }
+
+    void AddOrReplaceDynamic(AggregationManifest manifest, DynamicObject dynamic)
+    {
+        var replaceEntry = manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
+        if (replaceEntry == null)
+        {
+            //don't include meshes with empty mesh names in manifest
+            if (!string.IsNullOrEmpty(dynamic.MeshName))
+            {
+                manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+            }
         }
         else
         {
-            if (GUI.Button(buttonrect, text, "button_disabled"))
-            {
-                onclick.Invoke();
-            }
+            replaceEntry.mesh = dynamic.MeshName;
+            replaceEntry.name = dynamic.gameObject.name;
         }
-    }*/
+    }
 }
