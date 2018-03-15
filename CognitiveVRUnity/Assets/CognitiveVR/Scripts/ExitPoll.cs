@@ -665,7 +665,7 @@ namespace CognitiveVR
             return this;
         }
 
-        private LayerMask _panelLayerMask = LayerMask.GetMask("Default", "World", "Ground");
+        private LayerMask _panelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
         public LayerMask PanelLayerMask
         {
             get

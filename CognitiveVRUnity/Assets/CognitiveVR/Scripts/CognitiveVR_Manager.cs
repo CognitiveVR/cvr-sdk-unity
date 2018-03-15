@@ -599,6 +599,7 @@ namespace CognitiveVR
 
         void OnDestroy()
         {
+            if (instance != this) { return; }
             if (!Application.isPlaying) { return; }
 
             OnQuit();
