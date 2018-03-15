@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using CognitiveVR;
 
 /// <summary>
 /// WARNING - NOT FULLY TESTED!
@@ -45,7 +46,7 @@ namespace CognitiveVR.Components
             {
                 Util.logDebug("batterylevel " + batteryLevel);
 
-                Instrumentation.Transaction("cvr.battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
+                new Transaction("cvr.battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
             }
 #endif
         }

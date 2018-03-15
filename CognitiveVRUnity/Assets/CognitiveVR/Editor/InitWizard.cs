@@ -19,10 +19,12 @@ public class InitWizard : EditorWindow
         window.LoadKeys(); 
         window.selectedExportQuality = ExportSettings.HighSettings;
 
+        window.GetSelectedSDKs();
+
         //cognitive3dLogo = EditorCore.LogoTexture;
     }
 
-    List<string> pageids = new List<string>() { "welcome", "authenticate", "explaindynamic", "explainscene", "listdynamics", "uploadscene", "upload", "uploadsummary" };
+    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explaindynamic", "explainscene", "listdynamics", "uploadscene", "upload", "uploadsummary" };
     public int currentPage;
 
     private void OnGUI()
@@ -35,7 +37,7 @@ public class InitWizard : EditorWindow
         {
             case "welcome":WelcomeUpdate(); break;
             case "authenticate": AuthenticateUpdate(); break;
-            case "scenetype": SceneTypeUpdate(); break;
+            case "selectsdk": SelectSDKUpdate(); break;
             case "explaindynamic": DynamicExplainUpdate(); break;
             case "explainscene": SceneExplainUpdate(); break;
             case "listdynamics": ListDynamicUpdate(); break;
@@ -110,19 +112,79 @@ public class InitWizard : EditorWindow
 
     #endregion
 
-    void SceneTypeUpdate()
+    void GetSelectedSDKs()
     {
-        GUI.Label(steptitlerect, "STEP 3 - SELECT SCENE TYPE", "steptitle");
+        selectedsdks.Clear();
+#if CVR_STEAMVR
+            selectedsdks.Add("CVR_STEAMVR");
+#endif
+#if CVR_OCULUS
+            selectedsdks.Add("CVR_OCULUS");
+#endif
+#if CVR_GOOGLEVR
+            selectedsdks.Add("CVR_GOOGLEVR");
+#endif
+#if CVR_DEFAULT
+        selectedsdks.Add("CVR_DEFAULT");
+#endif
+#if CVR_FOVE
+            selectedsdks.Add("CVR_FOVE");
+#endif
+#if CVR_PUPIL
+            selectedsdks.Add("CVR_PUPIL");
+#endif
+#if CVR_ARKIT //apple
+            selectedsdks.Add("CVR_ARKIT");
+#endif
+#if CVR_ARCORE //google
+            selectedsdks.Add("CVR_ARCORE");
+#endif
+#if CVR_META 
+            selectedsdks.Add("CVR_META");
+#endif
+    }
 
-        GUI.Button(new Rect(10, 300, 235, 40), "360");
-        GUI.Button(new Rect(255, 300, 240, 40), "3D");
+    List<string> selectedsdks = new List<string>();
+    void SelectSDKUpdate()
+    {
+        GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
+
+        GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be interacting with in this scene.", "boldlabel");
+
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK (eye tracking)", "Pupil Labs SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META" };
+
+        for(int i = 0;i <sdknames.Count;i++)
+        {
+            bool selected = selectedsdks.Contains(sdkdefines[i]);
+            if (GUI.Button(new Rect(30, i * 32 + 120, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            {
+                if (selected)
+                {
+                    selectedsdks.Remove(sdkdefines[i]);
+                }
+                else
+                {
+                    if (Event.current.shift) //add
+                    {
+                        selectedsdks.Add(sdkdefines[i]);
+                    }
+                    else //set
+                    {
+                        selectedsdks.Clear();
+                        selectedsdks.Add(sdkdefines[i]);
+                    }
+                }
+            }
+            GUI.Label(new Rect(420, i * 32 + 120, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+        }
     }
 
     #region Terminology
 
     void DynamicExplainUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 4 - WHAT IS A DYNAMIC OBJECT?", "steptitle");
+        GUI.Label(steptitlerect, "STEP 4A - WHAT IS A DYNAMIC OBJECT?", "steptitle");
 
         GUI.Label(new Rect(30, 45, 440, 440), "A Dynamic Object can be any GameObject that changes during a session.", "boldlabel");
 
@@ -142,9 +204,9 @@ public class InitWizard : EditorWindow
 
     void SceneExplainUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 4 - WHAT IS A DYNAMIC OBJECT?", "steptitle");
+        GUI.Label(steptitlerect, "STEP 4B - WHAT IS A SCENE?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A Dynamic Object can be any GameObject that changes during a session.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A Scene is the sandbox in which the user completes your experience and dynamic objects are located", "boldlabel");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
@@ -154,7 +216,7 @@ public class InitWizard : EditorWindow
         
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-        GUI.Label(new Rect(30, 350, 440, 440), "Not everything that moves needs to be a dynamic object. Small details that don't meaningfully impact a user's experience can be skipped. Anything the player grabs should be a dynamic object", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "A scene gives you context about where the player is located as they interact.", "normallabel");
     }
 
 #endregion
@@ -170,6 +232,7 @@ public class InitWizard : EditorWindow
     {
         RefreshSceneDynamics();
         EditorCore.ExportedDynamicObjects = null; //force refresh
+        GetSelectedSDKs();
     }
     
     void RefreshSceneDynamics()
@@ -179,7 +242,7 @@ public class InitWizard : EditorWindow
 
     void ListDynamicUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 3 - PREPARE OBJECTS", "steptitle");
+        GUI.Label(steptitlerect, "STEP 5 - PREPARE OBJECTS", "steptitle");
 
         GUI.Label(new Rect(30, 45, 440, 440), "These are the current <color=#8A9EB7FF>Dynamic Objects</color> currently tracked in your scene:", "boldlabel");
 
@@ -193,7 +256,7 @@ public class InitWizard : EditorWindow
         DynamicObject[] tempdynamics = GetDynamicObjects;
 
 
-        Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30); //TODO generate from the number of dynamic object lines there are
+        Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
         dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 270), dynamicScrollPosition, innerScrollSize,false,true);
 
         Rect dynamicrect;
@@ -210,7 +273,7 @@ public class InitWizard : EditorWindow
 
         if (GUI.Button(new Rect(180,400,140,40),"Upload All", "button_bluetext"))
         {
-            Debug.Log("upload all dynamics");
+            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
         }
     }
 
@@ -253,7 +316,7 @@ public class InitWizard : EditorWindow
 
     void UploadSceneUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 4 - SCENE UPLOAD", "steptitle");
+        GUI.Label(steptitlerect, "STEP 6 - SCENE UPLOAD", "steptitle");
 
 
         GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>SceneExplorer</color>.", "boldlabel");
@@ -337,7 +400,7 @@ public class InitWizard : EditorWindow
 
     void UploadUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 5 - UPLOAD", "steptitle");
+        GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
         GUI.Label(new Rect(30, 100, 440, 440), "In the final step, we complete the upload process to our <color=#8A9EB7FF>SceneExplorer</color> servers.\n\n\n" +
             "Once your Scene is uploaded, you will have to create a new version if you would like to edit the base geometry.\n\n\n"+
             "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the \"<color=#8A9EB7FF>Manage Objects</color>\" menu.", "normallabel");
@@ -345,7 +408,7 @@ public class InitWizard : EditorWindow
 
     void UploadSummaryUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
+        GUI.Label(steptitlerect, "STEP 8 - UPLOAD", "steptitle");
         GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>SceneExplorer</color>:", "boldlabel");
 
         int dynamicObjectCount = GetDynamicObjects.Length;
@@ -407,18 +470,30 @@ public class InitWizard : EditorWindow
                 break;
             case "tagdynamics":
                 break;
+            case "selectsdk":
+                onclick += () => EditorCore.SetPlayerDefine(selectedsdks);
+                break;
             case "listdynamics":
 
-                int dynamiccount = GetDynamicObjects.Length;
-
-                text = dynamiccount +"/" + dynamiccount + " Uploaded";
+                var dynamics = GetDynamicObjects;
+                int dynamicsFromSceneExported=0;
+                
+                for(int i = 0;i <dynamics.Length;i++)
+                {
+                    if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamics[i].MeshName))
+                    {
+                        dynamicsFromSceneExported++;
+                    }
+                }
+                buttonDisabled = dynamicsFromSceneExported != dynamics.Length;
+                text = dynamicsFromSceneExported + "/" + dynamics.Length + " Uploaded";
                 buttonrect = new Rect(350, 460, 140, 30);
                 break;
             case "uploadscene":
                 //buttonDisabled = true;
                 break;
             case "upload":
-                //onclick += () => EditorCore.RefreshSceneVersion();
+                onclick += () => EditorCore.RefreshSceneVersion();
                 text = "I understand, Continue";
                 buttonrect = new Rect(290, 460, 200, 30);
                 break;

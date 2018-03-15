@@ -880,7 +880,7 @@ namespace CognitiveVR
 
 
             //begin scene decimation
-            if (EditorCore.IsBlenderPathValid)
+            if (!EditorCore.IsBlenderPathValid)
             {
                 Debug.LogError("Blender is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender\nScene: "+ fullName+" exported to folder but not mesh decimated!");
                 //return;
@@ -900,7 +900,7 @@ namespace CognitiveVR
             EditorUtility.ClearProgressBar();
 
             //use case for empty 360 video scenes
-            if (String.IsNullOrEmpty(EditorCore.BlenderPath))
+            if (string.IsNullOrEmpty(EditorCore.BlenderPath))
             {
                 Debug.LogError("Blender is not found during scene export! Scene is not being decimated");
             }
@@ -1403,6 +1403,148 @@ namespace CognitiveVR
         static WWW GetSceneVersionWWW;
         static WWW authTokenRequest;*/
 
+        #region Export Dynamic Objects
+        public static void ExportAllDynamicsInScene()
+        {
+            //List<Transform> entireSelection = new List<Transform>();
+            //entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
+
+            var dynamics = FindObjectsOfType<DynamicObject>();
+
+            Debug.Log("Starting export of " + dynamics.Length + " dynamic objects");
+            
+
+            //export all the objects
+            int successfullyExportedCount = 0;
+            List<string> exportedMeshNames = new List<string>();
+
+            foreach (var dynamic in dynamics)
+            {
+                if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
+
+                if (dynamic.GetComponent<Canvas>() != null)
+                {
+                    //TODO merge this deeper in the export process. do this recurively ignoring child dynamics
+                    //take a snapshot
+                    var width = dynamic.GetComponent<RectTransform>().sizeDelta.x * dynamic.transform.localScale.x;
+                    var height = dynamic.GetComponent<RectTransform>().sizeDelta.y * dynamic.transform.localScale.y;
+
+                    var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(dynamic.transform);
+
+                    var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, dynamic.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                    CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
+                    successfullyExportedCount++;
+                }
+                else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(dynamic.transform))
+                {
+                    successfullyExportedCount++;
+                }
+
+                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+                {
+                    if (common.ToLower() == dynamic.MeshName.ToLower())
+                    {
+                        //don't export common meshes!
+                        continue;
+                    }
+                }
+
+                if (!exportedMeshNames.Contains(dynamic.MeshName))
+                {
+                    exportedMeshNames.Add(dynamic.MeshName);
+                }
+            }
+            EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + dynamics.Length + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
+        }
+
+        public static void ExportSelectedObjectsPrefab()
+        {
+            List<Transform> entireSelection = new List<Transform>();
+            entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
+
+            Debug.Log("Starting export of " + entireSelection.Count + " dynamic objects");
+
+            List<Transform> sceneObjects = new List<Transform>();
+            sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
+
+            List<Transform> prefabsToSpawn = new List<Transform>();
+
+            //add prefab objects to a list
+            foreach (var v in entireSelection)
+            {
+                if (!sceneObjects.Contains(v))
+                {
+                    prefabsToSpawn.Add(v);
+                }
+            }
+
+            //spawn prefabs
+            var temporarySpawnedPrefabs = new List<GameObject>();
+            foreach (var v in prefabsToSpawn)
+            {
+                var newPrefab = GameObject.Instantiate(v.gameObject);
+                temporarySpawnedPrefabs.Add(newPrefab);
+                sceneObjects.Add(newPrefab.transform);
+            }
+
+            //export all the objects
+            int successfullyExportedCount = 0;
+            List<string> exportedMeshNames = new List<string>();
+
+            foreach (var v in sceneObjects)
+            {
+                var dynamic = v.GetComponent<DynamicObject>();
+                if (dynamic == null) { continue; }
+                if (v.GetComponent<Canvas>() != null)
+                {
+                    //TODO merge this deeper in the export process. do this recurively ignoring child dynamics
+                    //take a snapshot
+                    var width = v.GetComponent<RectTransform>().sizeDelta.x * v.localScale.x;
+                    var height = v.GetComponent<RectTransform>().sizeDelta.y * v.localScale.y;
+
+                    var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(v);
+
+                    var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, v, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                    CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
+                    successfullyExportedCount++;
+                }
+                else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
+                {
+                    successfullyExportedCount++;
+                }
+
+                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+                {
+                    if (common.ToLower() == dynamic.MeshName.ToLower())
+                    {
+                        //don't export common meshes!
+                        continue;
+                    }
+                }
+
+                if (!exportedMeshNames.Contains(dynamic.MeshName))
+                {
+                    exportedMeshNames.Add(dynamic.MeshName);
+                }
+            }
+
+            //destroy the temporary prefabs
+            foreach (var v in temporarySpawnedPrefabs)
+            {
+                GameObject.DestroyImmediate(v);
+            }
+
+            if (successfullyExportedCount == 1 && entireSelection.Count == 1)
+            {
+                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + " dynamic object", "Ok");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
+            }
+        }
+        #endregion
+
         #region Upload Dynamic Objects
 
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
@@ -1437,7 +1579,7 @@ namespace CognitiveVR
 
             if (ShowPopupWindow)
             {
-                int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + subdirectories.Length + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + ")?", "Ok", "Cancel", "Open Directory");
+                int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + subdirectories.Length + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + " Version:" + settings.VersionNumber+")?", "Ok", "Cancel", "Open Directory");
                 if (option == 0) { } //ok
                 else if (option == 1) { return; } //cancel
                 else

@@ -181,8 +181,9 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     {
         get
         {
-            if (string.IsNullOrEmpty(BlenderPath)) { return false; }
+            if (string.IsNullOrEmpty(BlenderPath)) { Debug.Log("editor core blender path is null or empty"); return false; }
 #if UNITY_EDITOR_WIN
+            Debug.Log("editor core is blender path valid " + BlenderPath.ToLower());
             return BlenderPath.ToLower().EndsWith("blender.exe");
 #elif UNITY_EDITOR_OSX
             return CBlenderPath.ToLower().EndsWith("blender.app");
@@ -545,6 +546,10 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     #endregion
 
     public static List<string> ExportedDynamicObjects;
+    /// <summary>
+    /// returns list of exported dynamic objects. refreshes on init window focused
+    /// </summary>
+    /// <returns></returns>
     public static List<string> GetExportedDynamicObjectNames()
     {
         if (ExportedDynamicObjects != null)

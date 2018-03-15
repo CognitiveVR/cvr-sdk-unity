@@ -266,7 +266,19 @@ namespace CognitiveVR
             }
             if (customId.intValue < 0)
             {
-                customId.intValue = 1;
+                var dynamics = FindObjectsOfType<DynamicObject>();
+                List<int> usedInts = new List<int>();
+                foreach (var dynamic in dynamics)
+                {
+                    usedInts.Add(dynamic.CustomId);
+                }
+
+                for (int i = 0; i<1000;i++)
+                {
+                    if (usedInts.Contains(i)) { continue; }
+                    customId.intValue = i;
+                    break;
+                }
                 Debug.Log("need new dynamic object id");
             }
         }

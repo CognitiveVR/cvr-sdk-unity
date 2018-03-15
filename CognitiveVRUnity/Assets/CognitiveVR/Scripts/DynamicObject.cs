@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//this should only contain the component to send dynamic data/engagements to the plugin
+
 
 //manually send snapshots with builder pattern
 //presets for controllers/level geometry/pooled enemies/grabable item
@@ -650,7 +652,7 @@ namespace CognitiveVR
                 {
                     HasRegisteredAnyDynamics = true;
                     CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
-                    CognitiveVR_Manager.SendDataEvent += SendAllSnapshots;
+                    Core.OnSendData += Core_OnSendData;
                 }
             }
 
@@ -755,7 +757,7 @@ namespace CognitiveVR
         }
 
         //from SendDataEvent. either manual 'send all data' or onquit
-        public static void SendAllSnapshots()
+        static void Core_OnSendData()
         {
             //WriteAllSnapshots();
 
@@ -852,9 +854,9 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", Core.UniqueID, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, sendSnapshotBuilder);
+            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, sendSnapshotBuilder);
+            JsonUtil.SetString("sessionid", Core.SessionID, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             JsonUtil.SetInt("part", jsonpart, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
@@ -954,9 +956,9 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", Core.UniqueID, builder);
             builder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
+            JsonUtil.SetString("sessionid", Core.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", jsonpart, builder);
             builder.Append(",");
@@ -1206,7 +1208,7 @@ namespace CognitiveVR
                     NewSnapshot().SetEnabled(false);
                 if (TotalGazeDuration > 0)
                 {
-                    Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                    new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
                     TotalGazeDuration = 0;
                 }
                 return;
@@ -1259,7 +1261,7 @@ namespace CognitiveVR
         {
             if (TotalGazeDuration > 0)
             {
-                Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
             }
         }

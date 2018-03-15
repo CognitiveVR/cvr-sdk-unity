@@ -10,8 +10,20 @@ namespace CognitiveVR
         [MenuItem("cognitive3D/Add Cognitive Manager", priority = 0)]
         static void Cognitive3DManager()
         {
-            //spawn prefab
-            CognitiveVR_ComponentSetup.AddCognitiveVRManager();
+            var found = Object.FindObjectOfType<CognitiveVR_Manager>();
+            if (found != null)
+            {
+                Selection.activeGameObject = found.gameObject;
+                return;
+            }
+            else
+            {
+                //spawn prefab
+                GameObject newManager = new GameObject("CognitiveVR_Manager");
+                Selection.activeGameObject = newManager;
+                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+                newManager.AddComponent<CognitiveVR_Manager>();
+            }
         }
 
         [MenuItem("cognitive3D/Open Web Dashboard...", priority = 5)]

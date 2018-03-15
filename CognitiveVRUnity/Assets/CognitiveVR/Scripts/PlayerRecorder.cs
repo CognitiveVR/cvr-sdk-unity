@@ -9,6 +9,8 @@ using CognitiveVR.Components;
 /// this tracks the position and gaze point of the player. this also handles the sending data event
 /// </summary>
 
+//should only deal with getting the world position of user's gaze and submitting that to the plugin
+
 namespace CognitiveVR
 {
     public partial class CognitiveVR_Manager
@@ -53,7 +55,7 @@ namespace CognitiveVR
             CheckCameraSettings();
 
             PlayerSnapshot.colorSpace = QualitySettings.activeColorSpace;
-#if CVR_GAZETRACK
+#if CVR_FOVE||CVR_PUPIL
             PlayerSnapshot.tex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
 #else
             PlayerSnapshot.tex = new Texture2D(1, 1);
@@ -61,12 +63,12 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.SendDataOnQuit)
             {
-                QuitEvent += OnSendData;
+                QuitEvent += Core.SendDataEvent;
                 //QuitEvent += DynamicObject.SendAllSnapshots;
             }
 
-            SendDataEvent += SendPlayerGazeSnapshots;
-            SendDataEvent += InstrumentationSubsystem.SendTransactions;
+            //SendDataEvent += SendPlayerGazeSnapshots;
+            //SendDataEvent += Instrumentation.SendTransactions;
 
 #if CVR_PUPIL
             PupilTools.OnCalibrationStarted += PupilGazeTracker_OnCalibrationStarted;
@@ -90,8 +92,8 @@ namespace CognitiveVR
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                 {
                     BeginPlayerRecording();
-                    CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                    CoreSubsystem.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
+                    Core.CurrentSceneId = sceneSettings.SceneId;
+                    Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
@@ -219,7 +221,7 @@ namespace CognitiveVR
                 if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
                 if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
 
-                OnSendData();
+                Core.SendDataEvent();
             }
         }
 
@@ -235,18 +237,6 @@ namespace CognitiveVR
             }
 
             CognitiveVR_Manager.TickEvent += instance.CognitiveVR_Manager_OnTick;
-        }
-
-        public static void SendPlayerRecording()
-        {
-            instance.OnSendData();
-        }
-
-        public static void EndPlayerRecording()
-        {
-            CognitiveVR_Manager.TickEvent -= instance.CognitiveVR_Manager_OnTick;
-            instance.OnSendData();
-            //instance.SetTrackingScene(SceneManager.GetActiveScene().name);
         }
 
         //delayed by PlayerSnapshotInterval
@@ -289,7 +279,7 @@ namespace CognitiveVR
             var hmd = HMD;
             RaycastHit hit = new RaycastHit();
             Vector3 gazeDirection = hmd.forward;
-#if CVR_GAZETRACK
+#if CVR_FOVE||CVR_PUPIL
 #if CVR_FOVE //direction
             var eyeRays = FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
@@ -566,7 +556,7 @@ namespace CognitiveVR
             //snapshot.Properties.Add("hmdRotation", camRot);
             snapshot.HMDRotation = camRot;
 
-#if CVR_GAZETRACK
+#if CVR_FOVE||CVR_PUPIL
 
             //gaze tracking sdks need to return a v3 direction "gazeDirection" and a v2 point "hmdGazePoint"
             //the v2 point is used to get a pixel from the render texture
@@ -801,9 +791,9 @@ namespace CognitiveVR
                     JsonUtil.SetString("userid", Core.userId, builder);
                     builder.Append(",");
 
-                    JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
+                    JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
                     builder.Append(",");
-                    JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
+                    JsonUtil.SetString("sessionid", Core.SessionID, builder);
                     builder.Append(",");
                     JsonUtil.SetInt("part", jsonpart, builder);
                     jsonpart++;
@@ -991,9 +981,9 @@ namespace CognitiveVR
                     JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
 
-                    JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, builder);
+                    JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
                     builder.Append(",");
-                    JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, builder);
+                    JsonUtil.SetString("sessionid", Core.SessionID, builder);
                     builder.Append(",");
                     JsonUtil.SetInt("part", jsonpart, builder);
                     jsonpart++;
@@ -1067,9 +1057,9 @@ namespace CognitiveVR
             //unsubscribe events
             //should i set all these events to null?
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-            SendDataEvent -= SendPlayerGazeSnapshots;
-            SendDataEvent -= InstrumentationSubsystem.SendTransactions;
-            CognitiveVR_Manager.QuitEvent -= OnSendData;
+            //SendDataEvent -= SendPlayerGazeSnapshots;
+            //SendDataEvent -= Instrumentation.SendTransactions;
+            //CognitiveVR_Manager.QuitEvent -= OnSendData;
             //SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
 #if CVR_STEAMVR
             CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;

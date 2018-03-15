@@ -545,7 +545,7 @@ namespace CognitiveVR
 
         void SendResponsesAsTransaction()
         {
-            var exitpoll = Instrumentation.Transaction("cvr.exitpoll");
+            var exitpoll = new Transaction("cvr.exitpoll");
             exitpoll.setProperty("userId", CognitiveVR.Core.userId);
             exitpoll.setProperty("questionSetId", QuestionSetId);
             exitpoll.setProperty("hook", RequestQuestionHookName);
@@ -561,7 +561,7 @@ namespace CognitiveVR
                 exitpoll.setProperty(property.Key, property.Value);
             }
             exitpoll.beginAndEnd(CurrentExitPollPanel.transform.position);
-            InstrumentationSubsystem.SendTransactions();
+            Core.SendDataEvent();
         }
 
         //puts responses from questions into json for exitpoll microservice
@@ -573,7 +573,7 @@ namespace CognitiveVR
             builder.Append(",");
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionId", CoreSubsystem.SessionID, builder);
+            JsonUtil.SetString("sessionId", Core.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
@@ -647,19 +647,8 @@ namespace CognitiveVR
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 
-            exitPollResponses = new UnityEngine.WWW(url, bytes, headers);
-
-            //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
+            NetworkManager.Post(url, bytes, headers);
         }
-
-        /*IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
-        {
-            CognitiveVR.Util.logDebug(url);
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
-            yield return www;
-            CognitiveVR.Util.logDebug("error: "+www.error);
-            CognitiveVR.Util.logDebug("text: "+www.text);
-        }*/
 
         public bool UseTimeout { get; private set; }
         public float Timeout { get; private set; }

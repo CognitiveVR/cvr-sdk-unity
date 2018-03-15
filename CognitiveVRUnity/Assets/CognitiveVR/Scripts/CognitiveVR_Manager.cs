@@ -15,6 +15,13 @@ using System.Runtime.InteropServices;
 /// initializes CognitiveVR analytics. Add components to track additional events
 /// </summary>
 
+//init components
+//update ticks + events
+//level change events
+//get hmd + controllers
+//quit and destroy events
+//otherwise use core
+
 namespace CognitiveVR
 {
     public partial class CognitiveVR_Manager : MonoBehaviour
@@ -55,8 +62,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-                Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+                new Transaction("cvr.session").begin();
             }
             else //some failure
             {
@@ -121,13 +127,6 @@ namespace CognitiveVR
         /// </summary>
         public static event QuitHandler QuitEvent;
         public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
-
-        public delegate void SendDataHandler(); //send data
-        /// <summary>
-        /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
-        /// </summary>
-        public static event SendDataHandler SendDataEvent;
-        public void OnSendData() { if (SendDataEvent != null) { SendDataEvent(); } }
 
         public delegate void LevelLoadedHandler(); //level
         /// <summary>
@@ -445,7 +444,7 @@ namespace CognitiveVR
                 Destroy(gameObject);
                 return;
             } //destroy if there's already another manager
-            if (instance == this && CoreSubsystem.Initialized)
+            if (instance == this && Core.Initialized)
             {
                 Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
                 return;
@@ -486,7 +485,7 @@ namespace CognitiveVR
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
             UpdateUserState(user.Properties);
         }
-
+        
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             DynamicObject.ClearObjectIds();
@@ -505,15 +504,15 @@ namespace CognitiveVR
                     if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
                     {
                         Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
-                        OnSendData();
+                        Core.SendDataEvent();
                         //SendPlayerGazeSnapshots();
                         CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                     }
                 }
 
-                CoreSubsystem.CurrentSceneId = string.Empty;
-                CoreSubsystem.CurrentSceneVersionNumber = 0;
-                CoreSubsystem.CurrensSceneVersionId = 0;
+                Core.CurrentSceneId = string.Empty;
+                Core.CurrentSceneVersionNumber = 0;
+                Core.CurrensSceneVersionId = 0;
 
                 CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
                 if (sceneSettings != null)
@@ -521,9 +520,9 @@ namespace CognitiveVR
                     if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                        CoreSubsystem.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
-                        CoreSubsystem.CurrensSceneVersionId = sceneSettings.VersionId;
+                        Core.CurrentSceneId = sceneSettings.SceneId;
+                        Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
+                        Core.CurrensSceneVersionId = sceneSettings.VersionId;
                     }
                     else
                     {
@@ -587,14 +586,14 @@ namespace CognitiveVR
         /// </summary>
         public void EndSession()
         {
-            OnSendData();
+            Core.SendDataEvent();
 
-            double playtime = Util.Timestamp() - CoreSubsystem.SessionTimeStamp;
-            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
+            new Transaction("cvr.session").setProperty("sessionlength", playtime).end();
 
             Destroy(FindObjectOfType<CognitiveVR_Manager>());
 
-            CoreSubsystem.reset();
+            Core.reset();
             initResponse = Error.NotInitialized;
         }
 
@@ -605,9 +604,9 @@ namespace CognitiveVR
             OnQuit();
             //OnSendData();
 
-            if (CoreSubsystem.Initialized)
+            if (Core.Initialized)
             {
-                CoreSubsystem.reset();
+                Core.reset();
             }
 
             CleanupEvents();
@@ -698,21 +697,21 @@ namespace CognitiveVR
 
             if (InitResponse != Error.Success) { return; }
 
-            double playtime = Util.Timestamp() - CoreSubsystem.SessionTimeStamp;
+            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
-                Instrumentation.Transaction("cvr.session").setProperty("sessionlength",playtime).end();
+                new Transaction("cvr.session").setProperty("sessionlength",playtime).end();
                 return;
             }
 
 			CognitiveVR.Util.logDebug("session length " + playtime);
-            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            new Transaction("cvr.session").setProperty("sessionlength", playtime).end();
             Application.CancelQuit();
 
 
-            OnSendData();
-            CoreSubsystem.reset();
+            Core.SendDataEvent();
+            Core.reset();
 
 
             //Camera.onPostRender -= MyPostRender;

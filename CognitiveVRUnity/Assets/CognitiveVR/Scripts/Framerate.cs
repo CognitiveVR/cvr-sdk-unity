@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using CognitiveVR;
 
 /// <summary>
 /// sends fps as a sensor

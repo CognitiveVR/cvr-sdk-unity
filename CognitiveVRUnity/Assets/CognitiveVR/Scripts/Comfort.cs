@@ -87,13 +87,13 @@ namespace CognitiveVR.Components
             {
                 lowFramerate = true;
                 fpsTransactionID = Util.GetUniqueId();
-                Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
+                new Transaction("cvr.performance").setProperty("fps", lastFps).begin();
                 Util.logDebug("low framerate");
             }
             else if (lastFps > LowFramerateThreshold && lowFramerate)
             {
                 lowFramerate = false;
-                Instrumentation.Transaction("cvr.performance", fpsTransactionID).end();
+                new Transaction("cvr.performance").end();
             }
 
             if (OnlySendComfortOnLowFPS) { return; }
@@ -102,7 +102,7 @@ namespace CognitiveVR.Components
             accumRotation = 0.0F;
             rotFrames = 0;
 
-            Instrumentation.Transaction("cvr.comfort", fpsTransactionID)
+            new Transaction("cvr.comfort")
                 .setProperty("fps", lastFps)
                 .setProperty("rps", lastRps)
 #if CVR_OCULUS

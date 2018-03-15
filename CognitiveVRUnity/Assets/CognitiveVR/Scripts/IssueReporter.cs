@@ -156,7 +156,7 @@ namespace CognitiveVR.Components
         {
             if (string.IsNullOrEmpty(title)) { return; }
 
-            Transaction t = Instrumentation.Transaction("cvr.issue").setProperty("Title", title);
+            Transaction t = new Transaction("cvr.issue").setProperty("Title", title);
             if (!string.IsNullOrEmpty(description)) { t.setProperty("Description", description); }
             if (!string.IsNullOrEmpty(repro)) { t.setProperty("Reproduction", repro); }
             t.beginAndEnd();

@@ -26,12 +26,12 @@ namespace CognitiveVR.Components
         private void OVRManager_HMDMounted()
         {
             hmdpresentGUID = Util.GetUniqueId();
-            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
+            new Transaction("cvr.hmdpresent").setProperty("present", true).setProperty("starttime", Time.time).begin();
         }
 
         private void OVRManager_HMDUnmounted()
         {
-            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time).end();
+            new Transaction("cvr.hmdpresent").setProperty("present", false).setProperty("endtime", Time.time).end();
         }
 
 

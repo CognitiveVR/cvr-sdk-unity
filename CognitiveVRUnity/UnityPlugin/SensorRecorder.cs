@@ -15,7 +15,7 @@ namespace CognitiveVR
 
         static SensorRecorder()
         {
-            CognitiveVR_Manager.SendDataEvent += SendData;
+            Core.OnSendData += Core_OnSendData;
         }
 
         public static void RecordDataPoint(string category, float value)
@@ -32,11 +32,11 @@ namespace CognitiveVR
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
-                SendData();
+                Core_OnSendData();
             }
         }
 
-        public static void SendData()
+        private static void Core_OnSendData()
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
@@ -47,9 +47,9 @@ namespace CognitiveVR
             sb.Append("{");
             JsonUtil.SetString("name", Core.UniqueID, sb);
             sb.Append(",");
-            JsonUtil.SetString("sessionid", CoreSubsystem.SessionID, sb);
+            JsonUtil.SetString("sessionid", Core.SessionID, sb);
             sb.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CoreSubsystem.SessionTimeStamp, sb);
+            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sb);
             sb.Append(",");
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
@@ -84,7 +84,8 @@ namespace CognitiveVR
 
             string url = Constants.POSTSENSORDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
             byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
-            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+            //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+            NetworkManager.Post(url, outBytes);
         }
 
         #region json

@@ -30,11 +30,11 @@ namespace CognitiveVR.Components
             {
                 Util.logDebug("hmd collision");
                 HMDGuid = Util.GetUniqueId();
-                Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").setProperty("state", "begin").begin();
+                new Transaction("cvr.collision").setProperty("device", "HMD").setProperty("state", "begin").begin();
             }
             else if (!hit && !string.IsNullOrEmpty(HMDGuid))
             {
-                Instrumentation.Transaction("cvr.collision", HMDGuid).setProperty("device", "HMD").setProperty("state", "end").end();
+                new Transaction("cvr.collision").setProperty("device", "HMD").setProperty("state", "end").end();
                 HMDGuid = string.Empty;
             }
         }

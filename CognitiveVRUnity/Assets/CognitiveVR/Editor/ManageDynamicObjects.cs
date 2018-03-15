@@ -42,6 +42,8 @@ public class ManageDynamicObjects : EditorWindow
         GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
         Rect gameobject = new Rect(190, 95, 120, 30);
         GUI.Label(gameobject, "GameObject", "dynamicheader");
+        Rect ids = new Rect(320, 95, 120, 30);
+        GUI.Label(ids, "Ids", "dynamicheader");
         Rect uploaded = new Rect(380, 95, 120, 30);
         GUI.Label(uploaded, "Uploaded", "dynamicheader");
 
@@ -65,6 +67,8 @@ public class ManageDynamicObjects : EditorWindow
         if (GUI.Button(new Rect(180, 400, 140, 40), "Upload All", "button_bluetext"))
         {
             Debug.Log("upload all dynamics");
+            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            CognitiveVR_SceneExportWindow.UploadDynamicObjects(true);
         }
 
         DrawFooter();
