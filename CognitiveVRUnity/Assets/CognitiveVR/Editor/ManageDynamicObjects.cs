@@ -69,6 +69,12 @@ public class ManageDynamicObjects : EditorWindow
             Debug.Log("upload all dynamics");
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             CognitiveVR_SceneExportWindow.UploadDynamicObjects(true);
+            //TODO pop up upload ids to scene modal
+        }
+
+        if (GUI.Button(new Rect(30,400,140,40),"Upload Ids to Scene"))
+        {
+            EditorCore.RefreshSceneVersion(delegate() { UploadManifest(); }); //get latest scene version then upload manifest to there
         }
 
         DrawFooter();
@@ -152,7 +158,7 @@ public class ManageDynamicObjects : EditorWindow
     {
         var headers = new Dictionary<string, string>();
         headers.Add("X-HTTP-Method-Override", "GET");
-        headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
+        headers.Add("Authorization", EditorCore.DeveloperKey);
 
         var currentSceneSettings = EditorCore.GetPreferences().FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
         if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
@@ -191,20 +197,8 @@ public class ManageDynamicObjects : EditorWindow
         {
             if (responsecode == 401)
             {
-                Util.logWarning("GetManifestResponse not authorized. Requesting Auth Token");
+                Util.logWarning("GetManifestResponse not authorized");
                 //not authorized
-                /*
-
-                var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
-                if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
-                {
-                    return;
-                }
-                if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
-                {
-                    Util.logWarning("Cannot Get Manifest Response. Current scene doesn't have an id!");
-                    return;
-                }*/
             }
             else
             {
@@ -218,7 +212,7 @@ public class ManageDynamicObjects : EditorWindow
     {
         var headers = new Dictionary<string, string>();
         headers.Add("X-HTTP-Method-Override", "GET");
-        headers.Add("Authorization", "Bearer " + EditorPrefs.GetString("authToken"));
+        headers.Add("Authorization", EditorCore.DeveloperKey);
 
         var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
         if (currentSceneSettings == null) //there's a warning in CognitiveVR_Preferences.FindCurrentScene if null
@@ -247,14 +241,8 @@ public class ManageDynamicObjects : EditorWindow
         Util.logDebug(sv.versionNumber.ToString());
     }
 
-
-
-
-
-
-
-    List<DynamicObject> ObjectsInScene;
-    public List<DynamicObject> GetDynamicObjectsInScene()
+    static List<DynamicObject> ObjectsInScene;
+    public static List<DynamicObject> GetDynamicObjectsInScene()
     {
         if (ObjectsInScene == null)
         {
@@ -289,11 +277,15 @@ public class ManageDynamicObjects : EditorWindow
     }
 
     //only need id, mesh and name
-    AggregationManifest Manifest;
-    SceneVersionCollection SceneVersionCollection;
+    static AggregationManifest Manifest;
+    static SceneVersionCollection SceneVersionCollection;
 
-    void UpdateManifest()
+    /// <summary>
+    /// generate manifest from scene objects and upload to latest version of scene
+    /// </summary>
+    public static void UploadManifest()
     {
+        ObjectsInScene.Clear();
         foreach (var v in GetDynamicObjectsInScene())
         {
             AddOrReplaceDynamic(Manifest, v);
@@ -308,7 +300,7 @@ public class ManageDynamicObjects : EditorWindow
         SendManifest(json, SceneVersionCollection.GetLatestVersion());
     }
 
-    string ManifestToJson()
+    static string ManifestToJson()
     {
         string objectIdManifest = "{\"objects\":[";
 
@@ -326,7 +318,7 @@ public class ManageDynamicObjects : EditorWindow
         return objectIdManifest;
     }
 
-    void SendManifest(string json, SceneVersion sceneversion)
+    static void SendManifest(string json, SceneVersion sceneversion)
     {
         var settings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
         if (settings == null)
@@ -350,16 +342,17 @@ public class ManageDynamicObjects : EditorWindow
 
         var headers = new Dictionary<string, string>();
         headers.Add("Content-Type", "application/json");
+        headers.Add("Authorization", EditorCore.DeveloperKey);
 
         EditorNetwork.Post(url, outBytes, PostManifestResponse,false);
     }
 
-    void PostManifestResponse(int responsecode, string error, string text)
+    static void PostManifestResponse(int responsecode, string error, string text)
     {
         Util.logDebug("Manifest upload complete. response: " + text + " error: " + error);
     }
 
-    void AddOrReplaceDynamic(AggregationManifest manifest, DynamicObject dynamic)
+    static void AddOrReplaceDynamic(AggregationManifest manifest, DynamicObject dynamic)
     {
         var replaceEntry = manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
         if (replaceEntry == null)

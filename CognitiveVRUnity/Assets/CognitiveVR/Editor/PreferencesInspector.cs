@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
 
@@ -126,6 +127,16 @@ namespace CognitiveVR
             GUILayout.BeginHorizontal();
             GUILayout.Space(15);
 
+            //the full process
+            //refresh scene versions
+            //save screenshot
+            //export scene
+            //decimate scene
+            //confirm upload of scene. new scene? new version?
+            //export dynamics
+            //confirm uploading dynamics
+            //confirm upload manifest
+
             if (GUILayout.Button("Export","ButtonLeft"))
             {
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
@@ -136,17 +147,104 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(!hasUploadFiles);
             if (GUILayout.Button("Upload", "ButtonRight"))
             {
-                
+                System.Action completedRefreshSceneVersion2 = delegate ()
+                {
+                    ManageDynamicObjects.UploadManifest();
+                };
+
+                //upload dynamics
+                System.Action completeSceneUpload = delegate () {
+                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+                    
+                    //TODO upload aggregate manifest requires latest scene versions
+                };
+
+                //upload scene
+                System.Action completedRefreshSceneVersion1 = delegate () {
+                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+
+                    if (current == null || string.IsNullOrEmpty(current.SceneId))
+                    {
+                        //new scene
+                        CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                    }
+                    else
+                    {
+                        //new version
+                        if (EditorUtility.DisplayDialog("Upload New Version","Upload a new version of this existing scene? Will archive previous version","Ok"))
+                        {
+                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        }
+                    }
+                };
+
+                //get the latest verion of the scene
+                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
             }
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
             GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Refresh Scene Versions"))
+            {
+                EditorCore.RefreshSceneVersion(null);
+            }
+            if (GUILayout.Button("Add all scenes"))
+            {
+                UpdateSceneNames();
+            }
 
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sceneSettings"),true);
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
+        }
+
+        private static void UpdateSceneNames()
+        {
+            //save these to a temp list
+            var prefs = EditorCore.GetPreferences();
+
+            List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
+            foreach (var v in prefs.sceneSettings)
+            {
+                oldSettings.Add(v);
+            }
+
+
+            //clear then rebuild the list in preferences
+            prefs.sceneSettings.Clear();
+
+            //add all scenes
+            string[] guidList = AssetDatabase.FindAssets("t:scene");
+
+            foreach (var v in guidList)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(v);
+                string name = path.Substring(path.LastIndexOf('/') + 1);
+                name = name.Substring(0, name.Length - 6);
+
+                prefs.sceneSettings.Add(new CognitiveVR_Preferences.SceneSettings(name, path));
+            }
+
+            //match up dictionary keys from temp list
+            foreach (var oldSetting in oldSettings)
+            {
+                foreach (var newSetting in prefs.sceneSettings)
+                {
+                    if (newSetting.SceneName == oldSetting.SceneName)
+                    {
+                        newSetting.SceneId = oldSetting.SceneId;
+                        newSetting.LastRevision = oldSetting.LastRevision;
+                        newSetting.SceneName = oldSetting.SceneName;
+                        newSetting.ScenePath = oldSetting.ScenePath;
+                        newSetting.VersionId = oldSetting.VersionId;
+                        newSetting.VersionNumber = oldSetting.VersionNumber;
+                    }
+                }
+            }
         }
     }
 }

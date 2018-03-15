@@ -493,23 +493,56 @@ public class InitWizard : EditorWindow
                 //buttonDisabled = true;
                 break;
             case "upload":
-                onclick += () => EditorCore.RefreshSceneVersion();
+                onclick += () => EditorCore.RefreshSceneVersion(null);
                 text = "I understand, Continue";
                 buttonrect = new Rect(290, 460, 200, 30);
                 break;
             case "uploadsummary":
 
+                //fourth upload manifest
+                System.Action completedRefreshSceneVersion = delegate ()
+                {
+                    ManageDynamicObjects.UploadManifest();
+                };
+
+                //third upload dynamics
                 System.Action completeSceneUpload = delegate () {
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
                     CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
                 };
 
+                //second upload scene
                 System.Action completeScreenshot = delegate(){
+
+                    //TODO popup window asking to confirm replacing scene if scene already has been uploaded
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-                    CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+
+                    if (current == null || string.IsNullOrEmpty(current.SceneId))
+                    {
+                        //new scene
+                        CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                    }
+                    else
+                    {
+                        //new version
+                        if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok"))
+                        {
+                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        }
+                    }
                 };
 
-                onclick = () => EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                //get scene versions
+                System.Action completedRefreshSceneVersion1 = delegate ()
+                {
+                    EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                };
+
+                onclick = () => EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+
+                //first save screenshot
+                onclick = () => 
                 
                 text = "Upload";
                 break;

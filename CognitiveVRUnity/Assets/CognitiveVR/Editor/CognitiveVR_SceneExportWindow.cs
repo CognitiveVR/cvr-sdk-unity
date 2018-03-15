@@ -488,10 +488,11 @@ namespace CognitiveVR
             }
             else
             {
-                if (EditorUtility.DisplayDialog("Upload Scene", "Do you want to upload \"" + settings.SceneName + "\" to your Dashboard?", "Yes", "No"))
+                uploadConfirmed = true;
+                /*if (EditorUtility.DisplayDialog("Upload Scene", "Do you want to upload \"" + settings.SceneName + "\" to your Dashboard?", "Yes", "No"))
                 {
-                    uploadConfirmed = true;
-                }
+                    
+                }*/
             }
 
             if (!uploadConfirmed)
@@ -1114,6 +1115,7 @@ namespace CognitiveVR
                 else
                 {
                     dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    //TODO add headers.Add("Authorization", EditorCore.DeveloperKey);
                     currentDynamicUploadName = dynamicObjectForms[0].Name;
                     dynamicObjectForms.RemoveAt(0);
                 }

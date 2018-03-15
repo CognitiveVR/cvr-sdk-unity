@@ -404,10 +404,13 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     #endregion
 
-    public static void RefreshSceneVersion()
+    static System.Action RefreshSceneVersionComplete;
+    public static void RefreshSceneVersion(System.Action refreshSceneVersionComplete)
     {
+        RefreshSceneVersionComplete = refreshSceneVersionComplete;
         //gets the scene version from api and sets it to the current scene
-        var currentSettings = CognitiveVR_Preferences.Instance.FindScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name);
+        string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+        var currentSettings = CognitiveVR_Preferences.Instance.FindScene(currentSceneName);
         if (currentSettings != null)
         {
             if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -426,6 +429,10 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
 
             EditorNetwork.Get(url, GetSceneVersionResponse, true, "Get Scene Version");
+        }
+        else
+        {
+            Debug.Log("No scene versions for scene: " + currentSceneName);
         }
     }
 
@@ -461,6 +468,10 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         settings.VersionNumber = collection.GetLatestVersion().versionNumber;
         
         AssetDatabase.SaveAssets();
+
+        if (RefreshSceneVersionComplete != null)
+            RefreshSceneVersionComplete.Invoke();
+        RefreshSceneVersionComplete = null;
     }
 
     #region GUI
