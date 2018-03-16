@@ -906,7 +906,11 @@ namespace CognitiveVR
             EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + dynamics.Length + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
         }
 
-        public static void ExportSelectedObjectsPrefab()
+        /// <summary>
+        /// export selected gameobjects, temporarily spawn them in the scene if they are prefabs
+        /// </summary>
+        /// <returns>true if exported at least 1 mesh</returns>
+        public static bool ExportSelectedObjectsPrefab()
         {
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
@@ -983,6 +987,18 @@ namespace CognitiveVR
                 GameObject.DestroyImmediate(v);
             }
 
+            if (entireSelection.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects selected", "Ok");
+                return false;
+            }
+
+            if (successfullyExportedCount == 0)
+            {
+                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
+                return false;
+            }
+
             if (successfullyExportedCount == 1 && entireSelection.Count == 1)
             {
                 EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + " dynamic object", "Ok");
@@ -991,6 +1007,7 @@ namespace CognitiveVR
             {
                 EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
             }
+            return true;
         }
         #endregion
 

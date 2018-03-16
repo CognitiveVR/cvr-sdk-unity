@@ -71,10 +71,12 @@ public class ManageDynamicObjects : EditorWindow
             //TODO pop up upload ids to scene modal
         }
 
-        if (GUI.Button(new Rect(180, 400, 140, 40), "Upload Selected", "button_bluetext"))
+        if (GUI.Button(new Rect(330, 400, 140, 40), "Upload Selected", "button_bluetext"))
         {
-            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
-            CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+            if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+            {
+                CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+            }
             //TODO pop up upload ids to scene modal
         }
 
