@@ -302,7 +302,7 @@ namespace CognitiveVR
             DynamicObjectId sphereId = null;
             if (!CognitiveVR_Preferences.S_TrackGazePoint)
             {
-                if (CognitiveVR_Preferences.S_VideoSphereDynamicObjectId > -1)
+                if (!string.IsNullOrEmpty(CognitiveVR_Preferences.S_VideoSphereDynamicObjectId))
                 {
                     if (sphereId == null)
                     {
@@ -340,7 +340,7 @@ namespace CognitiveVR
 
             Instance.postRenderHitPos = Vector3.zero;
             instance.postRenderHitWorldPos = Vector3.zero;
-            Instance.postRenderId = -1;
+            Instance.postRenderId = "";
             //Instance.postRenderDist = 999;
             Instance.hitType = DynamicHitType.None;
 
@@ -491,7 +491,7 @@ namespace CognitiveVR
         Vector3 postRenderHitPos;
         //used for debugging and calculating distance of UI compared to world gaze point
         Vector3 postRenderHitWorldPos;
-        int postRenderId = -1;
+        string postRenderId = "";
         //float postRenderDist;
         //DynamicObject uiDynamicHit;
 
@@ -500,7 +500,7 @@ namespace CognitiveVR
         {
             //TODO pool player snapshots
             PlayerSnapshot snapshot = new PlayerSnapshot(frameCount);
-            if (postRenderId >= 0 && hitType == DynamicHitType.Physics)
+            if (!string.IsNullOrEmpty(postRenderId) && hitType == DynamicHitType.Physics)
             {
                 //snapshot.Properties.Add("objectId", objectId);
                 snapshot.ObjectId = postRenderId;
@@ -613,7 +613,7 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
             {
-                if (snapshot.ObjectId > -1 && hitType == DynamicHitType.Physics)
+                if (!string.IsNullOrEmpty(snapshot.ObjectId) && hitType == DynamicHitType.Physics)
                 {
                     snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
 
@@ -689,7 +689,7 @@ namespace CognitiveVR
             {
                 foreach (var snapshot in tempSnapshots)
                 {
-                    if (snapshot.ObjectId > -1)
+                    if (!string.IsNullOrEmpty(snapshot.ObjectId))
                     {
                         snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
                     }
@@ -903,7 +903,7 @@ namespace CognitiveVR
                 //evaluate gaze from snapshots then send
                 foreach( var snapshot in playerSnapshots)
                 {
-                    if (snapshot.ObjectId > -1)
+                    if (!string.IsNullOrEmpty(snapshot.ObjectId))
                     {
                         snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
                     }
@@ -1149,14 +1149,14 @@ namespace CognitiveVR
         }
 
         //EvaluateGaze on a dynamic object
-        private static string SetDynamicGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, int objectId)
+        private static string SetDynamicGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, string objectId)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
             JsonUtil.SetDouble("time", time, builder);
             builder.Append(",");
-            JsonUtil.SetInt("o", objectId, builder);
+            JsonUtil.SetString("o", objectId, builder);
             builder.Append(",");
             JsonUtil.SetVector("p", position, builder);
             builder.Append(",");

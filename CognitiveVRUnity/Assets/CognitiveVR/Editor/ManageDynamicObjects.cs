@@ -42,8 +42,8 @@ public class ManageDynamicObjects : EditorWindow
         GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
         Rect gameobject = new Rect(190, 95, 120, 30);
         GUI.Label(gameobject, "GameObject", "dynamicheader");
-        Rect ids = new Rect(320, 95, 120, 30);
-        GUI.Label(ids, "Ids", "dynamicheader");
+        //Rect ids = new Rect(320, 95, 120, 30);
+        //GUI.Label(ids, "Ids", "dynamicheader");
         Rect uploaded = new Rect(380, 95, 120, 30);
         GUI.Label(uploaded, "Uploaded", "dynamicheader");
 
@@ -66,11 +66,27 @@ public class ManageDynamicObjects : EditorWindow
         //buttons
         if (GUI.Button(new Rect(180, 400, 140, 40), "Upload All", "button_bluetext"))
         {
-            Debug.Log("upload all dynamics");
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
-            CognitiveVR_SceneExportWindow.UploadDynamicObjects(true);
+            CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
             //TODO pop up upload ids to scene modal
         }
+
+        if (GUI.Button(new Rect(180, 400, 140, 40), "Upload Selected", "button_bluetext"))
+        {
+            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+            //TODO pop up upload ids to scene modal
+        }
+
+        //export and upload all
+
+        /*if (GUI.Button(new Rect(180, 400, 140, 40), "Upload Selected", "button_bluetext"))
+        {
+            Debug.Log("upload all dynamics");
+            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+            //TODO pop up upload ids to scene modal
+        }*/
 
         if (GUI.Button(new Rect(30,400,140,40),"Upload Ids to Scene"))
         {
@@ -101,16 +117,26 @@ public class ManageDynamicObjects : EditorWindow
     //each row is 30 pixels
     void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground, bool deleted, bool notuploaded)
     {
-        if (deleted)
+        Event e = Event.current;
+        if (e.isMouse && e.type == EventType.mouseDown)
         {
-            //warning or color red
-            GUI.color = new Color(1,0,0,0.3f);
-        }
-        if (notuploaded)
-        {
-            //ie new
-            //color green
-            GUI.color = new Color(0, 1, 0, 0.3f);
+            if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x+rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y+rect.height)
+            {
+            }
+            else
+            {
+                if (e.shift) //add to selection
+                {
+                    GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
+                    Selection.gameObjects.CopyTo(gos, 0);
+                    gos[gos.Length - 1] = dynamic.gameObject;
+                    Selection.objects = gos;
+                }
+                else
+                {
+                    Selection.activeTransform = dynamic.transform;
+                }
+            }
         }
 
         if (darkbackground)
@@ -118,23 +144,30 @@ public class ManageDynamicObjects : EditorWindow
         else
             GUI.Box(rect, "", "dynamicentry_odd");
 
-        GUI.color = Color.white;
+        //GUI.color = Color.white;
 
         Rect mesh = new Rect(rect.x + 10, rect.y, 120, rect.height);
         Rect gameobject = new Rect(rect.x + 160, rect.y, 120, rect.height);
-        Rect id = new Rect(rect.x + 290, rect.y, 120, rect.height);
+        //Rect id = new Rect(rect.x + 290, rect.y, 120, rect.height);
 
         Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
         Rect uploaded = new Rect(rect.x + 380, rect.y, 24, rect.height);
 
         GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
         GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
-        GUI.Label(id, dynamic.CustomId.ToString(), "dynamiclabel");
+        //GUI.Label(id, dynamic.CustomId.ToString(), "dynamiclabel");
         if (!dynamic.HasCollider())
         {
             GUI.Label(collider, new GUIContent(EditorCore.Alert,"Tracking Gaze requires a collider"), "image_centered");
         }
-        GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName))
+        {
+            GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+        }
+        else
+        {
+            GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
+        }
     }
 
     #endregion

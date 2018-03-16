@@ -87,13 +87,13 @@ namespace CognitiveVR.Components
             {
                 lowFramerate = true;
                 fpsTransactionID = Util.GetUniqueId();
-                new Transaction("cvr.performance").setProperty("fps", lastFps).begin();
+                new Transaction("cvr.performance").setProperty("fps", lastFps).Send();
                 Util.logDebug("low framerate");
             }
             else if (lastFps > LowFramerateThreshold && lowFramerate)
             {
                 lowFramerate = false;
-                new Transaction("cvr.performance").end();
+                new Transaction("cvr.performance").Send();
             }
 
             if (OnlySendComfortOnLowFPS) { return; }
@@ -110,7 +110,7 @@ namespace CognitiveVR.Components
                     .setProperty("gpulevel", OVRPlugin.gpuLevel)
                     .setProperty("powersaving", OVRPlugin.powerSaving)
 #endif
-                    .beginAndEnd();
+                    .Send();
             Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
         }
 

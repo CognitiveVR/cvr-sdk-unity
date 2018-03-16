@@ -1180,7 +1180,7 @@ namespace CognitiveVR
             }
             if (!dynamic.UseCustomMesh)
             {
-                Debug.Log("Skipping " + transform.gameObject + ". Common Meshes for Dynamic Objects don't need to be exported");
+                //Debug.Log("Skipping " + transform.gameObject + ". Common Meshes for Dynamic Objects don't need to be exported");
                 return false;
             }
 

@@ -30,6 +30,10 @@ namespace CognitiveVR
 {
     public class DynamicObject : MonoBehaviour
     {
+#if UNITY_EDITOR
+        public int iId; //stores instanceid. used to check if something in editor has changed
+#endif
+
         public enum CommonDynamicMesh
         {
             ViveController,
@@ -52,9 +56,9 @@ namespace CognitiveVR
 
         //[Header("IDs")]
         public bool UseCustomId = true;
-        public int CustomId = -1;
-        public bool ReleaseIdOnDestroy = true;
-        public bool ReleaseIdOnDisable = true;
+        public string CustomId = "";
+        public bool ReleaseIdOnDestroy = true; //only release the id for reuse if not tracking gaze
+        public bool ReleaseIdOnDisable = true; //only release the id for reuse if not tracking gaze
 
         public string GroupName;
 
@@ -735,25 +739,28 @@ namespace CognitiveVR
             lastRotation = rot;
         }
 
+        /// <summary>
+        /// used to generate a new unique dynamic object ids at runtime
+        /// </summary>
+        /// <param name="MeshName"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public static DynamicObjectId GetUniqueID(string MeshName, DynamicObject target)
         {
             DynamicObjectId usedObjectId = null;
-            while (true)
+            while (true) //keep going through objectid list until a new one is reached
             {
-                //check each objectid. increment to next if id is found
                 currentUniqueId++;
-
                 usedObjectId = ObjectIds.Find(delegate (DynamicObjectId obj)
                 {
-                    return obj.Id == currentUniqueId + uniqueIdOffset;
+                    return obj.Id == "RUNTIME" + (currentUniqueId + uniqueIdOffset).ToString();
                 });
-
                 if (usedObjectId == null)
                 {
-                    break;
+                    break; //break once we have a currentuniqueid that isn't in objectid list
                 }
             }
-            return new DynamicObjectId(currentUniqueId + uniqueIdOffset, MeshName, target);
+            return new DynamicObjectId("RUNTIME" + (currentUniqueId + uniqueIdOffset).ToString(), MeshName, target);
         }
 
         //from SendDataEvent. either manual 'send all data' or onquit
@@ -1070,7 +1077,7 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            JsonUtil.SetInt("id", snap.Id, builder);
+            JsonUtil.SetString("id", snap.Id, builder);
             builder.Append(",");
             JsonUtil.SetDouble("time", snap.Timestamp, builder);
             builder.Append(",");
@@ -1208,7 +1215,7 @@ namespace CognitiveVR
                     NewSnapshot().SetEnabled(false);
                 if (TotalGazeDuration > 0)
                 {
-                    new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                    new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).Send();
                     TotalGazeDuration = 0;
                 }
                 return;
@@ -1261,7 +1268,7 @@ namespace CognitiveVR
         {
             if (TotalGazeDuration > 0)
             {
-                new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).Send();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
             }
         }
@@ -1367,7 +1374,7 @@ namespace CognitiveVR
         }
 
         public DynamicObject Dynamic;
-        public int Id;
+        public string Id;
         public Dictionary<string, object> Properties;
         public Dictionary<string, DynamicObjectButtonStates.ButtonState> Buttons;
         public List<DynamicObject.EngagementEvent> Engagements;
@@ -1563,12 +1570,12 @@ namespace CognitiveVR
     /// </summary>
     public class DynamicObjectId
     {
-        public int Id;
+        public string Id;
         public bool Used = true;
         public string MeshName;
         public DynamicObject Target;
 
-        public DynamicObjectId(int id, string meshName, DynamicObject target)
+        public DynamicObjectId(string id, string meshName, DynamicObject target)
         {
             this.Id = id;
             this.MeshName = meshName;
@@ -1590,21 +1597,21 @@ namespace CognitiveVR
 
     public class DynamicObjectManifestEntry
     {
-        public int Id;
+        public string Id;
         public string Name;
         public string MeshName;
         public Dictionary<string, object> Properties;
         public string videoURL;
         public bool videoFlipped;
 
-        public DynamicObjectManifestEntry(int id, string name, string meshName)
+        public DynamicObjectManifestEntry(string id, string name, string meshName)
         {
             this.Id = id;
             this.Name = name;
             this.MeshName = meshName;
         }
 
-        public DynamicObjectManifestEntry(int id, string name, string meshName,Dictionary<string,object>props)
+        public DynamicObjectManifestEntry(string id, string name, string meshName,Dictionary<string,object>props)
         {
             this.Id = id;
             this.Name = name;

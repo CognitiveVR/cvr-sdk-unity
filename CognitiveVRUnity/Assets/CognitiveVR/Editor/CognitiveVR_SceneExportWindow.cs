@@ -999,7 +999,37 @@ namespace CognitiveVR
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
         static string currentDynamicUploadName;
 
-        public static void UploadDynamicObjects(bool ShowPopupWindow = false)
+        public static void UploadSelectedDynamicObjects(bool ShowPopupWindow = false)
+        {
+            List<string> dynamicMeshNames = new List<string>();
+            foreach (var v in Selection.transforms)
+            {
+                var dyn = v.GetComponent<DynamicObject>();
+                if (dyn == null) { continue; }
+                dynamicMeshNames.Add(dyn.MeshName);
+            }
+
+            UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
+        }
+
+        public static void UploadAllDynamicObjects(bool ShowPopupWindow = false)
+        {
+            List<string> dynamicMeshNames = new List<string>();
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+            var subdirectories = Directory.GetDirectories(path);
+            foreach (var v in subdirectories)
+            {
+                var split = v.Split(Path.DirectorySeparatorChar);
+                //
+                dynamicMeshNames.Add(split[split.Length - 1]);
+            }
+
+            //upload all stuff from exported files
+            UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
+        }
+
+        //search through files. if dynamics.name contains exported folder, upload
+        static void UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 
@@ -1026,9 +1056,21 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
 
+            //
+            List<string> exportDirectories = new List<string>();
+            foreach(var v in subdirectories)
+            {
+                var split = v.Split(Path.DirectorySeparatorChar);
+
+                if (dynamicMeshNames.Contains(split[split.Length - 1]))
+                {
+                    exportDirectories.Add(v);
+                }
+            }
+
             if (ShowPopupWindow)
             {
-                int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + subdirectories.Length + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + " Version:" + settings.VersionNumber+")?", "Ok", "Cancel", "Open Directory");
+                int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + exportDirectories.Count + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + " Version:" + settings.VersionNumber+")?", "Ok", "Cancel", "Open Directory");
                 if (option == 0) { } //ok
                 else if (option == 1) { return; } //cancel
                 else
@@ -1044,7 +1086,7 @@ namespace CognitiveVR
                 }
             }
             string objectNames="";
-            foreach (var subdir in subdirectories)
+            foreach (var subdir in exportDirectories)
             {
                 var filePaths = Directory.GetFiles(subdir);
 

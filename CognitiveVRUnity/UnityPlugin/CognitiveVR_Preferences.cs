@@ -51,7 +51,7 @@ namespace CognitiveVR
         public static bool S_DynamicObjectSearchInParent;
         public static bool S_TrackGazePoint;
         public static bool S_GazePointFromDirection;
-        public static int S_VideoSphereDynamicObjectId;
+        public static string S_VideoSphereDynamicObjectId;
         public static float S_GazeDirectionMultiplier;
 
         //timestamp and session id
@@ -125,7 +125,7 @@ namespace CognitiveVR
         public bool TrackGazePoint = true;
 
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
-        public int VideoSphereDynamicObjectId = 1000;
+        public string VideoSphereDynamicObjectId = "";
         public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]

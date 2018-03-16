@@ -102,8 +102,9 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
-        private static void AppendTransaction(string category, Dictionary<string, object> properties, float[] position, double timestamp)
+        public static void SendTransaction(string category, Dictionary<string, object> properties, float[] position)
         {
+            var timestamp = Util.Timestamp();
             TransactionBuilder.Append("{");
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
             TransactionBuilder.Append(",");
@@ -140,21 +141,6 @@ namespace CognitiveVR
             {
                 SendTransactions();
             }
-        }
-
-        public static void beginTransaction(string category, Dictionary<string, object> properties, float[] position)
-        {
-            AppendTransaction(category, properties, position, Util.Timestamp());
-        }
-
-        public static void updateTransaction(string category, int progress, Dictionary<string, object> properties)
-        {
-
-        }
-
-        public static void endTransaction(string category, Dictionary<string, object> properties, float[] position)
-        {
-            AppendTransaction(category, properties, position, Util.Timestamp());
         }
     }
 }

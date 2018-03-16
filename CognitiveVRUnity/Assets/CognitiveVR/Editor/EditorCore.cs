@@ -211,6 +211,14 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
     }
 
+    internal static bool HasDynamicExportFiles(string meshname)
+    {
+        string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
+        var SceneExportDirExists = Directory.Exists(dynamicExportDirectory);
+
+        return SceneExportDirExists && Directory.GetFiles(dynamicExportDirectory).Length > 0;
+    }
+
 
     //Color Blue = new Color32(0xFA, 0x4F, 0xF2, 0xFF); //set in guiskin
     //Color Black = new Color32(0x1A, 0x1A, 0x1A, 0xFF); //set in guiskin
@@ -578,6 +586,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             var dirname = new DirectoryInfo(subdir).Name;
             ObjectNames.Add(dirname);
         }
+        ExportedDynamicObjects = ObjectNames;
         return ObjectNames;
     }
 

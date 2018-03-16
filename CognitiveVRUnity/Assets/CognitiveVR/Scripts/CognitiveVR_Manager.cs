@@ -62,7 +62,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                new Transaction("cvr.session").begin();
+                new Transaction("cvr.session").Send();
             }
             else //some failure
             {
@@ -589,7 +589,7 @@ namespace CognitiveVR
             Core.SendDataEvent();
 
             double playtime = Util.Timestamp() - Core.SessionTimeStamp;
-            new Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            new Transaction("cvr.session").setProperty("sessionlength", playtime).Send();
 
             Destroy(FindObjectOfType<CognitiveVR_Manager>());
 
@@ -702,12 +702,12 @@ namespace CognitiveVR
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
-                new Transaction("cvr.session").setProperty("sessionlength",playtime).end();
+                new Transaction("cvr.session").setProperty("sessionlength",playtime).Send();
                 return;
             }
 
 			CognitiveVR.Util.logDebug("session length " + playtime);
-            new Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            new Transaction("cvr.session").setProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
 

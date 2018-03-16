@@ -560,7 +560,7 @@ namespace CognitiveVR
             {
                 exitpoll.setProperty(property.Key, property.Value);
             }
-            exitpoll.beginAndEnd(CurrentExitPollPanel.transform.position);
+            exitpoll.Send(CurrentExitPollPanel.transform.position);
             Core.SendDataEvent();
         }
 

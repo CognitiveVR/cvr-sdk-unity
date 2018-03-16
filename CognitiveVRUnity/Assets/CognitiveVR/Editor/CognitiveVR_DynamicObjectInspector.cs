@@ -10,7 +10,7 @@ namespace CognitiveVR
     [CanEditMultipleObjects]
     public class CognitiveVR_DynamicObjectInspector : Editor
     {
-        bool foldout = false;
+        static bool foldout = false;
         public override void OnInspectorGUI()
         {
             var script = serializedObject.FindProperty("m_Script");
@@ -31,7 +31,17 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
-            CheckCustomId(useCustomID, customId);
+            var iId = serializedObject.FindProperty("iId");            
+            var dynamic = target as DynamicObject;
+            if (dynamic.iId != dynamic.GetInstanceID()) //only check if something has changed on a dynamic
+            {
+                if (useCustomID.boolValue)
+                {
+                    iId.intValue = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
+                    CheckCustomId(customId);
+                    //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
+                }
+            }
 
 #if UNITY_5_6_OR_NEWER
             //video
@@ -64,22 +74,6 @@ namespace CognitiveVR
             }
 
             GUILayout.EndHorizontal();
-            /*
-            EditorGUI.BeginDisabledGroup(useCustomMesh.boolValue);
-            UnityEditor.EditorGUILayout.PropertyField(commonMeshName);
-            EditorGUI.EndDisabledGroup();
-
-            GUILayout.BeginHorizontal();
-            UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-
-            EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
-            UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
-            /*if (GUILayout.Button("Export", GUILayout.MaxWidth(100)))
-            {
-                MenuItems.ExportSelectedObjectsPrefab();
-            }
-            EditorGUI.EndDisabledGroup();
-            GUILayout.EndHorizontal();*/
 
             EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
             DisplayGazeTrackHelpbox(trackGaze.boolValue);
@@ -108,9 +102,16 @@ namespace CognitiveVR
 
                 EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
                 UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
-                if (GUILayout.Button("Export", GUILayout.MaxWidth(100)))
+                if (GUILayout.Button("Export", "ButtonLeft", GUILayout.MaxWidth(100)))
                 {
                     CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                }
+
+                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                if (GUILayout.Button("Upload", "ButtonRight", GUILayout.MaxWidth(100)))
+                {
+                    CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
+                    //CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
                 }
                 EditorGUI.EndDisabledGroup();
 
@@ -258,29 +259,33 @@ namespace CognitiveVR
             }
         }
 
-        void CheckCustomId(SerializedProperty useCustomId, SerializedProperty customId)
+        void CheckCustomId(SerializedProperty customId)
         {
-            if (!useCustomId.boolValue)
-            {
-                return;
-            }
-            if (customId.intValue < 0)
-            {
-                var dynamics = FindObjectsOfType<DynamicObject>();
-                List<int> usedInts = new List<int>();
-                foreach (var dynamic in dynamics)
-                {
-                    usedInts.Add(dynamic.CustomId);
-                }
+            if (Application.isPlaying) { return; }
 
-                for (int i = 0; i<1000;i++)
+            HashSet<string> usedids = new HashSet<string>();
+
+            var dynamics = FindObjectsOfType<DynamicObject>();
+
+            for (int i = dynamics.Length - 1; i >= 0; i--) //should adjust newer dynamics instead of older
+            {
+                if (dynamics[i].UseCustomId == false) { continue; }
+                if (usedids.Contains(dynamics[i].CustomId))
                 {
-                    if (usedInts.Contains(i)) { continue; }
-                    customId.intValue = i;
-                    break;
+                    Debug.Log("usedids contains customid: " + dynamics[i].CustomId);
+
+                    string s = System.Guid.NewGuid().ToString();
+                    customId.stringValue = s;
+                    dynamics[i].CustomId = s;
+                    usedids.Add(s);
+                    Debug.Log(dynamics[i].gameObject.name + " has same customid, set new guid " + s);
                 }
-                Debug.Log("need new dynamic object id");
+                else
+                {
+                    usedids.Add(dynamics[i].CustomId);
+                }
             }
         }
     }
 }
+ 

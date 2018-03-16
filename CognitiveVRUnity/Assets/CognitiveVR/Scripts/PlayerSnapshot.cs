@@ -23,7 +23,7 @@ namespace CognitiveVR
 
         public double timestamp;
         //public Dictionary<string, object> Properties = new Dictionary<string, object>();
-        public int ObjectId = -1;
+        public string ObjectId = "";
         //used instead of GazePoint when looking at dynamic object
         public Vector3 LocalGaze;
         //position of HMD

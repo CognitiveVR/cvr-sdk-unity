@@ -159,7 +159,7 @@ namespace CognitiveVR.Components
             Transaction t = new Transaction("cvr.issue").setProperty("Title", title);
             if (!string.IsNullOrEmpty(description)) { t.setProperty("Description", description); }
             if (!string.IsNullOrEmpty(repro)) { t.setProperty("Reproduction", repro); }
-            t.beginAndEnd();
+            t.Send();
 
             //integrate call to some JIRA rest webthing
         }

@@ -3,33 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-//making a Windows universal build?
-//unityplugin rightclick->properties->build->conditional compilation symbols
-//add 'NETFX_CORE' and build the dll
-
 namespace CognitiveVR
 {
     public static class Constants
     {
-        //public const int DEFAULT_REQUEST_TIMEOUT = 3000; // in ms
-        //public const int INIT_TIMEOUT = 10000; // in ms
-        //public const string TXN_SUCCESS = "success";
-        //public const string TXN_ERROR = "error";
         public const string ENTITY_TYPE_USER = "USER";
         public const string ENTITY_TYPE_DEVICE = "DEVICE";
-
-        //public const string TIMEOUT_MODE_TRANSACTION = "TXN";
-        //public const string TIMEOUT_MODE_ANY = "ANY";
-
-        //public const string PROPERTY_ISNEW = "_COGNITIVEVR_isNew";
-        //internal const double TIME_RECORDAGAIN = 8.0*60.0*60.0;  // only record each 8 hours
 
 
         //editor urls
         //GET dynamic object manifest
         public static string GETDYNAMICMANIFEST(int versionid)
         {
-            return String.Concat("https://api.sceneexplorer.com/versions/", versionid, "/objects");
+            return String.Concat("https://data.sceneexplorer.com/versions/", versionid, "/objects"); //changed api to data
         }
 
         //POST dynamic object manifest
@@ -43,11 +29,10 @@ namespace CognitiveVR
             return String.Concat("https://data.sceneexplorer.com/objects/",sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
-
         //GET scene settings and read scene version
         public static string GETSCENEVERSIONS(string sceneid)
         {
-            return String.Concat("https://api.sceneexplorer.com/scenes/", sceneid);
+            return String.Concat("https://data.sceneexplorer.com/scenes/", sceneid); //changed api to data
         }
 
         //POST scene screenshot
@@ -71,14 +56,11 @@ namespace CognitiveVR
         //POST get auth token from dynamic object manifest response
         public static string POSTAUTHTOKEN(string sceneid)
         {
-            return String.Concat("https://api.sceneexplorer.com/tokens/", sceneid);
+            return String.Concat("https://data.sceneexplorer.com/tokens/", sceneid);//changed api to data
         }
 
         //UNITY used to open scenes on sceneexplorer
         public const string SCENEEXPLORER_SCENE = "https://sceneexplorer.com/scene/";
-
-        //POST used to log into the editor
-        public const string API_SESSIONS = "https://api.cognitivevr.io/sessions";
 
         //UNITY opens dashboard page to create a new product
         public const string DASH_NEWPRODUCT = "https://dashboard.cognitivevr.io/admin/products/create";
@@ -95,7 +77,6 @@ namespace CognitiveVR
 
 
         //session urls
-
 
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
@@ -120,13 +101,6 @@ namespace CognitiveVR
         {
             return string.Concat("https://data.sceneexplorer.com/sensors/", sceneid, "?version=", versionnumber);
         }
-
-        //POST used in core initialization, personalization (tuning), data collector
-        //TODO this is handed off by lots of different components. should just put this url into the actual urls that get sent. THIS SHOULD NOT CHANGE DURING RUNTIME
-        //public const string DATA_HOST = "https://data.cognitivevr.io";
-
-        //unused
-        //public const string NOTIFICATIONS_HOST = "https://notification.cognitivevr.io";
 
 
         //GET request question set

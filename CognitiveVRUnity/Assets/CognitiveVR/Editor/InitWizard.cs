@@ -280,6 +280,28 @@ public class InitWizard : EditorWindow
     //each row is 30 pixels
     void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground)
     {
+        Event e = Event.current;
+        if (e.isMouse && e.type == EventType.mouseDown)
+        {
+            if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
+            {
+            }
+            else
+            {
+                if (e.shift) //add to selection
+                {
+                    GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
+                    Selection.gameObjects.CopyTo(gos, 0);
+                    gos[gos.Length - 1] = dynamic.gameObject;
+                    Selection.objects = gos;
+                }
+                else
+                {
+                    Selection.activeTransform = dynamic.transform;
+                }
+            }
+        }
+
         if (darkbackground)
             GUI.Box(rect, "", "dynamicentry_even");
         else
@@ -508,7 +530,7 @@ public class InitWizard : EditorWindow
                 //third upload dynamics
                 System.Action completeSceneUpload = delegate () {
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-                    CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
                 };
 

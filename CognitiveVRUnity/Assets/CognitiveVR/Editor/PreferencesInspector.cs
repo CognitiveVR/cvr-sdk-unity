@@ -9,8 +9,6 @@ namespace CognitiveVR
     [CustomEditor(typeof(CognitiveVR_Preferences))]
     public class PreferencesInspector : Editor
     {
-        bool remapHotkey;
-
         public override void OnInspectorGUI()
         {
             var p = (CognitiveVR_Preferences)target;
@@ -27,7 +25,7 @@ namespace CognitiveVR
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval), 0, 10);
-            p.VideoSphereDynamicObjectId = Mathf.Clamp(EditorGUILayout.IntField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId), 0, 1000);
+            p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
             p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
 
             EditorGUILayout.Space();
@@ -155,7 +153,7 @@ namespace CognitiveVR
                 //upload dynamics
                 System.Action completeSceneUpload = delegate () {
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-                    CognitiveVR_SceneExportWindow.UploadDynamicObjects();
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     
                     //TODO upload aggregate manifest requires latest scene versions
                 };
