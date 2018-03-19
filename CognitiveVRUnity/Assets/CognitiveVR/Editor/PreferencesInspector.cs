@@ -35,8 +35,8 @@ namespace CognitiveVR
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 0, 1000);
             p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 0, 1000);
 
-            //TODO
-            EditorGUILayout.Toggle("Save data locally if no internet connection", false);
+            //TODO local storage
+            //EditorGUILayout.Toggle("Save data locally if no internet connection", false);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Events", EditorStyles.boldLabel);
@@ -137,12 +137,31 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Export","ButtonLeft"))
             {
+                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                {
+                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                    {
+                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                        {
+                        }
+                        else
+                        {
+                            return;//cancel from save scene window
+                        }
+                    }
+                    else
+                    {
+                        return;//cancel from 'do you want to save' popup
+                    }
+                }
                 CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
+                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                UnityEditor.AssetDatabase.SaveAssets();
             }
 
-            bool hasUploadFiles = EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+            bool hasUploadFiles = EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
             
-            EditorGUI.BeginDisabledGroup(!hasUploadFiles);
+            EditorGUI.BeginDisabledGroup(!hasUploadFiles); //TODO should be able to upload a scene even if there is no static meshes. could be 360 videos scene or something
             if (GUILayout.Button("Upload", "ButtonRight"))
             {
                 System.Action completedRefreshSceneVersion2 = delegate ()
@@ -154,8 +173,6 @@ namespace CognitiveVR
                 System.Action completeSceneUpload = delegate () {
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
                     CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
-                    
-                    //TODO upload aggregate manifest requires latest scene versions
                 };
 
                 //upload scene
@@ -178,19 +195,40 @@ namespace CognitiveVR
                 };
 
                 //get the latest verion of the scene
+                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                {
+                    if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                    {
+                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                        {
+                        }
+                        else
+                        {
+                            return;//cancel from save scene window
+                        }
+                    }
+                    else
+                    {
+                        return;//cancel from 'do you want to save' popup
+                    }
+                }
                 EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
             }
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Refresh Scene Versions"))
+            if (GUILayout.Button("Refresh Latest Scene Versions")) //ask scene explorer for all the versions of this active scene
             {
                 EditorCore.RefreshSceneVersion(null);
             }
-            if (GUILayout.Button("Add all scenes"))
+            /*if (GUILayout.Button("Refresh Local Scene Data")) //TODO write more descriptive button title
             {
                 UpdateSceneNames();
+            }*/
+            if (GUILayout.Button("Upload Dynamic Object Aggregation Manifest"))
+            {
+                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); }); //get latest scene version then upload manifest to there
             }
 
             EditorGUILayout.Space();
@@ -200,11 +238,12 @@ namespace CognitiveVR
             serializedObject.Update();
         }
 
+        //currently UNUSED. useful with the scene export window that shows all scenes regardless of if they were exported
         private static void UpdateSceneNames()
         {
-            //save these to a temp list
             var prefs = EditorCore.GetPreferences();
 
+            //save these to a temp list
             List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
             foreach (var v in prefs.sceneSettings)
             {

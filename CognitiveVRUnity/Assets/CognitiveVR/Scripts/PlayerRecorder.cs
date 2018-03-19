@@ -874,7 +874,7 @@ namespace CognitiveVR
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string url = Constants.POSTGAZEDATA(sceneSettings.SceneId,sceneSettings.VersionNumber);
 
-                    StartCoroutine(PostJsonRequest(outBytes, url));
+                    CognitiveVR.NetworkManager.Post(url, outBytes);
                 }
             }
             else
@@ -1025,7 +1025,7 @@ namespace CognitiveVR
 
                     CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 
-                    StartCoroutine(PostJsonRequest(outBytes, url));
+                    CognitiveVR.NetworkManager.Post(url, outBytes);
                 }
             }
             else
@@ -1034,22 +1034,6 @@ namespace CognitiveVR
             }
 
             playerSnapshots.Clear();
-        }
-
-        Dictionary<string, string> headers = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" } };
-        
-        public IEnumerator PostJsonRequest(byte[] bytes, string url)
-        {
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
-            
-            yield return www;
-
-#if UNITY_EDITOR
-            if (CognitiveVR_Preferences.Instance.EnableLogging)
-            {
-                Util.logDebug(url + " PostJsonRequest response - " + (string.IsNullOrEmpty(www.error) ? "" : "<color=red>return error: " + www.error + "</color>") + " <color=green>return text: " + www.text + "</color>");
-            }
-#endif
         }
 
         void CleanupPlayerRecorderEvents()

@@ -59,7 +59,7 @@ namespace CognitiveVR
 
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
-        static Vector2 canvasPos;
+        /*static Vector2 canvasPos;
         static CognitiveVR_Preferences prefs;
 
         bool exportOptionsFoldout = false;
@@ -71,7 +71,7 @@ namespace CognitiveVR
         int keyWidth = 400;
 
 
-        bool loadedScenes = false;
+        bool loadedScenes = false;*/
 
         List<string> AddAllScenes()
         {
@@ -92,35 +92,9 @@ namespace CognitiveVR
             return allSceneNames;
         }
 
-        Texture2D refreshTexture;
-
         #region Screenshot
 
-        bool DisplayScreenshotTip = false;
         List<Camera> tempDisabledCameras = new List<Camera>();
-
-        Texture2D ConvertRenderTexture(RenderTexture rt)
-        {
-            //write rendertexture to png
-            Texture2D tex = new Texture2D(rt.width, rt.height);
-            RenderTexture.active = rt;
-            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = null;
-
-            var color = tex.GetPixel(0, 0);
-            if (color.a < 0.9f)
-            {
-                //KNOWN BUG - sometimes having active cameras in the scene does weird things to scenert
-                DisplayScreenshotTip = true;
-            }
-            else
-            {
-                DisplayScreenshotTip = false;
-            }
-
-            return tex;
-        }
 
         Texture2D cachedScreenshot;
 
@@ -370,7 +344,7 @@ namespace CognitiveVR
             BlenderRequest = true;
             HasOpenedBlender = false;
             EditorApplication.update += UpdateProcess;
-            UploadSceneSettings = currentSceneSettings;
+            UploadSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
 
 
             blenderStartTime = (float)EditorApplication.timeSinceStartup;
@@ -451,19 +425,13 @@ namespace CognitiveVR
 
             if (settings == null) { return; }
 
-            if (sceneUploadWWW != null)
-            {
-                Debug.LogError("Scene upload WWW is not null. Please wait until your scene has finished uploading before uploading another!");
-                return;
-            }
-
             bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
 
             bool uploadConfirmed = false;
             string sceneName = settings.SceneName;
             string[] filePaths = new string[] { };
 
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
             if (SceneExportDirExists)
@@ -482,7 +450,7 @@ namespace CognitiveVR
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + EditorCore.DeveloperKey + "\",\"sceneName\":\"" + currentSceneSettings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + EditorCore.DeveloperKey + "\",\"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
                 }
             }
@@ -586,32 +554,81 @@ namespace CognitiveVR
                 wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
             }
 
+            //TODO transfer this to CognitiveVR.EditorNetworkManager
+
             if (hasExistingSceneId)
             {
-                sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm);
-                Debug.Log("Add new version - upload scene to " + Constants.POSTUPDATESCENE(settings.SceneId));
+                
+                //sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm);
+                //Debug.Log("Add new version - upload scene to " + Constants.POSTUPDATESCENE(settings.SceneId));
+
+
+                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostUploadResponse, null, true, "Upload", "Uploading new version of scene");//AUTH
             }
             else
             {
-                sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
-                Debug.Log("Upload new scene");
+                //sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
+                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostUploadResponse, null, true, "Upload", "Uploading new scene");//AUTH
+                //Debug.Log("Upload new scene");
             }
 
             UploadComplete = uploadComplete;
 
-            EditorApplication.update += UpdateUploadData;
+            //EditorApplication.update += UpdateUploadData;
+        }
+
+        static void PostUploadResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200)
+            {
+                Debug.LogError("Scene Upload Error " + error);
+                
+                UploadSceneSettings = null;
+                UploadComplete = null;
+                return;
+            }
+
+            //response can be <!DOCTYPE html><html lang=en><head><meta charset=utf-8><title>Error</title></head><body><pre>Internal Server Error</pre></body></html>
+            if (text.Contains("Internal Server Error"))
+            {
+                Debug.LogError("Scene Upload Error:" + text);
+                
+                UploadSceneSettings = null;
+                UploadComplete = null;
+                return;
+            }
+
+            string responseText = text.Replace("\"", "");
+            if (!string.IsNullOrEmpty(responseText))
+            {
+                UploadSceneSettings.SceneId = responseText;
+            }
+
+            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
+
+            //after scene upload response, hit version route to get the version of the scene
+            //SendSceneVersionRequest(UploadSceneSettings);
+
+            GUI.FocusControl("NULL");
+
+            AssetDatabase.SaveAssets();
+
+            if (UploadComplete != null)
+                UploadComplete.Invoke();
+            UploadComplete = null;
+
+            Debug.Log("<color=green>Scene Upload Complete!</color>");
         }
 
         static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
 
-        static WWW sceneUploadWWW;
-
-        static void UpdateUploadData()
+        /*static void UpdateUploadData()
         {
             if (sceneUploadWWW == null)
             {
                 EditorApplication.update -= UpdateUploadData;
                 EditorUtility.ClearProgressBar();
+                UploadComplete = null;
                 return;
             }
 
@@ -623,6 +640,7 @@ namespace CognitiveVR
                 sceneUploadWWW = null;
                 UploadSceneSettings = null;
                 Debug.LogError("Upload canceled!");
+                UploadComplete = null;
                 return;
             }
 
@@ -640,6 +658,7 @@ namespace CognitiveVR
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
                 UploadSceneSettings = null;
+                UploadComplete = null;
                 return;
             }
 
@@ -651,6 +670,7 @@ namespace CognitiveVR
                 sceneUploadWWW.Dispose();
                 sceneUploadWWW = null;
                 UploadSceneSettings = null;
+                UploadComplete = null;
                 return;
             }
 
@@ -675,13 +695,13 @@ namespace CognitiveVR
                 UploadComplete.Invoke();
             UploadComplete = null;
 
-            /*if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?", "Open on SceneExplorer", "Close"))
-            {
-                Application.OpenURL(Constants.SCENEEXPLORER_SCENE + UploadSceneSettings.SceneId);
-            }*/
+            //if (EditorUtility.DisplayDialog("Upload Complete", UploadSceneSettings.SceneName + " was successfully uploaded! Do you want to open your scene in SceneExplorer?", "Open on SceneExplorer", "Close"))
+            //{
+            //    Application.OpenURL(Constants.SCENEEXPLORER_SCENE + UploadSceneSettings.SceneId);
+            //}
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
-        }
+        }*/
         #endregion
 
         /*
@@ -853,7 +873,11 @@ namespace CognitiveVR
         static WWW authTokenRequest;*/
 
         #region Export Dynamic Objects
-        public static void ExportAllDynamicsInScene()
+        /// <summary>
+        /// export all dynamic objects in scene. skip prefabs
+        /// </summary>
+        /// <returns>true if any dynamics are exported</returns>
+        public static bool ExportAllDynamicsInScene()
         {
             //List<Transform> entireSelection = new List<Transform>();
             //entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
@@ -903,7 +927,15 @@ namespace CognitiveVR
                     exportedMeshNames.Add(dynamic.MeshName);
                 }
             }
+
+            if (successfullyExportedCount == 0)
+            {
+                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
+                return false;
+            }
+
             EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + dynamics.Length + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok");
+            return true;
         }
 
         /// <summary>
@@ -1050,7 +1082,7 @@ namespace CognitiveVR
         {
             string fileList = "Upload Files:\n";
 
-            var settings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var settings = CognitiveVR_Preferences.FindCurrentScene();
             if (settings == null)
             {
                 string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
@@ -1128,7 +1160,7 @@ namespace CognitiveVR
 
                 string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
 
-                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname));
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname,new Dictionary<string, string> { { "content", "words" }, { "auth", "1234" } })); //AUTH
             }
 
             if (dynamicObjectForms.Count > 0)
@@ -1144,12 +1176,14 @@ namespace CognitiveVR
             public string Url;
             public WWWForm Form;
             public string Name;
+            public Dictionary<string, string> Headers;
 
-            public DynamicObjectForm(string url, WWWForm form, string name)
+            public DynamicObjectForm(string url, WWWForm form, string name, Dictionary<string, string> headers)
             {
                 Url = url;
                 Form = form;
                 Name = name;
+                Headers = headers;
             }
         }
 
@@ -1173,7 +1207,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form.data,dynamicObjectForms[0].Headers);
                     //TODO add headers.Add("Authorization", EditorCore.DeveloperKey);
                     currentDynamicUploadName = dynamicObjectForms[0].Name;
                     dynamicObjectForms.RemoveAt(0);

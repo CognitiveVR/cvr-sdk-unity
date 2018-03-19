@@ -415,7 +415,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     static System.Action RefreshSceneVersionComplete;
     public static void RefreshSceneVersion(System.Action refreshSceneVersionComplete)
     {
-        RefreshSceneVersionComplete = refreshSceneVersionComplete;
         //gets the scene version from api and sets it to the current scene
         string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
         var currentSettings = CognitiveVR_Preferences.Instance.FindScene(currentSceneName);
@@ -431,12 +430,13 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             if (string.IsNullOrEmpty(currentSettings.SceneId))
             {
                 Debug.LogWarning("SendSceneVersionRequest Current scene doesn't have an id!");
+                refreshSceneVersionComplete.Invoke();
                 return;
             }
 
+            RefreshSceneVersionComplete = refreshSceneVersionComplete;
             string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
-
-            EditorNetwork.Get(url, GetSceneVersionResponse, true, "Get Scene Version");
+            EditorNetwork.Get(url, GetSceneVersionResponse, null,true, "Get Scene Version");//AUTH
         }
         else
         {
@@ -446,32 +446,19 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     private static void GetSceneVersionResponse(int responsecode, string error, string text)
     {
-        if (responsecode >= 500)
+        if (responsecode != 200)
         {
+            RefreshSceneVersionComplete = null;
             //internal server error
-            Util.logDebug("GetSettingsResponse - 500 internal server error");
+            Util.logDebug("GetSettingsResponse " + responsecode);
             return;
-        }
-        else if (responsecode >= 400)
-        {
-            if (responsecode == 401)
-            {
-                Util.logDebug("GetSettingsResponse - unauthorized. Get auth token");
-                return;
-            }
-            else
-            {
-                //some other error
-                Util.logDebug("GetSettingsResponse - some error" + responsecode);
-                return;
-            }
         }
 
         Debug.Log("GetSettingsResponse - got response with scene version");
         var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
 
-        var settings = GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-        if (settings == null) { return; }
+        var settings = CognitiveVR_Preferences.FindCurrentScene();
+        if (settings == null) { RefreshSceneVersionComplete = null; return; }
         settings.VersionId = collection.GetLatestVersion().id;
         settings.VersionNumber = collection.GetLatestVersion().versionNumber;
         
@@ -648,6 +635,10 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     public void OnPostprocessBuild(BuildTarget target, string path)
     {
         //TODO send dynamic object manifest from local json file
+        /*if (EditorUtility.DisplayDialog("Object Manifest", "Upload all object ids to SceneExplorer for aggregation?", "Ok", "No"))
+        {
+            ManageDynamicObjects.UploadManifest();
+        }*/
     }
 
     public void OnPreprocessBuild(BuildTarget target, string path)
@@ -757,6 +748,11 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     #endregion
 
     #region Scene Export
+    /// <summary>
+    /// has folder and files for scene
+    /// </summary>
+    /// <param name="currentSceneSettings"></param>
+    /// <returns></returns>
     public static bool HasSceneExportFiles(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
     {
         if (currentSceneSettings == null) { return false; }
@@ -764,6 +760,20 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
         
         return SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0;
+    }
+
+    /// <summary>
+    /// has folder for scene. can be empty
+    /// </summary>
+    /// <param name="currentSceneSettings"></param>
+    /// <returns></returns>
+    public static bool HasSceneExportFolder(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+    {
+        if (currentSceneSettings == null) { return false; }
+        string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+        var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+
+        return SceneExportDirExists;
     }
     #endregion
 }

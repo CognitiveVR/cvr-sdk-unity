@@ -342,7 +342,7 @@ namespace CognitiveVR
             //hooks/questionsets. ask hook by id what their questionset is
             string url = Constants.GETEXITPOLLQUESTIONSET(CognitiveVR_Preferences.Instance.APIKey, RequestQuestionHookName);
 
-            WWW www = new WWW(url);
+            WWW www = new WWW(url);//AUTH
 
             float time = 0;
             while (time < 3) //wait a maximum of 3 seconds
@@ -643,7 +643,7 @@ namespace CognitiveVR
 
             CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);
 
-            var headers = new Dictionary<string, string>();
+            var headers = new Dictionary<string, string>();//AUTH
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
 

@@ -83,9 +83,9 @@ namespace CognitiveVR
             currentSensorSnapshots = 0;
 
             string url = Constants.POSTSENSORDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(sb.ToString());
+            //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
-            NetworkManager.Post(url, outBytes);
+            NetworkManager.Post(url, sb.ToString());
         }
 
         #region json

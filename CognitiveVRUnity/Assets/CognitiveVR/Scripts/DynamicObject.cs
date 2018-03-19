@@ -907,8 +907,10 @@ namespace CognitiveVR
 
             string content = sendSnapshotBuilder.ToString();
 
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
-            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+            if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
+            {
+                CognitiveVR.NetworkManager.Post(url, content);
+            }
         }
 
         /// <summary>
@@ -1017,8 +1019,7 @@ namespace CognitiveVR
 
             if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
             {
-                byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+                CognitiveVR.NetworkManager.Post(url, content);
             }
         }
 

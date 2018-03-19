@@ -174,6 +174,25 @@ namespace CognitiveVR
         }
 
         /// <summary>
+        /// adds scene data if it doesn't already exist in scene settings
+        /// </summary>
+        /// <param name="scene"></param>
+        public static void AddSceneSettings(UnityEngine.SceneManagement.Scene scene)
+        {
+            if (scene == null || string.IsNullOrEmpty(scene.name)) { return; }
+            var foundSettings = Instance.sceneSettings.Find(x => x.ScenePath == scene.path);
+            if (foundSettings != null)
+            {
+                foundSettings.SceneName = scene.name;
+                foundSettings.ScenePath = scene.path;
+            }
+            else
+            {
+                instance.sceneSettings.Add(new SceneSettings(scene.name, scene.path));
+            }
+        }
+
+        /// <summary>
         /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data. can return null
         /// </summary>
         /// <returns></returns>

@@ -92,13 +92,13 @@ namespace CognitiveVR
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
             string url = Constants.POSTEVENTDATA(Core.CurrentSceneId, Core.CurrentSceneVersionNumber);
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(packagedEvents);
+            //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
 
-            var headers = new Dictionary<string, string>();
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
+            //var headers = new Dictionary<string, string>();
+            //headers.Add("Content-Type", "application/json");
+            //headers.Add("X-HTTP-Method-Override", "POST");
 
-            NetworkManager.Post(url, outBytes, headers);
+            NetworkManager.Post(url, packagedEvents);
         }
 
         //writes json to display the transaction in sceneexplorer

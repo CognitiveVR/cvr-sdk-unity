@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using CognitiveVR;
 
 public class EditorNetwork
 {
@@ -30,6 +31,10 @@ public class EditorNetwork
 
     public static void Get(string url, Response callback, Dictionary<string,string> headers, bool blocking, string requestName = "Get", string requestInfo = "")
     {
+        if (headers == null) { headers = new Dictionary<string, string>(); }
+        if (!headers.ContainsKey("Content-Type")){ headers.Add("Content-Type", "application/json"); }
+        if (!headers.ContainsKey("X-HTTP-Method-Override")){ headers.Add("X-HTTP-Method-Override", "GET"); }
+        if (!headers.ContainsKey("Auth")) { headers.Add("Auth", EditorCore.DeveloperKey); }
         WWW www = new WWW(url,null, headers);
 
         EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking, requestName, requestInfo));
@@ -38,20 +43,15 @@ public class EditorNetwork
         EditorApplication.update += EditorUpdate;
     }
 
-    public static void Get(string url, Response callback, bool blocking, string requestName = "Get", string requestInfo = "")
+    public static void Post(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
-        WWW www = new WWW(url);
+        if (headers == null) { headers = new Dictionary<string, string>(); }
+        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
+        if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
+        if (!headers.ContainsKey("Auth")) { headers.Add("Auth", EditorCore.DeveloperKey); }
 
-        EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking,requestName,requestInfo));
-
-        EditorApplication.update -= EditorUpdate;
-        EditorApplication.update += EditorUpdate;
-    }
-
-    public static void Post(string url, string stringcontent, Response callback, bool blocking, string requestName = "Post", string requestInfo = "")
-    {
         var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-        WWW www = new WWW(url,bytes);
+        WWW www = new WWW(url,bytes,headers);
 
         EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking, requestName, requestInfo));
 
@@ -59,9 +59,13 @@ public class EditorNetwork
         EditorApplication.update += EditorUpdate;
     }
 
-    public static void Post(string url, byte[] bytecontent, Response callback, bool blocking, string requestName = "Post", string requestInfo = "")
+    public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
-        WWW www = new WWW(url, bytecontent);
+        if (headers == null) { headers = new Dictionary<string, string>(); }
+        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
+        if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
+        if (!headers.ContainsKey("Auth")) { headers.Add("Auth", EditorCore.DeveloperKey); }
+        WWW www = new WWW(url, bytecontent,headers);
 
         EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking, requestName, requestInfo));
 
@@ -69,9 +73,13 @@ public class EditorNetwork
         EditorApplication.update += EditorUpdate;
     }
 
-    public static void Post(string url, WWWForm formcontent, Response callback, bool blocking, string requestName = "Post", string requestInfo = "")
+    public static void Post(string url, WWWForm formcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
-        WWW www = new WWW(url, formcontent);
+        if (headers == null) { headers = new Dictionary<string, string>(); }
+        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
+        if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
+        if (!headers.ContainsKey("Auth")) { headers.Add("Auth", EditorCore.DeveloperKey); }
+        WWW www = new WWW(url, formcontent.data,headers);
 
         EditorWebRequests.Add(new EditorWebRequest(www, callback, blocking, requestName, requestInfo));
 

@@ -53,8 +53,21 @@ public class InitWizard : EditorWindow
     void WelcomeUpdate()
     {
         GUI.Label(steptitlerect, "STEP 1 - WELCOME", "steptitle");
-        GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Setup.","boldlabel");
-        GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.","normallabel");
+
+        var settings = CognitiveVR_Preferences.FindCurrentScene();
+        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+        {
+            //upload new version
+            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Setup.", "boldlabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.\n\n"+
+                "This scene has already been uploaded to SceneExplorer. Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again\n\n"+
+                "Use 'Manage Dynamic Objects' if you want to upload new dynamic objects to your existing scene", "normallabel");
+        }
+        else
+        {
+            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Setup.", "boldlabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.", "normallabel");
+        }
     }
 
     #region Auth Keys
@@ -405,9 +418,26 @@ public class InitWizard : EditorWindow
 
         if (GUI.Button(new Rect(180, 400, 120, 40), "Export Scene", "button_bluetext"))
         {
-            Debug.Log("export scene");
-
+            if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            {
+                if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save","Cancel"))
+                {
+                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                    {
+                    }
+                    else
+                    {
+                        return;//cancel from save scene window
+                    }
+                }
+                else
+                {
+                    return;//cancel from 'do you want to save' popup
+                }
+            }
             CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
+            CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            UnityEditor.AssetDatabase.SaveAssets();
         }
 
         if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
@@ -469,6 +499,7 @@ public class InitWizard : EditorWindow
     void DrawNextButton()
     {
         bool buttonDisabled = false;
+        bool appearDisabled = false; //used on dynamic upload page to skip step
         string text = "Next";
         System.Action onclick = () => currentPage++;
         Rect buttonrect = new Rect(410, 460, 80, 30);
@@ -507,12 +538,21 @@ public class InitWizard : EditorWindow
                         dynamicsFromSceneExported++;
                     }
                 }
-                buttonDisabled = dynamicsFromSceneExported != dynamics.Length;
+                appearDisabled = dynamicsFromSceneExported != dynamics.Length;
+                if (appearDisabled)
+                {
+                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all dynamic objects?", "Yes", "No")) { currentPage++; } };
+                }
                 text = dynamicsFromSceneExported + "/" + dynamics.Length + " Uploaded";
                 buttonrect = new Rect(350, 460, 140, 30);
                 break;
             case "uploadscene":
                 //buttonDisabled = true;
+                appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+                if (appearDisabled)
+                {
+                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading the scene?", "Yes", "No")) { currentPage++; } };
+                }
                 break;
             case "upload":
                 onclick += () => EditorCore.RefreshSceneVersion(null);
@@ -521,23 +561,22 @@ public class InitWizard : EditorWindow
                 break;
             case "uploadsummary":
 
-                //fourth upload manifest
+                //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
                     ManageDynamicObjects.UploadManifest();
                 };
 
-                //third upload dynamics
+                //fourth upload dynamics
                 System.Action completeSceneUpload = delegate () {
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
                     CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
                 };
 
-                //second upload scene
+                //third upload scene
                 System.Action completeScreenshot = delegate(){
 
-                    //TODO popup window asking to confirm replacing scene if scene already has been uploaded
                     CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
 
                     if (current == null || string.IsNullOrEmpty(current.SceneId))
@@ -555,22 +594,47 @@ public class InitWizard : EditorWindow
                     }
                 };
 
-                //get scene versions
+                //second save screenshot
                 System.Action completedRefreshSceneVersion1 = delegate ()
                 {
                     EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
                 };
 
-                onclick = () => EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
-
-                //first save screenshot
-                onclick = () => 
+                //first refresh scene version
+                onclick = () =>
+                {
+                    if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                    {
+                        if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                        {
+                            if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                            {
+                            }
+                            else
+                            {
+                                return;//cancel from save scene window
+                            }
+                        }
+                        else
+                        {
+                            return;//cancel from 'do you want to save' popup
+                        }
+                    }
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                };
                 
                 text = "Upload";
                 break;
         }
 
-        if (buttonDisabled)
+        if (appearDisabled)
+        {
+            if (GUI.Button(buttonrect, text, "button_disabled"))
+            {
+                onclick.Invoke();
+            }
+        }
+        else if (buttonDisabled)
         {
             GUI.Button(buttonrect, text, "button_disabled");
         }
