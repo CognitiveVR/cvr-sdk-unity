@@ -29,7 +29,7 @@ namespace CognitiveVR
             p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Gaze Snapshot Batch Size", p.GazeSnapshotCount),0,1000);
             p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Snapshot Batch Size", p.TransactionSnapshotCount), 0, 1000);
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 0, 1000);
@@ -171,8 +171,9 @@ namespace CognitiveVR
 
                 //upload dynamics
                 System.Action completeSceneUpload = delegate () {
-                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    //CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
                     CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion2); //likely completed in previous step, but just in case
                 };
 
                 //upload scene
@@ -218,15 +219,15 @@ namespace CognitiveVR
             EditorGUI.indentLevel--;
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Refresh Latest Scene Versions")) //ask scene explorer for all the versions of this active scene
+            if (GUILayout.Button("Refresh Latest Scene Versions")) //ask scene explorer for all the versions of this active scene. happens automatically post scene upload
             {
                 EditorCore.RefreshSceneVersion(null);
             }
-            /*if (GUILayout.Button("Refresh Local Scene Data")) //TODO write more descriptive button title
+            /*if (GUILayout.Button("Refresh Local Scene Data")) //needs more descriptive button title
             {
                 UpdateSceneNames();
             }*/
-            if (GUILayout.Button("Upload Dynamic Object Aggregation Manifest"))
+            if (GUILayout.Button("Upload Dynamic Object Aggregation Manifest")) //happens automatically after dynamics are uploaded
             {
                 EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); }); //get latest scene version then upload manifest to there
             }

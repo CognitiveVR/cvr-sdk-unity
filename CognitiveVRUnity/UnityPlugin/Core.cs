@@ -11,7 +11,7 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        //!!important no data is sent unless begin session has been called (TODO make this true)
+        //!!important no data is sent unless begin session has been called (TODO make this true). need some place to set timestamp and sessionid
 
         //public variables
         //session timestamp

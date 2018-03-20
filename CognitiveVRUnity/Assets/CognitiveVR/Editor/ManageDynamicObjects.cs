@@ -7,7 +7,6 @@ using CognitiveVR;
 public class ManageDynamicObjects : EditorWindow
 {
     Rect steptitlerect = new Rect(30, 0, 100, 440);
-    Rect boldlabelrect = new Rect(30, 100, 440, 440);
 
     public static void Init()
     {
@@ -25,17 +24,20 @@ public class ManageDynamicObjects : EditorWindow
 
         var currentscene = CognitiveVR_Preferences.FindCurrentScene();
 
-        if (currentscene != null)
+        if (string.IsNullOrEmpty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name))
         {
-            GUI.Label(steptitlerect, "DYNAMIC OBJECTS "+ currentscene.SceneName + " Version: " + currentscene.VersionNumber, "steptitle");
-            
+            GUI.Label(steptitlerect, "DYNAMIC OBJECTS   Scene Not Saved", "steptitle");
+        }
+        else if (currentscene == null || string.IsNullOrEmpty(currentscene.SceneId))
+        {
+            GUI.Label(steptitlerect, "DYNAMIC OBJECTS   Scene Not Uploaded", "steptitle");
         }
         else
         {
-            GUI.Label(steptitlerect, "DYNAMIC OBJECTS Scene Not Saved", "steptitle");
+            GUI.Label(steptitlerect, "DYNAMIC OBJECTS   " + currentscene.SceneName + " Version: " + currentscene.VersionNumber, "steptitle");
         }
 
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the current <color=#8A9EB7FF>Dynamic Objects</color> tracked in your scene:", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "These are the current <color=#8A9EB7FF>Dynamic Object</color> components in your scene:", "boldlabel");
 
         //headers
         Rect mesh = new Rect(30, 95, 120, 30);
@@ -64,22 +66,23 @@ public class ManageDynamicObjects : EditorWindow
         GUI.Box(new Rect(30, 120, 425, 270), "", "box_sharp_alpha");
 
         //buttons
-        if (GUI.Button(new Rect(180, 400, 140, 40), "Upload All", "button_bluetext"))
+
+        if (GUI.Button(new Rect(60, 400, 150, 40), "Upload Selected", "button_bluetext"))
         {
-            if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
+            if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
             {
-                CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
-                UploadManifest();
+                if (CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true))
+                    UploadManifest();
             }
             //TODO pop up upload ids to scene modal
         }
 
-        if (GUI.Button(new Rect(330, 400, 140, 40), "Upload Selected", "button_bluetext"))
+        if (GUI.Button(new Rect(320, 400, 100, 40), "Upload All", "button_bluetext"))
         {
-            if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+            if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
             {
-                CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
-                UploadManifest();
+                if (CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true))
+                    UploadManifest();
             }
             //TODO pop up upload ids to scene modal
         }
@@ -299,7 +302,7 @@ public class ManageDynamicObjects : EditorWindow
     /// </summary>
     public static void UploadManifest()
     {
-        ObjectsInScene.Clear();
+        ObjectsInScene = null;
         foreach (var v in GetDynamicObjectsInScene())
         {
             AddOrReplaceDynamic(Manifest, v);

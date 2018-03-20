@@ -58,14 +58,14 @@ public class InitWizard : EditorWindow
         if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
         {
             //upload new version
-            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.\n\n"+
-                "This scene has already been uploaded to SceneExplorer. Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again\n\n"+
-                "Use 'Manage Dynamic Objects' if you want to upload new dynamic objects to your existing scene", "normallabel");
+            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Scene Setup.", "boldlabel");
+            GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.\n\n\n"+
+                "<color=#8A9EB7FF>This scene has already been uploaded to SceneExplorer!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again\n\n" +
+                "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene", "normallabel");
         }
         else
         {
-            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Setup.", "boldlabel");
+            GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Scene Setup.", "boldlabel");
             GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.", "normallabel");
         }
     }
@@ -162,7 +162,7 @@ public class InitWizard : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be interacting with in this scene.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
         List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK (eye tracking)", "Pupil Labs SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META" };
@@ -199,9 +199,8 @@ public class InitWizard : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP 4A - WHAT IS A DYNAMIC OBJECT?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A Dynamic Object can be any GameObject that changes during a session.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object component</color> goes on any GameObject that changes during a session.", "boldlabel");
 
-        
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
@@ -212,14 +211,14 @@ public class InitWizard : EditorWindow
 
         GUI.color = Color.white;
 
-        GUI.Label(new Rect(30, 350, 440, 440), "Not everything that moves needs to be a dynamic object. Small details that don't meaningfully impact a user's experience can be skipped. Anything the player grabs should be a dynamic object", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "Moving objects and things the user interacts with should have a Dynamic Object component. However, small details that don't meaningfully impact a user's experience can be skipped.", "normallabel");
     }
 
     void SceneExplainUpdate()
     {
         GUI.Label(steptitlerect, "STEP 4B - WHAT IS A SCENE?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A Scene is the sandbox in which the user completes your experience and dynamic objects are located", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the environment the user completes your experience in.", "boldlabel");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
@@ -229,7 +228,7 @@ public class InitWizard : EditorWindow
         
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-        GUI.Label(new Rect(30, 350, 440, 440), "A scene gives you context about where the player is located as they interact.", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "A scene gives you context about where the player is located as they interact. This is almost always analogous to a Unity scene.", "normallabel");
     }
 
 #endregion
@@ -257,7 +256,7 @@ public class InitWizard : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP 5 - PREPARE OBJECTS", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the current <color=#8A9EB7FF>Dynamic Objects</color> currently tracked in your scene:", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "These are the <color=#8A9EB7FF>Dynamic Objects</color> components currently located in your scene:", "boldlabel");
 
         Rect mesh = new Rect(30, 95, 120, 30);
         GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
@@ -361,8 +360,9 @@ public class InitWizard : EditorWindow
         selectBlender = "Select Blender.app";
 #endif
         GUI.Label(new Rect(30, 120, 100, 30), selectBlender, "miniheader");
-
         
+        GUI.Label(new Rect(130, 120, 30, 30), new GUIContent(EditorGUIUtility.FindTexture("d_console.infoicon.sml"), "Blender is used to reduce complex scene geometry. It is free and open source.\nDownload from Blender.org"),"image_centered");
+
         if (GUI.Button(new Rect(30, 160, 100, 30), "Browse...", "button_disabled"))
         {
             EditorCore.BlenderPath = EditorUtility.OpenFilePanel("Select Blender", string.IsNullOrEmpty(EditorCore.BlenderPath) ? "c:\\" : EditorCore.BlenderPath, "");
@@ -450,12 +450,47 @@ public class InitWizard : EditorWindow
         }
     }
 
+    bool delayUnderstandButton = true;
+    double understandRevealTime;
+
     void UploadUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
-        GUI.Label(new Rect(30, 100, 440, 440), "In the final step, we complete the upload process to our <color=#8A9EB7FF>SceneExplorer</color> servers.\n\n\n" +
-            "Once your Scene is uploaded, you will have to create a new version if you would like to edit the base geometry.\n\n\n"+
-            "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the \"<color=#8A9EB7FF>Manage Objects</color>\" menu.", "normallabel");
+        if (delayUnderstandButton)
+        {
+            delayUnderstandButton = false;
+            understandRevealTime = EditorApplication.timeSinceStartup + 3;
+        }
+
+        var settings = CognitiveVR_Preferences.FindCurrentScene();
+        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+        {
+            //upload new version
+            GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
+
+            Color scene1color = Color.HSVToRGB(0.55f, 0.5f, 1);
+            Color scene2color = Color.HSVToRGB(0.55f, 1f, 1);
+
+            GUI.color = scene1color;
+            GUI.Box(new Rect(100,40, 125, 125), EditorCore.SceneBackground, "image_centered");
+            GUI.color = Color.white;
+
+            GUI.Box(new Rect(100, 40, 125, 125), EditorCore.ObjectsBackground, "image_centered");
+
+            GUI.color = scene2color;
+            GUI.Box(new Rect(250, 40, 125, 125), EditorCore.SceneBackground, "image_centered");
+            GUI.color = Color.white;
+
+            GUI.Label(new Rect(30, 180, 440, 440), "In the final step, we will upload version <color=#62B4F3FF>" + (settings.VersionNumber+1)+ " </color>of the scene to <color=#8A9EB7FF>SceneExplorer</color>.\n\n\n" +
+                "This will archive the previous version <color=#62B4F3FF>" + (settings.VersionNumber) + " </color> of this scene. You will be prompted to copy the Dynamic Objects to the new version.\n\n\n" +
+                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
+        }
+        else
+        {
+            GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
+            GUI.Label(new Rect(30, 100, 440, 440), "In the final step, we will complete the upload process to our <color=#8A9EB7FF>SceneExplorer</color> servers.\n\n\n" +
+                "After your Scene is uploaded, if you make changes to your scene, you may want to open this window again and upload a new version of the scene.\n\n\n" +
+                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
+        }
     }
 
     void UploadSummaryUpdate()
@@ -482,7 +517,7 @@ public class InitWizard : EditorWindow
         if (sceneRT != null)
             GUI.Box(new Rect(175, 230, 150, 150), sceneRT, "image_centeredboxed");
 
-        GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete", "normallabel");
+        GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
     }
 
     void DrawFooter()
@@ -551,11 +586,15 @@ public class InitWizard : EditorWindow
                 appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
                 if (appearDisabled)
                 {
-                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading the scene?", "Yes", "No")) { currentPage++; } };
+                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting this scene?", "Yes", "No")) { currentPage++; } };
                 }
                 break;
             case "upload":
                 onclick += () => EditorCore.RefreshSceneVersion(null);
+                if (understandRevealTime > EditorApplication.timeSinceStartup)
+                {
+                    buttonDisabled = true;
+                }
                 text = "I understand, Continue";
                 buttonrect = new Rect(290, 460, 200, 30);
                 break;
@@ -569,7 +608,7 @@ public class InitWizard : EditorWindow
 
                 //fourth upload dynamics
                 System.Action completeSceneUpload = delegate () {
-                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    //CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
                     CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
                 };

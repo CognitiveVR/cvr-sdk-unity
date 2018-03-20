@@ -593,19 +593,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
                 }
             }
         }
-        else if (Directory.Exists(@"C:/Program Files (x86)"))
-        {
-            if (Directory.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64"))
-            {
-                if (Directory.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64"))
-                {
-                    if (File.Exists(@"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe"))
-                    {
-                        return @"C:/Program Files (x86)/blender-2.77a-windows64/blender-2.77a-windows64/blender.exe";
-                    }
-                }
-            }
-        }
 #elif UNITY_EDITOR_OSX
             //check /Applications/Blender/blender.app
             if (Directory.Exists(@"/Applications/"))
@@ -658,14 +645,12 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         public string created_at;
     }
 
-    static DateTime lastSdkUpdateDate;
     private static void SaveEditorVersion()
     {
         if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
         {
             EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
             EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            lastSdkUpdateDate = System.DateTime.UtcNow;
         }
     }
 

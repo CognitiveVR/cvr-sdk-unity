@@ -64,7 +64,7 @@ namespace CognitiveVR
 
         public DynamicObjectId ObjectId;
 
-        public bool UseCustomMesh;
+        public bool UseCustomMesh = true;
         public CommonDynamicMesh CommonMesh;
         public string MeshName;
 

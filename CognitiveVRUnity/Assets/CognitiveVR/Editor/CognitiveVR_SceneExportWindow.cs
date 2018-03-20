@@ -1048,7 +1048,12 @@ namespace CognitiveVR
         static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
         static string currentDynamicUploadName;
 
-        public static void UploadSelectedDynamicObjects(bool ShowPopupWindow = false)
+        /// <summary>
+        /// returns true if successfully uploaded dynamics
+        /// </summary>
+        /// <param name="ShowPopupWindow"></param>
+        /// <returns></returns>
+        public static bool UploadSelectedDynamicObjects(bool ShowPopupWindow = false)
         {
             List<string> dynamicMeshNames = new List<string>();
             foreach (var v in Selection.transforms)
@@ -1058,10 +1063,15 @@ namespace CognitiveVR
                 dynamicMeshNames.Add(dyn.MeshName);
             }
 
-            UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
+            return UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
         }
 
-        public static void UploadAllDynamicObjects(bool ShowPopupWindow = false)
+        /// <summary>
+        /// returns true if successfully uploaded dynamics
+        /// </summary>
+        /// <param name="ShowPopupWindow"></param>
+        /// <returns></returns>
+        public static bool UploadAllDynamicObjects(bool ShowPopupWindow = false)
         {
             List<string> dynamicMeshNames = new List<string>();
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
@@ -1074,11 +1084,11 @@ namespace CognitiveVR
             }
 
             //upload all stuff from exported files
-            UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
+            return UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
         }
 
         //search through files. if dynamics.name contains exported folder, upload
-        static void UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
+        static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 
@@ -1091,7 +1101,7 @@ namespace CognitiveVR
                     s = "Unknown Scene";
                 }
                 EditorUtility.DisplayDialog("Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
-                return;
+                return false;
             }
 
             string sceneid = settings.SceneId;
@@ -1099,7 +1109,7 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(sceneid))
             {
                 EditorUtility.DisplayDialog("Upload Failed", "Could not find the SceneId for \"" + settings.SceneName + "\". Are you sure you've exported and uploaded this scene to SceneExplorer?","Ok");
-                return;
+                return false;
             }
 
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
@@ -1121,13 +1131,13 @@ namespace CognitiveVR
             {
                 int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + exportDirectories.Count + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + " Version:" + settings.VersionNumber+")?", "Ok", "Cancel", "Open Directory");
                 if (option == 0) { } //ok
-                else if (option == 1) { return; } //cancel
+                else if (option == 1) { return false; } //cancel
                 else
                 {
 #if UNITY_EDITOR_WIN
                     //open directory
                     System.Diagnostics.Process.Start("explorer.exe", path);
-                    return;
+                    return false;
 #elif UNITY_EDITOR_OSX
                 System.Diagnostics.Process.Start("open", path);
                 return;
@@ -1169,6 +1179,7 @@ namespace CognitiveVR
                 DynamicUploadSuccess = 0;
                 EditorApplication.update += UpdateUploadDynamics;
             }
+            return true;
         }
 
         class DynamicObjectForm
