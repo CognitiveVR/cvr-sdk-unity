@@ -312,7 +312,7 @@ namespace CognitiveVR
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + developerkey + "\",\"sceneName\":\""+ fullName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+            string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + developerkey + "\",\"sceneName\":\""+ fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             decimateScriptPath = decimateScriptPath.Replace(" ", "\" \"");
@@ -450,7 +450,7 @@ namespace CognitiveVR
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + EditorCore.DeveloperKey + "\",\"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_Version + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"developerkey\":\"" + EditorCore.DeveloperKey + "\",\"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
                 }
             }
@@ -558,22 +558,26 @@ namespace CognitiveVR
 
             if (hasExistingSceneId)
             {
-                
+
                 //sceneUploadWWW = new WWW(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm);
                 //Debug.Log("Add new version - upload scene to " + Constants.POSTUPDATESCENE(settings.SceneId));
 
-
-                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostUploadResponse, null, true, "Upload", "Uploading new version of scene");//AUTH
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (EditorCore.IsDeveloperKeyValid)
+                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
             }
             else
             {
                 //sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
-                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostUploadResponse, null, true, "Upload", "Uploading new scene");//AUTH
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (EditorCore.IsDeveloperKeyValid)
+                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
                 //Debug.Log("Upload new scene");
             }
 
             UploadComplete = uploadComplete;
-
             //EditorApplication.update += UpdateUploadData;
         }
 
@@ -1170,7 +1174,11 @@ namespace CognitiveVR
 
                 string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
 
-                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname,new Dictionary<string, string> { { "content", "words" }, { "auth", "1234" } })); //AUTH
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (EditorCore.IsDeveloperKeyValid)
+                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname, headers)); //AUTH
             }
 
             if (dynamicObjectForms.Count > 0)

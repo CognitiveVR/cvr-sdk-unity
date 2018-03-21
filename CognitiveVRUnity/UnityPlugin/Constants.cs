@@ -7,10 +7,6 @@ namespace CognitiveVR
 {
     public static class Constants
     {
-        public const string ENTITY_TYPE_USER = "USER";
-        public const string ENTITY_TYPE_DEVICE = "DEVICE";
-
-
         //editor urls
         //GET dynamic object manifest
         public static string GETDYNAMICMANIFEST(int versionid)

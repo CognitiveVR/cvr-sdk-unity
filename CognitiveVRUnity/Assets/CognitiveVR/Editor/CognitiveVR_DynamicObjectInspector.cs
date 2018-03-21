@@ -33,7 +33,7 @@ namespace CognitiveVR
 
             var iId = serializedObject.FindProperty("iId");            
             var dynamic = target as DynamicObject;
-            if (dynamic.iId != dynamic.GetInstanceID()) //only check if something has changed on a dynamic
+            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(customId.stringValue)) //only check if something has changed on a dynamic
             {
                 if (useCustomID.boolValue)
                 {
@@ -135,13 +135,7 @@ namespace CognitiveVR
 
 
                 //Object ID
-                GUILayout.Label("Ids (Basic)", EditorStyles.boldLabel);
-
-                EditorGUILayout.PropertyField(releaseOnDisable, new GUIContent("Release Id OnDisable", "Allow other objects to use this Id when this object is no longer active"));
-                EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"));
-
-
-                GUILayout.Label("Ids (Advanced)", EditorStyles.boldLabel);
+                GUILayout.Label("Ids", EditorStyles.boldLabel);
 
                 GUILayout.BeginHorizontal();
 
@@ -154,6 +148,9 @@ namespace CognitiveVR
                 GUILayout.EndHorizontal();
 
                 EditorGUILayout.PropertyField(groupName, new GUIContent("Group Name", "This is used to identify types of objects and combine aggregated data"));
+
+                EditorGUILayout.PropertyField(releaseOnDisable, new GUIContent("Release Id OnDisable", "Allow other objects to use this Id when this object is no longer active"));
+                EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"));
 
                 //Snapshot Threshold
                 GUILayout.Label("Snapshot Threshold", EditorStyles.boldLabel);
@@ -270,7 +267,7 @@ namespace CognitiveVR
             for (int i = dynamics.Length - 1; i >= 0; i--) //should adjust newer dynamics instead of older
             {
                 if (dynamics[i].UseCustomId == false) { continue; }
-                if (usedids.Contains(dynamics[i].CustomId))
+                if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     Debug.Log("usedids contains customid: " + dynamics[i].CustomId);
 

@@ -219,17 +219,9 @@ namespace CognitiveVR
             EditorGUI.indentLevel--;
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Refresh Latest Scene Versions")) //ask scene explorer for all the versions of this active scene. happens automatically post scene upload
+            if (GUILayout.Button(new GUIContent("Refresh Latest Scene Versions", "Get the latest versionnumber and versionid for this scene"))) //ask scene explorer for all the versions of this active scene. happens automatically post scene upload
             {
                 EditorCore.RefreshSceneVersion(null);
-            }
-            /*if (GUILayout.Button("Refresh Local Scene Data")) //needs more descriptive button title
-            {
-                UpdateSceneNames();
-            }*/
-            if (GUILayout.Button("Upload Dynamic Object Aggregation Manifest")) //happens automatically after dynamics are uploaded
-            {
-                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); }); //get latest scene version then upload manifest to there
             }
 
             EditorGUILayout.Space();

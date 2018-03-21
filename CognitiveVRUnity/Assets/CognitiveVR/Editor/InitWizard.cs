@@ -60,8 +60,8 @@ public class InitWizard : EditorWindow
             //upload new version
             GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Scene Setup.", "boldlabel");
             GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.\n\n\n"+
-                "<color=#8A9EB7FF>This scene has already been uploaded to SceneExplorer!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again\n\n" +
-                "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene", "normallabel");
+                "<color=#8A9EB7FF>This scene has already been uploaded to SceneExplorer!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again.\n\n" +
+                "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
         }
         else
         {

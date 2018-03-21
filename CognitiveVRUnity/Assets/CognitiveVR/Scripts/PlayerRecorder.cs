@@ -46,7 +46,7 @@ namespace CognitiveVR
         }
 #endif
 
-        public void PlayerRecorderInit(Error initError)
+        void PlayerRecorderInit(Error initError)
         {
             if (initError != Error.Success)
             {
@@ -208,24 +208,7 @@ namespace CognitiveVR
         }
 #endif
 
-        void UpdatePlayerRecorder()
-        {
-            //TimeSinceLastObjectGazeRequest += Time.deltaTime;
-
-            CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
-
-            if (!prefs.SendDataOnHotkey) { return; }
-            if (Input.GetKeyDown(prefs.SendDataHotkey))
-            {
-                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
-                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
-                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
-
-                Core.SendDataEvent();
-            }
-        }
-
-        public static void BeginPlayerRecording()
+        static void BeginPlayerRecording()
         {
             var scenedata = CognitiveVR_Preferences.FindTrackingScene();
             //var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(SceneManager.GetActiveScene().path);
@@ -269,7 +252,7 @@ namespace CognitiveVR
             }
         }
 
-        //only used with gazedirection
+        //only used with !prefs.S_TrackGazePoint
         static DynamicObject VideoSphere;
 
         //dynamic object
@@ -495,6 +478,7 @@ namespace CognitiveVR
         //float postRenderDist;
         //DynamicObject uiDynamicHit;
 
+        //TODO make this private and tie a delegate to this
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender()
         {
@@ -756,7 +740,7 @@ namespace CognitiveVR
             SendPlayerGazeSnapshots(stringGazeSnapshots);
         }
 
-        public void SendPlayerGazeSnapshots(List<string> stringGazeSnapshots)
+        void SendPlayerGazeSnapshots(List<string> stringGazeSnapshots)
         {
             /*if (playerSnapshots.Count == 0)
             {
@@ -788,7 +772,7 @@ namespace CognitiveVR
                     builder.Append("{");
 
                     //header
-                    JsonUtil.SetString("userid", Core.userId, builder);
+                    JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
 
                     JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
@@ -815,7 +799,7 @@ namespace CognitiveVR
                     builder.Append(",");
 
 
-                    var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties();
+                    var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties(true);
                     if (deviceProperties.Count > 0)
                     {
                         builder.Append("\"device\":[");
@@ -835,7 +819,7 @@ namespace CognitiveVR
                         builder.Append("],");
                     }
 
-                    var userProperties = CognitiveVR_Manager.GetNewUserProperties();
+                    var userProperties = CognitiveVR_Manager.GetNewUserProperties(true);
                     if (userProperties.Count > 0)
                     {
                         builder.Append("\"user\":[");
@@ -889,7 +873,7 @@ namespace CognitiveVR
         /// <summary>
         /// registered to OnSendData
         /// </summary>
-        public void SendPlayerGazeSnapshots()
+        void SendPlayerGazeSnapshots()
         {
             if (playerSnapshots.Count == 0)
             {
@@ -1055,29 +1039,6 @@ namespace CognitiveVR
         }
 
 #region json
-
-        private static void WriteToFile(byte[] bytes, string appendFileName = "")
-        {
-            if (!System.IO.Directory.Exists("CognitiveVR_SceneExplorerExport"))
-            {
-                System.IO.Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            }
-
-            string playerID = System.DateTime.Now.ToString("d").Replace(':', '_').Replace(" ", "") + '_' + System.DateTime.Now.ToString("t").Replace('/', '_');
-
-            string path = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "player" + playerID + appendFileName + ".json";
-
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
-            //write file, using some kinda stream writer
-            using (FileStream fs = File.Create(path))
-            {
-                fs.Write(bytes, 0, bytes.Length);
-            }
-        }
 
         private static string SetPreGazePoint(double time, Vector3 position, Quaternion rotation)
         {

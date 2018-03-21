@@ -149,7 +149,7 @@ namespace CognitiveVR
         public bool HotkeyAlt = false;
         public KeyCode SendDataHotkey = KeyCode.F9;
         
-        [Header("Scene Settings")]
+        
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
         public SceneSettings FindScene(string sceneName)

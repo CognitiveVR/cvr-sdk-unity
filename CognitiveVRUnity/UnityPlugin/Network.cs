@@ -44,23 +44,24 @@ namespace CognitiveVR
 
         static Dictionary<string, string> getHeaders;
 
+        //currently unused. TODO exitpoll should use this
         public static void Get(string url, Response callback)
         {
             if (getHeaders == null)//AUTH
             {
-                 getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, {"Auth",CognitiveVR_Preferences.Instance.APIKey } };
+                 getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, {"Authorization","APIKEY:DATA "+CognitiveVR_Preferences.Instance.APIKey } };
             }
             WWW www = new WWW(url,null, getHeaders);
             Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
         }
 
-        static Dictionary<string, string> postHeaders;// = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" } };
+        static Dictionary<string, string> postHeaders;
 
         public static void Post(string url, string stringcontent)
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             WWW www = new WWW(url, bytes,postHeaders);
@@ -70,7 +71,7 @@ namespace CognitiveVR
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             WWW www = new WWW(url, bytecontent, postHeaders);
         }
@@ -79,7 +80,7 @@ namespace CognitiveVR
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             foreach (var kvp in postHeaders)
             {
@@ -100,7 +101,7 @@ namespace CognitiveVR
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             foreach(var kvp in postHeaders)
             {
@@ -114,7 +115,7 @@ namespace CognitiveVR
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             foreach (var kvp in postHeaders)
             {
@@ -127,10 +128,11 @@ namespace CognitiveVR
         {
             if (postHeaders == null)//AUTH
             {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Auth", CognitiveVR_Preferences.Instance.APIKey } };
+                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
             }
             WWW www = new WWW(url, bytecontent);
             Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
         }
+        //TODO clear post headers OnEndSession event
     }
 }

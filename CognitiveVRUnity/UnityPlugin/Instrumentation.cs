@@ -45,11 +45,6 @@ namespace CognitiveVR
             //clear the transaction builder
             builder.Length = 0;
 
-            //PackageData(CoreSubsystem.UniqueID, CoreSubsystem.SessionTimeStamp, CoreSubsystem.SessionID);
-            string userid = Core.UniqueID;
-            double timestamp = Core.SessionTimeStamp;
-            string sessionId = Core.SessionID;
-
             //CognitiveVR.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
 
@@ -59,9 +54,9 @@ namespace CognitiveVR
             builder.Append(JsonUtil.SetString("userid", Core.UniqueID));
             builder.Append(",");
 
-            builder.Append(JsonUtil.SetObject("timestamp", timestamp));
+            builder.Append(JsonUtil.SetObject("timestamp", Core.SessionTimeStamp));
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionid", sessionId));
+            builder.Append(JsonUtil.SetString("sessionid", Core.SessionID));
             builder.Append(",");
             builder.Append(JsonUtil.SetObject("part", partCount));
             partCount++;
@@ -102,13 +97,17 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
+        public static void SendTransaction(string category, Dictionary<string, object> properties, Vector3 position)
+        {
+            SendTransaction(category, properties, new float[3]{ position.x,position.y,position.z});
+        }
+
         public static void SendTransaction(string category, Dictionary<string, object> properties, float[] position)
         {
-            var timestamp = Util.Timestamp();
             TransactionBuilder.Append("{");
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetObject("time", timestamp));
+            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
             TransactionBuilder.Append(",");
             TransactionBuilder.Append(JsonUtil.SetVector("point", position));
 

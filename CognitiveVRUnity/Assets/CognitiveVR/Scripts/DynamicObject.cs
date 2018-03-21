@@ -1319,7 +1319,7 @@ namespace CognitiveVR
 
             var type = DirtyEngagements.Find(delegate (EngagementEvent obj)
             {
-                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1); ;
+                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1);
             });
 
             if (type != null)

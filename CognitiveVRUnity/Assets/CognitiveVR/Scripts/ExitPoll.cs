@@ -342,7 +342,10 @@ namespace CognitiveVR
             //hooks/questionsets. ask hook by id what their questionset is
             string url = Constants.GETEXITPOLLQUESTIONSET(CognitiveVR_Preferences.Instance.APIKey, RequestQuestionHookName);
 
-            WWW www = new WWW(url);//AUTH
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+
+            WWW www = new WWW(url,null,headers);//AUTH
 
             float time = 0;
             while (time < 3) //wait a maximum of 3 seconds
@@ -546,7 +549,7 @@ namespace CognitiveVR
         void SendResponsesAsTransaction()
         {
             var exitpoll = new Transaction("cvr.exitpoll");
-            exitpoll.setProperty("userId", CognitiveVR.Core.userId);
+            exitpoll.setProperty("userId", CognitiveVR.Core.UserId);
             exitpoll.setProperty("questionSetId", QuestionSetId);
             exitpoll.setProperty("hook", RequestQuestionHookName);
 
@@ -569,7 +572,7 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            JsonUtil.SetString("userId", CognitiveVR.Core.userId, builder);
+            JsonUtil.SetString("userId", CognitiveVR.Core.UserId, builder);
             builder.Append(",");
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
@@ -629,11 +632,6 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-#pragma warning disable 414
-        //http request can be lost unless held in reference until completed
-        WWW exitPollResponses;
-#pragma warning restore 414
-
         //the responses of all the questions in the set put together in a string and uploaded to the microservice at api.cognitivevr.io
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
@@ -646,6 +644,7 @@ namespace CognitiveVR
             var headers = new Dictionary<string, string>();//AUTH
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
+            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
 
             NetworkManager.Post(url, bytes, headers);
         }

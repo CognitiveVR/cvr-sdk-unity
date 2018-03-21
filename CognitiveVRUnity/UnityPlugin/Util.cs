@@ -18,7 +18,7 @@ namespace CognitiveVR
 
         private const string LOG_TAG = "com.cvr.cognitivevr: ";
 		
-		internal static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
+		static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
         public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
         internal static string getSDKName(string namePrefix) { return namePrefix; }
 
@@ -428,6 +428,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, float[] pos, bool centimeterLimit = false)
         {
+            if (pos.Length < 3) { pos = new float[3] { 0, 0, 0 }; }
+
             System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
             builder.Append("\"");
             builder.Append( name );
@@ -463,6 +465,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static StringBuilder SetVector(string name, float[] pos, StringBuilder builder, bool centimeterLimit = false)
         {
+            if (pos.Length < 3) { pos = new float[3] { 0, 0, 0 }; }
+
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -613,6 +617,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, float[] quat)
         {
+            if (quat.Length < 4) { quat = new float[4] { 0, 0, 0,0 }; }
+
             System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
             builder.Append("\"");
             builder.Append(name);
@@ -637,6 +643,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static StringBuilder SetQuat(string name, float[] quat, StringBuilder builder)
         {
+            if (quat.Length < 4) { quat = new float[4] { 0, 0, 0, 0 }; }
+
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");

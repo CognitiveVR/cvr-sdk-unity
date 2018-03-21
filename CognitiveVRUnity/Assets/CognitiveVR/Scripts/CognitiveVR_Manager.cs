@@ -383,7 +383,7 @@ namespace CognitiveVR
         }
         YieldInstruction playerSnapshotInverval;
 
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
         public bool InitializeOnStart = true;
 
         [HideInInspector] //complete this option later
@@ -421,7 +421,7 @@ namespace CognitiveVR
                 yield return new WaitForSeconds(StartupDelayTime);
             }
             if (InitializeOnStart)
-                Initialize();
+                Initialize("");
         }
 
         private void OnValidate()
@@ -430,12 +430,6 @@ namespace CognitiveVR
         }
 
         public void Initialize(string userName, Dictionary<string,object> userProperties = null)
-        {
-            var user = EntityInfo.createUserInfo(userName, userProperties);
-            Initialize(user);
-        }
-
-        public void Initialize(EntityInfo user = null)
         {
             Util.logDebug("CognitiveVR_Manager Initialize");
             if (instance != null && instance != this)
@@ -481,9 +475,12 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
 
-            CognitiveVR.Core.init(CognitiveVR_Preferences.Instance.APIKey,user,null,OnInit); //TODO return errors from init method, not callback
+            Core.UserId = userName;
+
+            CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
-            UpdateUserState(user.Properties);
+            UpdateUserState(userProperties);
+            UpdateUserState("name", userName);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -512,7 +509,6 @@ namespace CognitiveVR
 
                 Core.CurrentSceneId = string.Empty;
                 Core.CurrentSceneVersionNumber = 0;
-                Core.CurrensSceneVersionId = 0;
 
                 CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
                 if (sceneSettings != null)
@@ -522,7 +518,6 @@ namespace CognitiveVR
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
                         Core.CurrentSceneId = sceneSettings.SceneId;
                         Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
-                        Core.CurrensSceneVersionId = sceneSettings.VersionId;
                     }
                     else
                     {
@@ -562,7 +557,7 @@ namespace CognitiveVR
             //doPostRender = false;
 
             OnUpdate();
-            UpdatePlayerRecorder();
+            UpdateSendHotkeyCheck();
 
 #if CVR_STEAMVR
             var system = Valve.VR.OpenVR.System;
@@ -578,6 +573,21 @@ namespace CognitiveVR
                 }
             }
 #endif
+        }
+
+        void UpdateSendHotkeyCheck()
+        {
+            CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
+
+            if (!prefs.SendDataOnHotkey) { return; }
+            if (Input.GetKeyDown(prefs.SendDataHotkey))
+            {
+                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
+                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
+                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
+
+                Core.SendDataEvent();
+            }
         }
 
         /// <summary>
@@ -727,16 +737,22 @@ namespace CognitiveVR
             Application.Quit();
         }
 
+        #endregion
 
-        public static Dictionary<string, object> GetNewDeviceProperties()
+        //TODO how to write new entity properties? where is entity name set?
+        public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
         {
-            Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
-            newDeviceProperties.Clear();
-            return returndict;
+            if (clearNewProperties)
+            {
+                Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
+                newDeviceProperties.Clear();
+                return returndict;
+            }
+            return newDeviceProperties;
         }
         static Dictionary<string, object> newDeviceProperties = new Dictionary<string, object>();
         static Dictionary<string, object> knownDeviceProperties = new Dictionary<string, object>();
-        internal static void UpdateDeviceState(Dictionary<string, object> dictionary)
+        public static void UpdateDeviceState(Dictionary<string, object> dictionary)
         {
             foreach(var kvp in dictionary)
             {
@@ -759,7 +775,7 @@ namespace CognitiveVR
                 }
             }
         }
-        internal static void UpdateDeviceState(string key, object value)
+        public static void UpdateDeviceState(string key, object value)
         {
             if (knownDeviceProperties.ContainsKey(key) && knownDeviceProperties[key]!=value) //update value
             {
@@ -780,15 +796,19 @@ namespace CognitiveVR
             }
         }
 
-        public static Dictionary<string,object> GetNewUserProperties()
+        public static Dictionary<string, object> GetNewUserProperties(bool clearNewProperties)
         {
-            Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
-            newUserProperties.Clear();
-            return returndict;
+            if (clearNewProperties)
+            {
+                Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
+                newUserProperties.Clear();
+                return returndict;
+            }
+            return newUserProperties;
         }
         static Dictionary<string, object> newUserProperties = new Dictionary<string, object>();
         static Dictionary<string, object> knownUserProperties = new Dictionary<string, object>();
-        internal static void UpdateUserState(Dictionary<string, object> dictionary)
+        public static void UpdateUserState(Dictionary<string, object> dictionary)
         {
             foreach (var kvp in dictionary)
             {
@@ -811,7 +831,7 @@ namespace CognitiveVR
                 }
             }
         }
-        internal static void UpdateUserState(string key, object value)
+        public static void UpdateUserState(string key, object value)
         {
             if (knownUserProperties.ContainsKey(key) && knownUserProperties[key] != value) //update value
             {
@@ -831,6 +851,5 @@ namespace CognitiveVR
                 newUserProperties.Add(key, value);
             }
         }
-        #endregion
     }
 }

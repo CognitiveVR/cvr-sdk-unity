@@ -22,6 +22,12 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         
         //check sdk versions
         CheckForUpdates();
+
+        if (!EditorPrefs.HasKey("cognitive_init_popup"))
+        {
+            InitWizard.Init();
+        }
+        EditorPrefs.SetBool("cognitive_init_popup", true);
     }
 
     public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
@@ -436,7 +442,12 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
             RefreshSceneVersionComplete = refreshSceneVersionComplete;
             string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
-            EditorNetwork.Get(url, GetSceneVersionResponse, null,true, "Get Scene Version");//AUTH
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+            EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
         }
         else
         {
@@ -647,9 +658,9 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     private static void SaveEditorVersion()
     {
-        if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_Version)
+        if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_VERSION)
         {
-            EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_Version);
+            EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_VERSION);
             EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
     }
@@ -667,7 +678,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     static WWW checkForUpdatesRequest;
     static void CheckForUpdates()
     {
-        Debug.Log("check for updates");
         System.DateTime remindDate; //current date must be this or beyond to show popup window
 
         if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
@@ -709,7 +719,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
                 if (!string.IsNullOrEmpty(version))
                 {
-                    if (version != CognitiveVR.Core.SDK_Version)
+                    if (version != CognitiveVR.Core.SDK_VERSION)
                     {
                         //new version
                         CognitiveVR_UpdateSDKWindow.Init(version, summary);

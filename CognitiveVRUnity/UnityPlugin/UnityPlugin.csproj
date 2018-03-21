@@ -44,7 +44,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="DynamicObjectCore.cs" />
-    <Compile Include="EntityInfo.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="External\StringBuilderExtensions.cs" />
     <Compile Include="External\MiniJSON.cs" />
