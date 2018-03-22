@@ -269,13 +269,11 @@ namespace CognitiveVR
                 if (dynamics[i].UseCustomId == false) { continue; }
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
-                    Debug.Log("usedids contains customid: " + dynamics[i].CustomId);
-
                     string s = System.Guid.NewGuid().ToString();
                     customId.stringValue = s;
                     dynamics[i].CustomId = s;
                     usedids.Add(s);
-                    Debug.Log(dynamics[i].gameObject.name + " has same customid, set new guid " + s);
+                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + s);
                 }
                 else
                 {

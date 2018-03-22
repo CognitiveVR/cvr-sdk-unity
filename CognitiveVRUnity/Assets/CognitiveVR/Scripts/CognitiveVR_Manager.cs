@@ -754,7 +754,8 @@ namespace CognitiveVR
         static Dictionary<string, object> knownDeviceProperties = new Dictionary<string, object>();
         public static void UpdateDeviceState(Dictionary<string, object> dictionary)
         {
-            foreach(var kvp in dictionary)
+            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
+            foreach (var kvp in dictionary)
             {
                 if (knownDeviceProperties.ContainsKey(kvp.Key) && knownDeviceProperties[kvp.Key] != kvp.Value) //update value
                 {
@@ -810,6 +811,7 @@ namespace CognitiveVR
         static Dictionary<string, object> knownUserProperties = new Dictionary<string, object>();
         public static void UpdateUserState(Dictionary<string, object> dictionary)
         {
+            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
             foreach (var kvp in dictionary)
             {
                 if (knownUserProperties.ContainsKey(kvp.Key) && knownUserProperties[kvp.Key] != kvp.Value) //update value

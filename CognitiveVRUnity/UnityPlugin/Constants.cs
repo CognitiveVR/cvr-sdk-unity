@@ -5,54 +5,58 @@ using System.Text;
 
 namespace CognitiveVR
 {
+    //testdata.cognitive3d.com
+
     public static class Constants
     {
+        private static string domain = "data.sceneexplorer.com";
+
         //editor urls
         //GET dynamic object manifest
         public static string GETDYNAMICMANIFEST(int versionid)
         {
-            return String.Concat("https://data.sceneexplorer.com/versions/", versionid, "/objects"); //changed api to data
+            return String.Concat("https://",domain,"/versions/", versionid, "/objects"); //changed api to data
         }
 
         //POST dynamic object manifest
         public static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
         {
-            return String.Concat("https://data.sceneexplorer.com/objects/",sceneid,"?version=", versionnumber);
+            return String.Concat("https://", domain, "/objects/", sceneid,"?version=", versionnumber);
         }
         //POST dynamic object mesh data
         public static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
         {
-            return String.Concat("https://data.sceneexplorer.com/objects/",sceneid,"/",exportdirectory,"?version=", versionnumber);
+            return String.Concat("https://", domain, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
         //GET scene settings and read scene version
         public static string GETSCENEVERSIONS(string sceneid)
         {
-            return String.Concat("https://data.sceneexplorer.com/scenes/", sceneid); //changed api to data
+            return String.Concat("https://", domain, "/scenes/", sceneid); //changed api to data
         }
 
         //POST scene screenshot
         public static string POSTSCREENSHOT(string sceneid, int versionnumber)
         {
-            return String.Concat("https://data.sceneexplorer.com/scenes/",sceneid,"/screenshot?version=", versionnumber);
+            return String.Concat("https://", domain, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
         }
 
         //POST upload decimated scene
         public static string POSTNEWSCENE()
         {
-            return "https://data.sceneexplorer.com/scenes";
+            return "https://" + domain + "/scenes";
         }
 
         //POST upload and replace existing scene
         public static string POSTUPDATESCENE(string sceneid)
         {
-            return String.Concat("https://data.sceneexplorer.com/scenes/",sceneid);
+            return String.Concat("https://", domain, "/scenes/", sceneid);
         }
         
         //POST get auth token from dynamic object manifest response
         public static string POSTAUTHTOKEN(string sceneid)
         {
-            return String.Concat("https://data.sceneexplorer.com/tokens/", sceneid);//changed api to data
+            return String.Concat("https://", domain, "/tokens/", sceneid);//changed api to data
         }
 
         //UNITY used to open scenes on sceneexplorer
@@ -69,7 +73,7 @@ namespace CognitiveVR
         //UNITY where the user goes to download the sdk
         public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
 
-
+        public const string DASHBOARD = "http://dashboard.cognitivevr.io";
 
 
         //session urls
@@ -77,37 +81,37 @@ namespace CognitiveVR
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
-            return string.Concat("https://data.sceneexplorer.com/dynamics/", sceneid, "?version=",versionnumber);
+            return string.Concat("https://", domain, "/dynamics/", sceneid, "?version=",versionnumber);
         }
 
         //POST gaze json data to scene explorer
         public static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://data.sceneexplorer.com/gaze/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/gaze/", sceneid, "?version=", versionnumber);
         }
 
         //POST event json data to scene explorer
         public static string POSTEVENTDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://data.sceneexplorer.com/events/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/events/", sceneid, "?version=", versionnumber);
         }
 
         //POST sensor json data to scene explorer
         public static string POSTSENSORDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://data.sceneexplorer.com/sensors/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/sensors/", sceneid, "?version=", versionnumber);
         }
 
 
         //GET request question set
-        public static string GETEXITPOLLQUESTIONSET(string customerid, string hookname)
+        public static string GETEXITPOLLQUESTIONSET(string hookname)
         {
-            return string.Concat("https://api.cognitivevr.io/products/", customerid, "/questionSetHooks/", hookname, "/questionset");
+            return string.Concat("https://api.cognitivevr.io/products/questionSetHooks/", hookname, "/questionset");
         }
         //POST question set responses
-        public static string POSTEXITPOLLRESPONSES(string customerid, string questionsetname, int questionsetversion)
+        public static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
-            return string.Concat("https://api.cognitivevr.io/products/", customerid, "/questionSets/", questionsetname, "/",questionsetversion, "/responses");
+            return string.Concat("https://api.cognitivevr.io/products/questionSets/", questionsetname, "/",questionsetversion, "/responses");
         }
     }
 }

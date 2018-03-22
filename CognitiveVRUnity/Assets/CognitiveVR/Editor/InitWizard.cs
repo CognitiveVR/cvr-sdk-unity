@@ -21,16 +21,15 @@ public class InitWizard : EditorWindow
 
         window.GetSelectedSDKs();
 
-        //cognitive3dLogo = EditorCore.LogoTexture;
+        CognitiveVR_SceneExportWindow.ClearUploadSceneSettings();
     }
 
-    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explaindynamic", "explainscene", "listdynamics", "uploadscene", "upload", "uploadsummary" };
+    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explaindynamic", "explainscene", "listdynamics", "uploadscene", "upload", "uploadsummary", "done" };
     public int currentPage;
 
     private void OnGUI()
     {
         GUI.skin = EditorCore.WizardGUISkin;
-
         GUI.DrawTexture(new Rect(0, 0, 500, 500), EditorGUIUtility.whiteTexture);
 
         switch (pageids[currentPage])
@@ -44,6 +43,7 @@ public class InitWizard : EditorWindow
             case "uploadscene": UploadSceneUpdate(); break;
             case "upload": UploadUpdate(); break;
             case "uploadsummary": UploadSummaryUpdate(); break;
+            case "done": DoneUpdate(); break;
         }
 
         DrawFooter();
@@ -59,14 +59,14 @@ public class InitWizard : EditorWindow
         {
             //upload new version
             GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Scene Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.\n\n\n"+
+            GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.\n\n\n"+
                 "<color=#8A9EB7FF>This scene has already been uploaded to SceneExplorer!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again.\n\n" +
                 "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
         }
         else
         {
             GUI.Label(boldlabelrect, "Welcome to the Cognitive3D SDK Scene Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and your scene's analytics will be ready for production at the end of this setup.", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.", "normallabel");
         }
     }
 
@@ -520,6 +520,16 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
     }
 
+    void DoneUpdate()
+    {
+        GUI.Label(steptitlerect, "STEP 9 - DONE", "steptitle");
+        GUI.Label(new Rect(30, 45, 440, 440), "That's it!\n\nThe <color=#8A9EB7FF>CognitiveVR_Manager</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard", "boldlabel");
+        if (GUI.Button(new Rect(150,300,200,40),"Open Dashboard","button_bluetext"))
+        {
+            Application.OpenURL(Constants.DASHBOARD);
+        }
+    }
+
     void DrawFooter()
     {
         GUI.color = EditorCore.BlueishGrey;
@@ -560,6 +570,16 @@ public class InitWizard : EditorWindow
                 break;
             case "selectsdk":
                 onclick += () => EditorCore.SetPlayerDefine(selectedsdks);
+                onclick += () =>
+                {
+                    var found = Object.FindObjectOfType<CognitiveVR_Manager>();
+                    if (found == null) //add cognitivevr_manager
+                    {
+                        GameObject newManager = new GameObject("CognitiveVR_Manager");
+                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
+                        newManager.AddComponent<CognitiveVR_Manager>();
+                    }
+                };
                 break;
             case "listdynamics":
 
@@ -600,10 +620,13 @@ public class InitWizard : EditorWindow
                 break;
             case "uploadsummary":
 
+                //TODO close init wizard or something
+
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
                     ManageDynamicObjects.UploadManifest();
+                    currentPage = 9;
                 };
 
                 //fourth upload dynamics
@@ -620,13 +643,16 @@ public class InitWizard : EditorWindow
 
                     if (current == null || string.IsNullOrEmpty(current.SceneId))
                     {
-                        //new scene
-                        CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to SceneExplorer?", "Ok", "Cancel"))
+                        {
+                            //new scene
+                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        }
                     }
                     else
                     {
                         //new version
-                        if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok"))
+                        if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok","Cancel"))
                         {
                             CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
                         }
@@ -648,6 +674,7 @@ public class InitWizard : EditorWindow
                         {
                             if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                             {
+                                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
                             }
                             else
                             {
@@ -659,10 +686,13 @@ public class InitWizard : EditorWindow
                             return;//cancel from 'do you want to save' popup
                         }
                     }
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
                 };
                 
                 text = "Upload";
+                break;
+            case "done":
+                onclick = () => Close();
+                text = "Close";
                 break;
         }
 
@@ -681,7 +711,8 @@ public class InitWizard : EditorWindow
         {
             if (GUI.Button(buttonrect, text))
             {
-                onclick.Invoke();
+                if (onclick != null)
+                    onclick.Invoke();
             }
         }
     }
@@ -713,7 +744,10 @@ public class InitWizard : EditorWindow
                 break;
             case "uploadsummary":
                 //buttonDisabled = true;
-                text = "Cancel";
+                //text = "Cancel";
+                break;
+            case "done":
+                onclick = null;
                 break;
         }
 
@@ -725,7 +759,8 @@ public class InitWizard : EditorWindow
         {
             if (GUI.Button(buttonrect, text, "button_disabled"))
             {
-                onclick.Invoke();
+                if (onclick != null)
+                    onclick.Invoke();
             }
         }
     }

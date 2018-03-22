@@ -45,7 +45,6 @@ public class EditorNetwork
     public static void Post(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
         if (headers == null) { headers = new Dictionary<string, string>(); }
-        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
         if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
 
         var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
@@ -60,7 +59,6 @@ public class EditorNetwork
     public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
         if (headers == null) { headers = new Dictionary<string, string>(); }
-        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
         if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
         WWW www = new WWW(url, bytecontent,headers);
 
@@ -73,7 +71,6 @@ public class EditorNetwork
     public static void Post(string url, WWWForm formcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
         if (headers == null) { headers = new Dictionary<string, string>(); }
-        if (!headers.ContainsKey("Content-Type")) { headers.Add("Content-Type", "application/json"); }
         if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
         WWW www = new WWW(url, formcontent.data,headers);
 
@@ -96,7 +93,7 @@ public class EditorNetwork
                 EditorUtility.ClearProgressBar();
 
             int responseCode = CognitiveVR.Util.GetResponseCode(EditorWebRequests[i].Request.responseHeaders);
-            Debug.Log("response from " + EditorWebRequests[i].Request.url + ": " + responseCode + " text " + EditorWebRequests[i].Request.text);
+            Util.logDebug("webresponse from " + EditorWebRequests[i].Request.url + ": " + responseCode + " [TEXT] " + EditorWebRequests[i].Request.text + " [ERROR] " + EditorWebRequests[i].Request.error);
             if (EditorWebRequests[i].Response != null)
             {
                 EditorWebRequests[i].Response.Invoke(responseCode, EditorWebRequests[i].Request.error, EditorWebRequests[i].Request.text);

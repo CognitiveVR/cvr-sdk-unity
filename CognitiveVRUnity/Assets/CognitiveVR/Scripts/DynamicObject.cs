@@ -1232,7 +1232,7 @@ namespace CognitiveVR
             {
                 if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {
-                    var collider = GetComponentInParent<Collider>();
+                    var collider = GetComponentInChildren<Collider>();
                     if (collider == null)
                     {
                         return false;

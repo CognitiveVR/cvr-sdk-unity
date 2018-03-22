@@ -187,9 +187,8 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     {
         get
         {
-            if (string.IsNullOrEmpty(BlenderPath)) { Debug.Log("editor core blender path is null or empty"); return false; }
+            if (string.IsNullOrEmpty(BlenderPath)) { Debug.Log("EditorCore BlenderPath is null or empty"); return false; }
 #if UNITY_EDITOR_WIN
-            Debug.Log("editor core is blender path valid " + BlenderPath.ToLower());
             return BlenderPath.ToLower().EndsWith("blender.exe");
 #elif UNITY_EDITOR_OSX
             return CBlenderPath.ToLower().EndsWith("blender.app");
@@ -436,7 +435,8 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             if (string.IsNullOrEmpty(currentSettings.SceneId))
             {
                 Debug.LogWarning("SendSceneVersionRequest Current scene doesn't have an id!");
-                refreshSceneVersionComplete.Invoke();
+                if (refreshSceneVersionComplete != null)
+                    refreshSceneVersionComplete.Invoke();
                 return;
             }
 
@@ -461,19 +461,22 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         {
             RefreshSceneVersionComplete = null;
             //internal server error
-            Util.logDebug("GetSettingsResponse " + responsecode);
+            Util.logDebug("GetSettingsResponse [ERROR] " + responsecode);
             return;
         }
 
-        Debug.Log("GetSettingsResponse - got response with scene version");
+        Debug.Log("GetSceneVersionResponse [TEXT] " + text);
         var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
 
         var settings = CognitiveVR_Preferences.FindCurrentScene();
         if (settings == null) { RefreshSceneVersionComplete = null; return; }
-        settings.VersionId = collection.GetLatestVersion().id;
-        settings.VersionNumber = collection.GetLatestVersion().versionNumber;
-        
-        AssetDatabase.SaveAssets();
+        if (collection != null)
+        {
+            settings.VersionId = collection.GetLatestVersion().id;
+            settings.VersionNumber = collection.GetLatestVersion().versionNumber;
+
+            AssetDatabase.SaveAssets();
+        }
 
         if (RefreshSceneVersionComplete != null)
             RefreshSceneVersionComplete.Invoke();

@@ -29,14 +29,13 @@ namespace CognitiveVR
         [MenuItem("cognitive3D/Open Web Dashboard...", priority = 5)]
         static void Cognitive3DDashboard()
         {
-            Application.OpenURL("http://dashboard.cognitivevr.io");
+            Application.OpenURL(Constants.DASHBOARD);
         }
 
         [MenuItem("cognitive3D/Check for Updates...", priority = 10)]
         static void CognitiveCheckUpdates()
         {
             EditorCore.ForceCheckUpdates();
-            //Application.OpenURL("http://dashboard.cognitivevr.io");
         }
 
         [MenuItem("cognitive3D/Scene Setup", priority = 55)]
@@ -51,17 +50,13 @@ namespace CognitiveVR
         {
             //open window
             ManageDynamicObjects.Init();
-            //CognitiveVR_ObjectManifestWindow.Init();
         }
 
         [MenuItem("cognitive3D/Advanced Options", priority = 65)]
         static void Cognitive3DOptions()
         {
-            //open window
+            //select asset
             Selection.activeObject = EditorCore.GetPreferences();
-
-            //CognitiveVR_ComponentSetup.Init();
-            //CognitiveVR_Settings.Init();
         }
     }
 }

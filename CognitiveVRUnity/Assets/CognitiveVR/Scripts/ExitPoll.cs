@@ -199,7 +199,7 @@ namespace CognitiveVR
         static IEnumerator RequestAllQuestions()
         {
             //TODO finish caching questions on startup
-            string url = "http://api.cognititivevr.io/customerid/allquestions";
+            string url = "http cognitive /customerid/allquestions";
             url = "nowhere";
             WWW responseRequest = new WWW(url);
             yield return responseRequest;
@@ -243,7 +243,7 @@ namespace CognitiveVR
             {
                 //hook name needs to be pulled out of json text file so it knows where to send
                 string url;
-                //string url = "http://api.cognititivevr.io/"+CognitiveVR_Preferences.Instance.CustomerID+"/"+ +"/responses";
+                //string url = "http cognititive /"+CognitiveVR_Preferences.Instance.CustomerID+"/"+ +"/responses";
                 url = "nowhere";
                 WWW responseRequest = new WWW(url);
                 yield return responseRequest;
@@ -340,7 +340,7 @@ namespace CognitiveVR
         IEnumerator RequestQuestions()
         {
             //hooks/questionsets. ask hook by id what their questionset is
-            string url = Constants.GETEXITPOLLQUESTIONSET(CognitiveVR_Preferences.Instance.APIKey, RequestQuestionHookName);
+            string url = Constants.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
@@ -636,7 +636,7 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            string url = Constants.POSTEXITPOLLRESPONSES(CognitiveVR_Preferences.Instance.APIKey, QuestionSetName, questionSetVersion);
+            string url = Constants.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);

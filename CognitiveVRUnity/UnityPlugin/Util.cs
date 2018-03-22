@@ -16,7 +16,7 @@ namespace CognitiveVR
         public static Vector3 vector_forward = new Vector3(0, 0, 1);
 
 
-        private const string LOG_TAG = "com.cvr.cognitivevr: ";
+        private const string LOG_TAG = "[COGNITIVE3D] ";
 		
 		static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
         public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
@@ -174,7 +174,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("GetResponseCode could not find a status. Likely url is incorrect");
+                Util.logDebug("GetResponseCode could not find a status. Likely url is incorrect");
             }
             return returnCode;
         }

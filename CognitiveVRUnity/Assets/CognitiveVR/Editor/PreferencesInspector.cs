@@ -115,8 +115,8 @@ namespace CognitiveVR
 
             EditorCore.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Meshes Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), EditorCore.ExportSettings.ExportStaticOnly);
             EditorCore.ExportSettings.MinExportGeoSize = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Minimum Export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), EditorCore.ExportSettings.MinExportGeoSize),0,100);
-            EditorCore.ExportSettings.ExplorerMinimumFaceCount = EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), EditorCore.ExportSettings.ExplorerMinimumFaceCount);
-            EditorCore.ExportSettings.ExplorerMaximumFaceCount = EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), EditorCore.ExportSettings.ExplorerMaximumFaceCount);
+            EditorCore.ExportSettings.ExplorerMinimumFaceCount = Mathf.Max(EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), EditorCore.ExportSettings.ExplorerMinimumFaceCount),0);
+            EditorCore.ExportSettings.ExplorerMaximumFaceCount = Mathf.Max(EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), EditorCore.ExportSettings.ExplorerMaximumFaceCount), EditorCore.ExportSettings.ExplorerMinimumFaceCount);
             EditorCore.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), EditorCore.ExportSettings.DiffuseTextureName);
 
             GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth") };
@@ -183,12 +183,15 @@ namespace CognitiveVR
                     if (current == null || string.IsNullOrEmpty(current.SceneId))
                     {
                         //new scene
-                        CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to SceneExplorer?", "Ok", "Cancel"))
+                        {
+                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                        }
                     }
                     else
                     {
                         //new version
-                        if (EditorUtility.DisplayDialog("Upload New Version","Upload a new version of this existing scene? Will archive previous version","Ok"))
+                        if (EditorUtility.DisplayDialog("Upload New Version","Upload a new version of this existing scene? Will archive previous version","Ok","Cancel"))
                         {
                             CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
                         }
@@ -202,6 +205,7 @@ namespace CognitiveVR
                     {
                         if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                         {
+                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
                         }
                         else
                         {
@@ -213,7 +217,7 @@ namespace CognitiveVR
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                
             }
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
