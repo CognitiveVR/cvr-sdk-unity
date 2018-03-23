@@ -449,7 +449,7 @@ public class ManageDynamicObjects : EditorWindow
                 debug += v + "\n";
             }
             Debug.LogWarning(debug);
-            EditorUtility.DisplayDialog("Error", "One or more dynamic objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
+            EditorUtility.DisplayDialog("Error", "One or more Dynamic Objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
         }
     }
 }

@@ -1159,7 +1159,7 @@ namespace CognitiveVR
         {
             if (transform == null)
             {
-                EditorUtility.DisplayDialog("No source object selected!", "Please select one or more dynamic objects", "Ok");
+                EditorUtility.DisplayDialog("Export Dynamic Object", "No source object selected! Please select one or more Dynamic Objects", "Ok");
                 return false;
             }
 

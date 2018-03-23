@@ -6,13 +6,12 @@ namespace CognitiveVR
     /// <summary>
     /// holds category and properties of events
     /// </summary>
-    [System.Obsolete("Use CustomEvent instead")]
-    public class Transaction
+    public class CustomEvent
     {
         private string _category;
         private Dictionary<string, object> _properties = new Dictionary<string, object>();
 
-        public Transaction(string category)
+        public CustomEvent(string category)
         {
             _category = category;
         }
@@ -36,7 +35,7 @@ namespace CognitiveVR
         /// </summary>
         /// <returns>The transaction itself (to support a builder-style implementation)</returns>
         /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
-        public Transaction setProperties(Dictionary<string, object> properties)
+        public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
             if (null != properties)
             {
@@ -52,54 +51,44 @@ namespace CognitiveVR
         /// <returns>The transaction itself (to support a builder-style implementation)</returns>
         /// <param name="key">Key for transaction state property</param>
         /// <param name="value">Value for transaction state property</param>
-        public Transaction setProperty(string key, object value)
+        public CustomEvent SetProperty(string key, object value)
         {
             _properties.Add(key, value);
             return this;
         }
-        
-        public enum TimeoutMode
+
+        /// <summary>
+        /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
+        /// </summary>
+        /// <param name="timeout">How long to keep the transaction 'open' without new activity</param>
+        /// <param name="mode">The type of activity which will keep the transaction open</param>
+        public void Send(Vector3 position)
         {
-            Transaction,
-            Any
+            float[] pos = new float[3] { 0, 0, 0 };
+
+            pos[0] = position.x;
+            pos[1] = position.y;
+            pos[2] = position.z;
+
+            Instrumentation.SendCustomEvent(_category, _properties, pos);
         }
 
-        private const string TXN_SUCCESS = "success";
-        private const string TXN_ERROR = "error";
-        
-        public void end(string result = TXN_SUCCESS)
+        /// <summary>
+        /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
+        /// </summary>
+        /// <param name="timeout">How long to keep the transaction 'open' without new activity</param>
+        /// <param name="mode">The type of activity which will keep the transaction open</param>
+        public void Send()
         {
-            Instrumentation.SendCustomEvent(_category, _properties, HMD.position);
-        }
-        
-        public void end(Vector3 position, string result = TXN_SUCCESS)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, position);
-        }
-        
-        public void begin(Vector3 position, double timeout = 0, TimeoutMode mode = TimeoutMode.Transaction)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, position);
-        }
-        
-        public void begin(double timeout = 0, TimeoutMode mode = TimeoutMode.Transaction)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, HMD.position);
-        }
-        
-        public void beginAndEnd(string result = TXN_SUCCESS)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, HMD.position);
-        }
-        
-        public void beginAndEnd(Vector3 position, string result = TXN_SUCCESS)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, position);
-        }
-        
-        public void update(int progress)
-        {
-            Instrumentation.SendCustomEvent(_category, _properties, HMD.position);
+            if (HMD == null) { return; }
+
+            float[] pos = new float[3] { 0, 0, 0 };
+
+            pos[0] = HMD.position.x;
+            pos[1] = HMD.position.y;
+            pos[2] = HMD.position.z;
+
+            Instrumentation.SendCustomEvent(_category, _properties, pos);
         }
     }
 }

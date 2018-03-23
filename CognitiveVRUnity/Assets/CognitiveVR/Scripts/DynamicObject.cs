@@ -174,7 +174,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logWarning("dynamic object destroyed");
+                Util.logWarning("Dynamic Object destroyed");
                 return;
             }
 
@@ -409,7 +409,7 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                CognitiveVR.Util.logWarning("Dynamic Object Update - sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logWarning("Dynamic Object Update - sceneid is empty. do not send Dynamic Objects to sceneexplorer");
                 //NewSnapshots.Clear();
                 //NewObjectManifest.Clear();
                 NewSnapshotQueue.Clear();
@@ -841,7 +841,7 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                CognitiveVR.Util.logDebug("sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
                 {
                     NewSnapshots[i].ReturnToPool();
@@ -942,7 +942,7 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                CognitiveVR.Util.logDebug("sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 int count = NewSnapshotQueue.Count;
                 for (int i = 0; i < count; i++)
                 {
@@ -1216,7 +1216,7 @@ namespace CognitiveVR
                     NewSnapshot().SetEnabled(false);
                 if (TotalGazeDuration > 0)
                 {
-                    new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).Send();
+                    new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                     TotalGazeDuration = 0;
                 }
                 return;
@@ -1269,7 +1269,7 @@ namespace CognitiveVR
         {
             if (TotalGazeDuration > 0)
             {
-                new Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).Send();
+                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
             }
         }

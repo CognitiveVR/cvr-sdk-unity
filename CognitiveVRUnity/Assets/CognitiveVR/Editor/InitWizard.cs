@@ -456,6 +456,7 @@ public class InitWizard : EditorWindow
             }
             CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
             UnityEditor.AssetDatabase.SaveAssets();
         }
 
@@ -615,7 +616,7 @@ public class InitWizard : EditorWindow
                 appearDisabled = dynamicsFromSceneExported != dynamics.Length;
                 if (appearDisabled)
                 {
-                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all dynamic objects?", "Yes", "No")) { currentPage++; } };
+                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all Dynamic Objects?", "Yes", "No")) { currentPage++; } };
                 }
                 if (dynamics.Length == 0 && dynamicsFromSceneExported == 0)
                 {
@@ -645,8 +646,6 @@ public class InitWizard : EditorWindow
                 buttonrect = new Rect(290, 460, 200, 30);
                 break;
             case "uploadsummary":
-
-                //TODO close init wizard or something
 
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()

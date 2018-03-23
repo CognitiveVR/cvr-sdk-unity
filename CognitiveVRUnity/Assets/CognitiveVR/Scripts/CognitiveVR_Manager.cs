@@ -62,7 +62,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                new Transaction("cvr.session").Send();
+                new CustomEvent("cvr.session").Send();
             }
             else //some failure
             {
@@ -446,6 +446,7 @@ namespace CognitiveVR
 
             if (!CognitiveVR_Preferences.Instance.IsAPIKeyValid)
             {
+                Util.logDebug("CognitiveVR_Manager Initialize does not have valid apikey");
                 return;
             }
             if (OutstandingInitRequest)
@@ -485,6 +486,7 @@ namespace CognitiveVR
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            Debug.Log("scene manager scene loaded event");
             DynamicObject.ClearObjectIds();
             if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
@@ -596,13 +598,14 @@ namespace CognitiveVR
         /// </summary>
         public void EndSession()
         {
+            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
+            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
+
             Core.SendDataEvent();
 
-            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
-            new Transaction("cvr.session").setProperty("sessionlength", playtime).Send();
+            //Destroy(instance);
 
-            Destroy(FindObjectOfType<CognitiveVR_Manager>());
-
+            CleanupEvents();
             Core.reset();
             initResponse = Error.NotInitialized;
         }
@@ -712,12 +715,12 @@ namespace CognitiveVR
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
-                new Transaction("cvr.session").setProperty("sessionlength",playtime).Send();
+                new CustomEvent("cvr.session").SetProperty("sessionlength",playtime).Send();
                 return;
             }
 
 			CognitiveVR.Util.logDebug("session length " + playtime);
-            new Transaction("cvr.session").setProperty("sessionlength", playtime).Send();
+            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
 
@@ -739,7 +742,6 @@ namespace CognitiveVR
 
         #endregion
 
-        //TODO how to write new entity properties? where is entity name set?
         public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
         {
             if (clearNewProperties)

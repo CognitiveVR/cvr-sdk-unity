@@ -548,20 +548,20 @@ namespace CognitiveVR
 
         void SendResponsesAsTransaction()
         {
-            var exitpoll = new Transaction("cvr.exitpoll");
-            exitpoll.setProperty("userId", CognitiveVR.Core.UserId);
-            exitpoll.setProperty("questionSetId", QuestionSetId);
-            exitpoll.setProperty("hook", RequestQuestionHookName);
+            var exitpoll = new CustomEvent("cvr.exitpoll");
+            exitpoll.SetProperty("userId", CognitiveVR.Core.UserId);
+            exitpoll.SetProperty("questionSetId", QuestionSetId);
+            exitpoll.SetProperty("hook", RequestQuestionHookName);
 
             var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
             {
-                exitpoll.setProperty("sceneId", scenesettings.SceneId);
+                exitpoll.SetProperty("sceneId", scenesettings.SceneId);
             }
 
             foreach (var property in transactionProperties)
             {
-                exitpoll.setProperty(property.Key, property.Value);
+                exitpoll.SetProperty(property.Key, property.Value);
             }
             exitpoll.Send(CurrentExitPollPanel.transform.position);
             Core.SendDataEvent();

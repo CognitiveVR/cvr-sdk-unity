@@ -16,10 +16,13 @@ namespace CognitiveVR
         static SensorRecorder()
         {
             Core.OnSendData += Core_OnSendData;
+            Core.CheckSessionId();
         }
 
         public static void RecordDataPoint(string category, float value)
         {
+            Core.CheckSessionId();
+
             if (CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));

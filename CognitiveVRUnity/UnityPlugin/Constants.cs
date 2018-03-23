@@ -76,25 +76,25 @@ namespace CognitiveVR
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/dynamics/", sceneid, "?version=",versionnumber);
+            return string.Concat("https://", domain, "/v", version, "/dynamics/", sceneid, "?version=",versionnumber.ToString());
         }
 
         //POST gaze json data to scene explorer
         public static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/gaze/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/v", version, "/gaze/", sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST event json data to scene explorer
         public static string POSTEVENTDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/events/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/v", version, "/events/", sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST sensor json data to scene explorer
         public static string POSTSENSORDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/sensors/", sceneid, "?version=", versionnumber);
+            return string.Concat("https://", domain, "/v", version, "/sensors/", sceneid, "?version=", versionnumber.ToString());
         }
 
 
@@ -106,7 +106,7 @@ namespace CognitiveVR
         //POST question set responses
         public static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
-            return string.Concat("https://", domain, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion, "/responses");
+            return string.Concat("https://", domain, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
     }
 }

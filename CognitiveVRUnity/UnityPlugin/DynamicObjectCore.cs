@@ -18,6 +18,7 @@ namespace CognitiveVR
         static DynamicObjectCore()
         {
             Core.OnSendData += Core_OnSendData;
+            Core.CheckSessionId();
         }
 
         public static void RecordDynamic(double timestamp, Vector3 position, Quaternion rotation)

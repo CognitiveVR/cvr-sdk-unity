@@ -38,11 +38,11 @@ namespace CognitiveVR.Components
                 {
                     Util.logDebug("controller collision");
                     controller0GUID = Util.GetUniqueId();
-                    new Transaction("cvr.collision").setProperty("device", "left controller").setProperty("state","begin").Send();
+                    new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state","begin").Send();
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller0GUID))
                 {
-                    new Transaction("cvr.collision").setProperty("device", "left controller").setProperty("state", "end").Send();
+                    new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
                     controller0GUID = string.Empty;
                 }
             }
@@ -59,11 +59,11 @@ namespace CognitiveVR.Components
                 {
                     Util.logDebug("controller collision");
                     controller1GUID = Util.GetUniqueId();
-                    new Transaction("cvr.collision").setProperty("device", "right controller").setProperty("state", "begin").Send();
+                    new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
                 }
                 else if (!hit && !string.IsNullOrEmpty(controller1GUID))
                 {
-                    new Transaction("cvr.collision").setProperty("device", "right controller").setProperty("state", "end").Send();
+                    new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
                     controller1GUID = string.Empty;
                 }
             }

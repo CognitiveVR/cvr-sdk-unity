@@ -18,6 +18,7 @@ namespace CognitiveVR
         static GazeCore()
         {
             Core.OnSendData += Core_OnSendData;
+            Core.CheckSessionId();
         }
 
         public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane

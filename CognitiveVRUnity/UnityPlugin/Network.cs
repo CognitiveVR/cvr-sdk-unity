@@ -133,6 +133,5 @@ namespace CognitiveVR
             WWW www = new WWW(url, bytecontent);
             Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
         }
-        //TODO clear post headers OnEndSession event
     }
 }

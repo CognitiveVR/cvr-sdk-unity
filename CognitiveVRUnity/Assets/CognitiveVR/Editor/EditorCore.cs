@@ -483,7 +483,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         {
             settings.VersionId = collection.GetLatestVersion().id;
             settings.VersionNumber = collection.GetLatestVersion().versionNumber;
-            Debug.Log("refresh scene version collection");
+            EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
             AssetDatabase.SaveAssets();
         }
 

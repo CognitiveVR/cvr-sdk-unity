@@ -91,6 +91,16 @@ namespace CognitiveVR
             }
         }
 
+        //sets session timestamp, uniqueid and sessionid if not set otherwise
+        public static void CheckSessionId()
+        {
+            if (string.IsNullOrEmpty(_sessionId))
+            {
+                Debug.Log("check session id create new sessionid");
+                _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
+            }
+        }
+
         public static string CurrentSceneId;
         public static int CurrentSceneVersionNumber;
         //public static int CurrensSceneVersionId; //was set in cognitivevr_manager on scene change; never used
@@ -107,6 +117,7 @@ namespace CognitiveVR
             UserId = null;
             _sessionId = null;
             _timestamp = 0;
+            _uniqueId = null;
             DeviceId = null;
             Initialized = false;
             CurrentSceneId = null;
@@ -191,8 +202,8 @@ namespace CognitiveVR
                     //HttpRequest.init(hubObjName, false);
 
                     //set session timestamp
-                    var sessionid = SessionID;
-                    Util.logDebug("Begin session " + sessionid);
+                    CheckSessionId();
+                    Util.logDebug("Begin session " + SessionID);
 
                     //update device state
                     //update user state

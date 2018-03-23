@@ -16,6 +16,7 @@ namespace CognitiveVR
         static Instrumentation()
         {
             Core.OnSendData += Core_OnSendData;
+            Core.CheckSessionId();
         }
 
         private static void Core_OnSendData()
@@ -31,8 +32,8 @@ namespace CognitiveVR
         //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
 
-        static int maxCachedEvents = 0;
-        static int cachedEvents = 16;
+        static int maxCachedEvents = 16;
+        static int cachedEvents = 0;
 
         private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
@@ -81,7 +82,7 @@ namespace CognitiveVR
 
             if (string.IsNullOrEmpty(Core.CurrentSceneId))
             {
-                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for scene! do not upload transactions to sceneexplorer");
+                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
                 return;
             }
 
@@ -97,12 +98,12 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
-        public static void SendTransaction(string category, Dictionary<string, object> properties, Vector3 position)
+        public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position)
         {
-            SendTransaction(category, properties, new float[3]{ position.x,position.y,position.z});
+            SendCustomEvent(category, properties, new float[3]{ position.x,position.y,position.z});
         }
 
-        public static void SendTransaction(string category, Dictionary<string, object> properties, float[] position)
+        public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position)
         {
             TransactionBuilder.Append("{");
             TransactionBuilder.Append(JsonUtil.SetString("name", category));
@@ -141,5 +142,12 @@ namespace CognitiveVR
                 SendTransactions();
             }
         }
+
+#pragma warning disable 618
+        public static Transaction Transaction(string category)
+        {
+            return new CognitiveVR.Transaction(category);
+        }
+#pragma warning restore 618
     }
 }

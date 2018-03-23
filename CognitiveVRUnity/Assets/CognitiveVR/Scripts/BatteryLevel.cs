@@ -46,7 +46,7 @@ namespace CognitiveVR.Components
             {
                 Util.logDebug("batterylevel " + batteryLevel);
 
-                new Transaction("cvr.battery").setProperty("batterylevel", batteryLevel).Send();
+                new CustomEvent("cvr.battery").SetProperty("batterylevel", batteryLevel).Send();
             }
 #endif
         }

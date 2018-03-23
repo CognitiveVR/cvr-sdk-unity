@@ -19,7 +19,7 @@ namespace CognitiveVR
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
-            p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a dynamic object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
+            p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
             //p.TrackGazePoint
 
             EditorGUILayout.Space();
@@ -161,7 +161,7 @@ namespace CognitiveVR
 
             bool hasUploadFiles = EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
             
-            EditorGUI.BeginDisabledGroup(!hasUploadFiles); //TODO should be able to upload a scene even if there is no static meshes. could be 360 videos scene or something
+            EditorGUI.BeginDisabledGroup(!hasUploadFiles);
             if (GUILayout.Button("Upload", "ButtonRight"))
             {
                 System.Action completedRefreshSceneVersion2 = delegate ()

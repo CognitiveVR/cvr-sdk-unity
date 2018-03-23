@@ -461,9 +461,7 @@ namespace CognitiveVR
                 wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
             }
 
-            //TODO transfer this to CognitiveVR.EditorNetworkManager
-
-            if (hasExistingSceneId)
+            if (hasExistingSceneId) //upload new verison of existing scene
             {
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)
@@ -475,9 +473,9 @@ namespace CognitiveVR
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
+                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
             }
-            else
+            else //upload as new scene
             {
                 //posting wwwform with headers
                 
@@ -493,7 +491,7 @@ namespace CognitiveVR
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
+                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
                 //Debug.Log("Upload new scene");
             }
 
@@ -501,8 +499,10 @@ namespace CognitiveVR
             //EditorApplication.update += UpdateUploadData;
         }
 
-        static void PostUploadResponse(int responseCode, string error, string text)
+        static void PostSceneUploadResponse(int responseCode, string error, string text)
         {
+            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode + " [ERROR] " + error + " [TEXT] " + text);
+
             if (responseCode != 200 && responseCode != 201)
             {
                 Debug.LogError("Scene Upload Error " + error);
@@ -525,7 +525,9 @@ namespace CognitiveVR
             string responseText = text.Replace("\"", "");
             if (!string.IsNullOrEmpty(responseText)) //uploading a new version returns empty. uploading a new scene returns sceneid
             {
+                EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
                 UploadSceneSettings.SceneId = responseText;
+                AssetDatabase.SaveAssets();
             }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
@@ -534,7 +536,7 @@ namespace CognitiveVR
             //SendSceneVersionRequest(UploadSceneSettings);
 
             GUI.FocusControl("NULL");
-
+            EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
             AssetDatabase.SaveAssets();
 
             if (UploadComplete != null)
@@ -565,18 +567,26 @@ namespace CognitiveVR
 
             var dynamics = FindObjectsOfType<DynamicObject>();
 
-            Debug.Log("Starting export of " + dynamics.Length + " dynamic objects");
+            Debug.Log("Starting export of " + dynamics.Length + " Dynamic Objects");
             
 
             //export all the objects
             int successfullyExportedCount = 0;
             List<string> exportedMeshNames = new List<string>();
+            List<string> totalExportedMeshNames = new List<string>();
 
             foreach (var dynamic in dynamics)
             {
-                if (dynamic.UseCustomMesh && string.IsNullOrEmpty(dynamic.MeshName))
+                if (!dynamic.UseCustomMesh)
                 {
                     //skip exporting a mesh with no name
+                    continue;
+                }
+                if (string.IsNullOrEmpty(dynamic.MeshName))
+                {
+                    if (!totalExportedMeshNames.Contains(""))
+                        totalExportedMeshNames.Add("");
+                    Debug.LogWarning("GameObject " + dynamic.gameObject + " has empty mesh name");
                     continue;
                 }
 
@@ -608,6 +618,8 @@ namespace CognitiveVR
                         continue;
                     }
                 }
+                if (!totalExportedMeshNames.Contains(dynamic.MeshName))
+                    totalExportedMeshNames.Add(dynamic.MeshName);
 
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
@@ -617,11 +629,11 @@ namespace CognitiveVR
 
             if (successfullyExportedCount == 0)
             {
-                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
                 return false;
             }
 
-            EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + dynamics.Length + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok"); //TODO reword export window
+            EditorUtility.DisplayDialog("Dynamic Object Export", "From all Dynamic Objects in scene, found " + totalExportedMeshNames.Count + " unique mesh names and successfully exported " + successfullyExportedCount, "Ok");
             return true;
         }
 
@@ -636,7 +648,7 @@ namespace CognitiveVR
 
             if (entireSelection.Count == 0) { Debug.Log("No Dynamic Objects selected"); return false; }
 
-            Debug.Log("Starting export of " + entireSelection.Count + " dynamic objects");
+            Debug.Log("Starting export of " + entireSelection.Count + " Dynamic Objects");
 
             List<Transform> sceneObjects = new List<Transform>();
             sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
@@ -664,17 +676,27 @@ namespace CognitiveVR
             //export all the objects
             int successfullyExportedCount = 0;
             List<string> exportedMeshNames = new List<string>();
+            List<string> totalExportedMeshNames = new List<string>();
 
             foreach (var v in sceneObjects)
             {
                 var dynamic = v.GetComponent<DynamicObject>();
                 if (dynamic == null) { continue; }
 
-                if (dynamic.UseCustomMesh && string.IsNullOrEmpty(dynamic.MeshName))
+                if (!dynamic.UseCustomMesh)
                 {
                     //skip exporting a mesh with no name
                     continue;
                 }
+                if (string.IsNullOrEmpty(dynamic.MeshName))
+                {
+                    if (!totalExportedMeshNames.Contains(""))
+                        totalExportedMeshNames.Add("");
+                    Debug.LogWarning("GameObject " + dynamic.gameObject + " has empty mesh name");
+                    continue;
+                }
+
+                if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
 
                 if (v.GetComponent<Canvas>() != null)
                 {
@@ -702,7 +724,8 @@ namespace CognitiveVR
                         continue;
                     }
                 }
-
+                if (!totalExportedMeshNames.Contains(dynamic.MeshName))
+                    totalExportedMeshNames.Add(dynamic.MeshName);
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
                     exportedMeshNames.Add(dynamic.MeshName);
@@ -717,23 +740,23 @@ namespace CognitiveVR
 
             if (entireSelection.Count == 0)
             {
-                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects selected", "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
                 return false;
             }
 
             if (successfullyExportedCount == 0)
             {
-                EditorUtility.DisplayDialog("Objects exported", "No dynamic objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
                 return false;
             }
 
             if (successfullyExportedCount == 1 && entireSelection.Count == 1)
             {
-                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + " dynamic object", "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
             }
             else
             {
-                EditorUtility.DisplayDialog("Objects exported", "Successfully exported " + successfullyExportedCount + "/" + entireSelection.Count + " dynamic objects using " + exportedMeshNames.Count + " unique mesh names", "Ok"); //TODO reword export window
+                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names and successfully exported " + successfullyExportedCount, "Ok");
             }
             return true;
         }
