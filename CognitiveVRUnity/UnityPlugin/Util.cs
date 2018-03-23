@@ -82,7 +82,7 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Add("cvr.unity.version", Application.unityVersion);
             sDeviceAndAppInfo.Add("cvr.device.model", SystemInfo.deviceModel);
             sDeviceAndAppInfo.Add("cvr.device.type", SystemInfo.deviceType.ToString());
-            sDeviceAndAppInfo.Add("cvr.device.platform", Application.platform);
+            sDeviceAndAppInfo.Add("cvr.device.platform", Application.platform.ToString());
             sDeviceAndAppInfo.Add("cvr.device.os", SystemInfo.operatingSystem);
             sDeviceAndAppInfo.Add("cvr.device.graphics.name", SystemInfo.graphicsDeviceName);
             sDeviceAndAppInfo.Add("cvr.device.graphics.type", SystemInfo.graphicsDeviceType.ToString());

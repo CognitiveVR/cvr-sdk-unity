@@ -805,6 +805,7 @@ namespace CognitiveVR
                         builder.Append("\"device\":[");
                         foreach (var kvp in deviceProperties)
                         {
+                            builder.Append("{");
                             if (kvp.Value.GetType() == typeof(string))
                             {
                                 JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
@@ -813,6 +814,7 @@ namespace CognitiveVR
                             {
                                 JsonUtil.SetObject(kvp.Key, kvp.Value,builder);
                             }
+                            builder.Append("}");
                             builder.Append(",");
                         }
                         builder.Remove(builder.Length - 1, 1); //remove comma
@@ -825,6 +827,7 @@ namespace CognitiveVR
                         builder.Append("\"user\":[");
                         foreach (var kvp in userProperties)
                         {
+                            builder.Append("{");
                             if (kvp.Value.GetType() == typeof(string))
                             {
                                 JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
@@ -833,6 +836,7 @@ namespace CognitiveVR
                             {
                                 JsonUtil.SetObject(kvp.Key, kvp.Value, builder);
                             }
+                            builder.Append("}");
                             builder.Append(",");
                         }
                         builder.Remove(builder.Length - 1, 1); //remove comma

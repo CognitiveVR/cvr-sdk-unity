@@ -217,6 +217,10 @@ namespace CognitiveVR
                         return;//cancel from 'do you want to save' popup
                     }
                 }
+                else
+                {
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                }
                 
             }
             EditorGUI.EndDisabledGroup();

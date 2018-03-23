@@ -92,13 +92,19 @@ public class EditorNetwork
             if (EditorWebRequests[i].IsBlocking)
                 EditorUtility.ClearProgressBar();
 
-            int responseCode = CognitiveVR.Util.GetResponseCode(EditorWebRequests[i].Request.responseHeaders);
-            Util.logDebug("webresponse from " + EditorWebRequests[i].Request.url + ": " + responseCode + " [TEXT] " + EditorWebRequests[i].Request.text + " [ERROR] " + EditorWebRequests[i].Request.error);
-            if (EditorWebRequests[i].Response != null)
+            try
             {
-                EditorWebRequests[i].Response.Invoke(responseCode, EditorWebRequests[i].Request.error, EditorWebRequests[i].Request.text);
+                int responseCode = CognitiveVR.Util.GetResponseCode(EditorWebRequests[i].Request.responseHeaders);
+                Util.logDebug("Got Response from " + EditorWebRequests[i].Request.url + ": [CODE] " + responseCode + " [TEXT] " + EditorWebRequests[i].Request.text + " [ERROR] " + EditorWebRequests[i].Request.error);
+                if (EditorWebRequests[i].Response != null)
+                {
+                    EditorWebRequests[i].Response.Invoke(responseCode, EditorWebRequests[i].Request.error, EditorWebRequests[i].Request.text);
+                }
             }
-            EditorWebRequests.RemoveAt(i);
+            finally //if there is an error in try, still remove request
+            {
+                EditorWebRequests.RemoveAt(i);
+            }
         }
     }
 }

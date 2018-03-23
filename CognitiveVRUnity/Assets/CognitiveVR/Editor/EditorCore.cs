@@ -191,7 +191,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 #if UNITY_EDITOR_WIN
             return BlenderPath.ToLower().EndsWith("blender.exe");
 #elif UNITY_EDITOR_OSX
-            return CBlenderPath.ToLower().EndsWith("blender.app");
+            return BlenderPath.ToLower().EndsWith("blender.app");
 #else
             return false;
 #endif
@@ -418,8 +418,13 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     #endregion
 
     static System.Action RefreshSceneVersionComplete;
+    /// <summary>
+    /// get collection of versions of scene
+    /// </summary>
+    /// <param name="refreshSceneVersionComplete"></param>
     public static void RefreshSceneVersion(System.Action refreshSceneVersionComplete)
     {
+        Debug.Log("refresh scene version");
         //gets the scene version from api and sets it to the current scene
         string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
         var currentSettings = CognitiveVR_Preferences.Instance.FindScene(currentSceneName);
@@ -434,7 +439,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             }
             if (string.IsNullOrEmpty(currentSettings.SceneId))
             {
-                Debug.LogWarning("SendSceneVersionRequest Current scene doesn't have an id!");
+                Debug.Log("SendSceneVersionRequest Current scene doesn't have an id - cannot get scene versions");
                 if (refreshSceneVersionComplete != null)
                     refreshSceneVersionComplete.Invoke();
                 return;
@@ -464,23 +469,28 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             Util.logDebug("GetSettingsResponse [ERROR] " + responsecode);
             return;
         }
-
-        Debug.Log("GetSceneVersionResponse [TEXT] " + text);
-        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
-
         var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings == null) { RefreshSceneVersionComplete = null; return; }
+        if (settings == null)
+        {
+            //this should be impossible, but might happen if changing scenes at exact time
+            RefreshSceneVersionComplete = null;
+            Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
+            return;
+        }
+
+        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
         if (collection != null)
         {
             settings.VersionId = collection.GetLatestVersion().id;
             settings.VersionNumber = collection.GetLatestVersion().versionNumber;
-
+            Debug.Log("refresh scene version collection");
             AssetDatabase.SaveAssets();
         }
 
         if (RefreshSceneVersionComplete != null)
+        {
             RefreshSceneVersionComplete.Invoke();
-        RefreshSceneVersionComplete = null;
+        }
     }
 
     #region GUI
@@ -563,6 +573,52 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return AcceptButtonLarge(text);
     }
 
+    //https://forum.unity.com/threads/how-to-copy-and-paste-in-a-custom-editor-textfield.261087/
+
+    /// <summary>
+    /// Add copy-paste functionality to any text field
+    /// Returns changed text or NULL.
+    /// Usage: text = HandleCopyPaste (controlID) ?? text;
+    /// </summary>
+    public static string HandleCopyPaste(int controlID)
+    {
+        if (controlID == GUIUtility.keyboardControl)
+        {
+            if (Event.current.type == EventType.KeyUp && (Event.current.modifiers == EventModifiers.Control || Event.current.modifiers == EventModifiers.Command))
+            {
+                if (Event.current.keyCode == KeyCode.C)
+                {
+                    Event.current.Use();
+                    TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                    editor.Copy();
+                }
+                else if (Event.current.keyCode == KeyCode.V)
+                {
+                    Event.current.Use();
+                    TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                    editor.Paste();
+                    return editor.text;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// TextField with copy-paste support
+    /// </summary>
+    public static string TextField(Rect rect, string value, int maxlength)
+    {
+        int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
+        if (textFieldID == 0)
+            return value;
+
+        // Handle custom copy-paste
+        value = HandleCopyPaste(textFieldID) ?? value;
+
+        return GUI.TextField(rect, value,maxlength);
+    }
+
     #endregion
 
     public static List<string> ExportedDynamicObjects;
@@ -578,6 +634,9 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
         //read folder
         string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+
+        Directory.CreateDirectory(path);
+
         var subdirectories = Directory.GetDirectories(path);
 
         List<string> ObjectNames = new List<string>();

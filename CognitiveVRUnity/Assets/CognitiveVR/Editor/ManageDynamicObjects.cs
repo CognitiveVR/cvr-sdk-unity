@@ -80,6 +80,8 @@ public class ManageDynamicObjects : EditorWindow
             versionnumber = currentscene.VersionNumber;
         }
 
+        //TODO display uploading label for 2 frames before actually starting to upload. see init wizard implementation
+
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
         if (GUI.Button(new Rect(60, 400, 150, 40), new GUIContent("Upload Selected", "Export and Upload to " + scenename + " version " + versionnumber), buttontextstyle))
         {
@@ -89,11 +91,11 @@ public class ManageDynamicObjects : EditorWindow
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 {
                     if (CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true))
-
-                        UploadManifest();
+                    {
+                        EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
+                    }
                 }
             });
-            //TODO pop up upload ids to scene modal
         }
 
         if (GUI.Button(new Rect(320, 400, 100, 40), new GUIContent("Upload All","Export and Upload to "+ scenename + " version " + versionnumber), buttontextstyle))
@@ -103,19 +105,13 @@ public class ManageDynamicObjects : EditorWindow
                 if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
                 {
                     if (CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true))
-                        UploadManifest();
+                    {
+                        EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
+                    }
                 }
             });
-            //TODO pop up upload ids to scene modal
         }
         EditorGUI.EndDisabledGroup();
-
-        //export and upload all
-
-        /*if (GUI.Button(new Rect(30,400,140,40),"Upload Ids to Scene"))
-        {
-            EditorCore.RefreshSceneVersion(delegate() { ManageDynamicObjects.UploadManifest(); }); //get latest scene version then upload manifest to there
-        }*/
 
         DrawFooter();
         Repaint(); //manually repaint gui each frame to make sure it's responsive
@@ -221,6 +217,18 @@ public class ManageDynamicObjects : EditorWindow
             EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
         }
         EditorGUI.EndDisabledGroup();
+
+        //if (GUI.Button(new Rect(0,450,100,50),"get"))
+        //{
+        //    EditorCore.RefreshSceneVersion(delegate () {
+        //        Dictionary<string, string> headers = new Dictionary<string, string>();
+        //        if (EditorCore.IsDeveloperKeyValid)
+        //        {
+        //            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+        //        }
+        //        EditorNetwork.Get(Constants.GETDYNAMICMANIFEST(currentScene.VersionId), GetManifestResponse, headers, false);
+        //    });
+        //}
     }
 
     //get dynamic object aggregation manifest for the current scene
@@ -269,51 +277,6 @@ public class ManageDynamicObjects : EditorWindow
         }
     }
 
-    //send an http request to get all versions of the current scene
-    /*System.Action onSceneVersionComplete;
-    void GetSceneVersion(System.Action onComplete)
-    {
-        var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
-        if (currentSceneSettings == null)
-        {
-            onSceneVersionComplete = null;
-            return;
-        }
-        if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
-        {
-            Util.logWarning("Cannot Get Scene Version. Current scene doesn't have an id!");
-            onSceneVersionComplete = null;
-            return;
-        }
-
-        onSceneVersionComplete = onComplete;
-        string url = Constants.GETSCENEVERSIONS(currentSceneSettings.SceneId);
-
-        Dictionary<string, string> headers = new Dictionary<string, string>();
-        if (EditorCore.IsDeveloperKeyValid)
-            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-        //EditorNetwork.Get(url, GetSceneSettingsResponse, headers, false);//AUTH
-        Util.logDebug("GetSceneVersion request sent");
-    }*/
-
-    /*void GetSceneSettingsResponse(int responsecode, string error, string text)
-    {
-        Util.logDebug("GetSettingsResponse responseCode: " + responsecode);
-
-        SceneVersionCollection = JsonUtility.FromJson<SceneVersionCollection>(text);
-
-        if (SceneVersionCollection != null)
-        {
-            var sv = SceneVersionCollection.GetLatestVersion();
-            Util.logDebug(sv.versionNumber.ToString());
-            if (onSceneVersionComplete != null)
-            {
-                onSceneVersionComplete.Invoke();
-            }
-        }
-        onSceneVersionComplete = null;
-    }*/
-
     static List<DynamicObject> ObjectsInScene;
     public static List<DynamicObject> GetDynamicObjectsInScene()
     {
@@ -354,7 +317,7 @@ public class ManageDynamicObjects : EditorWindow
     //static SceneVersionCollection SceneVersionCollection;
 
     /// <summary>
-    /// generate manifest from scene objects and upload to latest version of scene
+    /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
     /// </summary>
     public static void UploadManifest()
     {
@@ -362,10 +325,15 @@ public class ManageDynamicObjects : EditorWindow
         //if (SceneVersionCollection == null) { Debug.LogError("SceneVersionCollection is null! Make sure RefreshSceneVersion was called before this"); return; }
 
         ObjectsInScene = null;
-        foreach (var v in GetDynamicObjectsInScene())
+
+        AddOrReplaceDynamic(Manifest, GetDynamicObjectsInScene());
+
+        if (Manifest.objects.Count == 0)
         {
-            AddOrReplaceDynamic(Manifest, v);
+            Debug.LogWarning("Aggregation Manifest has nothing in list!");
+            return;
         }
+
         string json = "";
         if (ManifestToJson(out json))
         {
@@ -375,7 +343,6 @@ public class ManageDynamicObjects : EditorWindow
             else
                 Util.logError("Could not find scene version for current scene");
         }
-        Util.logDebug(json);
     }
 
     static bool ManifestToJson(out string json)
@@ -385,11 +352,9 @@ public class ManageDynamicObjects : EditorWindow
         List<string> usedIds = new List<string>();
 
         bool containsValidEntry = false;
-        bool meshNameMissing = false;
-        List<string> missingMeshGameObjects = new List<string>();
         foreach (var entry in Manifest.objects)
         {
-            if (string.IsNullOrEmpty(entry.mesh)) { meshNameMissing = true; missingMeshGameObjects.Add(entry.name); continue; }
+            if (string.IsNullOrEmpty(entry.mesh)) { Debug.LogWarning(entry.name + " missing meshname"); continue; }
             if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
             if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id that already exists in the scene. This may not be aggregated correctly"); } //TODO popup option to choose new GUID for dynamic
             usedIds.Add(entry.id);
@@ -403,17 +368,6 @@ public class ManageDynamicObjects : EditorWindow
 
         json = json.Remove(json.Length - 1, 1);
         json += "]}";
-
-        if (meshNameMissing)
-        {
-            string debug = "Dynamic Objects missing mesh name:\n";
-            foreach (var v in missingMeshGameObjects)
-            {
-                debug += v + "\n";
-            }
-            Debug.LogError(debug);
-            EditorUtility.DisplayDialog("Error", "One or more dynamic objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
-        }
 
         return containsValidEntry;
     }
@@ -429,18 +383,20 @@ public class ManageDynamicObjects : EditorWindow
             {
                 s = "Unknown Scene";
             }
-            EditorUtility.DisplayDialog("Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
+            EditorUtility.DisplayDialog("Dynamic Object Manifest Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
             return;
         }
 
         string url = Constants.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
-        Util.logDebug("Manifest Url: " + url);
-        Util.logDebug("Manifest Contents: " + json);
+        Util.logDebug("Send Manifest Contents: " + json);
 
         //upload manifest
         Dictionary<string, string> headers = new Dictionary<string, string>();
         if (EditorCore.IsDeveloperKeyValid)
+        {
             headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            headers.Add("Content-Type","application/json");
+        }
         EditorNetwork.Post(url, json, PostManifestResponse,headers,false);//AUTH
     }
 
@@ -449,21 +405,51 @@ public class ManageDynamicObjects : EditorWindow
         Util.logDebug("Manifest upload complete. response: " + text + " error: " + error);
     }
 
-    static void AddOrReplaceDynamic(AggregationManifest manifest, DynamicObject dynamic)
+    static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
     {
-        var replaceEntry = manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
-        if (replaceEntry == null)
+        bool meshNameMissing = false;
+        List<string> missingMeshGameObjects = new List<string>();
+        foreach (var dynamic in scenedynamics)
         {
-            //don't include meshes with empty mesh names in manifest
-            if (!string.IsNullOrEmpty(dynamic.MeshName))
+
+            var replaceEntry = manifest.objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
+            if (replaceEntry == null)
             {
-                manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                //don't include meshes with empty mesh names in manifest
+                if (!string.IsNullOrEmpty(dynamic.MeshName))
+                {
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                }
+                else
+                {
+                    missingMeshGameObjects.Add(dynamic.gameObject.name);
+                    meshNameMissing = true;
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(dynamic.MeshName))
+                {
+                    replaceEntry.mesh = dynamic.MeshName;
+                    replaceEntry.name = dynamic.gameObject.name;
+                }
+                else
+                {
+                    missingMeshGameObjects.Add(dynamic.gameObject.name);
+                    meshNameMissing = true;
+                }
             }
         }
-        else
+
+        if (meshNameMissing)
         {
-            replaceEntry.mesh = dynamic.MeshName;
-            replaceEntry.name = dynamic.gameObject.name;
+            string debug = "Dynamic Objects missing mesh name:\n";
+            foreach (var v in missingMeshGameObjects)
+            {
+                debug += v + "\n";
+            }
+            Debug.LogWarning(debug);
+            EditorUtility.DisplayDialog("Error", "One or more dynamic objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
         }
     }
 }

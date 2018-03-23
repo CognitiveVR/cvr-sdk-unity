@@ -81,7 +81,7 @@ public class InitWizard : EditorWindow
 
         //api key
         GUI.Label(new Rect(30, 200, 100, 30), "API Key", "miniheader");
-        apikey = GUI.TextField(new Rect(30, 230, 400, 40), apikey);
+        apikey = EditorCore.TextField(new Rect(30, 230, 400, 40), apikey, 32);
         if (string.IsNullOrEmpty(apikey))
         {
             GUI.Label(new Rect(30, 230, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
@@ -93,7 +93,7 @@ public class InitWizard : EditorWindow
 
         //dev key
         GUI.Label(new Rect(30, 300, 100, 30), "Developer Key", "miniheader");
-        developerkey = GUI.TextField(new Rect(30, 330, 400, 40), developerkey);
+        developerkey = EditorCore.TextField(new Rect(30, 330, 400, 40), developerkey, 32);
         if (string.IsNullOrEmpty(developerkey))
         {
             GUI.Label(new Rect(30, 330, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
@@ -197,9 +197,9 @@ public class InitWizard : EditorWindow
 
     void DynamicExplainUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 4A - WHAT IS A DYNAMIC OBJECT?", "steptitle");
+        GUI.Label(steptitlerect, "STEP 4a - WHAT IS A DYNAMIC OBJECT?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object component</color> goes on any GameObject that changes during a session.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during a scene which you wish to track.", "boldlabel");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
@@ -211,14 +211,14 @@ public class InitWizard : EditorWindow
 
         GUI.color = Color.white;
 
-        GUI.Label(new Rect(30, 350, 440, 440), "Moving objects and things the user interacts with should have a Dynamic Object component. However, small details that don't meaningfully impact a user's experience can be skipped.", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "You must attach Dynamic Object Components onto any objects you wish to track in your scene. These objects must also have colliders attached to them so we can track user gaze on them.", "normallabel");
     }
 
     void SceneExplainUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 4B - WHAT IS A SCENE?", "steptitle");
+        GUI.Label(steptitlerect, "STEP 4b - WHAT IS A SCENE?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the environment the user completes your experience in.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not required colliders on it to detect user gaze.", "boldlabel");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
@@ -228,7 +228,7 @@ public class InitWizard : EditorWindow
         
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-        GUI.Label(new Rect(30, 350, 440, 440), "A scene gives you context about where the player is located as they interact. This is almost always analogous to a Unity scene.", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one larget step, and can be updated at a later date, resulting in a new Scene Version", "normallabel");
     }
 
 #endregion
@@ -252,11 +252,12 @@ public class InitWizard : EditorWindow
         _cachedDynamics = FindObjectsOfType<DynamicObject>();
     }
 
+    int delayDisplayUploading = -1;
     void ListDynamicUpdate()
     {
         GUI.Label(steptitlerect, "STEP 5 - PREPARE OBJECTS", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the <color=#8A9EB7FF>Dynamic Objects</color> components currently located in your scene:", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
         Rect mesh = new Rect(30, 95, 120, 30);
         GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
@@ -267,6 +268,11 @@ public class InitWizard : EditorWindow
 
         DynamicObject[] tempdynamics = GetDynamicObjects;
 
+
+        if (tempdynamics.Length == 0)
+        {
+            GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?","button_disabledtext");
+        }
 
         Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
         dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 270), dynamicScrollPosition, innerScrollSize,false,true);
@@ -282,10 +288,23 @@ public class InitWizard : EditorWindow
         GUI.EndScrollView();
 
         GUI.Box(new Rect(30, 120, 425, 270), "","box_sharp_alpha");
-
-        if (GUI.Button(new Rect(180,400,140,40),"Upload All", "button_bluetext"))
+        if (delayDisplayUploading>0)
         {
+            GUI.Button(new Rect(180, 400, 140, 40), "Uploading...", "button_bluetext"); //fake replacement for button
+            delayDisplayUploading--;
+        }
+        else if (delayDisplayUploading == 0)
+        {
+            GUI.Button(new Rect(180, 400, 140, 40), "Uploading...", "button_bluetext"); //fake replacement for button
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            delayDisplayUploading--;
+        }
+        else
+        {
+            if (GUI.Button(new Rect(180, 400, 140, 40), "Upload All", "button_bluetext"))
+            {
+                delayDisplayUploading = 2;
+            }
         }
     }
 
@@ -563,7 +582,7 @@ public class InitWizard : EditorWindow
                 }
                 else
                 {
-                    text = "Keys Accepted";
+                    text = "Next";
                 }
                 break;
             case "tagdynamics":
@@ -598,7 +617,14 @@ public class InitWizard : EditorWindow
                 {
                     onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all dynamic objects?", "Yes", "No")) { currentPage++; } };
                 }
-                text = dynamicsFromSceneExported + "/" + dynamics.Length + " Uploaded";
+                if (dynamics.Length == 0 && dynamicsFromSceneExported == 0)
+                {
+                    text = "Skip Dynamics";
+                }
+                else
+                {
+                    text = dynamicsFromSceneExported + "/" + dynamics.Length + " Uploaded";
+                }
                 buttonrect = new Rect(350, 460, 140, 30);
                 break;
             case "uploadscene":
@@ -668,7 +694,7 @@ public class InitWizard : EditorWindow
                 //first refresh scene version
                 onclick = () =>
                 {
-                    if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                    if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) //scene not saved. "do want save?" popup
                     {
                         if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
                         {
@@ -686,8 +712,14 @@ public class InitWizard : EditorWindow
                             return;//cancel from 'do you want to save' popup
                         }
                     }
+                    else
+                    {
+                        EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                    }
                 };
-                
+
+                buttonDisabled = !EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
+
                 text = "Upload";
                 break;
             case "done":
