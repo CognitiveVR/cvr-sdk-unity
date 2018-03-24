@@ -429,7 +429,7 @@ namespace CognitiveVR
             if (StartupDelayTime < 0) { StartupDelayTime = 0;}
         }
 
-        public void Initialize(string userName, Dictionary<string,object> userProperties = null)
+        public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
         {
             Util.logDebug("CognitiveVR_Manager Initialize");
             if (instance != null && instance != this)
@@ -500,6 +500,7 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
                 if (lastSceneSettings != null)
                 {
+                    Debug.Log("scene load last scene was " + lastSceneSettings.SceneName);
                     if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
                     {
                         Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
@@ -603,7 +604,12 @@ namespace CognitiveVR
 
             Core.SendDataEvent();
 
-            //Destroy(instance);
+            //clear properties from last session
+            newDeviceProperties.Clear();
+            knownDeviceProperties.Clear();
+
+            newUserProperties.Clear();
+            knownUserProperties.Clear();
 
             CleanupEvents();
             Core.reset();
@@ -634,7 +640,7 @@ namespace CognitiveVR
         }
 
         //writes manifest entry and object snapshot to string then send http request
-        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots)
+        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots, CognitiveVR_Preferences.SceneSettings trackingSettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             //save and clear snapshots and manifest entries
             DynamicObjectManifestEntry[] tempObjectManifest = new DynamicObjectManifestEntry[SendObjectManifest.Count];
@@ -700,7 +706,7 @@ namespace CognitiveVR
                 SendObjectSnapshots.Dequeue().ReturnToPool();
             }
 
-            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots);
+            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots,trackingSettings,uniqueid,sessiontimestamp,sessionid);
         }
 
 #region Application Quit
@@ -757,6 +763,7 @@ namespace CognitiveVR
         public static void UpdateDeviceState(Dictionary<string, object> dictionary)
         {
             if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
+
             foreach (var kvp in dictionary)
             {
                 if (knownDeviceProperties.ContainsKey(kvp.Key) && knownDeviceProperties[kvp.Key] != kvp.Value) //update value

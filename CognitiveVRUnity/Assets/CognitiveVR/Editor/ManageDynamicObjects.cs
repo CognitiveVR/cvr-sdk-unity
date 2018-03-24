@@ -212,7 +212,7 @@ public class ManageDynamicObjects : EditorWindow
         }
 
         EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
-        if (GUI.Button(new Rect(130, 450, 250, 50), new GUIContent("Upload Aggregation List", tooltip), "button_bluetext"))
+        if (GUI.Button(new Rect(130, 450, 250, 50), new GUIContent("Save & Sync with Server", tooltip), "button_bluetext"))
         {
             EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
         }

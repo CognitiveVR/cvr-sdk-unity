@@ -82,9 +82,9 @@ namespace CognitiveVR.Components
             Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
 
             string transactionID = Util.GetUniqueId();
-            Transaction inTransaction = Instrumentation.Transaction("cvr.input", transactionID);
-            inTransaction.setProperty("type", type).setProperty("device", rightController?"right controller": "left controller").setProperty("state","begin");
-            inTransaction.begin(pos);
+            var inTransaction = new CustomEvent("cvr.input");
+            inTransaction.SetProperty("type", type).SetProperty("device", rightController?"right controller": "left controller").SetProperty("state","begin");
+            inTransaction.Send(pos);
 
             if (!pendingTransactions.ContainsKey(transactionKey))
             { pendingTransactions.Add(transactionKey, transactionID); }
@@ -96,7 +96,7 @@ namespace CognitiveVR.Components
             if (pendingTransactions.TryGetValue(transactionKey, out transactionID))
             {
                 Vector3 pos = CognitiveVR_Manager.GetControllerPosition(rightController);
-                Instrumentation.Transaction("cvr.input", transactionID).setProperty("type",type).setProperty("device", rightController ? "right controller" : "left controller").setProperty("state","end").end(pos);
+                new CustomEvent("cvr.input").SetProperty("type",type).SetProperty("device", rightController ? "right controller" : "left controller").SetProperty("state","end").Send(pos);
                 pendingTransactions.Remove(transactionID);
             }
         }
@@ -141,19 +141,19 @@ namespace CognitiveVR.Components
 
         private void OnPadClicked(object sender, ClickedEventArgs e)
         {
-            Transaction padTransaction = Instrumentation.Transaction("cvr.input");
+            var padTransaction = new CustomEvent("cvr.input");
             CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo((int)e.controllerIndex);
             if (cont == null) { return; }
             
             Vector3 pos = CognitiveVR_Manager.GetControllerPosition(cont.isRight);
-            padTransaction.setProperties(new Dictionary<string, object>
+            padTransaction.SetProperties(new Dictionary<string, object>
             {
                 { "type","pad" },
                 { "device", cont.isRight?"right controller":"left controller"},
                 { "x",e.padX },
                 { "y",e.padY }
             });
-            padTransaction.beginAndEnd(pos);
+            padTransaction.Send(pos);
         }
 
         void OnTriggerClicked(object sender, ClickedEventArgs e)

@@ -41,12 +41,12 @@ namespace CognitiveVR.Components
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
                 hmdpresentGUID = Util.GetUniqueId();
-                Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
+                new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
             }
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 Util.logDebug("hmd removed");
-                Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time - 10f).end();
+                new CustomEvent("cvr.hmdpresent", hmdpresentGUID).SetProperty("present", false).SetProperty("endtime", Time.time - 10f).Send();
             }
         }
 #endif

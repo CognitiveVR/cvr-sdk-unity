@@ -422,7 +422,7 @@ namespace CognitiveVR
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue));
+                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID));
             }
         }
 
@@ -597,7 +597,7 @@ namespace CognitiveVR
 
                         if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
                         {
-                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue));
+                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                         }
                     }
                 }
@@ -786,7 +786,7 @@ namespace CognitiveVR
                 snap.ReturnToPool();
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots);
+                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -804,7 +804,7 @@ namespace CognitiveVR
                 //entry = null;
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots);
+                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -812,18 +812,19 @@ namespace CognitiveVR
             //if (NewObjectManifestQueue.Count > 0)
                 //NewObjectManifestQueue.Clear();
 
-            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots);
+            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
         }
 
-        public static void SendSavedSnapshots(List<string> stringEntries, List<string> stringSnapshots)
+        //from thread
+        public static void SendSavedSnapshots(List<string> stringEntries, List<string> stringSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             if (stringEntries.Count == 0 && stringSnapshots.Count == 0) { return; }
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
             //redundant? checked when writing snapshots to string
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
-            if (sceneSettings == null)
+            //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
+            if (trackingsettings == null)
             {
                 CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
@@ -839,7 +840,7 @@ namespace CognitiveVR
                 sendSnapshotBuilder.Length = 0;
                 return;
             }
-            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            if (string.IsNullOrEmpty(trackingsettings.SceneId))
             {
                 CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
@@ -859,11 +860,11 @@ namespace CognitiveVR
             sendSnapshotBuilder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, sendSnapshotBuilder);
+            JsonUtil.SetString("userid", uniqueid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sendSnapshotBuilder);
+            JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetString("sessionid", Core.SessionID, sendSnapshotBuilder);
+            JsonUtil.SetString("sessionid", sessionid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             JsonUtil.SetInt("part", jsonpart, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
@@ -903,11 +904,11 @@ namespace CognitiveVR
 
             sendSnapshotBuilder.Append("}");
 
-            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
 
-            if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
+            //if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
             {
                 CognitiveVR.NetworkManager.Post(url, content);
             }
@@ -916,14 +917,14 @@ namespace CognitiveVR
         /// <summary>
         /// it is recommended that you use PlayerRecorder.SendData instead. that will send all outstanding data
         /// </summary>
-        public static void SendSavedSnapshotsForce(bool forceSend, List<string> stringEntries, List<string> stringSnapshots)
+        public static void SendSavedSnapshotsForce(bool forceSend, List<string> stringEntries, List<string> stringSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             //put all this into http request
             if (stringEntries.Count == 0 && stringSnapshots.Count == 0) { Util.logWarning("DynamicObject SendSavedSnapshotsForce - no string entries or snapshots"); return; }
 
             //redundant? checked when writing snapshots to string
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
-            if (sceneSettings == null)
+            //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
+            if (trackingsettings == null)
             {
                 CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 int count = NewSnapshotQueue.Count;
@@ -940,7 +941,7 @@ namespace CognitiveVR
                 //savedDynamicSnapshots.Clear();
                 return;
             }
-            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            if (string.IsNullOrEmpty(trackingsettings.SceneId))
             {
                 CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 int count = NewSnapshotQueue.Count;
@@ -963,11 +964,11 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, builder);
+            JsonUtil.SetString("userid", uniqueid, builder);
             builder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", Core.SessionID, builder);
+            JsonUtil.SetString("sessionid", sessionid, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", jsonpart, builder);
             builder.Append(",");
@@ -1013,7 +1014,7 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = builder.ToString();
 

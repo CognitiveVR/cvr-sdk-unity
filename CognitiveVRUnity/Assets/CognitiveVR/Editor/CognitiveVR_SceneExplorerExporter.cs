@@ -662,7 +662,7 @@ namespace CognitiveVR
             bool canceled = false;
             materialList = PrepareFileWrite();
 
-            using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
+            using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj")) //TODO mac export filestream ioexception error
             {
                 sw.Write("mtllib ./" + filename + ".mtl\n");
                 if (!skipTerrain)

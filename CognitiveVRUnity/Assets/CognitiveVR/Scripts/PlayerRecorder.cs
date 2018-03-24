@@ -113,12 +113,12 @@ namespace CognitiveVR
         //TODO these can happen on a separate thread? uses camera.main which will only work on the main thread
         private void PupilGazeTracker_OnCalibrationDone()
         {
-            //Instrumentation.Transaction("cvr.calibration").end();
+            //new CustomEvent("cvr.calibration").Send();
         }
 
         private void PupilGazeTracker_OnCalibrationStarted()
         {
-            //Instrumentation.Transaction("cvr.calibration").begin();
+            //new CustomEvent("cvr.calibration").Send();
         }
 #endif
 
@@ -433,7 +433,7 @@ namespace CognitiveVR
             }
             else*/
             {
-                if (PhysicsdynamicHit != null)
+                if (PhysicsdynamicHit != null && PhysicsdynamicHit.ObjectId != null)
                 {
                     //instance.TickPostRender(hit.transform.InverseTransformPointUnscaled(WorldHitPoint), PhysicsdynamicHit.ObjectId.Id);
                     instance.postRenderHitPos = hit.transform.InverseTransformPointUnscaled(PhysicsHitPoint);
@@ -658,7 +658,7 @@ namespace CognitiveVR
 
                 playerSnapshots.Clear();
 
-                StartCoroutine(Threaded_SendGaze(tempSnapshots));
+                StartCoroutine(Threaded_SendGaze(tempSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewDeviceProperties(true), CognitiveVR_Manager.GetNewUserProperties(true)));
 
                 //SendPlayerGazeSnapshots();
                 //OnSendData();
@@ -666,7 +666,7 @@ namespace CognitiveVR
         }
         //bool doneSendGaze = false;
         //bool waitingForThread = false;
-        IEnumerator Threaded_SendGaze(PlayerSnapshot[] tempSnapshots)
+        IEnumerator Threaded_SendGaze(PlayerSnapshot[] tempSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid, Dictionary<string, object> deviceProperties, Dictionary<string, object> userProperties)
         {
             bool doneSendGaze = false;
             if (!CognitiveVR_Preferences.S_EvaluateGazeRealtime)
@@ -736,11 +736,11 @@ namespace CognitiveVR
             {
                 yield return null;
             }
-            
-            SendPlayerGazeSnapshots(stringGazeSnapshots);
+
+            SendPlayerGazeSnapshots(stringGazeSnapshots, trackingsettings, uniqueid, sessiontimestamp, sessionid, deviceProperties, userProperties);
         }
 
-        void SendPlayerGazeSnapshots(List<string> stringGazeSnapshots)
+        void SendPlayerGazeSnapshots(List<string> stringGazeSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid, Dictionary<string,object> deviceProperties, Dictionary<string,object> userProperties)
         {
             /*if (playerSnapshots.Count == 0)
             {
@@ -748,22 +748,22 @@ namespace CognitiveVR
                 return;
             }*/
 
-            var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
-            if (sceneSettings == null)
+            //var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (trackingsettings == null)
             {
                 Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + CognitiveVR_Preferences.TrackingSceneName + "! Cancel Data Upload");
                 return;
             }
-            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            if (string.IsNullOrEmpty(trackingsettings.SceneId))
             {
                 //playerSnapshots.Clear();
                 CognitiveVR.Util.logDebug("sceneid is empty. do not send gaze objects to sceneexplorer");
                 return;
             }
 
-            if (sceneSettings != null)
+            if (trackingsettings != null)
             {
-                Util.logDebug("uploading gaze and events to " + sceneSettings.SceneId);
+                Util.logDebug("uploading gaze and events to " + trackingsettings.SceneId);
 
                 if (stringGazeSnapshots.Count > 0)
                 {
@@ -799,7 +799,7 @@ namespace CognitiveVR
                     builder.Append(",");
 
 
-                    var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties(true);
+                    //var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties(true);
                     if (deviceProperties.Count > 0)
                     {
                         builder.Append("\"device\":[");
@@ -821,7 +821,7 @@ namespace CognitiveVR
                         builder.Append("],");
                     }
 
-                    var userProperties = CognitiveVR_Manager.GetNewUserProperties(true);
+                    //var userProperties = CognitiveVR_Manager.GetNewUserProperties(true);
                     if (userProperties.Count > 0)
                     {
                         builder.Append("\"user\":[");
@@ -860,7 +860,7 @@ namespace CognitiveVR
                     builder.Append("}");
 
                     byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
-                    string url = Constants.POSTGAZEDATA(sceneSettings.SceneId,sceneSettings.VersionNumber);
+                    string url = Constants.POSTGAZEDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
                     CognitiveVR.NetworkManager.Post(url, outBytes);
                 }
