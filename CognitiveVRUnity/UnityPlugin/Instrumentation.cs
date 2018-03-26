@@ -97,6 +97,44 @@ namespace CognitiveVR
             NetworkManager.Post(url, packagedEvents);
         }
 
+        public static void SendCustomEvent(string category, float[] position)
+        {
+            TransactionBuilder.Append("{");
+            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+
+            TransactionBuilder.Append("}"); //close transaction object
+            TransactionBuilder.Append(",");
+
+            cachedEvents++;
+            if (cachedEvents >= maxCachedEvents)
+            {
+                SendTransactions();
+            }
+        }
+
+        public static void SendCustomEvent(string category, Vector3 position)
+        {
+            TransactionBuilder.Append("{");
+            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
+            TransactionBuilder.Append(",");
+            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+
+            TransactionBuilder.Append("}"); //close transaction object
+            TransactionBuilder.Append(",");
+
+            cachedEvents++;
+            if (cachedEvents >= maxCachedEvents)
+            {
+                SendTransactions();
+            }
+        }
+
         //writes json to display the transaction in sceneexplorer
         public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position)
         {
