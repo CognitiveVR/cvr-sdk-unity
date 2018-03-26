@@ -60,25 +60,6 @@ namespace CognitiveVR
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
 
-        List<string> AddAllScenes()
-        {
-            //add all scenes
-            string[] guidList = AssetDatabase.FindAssets("t:scene");
-            List<string> allSceneNames = new List<string>();
-
-            //sceneNames.Clear();
-
-            foreach (var v in guidList)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(v);
-                string name = path.Substring(path.LastIndexOf('/') + 1);
-                name = name.Substring(0, name.Length - 6);
-                allSceneNames.Add(name);
-                //sceneNames.Add(name);
-            }
-            return allSceneNames;
-        }
-
         #region Screenshot
 
         List<Camera> tempDisabledCameras = new List<Camera>();

@@ -299,6 +299,19 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             {
                 _prefs = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
                 AssetDatabase.CreateAsset(_prefs, "Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+
+                List<string> names = new List<string>();
+                List<string> paths = new List<string>();
+
+                
+                GetAllScenes(names, paths);
+                for (int i = 0; i < names.Count;i++)
+                {
+                    CognitiveVR_Preferences.AddSceneSettings(_prefs, names[i],paths[i]);
+                }
+                EditorUtility.SetDirty(EditorCore.GetPreferences());
+                AssetDatabase.SaveAssets();
+
                 AssetDatabase.Refresh();
             }
         }
@@ -706,6 +719,20 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         
     }
     #endregion
+    
+    public static void GetAllScenes(List<string>names, List<string>paths)
+    {
+        string[] guidList = AssetDatabase.FindAssets("t:scene");
+
+        foreach (var v in guidList)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(v);
+            string name = path.Substring(path.LastIndexOf('/') + 1);
+            name = name.Substring(0, name.Length - 6);
+            names.Add(name);
+            paths.Add(path);
+        }
+    }
 
 
     #region Updates

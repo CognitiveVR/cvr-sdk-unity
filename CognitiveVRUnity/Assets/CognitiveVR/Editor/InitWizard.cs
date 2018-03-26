@@ -456,6 +456,7 @@ public class InitWizard : EditorWindow
             }
             CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
 
             UnityEditor.AssetDatabase.SaveAssets();
         }

@@ -192,6 +192,12 @@ namespace CognitiveVR
             }
         }
 
+        public static void AddSceneSettings(CognitiveVR_Preferences newInstance, string name, string path)
+        {
+            //skip. this should onyl be called automatically at the construction of preferences
+            newInstance.sceneSettings.Add(new SceneSettings(name, path));
+        }
+
         /// <summary>
         /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data. can return null
         /// </summary>
