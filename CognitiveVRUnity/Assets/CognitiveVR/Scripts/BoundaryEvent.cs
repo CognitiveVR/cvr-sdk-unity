@@ -21,7 +21,7 @@ namespace CognitiveVR.Components
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
                 chaperoneGUID = Util.GetUniqueId();
-                new CustomEvent("cvr.boundary", chaperoneGUID).Send();
+                new CustomEvent("cvr.boundary").Send();
                 Util.logDebug("chaperone visible");
             }
 #endif

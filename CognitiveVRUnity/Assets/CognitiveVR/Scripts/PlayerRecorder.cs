@@ -170,7 +170,7 @@ namespace CognitiveVR
                 headsetPresent = false;
                 if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
                 {
-                    OnSendData();
+                    Core.SendDataEvent();
                 }
             }
         }
@@ -186,7 +186,7 @@ namespace CognitiveVR
                 headsetPresent = false;
                 if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
                 {
-                    OnSendData();
+                    Core.SendDataEvent();
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace CognitiveVR
             headsetPresent = false;
             if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
             {
-                OnSendData();
+                Core.SendDataEvent();
             }
         }
 #endif

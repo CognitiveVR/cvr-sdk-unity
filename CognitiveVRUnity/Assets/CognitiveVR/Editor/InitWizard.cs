@@ -79,10 +79,10 @@ public class InitWizard : EditorWindow
         GUI.Label(steptitlerect, "STEP 2 - AUTHENTICATION", "steptitle");
         GUI.Label(boldlabelrect, "Please add your Cognitive3D authorization keys below to continue.", "boldlabel");
 
-        //api key
-        GUI.Label(new Rect(30, 200, 100, 30), "API Key", "miniheader");
-        apikey = EditorCore.TextField(new Rect(30, 230, 400, 40), apikey, 32);
-        if (string.IsNullOrEmpty(apikey))
+        //dev key
+        GUI.Label(new Rect(30, 200, 100, 30), "Developer Key", "miniheader");
+        developerkey = EditorCore.TextField(new Rect(30, 230, 400, 40), developerkey, 32);
+        if (string.IsNullOrEmpty(developerkey))
         {
             GUI.Label(new Rect(30, 230, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
         }
@@ -91,10 +91,10 @@ public class InitWizard : EditorWindow
             GUI.Label(new Rect(440, 230, 24, 40), EditorCore.Checkmark, "image_centered");
         }
 
-        //dev key
-        GUI.Label(new Rect(30, 300, 100, 30), "Developer Key", "miniheader");
-        developerkey = EditorCore.TextField(new Rect(30, 330, 400, 40), developerkey, 32);
-        if (string.IsNullOrEmpty(developerkey))
+        //api key
+        GUI.Label(new Rect(30, 300, 100, 30), "API Key", "miniheader");
+        apikey = EditorCore.TextField(new Rect(30, 330, 400, 40), apikey, 32);
+        if (string.IsNullOrEmpty(apikey))
         {
             GUI.Label(new Rect(30, 330, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
         }
@@ -102,6 +102,7 @@ public class InitWizard : EditorWindow
         {
             GUI.Label(new Rect(440, 330, 24, 40), EditorCore.Checkmark, "image_centered");
         }
+
     }
 
     void SaveKeys()

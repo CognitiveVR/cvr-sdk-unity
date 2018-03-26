@@ -46,7 +46,7 @@ namespace CognitiveVR.Components
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 Util.logDebug("hmd removed");
-                new CustomEvent("cvr.hmdpresent", hmdpresentGUID).SetProperty("present", false).SetProperty("endtime", Time.time - 10f).Send();
+                new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time - 10f).Send();
             }
         }
 #endif

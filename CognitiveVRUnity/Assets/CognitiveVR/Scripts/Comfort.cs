@@ -106,9 +106,9 @@ namespace CognitiveVR.Components
                 .SetProperty("fps", lastFps)
                 .SetProperty("rps", lastRps)
 #if CVR_OCULUS
-                    .setProperty("cpulevel", OVRPlugin.cpuLevel)
-                    .setProperty("gpulevel", OVRPlugin.gpuLevel)
-                    .setProperty("powersaving", OVRPlugin.powerSaving)
+                    .SetProperty("cpulevel", OVRPlugin.cpuLevel)
+                    .SetProperty("gpulevel", OVRPlugin.gpuLevel)
+                    .SetProperty("powersaving", OVRPlugin.powerSaving)
 #endif
                     .Send();
             Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
