@@ -9,9 +9,9 @@ public class GazeReticle : MonoBehaviour
     public float Speed = 0.3f;
     public float Distance = 3;
 
-#if CVR_GAZETRACK || CVR_FOVE
+#if CVR_FOVE||CVR_PUPIL
     Vector3 LastLookDirection = Vector3.zero;
-#endif //cvr_gazetrack
+#endif
 
 #if CVR_FOVE
     FoveInterface _foveInstance;

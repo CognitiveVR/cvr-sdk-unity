@@ -16,31 +16,18 @@ namespace CognitiveVR
         public static Vector3 vector_forward = new Vector3(0, 0, 1);
 
 
-        private const string LOG_TAG = "com.cvr.cognitivevr: ";
-		private static bool sLogEnabled = false;
-		private static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
-        internal static IDictionary<string, object> getDeviceAndAppInfo() { return sDeviceAndAppInfo; }
+        private const string LOG_TAG = "[COGNITIVE3D] ";
+		
+		static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
+        public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
         internal static string getSDKName(string namePrefix) { return namePrefix; }
 
-        private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
-        private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
-
-		public static void setLogEnabled(bool value)
-		{
-			sLogEnabled = value;
-		}
-
-        public static bool IsLoggingEnabled
-        {
-            get
-            {
-                return sLogEnabled;
-            }
-        }
+        //private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
+        //private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
 
         public static void logWarning(string msg, UnityEngine.Object context = null)
         {
-            if (sLogEnabled)
+            if (CognitiveVR_Preferences.Instance.EnableLogging)
             {
                 if (context != null)
                     Debug.LogWarning(LOG_TAG + msg, context);
@@ -52,7 +39,7 @@ namespace CognitiveVR
         // Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
         public static void logDebug(string msg)
 		{
-			if (sLogEnabled)
+			if (CognitiveVR_Preferences.Instance.EnableLogging)
 			{
 				Debug.Log(LOG_TAG + msg);
 			}
@@ -60,7 +47,7 @@ namespace CognitiveVR
 		
 		public static void logError(Exception e)
 		{
-			if (sLogEnabled)
+			if (CognitiveVR_Preferences.Instance.EnableLogging)
 			{
 				Debug.LogException(e);
 			}
@@ -68,7 +55,7 @@ namespace CognitiveVR
 		
 		public static void logError(string msg)
 		{
-			if (sLogEnabled)
+			if (CognitiveVR_Preferences.Instance.EnableLogging)
 			{
 				Debug.LogError(LOG_TAG + msg);
 			}
@@ -95,7 +82,7 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Add("cvr.unity.version", Application.unityVersion);
             sDeviceAndAppInfo.Add("cvr.device.model", SystemInfo.deviceModel);
             sDeviceAndAppInfo.Add("cvr.device.type", SystemInfo.deviceType.ToString());
-            sDeviceAndAppInfo.Add("cvr.device.platform", Application.platform);
+            sDeviceAndAppInfo.Add("cvr.device.platform", Application.platform.ToString());
             sDeviceAndAppInfo.Add("cvr.device.os", SystemInfo.operatingSystem);
             sDeviceAndAppInfo.Add("cvr.device.graphics.name", SystemInfo.graphicsDeviceName);
             sDeviceAndAppInfo.Add("cvr.device.graphics.type", SystemInfo.graphicsDeviceType.ToString());
@@ -129,103 +116,6 @@ namespace CognitiveVR
             if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { return "gear"; }
 
             return "unknown";
-        }
-
-        internal static void cacheCurrencyInfo()
-        {
-            // Clear out any previously set data
-            sValidCurrencyCodes.Clear();
-            sCurrencyCodesBySymbol.Clear();
-#if !NETFX_CORE
-            // Cache a set of valid ISO 4217 currency codes and a map of valid currency symbols to ISO 4217 currency codes
-            foreach (CultureInfo info in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
-            {
-                try
-                {
-                    RegionInfo ri = new RegionInfo(info.Name);
-                    sValidCurrencyCodes.Add(ri.ISOCurrencySymbol);
-
-                    if (sCurrencyCodesBySymbol.ContainsKey(ri.CurrencySymbol))
-                    {
-                        sCurrencyCodesBySymbol[ri.CurrencySymbol].Add(ri.ISOCurrencySymbol);
-                    }
-                    else
-                    {
-                        HashSet<string> codes = new HashSet<string>();
-                        codes.Add(ri.ISOCurrencySymbol);
-                        sCurrencyCodesBySymbol.Add(ri.CurrencySymbol, codes);
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // Not a valid culture name.  Ok, move along....
-                }
-            }
-#endif
-        }
-
-        // Given an input currency string, return a string that is valid currency string.
-        // This can be either a valid ISO 4217 currency code or a currency symbol (e.g., for real currencies),  or simply any other ASCII string (e.g., for virtual currencies)
-        // If one cannot be determined, this method returns "unknown"
-        public static string getValidCurrencyString(string currency)
-        {
-#if NETFX_CORE
-            return "NETFX_CORE";
-#else
-            string validCurrencyStr;
-
-            // First check if the string is already a valid ISO 4217 currency code (i.e., it's in the list of known codes)
-            if (sValidCurrencyCodes.Contains(currency.ToUpper()))
-            {
-                // It is, just return it
-                validCurrencyStr = currency.ToUpper();
-            }
-            else
-            {
-                // Not a valid currency code, is it a currency symbol?
-                HashSet<string> possibleCodes;
-                if (sCurrencyCodesBySymbol.TryGetValue(currency.ToUpper(), out possibleCodes))
-                {
-                    // It's a valid symbol
-
-                    // If there is only one associated currency code, use it
-                    if (1 == possibleCodes.Count)
-                    {
-                        using (IEnumerator<string> iter = possibleCodes.GetEnumerator())
-                        {
-                            iter.MoveNext();
-                            validCurrencyStr = iter.Current;
-                        }
-                    }
-                    else
-                    {
-                        // Ok, more than one code associated with this symbol
-                        // We make a best guess as to the actual currency code based on the user's locale.
-                        RegionInfo ri = RegionInfo.CurrentRegion;
-                        if (possibleCodes.Contains(ri.ISOCurrencySymbol))
-                        {
-                            // The locale currency is in the list of possible codes
-                            // It's pretty likely that this currency symbol refers to the locale currency, so let's assume that
-                            // This is not a perfect solution, but it's the best we can do until Google and Amazon start giving us more than just currency symbols
-                            validCurrencyStr = ri.ISOCurrencySymbol;
-                        }
-                        else
-                        {
-                            // We have no idea which currency this symbol refers to, so just set it to "unknown"
-                            validCurrencyStr = "unknown";
-                        }
-                    }
-                }
-                else
-                {
-                    // This is not a known currencyc sy so mbol,it must be a virtual currency
-                    // Strip out any non-ASCII haracters
-                    validCurrencyStr = Regex.Replace(currency, @"[^\u0000-\u007F]", string.Empty);
-                }
-            }
-
-            return validCurrencyStr;
-#endif
         }
 
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -284,7 +174,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("GetResponseCode could not find a status. Likely url is incorrect");
+                Util.logDebug("GetResponseCode could not find a status. Likely url is incorrect");
             }
             return returnCode;
         }
@@ -538,6 +428,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static string SetVector(string name, float[] pos, bool centimeterLimit = false)
         {
+            if (pos.Length < 3) { pos = new float[3] { 0, 0, 0 }; }
+
             System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
             builder.Append("\"");
             builder.Append( name );
@@ -573,6 +465,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static StringBuilder SetVector(string name, float[] pos, StringBuilder builder, bool centimeterLimit = false)
         {
+            if (pos.Length < 3) { pos = new float[3] { 0, 0, 0 }; }
+
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");
@@ -723,6 +617,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static string SetQuat(string name, float[] quat)
         {
+            if (quat.Length < 4) { quat = new float[4] { 0, 0, 0,0 }; }
+
             System.Text.StringBuilder builder = new System.Text.StringBuilder(128);
             builder.Append("\"");
             builder.Append(name);
@@ -747,6 +643,8 @@ namespace CognitiveVR
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static StringBuilder SetQuat(string name, float[] quat, StringBuilder builder)
         {
+            if (quat.Length < 4) { quat = new float[4] { 0, 0, 0, 0 }; }
+
             builder.Append("\"");
             builder.Append(name);
             builder.Append("\":[");

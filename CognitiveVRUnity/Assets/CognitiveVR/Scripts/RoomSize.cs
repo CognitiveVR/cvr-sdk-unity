@@ -20,26 +20,29 @@ namespace CognitiveVR.Components
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
-                Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
+                CognitiveVR_Manager.UpdateDeviceState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
+                //Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
             }
             else
             {
                 bool seated = Mathf.Approximately(roomX, 1f) && roomX == roomY;
-                Instrumentation.updateDeviceState(new Dictionary<string, object>()
+                CognitiveVR_Manager.UpdateDeviceState(new Dictionary<string, object>()
                 {
                     { "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", roomX, roomY) },
                     { "cvr.vr.roomscale", !seated }
                 });
+                //Instrumentation.updateDeviceState(new Dictionary<string, object>(){{ "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", roomX, roomY) },{ "cvr.vr.roomscale", !seated }});
             }
 #elif CVR_OCULUS
 
             //(x = width, y = height, z = depth)
             Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
 
-            Instrumentation.updateDeviceState(new Dictionary<string, object>()
+            CognitiveVR_Manager.UpdateDeviceState(new Dictionary<string, object>()
             {
                 { "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", dimensions.x, dimensions.z) }
             });
+            //Instrumentation.updateDeviceState(new Dictionary<string, object>(){{ "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", dimensions.x, dimensions.z) }});
 #endif
         }
 

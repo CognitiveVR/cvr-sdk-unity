@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//this should only contain the component to send dynamic data/engagements to the plugin
+
 
 //manually send snapshots with builder pattern
 //presets for controllers/level geometry/pooled enemies/grabable item
@@ -24,13 +26,14 @@ using System.Collections.Generic;
 //list of controller objects
 
 //iterate through and write updates
-
-
-
 namespace CognitiveVR
 {
     public class DynamicObject : MonoBehaviour
     {
+#if UNITY_EDITOR
+        public int iId; //stores instanceid. used to check if something in editor has changed
+#endif
+
         public enum CommonDynamicMesh
         {
             ViveController,
@@ -46,22 +49,22 @@ namespace CognitiveVR
         public bool UpdateTicksOnEnable = true;
 
         //[Header("Thresholds")]
-        public float PositionThreshold = 0.0f;
+        public float PositionThreshold = 0.001f;
         public Vector3 lastPosition;
-        public float RotationThreshold = 0.0f;
+        public float RotationThreshold = 0.1f;
         public Quaternion lastRotation;
 
         //[Header("IDs")]
-        public bool UseCustomId = false;
-        public int CustomId;
-        public bool ReleaseIdOnDestroy = true;
-        public bool ReleaseIdOnDisable = true;
+        public bool UseCustomId = true;
+        public string CustomId = "";
+        public bool ReleaseIdOnDestroy = true; //only release the id for reuse if not tracking gaze
+        public bool ReleaseIdOnDisable = true; //only release the id for reuse if not tracking gaze
 
         public string GroupName;
 
         public DynamicObjectId ObjectId;
 
-        public bool UseCustomMesh;
+        public bool UseCustomMesh = true;
         public CommonDynamicMesh CommonMesh;
         public string MeshName;
 
@@ -81,7 +84,7 @@ namespace CognitiveVR
         bool wasBufferingVideo = false;
 #endif
 
-        public bool TrackGaze = false;
+        public bool TrackGaze = true;
         float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
@@ -171,7 +174,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logWarning("dynamic object destroyed");
+                Util.logWarning("Dynamic Object destroyed");
                 return;
             }
 
@@ -406,7 +409,7 @@ namespace CognitiveVR
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
             {
-                CognitiveVR.Util.logWarning("Dynamic Object Update - sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logWarning("Dynamic Object Update - sceneid is empty. do not send Dynamic Objects to sceneexplorer");
                 //NewSnapshots.Clear();
                 //NewObjectManifest.Clear();
                 NewSnapshotQueue.Clear();
@@ -419,7 +422,7 @@ namespace CognitiveVR
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue));
+                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID));
             }
         }
 
@@ -594,7 +597,7 @@ namespace CognitiveVR
 
                         if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
                         {
-                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue));
+                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                         }
                     }
                 }
@@ -653,7 +656,7 @@ namespace CognitiveVR
                 {
                     HasRegisteredAnyDynamics = true;
                     CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
-                    CognitiveVR_Manager.SendDataEvent += SendAllSnapshots;
+                    Core.OnSendData += Core_OnSendData;
                 }
             }
 
@@ -736,29 +739,32 @@ namespace CognitiveVR
             lastRotation = rot;
         }
 
+        /// <summary>
+        /// used to generate a new unique dynamic object ids at runtime
+        /// </summary>
+        /// <param name="MeshName"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public static DynamicObjectId GetUniqueID(string MeshName, DynamicObject target)
         {
             DynamicObjectId usedObjectId = null;
-            while (true)
+            while (true) //keep going through objectid list until a new one is reached
             {
-                //check each objectid. increment to next if id is found
                 currentUniqueId++;
-
                 usedObjectId = ObjectIds.Find(delegate (DynamicObjectId obj)
                 {
-                    return obj.Id == currentUniqueId + uniqueIdOffset;
+                    return obj.Id == "runtime_" + (currentUniqueId + uniqueIdOffset).ToString();
                 });
-
                 if (usedObjectId == null)
                 {
-                    break;
+                    break; //break once we have a currentuniqueid that isn't in objectid list
                 }
             }
-            return new DynamicObjectId(currentUniqueId + uniqueIdOffset, MeshName, target);
+            return new DynamicObjectId("runtime_" + (currentUniqueId + uniqueIdOffset).ToString(), MeshName, target);
         }
 
         //from SendDataEvent. either manual 'send all data' or onquit
-        public static void SendAllSnapshots()
+        static void Core_OnSendData()
         {
             //WriteAllSnapshots();
 
@@ -780,7 +786,7 @@ namespace CognitiveVR
                 snap.ReturnToPool();
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots);
+                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -798,7 +804,7 @@ namespace CognitiveVR
                 //entry = null;
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots);
+                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -806,18 +812,19 @@ namespace CognitiveVR
             //if (NewObjectManifestQueue.Count > 0)
                 //NewObjectManifestQueue.Clear();
 
-            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots);
+            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
         }
 
-        public static void SendSavedSnapshots(List<string> stringEntries, List<string> stringSnapshots)
+        //from thread
+        public static void SendSavedSnapshots(List<string> stringEntries, List<string> stringSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             if (stringEntries.Count == 0 && stringSnapshots.Count == 0) { return; }
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
             //redundant? checked when writing snapshots to string
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
-            if (sceneSettings == null)
+            //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
+            if (trackingsettings == null)
             {
                 CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
@@ -833,9 +840,9 @@ namespace CognitiveVR
                 sendSnapshotBuilder.Length = 0;
                 return;
             }
-            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            if (string.IsNullOrEmpty(trackingsettings.SceneId))
             {
-                CognitiveVR.Util.logDebug("sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
                 {
                     NewSnapshots[i].ReturnToPool();
@@ -853,11 +860,11 @@ namespace CognitiveVR
             sendSnapshotBuilder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, sendSnapshotBuilder);
+            JsonUtil.SetString("userid", uniqueid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, sendSnapshotBuilder);
+            JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
-            JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, sendSnapshotBuilder);
+            JsonUtil.SetString("sessionid", sessionid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             JsonUtil.SetInt("part", jsonpart, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
@@ -897,25 +904,27 @@ namespace CognitiveVR
 
             sendSnapshotBuilder.Append("}");
 
-            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
 
-            byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
-            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+            //if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
+            {
+                CognitiveVR.NetworkManager.Post(url, content);
+            }
         }
 
         /// <summary>
         /// it is recommended that you use PlayerRecorder.SendData instead. that will send all outstanding data
         /// </summary>
-        public static void SendSavedSnapshotsForce(bool forceSend, List<string> stringEntries, List<string> stringSnapshots)
+        public static void SendSavedSnapshotsForce(bool forceSend, List<string> stringEntries, List<string> stringSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             //put all this into http request
             if (stringEntries.Count == 0 && stringSnapshots.Count == 0) { Util.logWarning("DynamicObject SendSavedSnapshotsForce - no string entries or snapshots"); return; }
 
             //redundant? checked when writing snapshots to string
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
-            if (sceneSettings == null)
+            //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
+            if (trackingsettings == null)
             {
                 CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
                 int count = NewSnapshotQueue.Count;
@@ -932,9 +941,9 @@ namespace CognitiveVR
                 //savedDynamicSnapshots.Clear();
                 return;
             }
-            if (string.IsNullOrEmpty(sceneSettings.SceneId))
+            if (string.IsNullOrEmpty(trackingsettings.SceneId))
             {
-                CognitiveVR.Util.logDebug("sceneid is empty. do not send dynamic objects to sceneexplorer");
+                CognitiveVR.Util.logDebug("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
                 int count = NewSnapshotQueue.Count;
                 for (int i = 0; i < count; i++)
                 {
@@ -955,11 +964,11 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, builder);
+            JsonUtil.SetString("userid", uniqueid, builder);
             builder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)CognitiveVR_Preferences.TimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", CognitiveVR_Preferences.SessionID, builder);
+            JsonUtil.SetString("sessionid", sessionid, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", jsonpart, builder);
             builder.Append(",");
@@ -1005,14 +1014,13 @@ namespace CognitiveVR
 
             builder.Append("}");
 
-            string url = Constants.POSTDYNAMICDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = builder.ToString();
 
             if (CognitiveVR_Manager.Instance.isActiveAndEnabled)
             {
-                byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(content);
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
+                CognitiveVR.NetworkManager.Post(url, content);
             }
         }
 
@@ -1071,7 +1079,7 @@ namespace CognitiveVR
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
             builder.Append("{");
 
-            JsonUtil.SetInt("id", snap.Id, builder);
+            JsonUtil.SetString("id", snap.Id, builder);
             builder.Append(",");
             JsonUtil.SetDouble("time", snap.Timestamp, builder);
             builder.Append(",");
@@ -1209,7 +1217,7 @@ namespace CognitiveVR
                     NewSnapshot().SetEnabled(false);
                 if (TotalGazeDuration > 0)
                 {
-                    Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                    new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                     TotalGazeDuration = 0;
                 }
                 return;
@@ -1217,6 +1225,34 @@ namespace CognitiveVR
             if (CognitiveVR_Manager.Instance != null)
                 NewSnapshot().ReleaseUniqueId();
         }
+
+#if UNITY_EDITOR
+        public bool HasCollider()
+        {
+            if (TrackGaze)
+            {
+                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                {
+                    var collider = GetComponentInChildren<Collider>();
+                    if (collider == null)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+                else
+                {
+                    var collider = GetComponent<Collider>();
+                    if (collider == null)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return true;
+        }
+#endif
 
         private void OnDrawGizmosSelected()
         {
@@ -1234,7 +1270,7 @@ namespace CognitiveVR
         {
             if (TotalGazeDuration > 0)
             {
-                Instrumentation.Transaction("cvr.objectgaze").setProperty("object name", gameObject.name).setProperty("duration", TotalGazeDuration).beginAndEnd();
+                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
             }
         }
@@ -1284,7 +1320,7 @@ namespace CognitiveVR
 
             var type = DirtyEngagements.Find(delegate (EngagementEvent obj)
             {
-                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1); ;
+                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1);
             });
 
             if (type != null)
@@ -1340,7 +1376,7 @@ namespace CognitiveVR
         }
 
         public DynamicObject Dynamic;
-        public int Id;
+        public string Id;
         public Dictionary<string, object> Properties;
         public Dictionary<string, DynamicObjectButtonStates.ButtonState> Buttons;
         public List<DynamicObject.EngagementEvent> Engagements;
@@ -1536,12 +1572,12 @@ namespace CognitiveVR
     /// </summary>
     public class DynamicObjectId
     {
-        public int Id;
+        public string Id;
         public bool Used = true;
         public string MeshName;
         public DynamicObject Target;
 
-        public DynamicObjectId(int id, string meshName, DynamicObject target)
+        public DynamicObjectId(string id, string meshName, DynamicObject target)
         {
             this.Id = id;
             this.MeshName = meshName;
@@ -1563,21 +1599,21 @@ namespace CognitiveVR
 
     public class DynamicObjectManifestEntry
     {
-        public int Id;
+        public string Id;
         public string Name;
         public string MeshName;
         public Dictionary<string, object> Properties;
         public string videoURL;
         public bool videoFlipped;
 
-        public DynamicObjectManifestEntry(int id, string name, string meshName)
+        public DynamicObjectManifestEntry(string id, string name, string meshName)
         {
             this.Id = id;
             this.Name = name;
             this.MeshName = meshName;
         }
 
-        public DynamicObjectManifestEntry(int id, string name, string meshName,Dictionary<string,object>props)
+        public DynamicObjectManifestEntry(string id, string name, string meshName,Dictionary<string,object>props)
         {
             this.Id = id;
             this.Name = name;

@@ -18,7 +18,7 @@ public class Builder
 
         System.IO.Directory.CreateDirectory(Application.dataPath + "/../../dist");
 
-        string sdkversion = CognitiveVR.Core.SDK_Version.Replace('.', '_');
+        string sdkversion = CognitiveVR.Core.SDK_VERSION.Replace('.', '_');
 
 		AssetDatabase.ExportPackage(cognitivevr_files, "../dist/CognitiveVR_"+ sdkversion + ".unitypackage", ExportPackageOptions.Recurse);
 	}

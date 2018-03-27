@@ -17,7 +17,7 @@ namespace CognitiveVR.Components
 
 #if CVR_OCULUS
             //TODO add oculus audio changed events
-            Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.headphonespresent", OVRPlugin.headphonesPresent } });
+            CognitiveVR_Manager.UpdateDeviceState(new Dictionary<string, object>() { { "cvr.vr.headphonespresent", OVRPlugin.headphonesPresent } });
 #elif CVR_STEAMVR
             //TODO could check SteamVR_Ears if using speaker?
 #endif

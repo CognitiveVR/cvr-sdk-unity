@@ -76,18 +76,9 @@
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>Library\ScriptAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
     <Reference Include="CognitiveVR">
       <HintPath>Assets\Plugins\CognitiveVR.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="CognitiveVRUnity.Plugins.csproj">
-      <Project>{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}</Project>
-      <Name>CognitiveVRUnity.Plugins</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\CognitiveVR\Scripts\ArmLength.cs" />
