@@ -2,6 +2,7 @@
 using CognitiveVR;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 #if CVR_STEAMVR
 using Valve.VR;
 #endif
@@ -13,6 +14,13 @@ using System.Runtime.InteropServices;
 /// <summary>
 /// initializes CognitiveVR analytics. Add components to track additional events
 /// </summary>
+
+//init components
+//update ticks + events
+//level change events
+//get hmd + controllers
+//quit and destroy events
+//otherwise use core
 
 namespace CognitiveVR
 {
@@ -54,8 +62,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                double DEFAULT_TIMEOUT = 10.0 * 86400.0; // 10 days
-                Instrumentation.Transaction("cvr.session").begin(DEFAULT_TIMEOUT, Transaction.TimeoutMode.Any);
+                new CustomEvent("cvr.session").Send();
             }
             else //some failure
             {
@@ -83,8 +90,8 @@ namespace CognitiveVR
             {              
                 var metaProperties = new Dictionary<string,object>();
                 metaProperties.Add("cvr.vr.serialnumber",serialnumber);
-
-                Instrumentation.updateDeviceState(metaProperties);
+                UpdateDeviceState(metaProperties);
+                //Instrumentation.updateDeviceState(metaProperties);
             }
 #elif CVR_STEAMVR
             var serialnumber = GetStringProperty(OpenVR.System, 0, ETrackedDeviceProperty.Prop_SerialNumber_String);
@@ -94,7 +101,8 @@ namespace CognitiveVR
                 var properties = new Dictionary<string, object>();
                 properties.Add("cvr.vr.serialnumber", serialnumber);
 
-                Instrumentation.updateDeviceState(properties);
+                UpdateDeviceState(properties);
+                //Instrumentation.updateDeviceState(properties);
             }
 #endif
         }
@@ -119,13 +127,6 @@ namespace CognitiveVR
         /// </summary>
         public static event QuitHandler QuitEvent;
         public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
-
-        public delegate void SendDataHandler(); //send data
-        /// <summary>
-        /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
-        /// </summary>
-        public static event SendDataHandler SendDataEvent;
-        public void OnSendData() { if (SendDataEvent != null) { SendDataEvent(); } }
 
         public delegate void LevelLoadedHandler(); //level
         /// <summary>
@@ -382,9 +383,7 @@ namespace CognitiveVR
         }
         YieldInstruction playerSnapshotInverval;
 
-        [Tooltip("Enable cognitiveVR internal debug messages. Can be useful for debugging")]
-        public bool EnableLogging = true;
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize(). Useful for delaying startup in multiplayer games")]
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
         public bool InitializeOnStart = true;
 
         [HideInInspector] //complete this option later
@@ -394,17 +393,6 @@ namespace CognitiveVR
         static Error initResponse = Error.NotInitialized;
         public static Error InitResponse { get { return initResponse; } }
         bool OutstandingInitRequest = false;
-
-        /// <summary>
-        /// This will return SystemInfo.deviceUniqueIdentifier unless SteamworksUserTracker is present. only register users once! otherwise, there will be lots of uniqueID users with no data!
-        /// TODO make this loosly tied to SteamworksUserTracker - if this component is removed, ideally everything will still compile. maybe look for some interface?
-        /// </summary>
-        EntityInfo GetUniqueEntityID()
-        {
-            if (GetComponent<CognitiveVR.Components.SteamworksUser>() == null)
-                return CognitiveVR.EntityInfo.createUserInfo(SystemInfo.deviceUniqueIdentifier);
-            return null;
-        }
 
         public float StartupDelayTime = 2;
 
@@ -433,22 +421,15 @@ namespace CognitiveVR
                 yield return new WaitForSeconds(StartupDelayTime);
             }
             if (InitializeOnStart)
-                Initialize();
+                Initialize("");
         }
 
         private void OnValidate()
         {
             if (StartupDelayTime < 0) { StartupDelayTime = 0;}
-            Util.setLogEnabled(EnableLogging);
         }
 
-        public void Initialize(string userName, Dictionary<string,object> userProperties = null)
-        {
-            var user = EntityInfo.createUserInfo(userName, userProperties);
-            Initialize(user);
-        }
-
-        public void Initialize(EntityInfo user = null)
+        public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
         {
             Util.logDebug("CognitiveVR_Manager Initialize");
             if (instance != null && instance != this)
@@ -457,15 +438,15 @@ namespace CognitiveVR
                 Destroy(gameObject);
                 return;
             } //destroy if there's already another manager
-            if (instance == this && CoreSubsystem.Initialized)
+            if (instance == this && Core.Initialized)
             {
                 Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
                 return;
             } //skip if this manage has already been initialized
 
-            if (!CognitiveVR_Preferences.Instance.IsCustomerIDValid)
+            if (!CognitiveVR_Preferences.Instance.IsAPIKeyValid)
             {
-                if (EnableLogging) { Debug.LogWarning("CognitiveVR_Manager CustomerID is missing! Cannot init CognitiveVR"); }
+                Util.logDebug("CognitiveVR_Manager Initialize does not have valid apikey");
                 return;
             }
             if (OutstandingInitRequest)
@@ -473,20 +454,7 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_Manager Initialize already called. Waiting for response");
                 return;
             }
-
-            EntityInfo initializeUser = user;
-            if (initializeUser == null)
-            {
-                initializeUser = GetUniqueEntityID();
-            }
-
-            CognitiveVR.InitParams initParams = CognitiveVR.InitParams.create
-            (
-                customerId: CognitiveVR_Preferences.Instance.CustomerID,
-                logEnabled: EnableLogging,
-                userInfo: initializeUser
-            );
-            CognitiveVR.Core.init(initParams, OnInit);
+            
             OutstandingInitRequest = true;
 
             ExitPoll.Initialize();
@@ -507,10 +475,18 @@ namespace CognitiveVR
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
-        }
 
+            Core.UserId = userName;
+
+            CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
+            UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
+            UpdateUserState(userProperties);
+            UpdateUserState("name", userName);
+        }
+        
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            Debug.Log("scene manager scene loaded event");
             DynamicObject.ClearObjectIds();
             if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
@@ -524,18 +500,18 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
                 if (lastSceneSettings != null)
                 {
+                    Debug.Log("scene load last scene was " + lastSceneSettings.SceneName);
                     if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
                     {
                         Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
-                        OnSendData();
+                        Core.SendDataEvent();
                         //SendPlayerGazeSnapshots();
                         CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                     }
                 }
 
-                CoreSubsystem.CurrentSceneId = string.Empty;
-                CoreSubsystem.CurrentSceneVersionNumber = 0;
-                CoreSubsystem.CurrensSceneVersionId = 0;
+                Core.CurrentSceneId = string.Empty;
+                Core.CurrentSceneVersionNumber = 0;
 
                 CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
                 if (sceneSettings != null)
@@ -543,9 +519,8 @@ namespace CognitiveVR
                     if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        CoreSubsystem.CurrentSceneId = sceneSettings.SceneId;
-                        CoreSubsystem.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
-                        CoreSubsystem.CurrensSceneVersionId = sceneSettings.VersionId;
+                        Core.CurrentSceneId = sceneSettings.SceneId;
+                        Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     }
                     else
                     {
@@ -585,7 +560,7 @@ namespace CognitiveVR
             //doPostRender = false;
 
             OnUpdate();
-            UpdatePlayerRecorder();
+            UpdateSendHotkeyCheck();
 
 #if CVR_STEAMVR
             var system = Valve.VR.OpenVR.System;
@@ -603,20 +578,41 @@ namespace CognitiveVR
 #endif
         }
 
+        void UpdateSendHotkeyCheck()
+        {
+            CognitiveVR_Preferences prefs = CognitiveVR_Preferences.Instance;
+
+            if (!prefs.SendDataOnHotkey) { return; }
+            if (Input.GetKeyDown(prefs.SendDataHotkey))
+            {
+                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
+                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
+                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
+
+                Core.SendDataEvent();
+            }
+        }
+
         /// <summary>
         /// End the cognitivevr session. sends any outstanding data to dashboard and sceneexplorer
         /// requires calling Initialize to create a new session id and begin recording analytics again
         /// </summary>
         public void EndSession()
         {
-            OnSendData();
+            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
+            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
 
-            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
-            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            Core.SendDataEvent();
 
-            Destroy(FindObjectOfType<CognitiveVR_Manager>());
+            //clear properties from last session
+            newDeviceProperties.Clear();
+            knownDeviceProperties.Clear();
 
-            CoreSubsystem.reset();
+            newUserProperties.Clear();
+            knownUserProperties.Clear();
+
+            CleanupEvents();
+            Core.reset();
             initResponse = Error.NotInitialized;
         }
 
@@ -628,9 +624,9 @@ namespace CognitiveVR
             OnQuit();
             //OnSendData();
 
-            if (CoreSubsystem.Initialized)
+            if (Core.Initialized)
             {
-                CoreSubsystem.reset();
+                Core.reset();
             }
 
             CleanupEvents();
@@ -644,7 +640,7 @@ namespace CognitiveVR
         }
 
         //writes manifest entry and object snapshot to string then send http request
-        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots)
+        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots, CognitiveVR_Preferences.SceneSettings trackingSettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
             //save and clear snapshots and manifest entries
             DynamicObjectManifestEntry[] tempObjectManifest = new DynamicObjectManifestEntry[SendObjectManifest.Count];
@@ -695,7 +691,7 @@ namespace CognitiveVR
                     {
                         snapshots.Add(DynamicObject.SetSnapshot(tempSnapshots[i]));
                     }
-                    System.GC.Collect();
+                    //System.GC.Collect();
                     done = true;
                 }).Start();
 
@@ -710,7 +706,7 @@ namespace CognitiveVR
                 SendObjectSnapshots.Dequeue().ReturnToPool();
             }
 
-            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots);
+            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots,trackingSettings,uniqueid,sessiontimestamp,sessionid);
         }
 
 #region Application Quit
@@ -721,21 +717,21 @@ namespace CognitiveVR
 
             if (InitResponse != Error.Success) { return; }
 
-            double playtime = Util.Timestamp() - CognitiveVR_Preferences.TimeStamp;
+            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
-                Instrumentation.Transaction("cvr.session").setProperty("sessionlength",playtime).end();
+                new CustomEvent("cvr.session").SetProperty("sessionlength",playtime).Send();
                 return;
             }
 
 			CognitiveVR.Util.logDebug("session length " + playtime);
-            Instrumentation.Transaction("cvr.session").setProperty("sessionlength", playtime).end();
+            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
 
-            OnSendData();
-            CoreSubsystem.reset();
+            Core.SendDataEvent();
+            Core.reset();
 
 
             //Camera.onPostRender -= MyPostRender;
@@ -749,6 +745,122 @@ namespace CognitiveVR
             hasCanceled = true;            
             Application.Quit();
         }
-#endregion
+
+        #endregion
+
+        public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
+        {
+            if (clearNewProperties)
+            {
+                Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
+                newDeviceProperties.Clear();
+                return returndict;
+            }
+            return newDeviceProperties;
+        }
+        static Dictionary<string, object> newDeviceProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> knownDeviceProperties = new Dictionary<string, object>();
+        public static void UpdateDeviceState(Dictionary<string, object> dictionary)
+        {
+            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
+
+            foreach (var kvp in dictionary)
+            {
+                if (knownDeviceProperties.ContainsKey(kvp.Key) && knownDeviceProperties[kvp.Key] != kvp.Value) //update value
+                {
+                    if (newDeviceProperties.ContainsKey(kvp.Key))
+                    {
+                        newDeviceProperties[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        newDeviceProperties.Add(kvp.Key, kvp.Value);
+                    }
+                    knownDeviceProperties[kvp.Key] = kvp.Value;
+                }
+                else if (!knownDeviceProperties.ContainsKey(kvp.Key)) //add value
+                {
+                    knownDeviceProperties.Add(kvp.Key, kvp.Value);
+                    newDeviceProperties.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+        public static void UpdateDeviceState(string key, object value)
+        {
+            if (knownDeviceProperties.ContainsKey(key) && knownDeviceProperties[key]!=value) //update value
+            {
+                if (newDeviceProperties.ContainsKey(key))
+                {
+                    newDeviceProperties[key] = value;
+                }
+                else
+                {
+                    newDeviceProperties.Add(key, value);
+                }
+                knownDeviceProperties[key] = value;
+            }
+            else if(!knownDeviceProperties.ContainsKey(key)) //add value
+            {
+                knownDeviceProperties.Add(key, value);
+                newDeviceProperties.Add(key, value);
+            }
+        }
+
+        public static Dictionary<string, object> GetNewUserProperties(bool clearNewProperties)
+        {
+            if (clearNewProperties)
+            {
+                Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
+                newUserProperties.Clear();
+                return returndict;
+            }
+            return newUserProperties;
+        }
+        static Dictionary<string, object> newUserProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> knownUserProperties = new Dictionary<string, object>();
+        public static void UpdateUserState(Dictionary<string, object> dictionary)
+        {
+            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
+            foreach (var kvp in dictionary)
+            {
+                if (knownUserProperties.ContainsKey(kvp.Key) && knownUserProperties[kvp.Key] != kvp.Value) //update value
+                {
+                    if (newUserProperties.ContainsKey(kvp.Key))
+                    {
+                        newUserProperties[kvp.Key] = kvp.Value;
+                    }
+                    else
+                    {
+                        newUserProperties.Add(kvp.Key, kvp.Value);
+                    }
+                    knownUserProperties[kvp.Key] = kvp.Value;
+                }
+                else if (!knownUserProperties.ContainsKey(kvp.Key)) //add value
+                {
+                    knownUserProperties.Add(kvp.Key, kvp.Value);
+                    newUserProperties.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+        public static void UpdateUserState(string key, object value)
+        {
+            if (knownUserProperties.ContainsKey(key) && knownUserProperties[key] != value) //update value
+            {
+                if (newUserProperties.ContainsKey(key))
+                {
+                    newUserProperties[key] = value;
+                }
+                else
+                {
+                    newUserProperties.Add(key, value);
+                }
+                knownUserProperties[key] = value;
+            }
+            else if (!knownUserProperties.ContainsKey(key)) //add value
+            {
+                knownUserProperties.Add(key, value);
+                newUserProperties.Add(key, value);
+            }
+        }
     }
 }

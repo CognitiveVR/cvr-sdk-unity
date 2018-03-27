@@ -93,7 +93,7 @@ namespace CognitiveVR
 
         public Vector3 GetHMDForward()
         {
-#if CVR_GAZETRACK
+#if CVR_FOVE||CVR_PUPIL
 
 #if CVR_FOVE
             if (CognitiveVR_Manager.FoveInstance != null)

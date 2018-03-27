@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using CognitiveVR;
 
 /// <summary>
 /// WARNING - NOT FULLY TESTED!
@@ -34,18 +35,18 @@ namespace CognitiveVR.Components
 
 #if CVR_OCULUS
             Util.logDebug("batterylevel " + OVRPlugin.batteryLevel);
-            Instrumentation.Transaction("cvr.battery")
-                .setProperty("batterylevel", OVRPlugin.batteryLevel)
-                .setProperty("batterytemperature", OVRPlugin.batteryTemperature)
-                .setProperty("batterystatus", OVRPlugin.batteryStatus)
-                .beginAndEnd();
+            new CustomEvent("cvr.battery")
+                .SetProperty("batterylevel", OVRPlugin.batteryLevel)
+                .SetProperty("batterytemperature", OVRPlugin.batteryTemperature)
+                .SetProperty("batterystatus", OVRPlugin.batteryStatus)
+                .Send();
 #else
 
             if (GetBatteryLevel())
             {
                 Util.logDebug("batterylevel " + batteryLevel);
 
-                Instrumentation.Transaction("cvr.battery").setProperty("batterylevel", batteryLevel).beginAndEnd();
+                new CustomEvent("cvr.battery").SetProperty("batterylevel", batteryLevel).Send();
             }
 #endif
         }

@@ -87,13 +87,13 @@ namespace CognitiveVR.Components
             {
                 lowFramerate = true;
                 fpsTransactionID = Util.GetUniqueId();
-                Instrumentation.Transaction("cvr.performance", fpsTransactionID).setProperty("fps", lastFps).begin();
+                new CustomEvent("cvr.performance").SetProperty("fps", lastFps).Send();
                 Util.logDebug("low framerate");
             }
             else if (lastFps > LowFramerateThreshold && lowFramerate)
             {
                 lowFramerate = false;
-                Instrumentation.Transaction("cvr.performance", fpsTransactionID).end();
+                new CustomEvent("cvr.performance").Send();
             }
 
             if (OnlySendComfortOnLowFPS) { return; }
@@ -102,15 +102,15 @@ namespace CognitiveVR.Components
             accumRotation = 0.0F;
             rotFrames = 0;
 
-            Instrumentation.Transaction("cvr.comfort", fpsTransactionID)
-                .setProperty("fps", lastFps)
-                .setProperty("rps", lastRps)
+            new CustomEvent("cvr.comfort")
+                .SetProperty("fps", lastFps)
+                .SetProperty("rps", lastRps)
 #if CVR_OCULUS
-                    .setProperty("cpulevel", OVRPlugin.cpuLevel)
-                    .setProperty("gpulevel", OVRPlugin.gpuLevel)
-                    .setProperty("powersaving", OVRPlugin.powerSaving)
+                    .SetProperty("cpulevel", OVRPlugin.cpuLevel)
+                    .SetProperty("gpulevel", OVRPlugin.gpuLevel)
+                    .SetProperty("powersaving", OVRPlugin.powerSaving)
 #endif
-                    .beginAndEnd();
+                    .Send();
             Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
         }
 

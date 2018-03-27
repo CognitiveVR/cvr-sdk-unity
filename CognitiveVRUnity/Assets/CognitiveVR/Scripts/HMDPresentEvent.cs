@@ -26,12 +26,12 @@ namespace CognitiveVR.Components
         private void OVRManager_HMDMounted()
         {
             hmdpresentGUID = Util.GetUniqueId();
-            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
+            new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
         }
 
         private void OVRManager_HMDUnmounted()
         {
-            Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time).end();
+            new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time).Send();
         }
 
 
@@ -41,12 +41,12 @@ namespace CognitiveVR.Components
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
                 hmdpresentGUID = Util.GetUniqueId();
-                Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", true).setProperty("starttime", Time.time).begin();
+                new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
             }
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 Util.logDebug("hmd removed");
-                Instrumentation.Transaction("cvr.hmdpresent", hmdpresentGUID).setProperty("present", false).setProperty("endtime", Time.time - 10f).end();
+                new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time - 10f).Send();
             }
         }
 #endif

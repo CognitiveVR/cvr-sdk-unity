@@ -199,7 +199,7 @@ namespace CognitiveVR
         static IEnumerator RequestAllQuestions()
         {
             //TODO finish caching questions on startup
-            string url = "http://api.cognititivevr.io/customerid/allquestions";
+            string url = "http cognitive /customerid/allquestions";
             url = "nowhere";
             WWW responseRequest = new WWW(url);
             yield return responseRequest;
@@ -243,7 +243,7 @@ namespace CognitiveVR
             {
                 //hook name needs to be pulled out of json text file so it knows where to send
                 string url;
-                //string url = "http://api.cognititivevr.io/"+CognitiveVR_Preferences.Instance.CustomerID+"/"+ +"/responses";
+                //string url = "http cognititive /"+CognitiveVR_Preferences.Instance.CustomerID+"/"+ +"/responses";
                 url = "nowhere";
                 WWW responseRequest = new WWW(url);
                 yield return responseRequest;
@@ -340,9 +340,12 @@ namespace CognitiveVR
         IEnumerator RequestQuestions()
         {
             //hooks/questionsets. ask hook by id what their questionset is
-            string url = Constants.GETEXITPOLLQUESTIONSET(CognitiveVR_Preferences.Instance.CustomerID, RequestQuestionHookName);
+            string url = Constants.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
 
-            WWW www = new WWW(url);
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+
+            WWW www = new WWW(url,null,headers);//AUTH
 
             float time = 0;
             while (time < 3) //wait a maximum of 3 seconds
@@ -545,17 +548,23 @@ namespace CognitiveVR
 
         void SendResponsesAsTransaction()
         {
-            var exitpoll = Instrumentation.Transaction("cvr.exitpoll");
-            exitpoll.setProperty("userId", CognitiveVR.Core.userId);
-            exitpoll.setProperty("questionSetId", QuestionSetId);
-            exitpoll.setProperty("hook", RequestQuestionHookName);
+            var exitpoll = new CustomEvent("cvr.exitpoll");
+            exitpoll.SetProperty("userId", CognitiveVR.Core.UniqueID);
+            exitpoll.SetProperty("questionSetId", QuestionSetId);
+            exitpoll.SetProperty("hook", RequestQuestionHookName);
+
+            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
+            {
+                exitpoll.SetProperty("sceneId", scenesettings.SceneId);
+            }
 
             foreach (var property in transactionProperties)
             {
-                exitpoll.setProperty(property.Key, property.Value);
+                exitpoll.SetProperty(property.Key, property.Value);
             }
-            exitpoll.beginAndEnd(CurrentExitPollPanel.transform.position);
-            InstrumentationSubsystem.SendCachedTransactions();
+            exitpoll.Send(CurrentExitPollPanel.transform.position);
+            Core.SendDataEvent();
         }
 
         //puts responses from questions into json for exitpoll microservice
@@ -563,19 +572,19 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            JsonUtil.SetString("userId", CognitiveVR.Core.userId, builder);
+            JsonUtil.SetString("userId", CognitiveVR.Core.UniqueID, builder);
             builder.Append(",");
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionId", CognitiveVR_Preferences.SessionID, builder);
+            JsonUtil.SetString("sessionId", Core.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
 
-            var scene = CognitiveVR_Preferences.FindTrackingScene();
-            if (scene != null)
+            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
             {
-                JsonUtil.SetString("sceneId", scene.SceneId, builder);
+                JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);
                 builder.Append(",");
             }
 
@@ -623,37 +632,22 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-#pragma warning disable 414
-        //http request can be lost unless held in reference until completed
-        WWW exitPollResponses;
-#pragma warning restore 414
-
-        //the responses of all the questions in the set put together in a string and uploaded somewhere
+        //the responses of all the questions in the set put together in a string and uploaded to the microservice at api.cognitivevr.io
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            string url = Constants.POSTEXITPOLLRESPONSES(CognitiveVR_Preferences.Instance.CustomerID, QuestionSetName, questionSetVersion);
+            string url = Constants.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);
 
-            var headers = new Dictionary<string, string>();
+            var headers = new Dictionary<string, string>();//AUTH
             headers.Add("Content-Type", "application/json");
             headers.Add("X-HTTP-Method-Override", "POST");
+            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
 
-            exitPollResponses = new UnityEngine.WWW(url, bytes, headers);
-
-            //CognitiveVR_Manager.Instance.StartCoroutine(DebugSendQuestionResponses(url, bytes, headers));
+            NetworkManager.Post(url, bytes, headers);
         }
-
-        /*IEnumerator DebugSendQuestionResponses(string url, byte[] bytes, Dictionary<string,string>headers)
-        {
-            CognitiveVR.Util.logDebug(url);
-            WWW www = new UnityEngine.WWW(url, bytes, headers);
-            yield return www;
-            CognitiveVR.Util.logDebug("error: "+www.error);
-            CognitiveVR.Util.logDebug("text: "+www.text);
-        }*/
 
         public bool UseTimeout { get; private set; }
         public float Timeout { get; private set; }

@@ -662,7 +662,7 @@ namespace CognitiveVR
             bool canceled = false;
             materialList = PrepareFileWrite();
 
-            using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj"))
+            using (StreamWriter sw = new StreamWriter(folder + "/" + filename + ".obj")) //TODO mac export filestream ioexception error
             {
                 sw.Write("mtllib ./" + filename + ".mtl\n");
                 if (!skipTerrain)
@@ -731,7 +731,6 @@ namespace CognitiveVR
         {
             try
             {
-                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
                 Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
             }
             catch
@@ -838,9 +837,9 @@ namespace CognitiveVR
             else
             {
                 if (staticGeoOnly && nonstaticObjectCount > smallObjectCount)
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure at your meshes are marked as static, or disable ExportStaticMeshesOnly!", "Ok");
+                    EditorUtility.DisplayDialog("Scene not exported", "Make sure at your meshes are marked as static, or disable ExportStaticMeshesOnly!", "Ok");
                 else
-                    EditorUtility.DisplayDialog("Objects not exported", "Make sure your mesh has a renderer and is larger than MinimumExportSize", "Ok");
+                    EditorUtility.DisplayDialog("Scene not exported", "Make sure your mesh has a renderer and is larger than MinimumExportSize", "Ok");
                 return false;
             }
         }
@@ -931,6 +930,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null){ continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 filters.AddRange(RecursivelyGetMeshes(transform.GetChild(i)));
             }
@@ -951,6 +951,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 skinnedMeshes.AddRange(RecursivelyGetSkinnedMeshes(transform.GetChild(i)));
             }
@@ -971,6 +972,7 @@ namespace CognitiveVR
             for (int i = 0; i < transform.childCount; i++)
             {
                 if (transform.GetChild(i).GetComponent<DynamicObject>() != null) { continue; }
+                if (!transform.GetChild(i).gameObject.activeSelf || !transform.GetChild(i).gameObject.activeInHierarchy) { continue; } //skip disabled objects
 
                 canvases.AddRange(RecursivelyGetCanvases(transform.GetChild(i)));
             }
@@ -1157,7 +1159,7 @@ namespace CognitiveVR
         {
             if (transform == null)
             {
-                EditorUtility.DisplayDialog("No source object selected!", "Please select one or more dynamic objects", "Ok");
+                EditorUtility.DisplayDialog("Export Dynamic Object", "No source object selected! Please select one or more Dynamic Objects", "Ok");
                 return false;
             }
 
@@ -1177,7 +1179,7 @@ namespace CognitiveVR
             }
             if (!dynamic.UseCustomMesh)
             {
-                Debug.Log("Skipping " + transform.gameObject + ". Common Meshes for Dynamic Objects don't need to be exported");
+                //Debug.Log("Skipping " + transform.gameObject + ". Common Meshes for Dynamic Objects don't need to be exported");
                 return false;
             }
 

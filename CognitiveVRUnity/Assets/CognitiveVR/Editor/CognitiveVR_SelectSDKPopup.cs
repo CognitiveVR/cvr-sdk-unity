@@ -45,7 +45,7 @@ namespace CognitiveVR
 
         public override void OnClose()
         {
-            CognitiveVR_Settings.Instance.SetPlayerDefine(option);
+            EditorCore.SetPlayerDefine(option);
         }
 
         List<string> option = new List<string>();
@@ -57,7 +57,7 @@ namespace CognitiveVR
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if (option.Contains("CVR_DEFAULT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_DEFAULT")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Unity Default"))
             {
                 if (option.Contains("CVR_DEFAULT"))
@@ -78,7 +78,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.EndHorizontal();
 
-            if (option.Contains("CVR_STEAMVR")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_STEAMVR")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Steam VR 1.2.0"))
             {
                 if (option.Contains("CVR_STEAMVR"))
@@ -92,7 +92,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_OCULUS")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_OCULUS")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Oculus Utilities 1.9.0"))
             {
                 if (option.Contains("CVR_OCULUS"))
@@ -106,7 +106,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_FOVE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_FOVE")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Fove VR 1.3.1"))
             {
                 if (option.Contains("CVR_FOVE"))
@@ -124,7 +124,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_PUPIL")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_PUPIL")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Pupil Labs"))
             {
                 if (option.Contains("CVR_PUPIL"))
@@ -149,7 +149,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.EndHorizontal();
 
-            if (option.Contains("CVR_ARKIT")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_ARKIT")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Apple ARKit"))
             {
                 if (option.Contains("CVR_ARKIT"))
@@ -165,7 +165,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_ARCORE")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_ARCORE")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Google ARCore"))
             {
                 if (option.Contains("CVR_ARCORE"))
@@ -181,7 +181,7 @@ namespace CognitiveVR
             }
             GUI.color = Color.white;
 
-            if (option.Contains("CVR_META")) { GUI.color = CognitiveVR_Settings.GreenButton; GUI.contentColor = Color.white; }
+            if (option.Contains("CVR_META")) { GUI.color = EditorCore.GreenButton; GUI.contentColor = Color.white; }
             if (GUILayout.Button("Meta SDK v2.4.1.49"))
             {
                 if (option.Contains("CVR_META"))
@@ -201,7 +201,7 @@ namespace CognitiveVR
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(5);
 
-            GUI.color = CognitiveVR_Settings.GreenButton;
+            GUI.color = EditorCore.GreenButton;
             GUI.contentColor = Color.white;
             if (GUILayout.Button("Save and Close"))
             {

@@ -115,9 +115,6 @@
     <Reference Include="SyntaxTree.VisualStudio.Unity.Bridge">
       <HintPath>Library\UnityAssemblies\SyntaxTree.VisualStudio.Unity.Bridge.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>Library\ScriptAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>Library\ScriptAssemblies\Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -126,10 +123,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="CognitiveVRUnity.Plugins.csproj">
-      <Project>{6A9D6C03-560B-9E16-E64B-9F737AB6DEF8}</Project>
-      <Name>CognitiveVRUnity.Plugins</Name>
-    </ProjectReference>
     <ProjectReference Include="CognitiveVRUnity.csproj">
       <Project>{E043B98E-288A-0092-5749-5C5064408108}</Project>
       <Name>CognitiveVRUnity</Name>
@@ -140,16 +133,18 @@
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_DynamicObjectInspector.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ExitPollPanelEditor.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ManagerInspector.cs" />
-    <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_NewProductPopup.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_ObjectManifestWindow.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SceneExplorerExporter.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SceneExportWindow.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_SelectSDKPopup.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_Settings.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\CognitiveVR_UpdateSDKWindow.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\EditorCore.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\InitWizard.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\ManageDynamicObjects.cs" />
     <Compile Include="Assets\CognitiveVR\Editor\MenuItems.cs" />
+    <Compile Include="Assets\CognitiveVR\Editor\PreferencesInspector.cs" />
     <Compile Include="Assets\Editor\Builder.cs" />
-    <Compile Include="Assets\Editor\CognitiveVRPostProcessBuild.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\CognitiveVR\ExitPoll\SIL Open Font License.txt" />
