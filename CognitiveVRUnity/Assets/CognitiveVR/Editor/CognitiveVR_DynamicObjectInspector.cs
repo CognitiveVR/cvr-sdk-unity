@@ -270,7 +270,7 @@ namespace CognitiveVR
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     string s = System.Guid.NewGuid().ToString();
-                    customId.stringValue = s;
+                    customId.stringValue = "editor_"+s;
                     dynamics[i].CustomId = s;
                     usedids.Add(s);
                     Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + s);

@@ -753,14 +753,14 @@ namespace CognitiveVR
                 currentUniqueId++;
                 usedObjectId = ObjectIds.Find(delegate (DynamicObjectId obj)
                 {
-                    return obj.Id == "RUNTIME" + (currentUniqueId + uniqueIdOffset).ToString();
+                    return obj.Id == "runtime_" + (currentUniqueId + uniqueIdOffset).ToString();
                 });
                 if (usedObjectId == null)
                 {
                     break; //break once we have a currentuniqueid that isn't in objectid list
                 }
             }
-            return new DynamicObjectId("RUNTIME" + (currentUniqueId + uniqueIdOffset).ToString(), MeshName, target);
+            return new DynamicObjectId("runtime_" + (currentUniqueId + uniqueIdOffset).ToString(), MeshName, target);
         }
 
         //from SendDataEvent. either manual 'send all data' or onquit
