@@ -166,13 +166,12 @@ namespace CognitiveVR
             {
                 System.Action completedRefreshSceneVersion2 = delegate ()
                 {
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     ManageDynamicObjects.UploadManifest();
                 };
 
                 //upload dynamics
                 System.Action completeSceneUpload = delegate () {
-                    //CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     EditorCore.RefreshSceneVersion(completedRefreshSceneVersion2); //likely completed in previous step, but just in case
                 };
 

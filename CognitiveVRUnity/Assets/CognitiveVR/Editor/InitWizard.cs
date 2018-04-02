@@ -652,14 +652,13 @@ public class InitWizard : EditorWindow
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     ManageDynamicObjects.UploadManifest();
                     currentPage = 9;
                 };
 
                 //fourth upload dynamics
                 System.Action completeSceneUpload = delegate () {
-                    //CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
                 };
 
