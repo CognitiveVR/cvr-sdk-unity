@@ -105,16 +105,29 @@ namespace CognitiveVR
                 if (GUILayout.Button("Export", "ButtonLeft", GUILayout.MaxWidth(100)))
                 {
                     CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
                 }
 
                 EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
                 if (GUILayout.Button("Upload", "ButtonRight", GUILayout.MaxWidth(100)))
                 {
                     CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
-                    //CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
                 }
                 EditorGUI.EndDisabledGroup();
 
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                if (GUILayout.Button("Thumbnail from SceneView",GUILayout.MaxWidth(180)))
+                {
+                    foreach(var v in serializedObject.targetObjects)
+                    {
+                        EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
+                    }
+                }
+                EditorGUI.EndDisabledGroup();
                 GUILayout.EndHorizontal();
 
 
