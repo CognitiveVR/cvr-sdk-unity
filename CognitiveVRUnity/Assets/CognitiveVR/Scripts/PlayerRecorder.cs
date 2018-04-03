@@ -86,7 +86,6 @@ namespace CognitiveVR
             //SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
             CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
-
             if (sceneSettings != null)
             {
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
@@ -416,33 +415,33 @@ namespace CognitiveVR
 
             }
 
-            //instance.uiDynamicHit = null;
-            /*if (UIHitDistance < PhysicsHitDistance) //hit some UI thing first
+            if (PhysicsdynamicHit != null && PhysicsdynamicHit.ObjectId != null)
             {
-                if (UIdynamicHit != null)
+                //this is correct because the hit point is correct in world space, regardless of object orientation
+                //from this we want to know where it falls relative to the dynamic object transform
+                //mesh transform does not matter! meshes are exported as obj with origin as dynamic object - transformations are baked into the exported mesh
+                //if the mesh transform is moved/rotated after export, it should be exported again
+                instance.postRenderHitPos = PhysicsdynamicHit.transform.InverseTransformPointUnscaled(PhysicsHitPoint);
+
+                instance.postRenderHitWorldPos = PhysicsHitPoint;
+                instance.postRenderId = PhysicsdynamicHit.ObjectId.Id;
+                //instance.postRenderDist = hit.distance;
+                instance.hitType = DynamicHitType.Physics;
+                PhysicsdynamicHit.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
+#if UNITY_EDITOR
+                if (CognitiveVR_Preferences.Instance.EnableLogging)
                 {
-                    //Debug.Log("save hit from dynamic to world!");
-                    //instance.TickPostRender(results[0].gameObject.transform.InverseTransformPointUnscaled(UIHitPoint), UIdynamicHit.ObjectId.Id, UIHitDistance);
-                    instance.postRenderHitPos = results[0].gameObject.transform.InverseTransformPointUnscaled(UIHitPoint);
-                    instance.postRenderHitWorldPos = UIHitPoint;
-                    instance.postRenderId = UIdynamicHit.ObjectId.Id;
-                    instance.postRenderDist = UIHitDistance;
-                    instance.hitType = DynamicHitType.UI;
-                    instance.uiDynamicHit = UIdynamicHit;
+                    //world position
+                    //Debug.DrawRay(PhysicsdynamicHit.transform.TransformPointUnscaled(instance.postRenderHitPos), Vector3.up, Color.green, 1);
+                    //Debug.DrawRay(PhysicsdynamicHit.transform.TransformPointUnscaled(instance.postRenderHitPos), Vector3.right, Color.red, 1);
+                    //Debug.DrawRay(PhysicsdynamicHit.transform.TransformPointUnscaled(instance.postRenderHitPos), Vector3.forward, Color.blue, 1);
+
+                    //local position
+                    Debug.DrawRay(instance.postRenderHitPos, Vector3.up, Color.green, 1);
+                    Debug.DrawRay(instance.postRenderHitPos, Vector3.right, Color.red, 1);
+                    Debug.DrawRay(instance.postRenderHitPos, Vector3.forward, Color.blue, 1);
                 }
-            }
-            else*/
-            {
-                if (PhysicsdynamicHit != null && PhysicsdynamicHit.ObjectId != null)
-                {
-                    //instance.TickPostRender(hit.transform.InverseTransformPointUnscaled(WorldHitPoint), PhysicsdynamicHit.ObjectId.Id);
-                    instance.postRenderHitPos = hit.transform.InverseTransformPointUnscaled(PhysicsHitPoint);
-                    instance.postRenderHitWorldPos = PhysicsHitPoint;
-                    instance.postRenderId = PhysicsdynamicHit.ObjectId.Id;
-                    //instance.postRenderDist = hit.distance;
-                    instance.hitType = DynamicHitType.Physics;
-                    PhysicsdynamicHit.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                }
+#endif
             }
 
             if (!didHitAnything)// && results.Count == 0) //nothing hit

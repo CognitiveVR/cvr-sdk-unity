@@ -860,4 +860,107 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return SceneExportDirExists;
     }
     #endregion
+
+    #region dynamic object thumbnails
+    //returns unused layer int. returns -1 if no unused layer is found
+    static int FindUnusedLayer()
+    {
+        for (int i = 31; i > 0; i--)
+        {
+            if (string.IsNullOrEmpty(LayerMask.LayerToName(i)))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    //use the scene camera's transform
+    public static void SaveDynamicThumbnailSceneView(GameObject target)
+    {
+        SaveDynamicThumbnail(target, SceneView.lastActiveSceneView.camera.transform.position, SceneView.lastActiveSceneView.camera.transform.rotation);
+    }
+
+    public static void SaveDynamicThumbnailAutomatic(GameObject target)
+    {
+        Vector3 pos;
+        Quaternion rot;
+        CalcCameraTransform(target, out pos, out rot);
+        SaveDynamicThumbnail(target, pos, rot);
+    }
+
+    static void SaveDynamicThumbnail(GameObject target, Vector3 position, Quaternion rotation)
+    {
+        Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+        var dynamic = target.GetComponent<CognitiveVR.DynamicObject>();
+
+        //choose layer
+        int layer = FindUnusedLayer();
+        if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); return; }
+
+        //create camera stuff
+        GameObject go = new GameObject("temp dynamic camera");
+        var renderCam = go.AddComponent<Camera>();
+        renderCam.clearFlags = CameraClearFlags.Color;
+        renderCam.backgroundColor = Color.clear;
+        renderCam.cullingMask = 1 << layer;
+        var rt = new RenderTexture(128, 128, 16);
+        renderCam.targetTexture = rt;
+
+        //position camera
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+
+        //set dynamic gameobject layers
+
+        foreach (var v in target.GetComponentsInChildren<Transform>())
+        {
+            originallayers.Add(v.gameObject, v.gameObject.layer);
+            v.gameObject.layer = layer;
+        }
+
+        //render to texture
+        renderCam.Render();
+        Texture2D tex = new Texture2D(rt.width, rt.height);
+        RenderTexture.active = rt;
+        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        tex.Apply();
+        RenderTexture.active = null;
+
+        //reset dynamic object layers
+        foreach (var v in originallayers)
+        {
+            v.Key.layer = v.Value;
+        }
+
+        //remove camera
+        GameObject.DestroyImmediate(renderCam.gameObject);
+
+        //save
+        File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", tex.EncodeToPNG());
+    }
+
+    static void CalcCameraTransform(GameObject target, out Vector3 position, out Quaternion rotation)
+    {
+        //get bounds magnitude of target
+        //position at bounds center
+
+        Bounds largestBounds = new Bounds();
+        float boundsMag = 0;
+        //TODO combine bounds of meshes
+        //TODO canvas dynamic objects
+        foreach (var renderer in target.GetComponentsInChildren<Renderer>())
+        {
+            if (renderer.bounds.size.magnitude > boundsMag)
+            {
+                boundsMag = renderer.bounds.size.magnitude;
+                largestBounds = renderer.bounds;
+            }
+        }
+
+        //include target's rotation
+        position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
+        rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
+    }
+    #endregion
 }

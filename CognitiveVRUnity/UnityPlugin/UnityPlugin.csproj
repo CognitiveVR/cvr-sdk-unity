@@ -43,6 +43,7 @@
     <Compile Include="CognitiveVR_Preferences.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="CustomEvent.cs" />
     <Compile Include="DynamicObjectCore.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="External\StringBuilderExtensions.cs" />

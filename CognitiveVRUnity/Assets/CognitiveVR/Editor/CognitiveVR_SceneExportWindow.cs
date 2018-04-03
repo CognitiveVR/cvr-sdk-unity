@@ -584,10 +584,12 @@ namespace CognitiveVR
 
                     var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, dynamic.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
                     CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
+                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
                     successfullyExportedCount++;
                 }
                 else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(dynamic.transform))
                 {
+                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
                     successfullyExportedCount++;
                 }
 
@@ -690,10 +692,12 @@ namespace CognitiveVR
 
                     var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, v, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
                     CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
+                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
                     successfullyExportedCount++;
                 }
                 else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
                 {
+                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
                     successfullyExportedCount++;
                 }
 
