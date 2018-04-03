@@ -100,7 +100,6 @@
     <Compile Include="Assets\CognitiveVR\Scripts\HMDHeight.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HMDPresentEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\HeadphoneState.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\IssueReporter.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\MicrophoneButton.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\MicrophoneUtility.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\OcclusionEvent.cs" />
@@ -110,8 +109,6 @@
     <Compile Include="Assets\CognitiveVR\Scripts\RecenterEvent.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\RoomSize.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\ScreenResolution.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\SensorRecorder.cs" />
-    <Compile Include="Assets\CognitiveVR\Scripts\SteamworksUser.cs" />
     <Compile Include="Assets\CognitiveVR\Scripts\TeleportEvent.cs" />
   </ItemGroup>
   <ItemGroup>
