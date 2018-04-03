@@ -24,4 +24,4 @@ Once everything has imported correctly click **cognitive3D->Scene Setup** from t
 ## Cognitive3D Documentation
 The documentation explains how to authenticate with the SDK, track your users' experience and how to export your scene to view on SceneExplorer.com
 
-[Go to the Docs](http://docs.cognitivevr.io/unity/get-started/)
+[Go to the Docs](http://docs.cognitive3d.com/unity/get-started/)
