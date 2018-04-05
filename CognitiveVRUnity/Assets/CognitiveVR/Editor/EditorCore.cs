@@ -896,15 +896,18 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
         //choose layer
         int layer = FindUnusedLayer();
-        if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); return; }
+        if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers");}
 
         //create camera stuff
         GameObject go = new GameObject("temp dynamic camera");
         var renderCam = go.AddComponent<Camera>();
         renderCam.clearFlags = CameraClearFlags.Color;
         renderCam.backgroundColor = Color.clear;
-        renderCam.cullingMask = 1 << layer;
-        var rt = new RenderTexture(128, 128, 16);
+        if (layer != -1)
+        {
+            renderCam.cullingMask = 1 << layer;
+        }
+        var rt = new RenderTexture(512, 512, 16);
         renderCam.targetTexture = rt;
 
         //position camera
@@ -912,11 +915,13 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         go.transform.rotation = rotation;
 
         //set dynamic gameobject layers
-
-        foreach (var v in target.GetComponentsInChildren<Transform>())
+        if (layer != -1)
         {
-            originallayers.Add(v.gameObject, v.gameObject.layer);
-            v.gameObject.layer = layer;
+            foreach (var v in target.GetComponentsInChildren<Transform>())
+            {
+                originallayers.Add(v.gameObject, v.gameObject.layer);
+                v.gameObject.layer = layer;
+            }
         }
 
         //render to texture
@@ -927,10 +932,13 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         tex.Apply();
         RenderTexture.active = null;
 
-        //reset dynamic object layers
-        foreach (var v in originallayers)
+        if (layer != -1)
         {
-            v.Key.layer = v.Value;
+            //reset dynamic object layers
+            foreach (var v in originallayers)
+            {
+                v.Key.layer = v.Value;
+            }
         }
 
         //remove camera
