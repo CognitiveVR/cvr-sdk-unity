@@ -172,10 +172,6 @@ namespace CognitiveVR
                     return returnCode;
                 }
             }
-            else
-            {
-                Util.logDebug("GetResponseCode could not find a status. Likely url is incorrect");
-            }
             return returnCode;
         }
     }

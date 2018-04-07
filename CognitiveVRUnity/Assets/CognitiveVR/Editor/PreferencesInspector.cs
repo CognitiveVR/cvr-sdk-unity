@@ -35,8 +35,15 @@ namespace CognitiveVR
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 0, 1000);
             p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 0, 1000);
 
-            //TODO local storage
-            //EditorGUILayout.Toggle("Save data locally if no internet connection", false);
+            //local storage
+            p.LocalStorage = EditorGUILayout.Toggle("Save data locally if no internet connection", p.LocalStorage);
+            EditorGUI.BeginDisabledGroup(!p.LocalStorage);
+            GUILayout.BeginHorizontal();
+            p.LocalDataCacheSize = EditorGUILayout.LongField("Cache Size", p.LocalDataCacheSize);
+            if (p.LocalDataCacheSize < 1048576) { p.LocalDataCacheSize = 1048576; } //at least 1mb of storage (1048576 bytes)
+            EditorGUILayout.LabelField(EditorUtility.FormatBytes(p.LocalDataCacheSize),GUILayout.Width(100));
+            GUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Events", EditorStyles.boldLabel);

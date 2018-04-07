@@ -482,6 +482,8 @@ namespace CognitiveVR
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
             UpdateUserState(userProperties);
             UpdateUserState("name", userName);
+
+            CognitiveVR.NetworkManager.FindLocalDataFilenames();
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)

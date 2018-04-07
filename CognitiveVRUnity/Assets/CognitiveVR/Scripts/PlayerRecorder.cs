@@ -858,10 +858,10 @@ namespace CognitiveVR
 
                     builder.Append("}");
 
-                    byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
+                    //byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string url = Constants.POSTGAZEDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
-                    CognitiveVR.NetworkManager.Post(url, outBytes);
+                    CognitiveVR.NetworkManager.Post(url, builder.ToString());
                 }
             }
             else
@@ -1007,12 +1007,12 @@ namespace CognitiveVR
 
                     builder.Append("}");
 
-                    byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
+                    //byte[] outBytes = new System.Text.UTF8Encoding(true).GetBytes(builder.ToString());
                     string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
-                    CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
+                    //CognitiveVR.Util.logDebug(sceneSettings.SceneId + " gaze " + builder.ToString());
 
-                    CognitiveVR.NetworkManager.Post(url, outBytes);
+                    CognitiveVR.NetworkManager.Post(url, builder.ToString());
                 }
             }
             else
