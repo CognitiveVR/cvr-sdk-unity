@@ -179,38 +179,31 @@ namespace CognitiveVR
             //export scene from unity
             bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportScene(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
 
+            string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+
+            //write json settings file
+            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
             if (!successfulExport)
             {
-                Debug.LogError("Scene export canceled!");
+                Debug.LogError("Scene export failed!");
                 return;
             }
-
 
             //begin scene decimation
             if (!EditorCore.IsBlenderPathValid)
             {
-                Debug.LogError("Blender is not found during scene export! Use Edit>Preferences...CognitivePreferences to locate Blender\nScene: "+ fullName+" exported to folder but not mesh decimated!");
-                //return;
+                Debug.LogWarning("Blender not found during scene export. May result in large files uploaded to Scene Explorer");
+                return;
             }
 
-            string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
             string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
-
-            //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\""+ fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
-            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
             decimateScriptPath = decimateScriptPath.Replace(" ", "\" \"");
             objPath = objPath.Replace(" ", "\" \"");
             fullName = fullName.Replace(" ", "\" \"");
 
             EditorUtility.ClearProgressBar();
-
-            //use case for empty 360 video scenes
-            if (string.IsNullOrEmpty(EditorCore.BlenderPath))
-            {
-                Debug.LogError("Blender is not found during scene export! Scene is not being decimated");
-            }
 
             ProcessStartInfo processInfo;
 #if UNITY_EDITOR_WIN
@@ -230,7 +223,6 @@ namespace CognitiveVR
             HasOpenedBlender = false;
             EditorApplication.update += UpdateProcess;
             UploadSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
-
 
             blenderStartTime = (float)EditorApplication.timeSinceStartup;
         }

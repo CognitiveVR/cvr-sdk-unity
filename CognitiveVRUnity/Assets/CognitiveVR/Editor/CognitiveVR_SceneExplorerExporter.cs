@@ -333,7 +333,7 @@ namespace CognitiveVR
             }
             if (!mc.active)
             {
-                Debug.Log("Mesh container is not active " + mc.name);
+                Debug.Log("Export skipping " + mc.name + ". Is not active in hierarchy or does not have an enabled renderer");
                 return "";
             }
             //if (mc.GetComponent<MeshRenderer>() == null || !mc.GetComponent<MeshRenderer>().enabled || !mc.gameObject.activeInHierarchy) { return ""; }
@@ -823,6 +823,8 @@ namespace CognitiveVR
             }
 
             bool success = false;
+
+            //TODO bug export scene with no geometry, then exporting the scene again will display the wrong error message
 
             if (exportedObjects > 0)
             {

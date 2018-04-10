@@ -4,13 +4,12 @@ using System.IO;
 
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
-//TODO test only saving 1 file, separating lines into url, contents, urls, contents, etc. memory overhead, but cheaper than open/close filestreams
+//stack of line lengths, read/write through single filestream
 
 namespace CognitiveVR
 {
     public class NetworkManager : MonoBehaviour
     {
-        static bool showDebugLogs = false;
         static NetworkManager _sender;
         static NetworkManager Sender
         {
@@ -26,23 +25,27 @@ namespace CognitiveVR
             }
         }
 
-        static string localDataPath = Application.persistentDataPath + "/c3dlocal/";
+        static string localDataPath = Application.persistentDataPath + "/c3dlocal/data";
         static string localExitPollPath = Application.persistentDataPath + "/c3dlocal/exitpoll/";
 
         public delegate void FullResponse(string url, string content, int responsecode, string error, string text, bool uploadLocalData);
 
         public delegate void Response(int responsecode, string error, string text);
 
-        //class WebRequest
-        //{
-        //    public WWW Request;
-        //    public Response Response;
-        //    public WebRequest(WWW request, Response response)
-        //    {
-        //        Request = request;
-        //        Response = response;
-        //    }
-        //}
+        static StreamReader sr;
+        static StreamWriter sw;
+        static FileStream fs;
+        //line sizes of contents, ignoring line breaks. line breaks added automatically from StreamWriter.WriteLine
+        static Stack<int> linesizes = new Stack<int>();
+        static int totalBytes = 0;
+
+        //TODO close sr, sw, fs on end session
+        private void OnDestroy()
+        {
+            if (sr != null) sr.Close();
+            if (sw != null) { sw.Flush(); sw.Close(); }
+            if (fs != null) fs.Close();
+        }
 
         System.Collections.IEnumerator WaitForResponse(WWW www, Response callback)
         {
@@ -109,101 +112,117 @@ namespace CognitiveVR
         void GenericPostFullResponse(string url, string content, int responsecode, string error, string text, bool allowLocalUpload)
         {
             if (!allowLocalUpload) { return; }
-
+            
             if (responsecode == 200)
             {
                 if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
                 //search through files and upload outstanding data + remove that file
-                if (LocalDataFilenames.Count > 0)
-                {
-                    UploadLocalFile();
-                }
+                UploadLocalFile();
             }
             else
             {
-                //if (responsecode == 401) { return; } //ignore if invalid auth api key
+                if (responsecode == 401) { return; } //ignore if invalid auth api key
                 //write to file
                 WriteRequestToFile(url, content);
             }
         }
 
-        static long LocalDataSize = 0;
-        static Queue<string> LocalDataFilenames = new Queue<string>();
-
         //called on init to find all files not uploaded
         public static void FindLocalDataFilenames()
         {
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
-            if (!Directory.Exists(localDataPath))
-                Directory.CreateDirectory(localDataPath);
+            //if (!Directory.Exists(localDataPath))
+                //Directory.CreateDirectory(localDataPath);
             if (!Directory.Exists(localExitPollPath))
                 Directory.CreateDirectory(localExitPollPath);
 
-            var files = Directory.GetFiles(localDataPath);
-            for (int i = 0; i < files.Length; i++)
+            fs = File.Open(localDataPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            sr = new StreamReader(fs);
+            sw = new StreamWriter(fs);
+            //read all line sizes from data
+            while (sr.Peek() != -1)
             {
-                LocalDataFilenames.Enqueue(Path.GetFileName(files[i]));
-                FileInfo fi = new FileInfo(files[i]);
-                LocalDataSize += fi.Length;
+                int lineLength = System.Text.Encoding.UTF8.GetByteCount(sr.ReadLine());
+                linesizes.Push(lineLength);
+                totalBytes += lineLength;
             }
-            if (showDebugLogs) { Debug.Log("startup found cache of " + files.Length + " items. total size " + LocalDataSize); }
         }
-
-        int filenameincrement = 1;
+        
         void WriteRequestToFile(string url, string contents)
         {
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
 
-            string fullcontents = url + "\n" + contents;
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(fullcontents);
+            int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(url);
+            int contentByteCount = System.Text.Encoding.UTF8.GetByteCount(contents);
 
-            if (LocalDataSize + bytes.LongLength > CognitiveVR_Preferences.Instance.LocalDataCacheSize)
+            if (urlByteCount + contentByteCount + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
             {
-                if (showDebugLogs) { Debug.Log(">>>>>>>>>>local cache size hit limit"); }
+                //cache size reached! skip writing data
                 return;
             }
 
-            if (showDebugLogs) { Debug.Log(">>>>>>>>>>write request to file"); }
+            sw.WriteLine(url);
+            linesizes.Push(urlByteCount);
+            totalBytes += urlByteCount;
 
-            string filename = "localdata" + filenameincrement.ToString() + (int)Util.Timestamp();
-            //File.WriteAllText(localDataPath + filename, fullcontents);
-            //File.WriteAllBytes(localDataPath + filename, bytes);
-            using (var stream = File.Open(localDataPath + filename, FileMode.OpenOrCreate))
-            {
-                stream.Write(bytes, 0, bytes.Length);
-                /*for (var i = 0; i < FileSize; ++i)
-                {
-                    stream.WriteByte(0);
-                }*/
-            }
+            sw.WriteLine(contents);
+            linesizes.Push(contentByteCount);
+            totalBytes += contentByteCount;
 
-            LocalDataFilenames.Enqueue(filename);
-            filenameincrement++;
-            LocalDataSize += bytes.LongLength;
+            sw.Flush();
         }
 
         //uploads a single local file from the queue. only called when a 200 is returned from a post request
         void UploadLocalFile(int count = 2)
         {
+            if (linesizes.Count < 2) { return; }
             for (int i = 0; i < count; i++)
             {
-                if (LocalDataFilenames.Count == 0) { return; }
-                //try to post this, might be removed then directly returned to queue
-                string filename = LocalDataFilenames.Dequeue();
-                var lines = File.ReadAllLines(localDataPath + filename);
-                string url = lines[0];
-                string contents = lines[1];
-                LocalCachePost(url, contents);
+                if (linesizes.Count < 2) { return; }
+                int contentsize = linesizes.Pop();
+                int urlsize = linesizes.Pop();
 
-                //TODO test if faster to get file info or get bytes from string
-                FileInfo fi = new FileInfo(localDataPath + filename);
-                LocalDataSize -= fi.Length;
-                //var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(url + "\n" + contents);
-                //LocalDataSize -= bytes.LongLength;
+                int lastrequestsize = contentsize + urlsize + System.Text.Encoding.UTF8.GetByteCount("\r\n") * 2;
 
-                if (showDebugLogs) { Debug.Log(">>>>>>>>>>upload cached file"); }
+                fs.Seek(-lastrequestsize, SeekOrigin.End);
 
-                File.Delete(localDataPath + filename);
+                long originallength = fs.Length;
+
+                string tempurl = null;
+                string tempcontent = null;
+                char[] buffer = new char[urlsize];
+                while (sr.Peek() != -1)
+                {
+                    //can't do a read line :( internal eol search too slow
+                    //tempurl = sr.ReadLine();
+                    //tempcontent = sr.ReadLine();
+
+                    //TODO check performance on read vs readblock. read might be faster?
+
+                    sr.ReadBlock(buffer, 0, urlsize);
+                    
+                    tempurl = new string(buffer);
+                    //line return
+                    sr.Read();
+                    sr.Read();
+
+                    buffer = new char[contentsize];
+                    sr.ReadBlock(buffer, 0, contentsize);
+                    tempcontent = new string(buffer);
+                    //line return
+                    sr.Read();
+                    sr.Read();
+                }
+
+                int oelbyteCount = 2; //"\r\n"
+
+                int urlbyteCount = System.Text.Encoding.UTF8.GetByteCount(tempurl) + oelbyteCount;
+                int contentbyteCount = System.Text.Encoding.UTF8.GetByteCount(tempcontent) + oelbyteCount;
+
+                int removeLength = urlbyteCount + contentbyteCount;
+
+                fs.SetLength(originallength - removeLength);
+                LocalCachePost(tempurl, tempcontent);
             }
         }
 
@@ -255,53 +274,5 @@ namespace CognitiveVR
             WWW www = new WWW(url, bytes, postHeaders);
             Sender.StartCoroutine(Sender.WaitForFullResponse(www, stringcontent, Sender.GenericPostFullResponse,false));
         }
-
-        /*public static void Post(string url, string stringcontent, Dictionary<string, string> headers)
-        {
-            if (postHeaders == null)//AUTH
-            {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
-            foreach (var kvp in postHeaders)
-            {
-                if (!headers.ContainsKey(kvp.Key)) { headers.Add(kvp.Key, kvp.Value); }
-            }
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            WWW www = new WWW(url, bytes, headers);
-            Sender.StartCoroutine(Sender.WaitForFullResponse(www, stringcontent, Sender.GenericPostFullResponse, true));
-        }*/
-
-        /// <summary>
-        /// headers replaces default post headers
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="bytecontent"></param>
-        /// <param name="headers"></param>
-        /// <param name="callback"></param>
-        /*public static void Post(string url, string content, Dictionary<string, string> headers, Response callback)
-        {
-            if (postHeaders == null)//AUTH
-            {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
-            foreach(var kvp in postHeaders)
-            {
-                if (!headers.ContainsKey(kvp.Key)) { headers.Add(kvp.Key, kvp.Value); }
-            }
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
-            WWW www = new WWW(url, bytes, headers);
-            Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
-        }
-
-        public static void Post(string url, string content, Response callback)
-        {
-            if (postHeaders == null)//AUTH
-            {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
-            WWW www = new WWW(url, bytes);
-            Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
-        }*/
     }
 }
