@@ -457,8 +457,6 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
 
-            ExitPoll.Initialize();
-
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             CognitiveVR_Preferences.SetTrackingSceneName(sceneName);

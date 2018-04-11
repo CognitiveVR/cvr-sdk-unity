@@ -131,15 +131,13 @@ namespace CognitiveVR
         static int ReadLocalCacheCount;
 
         //called on init to find all files not uploaded
-        public static void InitLocalStorage(string environmentEOL, int readLocalCacheCount = 2)
+        public static void InitLocalStorage(string environmentEOL)
         {
-            ReadLocalCacheCount = readLocalCacheCount;
+            ReadLocalCacheCount = CognitiveVR_Preferences.Instance.ReadLocalCacheCount;
             EnvironmentEOL = environmentEOL;
             EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(environmentEOL);
             //EOLByteCount = eolByteCount;
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
-            //if (!Directory.Exists(localDataPath))
-                //Directory.CreateDirectory(localDataPath);
             if (!Directory.Exists(localExitPollPath))
                 Directory.CreateDirectory(localExitPollPath);
 
@@ -184,6 +182,11 @@ namespace CognitiveVR
             sw.Flush();
         }
 
+        public static void UploadAllLocalStorage()
+        {
+            //upload from local storage
+        }
+
         //uploads a single local file from the queue. only called when a 200 is returned from a post request
         void UploadLocalFile()
         {
@@ -205,10 +208,6 @@ namespace CognitiveVR
                 char[] buffer = new char[urlsize];
                 while (sr.Peek() != -1)
                 {
-                    //can't do a read line :( internal eol search too slow
-                    //tempurl = sr.ReadLine();
-                    //tempcontent = sr.ReadLine();
-
                     //TODO check performance on read vs readblock. read might be faster?                    
                     sr.ReadBlock(buffer, 0, urlsize);
                     

@@ -154,6 +154,7 @@ namespace CognitiveVR
         //defualt 100MB cache size
         public long LocalDataCacheSize = 1024 * 1024 * 100;
         public bool LocalStorage = true;
+        public int ReadLocalCacheCount = 2;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible

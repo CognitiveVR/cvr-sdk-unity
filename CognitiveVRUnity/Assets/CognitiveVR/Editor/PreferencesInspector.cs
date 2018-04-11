@@ -43,6 +43,8 @@ namespace CognitiveVR
             if (p.LocalDataCacheSize < 1048576) { p.LocalDataCacheSize = 1048576; } //at least 1mb of storage (1048576 bytes)
             EditorGUILayout.LabelField(EditorUtility.FormatBytes(p.LocalDataCacheSize),GUILayout.Width(100));
             GUILayout.EndHorizontal();
+            p.ReadLocalCacheCount = EditorGUILayout.IntField(new GUIContent("Read Local Cache Requests","For each successful request, read this many cached requests from the local storage"), p.ReadLocalCacheCount);
+            p.ReadLocalCacheCount = Mathf.Max(p.ReadLocalCacheCount, 1);
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
