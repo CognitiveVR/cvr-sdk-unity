@@ -111,10 +111,9 @@ namespace CognitiveVR
 
         void GenericPostFullResponse(string url, string content, int responsecode, string error, string text, bool allowLocalUpload)
         {
-            if (!allowLocalUpload) { return; }
-            
             if (responsecode == 200)
             {
+                if (!allowLocalUpload) { return; }
                 if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
                 //search through files and upload outstanding data + remove that file
                 UploadLocalFile();
@@ -127,9 +126,17 @@ namespace CognitiveVR
             }
         }
 
+        static int EOLByteCount = 2;
+        static string EnvironmentEOL;
+        static int ReadLocalCacheCount;
+
         //called on init to find all files not uploaded
-        public static void FindLocalDataFilenames()
+        public static void InitLocalStorage(string environmentEOL, int readLocalCacheCount = 2)
         {
+            ReadLocalCacheCount = readLocalCacheCount;
+            EnvironmentEOL = environmentEOL;
+            EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(environmentEOL);
+            //EOLByteCount = eolByteCount;
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
             //if (!Directory.Exists(localDataPath))
                 //Directory.CreateDirectory(localDataPath);
@@ -152,20 +159,25 @@ namespace CognitiveVR
         {
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
 
+            //Debug.Log("<<<<<<<<<write request to file");
+
             int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(url);
             int contentByteCount = System.Text.Encoding.UTF8.GetByteCount(contents);
 
             if (urlByteCount + contentByteCount + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
             {
                 //cache size reached! skip writing data
+                //Debug.Log("!!!!!!!!!!!!!cache reached");
                 return;
             }
 
-            sw.WriteLine(url);
+            sw.Write(url);
+            sw.Write(EnvironmentEOL);
             linesizes.Push(urlByteCount);
             totalBytes += urlByteCount;
 
-            sw.WriteLine(contents);
+            sw.Write(contents);
+            sw.Write(EnvironmentEOL);
             linesizes.Push(contentByteCount);
             totalBytes += contentByteCount;
 
@@ -173,16 +185,16 @@ namespace CognitiveVR
         }
 
         //uploads a single local file from the queue. only called when a 200 is returned from a post request
-        void UploadLocalFile(int count = 2)
+        void UploadLocalFile()
         {
             if (linesizes.Count < 2) { return; }
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < ReadLocalCacheCount; i++)
             {
                 if (linesizes.Count < 2) { return; }
                 int contentsize = linesizes.Pop();
                 int urlsize = linesizes.Pop();
 
-                int lastrequestsize = contentsize + urlsize + System.Text.Encoding.UTF8.GetByteCount("\r\n") * 2;
+                int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
 
                 fs.Seek(-lastrequestsize, SeekOrigin.End);
 
@@ -197,31 +209,27 @@ namespace CognitiveVR
                     //tempurl = sr.ReadLine();
                     //tempcontent = sr.ReadLine();
 
-                    //TODO check performance on read vs readblock. read might be faster?
-
+                    //TODO check performance on read vs readblock. read might be faster?                    
                     sr.ReadBlock(buffer, 0, urlsize);
                     
                     tempurl = new string(buffer);
                     //line return
-                    sr.Read();
-                    sr.Read();
+                    for(int eolc = 0; eolc < EOLByteCount; eolc++)
+                        sr.Read();
+                    
 
                     buffer = new char[contentsize];
                     sr.ReadBlock(buffer, 0, contentsize);
                     tempcontent = new string(buffer);
                     //line return
-                    sr.Read();
-                    sr.Read();
+                    for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
+                        sr.Read();
                 }
+                //Debug.Log(">>>>>>>>>read request");
+                //Debug.Log(tempurl);
+                //Debug.Log(tempcontent);
 
-                int oelbyteCount = 2; //"\r\n"
-
-                int urlbyteCount = System.Text.Encoding.UTF8.GetByteCount(tempurl) + oelbyteCount;
-                int contentbyteCount = System.Text.Encoding.UTF8.GetByteCount(tempcontent) + oelbyteCount;
-
-                int removeLength = urlbyteCount + contentbyteCount;
-
-                fs.SetLength(originallength - removeLength);
+                fs.SetLength(originallength - lastrequestsize);
                 LocalCachePost(tempurl, tempcontent);
             }
         }

@@ -483,7 +483,7 @@ namespace CognitiveVR
             UpdateUserState(userProperties);
             UpdateUserState("name", userName);
 
-            CognitiveVR.NetworkManager.FindLocalDataFilenames();
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -748,7 +748,7 @@ namespace CognitiveVR
             Application.Quit();
         }
 
-        #endregion
+#endregion
 
         public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
         {
