@@ -71,7 +71,7 @@ namespace CognitiveVR
             if (!www.isDone || responsecode != 200)
             {
                 //try to read from file
-                if (File.Exists(localExitPollPath+hookname))
+                if (CognitiveVR_Preferences.Instance.LocalStorage && File.Exists(localExitPollPath+hookname))
                 {
                     var text = File.ReadAllText(localExitPollPath + hookname);
                     if (callback != null)
@@ -159,6 +159,11 @@ namespace CognitiveVR
 
             //Debug.Log("<<<<<<<<<write request to file");
 
+            contents = contents.Replace('\n', ' ');
+
+            //byte[] b64bytes = System.Text.Encoding.UTF8.GetBytes(contents);
+            //string b64 = System.Convert.ToBase64String(b64bytes);
+
             int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(url);
             int contentByteCount = System.Text.Encoding.UTF8.GetByteCount(contents);
 
@@ -220,6 +225,8 @@ namespace CognitiveVR
                     buffer = new char[contentsize];
                     sr.ReadBlock(buffer, 0, contentsize);
                     tempcontent = new string(buffer);
+
+                    //tempcontent = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64CharArray(buffer,0,buffer.Length));
                     //line return
                     for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
                         sr.Read();

@@ -151,8 +151,8 @@ namespace CognitiveVR
 
         //TODO add option for unlimited cache size
         //TODO add option for never save locally
-        //defualt 100MB cache size
-        public long LocalDataCacheSize = 1024 * 1024 * 100;
+        //defualt 10MB cache size
+        public long LocalDataCacheSize = 1024 * 1024 * 10;
         public bool LocalStorage = true;
         public int ReadLocalCacheCount = 2;
 
