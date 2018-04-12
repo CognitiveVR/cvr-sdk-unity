@@ -6,6 +6,8 @@ using System.IO;
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
 
+//IMPROVEMENT single coroutine queue waiting for network responses instead of creating many
+
 namespace CognitiveVR
 {
     public class NetworkManager : MonoBehaviour
@@ -66,9 +68,10 @@ namespace CognitiveVR
                 time += Time.deltaTime;
             }
 
-            int responsecode = Util.GetResponseCode(www.responseHeaders);
-
-            if (!www.isDone || responsecode != 200)
+            var headers = www.responseHeaders;
+            int responsecode = Util.GetResponseCode(headers);
+            //check cvr header to make sure not blocked by capture portal
+            if (!www.isDone || responsecode != 200 || !headers.ContainsKey("cvr-request-time"))
             {
                 //try to read from file
                 if (CognitiveVR_Preferences.Instance.LocalStorage && File.Exists(localExitPollPath+hookname))
@@ -90,9 +93,6 @@ namespace CognitiveVR
             }
             else
             {
-                if (!CognitiveVR_Preferences.Instance.LocalStorage) { yield break; }
-                //write response to file
-                File.WriteAllText(localExitPollPath + hookname, www.text);
                 if (callback != null)
                 {
                     callback.Invoke(responsecode, www.error, www.text);
@@ -105,7 +105,17 @@ namespace CognitiveVR
             yield return www;
             if (callback != null)
             {
-                callback.Invoke(www.url, contents, Util.GetResponseCode(www.responseHeaders), www.error, www.text, allowLocalUpload);
+                var headers = www.responseHeaders;
+                int responsecode = Util.GetResponseCode(headers);
+                if (responsecode == 200)
+                {
+                    //check cvr header to make sure not blocked by capture portal
+                    if (!headers.ContainsKey("cvr-request-time"))
+                    {
+                        responsecode = 404;
+                    }
+                }
+                callback.Invoke(www.url, contents, responsecode, www.error, www.text, allowLocalUpload);
             }
         }
 
@@ -187,15 +197,108 @@ namespace CognitiveVR
             sw.Flush();
         }
 
-        public static void UploadAllLocalStorage()
+        /// <summary>
+        /// Upload all data from local storage. will call completed after everything has been uploaded, failed if not connected to internet or local storage not enabled
+        /// </summary>
+        /// <param name="completedCallback"></param>
+        /// <param name="failedCallback"></param>
+        public static void UploadAllLocalData(System.Action completedCallback, System.Action failedCallback)
         {
             //upload from local storage
+            if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } return; }
+
+            if (fs == null)
+            {
+                InitLocalStorage(System.Environment.NewLine);
+            }
+
+            Sender.StartCoroutine(Sender.ForceUploadLocalStorage(completedCallback,failedCallback));
+        }
+
+        System.Collections.IEnumerator ForceUploadLocalStorage(System.Action completed, System.Action failed)
+        {
+            bool hasFailed = false;
+            while (linesizes.Count > 1)
+            {
+                //get contents from file
+                int contentsize = linesizes.Pop();
+                int urlsize = linesizes.Pop();
+
+                int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
+
+                fs.Seek(-lastrequestsize, SeekOrigin.End);
+
+                long originallength = fs.Length;
+
+                string tempurl = null;
+                string tempcontent = null;
+                char[] buffer = new char[urlsize];
+                while (sr.Peek() != -1)
+                {
+                    sr.ReadBlock(buffer, 0, urlsize);
+
+                    tempurl = new string(buffer);
+                    //line return
+                    for (int eolc = 0; eolc < EOLByteCount; eolc++)
+                        sr.Read();
+
+
+                    buffer = new char[contentsize];
+                    sr.ReadBlock(buffer, 0, contentsize);
+                    tempcontent = new string(buffer);
+                    //line return
+                    for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
+                        sr.Read();
+                }
+
+                fs.SetLength(originallength - lastrequestsize);
+
+                //wait for post response
+                if (postHeaders == null)//AUTH
+                {
+                    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
+                }
+                var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
+                WWW www = new WWW(tempurl, bytes, postHeaders);
+                //Debug.Log("www whatever sent");
+                yield return Sender.StartCoroutine(Sender.WaitForFullResponse(www, tempcontent, Sender.GenericPostFullResponse, false));
+                //Debug.Log("www got a response");
+
+                //check internet access
+                var headers = www.responseHeaders;
+                int responsecode = Util.GetResponseCode(headers);
+                if (responsecode == 200)
+                {
+                    //check cvr header to make sure not blocked by capture portal
+                    if (!headers.ContainsKey("cvr-request-time"))
+                    {
+                        hasFailed = true;
+                        if (failed != null)
+                            failed.Invoke();
+                        yield break;
+                    }
+                }
+                else
+                {
+                    hasFailed = true;
+                    if (failed != null)
+                        failed.Invoke();
+                    yield break;
+                }
+            }
+
+            if (!hasFailed)
+            {
+                if (completed != null)
+                    completed.Invoke();
+            }
         }
 
         //uploads a single local file from the queue. only called when a 200 is returned from a post request
         void UploadLocalFile()
         {
             if (linesizes.Count < 2) { return; }
+
             for (int i = 0; i < ReadLocalCacheCount; i++)
             {
                 if (linesizes.Count < 2) { return; }
@@ -212,8 +315,7 @@ namespace CognitiveVR
                 string tempcontent = null;
                 char[] buffer = new char[urlsize];
                 while (sr.Peek() != -1)
-                {
-                    //TODO check performance on read vs readblock. read might be faster?                    
+                {                   
                     sr.ReadBlock(buffer, 0, urlsize);
                     
                     tempurl = new string(buffer);
@@ -225,15 +327,10 @@ namespace CognitiveVR
                     buffer = new char[contentsize];
                     sr.ReadBlock(buffer, 0, contentsize);
                     tempcontent = new string(buffer);
-
-                    //tempcontent = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64CharArray(buffer,0,buffer.Length));
                     //line return
                     for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
                         sr.Read();
                 }
-                //Debug.Log(">>>>>>>>>read request");
-                //Debug.Log(tempurl);
-                //Debug.Log(tempcontent);
 
                 fs.SetLength(originallength - lastrequestsize);
                 LocalCachePost(tempurl, tempcontent);
@@ -252,17 +349,6 @@ namespace CognitiveVR
             WWW www = new WWW(url, null, getHeaders);
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(www, hookname, callback,timeout));
         }
-
-        //currently unused. TODO exitpoll should use this
-        /*public static void Get(string url, Response callback)
-        {
-            if (getHeaders == null)//AUTH
-            {
-                 getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, {"Authorization","APIKEY:DATA "+CognitiveVR_Preferences.Instance.APIKey } };
-            }
-            WWW www = new WWW(url,null, getHeaders);
-            Sender.StartCoroutine(Sender.WaitForResponse(www, callback));
-        }*/
 
         static Dictionary<string, string> postHeaders;
 
