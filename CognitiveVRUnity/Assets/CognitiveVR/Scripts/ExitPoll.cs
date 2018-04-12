@@ -139,123 +139,6 @@ namespace CognitiveVR
             CurrentExitPollSet.RequestQuestionHookName = hookName;
             return CurrentExitPollSet;
         }
-
-        public static void Initialize()
-        {
-            //request questions
-            //if response, write response to disk
-            //else read cached questions from disk
-            //CognitiveVR_Manager.InitEvent += ReadQuestions;
-
-            //read answers from disk
-            //send answers to microservice
-            //CognitiveVR_Manager.InitEvent += WriteAnswers;
-        }
-
-        static Dictionary<string, string> ExitPollQuestions = new Dictionary<string, string>();
-
-        private static void ReadQuestions(Error initError)
-        {
-            CognitiveVR_Manager.InitEvent -= ReadQuestions;
-            if (initError == Error.Success)
-            {
-                //begin request. on complete, save to disk
-                //persistentdatapath/exitpollquestions
-                //CognitiveVR_Manager.Instance.StartCoroutine(RequestAllQuestions());
-            }
-            else
-            {
-                if (CognitiveVR_Manager.Instance.SaveExitPollOnDevice)
-                {
-                    //read saved exit poll from disk
-                    List<string> fileNames = new List<string>();
-                    //Application.persistentDataPath/exitpollquestions/
-
-                    for (int i = 0; i < fileNames.Count; i++)
-                    {
-                        ExitPollQuestions.Add(System.IO.Path.GetFileNameWithoutExtension(fileNames[i]), System.IO.File.ReadAllText(fileNames[i]));
-                    }
-                }
-            }
-        }
-
-        private static void WriteAnswers(Error initError)
-        {
-            CognitiveVR_Manager.InitEvent -= WriteAnswers;
-            if (initError != Error.Success)
-            {
-                //couldn't connect. keep files in cache
-            }
-            else
-            {
-                if (CognitiveVR_Manager.Instance.SaveExitPollOnDevice)
-                {
-                    //connected. send responses
-                    CognitiveVR_Manager.Instance.StartCoroutine(SendCachedResponses());
-                }
-            }
-        }
-
-        static IEnumerator RequestAllQuestions()
-        {
-            //TODO finish caching questions on startup
-            string url = "http cognitive /customerid/allquestions";
-            url = "nowhere";
-            WWW responseRequest = new WWW(url);
-            yield return responseRequest;
-            if (responseRequest.error.Length == 0)
-            {
-
-            }
-            else
-            {
-                var questions = responseRequest.text.Split('|');
-
-                //write to question dictionary
-
-                if (CognitiveVR_Manager.Instance.SaveExitPollOnDevice)
-                {
-                    string dataPath = Application.persistentDataPath;
-                    for (int i = 0; i < questions.Length; i++)
-                    {
-                        Json.ExitPollSetJson json = JsonUtility.FromJson<Json.ExitPollSetJson>(questions[i]);
-                        System.IO.File.WriteAllText(dataPath + json.id, questions[i]);
-                    }
-                }
-            }
-        }
-
-        public static string GetExitPollQuestion(string questionName)
-        {
-            if (ExitPollQuestions.ContainsKey(questionName))
-                return ExitPollQuestions[questionName];
-            return string.Empty;
-        }
-
-        static IEnumerator SendCachedResponses()
-        {
-            var jsonResponses = new List<string>();
-            //get all files in directory persistentDataPath/exitpollresponse
-            //jsonResponses.Add(Application.persistentDataPath)
-
-
-            for (int i = jsonResponses.Count - 1; i >= 0; i++)
-            {
-                //hook name needs to be pulled out of json text file so it knows where to send
-                string url;
-                //string url = "http cognititive /"+CognitiveVR_Preferences.Instance.CustomerID+"/"+ +"/responses";
-                url = "nowhere";
-                WWW responseRequest = new WWW(url);
-                yield return responseRequest;
-                if (responseRequest.error.Length == 0)
-                {
-                    //response was fine
-                    jsonResponses.RemoveAt(i);
-                    //Application.persistentDataPath/exitpollresponse
-                    //remove file from persistent data path
-                }
-            }
-        }
     }
 
     //creates a series of exit poll panels from question set constructed on the dashboard
@@ -300,7 +183,11 @@ namespace CognitiveVR
 
             if (CognitiveVR_Manager.Instance != null)
             {
-                CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
+                //CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
+                //hooks/questionsets. ask hook by id what their questionset is
+                string url = Constants.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
+
+                CognitiveVR.NetworkManager.GetExitPollQuestions(url, RequestQuestionHookName, QuestionSetResponse, 3);
             }
             else
             {
@@ -337,113 +224,98 @@ namespace CognitiveVR
 
         //TODO this should grab a question received and cached on CognitiveVRManager Init
         //build a collection of panel properties from the response
-        IEnumerator RequestQuestions()
+        void QuestionSetResponse(int responsecode, string error,string text)
         {
-            //hooks/questionsets. ask hook by id what their questionset is
-            string url = Constants.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
-
-            WWW www = new WWW(url,null,headers);//AUTH
-
-            float time = 0;
-            while (time < 3) //wait a maximum of 3 seconds
+            if (string.IsNullOrEmpty(text))
             {
-                yield return null;
-                if (www.isDone) break;
-                time += Time.deltaTime;
-            }
-            if (!www.isDone)
-            {
-                CognitiveVR.Util.logDebug("www request question timeout");
+                //question timeout or not found
                 if (EndAction != null)
                 {
                     EndAction.Invoke();
                 }
                 ExitPoll.CurrentExitPollSet = null;
-                yield break;
+                return;
             }
-            else
+
+
+            //build all the panel properties
+            Json.ExitPollSetJson json;
+            try
             {
-                CognitiveVR.Util.logDebug("Exit Poll Question Response:\n" + www.text);
-                if (string.IsNullOrEmpty(www.text))
-                {
-                    if (EndAction != null)
-                    {
-                        EndAction.Invoke();
-                    }
-                    ExitPoll.CurrentExitPollSet = null;
-                    yield break;
-                }
-
-
-                //build all the panel properties
-                Json.ExitPollSetJson json = JsonUtility.FromJson<Json.ExitPollSetJson>(www.text);
-                //Json.ExitPollSetJson json = JsonUtility.FromJson<Json.ExitPollSetJson>(ExitPoll.GetExitPollQuestion(RequestQuestionHookName));
-
-
-                if (json.questions == null || json.questions.Length == 0)
-                {
-                    CognitiveVR.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
-
-                    if (EndAction != null)
-                    {
-                        EndAction.Invoke();
-                    }
-                    ExitPoll.CurrentExitPollSet = null;
-                    yield break;
-                }
-
-                QuestionSetId = json.id;
-                QuestionSetName = json.name;
-                questionSetVersion = json.version;
-
-                //foreach (var question in json.questions)
-                for (int i = 0; i < json.questions.Length; i++)
-                {
-                    Dictionary<string, string> questionVariables = new Dictionary<string, string>();
-                    if (!questionVariables.ContainsKey("title"))
-                    {
-                        questionVariables.Add("title", json.title);
-                    }
-                    questionVariables.Add("question", json.questions[i].title);
-                    questionVariables.Add("type", json.questions[i].type);
-                    responseProperties.Add(new ResponseContext(json.questions[i].type));
-                    questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
-
-                    if (!string.IsNullOrEmpty(json.questions[i].minLabel))
-                        questionVariables.Add("minLabel", json.questions[i].minLabel);
-                    if (!string.IsNullOrEmpty(json.questions[i].maxLabel))
-                        questionVariables.Add("maxLabel", json.questions[i].maxLabel);
-                    //put this into a csv string?
-
-                    if (json.questions[i].range != null)
-                    {
-                        questionVariables.Add("start", json.questions[i].range.start.ToString());
-                        questionVariables.Add("end", json.questions[i].range.end.ToString());
-                    }
-
-                    string csvMultipleAnswers = "";
-                    if (json.questions[i].answers != null)
-                    {
-                        for (int j = 0; j < json.questions[i].answers.Length; j++)
-                        {
-                            if (json.questions[i].answers[j].answer.Length == 0) { continue; }
-                            //TODO include support for custom icons on multiple choice answers
-                            csvMultipleAnswers += json.questions[i].answers[j].answer + "|";
-                        }
-                    }
-                    if (csvMultipleAnswers.Length > 0)
-                    {
-                        csvMultipleAnswers = csvMultipleAnswers.Remove(csvMultipleAnswers.Length - 1); //last pipe
-                        questionVariables.Add("csvanswers", csvMultipleAnswers);
-                    }
-                    panelProperties.Add(questionVariables);
-                }
-
-                IterateToNextQuestion();
+                 json = JsonUtility.FromJson<Json.ExitPollSetJson>(text);
             }
+            catch
+            {
+                CognitiveVR.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
+                if (EndAction != null)
+                {
+                    EndAction.Invoke();
+                }
+                ExitPoll.CurrentExitPollSet = null;
+                return;
+            }
+
+            if (json.questions == null || json.questions.Length == 0)
+            {
+                CognitiveVR.Util.logDebug("Exit poll Question response empty! invoke end action");
+
+                if (EndAction != null)
+                {
+                    EndAction.Invoke();
+                }
+                ExitPoll.CurrentExitPollSet = null;
+                return;
+            }
+
+            QuestionSetId = json.id;
+            QuestionSetName = json.name;
+            questionSetVersion = json.version;
+
+            //foreach (var question in json.questions)
+            for (int i = 0; i < json.questions.Length; i++)
+            {
+                Dictionary<string, string> questionVariables = new Dictionary<string, string>();
+                if (!questionVariables.ContainsKey("title"))
+                {
+                    questionVariables.Add("title", json.title);
+                }
+                questionVariables.Add("question", json.questions[i].title);
+                questionVariables.Add("type", json.questions[i].type);
+                responseProperties.Add(new ResponseContext(json.questions[i].type));
+                questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
+
+                if (!string.IsNullOrEmpty(json.questions[i].minLabel))
+                    questionVariables.Add("minLabel", json.questions[i].minLabel);
+                if (!string.IsNullOrEmpty(json.questions[i].maxLabel))
+                    questionVariables.Add("maxLabel", json.questions[i].maxLabel);
+                //put this into a csv string?
+
+                if (json.questions[i].range != null)
+                {
+                    questionVariables.Add("start", json.questions[i].range.start.ToString());
+                    questionVariables.Add("end", json.questions[i].range.end.ToString());
+                }
+
+                string csvMultipleAnswers = "";
+                if (json.questions[i].answers != null)
+                {
+                    for (int j = 0; j < json.questions[i].answers.Length; j++)
+                    {
+                        if (json.questions[i].answers[j].answer.Length == 0) { continue; }
+                        //TODO include support for custom icons on multiple choice answers
+                        csvMultipleAnswers += json.questions[i].answers[j].answer + "|";
+                    }
+                }
+                if (csvMultipleAnswers.Length > 0)
+                {
+                    csvMultipleAnswers = csvMultipleAnswers.Remove(csvMultipleAnswers.Length - 1); //last pipe
+                    questionVariables.Add("csvanswers", csvMultipleAnswers);
+                }
+                panelProperties.Add(questionVariables);
+            }
+
+            IterateToNextQuestion();
+            
         }
 
         //after a panel has been answered, the responses from each panel in a format to be sent to exitpoll microservice
@@ -637,16 +509,16 @@ namespace CognitiveVR
         void SendQuestionResponses(string responses)
         {
             string url = Constants.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
-            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
+            //byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
-            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url + "\n" + responses);
+            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url);
 
-            var headers = new Dictionary<string, string>();//AUTH
-            headers.Add("Content-Type", "application/json");
-            headers.Add("X-HTTP-Method-Override", "POST");
-            headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            //var headers = new Dictionary<string, string>();//AUTH
+            //headers.Add("Content-Type", "application/json");
+            //headers.Add("X-HTTP-Method-Override", "POST");
+            //headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
 
-            NetworkManager.Post(url, bytes, headers);
+            NetworkManager.Post(url, responses);
         }
 
         public bool UseTimeout { get; private set; }

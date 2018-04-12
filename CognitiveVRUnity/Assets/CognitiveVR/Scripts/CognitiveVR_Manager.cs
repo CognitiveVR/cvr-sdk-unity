@@ -457,8 +457,6 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
 
-            ExitPoll.Initialize();
-
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
@@ -482,6 +480,8 @@ namespace CognitiveVR
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
             UpdateUserState(userProperties);
             UpdateUserState("name", userName);
+
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -746,7 +746,7 @@ namespace CognitiveVR
             Application.Quit();
         }
 
-        #endregion
+#endregion
 
         public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
         {

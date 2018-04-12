@@ -162,19 +162,15 @@ namespace CognitiveVR
 
         public static int GetResponseCode(Dictionary<string, string> headers)
         {
+            //HTTP/1.1 200 OK
             int returnCode = -1;
-            if (headers.ContainsKey("STATUS"))
+            string statusvalue = null;
+            if (headers.TryGetValue("STATUS",out statusvalue))
             {
-                //Debug.Log(headers["STATUS"]);
-                //HTTP/1.1 200 OK
-                if (int.TryParse(headers["STATUS"].Substring(9).Remove(3),out returnCode))
+                if (int.TryParse(statusvalue.Substring(9, 3),out returnCode))
                 {
                     return returnCode;
                 }
-            }
-            else
-            {
-                Util.logDebug("GetResponseCode could not find a status. Likely url is incorrect");
             }
             return returnCode;
         }

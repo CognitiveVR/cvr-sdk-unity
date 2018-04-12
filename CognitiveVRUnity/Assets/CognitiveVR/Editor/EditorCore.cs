@@ -452,7 +452,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             }
             if (string.IsNullOrEmpty(currentSettings.SceneId))
             {
-                Debug.Log("SendSceneVersionRequest Current scene doesn't have an id - cannot get scene versions");
                 if (refreshSceneVersionComplete != null)
                     refreshSceneVersionComplete.Invoke();
                 return;

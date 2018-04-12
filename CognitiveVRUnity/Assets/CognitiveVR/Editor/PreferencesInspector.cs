@@ -35,8 +35,23 @@ namespace CognitiveVR
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 0, 1000);
             p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 0, 1000);
 
-            //TODO local storage
-            //EditorGUILayout.Toggle("Save data locally if no internet connection", false);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Local Data Cache", EditorStyles.boldLabel);
+            //local storage
+            p.LocalStorage = EditorGUILayout.Toggle("Save data to Local Cache if no internet connection", p.LocalStorage);
+            EditorGUI.BeginDisabledGroup(!p.LocalStorage);
+            GUILayout.BeginHorizontal();
+            p.LocalDataCacheSize = EditorGUILayout.LongField("Cache Size", p.LocalDataCacheSize);
+            if (p.LocalDataCacheSize < 1048576) { p.LocalDataCacheSize = 1048576; } //at least 1mb of storage (1048576 bytes)
+            EditorGUILayout.LabelField(EditorUtility.FormatBytes(p.LocalDataCacheSize),GUILayout.Width(100));
+            GUILayout.EndHorizontal();
+            p.ReadLocalCacheCount = EditorGUILayout.IntField(new GUIContent("Upload Local Cache Rate", "For each successful network response, read this number of cached requests from the local data cache"), p.ReadLocalCacheCount);
+            p.ReadLocalCacheCount = Mathf.Max(p.ReadLocalCacheCount, 0);
+            if (p.ReadLocalCacheCount == 0 && p.LocalStorage)
+            {
+                EditorGUILayout.HelpBox("Saved data will only be uploaded if manually called! See Docs", MessageType.Warning);
+            }
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Events", EditorStyles.boldLabel);
