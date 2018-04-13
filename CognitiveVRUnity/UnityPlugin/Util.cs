@@ -103,19 +103,25 @@ namespace CognitiveVR
 
         }
 
+        static string _hmdname;
         //returns vive/rift/gear/unknown based on hmd model name
         public static string GetSimpleHMDName()
         {
+            if (_hmdname != null)
+            {
+                return _hmdname;
+            }
 #if UNITY_2017_2_OR_NEWER
             string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
 #else
             string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
 #endif
-            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ return "vive"; }
-            if (rawHMDName.Contains("rift cv1")) { return "rift"; }
-            if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { return "gear"; }
+            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ _hmdname = "vive"; return _hmdname; }
+            if (rawHMDName.Contains("rift cv1")) { _hmdname = "rift"; return _hmdname; }
+            if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { _hmdname = "gear"; return _hmdname; }
 
-            return "unknown";
+            _hmdname = "unknown";
+            return _hmdname;
         }
 
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -162,19 +168,15 @@ namespace CognitiveVR
 
         public static int GetResponseCode(Dictionary<string, string> headers)
         {
+            //HTTP/1.1 200 OK
             int returnCode = -1;
-            if (headers.ContainsKey("STATUS"))
+            string statusvalue = null;
+            if (headers.TryGetValue("STATUS",out statusvalue))
             {
-                //Debug.Log(headers["STATUS"]);
-                //HTTP/1.1 200 OK
-                if (int.TryParse(headers["STATUS"].Substring(9).Remove(3),out returnCode))
+                if (int.TryParse(statusvalue.Substring(9, 3),out returnCode))
                 {
                     return returnCode;
                 }
-            }
-            else
-            {
-                Util.logDebug("GetResponseCode could not find a status. Likely url is incorrect");
             }
             return returnCode;
         }

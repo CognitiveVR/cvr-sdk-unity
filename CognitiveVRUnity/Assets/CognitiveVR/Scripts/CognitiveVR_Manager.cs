@@ -457,8 +457,6 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
 
-            ExitPoll.Initialize();
-
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
@@ -482,6 +480,8 @@ namespace CognitiveVR
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
             UpdateUserState(userProperties);
             UpdateUserState("name", userName);
+
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -746,15 +746,22 @@ namespace CognitiveVR
             Application.Quit();
         }
 
-        #endregion
+#endregion
 
         public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
         {
             if (clearNewProperties)
             {
-                Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
-                newDeviceProperties.Clear();
-                return returndict;
+                if (newDeviceProperties.Count > 0)
+                {
+                    Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
+                    newDeviceProperties.Clear();
+                    return returndict;
+                }
+                else
+                {
+                    return newDeviceProperties;
+                }
             }
             return newDeviceProperties;
         }
@@ -810,9 +817,16 @@ namespace CognitiveVR
         {
             if (clearNewProperties)
             {
-                Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
-                newUserProperties.Clear();
-                return returndict;
+                if (newUserProperties.Count > 0)
+                {
+                    Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
+                    newUserProperties.Clear();
+                    return returndict;
+                }
+                else
+                {
+                    return newDeviceProperties;
+                }
             }
             return newUserProperties;
         }
