@@ -752,9 +752,16 @@ namespace CognitiveVR
         {
             if (clearNewProperties)
             {
-                Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
-                newDeviceProperties.Clear();
-                return returndict;
+                if (newDeviceProperties.Count > 0)
+                {
+                    Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
+                    newDeviceProperties.Clear();
+                    return returndict;
+                }
+                else
+                {
+                    return newDeviceProperties;
+                }
             }
             return newDeviceProperties;
         }
@@ -810,9 +817,16 @@ namespace CognitiveVR
         {
             if (clearNewProperties)
             {
-                Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
-                newUserProperties.Clear();
-                return returndict;
+                if (newUserProperties.Count > 0)
+                {
+                    Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
+                    newUserProperties.Clear();
+                    return returndict;
+                }
+                else
+                {
+                    return newDeviceProperties;
+                }
             }
             return newUserProperties;
         }
