@@ -174,14 +174,17 @@ public class ManageDynamicObjects : EditorWindow
         Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
         Rect uploaded = new Rect(rect.x + 380, rect.y, 24, rect.height);
 
-        GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
+        if (dynamic.UseCustomMesh)
+            GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
+        else
+            GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
         GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
         
         if (!dynamic.HasCollider())
         {
             GUI.Label(collider, new GUIContent(EditorCore.Alert,"Tracking Gaze requires a collider"), "image_centered");
         }
-        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName))
+        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName) || !dynamic.UseCustomMesh)
         {
             GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
         }
