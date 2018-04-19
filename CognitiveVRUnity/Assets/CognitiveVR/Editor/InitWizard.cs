@@ -219,7 +219,7 @@ public class InitWizard : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP 4b - WHAT IS A SCENE?", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not required colliders on it to detect user gaze.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not require colliders on it to detect user gaze.", "boldlabel");
 
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
@@ -229,7 +229,7 @@ public class InitWizard : EditorWindow
         
         GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-        GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one larget step, and can be updated at a later date, resulting in a new Scene Version", "normallabel");
+        GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one large step, and can be updated at a later date, resulting in a new Scene Version.", "normallabel");
     }
 
 #endregion
@@ -344,14 +344,17 @@ public class InitWizard : EditorWindow
         Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
         Rect uploaded = new Rect(rect.x + 360, rect.y, 24, rect.height);
 
-        GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
+        if (dynamic.UseCustomMesh)
+            GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
+        else
+            GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
         GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
         if (!dynamic.HasCollider())
         {
             GUI.Label(collider, new GUIContent(EditorCore.Alert,"Tracking Gaze requires a collider"), "image_centered");
         }
 
-        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName))
+        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName) || !dynamic.UseCustomMesh)
         {
             GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
         }
@@ -436,7 +439,8 @@ public class InitWizard : EditorWindow
             GUI.Label(new Rect(388, 265, 24, 100), EditorCore.EmptyCheckmark, "image_centered");
         }
 
-        if (GUI.Button(new Rect(180, 400, 120, 40), "Export Scene", "button_bluetext"))
+        
+        if (GUI.Button(new Rect(270, 410, 220, 40), "Augmented Reality? Skip Scene Export", "miniheader"))
         {
             if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
             {
@@ -455,21 +459,22 @@ public class InitWizard : EditorWindow
                     return;//cancel from 'do you want to save' popup
                 }
             }
-            CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
+            CognitiveVR_SceneExportWindow.ExportSceneAR();
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorUtility.SetDirty(EditorCore.GetPreferences());
 
             UnityEditor.AssetDatabase.SaveAssets();
+            currentPage++;
         }
 
-        if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
+        /*if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
         {
             GUI.Label(new Rect(300, 400, 24, 40), EditorCore.Checkmark, "image_centered");
         }
         else
         {
             GUI.Label(new Rect(300, 400, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
-        }
+        }*/
     }
 
     bool delayUnderstandButton = true;
@@ -560,6 +565,37 @@ public class InitWizard : EditorWindow
 
         DrawBackButton();
 
+        if (pageids[currentPage] == "uploadscene")
+        {
+            Rect buttonrect = new Rect(350, 460, 140, 30);
+            if (GUI.Button(buttonrect, "Export Scene"))
+            {
+                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                {
+                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                    {
+                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                        {
+                        }
+                        else
+                        {
+                            return;//cancel from save scene window
+                        }
+                    }
+                    else
+                    {
+                        return;//cancel from 'do you want to save' popup
+                    }
+                }
+                CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
+                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+                UnityEditor.AssetDatabase.SaveAssets();
+                currentPage++;
+            }
+        }
+
         DrawNextButton();
     }
 
@@ -610,7 +646,7 @@ public class InitWizard : EditorWindow
                 
                 for(int i = 0;i <dynamics.Length;i++)
                 {
-                    if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamics[i].MeshName))
+                    if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamics[i].MeshName) || !dynamics[i].UseCustomMesh)
                     {
                         dynamicsFromSceneExported++;
                     }
@@ -631,12 +667,16 @@ public class InitWizard : EditorWindow
                 buttonrect = new Rect(350, 460, 140, 30);
                 break;
             case "uploadscene":
-                //buttonDisabled = true;
-                appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+                //buttonDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+
+                buttonrect = new Rect(1000, 1000, 100, 100);
+                onclick = () => { Debug.Log("custom button"); };
+
+                /*appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
                 if (appearDisabled)
                 {
                     onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting this scene?", "Yes", "No")) { currentPage++; } };
-                }
+                }*/
                 break;
             case "upload":
                 onclick += () => EditorCore.RefreshSceneVersion(null);
@@ -773,6 +813,11 @@ public class InitWizard : EditorWindow
                 //buttonDisabled = true;
                 text = "Back";
                 buttonrect = new Rect(200, 460, 80, 30);
+                break;
+            case "uploadscene":
+                //buttonDisabled = true;
+                text = "Back";
+                buttonrect = new Rect(260, 460, 80, 30);
                 break;
             case "uploadsummary":
                 //buttonDisabled = true;

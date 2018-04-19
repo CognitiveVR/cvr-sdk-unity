@@ -160,6 +160,18 @@ namespace CognitiveVR
 
         #region Export Scene
 
+        //don't even try exporting the scene. just generate the folder and json file
+        public static void ExportSceneAR()
+        {
+            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+            string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+
+            //write json settings file
+            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+        }
+
+        //export and try to decimate the scene
         public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string developerkey,string texturename)
         {
             if (blenderProcess != null)

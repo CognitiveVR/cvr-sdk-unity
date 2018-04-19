@@ -109,12 +109,12 @@ namespace CognitiveVR
 
             //written to snapshot
             public string EngagementType;
-            public int Parent = -1;
+            public string Parent = "-1";
             public float EngagementTime = 0;
             public int EngagementNumber;
             //public int EngagementCount = 1; count is figured out by list.count in engagementsDict
 
-            public EngagementEvent(string name, int parent, int engagementNumber)
+            public EngagementEvent(string name, string parent, int engagementNumber)
             {
                 EngagementType = name;
                 Parent = parent;
@@ -1151,7 +1151,7 @@ namespace CognitiveVR
                         builder.Append(snap.Engagements[i].EngagementType);
                         builder.Append("\",");
 
-                        if (snap.Engagements[i].Parent > -1)
+                        if (snap.Engagements[i].Parent != "-1")
                         {
                             builder.Append("\"engagementparent\":");
                             builder.Append(snap.Engagements[i].Parent);
@@ -1280,7 +1280,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="engagementName"></param>
         /// <param name="parentDynamicObjectId"></param>
-        public void BeginEngagement(string engagementName = "default", int parentDynamicObjectId = -1)
+        public void BeginEngagement(string engagementName = "default", string parentDynamicObjectId = "-1")
         {
             if (DirtyEngagements == null)
             {
@@ -1307,7 +1307,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="engagementName"></param>
         /// <param name="parentDynamicObjectId"></param>
-        public void EndEngagement(string engagementName = "default", int parentDynamicObjectId = -1)
+        public void EndEngagement(string engagementName = "default", string parentDynamicObjectId = "-1")
         {
             if (DirtyEngagements == null)
             {
@@ -1320,7 +1320,7 @@ namespace CognitiveVR
 
             var type = DirtyEngagements.Find(delegate (EngagementEvent obj)
             {
-                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == -1);
+                return obj.EngagementType == engagementName && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == "-1");
             });
 
             if (type != null)

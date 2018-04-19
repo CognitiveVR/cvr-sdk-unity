@@ -54,7 +54,8 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sending Data Events", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
+            Constants.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), Constants.Gateway);
             p.SendDataOnHMDRemove = EditorGUILayout.Toggle("Send Data on HMD Remove", p.SendDataOnHMDRemove);
             p.SendDataOnLevelLoad = EditorGUILayout.Toggle("Send Data on Level Load", p.SendDataOnLevelLoad);
             p.SendDataOnQuit = EditorGUILayout.Toggle("Send Data on Quit", p.SendDataOnQuit);
@@ -103,7 +104,6 @@ namespace CognitiveVR
             GUILayout.EndHorizontal();
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
-
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);

@@ -802,20 +802,37 @@ namespace CognitiveVR
                 exportedObjects++;
                 
                 Mesh tempMesh = new Mesh();
-                
-                //Vector3 scale = skinnedMeshes[i].transform.localScale;
-                //Quaternion rot = skinnedMeshes[i].transform.localRotation;
-                //Vector3 pos = skinnedMeshes[i].transform.localPosition;
+
+
+                //bake scaled skinned mesh renderer
+
+                Dictionary<Transform, Vector3> scales = new Dictionary<Transform, Vector3>();
+
+                scales.Add(skinnedMeshes[i].transform, skinnedMeshes[i].transform.localScale);
 
                 skinnedMeshes[i].transform.localPosition = Vector3.zero;
                 skinnedMeshes[i].transform.localRotation = Quaternion.identity;
                 skinnedMeshes[i].transform.localScale = Vector3.one;
 
+                Vector3 parentbonusscales = Vector3.one;
+                Transform currentParent = skinnedMeshes[i].transform.parent;
+                int maxrecursive = 1000;
+                while (currentParent != null && maxrecursive > 0)
+                {
+                    scales.Add(currentParent, currentParent.localScale);
+                    currentParent.localScale = Vector3.one;
+                    currentParent = currentParent.parent;
+                    maxrecursive--;
+                }
+
                 skinnedMeshes[i].BakeMesh(tempMesh);
 
-                //skinnedMeshes[i].transform.localPosition = pos;
-                //skinnedMeshes[i].transform.localRotation = rot;
-                //skinnedMeshes[i].transform.localScale = scale;
+                foreach (var kvp in scales)
+                {
+                    kvp.Key.localScale = kvp.Value;
+                }
+
+                //reset scale to normal
 
                 //meshContainers.Add(new MeshContainer(sm.name, sm.transform, sm.GetComponent<Renderer>() != null && sm.GetComponent<Renderer>().enabled, tempMesh));
                 //skinnedMeshes[i].BakeMesh(tempMesh);
@@ -1225,7 +1242,9 @@ namespace CognitiveVR
             foreach (var sm in skinnedMeshes)
             {
                 Mesh tempMesh = new Mesh();
+                Dictionary<Transform, Vector3> scales = new Dictionary<Transform, Vector3>();
 
+                scales.Add(sm.transform, sm.transform.localScale);
                 //Vector3 scale = sm.transform.localScale;
                 //Quaternion rot = sm.transform.localRotation;
                 //Vector3 pos = sm.transform.localPosition;
@@ -1234,7 +1253,25 @@ namespace CognitiveVR
                 sm.transform.localRotation = Quaternion.identity;
                 sm.transform.localScale = Vector3.one;
 
+                
+
+                Vector3 parentbonusscales = Vector3.one;
+                Transform currentParent = sm.transform.parent;
+                int maxrecursive = 1000;
+                while (currentParent != null && maxrecursive > 0)
+                {
+                    scales.Add(currentParent, currentParent.localScale);
+                    currentParent.localScale = Vector3.one;
+                    currentParent = currentParent.parent;
+                    maxrecursive--;
+                }
+
                 sm.BakeMesh(tempMesh);
+
+                foreach(var kvp in scales)
+                {
+                    kvp.Key.localScale = kvp.Value;
+                }
 
                 //sm.transform.localPosition = pos;
                 //sm.transform.localRotation = rot;
