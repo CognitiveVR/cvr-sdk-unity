@@ -62,7 +62,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                new CustomEvent("cvr.session").Send();
+                new CustomEvent("Session Begin").Send();
             }
             else //some failure
             {
@@ -478,6 +478,7 @@ namespace CognitiveVR
 
             CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
             UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
+            UpdateDeviceState("DeviceId", Core.DeviceId);
             UpdateUserState(userProperties);
             UpdateUserState("name", userName);
 
@@ -600,7 +601,7 @@ namespace CognitiveVR
         public void EndSession()
         {
             double playtime = Util.Timestamp() - Core.SessionTimeStamp;
-            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
+            new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
 
             Core.SendDataEvent();
 
@@ -721,12 +722,12 @@ namespace CognitiveVR
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
-                new CustomEvent("cvr.session").SetProperty("sessionlength",playtime).Send();
+                new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();
                 return;
             }
 
 			CognitiveVR.Util.logDebug("session length " + playtime);
-            new CustomEvent("cvr.session").SetProperty("sessionlength", playtime).Send();
+            new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
 
