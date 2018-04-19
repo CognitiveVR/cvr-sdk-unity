@@ -5,53 +5,51 @@ using System.Text;
 
 namespace CognitiveVR
 {
-    //testdata.cognitive3d.com
-
     public static class Constants
     {
-        private const string domain = "data.cognitive3d.com";
+        public static string Gateway = "data.cognitive3d.com";
         private const string version = "0";
 
         //editor urls
         //GET dynamic object manifest
         public static string GETDYNAMICMANIFEST(int versionid)
         {
-            return String.Concat("https://",domain,"/v", version,"/versions/", versionid, "/objects"); //changed api to data
+            return String.Concat("https://", Gateway, "/v", version,"/versions/", versionid, "/objects"); //changed api to data
         }
 
         //POST dynamic object manifest
         public static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
         {
-            return String.Concat("https://", domain, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
+            return String.Concat("https://", Gateway, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
         }
         //POST dynamic object mesh data
         public static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
         {
-            return String.Concat("https://", domain, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
+            return String.Concat("https://", Gateway, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
         //GET scene settings and read scene version
         public static string GETSCENEVERSIONS(string sceneid)
         {
-            return String.Concat("https://", domain, "/v", version, "/scenes/", sceneid); //changed api to data
+            return String.Concat("https://", Gateway, "/v", version, "/scenes/", sceneid); //changed api to data
         }
 
         //POST scene screenshot
         public static string POSTSCREENSHOT(string sceneid, int versionnumber)
         {
-            return String.Concat("https://", domain, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
+            return String.Concat("https://", Gateway, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
         }
 
         //POST upload decimated scene
         public static string POSTNEWSCENE()
         {
-            return "https://" + domain + "/v"+ version+"/scenes";
+            return "https://" + Gateway + "/v"+ version+"/scenes";
         }
 
         //POST upload and replace existing scene
         public static string POSTUPDATESCENE(string sceneid)
         {
-            return String.Concat("https://", domain, "/v", version, "/scenes/", sceneid);
+            return String.Concat("https://", Gateway, "/v", version, "/scenes/", sceneid);
         }
 
         //UNITY used to open scenes on sceneexplorer
@@ -76,37 +74,37 @@ namespace CognitiveVR
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/dynamics/", sceneid, "?version=",versionnumber.ToString());
+            return string.Concat("https://", Gateway, "/v", version, "/dynamics/", sceneid, "?version=",versionnumber.ToString());
         }
 
         //POST gaze json data to scene explorer
         public static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/gaze/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat("https://", Gateway, "/v", version, "/gaze/", sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST event json data to scene explorer
         public static string POSTEVENTDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/events/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat("https://", Gateway, "/v", version, "/events/", sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST sensor json data to scene explorer
         public static string POSTSENSORDATA(string sceneid, int versionnumber)
         {
-            return string.Concat("https://", domain, "/v", version, "/sensors/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat("https://", Gateway, "/v", version, "/sensors/", sceneid, "?version=", versionnumber.ToString());
         }
 
 
         //GET request question set
         public static string GETEXITPOLLQUESTIONSET(string hookname)
         {
-            return string.Concat("https://", domain, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
+            return string.Concat("https://", Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
         //POST question set responses
         public static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
-            return string.Concat("https://", domain, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
+            return string.Concat("https://", Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
     }
 }

@@ -32,14 +32,14 @@ namespace CognitiveVR
         private RenderTexture rt;
 
 #if CVR_FOVE
-        static FoveInterface _foveInstance;
-        public static FoveInterface FoveInstance
+        static FoveInterfaceBase _foveInstance;
+        public static FoveInterfaceBase FoveInstance
         {
             get
             {
                 if (_foveInstance == null)
                 {
-                    _foveInstance = FindObjectOfType<FoveInterface>();
+                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
                 }
                 return _foveInstance;
             }
@@ -545,7 +545,7 @@ namespace CognitiveVR
 #if CVR_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = FoveInstance.GetNormalizedViewportPointForEye(ray.GetPoint(1000), Fove.Managed.EFVR_Eye.Left); //Unity Plugin Version 2.1.1
+            var normalizedPoint = cam.WorldToViewportPoint(ray.GetPoint(1000));
 
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))
