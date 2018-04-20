@@ -66,7 +66,7 @@ namespace CognitiveVR
         //UNITY where the user goes to download the sdk
         public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
 
-        public const string DASHBOARD = "http://dashboard.cognitivevr.io";
+        public const string DASHBOARD = "http://app.cognitive3d.com";
 
 
         //session urls

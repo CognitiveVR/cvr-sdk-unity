@@ -692,8 +692,9 @@ public class InitWizard : EditorWindow
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+                    //TODO this might cause a race condition for uploading dynamics and manifest
                     ManageDynamicObjects.UploadManifest();
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     currentPage = 9;
                 };
 

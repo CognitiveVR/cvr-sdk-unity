@@ -783,6 +783,12 @@ namespace CognitiveVR
         /// <returns></returns>
         public static bool UploadAllDynamicObjects(bool ShowPopupWindow = false)
         {
+            if (!Directory.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic"))
+            {
+                Debug.Log("skip uploading dynamic objects, folder doesn't exist");
+                return false;
+            }
+
             List<string> dynamicMeshNames = new List<string>();
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
