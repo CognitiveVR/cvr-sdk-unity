@@ -54,6 +54,10 @@ namespace CognitiveVR
         public static string S_VideoSphereDynamicObjectId;
         public static float S_GazeDirectionMultiplier;
 
+        public string Gateway = "data.cognitive3d.com";
+        public string Dashboard = "app.cognitive3d.com";
+        public string Viewer = "sceneexplorer.com/scene/";
+        
         //timestamp and session id
         //private static double _timeStamp;
         /*public static double TimeStamp
