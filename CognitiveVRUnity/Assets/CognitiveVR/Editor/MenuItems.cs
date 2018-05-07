@@ -29,7 +29,7 @@ namespace CognitiveVR
         [MenuItem("cognitive3D/Open Web Dashboard...", priority = 5)]
         static void Cognitive3DDashboard()
         {
-            Application.OpenURL(Constants.DASHBOARD);
+            Application.OpenURL("https://"+CognitiveVR_Preferences.Instance.Dashboard);
         }
 
         [MenuItem("cognitive3D/Check for Updates...", priority = 10)]

@@ -553,7 +553,7 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 45, 440, 440), "That's it!\n\nThe <color=#8A9EB7FF>CognitiveVR_Manager</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard", "boldlabel");
         if (GUI.Button(new Rect(150,300,200,40),"Open Dashboard","button_bluetext"))
         {
-            Application.OpenURL(Constants.DASHBOARD);
+            Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
         }
     }
 
@@ -692,8 +692,9 @@ public class InitWizard : EditorWindow
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+                    //TODO this might cause a race condition for uploading dynamics and manifest
                     ManageDynamicObjects.UploadManifest();
+                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
                     currentPage = 9;
                 };
 
