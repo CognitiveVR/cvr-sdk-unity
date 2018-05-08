@@ -90,10 +90,7 @@ public class ManageDynamicObjects : EditorWindow
             {
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 {
-                    if (CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true))
-                    {
-                        EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
-                    }
+                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
                 }
             });
         }
@@ -104,10 +101,7 @@ public class ManageDynamicObjects : EditorWindow
             {
                 if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
                 {
-                    if (CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true))
-                    {
-                        EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
-                    }
+                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true)); });
                 }
             });
         }
@@ -217,7 +211,7 @@ public class ManageDynamicObjects : EditorWindow
         EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
         if (GUI.Button(new Rect(130, 450, 250, 50), new GUIContent("Save & Sync with Server", tooltip), "button_bluetext"))
         {
-            EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(); });
+            EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(null); });
         }
         EditorGUI.EndDisabledGroup();
 
@@ -322,7 +316,7 @@ public class ManageDynamicObjects : EditorWindow
     /// <summary>
     /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
     /// </summary>
-    public static void UploadManifest()
+    public static void UploadManifest(System.Action callback)
     {
         if (Manifest == null) { Manifest = new AggregationManifest(); }
         //if (SceneVersionCollection == null) { Debug.LogError("SceneVersionCollection is null! Make sure RefreshSceneVersion was called before this"); return; }
@@ -342,7 +336,7 @@ public class ManageDynamicObjects : EditorWindow
         {
             var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
             if (currentSettings != null && currentSettings.VersionNumber > 0)
-                SendManifest(json, currentSettings.VersionNumber);
+                SendManifest(json, currentSettings.VersionNumber, callback);
             else
                 Util.logError("Could not find scene version for current scene");
         }
@@ -375,7 +369,8 @@ public class ManageDynamicObjects : EditorWindow
         return containsValidEntry;
     }
 
-    static void SendManifest(string json, int versionNumber)
+    static System.Action PostManifestResponseAction;
+    static void SendManifest(string json, int versionNumber, System.Action callback)
     {
         var settings = CognitiveVR_Preferences.FindCurrentScene();
         if (settings == null)
@@ -400,12 +395,18 @@ public class ManageDynamicObjects : EditorWindow
             headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
             headers.Add("Content-Type","application/json");
         }
+        PostManifestResponseAction = callback;
         EditorNetwork.Post(url, json, PostManifestResponse,headers,false);//AUTH
     }
 
     static void PostManifestResponse(int responsecode, string error, string text)
     {
         Util.logDebug("Manifest upload complete. response: " + text + " error: " + error);
+        if (PostManifestResponseAction != null)
+        {
+            PostManifestResponseAction.Invoke();
+            PostManifestResponseAction = null;
+        }
     }
 
     static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)

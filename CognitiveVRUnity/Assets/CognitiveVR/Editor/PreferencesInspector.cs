@@ -181,10 +181,14 @@ namespace CognitiveVR
             EditorGUI.BeginDisabledGroup(!hasUploadFiles);
             if (GUILayout.Button("Upload", "ButtonRight"))
             {
-                System.Action completedRefreshSceneVersion2 = delegate ()
+                System.Action completedmanifestupload = delegate ()
                 {
                     CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
-                    ManageDynamicObjects.UploadManifest();
+                };
+
+                System.Action completedRefreshSceneVersion2 = delegate ()
+                {
+                    ManageDynamicObjects.UploadManifest(completedmanifestupload);
                 };
 
                 //upload dynamics

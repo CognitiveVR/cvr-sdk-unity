@@ -10,6 +10,32 @@ namespace CognitiveVR
     [CanEditMultipleObjects]
     public class CognitiveVR_DynamicObjectInspector : Editor
     {
+        public void OnEnable()
+        {
+            PrefabUtility.prefabInstanceUpdated += PrefabInstanceUpdated;
+        }
+
+        void PrefabInstanceUpdated(GameObject instance)
+        {
+            var dynamic = instance.GetComponent<DynamicObject>();
+            if (dynamic == null) { return; }
+            dynamic.iId = 0;
+            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
+            {
+                if (dynamic.UseCustomId)
+                {
+                    Debug.Log("dynamic instance id is null or new");
+                    dynamic.iId = dynamic.GetInstanceID();
+                    CheckCustomId(ref dynamic.CustomId);
+                }
+            }
+        }
+
+        public void OnDisable()
+        {
+            PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
+        }
+
         static bool foldout = false;
         public override void OnInspectorGUI()
         {
@@ -37,6 +63,7 @@ namespace CognitiveVR
             {
                 if (useCustomID.boolValue)
                 {
+                    Debug.Log("dynamic instance id is null or new");
                     iId.intValue = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
                     CheckCustomId(customId);
                     //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
@@ -284,9 +311,35 @@ namespace CognitiveVR
                 {
                     string s = System.Guid.NewGuid().ToString();
                     customId.stringValue = "editor_"+s;
-                    dynamics[i].CustomId = s;
-                    usedids.Add(s);
-                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + s);
+                    dynamics[i].CustomId = customId.stringValue;
+                    usedids.Add(customId.stringValue);
+                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + customId.stringValue);
+                }
+                else
+                {
+                    usedids.Add(dynamics[i].CustomId);
+                }
+            }
+        }
+
+        void CheckCustomId(ref string customId)
+        {
+            if (Application.isPlaying) { return; }
+
+            HashSet<string> usedids = new HashSet<string>();
+
+            var dynamics = FindObjectsOfType<DynamicObject>();
+
+            for (int i = dynamics.Length - 1; i >= 0; i--) //should adjust newer dynamics instead of older
+            {
+                if (dynamics[i].UseCustomId == false) { continue; }
+                if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
+                {
+                    string s = System.Guid.NewGuid().ToString();
+                    customId = "editor_" + s;
+                    dynamics[i].CustomId = customId;
+                    usedids.Add(customId);
+                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + customId);
                 }
                 else
                 {
