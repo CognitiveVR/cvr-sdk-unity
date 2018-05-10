@@ -584,7 +584,8 @@ namespace CognitiveVR
             return this;
         }
 
-        public bool DisplayReticle { get; private set; }
+        private bool displayReticule = true;
+        public bool DisplayReticle { get { return displayReticule; } private set { displayReticule = value; } }
         /// <summary>
         /// Create a simple reticle while the ExitPoll Panel is visible
         /// </summary>
