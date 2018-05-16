@@ -57,6 +57,9 @@ namespace CognitiveVR
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
             jsonPart++;
+            JsonUtil.SetString("formatversion", "1.0", sb);
+            sb.Append(",");
+
 
             sb.Append("\"data\":[");
             foreach (var k in CachedSnapshots.Keys)

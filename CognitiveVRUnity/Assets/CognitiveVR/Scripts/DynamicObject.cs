@@ -869,6 +869,8 @@ namespace CognitiveVR
             JsonUtil.SetInt("part", jsonpart, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             jsonpart++;
+            JsonUtil.SetString("formatversion", "1.0", sendSnapshotBuilder);
+            sendSnapshotBuilder.Append(",");
 
             //format all the savedmanifest entries
 
@@ -973,6 +975,9 @@ namespace CognitiveVR
             JsonUtil.SetInt("part", jsonpart, builder);
             builder.Append(",");
             jsonpart++;
+
+            JsonUtil.SetString("formatversion", "1.0", builder);
+            builder.Append(",");
 
             //format all the savedmanifest entries
 

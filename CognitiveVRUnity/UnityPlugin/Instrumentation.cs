@@ -63,6 +63,9 @@ namespace CognitiveVR
             partCount++;
             builder.Append(",");
 
+            JsonUtil.SetString("formatversion", "1.0", builder);
+            builder.Append(",");
+
             //events
             builder.Append("\"data\":[");
 

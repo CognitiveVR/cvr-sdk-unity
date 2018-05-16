@@ -55,7 +55,7 @@ namespace CognitiveVR.Components
                 if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
-                    CognitiveVR_Manager.UpdateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
+                    CognitiveVR_Manager.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", Mathf.Sqrt(maxSqrDistance) } });
                     //Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
                     CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
@@ -90,7 +90,7 @@ namespace CognitiveVR.Components
                 if (samples >= SampleCount)
                 {
                     Util.logDebug("arm length " + maxSqrDistance);
-                    CognitiveVR_Manager.UpdateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
+                    CognitiveVR_Manager.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", Mathf.Sqrt(maxSqrDistance) } });
                     //Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
                     CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
