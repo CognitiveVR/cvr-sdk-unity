@@ -50,6 +50,13 @@ namespace CognitiveVR
             sb.Append("{");
             JsonUtil.SetString("name", Core.UniqueID, sb);
             sb.Append(",");
+
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, sb);
+                sb.Append(",");
+            }
+
             JsonUtil.SetString("sessionid", Core.SessionID, sb);
             sb.Append(",");
             JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sb);

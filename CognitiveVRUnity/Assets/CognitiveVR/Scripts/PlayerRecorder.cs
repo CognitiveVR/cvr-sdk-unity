@@ -710,6 +710,12 @@ namespace CognitiveVR
                 JsonUtil.SetString("userid", uniqueid, builder);
                 builder.Append(",");
 
+                if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+                {
+                    JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                    builder.Append(",");
+                }
+
                 JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, builder);
                 builder.Append(",");
                 JsonUtil.SetString("sessionid", sessionid, builder);
@@ -873,6 +879,12 @@ namespace CognitiveVR
                     //header
                     JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
+
+                    if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+                    {
+                        JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                        builder.Append(",");
+                    }
 
                     JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
                     builder.Append(",");

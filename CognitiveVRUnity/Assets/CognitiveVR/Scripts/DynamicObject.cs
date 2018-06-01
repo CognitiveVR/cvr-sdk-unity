@@ -438,6 +438,8 @@ namespace CognitiveVR
         /// </summary>
         public void CheckUpdate(float timeSinceLastCheck)
         {
+            if (!Core.Initialized) { return; }
+
             //it might actually be slower to check the threshold than to just write a snapshot
             //what this does well is reduce the network bandwidth, though
 
@@ -862,6 +864,13 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", uniqueid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
+
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, sendSnapshotBuilder);
+                sendSnapshotBuilder.Append(",");
+            }
+
             JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
             JsonUtil.SetString("sessionid", sessionid, sendSnapshotBuilder);
@@ -968,6 +977,11 @@ namespace CognitiveVR
             //header
             JsonUtil.SetString("userid", uniqueid, builder);
             builder.Append(",");
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                builder.Append(",");
+            }
             JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, builder);
             builder.Append(",");
             JsonUtil.SetString("sessionid", sessionid, builder);

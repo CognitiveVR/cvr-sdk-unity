@@ -492,7 +492,11 @@ namespace CognitiveVR
         public static void SetSessionName(string name)
         {
             UpdateSessionState("cvr.sessionname", name);
+        }
 
+        public static void SetLobbyId(string lobbyId)
+        {
+            CognitiveVR_Preferences.SetLobbyId(lobbyId);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
