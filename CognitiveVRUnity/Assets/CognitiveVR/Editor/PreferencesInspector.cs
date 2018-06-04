@@ -55,6 +55,7 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
+            CognitiveVR_Preferences.Instance.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), CognitiveVR_Preferences.Instance.Protocol);
             CognitiveVR_Preferences.Instance.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), CognitiveVR_Preferences.Instance.Gateway);
             CognitiveVR_Preferences.Instance.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "sceneexplorer.com/scene/"), CognitiveVR_Preferences.Instance.Viewer);
             CognitiveVR_Preferences.Instance.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), CognitiveVR_Preferences.Instance.Dashboard);
