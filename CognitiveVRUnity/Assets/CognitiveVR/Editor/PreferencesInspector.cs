@@ -21,12 +21,13 @@ namespace CognitiveVR
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
             //p.TrackGazePoint
+            p.PhysicsGaze = EditorGUILayout.Toggle(new GUIContent("Physics Gaze", "Use Physics.Raycast to calculate gaze point"), p.PhysicsGaze);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
-            p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval), 0, 10);
-            p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
-            p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
+            //EditorGUILayout.Space();
+            //EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
+            //p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval), 0, 10);
+            //p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
+            //p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);

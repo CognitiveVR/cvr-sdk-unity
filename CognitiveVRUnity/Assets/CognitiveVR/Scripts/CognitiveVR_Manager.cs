@@ -74,7 +74,14 @@ namespace CognitiveVR
             {
                 components[i].CognitiveVR_Init(initError);
             }
-            PlayerRecorderInit(initError);
+
+            //PlayerRecorderInit(initError);
+
+            if (CognitiveVR_Preferences.Instance.PhysicsGaze)
+                gameObject.AddComponent<PhysicsGaze>().Initialize();
+            else
+                gameObject.AddComponent<DepthGaze>().Initialize();
+
             if (InitEvent != null) { InitEvent(initError); }
 
             //required for when restarting cognitiveVR manager
@@ -519,7 +526,7 @@ namespace CognitiveVR
                         Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
                         Core.SendDataEvent();
                         //SendPlayerGazeSnapshots();
-                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+                        //CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                     }
                 }
 
@@ -531,7 +538,7 @@ namespace CognitiveVR
                 {
                     if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                     {
-                        CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+                        //CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
                         Core.CurrentSceneId = sceneSettings.SceneId;
                         Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     }
@@ -618,8 +625,8 @@ namespace CognitiveVR
             Core.SendDataEvent();
 
             //clear properties from last session
-            newSessionProperties.Clear();
-            knownSessionProperties.Clear();
+            //newSessionProperties.Clear();
+            //knownSessionProperties.Clear();
 
             CleanupEvents();
             Core.reset();
@@ -644,7 +651,7 @@ namespace CognitiveVR
 
         void CleanupEvents()
         {
-            CleanupPlayerRecorderEvents();
+            //CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
         }
@@ -760,66 +767,15 @@ namespace CognitiveVR
 
         public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
         {
-            if (clearNewProperties)
-            {
-                if (newSessionProperties.Count > 0)
-                {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newSessionProperties);
-                    newSessionProperties.Clear();
-                    return returndict;
-                }
-                else
-                {
-                    return newSessionProperties;
-                }
-            }
-            return newSessionProperties;
+            return Core.GetNewSessionProperties(clearNewProperties);
         }
-        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>();
-        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>();
         public static void UpdateSessionState(Dictionary<string, object> dictionary)
         {
-            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
-            foreach (var kvp in dictionary)
-            {
-                if (knownSessionProperties.ContainsKey(kvp.Key) && knownSessionProperties[kvp.Key] != kvp.Value) //update value
-                {
-                    if (newSessionProperties.ContainsKey(kvp.Key))
-                    {
-                        newSessionProperties[kvp.Key] = kvp.Value;
-                    }
-                    else
-                    {
-                        newSessionProperties.Add(kvp.Key, kvp.Value);
-                    }
-                    knownSessionProperties[kvp.Key] = kvp.Value;
-                }
-                else if (!knownSessionProperties.ContainsKey(kvp.Key)) //add value
-                {
-                    knownSessionProperties.Add(kvp.Key, kvp.Value);
-                    newSessionProperties.Add(kvp.Key, kvp.Value);
-                }
-            }
+            Core.UpdateSessionState(dictionary);
         }
         public static void UpdateSessionState(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
-            {
-                if (newSessionProperties.ContainsKey(key))
-                {
-                    newSessionProperties[key] = value;
-                }
-                else
-                {
-                    newSessionProperties.Add(key, value);
-                }
-                knownSessionProperties[key] = value;
-            }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
-            {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
-            }
+            Core.UpdateSessionState(key, value);
         }
     }
 }

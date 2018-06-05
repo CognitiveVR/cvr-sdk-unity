@@ -26,14 +26,14 @@ namespace CognitiveVR
                     }
                     IsSet = true;
                     S_SnapshotInterval = instance.SnapshotInterval;
-                    S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
+                    //S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    S_TrackGazePoint = instance.TrackGazePoint;
+                    //S_TrackGazePoint = instance.TrackGazePoint;
                     //S_GazePointFromDirection = instance.GazePointFromDirection;
-                    S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
-                    S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
+                    //S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
+                    //S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
@@ -42,17 +42,17 @@ namespace CognitiveVR
         }
 
         public static float S_SnapshotInterval;
-        public static bool S_EvaluateGazeRealtime;
+        //public static bool S_EvaluateGazeRealtime;
         public static int S_GazeSnapshotCount;
         public static int S_DynamicSnapshotCount;
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
 
         public static bool S_DynamicObjectSearchInParent;
-        public static bool S_TrackGazePoint;
-        public static bool S_GazePointFromDirection;
-        public static string S_VideoSphereDynamicObjectId;
-        public static float S_GazeDirectionMultiplier;
+        //public static bool S_TrackGazePoint;
+        //public static bool S_GazePointFromDirection;
+        //public static string S_VideoSphereDynamicObjectId;
+        //public static float S_GazeDirectionMultiplier;
 
         public static void SetLobbyId(string lobbyId)
         {
@@ -133,19 +133,21 @@ namespace CognitiveVR
         
         public float SnapshotInterval = 0.1f;
         public bool DynamicObjectSearchInParent = true;
-        public bool TrackGazePoint = true;
+        //public bool TrackGazePoint = true;
 
-        public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
-        public string VideoSphereDynamicObjectId = "";
-        public float GazeDirectionMultiplier = 1.0f;
+        //public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
+        //public string VideoSphereDynamicObjectId = "";
+        //public float GazeDirectionMultiplier = 1.0f;
 
         [Header("Send Data")]
         //public bool DebugWriteToFile = false;
 
-        public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
+        //public bool EvaluateGazeRealtime = true; //evaluate gaze data at real time and send when threshold reached. otherwise, send when manually called
         public int GazeSnapshotCount = 64;
 
-        public bool WriteJsonRealtime = true; //sends data when these thresholds are reached. if false, only send when manually called or OnQuit,HMDRemove,LevelLoad or HotKey
+        public bool PhysicsGaze = false;
+        
+        //public bool WriteJsonRealtime = true; //sends data when these thresholds are reached. if false, only send when manually called or OnQuit,HMDRemove,LevelLoad or HotKey
         //should be able to save snapshots and send when manually called
         public int SensorSnapshotCount = 64; //beyond this threshold? write to json (if not realtime) and send
         public int DynamicSnapshotCount = 64;
