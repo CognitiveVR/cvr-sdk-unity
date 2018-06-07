@@ -446,6 +446,11 @@ namespace CognitiveVR
             builder.Append("{");
             JsonUtil.SetString("userId", CognitiveVR.Core.UniqueID, builder);
             builder.Append(",");
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                builder.Append(",");
+            }
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
             JsonUtil.SetString("sessionId", Core.SessionID, builder);
@@ -454,9 +459,13 @@ namespace CognitiveVR
             builder.Append(",");
 
             var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
-            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
+            if (scenesettings != null)
             {
                 JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);
+                builder.Append(",");
+                JsonUtil.SetInt("versionNumber", scenesettings.VersionNumber, builder);
+                builder.Append(",");
+                JsonUtil.SetInt("versionId", scenesettings.VersionId, builder);
                 builder.Append(",");
             }
 
@@ -584,7 +593,8 @@ namespace CognitiveVR
             return this;
         }
 
-        public bool DisplayReticle { get; private set; }
+        private bool displayReticule = true;
+        public bool DisplayReticle { get { return displayReticule; } private set { displayReticule = value; } }
         /// <summary>
         /// Create a simple reticle while the ExitPoll Panel is visible
         /// </summary>

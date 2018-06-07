@@ -630,7 +630,7 @@ namespace CognitiveVR
 
                 playerSnapshots.Clear();
 
-                StartCoroutine(Threaded_SendGaze(tempSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewDeviceProperties(true), CognitiveVR_Manager.GetNewUserProperties(true)));
+                StartCoroutine(Threaded_SendGaze(tempSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewSessionProperties(true)));
 
                 //SendPlayerGazeSnapshots();
                 //OnSendData();
@@ -638,7 +638,7 @@ namespace CognitiveVR
         }
         //bool doneSendGaze = false;
         //bool waitingForThread = false;
-        IEnumerator Threaded_SendGaze(PlayerSnapshot[] tempSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid, Dictionary<string, object> deviceProperties, Dictionary<string, object> userProperties)
+        IEnumerator Threaded_SendGaze(PlayerSnapshot[] tempSnapshots, CognitiveVR_Preferences.SceneSettings trackingsettings, string uniqueid, double sessiontimestamp, string sessionid, Dictionary<string, object> sessionProperties)
         {
             //var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (trackingsettings == null)
@@ -710,6 +710,12 @@ namespace CognitiveVR
                 JsonUtil.SetString("userid", uniqueid, builder);
                 builder.Append(",");
 
+                if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+                {
+                    JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                    builder.Append(",");
+                }
+
                 JsonUtil.SetDouble("timestamp", (int)sessiontimestamp, builder);
                 builder.Append(",");
                 JsonUtil.SetString("sessionid", sessionid, builder);
@@ -733,14 +739,15 @@ namespace CognitiveVR
                 JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval, builder);
                 builder.Append(",");
 
+                JsonUtil.SetString("formatversion", "1.0", builder);
+                builder.Append(",");
 
                 //var deviceProperties = CognitiveVR_Manager.GetNewDeviceProperties(true);
-                if (deviceProperties.Count > 0)
+                if (sessionProperties.Count > 0)
                 {
-                    builder.Append("\"device\":[");
-                    foreach (var kvp in deviceProperties)
+                    builder.Append("\"properties\":{");
+                    foreach (var kvp in sessionProperties)
                     {
-                        builder.Append("{");
                         if (kvp.Value.GetType() == typeof(string))
                         {
                             JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
@@ -749,35 +756,11 @@ namespace CognitiveVR
                         {
                             JsonUtil.SetObject(kvp.Key, kvp.Value, builder);
                         }
-                        builder.Append("}");
                         builder.Append(",");
                     }
                     builder.Remove(builder.Length - 1, 1); //remove comma
-                    builder.Append("],");
+                    builder.Append("},");
                 }
-
-                //var userProperties = CognitiveVR_Manager.GetNewUserProperties(true);
-                if (userProperties.Count > 0)
-                {
-                    builder.Append("\"user\":[");
-                    foreach (var kvp in userProperties)
-                    {
-                        builder.Append("{");
-                        if (kvp.Value.GetType() == typeof(string))
-                        {
-                            JsonUtil.SetString(kvp.Key, (string)kvp.Value, builder);
-                        }
-                        else
-                        {
-                            JsonUtil.SetObject(kvp.Key, kvp.Value, builder);
-                        }
-                        builder.Append("}");
-                        builder.Append(",");
-                    }
-                    builder.Remove(builder.Length - 1, 1); //remove comma
-                    builder.Append("],");
-                }
-
 
                 //events
                 builder.Append("\"data\":[");
@@ -896,6 +879,12 @@ namespace CognitiveVR
                     //header
                     JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
+
+                    if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+                    {
+                        JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                        builder.Append(",");
+                    }
 
                     JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
                     builder.Append(",");

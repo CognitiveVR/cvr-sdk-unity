@@ -50,6 +50,13 @@ namespace CognitiveVR
             sb.Append("{");
             JsonUtil.SetString("name", Core.UniqueID, sb);
             sb.Append(",");
+
+            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, sb);
+                sb.Append(",");
+            }
+
             JsonUtil.SetString("sessionid", Core.SessionID, sb);
             sb.Append(",");
             JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sb);
@@ -57,6 +64,9 @@ namespace CognitiveVR
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
             jsonPart++;
+            JsonUtil.SetString("formatversion", "1.0", sb);
+            sb.Append(",");
+
 
             sb.Append("\"data\":[");
             foreach (var k in CachedSnapshots.Keys)

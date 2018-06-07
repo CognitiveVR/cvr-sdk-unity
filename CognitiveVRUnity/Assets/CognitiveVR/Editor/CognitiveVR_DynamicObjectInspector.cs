@@ -10,9 +10,37 @@ namespace CognitiveVR
     [CanEditMultipleObjects]
     public class CognitiveVR_DynamicObjectInspector : Editor
     {
+        public void OnEnable()
+        {
+            PrefabUtility.prefabInstanceUpdated += PrefabInstanceUpdated;
+        }
+
+        void PrefabInstanceUpdated(GameObject instance)
+        {
+            var dynamic = instance.GetComponent<DynamicObject>();
+            if (dynamic == null) { return; }
+            dynamic.iId = 0;
+            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
+            {
+                if (dynamic.UseCustomId)
+                {
+                    Debug.Log("dynamic instance id is null or new");
+                    dynamic.iId = dynamic.GetInstanceID();
+                    CheckCustomId(ref dynamic.CustomId);
+                }
+            }
+        }
+
+        public void OnDisable()
+        {
+            PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
+        }
+
         static bool foldout = false;
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
+
             var script = serializedObject.FindProperty("m_Script");
             var groupName = serializedObject.FindProperty("GroupName");
             var syncWithPlayerUpdate = serializedObject.FindProperty("SyncWithPlayerUpdate");
@@ -31,17 +59,20 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
 
-            var iId = serializedObject.FindProperty("iId");            
-            var dynamic = target as DynamicObject;
-            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(customId.stringValue)) //only check if something has changed on a dynamic
+            foreach(var t in serializedObject.targetObjects)
             {
-                if (useCustomID.boolValue)
+                var dynamic = t as DynamicObject;
+                if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
                 {
-                    iId.intValue = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
-                    CheckCustomId(customId);
-                    //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
+                    if (dynamic.UseCustomId)
+                    {
+                        dynamic.iId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
+                        CheckCustomId(ref dynamic.CustomId);
+                        //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
+                    }
                 }
             }
+            
 
 #if UNITY_5_6_OR_NEWER
             //video
@@ -58,17 +89,24 @@ namespace CognitiveVR
             GUILayout.BeginHorizontal();
 
             UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-            
-            if (useCustomMesh.boolValue)
+
+            bool anycustomnames = false;
+            foreach (var t in targets)
             {
-                if (string.IsNullOrEmpty(meshname.stringValue))
+                var dyn = t as DynamicObject;
+                if (dyn.UseCustomMesh)
                 {
-                    meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                    anycustomnames = true;
+                    if (string.IsNullOrEmpty(dyn.MeshName))
+                    {
+                        dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_");
+                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                    }
+                    if (targets.Length == 1)
+                    dyn.MeshName = UnityEditor.EditorGUILayout.TextField("", dyn.MeshName);
                 }
-                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
             }
-            else
+            if (!anycustomnames)
             {
                 UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
             }
@@ -84,52 +122,62 @@ namespace CognitiveVR
             if (foldout)
             {
 
-                //Mesh
-                GUILayout.Label("Mesh", EditorStyles.boldLabel);
-
-                EditorGUI.BeginDisabledGroup(useCustomMesh.boolValue);
-                UnityEditor.EditorGUILayout.PropertyField(commonMeshName);
-                EditorGUI.EndDisabledGroup();
-
-                if (string.IsNullOrEmpty(meshname.stringValue))
+                if (useCustomMesh.boolValue)
                 {
-                    meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                }
+                    //Mesh
+                    GUILayout.Label("Mesh", EditorStyles.boldLabel);
 
-                GUILayout.BeginHorizontal();
-                UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
 
-                EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
-                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
-                if (GUILayout.Button("Export", "ButtonLeft", GUILayout.MaxWidth(100)))
-                {
-                    CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
-                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-                }
+                    //EditorGUI.BeginDisabledGroup(useCustomMesh.boolValue);
+                    //UnityEditor.EditorGUILayout.PropertyField(commonMeshName);
+                    //EditorGUI.EndDisabledGroup();
 
-                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                if (GUILayout.Button("Upload", "ButtonRight", GUILayout.MaxWidth(100)))
-                {
-                    CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
-                }
-                EditorGUI.EndDisabledGroup();
-
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                if (GUILayout.Button("Thumbnail from SceneView",GUILayout.MaxWidth(180)))
-                {
-                    foreach(var v in serializedObject.targetObjects)
+                    if (string.IsNullOrEmpty(meshname.stringValue))
                     {
-                        EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
+                        //meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
+                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                     }
-                }
-                EditorGUI.EndDisabledGroup();
-                GUILayout.EndHorizontal();
 
+                    GUILayout.BeginHorizontal();
+                    //UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
+
+                    //EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
+                    UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
+                    if (GUILayout.Button("Export", "ButtonLeft", GUILayout.MaxWidth(100)))
+                    {
+                        CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        foreach (var t in serializedObject.targetObjects)
+                        {
+                            var dyn = t as DynamicObject;
+                            if (!dyn.UseCustomId)
+                            {
+                                EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                            }
+                        }
+                    }
+
+                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                    if (GUILayout.Button("Upload", "ButtonRight", GUILayout.MaxWidth(100)))
+                    {
+                        CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
+                    }
+                    EditorGUI.EndDisabledGroup();
+
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
+                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                    if (GUILayout.Button("Thumbnail from SceneView", GUILayout.MaxWidth(180)))
+                    {
+                        foreach (var v in serializedObject.targetObjects)
+                        {
+                            EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
+                        }
+                    }
+                    EditorGUI.EndDisabledGroup();
+                    GUILayout.EndHorizontal();
+                }
 
                 //Setup
                 GUILayout.Label("Setup", EditorStyles.boldLabel);
@@ -206,8 +254,17 @@ namespace CognitiveVR
 
             if (GUI.changed)
             {
+                foreach (var t in targets)
+                {
+                    var dyn = t as DynamicObject;
+                    if (dyn.UseCustomMesh)
+                    {
+                        dyn.MeshName = dyn.MeshName.Replace(" ", "_");
+                    }
+                }
+
                 //remove spaces from meshname
-                meshname.stringValue = meshname.stringValue.Replace(" ", "_");
+                //meshname.stringValue = meshname.stringValue.Replace(" ", "_");
 
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
@@ -269,7 +326,7 @@ namespace CognitiveVR
             }
         }
 
-        void CheckCustomId(SerializedProperty customId)
+        void CheckCustomId(ref string customId)
         {
             if (Application.isPlaying) { return; }
 
@@ -277,16 +334,16 @@ namespace CognitiveVR
 
             var dynamics = FindObjectsOfType<DynamicObject>();
 
-            for (int i = dynamics.Length - 1; i >= 0; i--) //should adjust newer dynamics instead of older
+            for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {
                 if (dynamics[i].UseCustomId == false) { continue; }
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     string s = System.Guid.NewGuid().ToString();
-                    customId.stringValue = "editor_"+s;
-                    dynamics[i].CustomId = s;
-                    usedids.Add(s);
-                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + s);
+                    customId = "editor_" + s;
+                    dynamics[i].CustomId = customId;
+                    usedids.Add(customId);
+                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + customId);
                 }
                 else
                 {

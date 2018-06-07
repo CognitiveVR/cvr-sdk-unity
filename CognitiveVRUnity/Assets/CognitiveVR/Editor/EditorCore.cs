@@ -902,6 +902,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         var renderCam = go.AddComponent<Camera>();
         renderCam.clearFlags = CameraClearFlags.Color;
         renderCam.backgroundColor = Color.clear;
+        renderCam.nearClipPlane = 0.01f;
         if (layer != -1)
         {
             renderCam.cullingMask = 1 << layer;

@@ -90,7 +90,7 @@ namespace CognitiveVR
             {              
                 var metaProperties = new Dictionary<string,object>();
                 metaProperties.Add("cvr.vr.serialnumber",serialnumber);
-                UpdateDeviceState(metaProperties);
+                UpdateSessionState(metaProperties);
                 //Instrumentation.updateDeviceState(metaProperties);
             }
 #elif CVR_STEAMVR
@@ -101,7 +101,7 @@ namespace CognitiveVR
                 var properties = new Dictionary<string, object>();
                 properties.Add("cvr.vr.serialnumber", serialnumber);
 
-                UpdateDeviceState(properties);
+                UpdateSessionState(properties);
                 //Instrumentation.updateDeviceState(properties);
             }
 #endif
@@ -477,17 +477,30 @@ namespace CognitiveVR
             Core.UserId = userName;
 
             CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
-            UpdateDeviceState(Util.GetDeviceProperties() as Dictionary<string,object>);
-            UpdateDeviceState("DeviceId", Core.DeviceId);
-            UpdateUserState(userProperties);
-            UpdateUserState("name", userName);
+            UpdateSessionState(Util.GetDeviceProperties() as Dictionary<string,object>);
+            UpdateSessionState("cvr.deviceId", Core.DeviceId);
+            UpdateSessionState(userProperties);
+            UpdateSessionState("cvr.name", userName);
 
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
+        }
+
+        /// <summary>
+        /// sets a user friendly label for the session on the dashboard. automatically generated if not supplied
+        /// </summary>
+        /// <param name="name"></param>
+        public static void SetSessionName(string name)
+        {
+            UpdateSessionState("cvr.sessionname", name);
+        }
+
+        public static void SetLobbyId(string lobbyId)
+        {
+            CognitiveVR_Preferences.SetLobbyId(lobbyId);
         }
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            Debug.Log("scene manager scene loaded event");
             DynamicObject.ClearObjectIds();
             if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
@@ -501,7 +514,6 @@ namespace CognitiveVR
                 CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
                 if (lastSceneSettings != null)
                 {
-                    Debug.Log("scene load last scene was " + lastSceneSettings.SceneName);
                     if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
                     {
                         Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
@@ -606,11 +618,8 @@ namespace CognitiveVR
             Core.SendDataEvent();
 
             //clear properties from last session
-            newDeviceProperties.Clear();
-            knownDeviceProperties.Clear();
-
-            newUserProperties.Clear();
-            knownUserProperties.Clear();
+            newSessionProperties.Clear();
+            knownSessionProperties.Clear();
 
             CleanupEvents();
             Core.reset();
@@ -747,134 +756,69 @@ namespace CognitiveVR
             Application.Quit();
         }
 
-#endregion
+        #endregion
 
-        public static Dictionary<string, object> GetNewDeviceProperties(bool clearNewProperties)
+        public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
         {
             if (clearNewProperties)
             {
-                if (newDeviceProperties.Count > 0)
+                if (newSessionProperties.Count > 0)
                 {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newDeviceProperties);
-                    newDeviceProperties.Clear();
+                    Dictionary<string, object> returndict = new Dictionary<string, object>(newSessionProperties);
+                    newSessionProperties.Clear();
                     return returndict;
                 }
                 else
                 {
-                    return newDeviceProperties;
+                    return newSessionProperties;
                 }
             }
-            return newDeviceProperties;
+            return newSessionProperties;
         }
-        static Dictionary<string, object> newDeviceProperties = new Dictionary<string, object>();
-        static Dictionary<string, object> knownDeviceProperties = new Dictionary<string, object>();
-        public static void UpdateDeviceState(Dictionary<string, object> dictionary)
-        {
-            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
-
-            foreach (var kvp in dictionary)
-            {
-                if (knownDeviceProperties.ContainsKey(kvp.Key) && knownDeviceProperties[kvp.Key] != kvp.Value) //update value
-                {
-                    if (newDeviceProperties.ContainsKey(kvp.Key))
-                    {
-                        newDeviceProperties[kvp.Key] = kvp.Value;
-                    }
-                    else
-                    {
-                        newDeviceProperties.Add(kvp.Key, kvp.Value);
-                    }
-                    knownDeviceProperties[kvp.Key] = kvp.Value;
-                }
-                else if (!knownDeviceProperties.ContainsKey(kvp.Key)) //add value
-                {
-                    knownDeviceProperties.Add(kvp.Key, kvp.Value);
-                    newDeviceProperties.Add(kvp.Key, kvp.Value);
-                }
-            }
-        }
-        public static void UpdateDeviceState(string key, object value)
-        {
-            if (knownDeviceProperties.ContainsKey(key) && knownDeviceProperties[key]!=value) //update value
-            {
-                if (newDeviceProperties.ContainsKey(key))
-                {
-                    newDeviceProperties[key] = value;
-                }
-                else
-                {
-                    newDeviceProperties.Add(key, value);
-                }
-                knownDeviceProperties[key] = value;
-            }
-            else if(!knownDeviceProperties.ContainsKey(key)) //add value
-            {
-                knownDeviceProperties.Add(key, value);
-                newDeviceProperties.Add(key, value);
-            }
-        }
-
-        public static Dictionary<string, object> GetNewUserProperties(bool clearNewProperties)
-        {
-            if (clearNewProperties)
-            {
-                if (newUserProperties.Count > 0)
-                {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newUserProperties);
-                    newUserProperties.Clear();
-                    return returndict;
-                }
-                else
-                {
-                    return newDeviceProperties;
-                }
-            }
-            return newUserProperties;
-        }
-        static Dictionary<string, object> newUserProperties = new Dictionary<string, object>();
-        static Dictionary<string, object> knownUserProperties = new Dictionary<string, object>();
-        public static void UpdateUserState(Dictionary<string, object> dictionary)
+        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>();
+        public static void UpdateSessionState(Dictionary<string, object> dictionary)
         {
             if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
             foreach (var kvp in dictionary)
             {
-                if (knownUserProperties.ContainsKey(kvp.Key) && knownUserProperties[kvp.Key] != kvp.Value) //update value
+                if (knownSessionProperties.ContainsKey(kvp.Key) && knownSessionProperties[kvp.Key] != kvp.Value) //update value
                 {
-                    if (newUserProperties.ContainsKey(kvp.Key))
+                    if (newSessionProperties.ContainsKey(kvp.Key))
                     {
-                        newUserProperties[kvp.Key] = kvp.Value;
+                        newSessionProperties[kvp.Key] = kvp.Value;
                     }
                     else
                     {
-                        newUserProperties.Add(kvp.Key, kvp.Value);
+                        newSessionProperties.Add(kvp.Key, kvp.Value);
                     }
-                    knownUserProperties[kvp.Key] = kvp.Value;
+                    knownSessionProperties[kvp.Key] = kvp.Value;
                 }
-                else if (!knownUserProperties.ContainsKey(kvp.Key)) //add value
+                else if (!knownSessionProperties.ContainsKey(kvp.Key)) //add value
                 {
-                    knownUserProperties.Add(kvp.Key, kvp.Value);
-                    newUserProperties.Add(kvp.Key, kvp.Value);
+                    knownSessionProperties.Add(kvp.Key, kvp.Value);
+                    newSessionProperties.Add(kvp.Key, kvp.Value);
                 }
             }
         }
-        public static void UpdateUserState(string key, object value)
+        public static void UpdateSessionState(string key, object value)
         {
-            if (knownUserProperties.ContainsKey(key) && knownUserProperties[key] != value) //update value
+            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
             {
-                if (newUserProperties.ContainsKey(key))
+                if (newSessionProperties.ContainsKey(key))
                 {
-                    newUserProperties[key] = value;
+                    newSessionProperties[key] = value;
                 }
                 else
                 {
-                    newUserProperties.Add(key, value);
+                    newSessionProperties.Add(key, value);
                 }
-                knownUserProperties[key] = value;
+                knownSessionProperties[key] = value;
             }
-            else if (!knownUserProperties.ContainsKey(key)) //add value
+            else if (!knownSessionProperties.ContainsKey(key)) //add value
             {
-                knownUserProperties.Add(key, value);
-                newUserProperties.Add(key, value);
+                knownSessionProperties.Add(key, value);
+                newSessionProperties.Add(key, value);
             }
         }
     }
