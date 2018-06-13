@@ -168,6 +168,7 @@ namespace CognitiveVR
 
         public static int GetResponseCode(Dictionary<string, string> headers)
         {
+            if (headers == null) { return 0; }
             //HTTP/1.1 200 OK
             int returnCode = -1;
             string statusvalue = null;
