@@ -12,7 +12,8 @@ namespace CognitiveVR
         {
             World,
             Dynamic,
-            Sky
+            Sky,
+            Media
         }
         public SnapshotType snapshotType;
 
@@ -39,6 +40,12 @@ namespace CognitiveVR
         public Vector3 GazePoint;
         //xy of screen when tracking eyes
         public Vector3 HMDGazePoint;
+
+        //media specific
+        public int mediatime;
+        public Vector2 uvs;
+        public string mediasource;
+
 
         public PlayerSnapshot(int framecount)
         {

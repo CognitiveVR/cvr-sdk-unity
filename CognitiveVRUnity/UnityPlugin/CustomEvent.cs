@@ -9,7 +9,7 @@ namespace CognitiveVR
     public class CustomEvent
     {
         private string _category;
-        private Dictionary<string, object> _properties = new Dictionary<string, object>();
+        private Dictionary<string, object> _properties = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
 
         public CustomEvent(string category)
         {
