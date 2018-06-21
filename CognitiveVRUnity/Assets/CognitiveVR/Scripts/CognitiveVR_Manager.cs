@@ -77,10 +77,14 @@ namespace CognitiveVR
 
             //PlayerRecorderInit(initError);
 
-            if (CognitiveVR_Preferences.Instance.PhysicsGaze)
-                gameObject.AddComponent<PhysicsGaze>().Initialize();
-            else
-                gameObject.AddComponent<DepthGaze>().Initialize();
+            switch (CognitiveVR_Preferences.Instance.GazeType)
+            {
+                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
+                //case GazeType.Command: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
+                case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
+                case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
+                case GazeType.SkyboxMedia: gameObject.AddComponent<SkyboxMediaGaze>().Initialize(); break;
+            }
 
             if (InitEvent != null) { InitEvent(initError); }
 

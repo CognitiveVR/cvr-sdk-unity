@@ -5,10 +5,17 @@ using CognitiveVR;
 using System.Text;
 using CognitiveVR.External;
 
-//TODO static place for receiving data from gaze and sending it
-
 namespace CognitiveVR
 {
+    public enum GazeType
+    {
+        Physics, //raycast
+        Command, //command buffer
+        Depth, //classic depth rendering
+        Sphere, //inverted sphere media
+        SkyboxMedia //360 skybox setup
+    }
+
     public static class GazeCore
     {
         private static int jsonPart = 1;

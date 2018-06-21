@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using CognitiveVR;
 
-//physics raycast from camera
-//adds gazepoint at hit.point
-//TODO media
+//dynamic raycast from camera
+//if no hit, then set gaze on media displayed on skybox
+//requires mesh collider and inverted spheres to get uvs
 
-public class PhysicsGaze : GazeBase {
-    
-
+public class SkyboxMediaGaze : GazeBase
+{
     public override void Initialize()
     {
         base.Initialize();
@@ -26,7 +25,6 @@ public class PhysicsGaze : GazeBase {
 
     private void CognitiveVR_Manager_TickEvent()
     {
-        RaycastHit hit = new RaycastHit();
         Ray ray = new Ray(CameraTransform.position, GetWorldGazeDirection());
 
         float hitDistance;
@@ -34,6 +32,7 @@ public class PhysicsGaze : GazeBase {
         Vector3 hitWorld;
         if (DynamicRaycast(ray.origin,ray.direction,CameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld)) //hit dynamic
         {
+            //hit a dynamic object
             string ObjectId = hitDynamic.ObjectId.Id;
             Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
@@ -41,21 +40,7 @@ public class PhysicsGaze : GazeBase {
             return;
         }
 
-        if (Physics.Raycast(ray,out hit, cam.farClipPlane))
-        {
-            Vector3 pos = CameraTransform.position;
-            Vector3 gazepoint = hit.point;
-            Quaternion rot = CameraTransform.rotation;
-
-            //hit world
-            GazeCore.RecordGazePoint(Util.Timestamp(), gazepoint, pos, rot);
-        }
-        else //hit sky / farclip
-        {
-            Vector3 pos = CameraTransform.position;
-            Quaternion rot = CameraTransform.rotation;
-            GazeCore.RecordGazePoint(Util.Timestamp(), pos, rot);
-        }
+        //TODO media uv stuff. timestamps
     }
 
     private void OnDestroy()

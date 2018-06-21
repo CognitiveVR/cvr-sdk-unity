@@ -21,7 +21,8 @@ namespace CognitiveVR
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
             //p.TrackGazePoint
-            p.PhysicsGaze = EditorGUILayout.Toggle(new GUIContent("Physics Gaze", "Use Physics.Raycast to calculate gaze point"), p.PhysicsGaze);
+            //p.PhysicsGaze = EditorGUILayout.Toggle(new GUIContent("Physics Gaze", "Use Physics.Raycast to calculate gaze point"), p.PhysicsGaze);
+            p.GazeType = (CognitiveVR.GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
 
             //EditorGUILayout.Space();
             //EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
