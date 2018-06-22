@@ -112,6 +112,8 @@ namespace CognitiveVR
         //TODO these can happen on a separate thread? uses camera.main which will only work on the main thread
         private void PupilGazeTracker_OnCalibrationDone()
         {
+            PupilTools.IsGazing = true;
+            PupilTools.SubscribeTo("gaze");
             //new CustomEvent("cvr.calibration").Send();
         }
 
@@ -273,7 +275,7 @@ namespace CognitiveVR
             var v2 = PupilData._2D.GazePosition;
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary,"confidence") > 0.1f) //think this is from the right source dict?
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary,"confidence") > 0.1f) //think this is from the right source dict? //confidence never returns a value?
             {
                 var ray = instance.cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
@@ -531,7 +533,7 @@ namespace CognitiveVR
             var v2 = PupilData._2D.GazePosition;//.GetEyeGaze(Pupil.GazeSource.BothEyes);
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f) { return; }
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f) { return; } //confidence never returns a value?
             //if (PupilTools.Confidence(PupilData.rightEyeID) < 0.5f){return;}
 
             var ray = cam.ViewportPointToRay(v2);
