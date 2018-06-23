@@ -698,7 +698,12 @@ namespace CognitiveVR
             string contents = null;
             string url = Constants.POSTGAZEDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
-            string hmdmodel = CognitiveVR.Util.GetSimpleHMDName();
+#if UNITY_2017_2_OR_NEWER
+            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+#else
+            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+#endif
+            string hmdmodel = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 
 
             new System.Threading.Thread(() =>
@@ -903,7 +908,12 @@ namespace CognitiveVR
 #elif CVR_META
                     JsonUtil.SetString("hmdtype", "meta", builder);
 #else
-                    JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), builder);
+            #if UNITY_2017_2_OR_NEWER
+                        string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+            #else
+                                string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+            #endif
+                    JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(rawHMDName), builder);
 #endif
                     builder.Append(",");
                     JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, builder);
