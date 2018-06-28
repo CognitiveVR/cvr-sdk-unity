@@ -112,6 +112,8 @@ namespace CognitiveVR
         //TODO these can happen on a separate thread? uses camera.main which will only work on the main thread
         private void PupilGazeTracker_OnCalibrationDone()
         {
+            PupilTools.IsGazing = true;
+            PupilTools.SubscribeTo("gaze");
             //new CustomEvent("cvr.calibration").Send();
         }
 
@@ -270,10 +272,10 @@ namespace CognitiveVR
 #endif //fove direction
 #if CVR_PUPIL //direction
             //var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
-            var v2 = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            var v2 = PupilData._2D.GazePosition;
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary,"confidence") > 0.1f) //think this is from the right source dict? //confidence never returns a value?
             {
                 var ray = instance.cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
@@ -528,10 +530,11 @@ namespace CognitiveVR
             worldGazeDirection.Normalize();
 #endif //fove direction
 #if CVR_PUPIL //direction
-            var v2 = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            var v2 = PupilData._2D.GazePosition;//.GetEyeGaze(Pupil.GazeSource.BothEyes);
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.Confidence(PupilData.rightEyeID) < 0.5f){return;}
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f) { return; } //confidence never returns a value?
+            //if (PupilTools.Confidence(PupilData.rightEyeID) < 0.5f){return;}
 
             var ray = cam.ViewportPointToRay(v2);
             worldGazeDirection = ray.direction.normalized;
@@ -556,7 +559,7 @@ namespace CognitiveVR
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
 #endif //fove screenpoint
 #if CVR_PUPIL//screenpoint
-            screenGazePoint = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            screenGazePoint = PupilData._2D.GazePosition;//.GetEyeGaze(Pupil.GazeSource.BothEyes);
 #endif //pupil screenpoint
 
             //snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
