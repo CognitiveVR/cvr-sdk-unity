@@ -9,10 +9,6 @@ public class GazeReticle : MonoBehaviour
     public float Speed = 0.3f;
     public float Distance = 3;
 
-#if CVR_FOVE||CVR_PUPIL
-    Vector3 LastLookDirection = Vector3.zero;
-#endif
-
 #if CVR_FOVE
     FoveInterface _foveInstance;
     FoveInterface FoveInstance
@@ -40,10 +36,63 @@ public class GazeReticle : MonoBehaviour
             return _transform;
         }
     }
+
+#if CVR_PUPIL
+
+    Camera _cam;
+    Camera Cam
+    {
+        get
+        {
+            if (_cam == null)
+            {
+                _cam = Camera.main;
+            }
+            return _cam;
+        }
+    }
+
+
     void Start()
     {
         if (CognitiveVR_Manager.HMD == null) { return; }
+        PupilTools.OnCalibrationEnded += PupilTools_OnCalibrationEnded;
+    }
+
+    private void PupilTools_OnCalibrationEnded()
+    {
+        PupilTools.IsGazing = true;
+        PupilTools.SubscribeTo("gaze");
+    }
+
+    void Update()
+    {
+        if (CognitiveVR_Manager.HMD == null) { return; }
+
+        Vector3 newPosition = t.position;
+        if (PupilTools.IsGazing)
+        {
+            if (PupilTools.CalibrationMode == Calibration.Mode._2D)
+            {
+                Vector3 position = PupilData._2D.GazePosition;
+                position.z = Distance;
+                newPosition = Cam.ViewportToWorldPoint(position);
+            }
+            else if (PupilTools.CalibrationMode == Calibration.Mode._3D)
+            {
+                newPosition = PupilData._3D.GazePosition;
+            }
+        }
+
+        t.position = Vector3.Lerp(t.position, newPosition, Speed);
+        t.LookAt(CognitiveVR_Manager.HMD.position);
+    }
+
+#elif CVR_FOVE
+    void Start()
+    {
         t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+        if (CognitiveVR_Manager.HMD == null) { return; }
     }
 
     void Update()
@@ -56,20 +105,13 @@ public class GazeReticle : MonoBehaviour
 
     Vector3 GetLookDirection()
     {
-#if CVR_FOVE
         if (FoveInstance == null)
         {
             return CognitiveVR_Manager.HMD.forward;
         }
         var eyeRays = FoveInstance.GetGazeRays();
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
-        LastLookDirection = v.normalized;
-        return LastLookDirection;
-#elif CVR_PUPIL
-        //TODO position for pupil labs gaze
-        return CognitiveVR_Manager.HMD.forward;
-#else
-        return CognitiveVR_Manager.HMD.forward;
-#endif
+        return v.normalized;
     }
+#endif
 }

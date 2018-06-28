@@ -478,6 +478,18 @@ namespace CognitiveVR
 
             CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
             UpdateSessionState(Util.GetDeviceProperties() as Dictionary<string,object>);
+
+#if UNITY_2017_2_OR_NEWER
+            UpdateSessionState("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
+            UpdateSessionState("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
+            UpdateSessionState("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
+#else
+            UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
+            UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
+            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
+#endif
+
+
             UpdateSessionState("cvr.deviceId", Core.DeviceId);
             UpdateSessionState(userProperties);
             UpdateSessionState("cvr.name", userName);
