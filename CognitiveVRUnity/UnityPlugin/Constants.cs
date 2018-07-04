@@ -87,12 +87,12 @@ namespace CognitiveVR
         //GET request question set
         public static string GETEXITPOLLQUESTIONSET(string hookname)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
+            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
         //POST question set responses
         public static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, CognitiveVR_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
+            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
     }
 }
