@@ -39,7 +39,7 @@ namespace CognitiveVR
         //bool _completed = false;
 
         //delays input so player can understand the popup interface before answering
-        float ResponseDelayTime = 2;
+        float ResponseDelayTime = 0.1f;
         float NextResponseTime;
         public bool NextResponseTimeValid
         {
@@ -147,6 +147,9 @@ namespace CognitiveVR
                 {
                     SetMutltipleChoiceButton(split[i],i,AnswerButtons[i]);
                 }
+                var c = GetComponent<BoxCollider>();
+                if (c != null)
+                    c.size = new Vector3(2, 0.75f + split.Length * 0.3f, 0.1f);
             }
             else if (properties["type"] == "SCALE")
             {
@@ -279,7 +282,7 @@ namespace CognitiveVR
                 while (normalizedTime < 1)
                 {
                     normalizedTime += Time.deltaTime / PopupTime;
-                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime));
+                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime), XScale.Evaluate(normalizedTime));
                     yield return null;
                 }
                 _panel.localScale = Vector3.one;
@@ -311,7 +314,8 @@ namespace CognitiveVR
                 while (normalizedTime > 0)
                 {
                     normalizedTime -= Time.deltaTime / PopupTime;
-                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime));
+                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime), XScale.Evaluate(normalizedTime));
+                    _panel.localPosition += transform.forward * normalizedTime*0.25f;
                     yield return null;
                 }
                 _panel.localScale = Vector3.zero;

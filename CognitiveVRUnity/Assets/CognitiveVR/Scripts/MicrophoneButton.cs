@@ -64,8 +64,10 @@ namespace CognitiveVR
             MicrophoneImage.transform.localScale = Vector3.one;
             Fill.color = Color.white;
             MicrophoneBackgroundImage.color = LowVolumeColor;
+            pointer = FindObjectOfType<ExitPollPointer>();
         }
 
+        ExitPollPointer pointer;
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
         void Update()
         {
@@ -93,32 +95,80 @@ namespace CognitiveVR
             }
             else
             {
-                if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
+                if (pointer == null)
                 {
-                    _currentLookTime += Time.deltaTime;
-                    UpdateFillAmount();
+                    //use hmd
+                    if (CognitiveVR_Manager.HMD == null) { return; }
 
-                    //maybe also scale button slightly if it has focus
-
-                    if (_currentLookTime >= LookTime)
+                    if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
                     {
-                        // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
-                        clip = Microphone.Start(null, false, RecordTime, outputRate);
-                        Fill.color = Color.red;
+                        _currentLookTime += Time.deltaTime;
+                        UpdateFillAmount();
 
-                        GetComponentInParent<ExitPollPanel>().DisableTimeout();
+                        //maybe also scale button slightly if it has focus
 
-                        _currentRecordTime = RecordTime;
-                        _finishedRecording = false;
-                        _recording = true;
+                        if (_currentLookTime >= LookTime)
+                        {
+                            RecorderActivate();
+                        }
+                    }
+                    else if (_currentLookTime > 0)
+                    {
+                        _currentLookTime = 0;
+                        UpdateFillAmount();
                     }
                 }
-                else if (_currentLookTime > 0)
+                else //use pointer
                 {
-                    _currentLookTime = 0;
-                    UpdateFillAmount();
+                    var tt = Vector3.Dot(pointer.transform.forward, (_transform.position - pointer.transform.position).normalized);
+                    if (tt > _theta) //pointing at the button
+                    {
+                        pointer.Target = transform;
+                        _currentLookTime += Time.deltaTime;
+                        UpdateFillAmount();
+
+                        if (_currentLookTime >= LookTime)
+                        {
+                            RecorderActivate();
+                        }
+                    }
+                    else if (tt < _theta * pointer.Stickiness && pointer.Target == transform) //bendy line pointing too far away from button
+                    {
+                        pointer.Target = null;
+                    }
+                    else if (pointer.Target != transform) //selection is not this
+                    {
+                        if (_currentLookTime > 0)
+                        {
+                            _currentLookTime = 0;
+                            UpdateFillAmount();
+                        }
+                    }
+                    else //pointing nearby button
+                    {
+                        _currentLookTime += Time.deltaTime;
+                        UpdateFillAmount();
+
+                        if (_currentLookTime >= LookTime)
+                        {
+                            RecorderActivate();
+                        }
+                    }
                 }
             }
+        }
+
+        void RecorderActivate()
+        {
+            // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
+            clip = Microphone.Start(null, false, RecordTime, outputRate);
+            Fill.color = Color.red;
+
+            GetComponentInParent<ExitPollPanel>().DisableTimeout();
+
+            _currentRecordTime = RecordTime;
+            _finishedRecording = false;
+            _recording = true;
         }
 
         void UpdateFillAmount()
