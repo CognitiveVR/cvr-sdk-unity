@@ -315,7 +315,7 @@ namespace CognitiveVR
                 {
                     normalizedTime -= Time.deltaTime / PopupTime;
                     _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime), XScale.Evaluate(normalizedTime));
-                    _panel.localPosition += transform.forward * normalizedTime*0.25f;
+                    _panel.localPosition += transform.forward * Time.deltaTime* 0.1f;
                     yield return null;
                 }
                 _panel.localScale = Vector3.zero;

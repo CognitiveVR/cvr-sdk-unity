@@ -176,6 +176,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
                 return;
@@ -196,6 +197,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
             }
         }
@@ -213,6 +215,8 @@ namespace CognitiveVR
             }
             OnPanelError();
         }
+
+        ExitPollPointer _pointer;
 
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
@@ -233,6 +237,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
             }
@@ -251,6 +256,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
             }
@@ -263,6 +269,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
             }
@@ -270,6 +277,15 @@ namespace CognitiveVR
             QuestionSetId = json.id;
             QuestionSetName = json.name;
             questionSetVersion = json.version;
+
+            if (DisplayControllerPointer)
+            {
+                _pointer = CognitiveVR_Manager.FindObjectOfType<ExitPollPointer>();
+                if (_pointer != null)
+                {
+                    _pointer.SetVisible(true);
+                }
+            }
 
             //foreach (var question in json.questions)
             for (int i = 0; i < json.questions.Length; i++)
@@ -364,6 +380,7 @@ namespace CognitiveVR
             {
                 EndAction.Invoke();
             }
+            if (_pointer) _pointer.SetVisible(false);
             ExitPoll.CurrentExitPollSet = null;
             CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
@@ -392,6 +409,7 @@ namespace CognitiveVR
                     {
                         EndAction.Invoke();
                     }
+                    if (_pointer) _pointer.SetVisible(false);
                     ExitPoll.CurrentExitPollSet = null;
                     return;
                 }
@@ -413,6 +431,7 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
             }
             panelCount++;
@@ -606,6 +625,18 @@ namespace CognitiveVR
             return this;
         }
 
+        public bool DisplayControllerPointer { get; private set; }
+        /// <summary>
+        /// Find a pointer object and enable that
+        /// </summary>
+        /// <param name="visible"></param>
+        /// <returns></returns>
+        public ExitPollSet SetDisplayControllerPointer(bool visible)
+        {
+            DisplayControllerPointer = visible;
+            return this;
+        }
+
         public bool LockYPosition { get; private set; }
         /// <summary>
         /// Use to HMD Y position instead of spawning the poll directly ahead of the player
@@ -671,6 +702,7 @@ namespace CognitiveVR
                 Util.logError("couldn't find prefab " + properties["type"]);
                 if (EndAction != null)
                 {
+                    if (_pointer) _pointer.SetVisible(false);
                     EndAction.Invoke();
                 }
                 ExitPoll.CurrentExitPollSet = null;

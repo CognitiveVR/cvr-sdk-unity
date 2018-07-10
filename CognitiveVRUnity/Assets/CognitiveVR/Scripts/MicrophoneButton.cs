@@ -132,7 +132,7 @@ namespace CognitiveVR
                             RecorderActivate();
                         }
                     }
-                    else if (tt < _theta * pointer.Stickiness && pointer.Target == transform) //bendy line pointing too far away from button
+                    else if (tt < _theta * pointer.Stiffness && pointer.Target == transform) //bendy line pointing too far away from button
                     {
                         pointer.Target = null;
                     }
