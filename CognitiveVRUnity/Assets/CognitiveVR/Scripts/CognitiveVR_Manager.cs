@@ -513,52 +513,40 @@ namespace CognitiveVR
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            DynamicObject.ClearObjectIds();
-            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            var loadingScene = CognitiveVR_Preferences.Instance.FindScene(scene.name);
+            bool replacingSceneId = false;
+
+            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
-                CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
-                OnLevelLoaded();
-                return;
+                Core.SendDataEvent();
             }
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.TrackingSceneName))
-            {
-                CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
-                if (lastSceneSettings != null)
-                {
-                    if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
-                    {
-                        Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
-                        Core.SendDataEvent();
-                        //SendPlayerGazeSnapshots();
-                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-                    }
-                }
 
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
+            {
+                //if scene loaded has new scene id
+                if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
+                {
+                    replacingSceneId = true;
+                }
+            }
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
+            {
+                DynamicObject.ClearObjectIds();
+                CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 Core.CurrentSceneId = string.Empty;
                 Core.CurrentSceneVersionNumber = 0;
-
-                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
-                if (sceneSettings != null)
+                if (loadingScene != null)
                 {
-                    if (!string.IsNullOrEmpty(sceneSettings.SceneId))
+                    if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        Core.CurrentSceneId = sceneSettings.SceneId;
-                        Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
+                        Core.CurrentSceneId = loadingScene.SceneId;
+                        Core.CurrentSceneVersionNumber = loadingScene.VersionNumber;
+                        CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
                     }
-                    else
-                    {
-                        Util.logWarning("PlayerRecorder sceneLoaded SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
-                    }
-                }
-                else
-                {
-                    Util.logWarning("PlayerRecorder sceneLoaded couldn't find scene " + scene.name + ". Not recording");
                 }
             }
-
-            CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
             OnLevelLoaded();
         }
 
