@@ -50,6 +50,8 @@ namespace CognitiveVR
             LineRenderer.enabled = visible;
         }
 
+        static Material PointerMat;
+
         private LineRenderer ConstructDefaultLineRenderer()
         {
             GameObject go = new GameObject("LineRenderer");
@@ -57,7 +59,15 @@ namespace CognitiveVR
             var lr = go.AddComponent<LineRenderer>();
             lr.widthMultiplier = 0.05f;
             lr.useWorldSpace = true;
-            lr.material = new Material(Shader.Find("Standard"));
+            if (PointerMat == null)
+            {
+                PointerMat = Resources.Load<Material>("ExitPollPointerLine");
+            }
+            if (PointerMat != null)
+                lr.material = PointerMat;
+            else
+                lr.material = new Material(Shader.Find("Standard"));
+            lr.textureMode = LineTextureMode.Tile;
             return lr;
         }
 

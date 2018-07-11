@@ -35,9 +35,7 @@ namespace CognitiveVR
 
         [Header("Visuals")]
         public Image MicrophoneImage;
-        public Image MicrophoneBackgroundImage;
-        public Color LowVolumeColor;
-        public Color HighVolumeColor;
+        public Text TipText;
 
         Transform _t;
         Transform _transform
@@ -62,8 +60,6 @@ namespace CognitiveVR
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
             MicrophoneImage.transform.localScale = Vector3.one;
-            Fill.color = Color.white;
-            MicrophoneBackgroundImage.color = LowVolumeColor;
             pointer = FindObjectOfType<ExitPollPointer>();
         }
 
@@ -80,8 +76,8 @@ namespace CognitiveVR
                 _currentRecordTime -= Time.deltaTime;
                 UpdateFillAmount();
                 float volumeLevel = MicrophoneUtility.LevelMax(clip);
-                MicrophoneImage.transform.localScale = Vector3.Lerp(MicrophoneImage.transform.localScale, Vector3.one * 0.5f + Vector3.one * Mathf.Clamp(volumeLevel, 0, 0.5f), 0.1f);
-                MicrophoneBackgroundImage.color = Color.Lerp(LowVolumeColor, Color.Lerp(MicrophoneBackgroundImage.color, HighVolumeColor, Mathf.Clamp(volumeLevel, 0, 1f)), 0.1f);
+                Vector3 newScale = new Vector3(0.8f, 0.1f + Mathf.Clamp(volumeLevel, 0, 0.7f), 0.8f);
+                MicrophoneImage.transform.localScale = Vector3.Lerp(MicrophoneImage.transform.localScale, newScale, 0.1f);
 
                 if (_currentRecordTime <= 0)
                 {
@@ -165,10 +161,11 @@ namespace CognitiveVR
             Fill.color = Color.red;
 
             GetComponentInParent<ExitPollPanel>().DisableTimeout();
-
+            pointer.Target = null;
             _currentRecordTime = RecordTime;
             _finishedRecording = false;
             _recording = true;
+            TipText.text = "Recording...";
         }
 
         void UpdateFillAmount()

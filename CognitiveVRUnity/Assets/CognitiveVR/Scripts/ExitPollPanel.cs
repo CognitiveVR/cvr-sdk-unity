@@ -413,8 +413,21 @@ namespace CognitiveVR
                         float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
 
                         _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
-                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, CognitiveVR_Manager.HMD.up), 0.1f);
+                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, Vector3.up), 0.1f);
                     }
+                }
+
+                //clamp distance
+                float dist = Vector3.Distance(_transform.position, CognitiveVR_Manager.HMD.position);
+                if (dist > QuestionSet.DisplayDistance)
+                {
+                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.DisplayDistance;
+                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
+                }
+                else if (dist < QuestionSet.MinimumDisplayDistance)
+                {
+                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.MinimumDisplayDistance;
+                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
                 }
             }
         }
