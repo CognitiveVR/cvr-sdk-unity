@@ -116,8 +116,6 @@ namespace CognitiveVR
                 UpdateTimeoutBar();
             }
 
-            _transform.rotation = Quaternion.LookRotation(_transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
-
             //display question from properties
 
             if (Title != null)

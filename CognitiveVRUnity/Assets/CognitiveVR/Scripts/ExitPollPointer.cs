@@ -33,6 +33,7 @@ namespace CognitiveVR
         private bool visible = false;
         private void Start()
         {
+            if (_t != null) return;
             sampledPoints = new Vector3[SampleResolution + 1];
             _t = transform;
             if (LineRenderer == null)
@@ -44,6 +45,7 @@ namespace CognitiveVR
         //controls visibility. set when exitpoll begins and completes
         public void SetVisible(bool visible)
         {
+            if (_t == null) Start();
             this.visible = visible;
             LineRenderer.enabled = visible;
         }

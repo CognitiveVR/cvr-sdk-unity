@@ -176,6 +176,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
@@ -197,6 +199,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
             }
@@ -237,6 +241,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
@@ -256,6 +262,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
@@ -269,6 +277,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
@@ -278,13 +288,14 @@ namespace CognitiveVR
             QuestionSetName = json.name;
             questionSetVersion = json.version;
 
-            if (DisplayControllerPointer)
+            if (ControllerPointer != null)
             {
-                _pointer = CognitiveVR_Manager.FindObjectOfType<ExitPollPointer>();
-                if (_pointer != null)
+                _pointer = ControllerPointer.GetComponentInChildren<ExitPollPointer>();
+                if (_pointer == null)
                 {
-                    _pointer.SetVisible(true);
+                    _pointer = ControllerPointer.AddComponent<ExitPollPointer>();
                 }
+                _pointer.SetVisible(true);
             }
 
             //foreach (var question in json.questions)
@@ -380,6 +391,8 @@ namespace CognitiveVR
             {
                 EndAction.Invoke();
             }
+            OverridePosition = null;
+            OverrideRotation = null;
             if (_pointer) _pointer.SetVisible(false);
             ExitPoll.CurrentExitPollSet = null;
             CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
@@ -409,6 +422,8 @@ namespace CognitiveVR
                     {
                         EndAction.Invoke();
                     }
+                    OverridePosition = null;
+                    OverrideRotation = null;
                     if (_pointer) _pointer.SetVisible(false);
                     ExitPoll.CurrentExitPollSet = null;
                     return;
@@ -431,6 +446,8 @@ namespace CognitiveVR
                 {
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
                 if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
             }
@@ -625,15 +642,15 @@ namespace CognitiveVR
             return this;
         }
 
-        public bool DisplayControllerPointer { get; private set; }
+        public GameObject ControllerPointer { get; private set; }
         /// <summary>
         /// Find a pointer object and enable that
         /// </summary>
         /// <param name="visible"></param>
         /// <returns></returns>
-        public ExitPollSet SetDisplayControllerPointer(bool visible)
+        public ExitPollSet SetControllerPointer(GameObject controller)
         {
-            DisplayControllerPointer = visible;
+            ControllerPointer = controller;
             return this;
         }
 
@@ -658,6 +675,20 @@ namespace CognitiveVR
         public ExitPollSet SetRotateToStayOnScreen(bool useRotateToOnscreen)
         {
             RotateToStayOnScreen = useRotateToOnscreen;
+            return this;
+        }
+
+        public Vector3? OverridePosition { get; private set; }
+        public ExitPollSet SetPosition(Vector3 overridePosition)
+        {
+            OverridePosition = overridePosition;
+            return this;
+        }
+
+        public Quaternion? OverrideRotation { get; private set; }
+        public ExitPollSet SetRotation(Quaternion overrideRotation)
+        {
+            OverrideRotation = overrideRotation;
             return this;
         }
 
@@ -702,15 +733,29 @@ namespace CognitiveVR
                 Util.logError("couldn't find prefab " + properties["type"]);
                 if (EndAction != null)
                 {
-                    if (_pointer) _pointer.SetVisible(false);
                     EndAction.Invoke();
                 }
+                OverridePosition = null;
+                OverrideRotation = null;
+                if (_pointer) _pointer.SetVisible(false);
                 ExitPoll.CurrentExitPollSet = null;
                 return;
             }
 
             var newPanelGo = GameObject.Instantiate<GameObject>(prefab);
-            newPanelGo.transform.position = spawnPoint;
+            
+            //set position
+            if (OverridePosition.HasValue)
+                newPanelGo.transform.position = OverridePosition.Value;
+            else
+                newPanelGo.transform.position = spawnPoint;
+
+            //set rotation
+            if (OverrideRotation.HasValue)
+                newPanelGo.transform.rotation = OverrideRotation.Value;
+            else
+                newPanelGo.transform.rotation = Quaternion.LookRotation(newPanelGo.transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
+
             CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
 
             CurrentExitPollPanel.Initialize(properties, panelId, this);
