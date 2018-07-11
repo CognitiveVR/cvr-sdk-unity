@@ -62,6 +62,7 @@ namespace CognitiveVR
         {
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (OnLook == null) { return; }
+            if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
 
             if (pointer == null)
             {
@@ -133,6 +134,8 @@ namespace CognitiveVR
         public void ActivateAction()
         {
             OnLook.Invoke();
+            if (pointer != null)
+                pointer.Target = null;
         }
 
         public void ClearAction()

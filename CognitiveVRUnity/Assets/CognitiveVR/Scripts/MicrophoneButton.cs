@@ -59,7 +59,6 @@ namespace CognitiveVR
             _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
-            MicrophoneImage.transform.localScale = Vector3.one;
             pointer = FindObjectOfType<ExitPollPointer>();
         }
 
@@ -70,6 +69,7 @@ namespace CognitiveVR
             if (CognitiveVR_Manager.HMD == null) { return; }
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (_finishedRecording) { return; }
+            if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
 
             if (_recording)
             {
@@ -161,7 +161,8 @@ namespace CognitiveVR
             Fill.color = Color.red;
 
             GetComponentInParent<ExitPollPanel>().DisableTimeout();
-            pointer.Target = null;
+            if (pointer)
+                pointer.Target = null;
             _currentRecordTime = RecordTime;
             _finishedRecording = false;
             _recording = true;

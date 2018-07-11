@@ -53,6 +53,7 @@ namespace CognitiveVR
 
         GameObject _reticule;
         float _remainingTime; //before timeout
+        public bool IsClosing { get { return _isclosing; } }
         bool _isclosing; //has timed out/answered/skipped but still animating?
         bool _allowTimeout; //used by microphone to disable timeout
 
