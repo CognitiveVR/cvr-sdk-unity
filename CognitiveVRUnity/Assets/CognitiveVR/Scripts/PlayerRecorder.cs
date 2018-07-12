@@ -85,14 +85,12 @@ namespace CognitiveVR
 #endif
             //SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            CognitiveVR_Preferences.SceneSettings sceneSettings = Core.TrackingScene;
             if (sceneSettings != null)
             {
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                 {
                     BeginPlayerRecording();
-                    Core.CurrentSceneId = sceneSettings.SceneId;
-                    Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
@@ -211,12 +209,12 @@ namespace CognitiveVR
 
         static void BeginPlayerRecording()
         {
-            var scenedata = CognitiveVR_Preferences.FindTrackingScene();
+            var scenedata = Core.TrackingScene;
             //var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(SceneManager.GetActiveScene().path);
 
             if (scenedata == null)
             {
-                CognitiveVR.Util.logDebug(CognitiveVR_Preferences.TrackingSceneName + " Scene data is null! Player Recorder has nowhere to upload data");
+                CognitiveVR.Util.logDebug(Core.TrackingSceneName + " Scene data is null! Player Recorder has nowhere to upload data");
                 return;
             }
 
@@ -633,7 +631,7 @@ namespace CognitiveVR
 
                 playerSnapshots.Clear();
 
-                StartCoroutine(Threaded_SendGaze(tempSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewSessionProperties(true)));
+                StartCoroutine(Threaded_SendGaze(tempSnapshots, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewSessionProperties(true)));
 
                 //SendPlayerGazeSnapshots();
                 //OnSendData();
@@ -646,7 +644,7 @@ namespace CognitiveVR
             //var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (trackingsettings == null)
             {
-                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + CognitiveVR_Preferences.TrackingSceneName + "! Cancel Data Upload");
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + Core.TrackingSceneName + "! Cancel Data Upload");
                 yield break;
             }
             if (string.IsNullOrEmpty(trackingsettings.SceneId))
@@ -822,10 +820,10 @@ namespace CognitiveVR
 
             List<string> savedGazeSnapshots = new List<string>();
 
-            var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            var sceneSettings = Core.TrackingScene;
             if (sceneSettings == null)
             {
-                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + CognitiveVR_Preferences.TrackingSceneName + "! Cancel Data Upload");
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + Core.TrackingSceneName + "! Cancel Data Upload");
                 return;
             }
             if (string.IsNullOrEmpty(sceneSettings.SceneId))
@@ -958,7 +956,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + CognitiveVR_Preferences.TrackingSceneName + "!");
+                Util.logError("CogntiveVR PlayerTracker.cs does not have scene key for scene " + Core.TrackingSceneName + "!");
             }
 
             playerSnapshots.Clear();
