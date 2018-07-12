@@ -440,7 +440,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         Debug.Log("refresh scene version");
         //gets the scene version from api and sets it to the current scene
         string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-        var currentSettings = CognitiveVR_Preferences.Instance.FindScene(currentSceneName);
+        var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
         if (currentSettings != null)
         {
             if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }

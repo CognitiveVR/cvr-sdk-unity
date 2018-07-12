@@ -457,9 +457,9 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
 
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            //string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
+            //Core.SetTrackingScene(sceneName);
 
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
 
@@ -513,52 +513,37 @@ namespace CognitiveVR
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            DynamicObject.ClearObjectIds();
-            if (!CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
+            bool replacingSceneId = false;
+
+            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
-                CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
-                OnLevelLoaded();
-                return;
+                Core.SendDataEvent();
             }
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.TrackingSceneName))
+
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
             {
-                CognitiveVR_Preferences.SceneSettings lastSceneSettings = CognitiveVR_Preferences.FindTrackingScene();
-                if (lastSceneSettings != null)
+                //if scene loaded has new scene id
+                if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
                 {
-                    if (!string.IsNullOrEmpty(lastSceneSettings.SceneId))
-                    {
-                        Util.logDebug("SceneManager_SceneLoaded ======================PlayerRecorder SceneLoaded send all data");
-                        Core.SendDataEvent();
-                        //SendPlayerGazeSnapshots();
-                        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-                    }
+                    replacingSceneId = true;
                 }
-
-                Core.CurrentSceneId = string.Empty;
-                Core.CurrentSceneVersionNumber = 0;
-
-                CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.Instance.FindScene(scene.name);
-                if (sceneSettings != null)
+            }
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
+            {
+                DynamicObject.ClearObjectIds();
+                CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+                Core.SetTrackingScene("");
+                if (loadingScene != null)
                 {
-                    if (!string.IsNullOrEmpty(sceneSettings.SceneId))
+                    if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        Core.CurrentSceneId = sceneSettings.SceneId;
-                        Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
+                        Core.SetTrackingScene(scene.name);
                     }
-                    else
-                    {
-                        Util.logWarning("PlayerRecorder sceneLoaded SceneId is empty for scene " + sceneSettings.SceneName + ". Not recording");
-                    }
-                }
-                else
-                {
-                    Util.logWarning("PlayerRecorder sceneLoaded couldn't find scene " + scene.name + ". Not recording");
                 }
             }
-
-            CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
             OnLevelLoaded();
         }
 
