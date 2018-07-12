@@ -89,14 +89,14 @@ namespace CognitiveVR
 
             string packagedEvents = builder.ToString();
 
-            if (string.IsNullOrEmpty(Core.CurrentSceneId))
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
                 return;
             }
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = Constants.POSTEVENTDATA(Core.CurrentSceneId, Core.CurrentSceneVersionNumber);
+            string url = Constants.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
 
             //var headers = new Dictionary<string, string>();

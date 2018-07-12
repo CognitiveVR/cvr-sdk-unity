@@ -193,7 +193,7 @@ namespace CognitiveVR
                 MeshName = CommonMesh.ToString().ToLower();
             }
 
-            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != CognitiveVR_Preferences.TrackingSceneName)
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != Core.TrackingSceneName)
             {
                 //register to a post scene load event
                 CognitiveVR_Manager.LevelLoadedEvent += CognitiveVR_Manager_LevelLoadedEvent;
@@ -396,10 +396,10 @@ namespace CognitiveVR
         //puts outstanding snapshots (from last update) into json
         private static void CognitiveVR_Manager_Update()
         {
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            CognitiveVR_Preferences.SceneSettings sceneSettings = Core.TrackingScene;
             if (sceneSettings == null)
             {
-                CognitiveVR.Util.logWarning("Dynamic Object Update - scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
+                CognitiveVR.Util.logWarning("Dynamic Object Update - scene settings are null " + Core.TrackingSceneName);
                 //NewSnapshots.Clear();
                 //NewObjectManifest.Clear();
                 NewSnapshotQueue.Clear();
@@ -423,7 +423,7 @@ namespace CognitiveVR
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID));
+                CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene,Core.UniqueID,Core.SessionTimeStamp,Core.SessionID));
             }
         }
 
@@ -600,7 +600,7 @@ namespace CognitiveVR
 
                         if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
                         {
-                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
+                            CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                         }
                     }
                 }
@@ -789,7 +789,7 @@ namespace CognitiveVR
                 snap.ReturnToPool();
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(),Core.UniqueID,Core.SessionTimeStamp,Core.SessionID);
+                    SendSavedSnapshotsForce(true,savedDynamicManifest,savedDynamicSnapshots, Core.TrackingScene,Core.UniqueID,Core.SessionTimeStamp,Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -807,7 +807,7 @@ namespace CognitiveVR
                 //entry = null;
                 if (savedDynamicSnapshots.Count + savedDynamicManifest.Count >= CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
-                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
+                    SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
                     savedDynamicManifest.Clear();
                     savedDynamicSnapshots.Clear();
                 }
@@ -815,7 +815,7 @@ namespace CognitiveVR
             //if (NewObjectManifestQueue.Count > 0)
                 //NewObjectManifestQueue.Clear();
 
-            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
+            SendSavedSnapshotsForce(true, savedDynamicManifest, savedDynamicSnapshots, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID);
         }
 
         //from thread
@@ -829,7 +829,7 @@ namespace CognitiveVR
             //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
             if (trackingsettings == null)
             {
-                CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
+                CognitiveVR.Util.logDebug("scene settings are null " + Core.TrackingSceneName);
                 /*for (int i = 0; i < NewSnapshots.Count; i++)
                 {
                     NewSnapshots[i].ReturnToPool();
@@ -938,7 +938,7 @@ namespace CognitiveVR
             //CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR.CognitiveVR_Preferences.FindTrackingScene();
             if (trackingsettings == null)
             {
-                CognitiveVR.Util.logDebug("scene settings are null " + CognitiveVR_Preferences.TrackingSceneName);
+                CognitiveVR.Util.logDebug("scene settings are null " + Core.TrackingSceneName);
                 int count = NewSnapshotQueue.Count;
                 for (int i = 0; i< count; i++)
                 {

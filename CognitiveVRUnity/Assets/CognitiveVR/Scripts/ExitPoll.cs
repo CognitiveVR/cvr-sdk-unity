@@ -461,7 +461,7 @@ namespace CognitiveVR
             exitpoll.SetProperty("questionSetId", QuestionSetId);
             exitpoll.SetProperty("hook", RequestQuestionHookName);
 
-            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            var scenesettings = Core.TrackingScene;
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
             {
                 exitpoll.SetProperty("sceneId", scenesettings.SceneId);
@@ -494,7 +494,7 @@ namespace CognitiveVR
             JsonUtil.SetString("hook", RequestQuestionHookName, builder);
             builder.Append(",");
 
-            var scenesettings = CognitiveVR_Preferences.FindTrackingScene();
+            var scenesettings = Core.TrackingScene;
             if (scenesettings != null)
             {
                 JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);

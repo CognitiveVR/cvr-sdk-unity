@@ -457,9 +457,9 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
 
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            //string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-            CognitiveVR_Preferences.SetTrackingSceneName(sceneName);
+            //Core.SetTrackingScene(sceneName);
 
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
 
@@ -513,7 +513,7 @@ namespace CognitiveVR
         
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
-            var loadingScene = CognitiveVR_Preferences.Instance.FindScene(scene.name);
+            var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
 
             if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
@@ -534,16 +534,13 @@ namespace CognitiveVR
             {
                 DynamicObject.ClearObjectIds();
                 CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-                Core.CurrentSceneId = string.Empty;
-                Core.CurrentSceneVersionNumber = 0;
+                Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
                     if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
                         CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
-                        Core.CurrentSceneId = loadingScene.SceneId;
-                        Core.CurrentSceneVersionNumber = loadingScene.VersionNumber;
-                        CognitiveVR_Preferences.SetTrackingSceneName(scene.name);
+                        Core.SetTrackingScene(scene.name);
                     }
                 }
             }

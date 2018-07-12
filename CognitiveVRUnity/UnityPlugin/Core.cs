@@ -34,7 +34,7 @@ namespace CognitiveVR
 
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.7.7";
+        public const string SDK_VERSION = "0.7.8";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -100,8 +100,35 @@ namespace CognitiveVR
             }
         }
 
-        public static string CurrentSceneId;
-        public static int CurrentSceneVersionNumber;
+        public static string TrackingSceneId { get; private set; }
+        public static int TrackingSceneVersionNumber { get; private set; }
+        public static string TrackingSceneName { get; private set; }
+
+        public static CognitiveVR_Preferences.SceneSettings TrackingScene {get; private set;}
+
+        public static void SetTrackingScene(string sceneName)
+        {
+            var scene = CognitiveVR_Preferences.FindScene(sceneName);
+            SetTrackingScene(scene);
+        }
+
+        public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
+        {
+            TrackingSceneId = "";
+            TrackingSceneVersionNumber = 0;
+            TrackingSceneName = "";
+            TrackingScene = null;
+            if (scene != null)
+            {
+                TrackingSceneId = scene.SceneId;
+                TrackingSceneVersionNumber = scene.VersionNumber;
+                TrackingSceneName = scene.SceneName;
+                TrackingScene = scene;
+            }
+        }
+
+        //public static string CurrentSceneId;
+        //public static int CurrentSceneVersionNumber;
         //public static int CurrensSceneVersionId; //was set in cognitivevr_manager on scene change; never used
 
         public static bool Initialized { get; private set; }
@@ -119,8 +146,10 @@ namespace CognitiveVR
             _uniqueId = null;
             DeviceId = null;
             Initialized = false;
-            CurrentSceneId = null;
-            CurrentSceneVersionNumber = 0;
+            TrackingSceneId = "";
+            TrackingSceneVersionNumber = 0;
+            TrackingSceneName = "";
+            TrackingScene = null;
         }
 
         /// <summary>
