@@ -36,6 +36,7 @@ namespace CognitiveVR
                 return camtransform;
             }
         }
+        protected bool headsetPresent;
 
         //called immediately after construction
         public virtual void Initialize()
