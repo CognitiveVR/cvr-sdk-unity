@@ -91,31 +91,16 @@ namespace CognitiveVR
             sDeviceAndAppInfo.Add("cvr.device.graphics.memory", SystemInfo.graphicsMemorySize);
             sDeviceAndAppInfo.Add("cvr.device.processor", SystemInfo.processorType);
             sDeviceAndAppInfo.Add("cvr.device.memory", SystemInfo.systemMemorySize);
-#if UNITY_2017_2_OR_NEWER
-            sDeviceAndAppInfo.Add("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
-            sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
-            sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
-#else
-            sDeviceAndAppInfo.Add("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
-            sDeviceAndAppInfo.Add("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
-            sDeviceAndAppInfo.Add("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
-#endif
-
         }
 
         static string _hmdname;
         //returns vive/rift/gear/unknown based on hmd model name
-        public static string GetSimpleHMDName()
+        public static string GetSimpleHMDName(string rawHMDName)
         {
             if (_hmdname != null)
             {
                 return _hmdname;
             }
-#if UNITY_2017_2_OR_NEWER
-            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
-#else
-            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
-#endif
             if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ _hmdname = "vive"; return _hmdname; }
             if (rawHMDName.Contains("rift cv1")) { _hmdname = "rift"; return _hmdname; }
             if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { _hmdname = "gear"; return _hmdname; }

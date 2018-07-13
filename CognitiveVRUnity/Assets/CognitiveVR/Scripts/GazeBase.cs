@@ -47,6 +47,25 @@ namespace CognitiveVR
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #endif
+            string hmdname = "none";
+#if CVR_FOVE
+                    hmdname = "fove";
+#elif CVR_ARKIT
+                    hmdname = "arkit";
+#elif CVR_ARCORE
+                    hmdname = "arcore";
+#elif CVR_META
+                    hmdname = "meta";
+#else
+#if UNITY_2017_2_OR_NEWER
+            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+#else
+            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+#endif
+            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
+#endif
+
+            GazeCore.SetHMDType(hmdname);
         }
 
 

@@ -22,6 +22,7 @@ namespace CognitiveVR
         //private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static StringBuilder gazebuilder;
         private static int gazeCount = 0;
+        private static string HMDName;
         //private static int currentSensorSnapshots = 0;
 
         static GazeCore()
@@ -31,6 +32,11 @@ namespace CognitiveVR
 
             gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
             gazebuilder.Append("{\"data\":[");
+        }
+
+        public static void SetHMDType(string hmdname)
+        {
+            HMDName = hmdname;
         }
 
         public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
@@ -109,7 +115,7 @@ namespace CognitiveVR
 
         private static void SendGazeData()
         {
-            if (string.IsNullOrEmpty(Core.CurrentSceneId))
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 Util.logDebug("Cognitive GazeCore.SendData could not find scene settings for scene! do not upload gaze to sceneexplorer");
                 return;
@@ -139,17 +145,8 @@ namespace CognitiveVR
             jsonPart++;
             gazebuilder.Append(",");
 
-#if CVR_FOVE
-                    JsonUtil.SetString("hmdtype", "fove", gazebuilder);
-#elif CVR_ARKIT
-                    JsonUtil.SetString("hmdtype", "arkit", gazebuilder);
-#elif CVR_ARCORE
-                    JsonUtil.SetString("hmdtype", "arcore", gazebuilder);
-#elif CVR_META
-                    JsonUtil.SetString("hmdtype", "meta", gazebuilder);
-#else
-            JsonUtil.SetString("hmdtype", CognitiveVR.Util.GetSimpleHMDName(), gazebuilder);
-#endif
+            JsonUtil.SetString("hmdtype", HMDName, gazebuilder);
+
             gazebuilder.Append(",");
             JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, gazebuilder);
             gazebuilder.Append(",");
@@ -176,13 +173,13 @@ namespace CognitiveVR
                 gazebuilder.Append("}");
             }
 
-            var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            var sceneSettings = Core.TrackingScene;
             string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
 
             gazebuilder.Length = 0;
-            gazebuilder.Append("{\"data\":");
+            gazebuilder.Append("{\"data\":[");
         }
     }
 }
