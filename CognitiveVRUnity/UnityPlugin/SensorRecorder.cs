@@ -43,7 +43,7 @@ namespace CognitiveVR
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
-            var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            var sceneSettings = Core.TrackingScene;
             if (sceneSettings == null) { CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings"); return; }
 
             StringBuilder sb = new StringBuilder(1024);

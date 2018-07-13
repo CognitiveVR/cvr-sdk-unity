@@ -9,13 +9,14 @@ public class Setup360Window : EditorWindow
 {
     VideoClip selectedClip;
     bool latlong;
-    string mediaid;
 
     public static void Init()
     {
         Setup360Window window = (Setup360Window)EditorWindow.GetWindow(typeof(Setup360Window), true, "360 Video Setup");
         window.Show();
     }
+
+    int _choiceIndex = 0;
 
     void OnGUI()
     {
@@ -31,8 +32,10 @@ public class Setup360Window : EditorWindow
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-        selectedClip = (VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip));
-        mediaid = EditorGUILayout.TextField(new GUIContent("Media Id", "get this from the dashboard"), mediaid);
+        selectedClip = (VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip),true);
+
+        //media source
+        _choiceIndex = EditorGUILayout.Popup("Select Media Source", _choiceIndex, EditorCore.MediaSources);
 
         GUILayout.Space(20);
         GUILayout.BeginHorizontal();
@@ -46,7 +49,7 @@ public class Setup360Window : EditorWindow
         GUILayout.EndHorizontal();
 
 
-        EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(mediaid));
+        EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex]));
         if (GUILayout.Button("Create"))
         {
             CreateAssets();
@@ -117,7 +120,7 @@ public class Setup360Window : EditorWindow
         sphere = sphere.transform.GetChild(0).gameObject;
         sphere.GetComponent<MeshRenderer>().enabled = false;
         var media = sphere.AddComponent<MediaComponent>();
-        media.MediaSource = mediaid;
+        media.MediaSource = EditorCore.MediaSources[_choiceIndex];
         media.VideoPlayer = vp;
         if (!sphere.GetComponent<MeshCollider>())
             sphere.AddComponent<MeshCollider>();

@@ -440,7 +440,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         Debug.Log("refresh scene version");
         //gets the scene version from api and sets it to the current scene
         string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-        var currentSettings = CognitiveVR_Preferences.Instance.FindScene(currentSceneName);
+        var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
         if (currentSettings != null)
         {
             if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -503,6 +503,82 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         {
             RefreshSceneVersionComplete.Invoke();
         }
+    }
+
+    //static System.Action RefreshSceneVersionComplete;
+    /// <summary>
+    /// get collection of versions of scene
+    /// </summary>
+    /// <param name="refreshSceneVersionComplete"></param>
+    public static void RefreshMediaSources()
+    {
+        Debug.Log("refresh media sources");
+        //gets the scene version from api and sets it to the current scene
+        string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+        var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
+        if (currentSettings != null)
+        {
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            if (currentSettings == null)
+            {
+                Debug.Log("SendSceneVersionRequest no scene settings!");
+                return;
+            }
+            string url = Constants.GETMEDIASOURCELIST();
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+            EditorNetwork.Get(url, GetMediaSourcesResponse, headers, true, "Get Scene Version");//AUTH
+        }
+        else
+        {
+            Debug.Log("No scene versions for scene: " + currentSceneName);
+        }
+    }
+
+    private static void GetMediaSourcesResponse(int responsecode, string error, string text)
+    {
+        if (responsecode != 200)
+        {
+            RefreshSceneVersionComplete = null;
+            //internal server error
+            Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
+            return;
+        }
+        var settings = CognitiveVR_Preferences.FindCurrentScene();
+        if (settings == null)
+        {
+            //this should be impossible, but might happen if changing scenes at exact time
+            RefreshSceneVersionComplete = null;
+            Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
+            return;
+        }
+
+        string[] split = text.Split(',');
+
+        SetMediaSources(text);
+        Debug.Log("Response contains " + split.Length + " media sources");
+    }
+
+    public static string[] MediaSources = new string[] {};
+
+    [UnityEditor.Callbacks.DidReloadScripts]
+    public static void SetMediaSourcesFromEditorPrefs()
+    {
+        if (EditorPrefs.HasKey("cognitive_mediasources"))
+        {
+            SetMediaSources(EditorPrefs.GetString("cognitive_mediasources"));
+        }
+    }
+
+    public static void SetMediaSources(string mediasources)
+    {
+        UnityEditor.ArrayUtility.Insert<string>(ref MediaSources, 0, "");
+        MediaSources = mediasources.Split(',');
+        EditorPrefs.SetString("cognitive_mediasources", mediasources);
     }
 
     #region GUI

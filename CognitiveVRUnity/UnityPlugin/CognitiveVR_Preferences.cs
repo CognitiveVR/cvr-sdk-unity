@@ -64,57 +64,6 @@ namespace CognitiveVR
         public string Gateway = "data.cognitive3d.com";
         public string Dashboard = "app.cognitive3d.com";
         public string Viewer = "sceneexplorer.com/scene/";
-        
-        //timestamp and session id
-        //private static double _timeStamp;
-        /*public static double TimeStamp
-        {
-            get
-            {
-                return CoreSubsystem.SessionTimeStamp;
-            }
-        }
-
-        //private static string _sessionId;
-        public static string SessionID
-        {
-            get
-            {
-                return CoreSubsystem.SessionID;
-            }
-        }*/
-
-        /// <summary>
-        /// companyname1234-productname. used in sceneexportwindow
-        /// </summary>
-        /*public string CompanyProduct
-        {
-            get
-            {
-                return CustomerID.Substring(0, CustomerID.Length - 5);
-            }
-        }
-
-        /// <summary>
-        /// companyname1234-productname-test
-        /// </summary>
-        public string CustomerID = "";
-
-        public bool IsCustomerIDValid
-        {
-            get
-            {
-                return CustomerID.Length > 7; //at least a-b-test
-            }
-        }*/
-
-        //public ReleaseType ReleaseType;
-
-
-        //used to display dummy organization on account settings window. should never be used to determine current selection
-        //public string OrgName;
-        //used to display dummy product on account settings window. should never be used to determine current selection
-        //public string ProductName;
 
         public bool IsAPIKeyValid
         {
@@ -169,27 +118,7 @@ namespace CognitiveVR
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
-        public SceneSettings FindScene(string sceneName)
-        {
-            return sceneSettings.Find(x => x.SceneName == sceneName);
-        }
-
-        public SceneSettings FindSceneByPath(string scenePath)
-        {
-            return sceneSettings.Find(x => x.ScenePath == scenePath);
-        }
-
-        public SceneSettings FindSceneById(string sceneid)
-        {
-            return sceneSettings.Find(x => x.SceneId == sceneid);
-        }
-
-        public static string TrackingSceneName { get; private set; }
-        public static void SetTrackingSceneName(string sceneName)
-        {
-            TrackingSceneName = sceneName;
-        }
-
+        
         /// <summary>
         /// adds scene data if it doesn't already exist in scene settings
         /// </summary>
@@ -215,19 +144,20 @@ namespace CognitiveVR
             newInstance.sceneSettings.Add(new SceneSettings(name, path));
         }
 
-        /// <summary>
-        /// return the scene settings for whichever scene should be receiving gaze,event,dynamic and sensor data. can return null
-        /// </summary>
-        /// <returns></returns>
-        public static SceneSettings FindTrackingScene()
+        public static SceneSettings FindScene(string sceneName)
         {
-            SceneSettings returnSettings = null;
-
-            returnSettings = Instance.FindScene(TrackingSceneName);
-
-            return returnSettings;
+            return Instance.sceneSettings.Find(x => x.SceneName == sceneName);
         }
 
+        public static SceneSettings FindSceneByPath(string scenePath)
+        {
+            return Instance.sceneSettings.Find(x => x.ScenePath == scenePath);
+        }
+
+        public static SceneSettings FindSceneById(string sceneid)
+        {
+            return Instance.sceneSettings.Find(x => x.SceneId == sceneid);
+        }
         /// <summary>
         /// return the scene settings for whichever scene is currently open and active
         /// </summary>
@@ -236,7 +166,7 @@ namespace CognitiveVR
         {
             SceneSettings returnSettings = null;
 
-            returnSettings = Instance.FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
+            returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
 
             return returnSettings;
         }
@@ -258,54 +188,6 @@ namespace CognitiveVR
                 ScenePath = path;
             }
         }
-    }
-
-    namespace Json
-    {
-        //these are filled/emptied from json, so may not be directly referenced
-#pragma warning disable 0649
-        [System.Serializable]
-        public class Organization
-        {
-            public string id;
-            public string name;
-            public string prefix;
-        }
-        [System.Serializable]
-        public class Product
-        {
-            public string id;
-            public string name;
-            public string orgId;
-            public string customerId = "";
-        }
-        [System.Serializable]
-        public class UserData
-        {
-            public string userId;
-            public string email;
-            public Organization[] organizations = new Organization[] { };
-            public Product[] products = new Product[] { };
-
-            public static UserData Empty
-            {
-                get
-                {
-                    return new UserData();
-                }
-            }
-
-            public Product AddProduct(string newProductName, string newCustomerId, string newOrganizationId, string newProductId = "")
-            {
-                List<Product> productList = new List<Product>();
-                productList.AddRange(products);
-                Product newProduct = new Product() { name = newProductName, orgId = newOrganizationId, customerId = newCustomerId, id = newProductId };
-                productList.Add(newProduct);
-                products = productList.ToArray();
-                return newProduct;
-            }
-        }
-#pragma warning restore 0649
     }
 
     [System.Serializable]

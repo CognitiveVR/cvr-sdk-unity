@@ -85,14 +85,12 @@ namespace CognitiveVR
 #endif
             //SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            CognitiveVR_Preferences.SceneSettings sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
+            CognitiveVR_Preferences.SceneSettings sceneSettings = Core.TrackingScene;
             if (sceneSettings != null)
             {
                 if (!string.IsNullOrEmpty(sceneSettings.SceneId))
                 {
                     BeginPlayerRecording();
-                    Core.CurrentSceneId = sceneSettings.SceneId;
-                    Core.CurrentSceneVersionNumber = sceneSettings.VersionNumber;
                     Util.logDebug("<color=green>PlayerRecorder Init begin recording scene</color> " + sceneSettings.SceneName);
                 }
                 else
@@ -112,6 +110,8 @@ namespace CognitiveVR
         //TODO these can happen on a separate thread? uses camera.main which will only work on the main thread
         private void PupilGazeTracker_OnCalibrationDone()
         {
+            PupilTools.IsGazing = true;
+            PupilTools.SubscribeTo("gaze");
             //new CustomEvent("cvr.calibration").Send();
         }
 
@@ -209,12 +209,12 @@ namespace CognitiveVR
 
         static void BeginPlayerRecording()
         {
-            var scenedata = CognitiveVR_Preferences.FindTrackingScene();
+            var scenedata = Core.TrackingScene;
             //var scenedata = CognitiveVR_Preferences.Instance.FindSceneByPath(SceneManager.GetActiveScene().path);
 
             if (scenedata == null)
             {
-                CognitiveVR.Util.logDebug(CognitiveVR_Preferences.TrackingSceneName + " Scene data is null! Player Recorder has nowhere to upload data");
+                CognitiveVR.Util.logDebug(Core.TrackingSceneName + " Scene data is null! Player Recorder has nowhere to upload data");
                 return;
             }
 
@@ -262,10 +262,10 @@ namespace CognitiveVR
 #endif //fove direction
 #if CVR_PUPIL //direction
             //var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
-            var v2 = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            var v2 = PupilData._2D.GazePosition;
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary,"confidence") > 0.1f) //think this is from the right source dict? //confidence never returns a value?
             {
                 var ray = instance.cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
@@ -452,10 +452,11 @@ namespace CognitiveVR
             worldGazeDirection.Normalize();
 #endif //fove direction
 #if CVR_PUPIL //direction
-            var v2 = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            var v2 = PupilData._2D.GazePosition;//.GetEyeGaze(Pupil.GazeSource.BothEyes);
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.Confidence(PupilData.rightEyeID) < 0.5f){return;}
+            //if (PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f) { return; } //confidence never returns a value?
+            //if (PupilTools.Confidence(PupilData.rightEyeID) < 0.5f){return;}
 
             var ray = cam.ViewportPointToRay(v2);
             worldGazeDirection = ray.direction.normalized;
@@ -480,7 +481,7 @@ namespace CognitiveVR
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
 #endif //fove screenpoint
 #if CVR_PUPIL//screenpoint
-            screenGazePoint = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            screenGazePoint = PupilData._2D.GazePosition;//.GetEyeGaze(Pupil.GazeSource.BothEyes);
 #endif //pupil screenpoint
 
             //snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
@@ -548,7 +549,7 @@ namespace CognitiveVR
 
                 playerSnapshots.Clear();
 
-                StartCoroutine(Threaded_SendGaze(tempSnapshots, CognitiveVR_Preferences.FindTrackingScene(), Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewSessionProperties(true)));
+                StartCoroutine(Threaded_SendGaze(tempSnapshots, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID, CognitiveVR_Manager.GetNewSessionProperties(true)));
 
                 //SendPlayerGazeSnapshots();
                 //OnSendData();
@@ -561,7 +562,7 @@ namespace CognitiveVR
             //var sceneSettings = CognitiveVR_Preferences.FindTrackingScene();
             if (trackingsettings == null)
             {
-                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + CognitiveVR_Preferences.TrackingSceneName + "! Cancel Data Upload");
+                Util.logDebug("CognitiveVR_PlayerTracker.SendData could not find scene settings for " + Core.TrackingSceneName + "! Cancel Data Upload");
                 yield break;
             }
             if (string.IsNullOrEmpty(trackingsettings.SceneId))
@@ -576,7 +577,12 @@ namespace CognitiveVR
             string contents = null;
             string url = Constants.POSTGAZEDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
-            string hmdmodel = CognitiveVR.Util.GetSimpleHMDName();
+#if UNITY_2017_2_OR_NEWER
+            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+#else
+            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
+#endif
+            string hmdmodel = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 
 
             new System.Threading.Thread(() =>
