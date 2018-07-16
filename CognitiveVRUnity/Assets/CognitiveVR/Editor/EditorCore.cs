@@ -556,11 +556,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
             return;
         }
-
-        string[] split = text.Split(',');
-
         SetMediaSources(text);
-        Debug.Log("Response contains " + split.Length + " media sources");
     }
 
     public static string[] MediaSources = new string[] {};
@@ -574,11 +570,14 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
     }
 
-    public static void SetMediaSources(string mediasources)
+    public static void SetMediaSources(string rawmediasources)
     {
-        UnityEditor.ArrayUtility.Insert<string>(ref MediaSources, 0, "");
-        MediaSources = mediasources.Split(',');
-        EditorPrefs.SetString("cognitive_mediasources", mediasources);
+        string[] sources = JsonUtil.GetJsonArray<string>(rawmediasources);
+        Debug.Log("Response contains " + sources.Length + " media sources");
+
+        UnityEditor.ArrayUtility.Insert<string>(ref sources, 0, "");
+        MediaSources = sources;
+        EditorPrefs.SetString("cognitive_mediasources", rawmediasources);
     }
 
     #region GUI
