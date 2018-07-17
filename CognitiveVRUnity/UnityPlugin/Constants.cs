@@ -60,7 +60,7 @@ namespace CognitiveVR
         //GET media source list
         public static string GETMEDIASOURCELIST()
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/mediasources");
+            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/media");
         }
 
         //session urls

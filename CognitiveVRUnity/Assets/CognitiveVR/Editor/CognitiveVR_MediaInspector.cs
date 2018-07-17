@@ -45,12 +45,56 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.BeginHorizontal();
-            _choiceIndex = EditorGUILayout.Popup("Select Media Source",_choiceIndex, EditorCore.MediaSources);
+            string[] displayOptions = new string[EditorCore.MediaSources.Length];
+            if (displayOptions.Length == 0)
+            {
+                if (GUILayout.Button("Refresh Media"))
+                {
+                    EditorCore.RefreshMediaSources();
+                }
+                EditorGUILayout.EndHorizontal();
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(m.MediaSource) && _choiceIndex == 0 && displayOptions.Length > 0)
+            {
+                //try once to select the correct media
+                for(int i = 0; i<EditorCore.MediaSources.Length;i++)
+                {
+                    if (EditorCore.MediaSources[i].uploadId == m.MediaSource)
+                    {
+                        _choiceIndex = i;
+                    }
+                }
+            }
+
+            for (int i = 0; i < EditorCore.MediaSources.Length; i++)
+            {
+                displayOptions[i] = EditorCore.MediaSources[i].name;
+            }
+            _choiceIndex = EditorGUILayout.Popup("Select Media Source",_choiceIndex, displayOptions);
+
+            
+            if (m.MediaSource != EditorCore.MediaSources[_choiceIndex].uploadId)
+            {
+                GUI.color = Color.green;
+            }
+
             if (GUILayout.Button("Save",GUILayout.Width(40)))
             {
-                m.MediaSource = EditorCore.MediaSources[_choiceIndex];
+                m.MediaSource = EditorCore.MediaSources[_choiceIndex].uploadId;
             }
+
+            GUI.color = Color.white;
             EditorGUILayout.EndHorizontal();
+
+            EditorGUI.BeginDisabledGroup(true);
+
+            //EditorGUILayout.LabelField("Id", EditorCore.MediaSources[_choiceIndex].uploadId);
+            //GUILayout.Label("Description");
+            EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+
+            EditorGUI.EndDisabledGroup();
             
             if (GUI.changed)
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());

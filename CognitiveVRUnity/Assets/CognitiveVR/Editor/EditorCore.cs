@@ -510,6 +510,7 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     /// get collection of versions of scene
     /// </summary>
     /// <param name="refreshSceneVersionComplete"></param>
+    [MenuItem("cognitive3D/Refresh Media")]
     public static void RefreshMediaSources()
     {
         Debug.Log("refresh media sources");
@@ -548,18 +549,26 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
             return;
         }
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings == null)
-        {
-            //this should be impossible, but might happen if changing scenes at exact time
-            RefreshSceneVersionComplete = null;
-            Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
-            return;
-        }
+        //var settings = CognitiveVR_Preferences.FindCurrentScene();
+        //if (settings == null)
+        //{
+        //    //this should be impossible, but might happen if changing scenes at exact time
+        //    RefreshSceneVersionComplete = null;
+        //    Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
+        //    return;
+        //}
         SetMediaSources(text);
     }
 
-    public static string[] MediaSources = new string[] {};
+    [Serializable]
+    public class MediaSource
+    {
+        public string name;
+        public string uploadId;
+        public string description;
+    }
+
+    public static MediaSource[] MediaSources = new MediaSource[] {};
 
     [UnityEditor.Callbacks.DidReloadScripts]
     public static void SetMediaSourcesFromEditorPrefs()
@@ -572,12 +581,12 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
     public static void SetMediaSources(string rawmediasources)
     {
-        string[] sources = JsonUtil.GetJsonArray<string>(rawmediasources);
+        MediaSource[] sources = JsonUtil.GetJsonArray<MediaSource>(rawmediasources);
         Debug.Log("Response contains " + sources.Length + " media sources");
 
-        UnityEditor.ArrayUtility.Insert<string>(ref sources, 0, "");
+        UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
         MediaSources = sources;
-        EditorPrefs.SetString("cognitive_mediasources", rawmediasources);
+        //EditorPrefs.SetString("cognitive_mediasources", rawmediasources);
     }
 
     #region GUI

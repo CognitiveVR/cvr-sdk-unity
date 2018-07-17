@@ -34,8 +34,26 @@ public class Setup360Window : EditorWindow
         GUILayout.EndHorizontal();
         selectedClip = (VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip),true);
 
+        if (EditorCore.MediaSources.Length == 0)
+        {
+            if (GUILayout.Button("Refresh Media Sources"))
+            {
+                EditorCore.RefreshMediaSources();
+            }
+            return;
+        }
+
         //media source
-        _choiceIndex = EditorGUILayout.Popup("Select Media Source", _choiceIndex, EditorCore.MediaSources);
+        string[] displayOptions = new string[EditorCore.MediaSources.Length];
+        for(int i = 0; i< EditorCore.MediaSources.Length;i++)
+        {
+            displayOptions[i] = EditorCore.MediaSources[i].name;
+        }
+        _choiceIndex = EditorGUILayout.Popup("Select Media Source", _choiceIndex, displayOptions);
+
+        EditorGUI.BeginDisabledGroup(true);
+        EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+        EditorGUI.EndDisabledGroup();
 
         GUILayout.Space(20);
         GUILayout.BeginHorizontal();
@@ -49,7 +67,7 @@ public class Setup360Window : EditorWindow
         GUILayout.EndHorizontal();
 
 
-        EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex]));
+        EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex].name));
         if (GUILayout.Button("Create"))
         {
             CreateAssets();
@@ -120,7 +138,7 @@ public class Setup360Window : EditorWindow
         sphere = sphere.transform.GetChild(0).gameObject;
         sphere.GetComponent<MeshRenderer>().enabled = false;
         var media = sphere.AddComponent<MediaComponent>();
-        media.MediaSource = EditorCore.MediaSources[_choiceIndex];
+        media.MediaSource = EditorCore.MediaSources[_choiceIndex].uploadId;
         media.VideoPlayer = vp;
         if (!sphere.GetComponent<MeshCollider>())
             sphere.AddComponent<MeshCollider>();
