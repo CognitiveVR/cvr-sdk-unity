@@ -244,6 +244,21 @@ namespace CognitiveVR
                 }
                 
             }
+
+            GUIContent ButtonContent = new GUIContent("Upload Screenshot");
+            if (v == null)
+            {
+                GUILayout.Button(ButtonContent);
+            }
+            else
+            {
+                if (GUILayout.Button(ButtonContent))
+                {
+                    EditorCore.UploadScreenshot();
+                }
+            }
+            EditorGUI.EndDisabledGroup();
+
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
             GUILayout.EndHorizontal();
