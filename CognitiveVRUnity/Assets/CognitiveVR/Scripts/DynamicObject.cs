@@ -39,7 +39,8 @@ namespace CognitiveVR
             ViveController,
             OculusTouchLeft,
             OculusTouchRight,
-            ViveTracker
+            ViveTracker,
+            ExitPoll
         }
 
         [HideInInspector]

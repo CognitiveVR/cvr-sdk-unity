@@ -166,6 +166,16 @@ namespace CognitiveVR
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
             string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
 
+            //if folder exists, delete mtl, obj, png and json contents
+            if (Directory.Exists(objPath))
+            {
+                var files = Directory.GetFiles(objPath);
+                for(int i=0;i<files.Length;i++)
+                {
+                    File.Delete(files[i]);
+                }
+            }
+
             //write json settings file
             string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
