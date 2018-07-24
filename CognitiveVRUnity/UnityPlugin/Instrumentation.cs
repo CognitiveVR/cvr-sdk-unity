@@ -52,7 +52,7 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            builder.Append(JsonUtil.SetString("userid", Core.UniqueID));
+            JsonUtil.SetString("userid", Core.UniqueID, builder);
             builder.Append(",");
 
             if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
@@ -61,11 +61,11 @@ namespace CognitiveVR
                 builder.Append(",");
             }
 
-            builder.Append(JsonUtil.SetObject("timestamp", Core.SessionTimeStamp));
+            JsonUtil.SetObject("timestamp", Core.SessionTimeStamp, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetString("sessionid", Core.SessionID));
+            JsonUtil.SetString("sessionid", Core.SessionID, builder);
             builder.Append(",");
-            builder.Append(JsonUtil.SetObject("part", partCount));
+            JsonUtil.SetObject("part", partCount, builder);
             partCount++;
             builder.Append(",");
 
@@ -109,11 +109,11 @@ namespace CognitiveVR
         public static void SendCustomEvent(string category, float[] position)
         {
             TransactionBuilder.Append("{");
-            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
+            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+            JsonUtil.SetVector("point", position, TransactionBuilder);
 
             TransactionBuilder.Append("}"); //close transaction object
             TransactionBuilder.Append(",");
@@ -128,11 +128,11 @@ namespace CognitiveVR
         public static void SendCustomEvent(string category, Vector3 position)
         {
             TransactionBuilder.Append("{");
-            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
+            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
+            JsonUtil.SetVector("point", position, TransactionBuilder);
 
             TransactionBuilder.Append("}"); //close transaction object
             TransactionBuilder.Append(",");
@@ -153,12 +153,11 @@ namespace CognitiveVR
         public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position)
         {
             TransactionBuilder.Append("{");
-            TransactionBuilder.Append(JsonUtil.SetString("name", category));
+            JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetObject("time", Util.Timestamp()));
+            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
-            TransactionBuilder.Append(JsonUtil.SetVector("point", position));
-
+            JsonUtil.SetVector("point", position, TransactionBuilder);
 
             if (properties != null && properties.Keys.Count > 0)
             {
@@ -168,11 +167,11 @@ namespace CognitiveVR
                 {
                     if (v.Value.GetType() == typeof(string))
                     {
-                        TransactionBuilder.Append(JsonUtil.SetString(v.Key, (string)v.Value));
+                        JsonUtil.SetString(v.Key, (string)v.Value, TransactionBuilder);
                     }
                     else
                     {
-                        TransactionBuilder.Append(JsonUtil.SetObject(v.Key, v.Value));
+                        JsonUtil.SetObject(v.Key, v.Value, TransactionBuilder);
                     }
                     TransactionBuilder.Append(",");
                 }
