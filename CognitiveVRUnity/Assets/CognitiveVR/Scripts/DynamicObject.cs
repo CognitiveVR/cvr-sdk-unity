@@ -40,7 +40,9 @@ namespace CognitiveVR
             OculusTouchLeft,
             OculusTouchRight,
             ViveTracker,
-            ExitPoll
+            ExitPoll,
+            LeapMotionHandLeft,
+            LeapMotionHandRight
         }
 
         [HideInInspector]
