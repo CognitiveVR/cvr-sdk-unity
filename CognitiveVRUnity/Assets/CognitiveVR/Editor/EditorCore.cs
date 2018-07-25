@@ -373,9 +373,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 
         if (EditorUtility.DisplayDialog("Upload Screenshot","Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber+"?","Upload","Cancel"))
         {
-            var fileContent = File.ReadAllBytes(path);
-            //confirmation popup
-
             string url = Constants.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
 
             var bytes = File.ReadAllBytes(path);

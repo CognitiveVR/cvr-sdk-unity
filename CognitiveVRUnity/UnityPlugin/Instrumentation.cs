@@ -35,7 +35,7 @@ namespace CognitiveVR
         static int maxCachedEvents = 16;
         static int cachedEvents = 0;
 
-        private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder();
+        private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
         static void SendTransactions()

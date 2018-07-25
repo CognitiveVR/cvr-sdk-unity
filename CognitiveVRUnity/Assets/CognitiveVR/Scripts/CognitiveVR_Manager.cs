@@ -486,7 +486,7 @@ namespace CognitiveVR
 #else
             UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
             UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
-            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
+            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRSettings.loadedDeviceName : "Not Found");
 #endif
 
 
