@@ -2,11 +2,6 @@ using UnityEngine;
 using System;
 using System.Text;
 using System.Collections.Generic;
-using CognitiveVR.External;
-#if !NETFX_CORE
-using System.Globalization;
-#endif
-using System.Text.RegularExpressions;
 
 namespace CognitiveVR
 {
