@@ -273,6 +273,9 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sceneSettings"),true);
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
+
+            if (GUI.changed)
+                EditorUtility.SetDirty(p);
         }
 
         //currently UNUSED. useful with the scene export window that shows all scenes regardless of if they were exported
