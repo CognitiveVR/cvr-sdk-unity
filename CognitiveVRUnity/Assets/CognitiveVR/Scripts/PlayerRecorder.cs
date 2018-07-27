@@ -458,6 +458,8 @@ namespace CognitiveVR
         //float postRenderDist;
         //DynamicObject uiDynamicHit;
 
+        Transform cameraRoot;
+
         //TODO make this private and tie a delegate to this
         //called from periodicrenderer OnPostRender or immediately after on tick if realtime gaze eval is disabled
         public void TickPostRender()
@@ -479,18 +481,31 @@ namespace CognitiveVR
                 snapshot.LocalGaze = postRenderHitPos;
             }
 
+            var camTransform = cam.transform;
+            var camPos = camTransform.position;
+            var camRot = camTransform.rotation;
+
             if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
             {
                 CognitiveVR_Manager.instance.GetGPSLocation(out snapshot.GPSLocation, out snapshot.CompassHeading);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                if (cameraRoot == null)
+                {
+                    cameraRoot = cam.transform.root;
+                }
+                RaycastHit floorhit = new RaycastHit();
+                if (Physics.Raycast(camPos, -cameraRoot.up, out floorhit))
+                {
+                    snapshot.FloorPosition = floorhit.point;
+                }
             }
 
 
 
 
 
-            var camTransform = cam.transform;
-            var camPos = camTransform.position;
-            var camRot = camTransform.rotation;
 
             //snapshot.Properties.Add("position", camPos);
             snapshot.Position = camPos;
@@ -793,15 +808,15 @@ namespace CognitiveVR
                 {
                     if (tempSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.Dynamic)
                     {
-                        SetDynamicGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].LocalGaze, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].ObjectId, builder);
+                        SetDynamicGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].LocalGaze, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].FloorPosition, tempSnapshots[i].ObjectId, builder);
                     }
                     else if (tempSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.World)
                     {
-                        SetPreGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GazePoint, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, builder);
+                        SetPreGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GazePoint, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].FloorPosition, builder);
                     }
                     else// if (t_snaphots[i].snapshotType == PlayerSnapshot.SnapshotType.Sky)
                     {
-                        SetFarplaneGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, builder);
+                        SetFarplaneGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].FloorPosition, builder);
                     }
                     builder.Append(",");
                 }
@@ -848,7 +863,7 @@ namespace CognitiveVR
         
 
         //EvaluateGazeRealtime
-        private static void SetPreGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 gazepos, Vector3 gpsloc, float compass, System.Text.StringBuilder builder)
+        private static void SetPreGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 gazepos, Vector3 gpsloc, float compass, Vector3 floorPos, System.Text.StringBuilder builder)
         {
             builder.Append("{");
 
@@ -866,11 +881,16 @@ namespace CognitiveVR
                 builder.Append(",");
                 JsonUtil.SetFloat("compass", compass, builder);
             }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                builder.Append(",");
+                JsonUtil.SetVector("f", floorPos, builder);
+            }
 
             builder.Append("}");
         }
 
-        private static void SetFarplaneGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 gpsloc, float compass, System.Text.StringBuilder builder)
+        private static void SetFarplaneGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 gpsloc, float compass, Vector3 floorPos, System.Text.StringBuilder builder)
         {
             builder.Append("{");
 
@@ -886,12 +906,17 @@ namespace CognitiveVR
                 builder.Append(",");
                 JsonUtil.SetFloat("compass", compass, builder);
             }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                builder.Append(",");
+                JsonUtil.SetVector("f", floorPos, builder);
+            }
 
             builder.Append("}");
         }
 
         //EvaluateGaze on a dynamic object
-        private static void SetDynamicGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, Vector3 gpsloc, float compass, string objectId, System.Text.StringBuilder builder)
+        private static void SetDynamicGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, Vector3 gpsloc, float compass, Vector3 floorPos, string objectId, System.Text.StringBuilder builder)
         {
             builder.Append("{");
 
@@ -910,6 +935,11 @@ namespace CognitiveVR
                 JsonUtil.SetVector("gpsloc", gpsloc, builder);
                 builder.Append(",");
                 JsonUtil.SetFloat("compass", compass, builder);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                builder.Append(",");
+                JsonUtil.SetVector("f", floorPos, builder);
             }
 
             builder.Append("}");

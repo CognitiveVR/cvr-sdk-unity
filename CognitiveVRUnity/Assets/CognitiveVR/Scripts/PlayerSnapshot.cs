@@ -41,6 +41,7 @@ namespace CognitiveVR
         public Vector3 GazePoint;
         //xy of screen when tracking eyes
         public Vector3 HMDGazePoint;
+        public Vector3 FloorPosition;
 
         public PlayerSnapshot(int framecount)
         {
