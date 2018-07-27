@@ -9,6 +9,8 @@ namespace CognitiveVR
     [CustomEditor(typeof(CognitiveVR_Preferences))]
     public class PreferencesInspector : Editor
     {
+        bool gpsFoldout;
+
         public override void OnInspectorGUI()
         {
             var p = (CognitiveVR_Preferences)target;
@@ -20,7 +22,22 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
-            //p.TrackGazePoint
+            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
+
+            EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
+            EditorGUI.indentLevel++;
+            gpsFoldout = EditorGUILayout.Foldout(gpsFoldout,"GPS Options");
+            if (gpsFoldout)
+            {
+                p.SyncGPSWithGaze = EditorGUILayout.Toggle(new GUIContent("Sync with Player Update", "Request new GPS location every time the player position and gaze is recorded"), p.SyncGPSWithGaze);
+                EditorGUI.BeginDisabledGroup(p.SyncGPSWithGaze);
+                p.GPSInterval = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Update Interval","Interval in seconds to record new GPS location data"), p.GPSInterval), 0.1f, 60f);
+                EditorGUI.EndDisabledGroup();
+                p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy","Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
+            }
+            EditorGUI.indentLevel--;
+
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);

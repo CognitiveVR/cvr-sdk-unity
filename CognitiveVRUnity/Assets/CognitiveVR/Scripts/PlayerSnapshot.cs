@@ -16,6 +16,8 @@ namespace CognitiveVR
         }
         public SnapshotType snapshotType;
 
+        public Vector3 GPSLocation; //long,lat,altitude
+        public float CompassHeading; //0 north, 90 east, 180 south, 270 west
 
         public static int Resolution = 64;
 

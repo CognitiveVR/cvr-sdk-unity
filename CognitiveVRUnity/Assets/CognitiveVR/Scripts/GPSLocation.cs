@@ -50,7 +50,10 @@ namespace CognitiveVR.Components
             CognitiveVR_Manager.UpdateSessionState("c3d.geo.longitude", Input.location.lastData.longitude);
             CognitiveVR_Manager.UpdateSessionState("c3d.geo.altitude", Input.location.lastData.altitude);
 
-            Input.location.Stop();
+            if (!CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                Input.location.Stop();
+            }
         }
         
         public static string GetDescription()
