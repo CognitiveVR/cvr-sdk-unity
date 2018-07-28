@@ -10,7 +10,6 @@ namespace CognitiveVR.Components
 {
     public class HMDPresentEvent : CognitiveVRAnalyticsComponent
     {
-        string hmdpresentGUID;
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.Success) { return; }
@@ -25,7 +24,6 @@ namespace CognitiveVR.Components
 
         private void OVRManager_HMDMounted()
         {
-            hmdpresentGUID = Util.GetUniqueId();
             new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
         }
 
@@ -40,12 +38,10 @@ namespace CognitiveVR.Components
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
-                hmdpresentGUID = Util.GetUniqueId();
                 new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
             }
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
-                Util.logDebug("hmd removed");
                 new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time - 10f).Send();
             }
         }

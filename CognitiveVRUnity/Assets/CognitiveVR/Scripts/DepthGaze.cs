@@ -40,6 +40,27 @@ namespace CognitiveVR
         {
             Ray ray = new Ray(CameraTransform.position, GetWorldGazeDirection());
 
+            Vector3 gpsloc = new Vector3();
+            float compass = 0;
+            Vector3 floorPos = new Vector3();
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                CognitiveVR_Manager.Instance.GetGPSLocation(out gpsloc, out compass);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                if (cameraRoot == null)
+                {
+                    cameraRoot = CameraTransform.root;
+                }
+                RaycastHit floorhit = new RaycastHit();
+                if (Physics.Raycast(camtransform.position, -cameraRoot.up, out floorhit))
+                {
+                    floorPos = floorhit.point;
+                }
+            }
+
+
             //raycast for dynamic
             float hitDistance;
             DynamicObject hitDynamic;
@@ -63,17 +84,17 @@ namespace CognitiveVR
             {
                 if (hitworld) //hit world
                 {
-                    GazeCore.RecordGazePoint(Util.Timestamp(), point, CameraTransform.position, CameraTransform.rotation);
+                    GazeCore.RecordGazePoint(Util.Timestamp(), point, CameraTransform.position, CameraTransform.rotation, gpsloc,compass,floorPos);
                 }
                 else //hit skybox
                 {
-                    GazeCore.RecordGazePoint(Util.Timestamp(), CameraTransform.position, CameraTransform.rotation);
+                    GazeCore.RecordGazePoint(Util.Timestamp(), CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
                 }
             }
             else //hit dynamic
             {
                 hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                GazeCore.RecordGazePoint(Util.Timestamp(), objectId, localGaze, ray.origin, CameraTransform.rotation);
+                GazeCore.RecordGazePoint(Util.Timestamp(), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
             }
         }
 

@@ -9,13 +9,33 @@ using CognitiveVR;
 //must implement
 //1. dynamics raycast
 //2. call dynamic.OnGaze(interval)
-//3. fove/pupil gaze direction
+//3. fove/pupil/tobii gaze direction
 //4. media
+//5. gps + compass
+//6. floor position
 
 namespace CognitiveVR
 {
     public class GazeBase : MonoBehaviour
     {
+#if CVR_TOBIIVR
+        private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
+#endif
+#if CVR_FOVE
+        static FoveInterfaceBase _foveInstance;
+        public static FoveInterfaceBase FoveInstance
+        {
+            get
+            {
+                if (_foveInstance == null)
+                {
+                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+                }
+                return _foveInstance;
+            }
+        }
+#endif
+
         protected Camera cam;
         protected Camera CameraComponent
         {
@@ -37,6 +57,7 @@ namespace CognitiveVR
             }
         }
         protected bool headsetPresent;
+        protected Transform cameraRoot;
 
         //called immediately after construction
         public virtual void Initialize()
@@ -66,7 +87,12 @@ namespace CognitiveVR
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 #endif
 
+#if CVR_TOBIIVR
+            _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
+#endif
+
             GazeCore.SetHMDType(hmdname);
+            cameraRoot = CameraTransform.root;
         }
 
 
@@ -201,7 +227,9 @@ namespace CognitiveVR
                 var ray = instance.cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
-#endif //pupil direction
+#elif CVR_TOBIIVR
+            gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+#endif
             return gazeDirection;
         }
 
@@ -223,7 +251,9 @@ namespace CognitiveVR
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
 #elif CVR_PUPIL//screenpoint
             screenGazePoint = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
-#endif //pupil screenpoint
+#elif CVR_TOBIIVR
+            screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+#endif
             return screenGazePoint;
         }
     }

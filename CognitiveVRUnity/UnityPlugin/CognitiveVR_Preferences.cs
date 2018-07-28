@@ -74,6 +74,11 @@ namespace CognitiveVR
         
         public float SnapshotInterval = 0.1f;
         public bool DynamicObjectSearchInParent = true;
+        public bool TrackGPSLocation;
+        public float GPSInterval = 1;
+        public float GPSAccuracy = 2;
+        public bool SyncGPSWithGaze;
+        public bool RecordFloorPosition = true;
 
         [Header("Send Data")]
         public int GazeSnapshotCount = 64;

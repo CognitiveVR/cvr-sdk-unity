@@ -84,11 +84,10 @@ namespace CognitiveVR
             {
                 try
                 {
-                    TextureImporterFormat format;
-                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i], out format))
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
-                        SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
+                        SetTextureImporterFormat(originalTexture, true);
                     }
                 }
                 catch
@@ -188,10 +187,9 @@ namespace CognitiveVR
                 try
                 {
                     bool ignored;
-                    TextureImporterFormat format;
-                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored, out format))
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored))
                     {
-                        SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i], TextureImporterFormat.RGBA32);
+                        SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i]);
                     }
                 }
                 catch
@@ -614,17 +612,16 @@ namespace CognitiveVR
                         try
                         {
                             bool readable;
-                            TextureImporterFormat format;
-                            if (GetTextureImportFormat((Texture2D)m.GetTexture(textureName), out readable, out format))
+                            if (GetTextureImportFormat((Texture2D)m.GetTexture(textureName), out readable))
                             {
                                 Texture2D originalTexture = m.GetTexture(textureName) as Texture2D;
 
-                                SetTextureImporterFormat(originalTexture, true, TextureImporterFormat.RGBA32);
+                                SetTextureImporterFormat(originalTexture, true);
                                 Texture2D outputMiniTexture = RescaleForExport(originalTexture, Mathf.NextPowerOfTwo(originalTexture.width) / textureDivisor, Mathf.NextPowerOfTwo(originalTexture.height) / textureDivisor);
 
                                 byte[] bytes = outputMiniTexture.EncodeToPNG();
                                 File.WriteAllBytes(destinationFile + m.GetTexture(textureName).name.Replace(' ', '_') + ".png", bytes);
-                                SetTextureImporterFormat(originalTexture, readable, format);
+                                SetTextureImporterFormat(originalTexture, readable);
                             }
                             else
                             {
@@ -896,10 +893,9 @@ namespace CognitiveVR
             return newText;
         }
 
-        public static bool GetTextureImportFormat(Texture2D texture, out bool isReadable, out TextureImporterFormat format)
+        public static bool GetTextureImportFormat(Texture2D texture, out bool isReadable)
         {
             isReadable = false;
-            format = TextureImporterFormat.Alpha8;
             if (null == texture)
             {
                 return false;
@@ -912,13 +908,12 @@ namespace CognitiveVR
                 tImporter.textureType = TextureImporterType.Default;
 
                 isReadable = tImporter.isReadable;
-                format = tImporter.textureFormat;
                 return true;
             }
             return false;
         }
 
-        public static void SetTextureImporterFormat(Texture2D texture, bool isReadable, TextureImporterFormat format)
+        public static void SetTextureImporterFormat(Texture2D texture, bool isReadable)
         {
             if (null == texture) return;
 
@@ -929,7 +924,6 @@ namespace CognitiveVR
                 tImporter.textureType = TextureImporterType.Default;
 
                 tImporter.isReadable = isReadable;
-                tImporter.textureFormat = format;
 
                 AssetDatabase.ImportAsset(assetPath);
                 AssetDatabase.Refresh();

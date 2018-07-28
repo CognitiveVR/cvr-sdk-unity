@@ -39,7 +39,7 @@ namespace CognitiveVR
             HMDName = hmdname;
         }
 
-        public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
+        public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at the camera far plane
         {
             gazebuilder.Append("{");
 
@@ -48,6 +48,19 @@ namespace CognitiveVR
             JsonUtil.SetVector("p", hmdpoint, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
+
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", compass, gazebuilder);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("f", floorPos, gazebuilder);
+            }
 
             gazebuilder.Append("}");
             gazeCount++;
@@ -61,7 +74,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at a dynamic object
         {
             gazebuilder.Append("{");
 
@@ -74,7 +87,18 @@ namespace CognitiveVR
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", compass, gazebuilder);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("f", floorPos, gazebuilder);
+            }
             gazebuilder.Append("}");
 
             gazeCount++;
@@ -88,7 +112,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
+        public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at world
         {
             gazebuilder.Append("{");
 
@@ -99,7 +123,18 @@ namespace CognitiveVR
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", gazepoint, gazebuilder);
-
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", compass, gazebuilder);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("f", floorPos, gazebuilder);
+            }
             gazebuilder.Append("}");
 
             gazeCount++;

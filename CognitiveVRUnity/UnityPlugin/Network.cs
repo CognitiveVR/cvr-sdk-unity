@@ -138,7 +138,8 @@ namespace CognitiveVR
             }
             else
             {
-                if (responsecode == 401) { return; } //ignore if invalid auth api key
+                if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; } //ignore if invalid auth api key
+                if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; } //ignore. couldn't parse response code, likely malformed url
                 //write to file
                 WriteRequestToFile(url, content);
             }
