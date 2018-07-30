@@ -43,22 +43,8 @@ namespace CognitiveVR
             Vector3 gpsloc = new Vector3();
             float compass = 0;
             Vector3 floorPos = new Vector3();
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
-            {
-                CognitiveVR_Manager.Instance.GetGPSLocation(out gpsloc, out compass);
-            }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
-            {
-                if (cameraRoot == null)
-                {
-                    cameraRoot = CameraTransform.root;
-                }
-                RaycastHit floorhit = new RaycastHit();
-                if (Physics.Raycast(camtransform.position, -cameraRoot.up, out floorhit))
-                {
-                    floorPos = floorhit.point;
-                }
-            }
+
+            GetOptionalSnapshotData(ref gpsloc, ref compass, ref floorPos);
 
 
             //raycast for dynamic
@@ -93,6 +79,7 @@ namespace CognitiveVR
             }
             else //hit dynamic
             {
+                //TODO check for media
                 hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
                 GazeCore.RecordGazePoint(Util.Timestamp(), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
             }
@@ -136,7 +123,7 @@ namespace CognitiveVR
         /// <returns></returns>
         private bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint, float neardepth, float fardepth, Vector3 hmdforward, Vector3 hmdpos, Vector3 HMDGazePoint, Vector3 GazeDirection)
         {
-#if CVR_FOVE || CVR_PUPIL
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
             float relativeDepth = 0;
             Vector2 snapshotPixel = HMDGazePoint;
 
@@ -198,7 +185,7 @@ namespace CognitiveVR
         {
             if (tex == null)
             {
-#if CVR_FOVE || CVR_PUPIL
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
                 tex = new Texture2D(Resolution, Resolution);
 #else
                 tex = new Texture2D(1, 1);
@@ -208,7 +195,7 @@ namespace CognitiveVR
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-#if CVR_FOVE || CVR_PUPIL //TODO read 1 pixel from the render texture where the request point is
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR //TODO read 1 pixel from the render texture where the request point is
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
             var color = tex.GetPixel(x,y);
 #else

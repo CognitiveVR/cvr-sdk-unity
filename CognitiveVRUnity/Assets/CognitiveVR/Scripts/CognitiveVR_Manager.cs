@@ -96,7 +96,6 @@ namespace CognitiveVR
                 //case GazeType.Command: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
                 case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
                 case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
-                case GazeType.SkyboxMedia: gameObject.AddComponent<SkyboxMediaGaze>().Initialize(); break;
             }
 
             if (InitEvent != null) { InitEvent(initError); }
@@ -586,7 +585,7 @@ namespace CognitiveVR
             }
         }
 
-        public void GetGPSLocation(out Vector3 loc, out float bearing)
+        public void GetGPSLocation(ref Vector3 loc, ref float bearing)
         {
             if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
             {

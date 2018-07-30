@@ -205,6 +205,26 @@ namespace CognitiveVR
             return didhitdynamic;
         }
 
+        public void GetOptionalSnapshotData(ref Vector3 gpsloc, ref float compass, ref Vector3 floorPos)
+        {
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                CognitiveVR_Manager.Instance.GetGPSLocation(ref gpsloc, ref compass);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                if (cameraRoot == null)
+                {
+                    cameraRoot = CameraTransform.root;
+                }
+                RaycastHit floorhit = new RaycastHit();
+                if (Physics.Raycast(camtransform.position, -cameraRoot.up, out floorhit))
+                {
+                    floorPos = floorhit.point;
+                }
+            }
+        }
+
         /// <summary>
         /// get the raw gaze direction in world space. includes fove/pupil labs eye tracking
         /// </summary>

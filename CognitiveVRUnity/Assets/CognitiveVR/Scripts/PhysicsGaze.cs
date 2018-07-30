@@ -32,22 +32,8 @@ public class PhysicsGaze : GazeBase {
         Vector3 gpsloc = new Vector3();
         float compass = 0;
         Vector3 floorPos = new Vector3();
-        if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
-        {
-            CognitiveVR_Manager.Instance.GetGPSLocation(out gpsloc, out compass);
-        }
-        if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
-        {
-            if (cameraRoot == null)
-            {
-                cameraRoot = CameraTransform.root;
-            }
-            RaycastHit floorhit = new RaycastHit();
-            if (Physics.Raycast(camtransform.position, -cameraRoot.up, out floorhit))
-            {
-                floorPos = floorhit.point;
-            }
-        }
+
+        GetOptionalSnapshotData(ref gpsloc, ref compass, ref floorPos);
 
         float hitDistance;
         DynamicObject hitDynamic;

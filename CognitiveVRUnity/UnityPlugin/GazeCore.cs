@@ -39,6 +39,7 @@ namespace CognitiveVR
             HMDName = hmdname;
         }
 
+        ///world position
         public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at the camera far plane
         {
             gazebuilder.Append("{");
@@ -74,6 +75,7 @@ namespace CognitiveVR
             }
         }
 
+        //gaze on dynamic object
         public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at a dynamic object
         {
             gazebuilder.Append("{");
@@ -112,6 +114,7 @@ namespace CognitiveVR
             }
         }
 
+        //gaze at sky
         public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at world
         {
             gazebuilder.Append("{");
@@ -146,6 +149,12 @@ namespace CognitiveVR
             {
                 gazebuilder.Append(",");
             }
+        }
+
+        //looking at a media dynamic object
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatime, Vector3 floorPos)
+        {
+
         }
 
         private static void SendGazeData()
