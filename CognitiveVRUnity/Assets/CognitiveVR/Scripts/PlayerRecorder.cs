@@ -496,9 +496,19 @@ namespace CognitiveVR
                     cameraRoot = cam.transform.root;
                 }
                 RaycastHit floorhit = new RaycastHit();
-                if (Physics.Raycast(camPos, -cameraRoot.up, out floorhit))
+                if (cameraRoot == cam.transform)
                 {
-                    snapshot.FloorPosition = floorhit.point;
+                    if (Physics.Raycast(camPos, Vector3.down, out floorhit))
+                    {
+                        snapshot.FloorPosition = floorhit.point;
+                    }
+                }
+                else
+                {
+                    if (Physics.Raycast(camPos, -cameraRoot.up, out floorhit))
+                    {
+                        snapshot.FloorPosition = floorhit.point;
+                    }
                 }
             }
 
