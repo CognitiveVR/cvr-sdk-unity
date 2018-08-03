@@ -16,6 +16,8 @@ namespace CognitiveVR
         }
         public SnapshotType snapshotType;
 
+        public Vector3 GPSLocation; //long,lat,altitude
+        public float CompassHeading; //0 north, 90 east, 180 south, 270 west
 
         public static int Resolution = 64;
 
@@ -39,6 +41,7 @@ namespace CognitiveVR
         public Vector3 GazePoint;
         //xy of screen when tracking eyes
         public Vector3 HMDGazePoint;
+        public Vector3 FloorPosition;
 
         public PlayerSnapshot(int framecount)
         {

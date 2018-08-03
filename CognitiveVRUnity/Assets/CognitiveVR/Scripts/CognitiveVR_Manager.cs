@@ -63,6 +63,19 @@ namespace CognitiveVR
             if (initError == Error.Success)
             {
                 new CustomEvent("Session Begin").Send();
+                if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+                {
+                    Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
+                    Input.compass.enabled = true;
+                    if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
+                    {
+                        //just get gaze snapshot to grab this
+                    }
+                    else
+                    {
+                        StartCoroutine(GPSTick());
+                    }
+                }
             }
             else //some failure
             {
@@ -382,6 +395,7 @@ namespace CognitiveVR
             }
         }
         YieldInstruction playerSnapshotInverval;
+        YieldInstruction GPSUpdateInverval;
 
         [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
         public bool InitializeOnStart = true;
@@ -464,6 +478,7 @@ namespace CognitiveVR
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
+            GPSUpdateInverval = new WaitForSeconds(CognitiveVR_Preferences.Instance.GPSInterval);
             StartCoroutine(Tick());
 
 #if CVR_STEAMVR
@@ -486,7 +501,7 @@ namespace CognitiveVR
 #else
             UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
             UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
-            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.family : "Not Found");
+            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRSettings.loadedDeviceName : "Not Found");
 #endif
 
 
@@ -557,6 +572,36 @@ namespace CognitiveVR
                 yield return playerSnapshotInverval;
                 frameCount = Time.frameCount;
                 OnTick();
+            }
+        }
+
+        public void GetGPSLocation(out Vector3 loc, out float bearing)
+        {
+            if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
+            {
+                loc.x = Input.location.lastData.latitude;
+                loc.y = Input.location.lastData.longitude;
+                loc.z = Input.location.lastData.altitude;
+                bearing = 360-Input.compass.magneticHeading;
+            }
+            else
+            {
+                loc = GPSLocation;
+                bearing = CompassOrientation;
+            }
+        }
+
+        Vector3 GPSLocation;
+        float CompassOrientation;
+        IEnumerator GPSTick()
+        {
+            while (Application.isPlaying)
+            {
+                yield return GPSUpdateInverval;
+                GPSLocation.x = Input.location.lastData.latitude;
+                GPSLocation.y = Input.location.lastData.longitude;
+                GPSLocation.z = Input.location.lastData.altitude;
+                CompassOrientation = 360 - Input.compass.magneticHeading;                
             }
         }
 

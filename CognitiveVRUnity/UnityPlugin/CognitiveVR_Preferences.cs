@@ -87,6 +87,11 @@ namespace CognitiveVR
         public int PlayerDataType = 0; //0 is 3d content with rendered gaze. 1 is video player with gaze from direction
         public string VideoSphereDynamicObjectId = "";
         public float GazeDirectionMultiplier = 1.0f;
+        public bool TrackGPSLocation;
+        public float GPSInterval = 1;
+        public float GPSAccuracy = 2;
+        public bool SyncGPSWithGaze;
+        public bool RecordFloorPosition = true;
 
         [Header("Send Data")]
         //public bool DebugWriteToFile = false;

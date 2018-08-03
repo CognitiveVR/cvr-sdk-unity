@@ -40,7 +40,9 @@ namespace CognitiveVR
             OculusTouchLeft,
             OculusTouchRight,
             ViveTracker,
-            ExitPoll
+            ExitPoll,
+            LeapMotionHandLeft,
+            LeapMotionHandRight
         }
 
         [HideInInspector]
@@ -114,6 +116,14 @@ namespace CognitiveVR
             public float EngagementTime = 0;
             public int EngagementNumber;
             //public int EngagementCount = 1; count is figured out by list.count in engagementsDict
+
+            public EngagementEvent(EngagementEvent source)
+            {
+                EngagementType = source.EngagementType;
+                Parent = source.Parent;
+                EngagementTime = source.EngagementTime;
+                EngagementNumber = source.EngagementNumber;
+            }
 
             public EngagementEvent(string name, string parent, int engagementNumber)
             {
@@ -503,11 +513,12 @@ namespace CognitiveVR
                         lastPosition = pos;
                         lastRotation = rot;
                     }
+                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements.Count);
                     for (int i = 0; i < DirtyEngagements.Count; i++)
                     {
                         DirtyEngagements[i].EngagementTime += timeSinceLastCheck;
+                        snapshot.Engagements.Add(new EngagementEvent(DirtyEngagements[i]));
                     }
-                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements);
                 }
                 DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
             }
@@ -1173,9 +1184,9 @@ namespace CognitiveVR
 
                         if (snap.Engagements[i].Parent != "-1")
                         {
-                            builder.Append("\"engagementparent\":");
+                            builder.Append("\"engagementparent\":\"");
                             builder.Append(snap.Engagements[i].Parent);
-                            builder.Append(",");
+                            builder.Append("\",");
                         }
                         builder.Append("\"engagement_time\":");
                         builder.Append(snap.Engagements[i].EngagementTime);
@@ -1194,7 +1205,7 @@ namespace CognitiveVR
 
             return builder.ToString();
         }
-
+        
         void OnDisable()
         {
             if (!Application.isPlaying) { return; }
