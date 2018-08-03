@@ -43,7 +43,7 @@ public class PhysicsGaze : GazeBase {
             string ObjectId = hitDynamic.ObjectId.Id;
             Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-            GazeCore.RecordGazePoint(Util.Timestamp(), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
             return;
         }
 
@@ -54,13 +54,13 @@ public class PhysicsGaze : GazeBase {
             Quaternion rot = CameraTransform.rotation;
 
             //hit world
-            GazeCore.RecordGazePoint(Util.Timestamp(), gazepoint, pos, rot, gpsloc, compass, floorPos);
+            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
         }
         else //hit sky / farclip
         {
             Vector3 pos = CameraTransform.position;
             Quaternion rot = CameraTransform.rotation;
-            GazeCore.RecordGazePoint(Util.Timestamp(), pos, rot, gpsloc, compass, floorPos);
+            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
         }
     }
 

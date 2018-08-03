@@ -43,12 +43,12 @@ public class SphereGaze : GazeBase {
             string ObjectId = hitDynamic.ObjectId.Id;
             Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-            GazeCore.RecordGazePoint(Util.Timestamp(), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
             return;
         }
 
         //hit the sphere
-        GazeCore.RecordGazePoint(Util.Timestamp(), ray.origin + ray.direction * SphereRadius, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+        GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ray.origin + ray.direction * SphereRadius, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
     }
 
     private void OnDestroy()

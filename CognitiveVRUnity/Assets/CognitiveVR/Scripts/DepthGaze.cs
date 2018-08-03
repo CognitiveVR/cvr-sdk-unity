@@ -10,6 +10,12 @@ namespace CognitiveVR
 {
     public class DepthGaze : GazeBase
     {
+        private int Resolution = 64;
+        private ColorSpace colorSpace = ColorSpace.Gamma;
+        private RenderTexture RTex;
+        private Texture2D tex;
+        CognitiveVR.Components.PlayerRecorderHelper helper;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -24,10 +30,9 @@ namespace CognitiveVR
                 helper = CameraTransform.gameObject.AddComponent<CognitiveVR.Components.PlayerRecorderHelper>();
                 helper.Initialize(() => OnHelperPostRender());
                 RTex = new RenderTexture(Resolution, Resolution, 0);
+                colorSpace = QualitySettings.activeColorSpace;
             }
         }
-
-        CognitiveVR.Components.PlayerRecorderHelper helper;
 
         private void CognitiveVR_Manager_TickEvent()
         {
@@ -66,22 +71,25 @@ namespace CognitiveVR
             bool hitworld = GetGazePoint(Resolution, Resolution, out point, CameraComponent.nearClipPlane, CameraComponent.farClipPlane, CameraTransform.forward, CameraTransform.position, screenGazePoint, gazedirection);
             float depthDistance = Vector3.Distance(point, CameraTransform.position);
 
-            if (hitDistance > 0 && hitDistance < depthDistance) //hit a dynamic object further than the scene depth
-            {
-                if (hitworld) //hit world
-                {
-                    GazeCore.RecordGazePoint(Util.Timestamp(), point, CameraTransform.position, CameraTransform.rotation, gpsloc,compass,floorPos);
-                }
-                else //hit skybox
-                {
-                    GazeCore.RecordGazePoint(Util.Timestamp(), CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
-                }
-            }
-            else //hit dynamic
+            if (hitDistance > 0 && hitDistance < depthDistance) //hit a dynamic object closer than the scene depth
             {
                 //TODO check for media
                 hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                GazeCore.RecordGazePoint(Util.Timestamp(), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+                Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
+            }
+            else //didn't hit a dynamic, or hit one further away than the depth buffer
+            {
+                if (hitworld) //hit world
+                {
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), point, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+                    Debug.DrawLine(CameraTransform.position, point, Color.red,1);
+                }
+                else //hit skybox
+                {
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+                    Debug.DrawRay(CameraTransform.position, CameraTransform.forward * CameraComponent.farClipPlane, Color.cyan,1);
+                }
             }
         }
 
@@ -91,11 +99,6 @@ namespace CognitiveVR
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
         }
-
-
-        private int Resolution = 64;
-        private ColorSpace colorSpace = ColorSpace.Linear;
-        private RenderTexture RTex;
 
         //returns the depth adjusted by near/farplanes. without this, gaze distance doesn't scale correctly when looking off center
         private float GetAdjustedDistance(float far, Vector3 gazeDir, Vector3 camForward)
@@ -180,7 +183,6 @@ namespace CognitiveVR
 #endif
         }
 
-        private Texture2D tex;
         private Color GetRTColor(RenderTexture rt, int x, int y)
         {
             if (tex == null)
@@ -188,6 +190,7 @@ namespace CognitiveVR
 #if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
                 tex = new Texture2D(Resolution, Resolution);
 #else
+                //tex = new Texture2D(Resolution, Resolution,TextureFormat.ARGB32, false);
                 tex = new Texture2D(1, 1);
 #endif
             }
@@ -197,8 +200,10 @@ namespace CognitiveVR
 
 #if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR //TODO read 1 pixel from the render texture where the request point is
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
+            //Graphics.CopyTexture(rt, tex);
             var color = tex.GetPixel(x,y);
 #else
+            //Graphics.CopyTexture(rt, tex);
             tex.ReadPixels(new Rect(x, y, 1, 1), 0, 0, false);
             var color = tex.GetPixel(0, 0);
 #endif

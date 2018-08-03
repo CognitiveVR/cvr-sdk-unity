@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Text;
 using System.Collections.Generic;
+using CognitiveVR.External;
 
 namespace CognitiveVR
 {
@@ -238,8 +239,8 @@ namespace CognitiveVR
             builder.Append("\":");
 
             builder.Append("\"");
-            //builder.Concat(intValue);
-            builder.Append(intValue);
+            builder.Concat(intValue);
+            //builder.Append(intValue);
             builder.Append("\"");
 
             return builder;
@@ -253,8 +254,8 @@ namespace CognitiveVR
             builder.Append("\":");
 
             builder.Append("\"");
-            //builder.Concat(floatValue);
-            builder.Append(floatValue);
+            builder.Concat(floatValue);
+            //builder.Append(floatValue);
             builder.Append("\"");
 
             return builder;
@@ -268,8 +269,8 @@ namespace CognitiveVR
             builder.Append("\":");
 
             builder.Append("\"");
-            //builder.ConcatDouble(doubleValue);
-            builder.Append(doubleValue);
+            builder.ConcatDouble(doubleValue);
+            //builder.Append(doubleValue);
             builder.Append("\"");
 
             return builder;
@@ -289,7 +290,7 @@ namespace CognitiveVR
 
             return builder;
         }
-
+        
         /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static StringBuilder SetVector(string name, float[] pos, StringBuilder builder, bool centimeterLimit = false)
         {
@@ -312,14 +313,14 @@ namespace CognitiveVR
             }
             else
             {
-                //builder.Concat(pos[0]);
-                builder.Append(pos[0]);
+                builder.Concat(pos[0]);
+                //builder.Append(pos[0]);
                 builder.Append(",");
-                //builder.Concat(pos[1]);
-                builder.Append(pos[1]);
+                builder.Concat(pos[1]);
+                //builder.Append(pos[1]);
                 builder.Append(",");
-                //builder.Concat(pos[2]);
-                builder.Append(pos[2]);
+                builder.Concat(pos[2]);
+                //builder.Append(pos[2]);
             }
 
             builder.Append("]");
@@ -346,14 +347,14 @@ namespace CognitiveVR
             }
             else
             {
-                //builder.Concat(pos.x);
-                builder.Append(pos.x);
+                builder.Concat(pos.x);
+                //builder.Append(pos.x);
                 builder.Append(",");
-                //builder.Concat(pos.y);
-                builder.Append(pos.y);
+                builder.Concat(pos.y);
+                //builder.Append(pos.y);
                 builder.Append(",");
-                //builder.Concat(pos.z);
-                builder.Append(pos.z);
+                builder.Concat(pos.z);
+                //builder.Append(pos.z);
             }
 
             builder.Append("]");
@@ -367,17 +368,17 @@ namespace CognitiveVR
             builder.Append(name);
             builder.Append("\":[");
 
-            //builder.Concat(quat.x);
-            builder.Append(quat.x);
+            builder.Concat(quat.x);
+            //builder.Append(quat.x);
             builder.Append(",");
-            //builder.Concat(quat.y);
-            builder.Append(quat.y);
+            builder.Concat(quat.y);
+            //builder.Append(quat.y);
             builder.Append(",");
-            //builder.Concat(quat.z);
-            builder.Append(quat.z);
+            builder.Concat(quat.z);
+            //builder.Append(quat.z);
             builder.Append(",");
-            //builder.Concat(quat.w);
-            builder.Append(quat.w);
+            builder.Concat(quat.w);
+            //builder.Append(quat.w);
 
             builder.Append("]");
             return builder;
@@ -392,17 +393,17 @@ namespace CognitiveVR
             builder.Append(name);
             builder.Append("\":[");
 
-            //builder.Concat(quat[0]);
-            builder.Append(quat[0]);
+            builder.Concat(quat[0]);
+            //builder.Append(quat[0]);
             builder.Append(",");
-            //builder.Concat(quat[1]);
-            builder.Append(quat[1]);
+            builder.Concat(quat[1]);
+            //builder.Append(quat[1]);
             builder.Append(",");
-            //builder.Concat(quat[2]);
-            builder.Append(quat[2]);
+            builder.Concat(quat[2]);
+            //builder.Append(quat[2]);
             builder.Append(",");
-            //builder.Concat(quat[3]);
-            builder.Append(quat[3]);
+            builder.Concat(quat[3]);
+            //builder.Append(quat[3]);
 
             builder.Append("]");
             return builder;

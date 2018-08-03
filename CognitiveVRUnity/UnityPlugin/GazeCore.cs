@@ -13,7 +13,6 @@ namespace CognitiveVR
         Command, //command buffer
         Depth, //classic depth rendering
         Sphere, //inverted sphere media
-        SkyboxMedia //360 skybox setup
     }
 
     public static class GazeCore
@@ -39,7 +38,7 @@ namespace CognitiveVR
             HMDName = hmdname;
         }
 
-        ///world position
+        ///sky position
         public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at the camera far plane
         {
             gazebuilder.Append("{");
@@ -114,7 +113,7 @@ namespace CognitiveVR
             }
         }
 
-        //gaze at sky
+        //world position
         public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at world
         {
             gazebuilder.Append("{");
@@ -152,7 +151,7 @@ namespace CognitiveVR
         }
 
         //looking at a media dynamic object
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatime, Vector3 floorPos)
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatime, Vector2 uvs, Vector3 floorPos)
         {
 
         }
@@ -168,8 +167,6 @@ namespace CognitiveVR
             gazebuilder.Append("],");
 
             gazeCount =0;
-
-            //add properties!
 
             //header
             JsonUtil.SetString("userid", Core.UniqueID, gazebuilder);
@@ -196,10 +193,10 @@ namespace CognitiveVR
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
-            gazebuilder.Append(",");
             
             if (Core.GetNewSessionProperties(false).Count > 0)
             {
+                gazebuilder.Append(",");
                 gazebuilder.Append("\"properties\":{");
                 foreach (var kvp in Core.GetNewSessionProperties(true))
                 {
@@ -216,14 +213,16 @@ namespace CognitiveVR
                 gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
                 gazebuilder.Append("}");
             }
+            gazebuilder.Append("}");
 
             var sceneSettings = Core.TrackingScene;
             string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
 
-            gazebuilder.Length = 0;
-            gazebuilder.Append("{\"data\":[");
+            //gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
+            gazebuilder.Length = 9;
+            //gazebuilder.Append("{\"data\":[");
         }
     }
 }

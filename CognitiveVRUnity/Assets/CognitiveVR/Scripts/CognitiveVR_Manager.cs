@@ -93,7 +93,7 @@ namespace CognitiveVR
             switch (CognitiveVR_Preferences.Instance.GazeType)
             {
                 case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
-                //case GazeType.Command: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
+                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                 case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
                 case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
@@ -664,7 +664,7 @@ namespace CognitiveVR
         /// </summary>
         public void EndSession()
         {
-            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
+            double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
 
             Core.SendDataEvent();
@@ -779,7 +779,7 @@ namespace CognitiveVR
 
             if (InitResponse != Error.Success) { return; }
 
-            double playtime = Util.Timestamp() - Core.SessionTimeStamp;
+            double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             if (QuitEvent == null)
             {
 				CognitiveVR.Util.logDebug("session length " + playtime);
