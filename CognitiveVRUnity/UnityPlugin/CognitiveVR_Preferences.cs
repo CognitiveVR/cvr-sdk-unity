@@ -56,6 +56,8 @@ namespace CognitiveVR
         public string Viewer = "sceneexplorer.com/scene/";
 
         public GazeType GazeType;
+        //0 is multipass, 1 is single pass, 2 is singlepass instanced
+        public int RenderPassType;
 
         public bool IsAPIKeyValid
         {

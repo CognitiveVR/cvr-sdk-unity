@@ -10,9 +10,38 @@ namespace CognitiveVR
     public class PreferencesInspector : Editor
     {
         bool gpsFoldout;
+        bool hasCheckedRenderType = false;
+
+        [UnityEditor.Callbacks.DidReloadScripts]
+        public static void CheckGazeRenderType()
+        {
+            var p = EditorCore.GetPreferences();
+
+            if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
+            {
+                p.RenderPassType = 0;
+                EditorUtility.SetDirty(p);
+            }
+            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.SinglePass && p.RenderPassType != 1)
+            {
+                p.RenderPassType = 1;
+                EditorUtility.SetDirty(p);
+            }
+            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.Instancing)
+            {
+                if (p.GazeType == GazeType.Command)
+                    Debug.LogError("Cognitive3D Analytics does not support Command Buffer Gaze with SinglePass (Instanced) stereo rendering. Please change the gaze type in Cognitive3D->Advanced Options menu");
+            }
+        }
 
         public override void OnInspectorGUI()
         {
+            if (!hasCheckedRenderType)
+            {
+                CheckGazeRenderType();
+                hasCheckedRenderType = true;
+            }
+
             var p = (CognitiveVR_Preferences)target;
 
             p.APIKey = EditorGUILayout.TextField("API Key", p.APIKey);
@@ -20,7 +49,11 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
-            p.GazeType = (GazeType)EditorGUILayout.EnumPopup("gaze type", p.GazeType);
+            p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
+            if (GUI.changed)
+            {
+                CheckGazeRenderType();
+            }
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 

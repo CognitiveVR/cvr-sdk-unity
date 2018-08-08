@@ -36,6 +36,8 @@ namespace CognitiveVR
         }
 #endif
 
+        public static Vector3 LastGazePoint;
+
         protected Camera cam;
         protected Camera CameraComponent
         {

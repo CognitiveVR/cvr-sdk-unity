@@ -135,7 +135,7 @@ namespace CognitiveVR
             snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution-1);
 
             var color = GetRTColor(RTex, (int)snapshotPixel.x, (int)snapshotPixel.y);
-            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+            if (colorSpace == ColorSpace.Linear)
             {
                 relativeDepth = color.linear.r; //does running the color through this linear multiplier cause NaN issues? GetAdjustedDistance passed in essentially 0?
             }
@@ -150,9 +150,9 @@ namespace CognitiveVR
                 return false;
             }
 
-            float actualDepth = GetAdjustedDistance(FarDepth, GazeDirection, HMDForward);
-            float actualDistance = Mathf.Lerp(NearDepth, actualDepth, relativeDepth);
-            gazeWorldPoint = Position + GazeDirection * actualDistance;
+            float actualDepth = GetAdjustedDistance(fardepth, GazeDirection, hmdforward);
+            float actualDistance = Mathf.Lerp(neardepth, actualDepth, relativeDepth);
+            gazeWorldPoint = hmdpos + GazeDirection * actualDistance;
             return true;
 #else
             float relativeDepth = 0;

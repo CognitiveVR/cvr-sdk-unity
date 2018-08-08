@@ -64,7 +64,7 @@ public class CommandGaze : GazeBase {
     private void CognitiveVR_Manager_TickEvent()
     {
         Ray ray = new Ray(CameraTransform.position, GetWorldGazeDirection());
-        helper.Begin(ray);
+        helper.Begin(ray,GetScreenGazePoint());
     }
 
     void OnHelperPostRender(Ray ray, Vector3 gazepoint)
@@ -104,6 +104,7 @@ public class CommandGaze : GazeBase {
             //hit world
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos+gazepoint, pos, rot, gpsloc, compass, floorPos);
             Debug.DrawLine(pos, pos + gazepoint, Color.red, 1);
+            LastGazePoint = pos + gazepoint;
         }
     }
 
