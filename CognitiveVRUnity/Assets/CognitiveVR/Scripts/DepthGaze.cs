@@ -31,6 +31,7 @@ namespace CognitiveVR
                 helper.Initialize(() => OnHelperPostRender());
                 RTex = new RenderTexture(Resolution, Resolution, 0);
                 colorSpace = QualitySettings.activeColorSpace;
+                helper.enabled = false;
             }
         }
 
