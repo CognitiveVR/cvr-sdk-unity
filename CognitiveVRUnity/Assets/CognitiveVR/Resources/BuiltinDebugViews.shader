@@ -32,7 +32,7 @@ Shader "Hidden/Post FX/Builtin Debug Views"
             float3 d = depth.xxx;
             
         #if !UNITY_COLORSPACE_GAMMA
-            d = GammaToLinearSpace(d);
+            //d = GammaToLinearSpace(d);
         #endif
 
             return float4(d, 1.0);
