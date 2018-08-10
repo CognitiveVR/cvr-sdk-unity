@@ -63,8 +63,11 @@ public class CommandGaze : GazeBase {
 
     private void CognitiveVR_Manager_TickEvent()
     {
-        Ray ray = new Ray(CameraTransform.position, GetWorldGazeDirection());
-        helper.Begin(ray,GetScreenGazePoint());
+        Vector3 viewport = GetViewportGazePoint();
+        viewport.z = 100;
+        var viewportray = CameraComponent.ViewportPointToRay(viewport);
+
+        helper.Begin(GetViewportGazePoint(), viewportray);
     }
 
     void OnHelperPostRender(Ray ray, Vector3 gazepoint)

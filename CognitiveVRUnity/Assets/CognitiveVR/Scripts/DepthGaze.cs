@@ -67,7 +67,7 @@ namespace CognitiveVR
             //get depth world point
             Vector3 point;
             Vector3 gazedirection = GetWorldGazeDirection();
-            Vector2 screenGazePoint = GetScreenGazePoint();
+            Vector2 screenGazePoint = GetViewportGazePoint();
             bool hitworld = GetGazePoint(Resolution, Resolution, out point, CameraComponent.nearClipPlane, CameraComponent.farClipPlane, CameraTransform.forward, CameraTransform.position, screenGazePoint, gazedirection);
             float depthDistance = Vector3.Distance(point, CameraTransform.position);
 

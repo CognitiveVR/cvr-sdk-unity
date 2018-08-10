@@ -255,7 +255,7 @@ namespace CognitiveVR
             return gazeDirection;
         }
 
-        public Vector3 GetScreenGazePoint()
+        public Vector3 GetViewportGazePoint()
         {
             Vector2 screenGazePoint = Vector2.one * 0.5f;
 
