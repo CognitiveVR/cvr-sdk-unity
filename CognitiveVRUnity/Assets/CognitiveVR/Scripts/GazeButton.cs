@@ -47,31 +47,82 @@ namespace CognitiveVR
             _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
+            if (lastSearchFrame != Time.frameCount && pointer == null)
+            {
+                lastSearchFrame = Time.frameCount;
+                pointer = FindObjectOfType<ExitPollPointer>();
+            }
         }
+
+        static ExitPollPointer pointer;
+        static int lastSearchFrame = -1;
 
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
         void Update()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (OnLook == null) { return; }
+            if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
 
-            if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
+            if (pointer == null)
             {
-                _currentLookTime += Time.deltaTime;
-                UpdateFillAmount();
+                //use hmd
+                if (CognitiveVR_Manager.HMD == null) { return; }
 
-                //maybe also scale button slightly if it has focus
-
-                if (_currentLookTime >= LookTime)
+                if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
                 {
-                    ActivateAction();
+                    _currentLookTime += Time.deltaTime;
+                    UpdateFillAmount();
+
+                    //maybe also scale button slightly if it has focus
+
+                    if (_currentLookTime >= LookTime)
+                    {
+                        ActivateAction();
+                    }
+                }
+                else if (_currentLookTime > 0)
+                {
+                    _currentLookTime = 0;
+                    UpdateFillAmount();
                 }
             }
-            else if (_currentLookTime > 0)
+            else //use pointer
             {
-                _currentLookTime = 0;
-                UpdateFillAmount();
+                var tt = Vector3.Dot(pointer.transform.forward, (_transform.position - pointer.transform.position).normalized);
+                if (tt > _theta) //pointing at the button
+                {
+                    pointer.Target = transform;
+                    _currentLookTime += Time.deltaTime;
+                    UpdateFillAmount();
+
+                    if (_currentLookTime >= LookTime)
+                    {
+                        ActivateAction();
+                    }
+                }
+                else if (tt < _theta * pointer.Stiffness && pointer.Target == transform) //bendy line pointing too far away from button
+                {
+                    pointer.Target = null;
+                }
+                else if (pointer.Target != transform) //selection is not this
+                {
+                    if (_currentLookTime > 0)
+                    {
+                        _currentLookTime = 0;
+                        UpdateFillAmount();
+                    }
+                }
+                else //pointing nearby button
+                {
+                    _currentLookTime += Time.deltaTime;
+                    UpdateFillAmount();
+
+                    if (_currentLookTime >= LookTime)
+                    {
+                        ActivateAction();
+                    }
+                }
             }
         }
 
@@ -83,6 +134,8 @@ namespace CognitiveVR
         public void ActivateAction()
         {
             OnLook.Invoke();
+            if (pointer != null)
+                pointer.Target = null;
         }
 
         public void ClearAction()

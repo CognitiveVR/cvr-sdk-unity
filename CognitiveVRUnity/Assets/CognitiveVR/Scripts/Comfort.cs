@@ -57,7 +57,6 @@ namespace CognitiveVR.Components
         float accum;
         int frames;
         bool lowFramerate;
-        string fpsTransactionID;
         float lastFps;
         void UpdateFramerate()
         {
@@ -86,7 +85,6 @@ namespace CognitiveVR.Components
             if (lastFps < LowFramerateThreshold && !lowFramerate)
             {
                 lowFramerate = true;
-                fpsTransactionID = Util.GetUniqueId();
                 new CustomEvent("cvr.performance").SetProperty("fps", lastFps).Send();
                 Util.logDebug("low framerate");
             }

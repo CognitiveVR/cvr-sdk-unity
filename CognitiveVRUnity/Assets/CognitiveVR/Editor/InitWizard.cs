@@ -147,6 +147,9 @@ public class InitWizard : EditorWindow
 #if CVR_PUPIL
             selectedsdks.Add("CVR_PUPIL");
 #endif
+#if CVR_TOBIIVR
+        selectedsdks.Add("CVR_TOBIIVR");
+#endif
 #if CVR_ARKIT //apple
             selectedsdks.Add("CVR_ARKIT");
 #endif
@@ -165,13 +168,13 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META" };
 
         for(int i = 0;i <sdknames.Count;i++)
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
-            if (GUI.Button(new Rect(30, i * 32 + 120, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            if (GUI.Button(new Rect(30, i * 32 + 110, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -190,7 +193,7 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32 + 120, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(new Rect(420, i * 32 + 110, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
         }
     }
 

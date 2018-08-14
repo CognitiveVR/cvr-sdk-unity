@@ -346,6 +346,67 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return true;
     }
 
+    public static void UploadScreenshot()
+    {
+        //get scene id
+        var currentScene = CognitiveVR_Preferences.FindCurrentScene();
+        if (currentScene == null)
+        {
+            Debug.Log("Could not find current scene");
+            return;
+        }
+        if (string.IsNullOrEmpty(currentScene.SceneId))
+        {
+            Debug.Log(currentScene.SceneName + " scene has not been uploaded!");
+            return;
+        }
+
+
+        //file popup
+        string path = EditorUtility.OpenFilePanel("Select Screenshot", "", "png");
+        if (path.Length == 0)
+        {
+            return;
+        }
+        
+        string filename = Path.GetFileName(path);
+
+        if (EditorUtility.DisplayDialog("Upload Screenshot","Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber+"?","Upload","Cancel"))
+        {
+            string url = Constants.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
+
+            var bytes = File.ReadAllBytes(path);
+
+            WWWForm form = new WWWForm();
+            form.AddBinaryData("screenshot", bytes, "screenshot.png");
+
+            var headers = new Dictionary<string, string>();
+
+            foreach (var v in form.headers)
+            {
+                headers[v.Key] = v.Value;
+            }
+
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+            EditorNetwork.Post(url, form, UploadScreenhotResponse, headers, false);
+        }
+    }
+
+    static void UploadScreenhotResponse(int responsecode, string error, string text)
+    {
+        if (responsecode == 200)
+        {
+            EditorUtility.DisplayDialog("Upload Complete", "Screenshot uploaded successfully", "Ok");
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("Upload Fail", "Screenshot was not uploaded successfully.\nError " + error, "Ok");
+            Debug.LogError("Failed to upload screenshot. Error " + error);
+        }
+    }
+
     public static bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
     {
         if (cachedScreenshot)

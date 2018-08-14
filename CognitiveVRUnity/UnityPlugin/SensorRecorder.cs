@@ -103,20 +103,23 @@ namespace CognitiveVR
 
         #region json
 
+        static StringBuilder sbdatapoint = new StringBuilder(256);
         //put this into the list of saved sensor data based on the name of the sensor
         private static string GetSensorDataToString(double timestamp, double sensorvalue)
         {
-            StringBuilder sb = new StringBuilder(1024);
+            //TODO test if string concatenation is just faster/less garbage
 
-            sb.Append("[");
+            sbdatapoint.Length = 0;
+
+            sbdatapoint.Append("[");
             //sb.ConcatDouble(timestamp);
-            sb.Append(timestamp);
-            sb.Append(",");
+            sbdatapoint.Append(timestamp);
+            sbdatapoint.Append(",");
             //sb.ConcatDouble(sensorvalue);
-            sb.Append(sensorvalue);
-            sb.Append("]");
+            sbdatapoint.Append(sensorvalue);
+            sbdatapoint.Append("]");
 
-            return sb.ToString();
+            return sbdatapoint.ToString();
         }
 
         #endregion

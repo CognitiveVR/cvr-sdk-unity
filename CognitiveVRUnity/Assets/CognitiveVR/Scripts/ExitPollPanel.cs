@@ -39,7 +39,7 @@ namespace CognitiveVR
         //bool _completed = false;
 
         //delays input so player can understand the popup interface before answering
-        float ResponseDelayTime = 2;
+        float ResponseDelayTime = 0.1f;
         float NextResponseTime;
         public bool NextResponseTimeValid
         {
@@ -53,6 +53,7 @@ namespace CognitiveVR
 
         GameObject _reticule;
         float _remainingTime; //before timeout
+        public bool IsClosing { get { return _isclosing; } }
         bool _isclosing; //has timed out/answered/skipped but still animating?
         bool _allowTimeout; //used by microphone to disable timeout
 
@@ -116,8 +117,6 @@ namespace CognitiveVR
                 UpdateTimeoutBar();
             }
 
-            _transform.rotation = Quaternion.LookRotation(_transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
-
             //display question from properties
 
             if (Title != null)
@@ -147,6 +146,9 @@ namespace CognitiveVR
                 {
                     SetMutltipleChoiceButton(split[i],i,AnswerButtons[i]);
                 }
+                var c = GetComponent<BoxCollider>();
+                if (c != null)
+                    c.size = new Vector3(2, 0.75f + split.Length * 0.3f, 0.1f);
             }
             else if (properties["type"] == "SCALE")
             {
@@ -279,7 +281,7 @@ namespace CognitiveVR
                 while (normalizedTime < 1)
                 {
                     normalizedTime += Time.deltaTime / PopupTime;
-                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime));
+                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime), XScale.Evaluate(normalizedTime));
                     yield return null;
                 }
                 _panel.localScale = Vector3.one;
@@ -311,7 +313,8 @@ namespace CognitiveVR
                 while (normalizedTime > 0)
                 {
                     normalizedTime -= Time.deltaTime / PopupTime;
-                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime));
+                    _panel.localScale = new Vector3(XScale.Evaluate(normalizedTime), YScale.Evaluate(normalizedTime), XScale.Evaluate(normalizedTime));
+                    _panel.localPosition += transform.forward * Time.deltaTime* 0.1f;
                     yield return null;
                 }
                 _panel.localScale = Vector3.zero;
@@ -411,8 +414,21 @@ namespace CognitiveVR
                         float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
 
                         _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
-                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, CognitiveVR_Manager.HMD.up), 0.1f);
+                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, Vector3.up), 0.1f);
                     }
+                }
+
+                //clamp distance
+                float dist = Vector3.Distance(_transform.position, CognitiveVR_Manager.HMD.position);
+                if (dist > QuestionSet.DisplayDistance)
+                {
+                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.DisplayDistance;
+                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
+                }
+                else if (dist < QuestionSet.MinimumDisplayDistance)
+                {
+                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.MinimumDisplayDistance;
+                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
                 }
             }
         }

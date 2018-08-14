@@ -9,6 +9,10 @@ public class GazeReticle : MonoBehaviour
     public float Speed = 0.3f;
     public float Distance = 3;
 
+#if CVR_TOBIIVR
+    private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
+#endif
+
 #if CVR_FOVE
     FoveInterface _foveInstance;
     FoveInterface FoveInstance
@@ -112,6 +116,31 @@ public class GazeReticle : MonoBehaviour
         var eyeRays = FoveInstance.GetGazeRays();
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
         return v.normalized;
+    }
+#elif CVR_TOBIIVR
+    void Start()
+    {
+        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+        _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
+        if (CognitiveVR_Manager.HMD == null) { return; }
+    }
+
+    void Update()
+    {
+        if (CognitiveVR_Manager.HMD == null) { return; }
+
+        t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(CognitiveVR_Manager.HMD.position);
+    }
+
+    Vector3 GetLookDirection()
+    {
+        if (_eyeTracker == null)
+        {
+            return CognitiveVR_Manager.HMD.forward;
+        }
+        var eyeray = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld;
+        return eyeray.direction.normalized;
     }
 #endif
 }
