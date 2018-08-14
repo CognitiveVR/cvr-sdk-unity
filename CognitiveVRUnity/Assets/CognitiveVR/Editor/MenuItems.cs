@@ -7,7 +7,13 @@ namespace CognitiveVR
 {
     public class MenuItems
     {
-        [MenuItem("cognitive3D/Add Cognitive Manager", priority = 0)]
+#if CVR_NEURABLE
+        public const string Menu = "Neurable/cognitive3D/";
+#else
+        public const string Menu = "cognitive3D/";
+#endif
+
+        [MenuItem(Menu + "Add Cognitive Manager", priority = 0)]
         static void Cognitive3DManager()
         {
             var found = Object.FindObjectOfType<CognitiveVR_Manager>();
@@ -27,33 +33,33 @@ namespace CognitiveVR
             }
         }
 
-        [MenuItem("cognitive3D/Open Web Dashboard...", priority = 5)]
+        [MenuItem(Menu + "Open Web Dashboard...", priority = 5)]
         static void Cognitive3DDashboard()
         {
-            Application.OpenURL("https://"+CognitiveVR_Preferences.Instance.Dashboard);
+            Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
         }
 
-        [MenuItem("cognitive3D/Check for Updates...", priority = 10)]
+        [MenuItem(Menu + "Check for Updates...", priority = 10)]
         static void CognitiveCheckUpdates()
         {
             EditorCore.ForceCheckUpdates();
         }
 
-        [MenuItem("cognitive3D/Scene Setup", priority = 55)]
+        [MenuItem(Menu + "Scene Setup", priority = 55)]
         static void Cognitive3DSceneSetup()
         {
             //open window
             InitWizard.Init();
         }
 
-        [MenuItem("cognitive3D/Manage Dynamic Objects", priority = 60)]
+        [MenuItem(Menu + "Manage Dynamic Objects", priority = 60)]
         static void Cognitive3DManageDynamicObjects()
         {
             //open window
             ManageDynamicObjects.Init();
         }
 
-        [MenuItem("cognitive3D/Advanced Options", priority = 65)]
+        [MenuItem(Menu + "Advanced Options", priority = 65)]
         static void Cognitive3DOptions()
         {
             //select asset

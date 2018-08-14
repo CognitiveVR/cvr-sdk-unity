@@ -179,7 +179,7 @@ public class InitWizard : EditorWindow
         for(int i = 0;i <sdknames.Count;i++)
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
-            if (GUI.Button(new Rect(30, i * 32 + 110, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            if (GUI.Button(new Rect(30, i * 32 + 100, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -198,7 +198,7 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32 + 110, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(new Rect(420, i * 32 + 100, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
         }
     }
 
