@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 using CognitiveVR;
 
+namespace CognitiveVR
+{
 public class ManageDynamicObjects : EditorWindow
 {
     Rect steptitlerect = new Rect(30, 0, 100, 440);
@@ -456,4 +458,5 @@ public class ManageDynamicObjects : EditorWindow
             EditorUtility.DisplayDialog("Error", "One or more Dynamic Objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
         }
     }
+}
 }

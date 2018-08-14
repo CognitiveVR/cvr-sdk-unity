@@ -18,11 +18,12 @@ namespace CognitiveVR
             }
             else
             {
-                //spawn prefab
-                GameObject newManager = new GameObject("CognitiveVR_Manager");
-                Selection.activeGameObject = newManager;
-                Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                newManager.AddComponent<CognitiveVR_Manager>();
+                string gameobjectName = "CognitiveVR_Manager";
+#if CVR_NEURABLE
+                gameobjectName = "Neurable Cognitive Engine";
+#endif
+
+                EditorCore.SpawnManager(gameobjectName);
             }
         }
 

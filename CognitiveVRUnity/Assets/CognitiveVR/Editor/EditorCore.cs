@@ -13,6 +13,8 @@ using System.IO;
 //check for sdk updates
 //pre/post build inferfaces
 
+namespace CognitiveVR
+{
 [InitializeOnLoad]
 public class EditorCore: IPreprocessBuild, IPostprocessBuild
 {
@@ -30,6 +32,20 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         EditorPrefs.SetBool("cognitive_init_popup", true);
     }
 
+    public static void SpawnManager(string gameobjectName)
+    {
+        GameObject newManager = new GameObject(gameobjectName);
+        Selection.activeGameObject = newManager;
+        Undo.RegisterCreatedObjectUndo(newManager, "Create "+ gameobjectName);
+        newManager.AddComponent<CognitiveVR_Manager>();
+
+#if CVR_NEURABLE
+        if (GameObject.FindObjectOfType<NeurableUnity.NeurableAffectiveStateEngine>() == null)
+            newManager.AddComponent<NeurableUnity.NeurableAffectiveStateEngine>();
+        if (GameObject.FindObjectOfType<NeurableUnity.FixationEngine>() == null)
+            newManager.AddComponent<NeurableUnity.FixationEngine>();
+#endif
+    }
     public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
 
     static GUIStyle headerStyle;
@@ -1032,4 +1048,5 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
     }
     #endregion
+}
 }
