@@ -607,7 +607,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
     /// get collection of versions of scene
     /// </summary>
     /// <param name="refreshSceneVersionComplete"></param>
-    [MenuItem("cognitive3D/Refresh Media")]
     public static void RefreshMediaSources()
     {
         Debug.Log("refresh media sources");

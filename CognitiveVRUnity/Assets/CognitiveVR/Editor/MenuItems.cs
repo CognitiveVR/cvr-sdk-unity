@@ -72,5 +72,11 @@ namespace CognitiveVR
             //select asset
             Selection.activeObject = EditorCore.GetPreferences();
         }
+
+        [MenuItem(Menu + "Refresh Media", priority = 110)]
+        static void RefreshMediaSources()
+        {
+            EditorCore.RefreshMediaSources();
+        }
     }
 }

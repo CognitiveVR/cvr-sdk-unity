@@ -51,9 +51,12 @@ public class Setup360Window : EditorWindow
         }
         _choiceIndex = EditorGUILayout.Popup("Select Media Source", _choiceIndex, displayOptions);
 
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Description:", GUILayout.Width(100));
         EditorGUI.BeginDisabledGroup(true);
         EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
         EditorGUI.EndDisabledGroup();
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(20);
         GUILayout.BeginHorizontal();
@@ -165,6 +168,9 @@ public class Setup360Window : EditorWindow
             camMain.transform.position = Vector3.zero;
         }
 
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         Selection.activeGameObject = sphere;
+
+        Close();
     }
 }
