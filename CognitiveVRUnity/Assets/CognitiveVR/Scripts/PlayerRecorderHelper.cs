@@ -39,13 +39,14 @@ namespace CognitiveVR.Components
 
         YieldInstruction endOfFrame = new WaitForEndOfFrame();
 
+        int LastRenderedFrame;
+
         public IEnumerator OnPostRender()
         {
+            if (LastRenderedFrame == Time.frameCount) { yield break; }
+            LastRenderedFrame = Time.frameCount;
             yield return endOfFrame;
-            if (CognitiveVR_Preferences.S_TrackGazePoint)
-            {
-                CognitiveVR_Manager.Instance.TickPostRender();
-            }
+            CognitiveVR_Manager.Instance.TickPostRender();
         }
 
         //steamvr freezes unity if this is enabled in unity 5.4

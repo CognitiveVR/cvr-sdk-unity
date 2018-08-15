@@ -566,6 +566,90 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         }
     }
 
+    //static System.Action RefreshSceneVersionComplete;
+    /// <summary>
+    /// get collection of versions of scene
+    /// </summary>
+    /// <param name="refreshSceneVersionComplete"></param>
+    [MenuItem("cognitive3D/Refresh Media")]
+    public static void RefreshMediaSources()
+    {
+        Debug.Log("refresh media sources");
+        //gets the scene version from api and sets it to the current scene
+        string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+        var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
+        if (currentSettings != null)
+        {
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            if (currentSettings == null)
+            {
+                Debug.Log("SendSceneVersionRequest no scene settings!");
+                return;
+            }
+            string url = Constants.GETMEDIASOURCELIST();
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+            EditorNetwork.Get(url, GetMediaSourcesResponse, headers, true, "Get Scene Version");//AUTH
+        }
+        else
+        {
+            Debug.Log("No scene versions for scene: " + currentSceneName);
+        }
+    }
+
+    private static void GetMediaSourcesResponse(int responsecode, string error, string text)
+    {
+        if (responsecode != 200)
+        {
+            RefreshSceneVersionComplete = null;
+            //internal server error
+            Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
+            return;
+        }
+        //var settings = CognitiveVR_Preferences.FindCurrentScene();
+        //if (settings == null)
+        //{
+        //    //this should be impossible, but might happen if changing scenes at exact time
+        //    RefreshSceneVersionComplete = null;
+        //    Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
+        //    return;
+        //}
+        SetMediaSources(text);
+    }
+
+    [Serializable]
+    public class MediaSource
+    {
+        public string name;
+        public string uploadId;
+        public string description;
+    }
+
+    public static MediaSource[] MediaSources = new MediaSource[] {};
+
+    [UnityEditor.Callbacks.DidReloadScripts]
+    public static void SetMediaSourcesFromEditorPrefs()
+    {
+        if (EditorPrefs.HasKey("cognitive_mediasources"))
+        {
+            SetMediaSources(EditorPrefs.GetString("cognitive_mediasources"));
+        }
+    }
+
+    public static void SetMediaSources(string rawmediasources)
+    {
+        MediaSource[] sources = JsonUtil.GetJsonArray<MediaSource>(rawmediasources);
+        Debug.Log("Response contains " + sources.Length + " media sources");
+
+        UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
+        MediaSources = sources;
+        //EditorPrefs.SetString("cognitive_mediasources", rawmediasources);
+    }
+
     #region GUI
     /// <summary>
     /// vibrant accept color for buttons

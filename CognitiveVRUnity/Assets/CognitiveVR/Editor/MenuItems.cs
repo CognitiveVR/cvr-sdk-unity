@@ -45,6 +45,13 @@ namespace CognitiveVR
             InitWizard.Init();
         }
 
+        [MenuItem("cognitive3D/360 Setup", priority = 56)]
+        static void Cognitive3D360Setup()
+        {
+            //open window
+            Setup360Window.Init();
+        }
+
         [MenuItem("cognitive3D/Manage Dynamic Objects", priority = 60)]
         static void Cognitive3DManageDynamicObjects()
         {

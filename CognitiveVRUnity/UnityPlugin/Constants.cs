@@ -57,6 +57,12 @@ namespace CognitiveVR
         //UNITY where the user goes to download the sdk
         public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
 
+        //GET media source list
+        public static string GETMEDIASOURCELIST()
+        {
+            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/media");
+        }
+
         //session urls
 
         //POST dynamics json data to scene explorer

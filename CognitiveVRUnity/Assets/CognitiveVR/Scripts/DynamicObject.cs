@@ -42,7 +42,9 @@ namespace CognitiveVR
             ViveTracker,
             ExitPoll,
             LeapMotionHandLeft,
-            LeapMotionHandRight
+            LeapMotionHandRight,
+            VideoSphereLatitude,
+            VideoSphereCubemap
         }
 
         [HideInInspector]
