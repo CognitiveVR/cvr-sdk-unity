@@ -57,7 +57,7 @@ namespace CognitiveVR
             CheckCameraSettings();
 
             PlayerSnapshot.colorSpace = QualitySettings.activeColorSpace;
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
             PlayerSnapshot.tex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
 #else
             PlayerSnapshot.tex = new Texture2D(1, 1);
@@ -131,7 +131,7 @@ namespace CognitiveVR
             var hmd = HMD;
             if (hmd == null)
             {
-                Util.logDebug("PlayerRecorder CheckCameraSettings HMD is null");
+                Util.logError("PlayerRecorder CheckCameraSettings HMD is null");
                 return;
             }
 
@@ -243,25 +243,17 @@ namespace CognitiveVR
             //doPostRender = true;
             RequestDynamicObjectGaze();
 
-            if (CognitiveVR_Preferences.S_TrackGazePoint)
-            {
-                periodicRenderer.enabled = true;
-                rt = periodicRenderer.DoRender(rt);
-                periodicRenderer.enabled = false;
-            }
-            else
-            {
-                TickPostRender();
-                //StartCoroutine(periodicRenderer.EndOfFrame());
-            }
+            periodicRenderer.enabled = true;
+            rt = periodicRenderer.DoRender(rt);
+            periodicRenderer.enabled = false;
         }
 
         //only used with !prefs.S_TrackGazePoint
-        static DynamicObject VideoSphere;
+        //static DynamicObject VideoSphere;
 
         //dynamic object
         //static bool HasHitDynamic = true;
-        static void RequestDynamicObjectGaze()
+        void RequestDynamicObjectGaze()
         {
             var hmd = HMD;
             RaycastHit hit = new RaycastHit();
@@ -289,55 +281,15 @@ namespace CognitiveVR
             gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #endif
             float maxDistance = 1000;
-            DynamicObjectId sphereId = null;
-            if (!CognitiveVR_Preferences.S_TrackGazePoint)
-            {
-                if (!string.IsNullOrEmpty(CognitiveVR_Preferences.S_VideoSphereDynamicObjectId))
-                {
-                    if (sphereId == null)
-                    {
-                        //find the object with the preset video sphere id
-                        //objectids get cleared and refreshed each scene change
 
-                        sphereId = DynamicObject.ObjectIds.Find(delegate (DynamicObjectId obj)
-                        {
-                            return obj.Id == CognitiveVR_Preferences.S_VideoSphereDynamicObjectId;
-                        });
-                    }
-                }
-
-                if (sphereId != null)
-                {
-                    maxDistance = CognitiveVR_Preferences.S_GazeDirectionMultiplier;
-                    if (VideoSphere == null)
-                    {
-                        var dynamics = FindObjectsOfType<DynamicObject>();
-                        for (int i = 0; i < dynamics.Length; i++)
-                        {
-                            if (dynamics[i].ObjectId == sphereId)
-                            {
-                                VideoSphere = dynamics[i];
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    //no video sphere
-                }
-            }
-
-            Instance.postRenderHitPos = Vector3.zero;
-            instance.postRenderHitWorldPos = Vector3.zero;
-            Instance.postRenderId = "";
-            //Instance.postRenderDist = 999;
-            Instance.hitType = DynamicHitType.None;
-            
+            postRenderHitPos = Vector3.zero;
+            postRenderHitWorldPos = Vector3.zero;
+            postRenderId = "";
+            hitType = DynamicHitType.None;
+            postRenderMediaComponent = null;
             DynamicObject PhysicsdynamicHit = null;
             float PhysicsHitDistance = Instance.cam.farClipPlane;
             Vector3 PhysicsHitPoint = Vector3.zero;
-            bool didHitAnything = false;
 
             //radius should be the size of the resolution pixel relative to screen size. ie lower resolution snapshot = larger radius
             //this can't work with a spherecast based on pixel size - a pixel represents a different amount of space at distance because of perspective
@@ -362,7 +314,6 @@ namespace CognitiveVR
             }
             if (!hitDynamic && Physics.SphereCast(HMD.position, radius, gazeDirection, out hit, maxDistance))
             {
-                didHitAnything = true;
                 if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {
                     PhysicsdynamicHit = hit.collider.GetComponentInParent<DynamicObject>();
@@ -380,6 +331,12 @@ namespace CognitiveVR
 
             if (hitDynamic)
             {
+                postRenderMediaComponent = hit.collider.GetComponent<MediaComponent>();
+                if (postRenderMediaComponent)
+                {
+                    postRenderUVs = hit.textureCoord;
+                }
+
                 PhysicsHitDistance = hit.distance;
                 PhysicsHitPoint = hit.point;
 
@@ -425,22 +382,6 @@ namespace CognitiveVR
                 }
 #endif
             }
-
-            if (!didHitAnything)// && results.Count == 0) //nothing hit
-            {
-                if (sphereId != null)
-                {
-                    //instance.TickPostRender(gazeDirection * maxDistance, CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId, WorldHitDistance);
-                    instance.postRenderHitPos = gazeDirection * maxDistance;
-                    instance.postRenderId = CognitiveVR_Preferences.Instance.VideoSphereDynamicObjectId;
-                    //instance.postRenderDist = WorldHitDistance;
-                    if (VideoSphere != null)
-                    {
-                        VideoSphere.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                    }
-                    //HasHitDynamic = true;
-                }
-            }
         }
 
         //0 is none, 1 is dynamic. used to distinguish if depth point is a dynamic object
@@ -455,6 +396,8 @@ namespace CognitiveVR
         //used for debugging and calculating distance of UI compared to world gaze point
         Vector3 postRenderHitWorldPos;
         string postRenderId = "";
+        MediaComponent postRenderMediaComponent;
+        Vector2 postRenderUVs;
         //float postRenderDist;
         //DynamicObject uiDynamicHit;
 
@@ -512,11 +455,6 @@ namespace CognitiveVR
                 }
             }
 
-
-
-
-
-
             //snapshot.Properties.Add("position", camPos);
             snapshot.Position = camPos;
             //snapshot.Properties.Add("hmdForward", camTransform.forward);
@@ -531,29 +469,12 @@ namespace CognitiveVR
             snapshot.NearDepth = cam.nearClipPlane;
             //snapshot.Properties.Add("farDepth", cam.farClipPlane);
             snapshot.FarDepth = cam.farClipPlane;
-            if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
-            {
-                //snapshot.Properties.Add("renderDepth", rt); //this is constantly getting overwritten
-                snapshot.RTex = rt;
-            }
-            else
-            {
-                //make a copy of rt and save to napshot
-                RenderTexture newrt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
-                //Graphics.CopyTexture(rt, newrt);
-                Graphics.Blit(rt, newrt);
-
-                //periodicRenderer.enabled = true;
-                //RenderTexture newrt = new RenderTexture(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, 0);
-                //newrt = periodicRenderer.DoRender(newrt);
-                //periodicRenderer.enabled = false;
-                snapshot.RTex = newrt;
-            }
+            snapshot.RTex = rt;
 
             //snapshot.Properties.Add("hmdRotation", camRot);
             snapshot.HMDRotation = camRot;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
 
             //gaze tracking sdks need to return a v3 direction "gazeDirection" and a v2 point "hmdGazePoint"
             //the v2 point is used to get a pixel from the render texture
@@ -581,6 +502,9 @@ namespace CognitiveVR
 #if CVR_TOBIIVR
             worldGazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #endif
+#if CVR_NEURABLE
+            worldGazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+#endif
             //snapshot.Properties.Add("gazeDirection", worldGazeDirection);
             snapshot.GazeDirection = worldGazeDirection;
 
@@ -605,6 +529,9 @@ namespace CognitiveVR
 #if CVR_TOBIIVR
             screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
 #endif
+#if CVR_NEURABLE
+            screenGazePoint = NeurableUnity.NeurableUser.Instance.NeurableCam.FocalPoint;
+#endif
             //snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
             snapshot.HMDGazePoint = screenGazePoint;
 #endif //gazetracker
@@ -612,57 +539,52 @@ namespace CognitiveVR
             //get gaze point (unless snapshot is whatever. maybe write the type of snapshot here? world, dynamic, sky)
             //wait until enough have been done, then batch the string.write or whatever in a thread
 
-            if (CognitiveVR_Preferences.S_EvaluateGazeRealtime)
+            if (!string.IsNullOrEmpty(snapshot.ObjectId) && hitType == DynamicHitType.Physics)
             {
-                if (!string.IsNullOrEmpty(snapshot.ObjectId) && hitType == DynamicHitType.Physics)
+                if (postRenderMediaComponent)
                 {
-                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
-
-                    Debug.DrawLine(snapshot.Position, postRenderHitWorldPos, Color.yellow, 1);
+                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.Media;
+                    snapshot.uvs = postRenderUVs;
+                    snapshot.mediasource = postRenderMediaComponent.MediaSource;
+                    snapshot.mediatime = postRenderMediaComponent.IsVideo ? (int)((postRenderMediaComponent.VideoPlayer.frame / postRenderMediaComponent.VideoPlayer.frameRate) * 1000) : 0;
                 }
                 else
                 {
-                    Vector3 calcGazePoint;
-                    bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
-
-                    //float gazeDistance = Vector3.SqrMagnitude(calcGazePoint - snapshot.Position);
-                    //float uiDistance = Vector3.SqrMagnitude(snapshot.Position - postRenderHitWorldPos);
-
-                    /*if (hitType == DynamicHitType.UI && gazeDistance > uiDistance)
-                    {
-                        Debug.DrawLine(snapshot.Position, postRenderHitWorldPos, Color.cyan, 1);
-                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
-                        if (uiDynamicHit != null)
-                            uiDynamicHit.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                        //KNOWN BUG if not evaluating world hit point at the end of the frame (and waiting for later) this check cannot happen - dynamic possibly destroyed
-                    }
-                    else
-                    {*/
-                    if (!validPoint)
-                    {
-                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
-                    }
-                    else if (!float.IsNaN(calcGazePoint.x))
-                    {
-                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
-                        snapshot.GazePoint = calcGazePoint;
-#if UNITY_EDITOR
-                        if (CognitiveVR_Preferences.Instance.EnableLogging)
-                        {
-                            Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
-                            Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
-                            Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
-                            Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
-                        }
-#endif
-                    }
-                    else
-                    {
-                        //looked at world, but invalid gaze point
-                        return;
-                    }
-                    //}
+                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
                 }
+
+                Debug.DrawLine(snapshot.Position, postRenderHitWorldPos, Color.yellow, 1);
+            }
+            else
+            {
+                Vector3 calcGazePoint;
+                bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
+
+                if (!validPoint)
+                {
+                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
+                    Debug.DrawRay(snapshot.Position, HMD.forward * 1000, Color.white, 1);
+                }
+                else if (!float.IsNaN(calcGazePoint.x))
+                {
+                    snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
+                    snapshot.GazePoint = calcGazePoint;
+#if UNITY_EDITOR
+                    if (CognitiveVR_Preferences.Instance.EnableLogging)
+                    {
+                        Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
+                        Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
+                        Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
+                        Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
+                    }
+#endif
+                }
+                else
+                {
+                    //looked at world, but invalid gaze point
+                    return;
+                }
+                //}
             }
 
             playerSnapshots.Add(snapshot);
@@ -698,45 +620,6 @@ namespace CognitiveVR
             }
 
             bool doneSendGaze = false;
-            if (!CognitiveVR_Preferences.S_EvaluateGazeRealtime)
-            {
-                foreach (var snapshot in tempSnapshots)
-                {
-                    if (!string.IsNullOrEmpty(snapshot.ObjectId))
-                    {
-                        snapshot.snapshotType = PlayerSnapshot.SnapshotType.Dynamic;
-                    }
-                    else
-                    {
-                        Vector3 calcGazePoint;
-                        bool validPoint = snapshot.GetGazePoint(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution, out calcGazePoint);
-                        if (!validPoint)
-                        {
-                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.Sky;
-                        }
-                        else if (!float.IsNaN(calcGazePoint.x))
-                        {
-                            snapshot.snapshotType = PlayerSnapshot.SnapshotType.World;
-                            snapshot.GazePoint = calcGazePoint;
-
-#if UNITY_EDITOR
-                            if (CognitiveVR_Preferences.Instance.EnableLogging)
-                            {
-                                Debug.DrawRay(snapshot.GazePoint, Vector3.up, Color.green, 1);
-                                Debug.DrawRay(snapshot.GazePoint, Vector3.right, Color.red, 1);
-                                Debug.DrawRay(snapshot.GazePoint, Vector3.forward, Color.blue, 1);
-                                Debug.DrawLine(snapshot.Position, snapshot.GazePoint, Color.magenta, 1);
-                            }
-#endif
-                        }
-                        else
-                        {
-                            //looked at world, but invalid gaze point
-                            continue;
-                        }
-                    }
-                }
-            }
 
             string contents = null;
             string url = Constants.POSTGAZEDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
@@ -824,6 +707,10 @@ namespace CognitiveVR
                     {
                         SetPreGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GazePoint, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].FloorPosition, builder);
                     }
+                    else if (tempSnapshots[i].snapshotType == PlayerSnapshot.SnapshotType.Media)
+                    {
+                        SetDynamicMediaGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].LocalGaze, tempSnapshots[i].ObjectId, tempSnapshots[i].mediasource, tempSnapshots[i].mediatime, tempSnapshots[i].uvs, builder);
+                    }
                     else// if (t_snaphots[i].snapshotType == PlayerSnapshot.SnapshotType.Sky)
                     {
                         SetFarplaneGazePoint(tempSnapshots[i].timestamp, tempSnapshots[i].Position, tempSnapshots[i].HMDRotation, tempSnapshots[i].GPSLocation, tempSnapshots[i].CompassHeading, tempSnapshots[i].FloorPosition, builder);
@@ -849,7 +736,6 @@ namespace CognitiveVR
 
             CognitiveVR.NetworkManager.Post(url, contents);
         }
-        
 
         void CleanupPlayerRecorderEvents()
         {
@@ -955,7 +841,30 @@ namespace CognitiveVR
             builder.Append("}");
         }
 
-#endregion
+        private static void SetDynamicMediaGazePoint(double time, Vector3 position, Quaternion rotation, Vector3 localGazePos, string objectId, string mediaid, int mediatime, Vector2 uvs, System.Text.StringBuilder builder)
+        {
+            builder.Append("{");
+
+            JsonUtil.SetDouble("time", time, builder);
+            builder.Append(",");
+            JsonUtil.SetString("o", objectId, builder);
+            builder.Append(",");
+            JsonUtil.SetVector("p", position, builder);
+            builder.Append(",");
+            JsonUtil.SetQuat("r", rotation, builder);
+            builder.Append(",");
+            JsonUtil.SetVector("g", localGazePos, builder);
+            builder.Append(",");
+            JsonUtil.SetString("mediaId", mediaid, builder);
+            builder.Append(",");
+            JsonUtil.SetInt("mediatime", mediatime, builder);
+            builder.Append(",");
+            JsonUtil.SetVector2("uvs", uvs, builder);
+
+            builder.Append("}");
+        }
+
+        #endregion
     }
 }
 

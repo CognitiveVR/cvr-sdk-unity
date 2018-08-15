@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 using CognitiveVR;
 
+namespace CognitiveVR
+{
 public class EditorNetwork
 {
     public delegate void Response(int responsecode, string error, string text);
@@ -107,4 +109,5 @@ public class EditorNetwork
             }
         }
     }
+}
 }

@@ -360,6 +360,23 @@ namespace CognitiveVR
             return builder;
         }
 
+        /// <returns>"name":[0.1,0.2</returns>
+        public static StringBuilder SetVector2(string name, Vector2 pos, StringBuilder builder)
+        {
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            //builder.Concat(pos.x);
+            builder.Append(pos.x);
+            builder.Append(",");
+            //builder.Concat(pos.y);
+            builder.Append(pos.y);
+
+            builder.Append("]");
+            return builder;
+        }
+
         /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
         public static StringBuilder SetQuat(string name, Quaternion quat, StringBuilder builder)
         {

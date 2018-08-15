@@ -12,7 +12,8 @@ namespace CognitiveVR
         {
             World,
             Dynamic,
-            Sky
+            Sky,
+            Media
         }
         public SnapshotType snapshotType;
 
@@ -42,6 +43,12 @@ namespace CognitiveVR
         //xy of screen when tracking eyes
         public Vector3 HMDGazePoint;
         public Vector3 FloorPosition;
+
+        //media specific
+        public int mediatime;
+        public Vector2 uvs;
+        public string mediasource;
+
 
         public PlayerSnapshot(int framecount)
         {
@@ -98,7 +105,7 @@ namespace CognitiveVR
         /// <returns></returns>
         public bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint)
         {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
             float relativeDepth = 0;
 
             Vector2 snapshotPixel = HMDGazePoint;
@@ -179,7 +186,7 @@ namespace CognitiveVR
         {
             if (tex == null)
             {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
                 tex = new Texture2D(Resolution, Resolution);
 #else
                 tex = new Texture2D(1,1);
@@ -189,7 +196,7 @@ namespace CognitiveVR
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR //TODO read 1 pixel from the render texture where the request point is
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE//TODO read 1 pixel from the render texture where the request point is
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
             var color = tex.GetPixel(x,y);
 #else

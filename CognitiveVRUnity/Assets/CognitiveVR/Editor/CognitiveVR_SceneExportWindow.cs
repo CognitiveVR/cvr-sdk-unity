@@ -220,7 +220,13 @@ namespace CognitiveVR
                 return;
             }
 
-            string decimateScriptPath = Application.dataPath + "/CognitiveVR/Editor/decimateall.py";
+            string filepath = "";
+            if (!EditorCore.RecursiveDirectorySearch("", out filepath, "CognitiveVR"+System.IO.Path.DirectorySeparatorChar+"Editor"))
+            {
+                Debug.LogError("Could not find CognitiveVR/Editor/decimateall.py");
+            }
+
+            string decimateScriptPath = filepath + System.IO.Path.DirectorySeparatorChar +"decimateall.py";
             decimateScriptPath = decimateScriptPath.Replace(" ", "\" \"");
             objPath = objPath.Replace(" ", "\" \"");
             fullName = fullName.Replace(" ", "\" \"");

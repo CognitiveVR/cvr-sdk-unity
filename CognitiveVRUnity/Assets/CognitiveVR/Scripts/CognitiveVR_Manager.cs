@@ -129,7 +129,7 @@ namespace CognitiveVR
 
         public delegate void TickHandler();
         /// <summary>
-        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval. Only if the sceneid is valid
         /// </summary>
         public static event TickHandler TickEvent;
         public void OnTick() { if (TickEvent != null) { TickEvent(); } }
