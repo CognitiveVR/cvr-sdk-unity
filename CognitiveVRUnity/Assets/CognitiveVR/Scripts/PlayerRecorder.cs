@@ -57,7 +57,7 @@ namespace CognitiveVR
             CheckCameraSettings();
 
             PlayerSnapshot.colorSpace = QualitySettings.activeColorSpace;
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
             PlayerSnapshot.tex = new Texture2D(PlayerSnapshot.Resolution, PlayerSnapshot.Resolution);
 #else
             PlayerSnapshot.tex = new Texture2D(1, 1);
@@ -474,7 +474,7 @@ namespace CognitiveVR
             //snapshot.Properties.Add("hmdRotation", camRot);
             snapshot.HMDRotation = camRot;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
 
             //gaze tracking sdks need to return a v3 direction "gazeDirection" and a v2 point "hmdGazePoint"
             //the v2 point is used to get a pixel from the render texture
@@ -502,6 +502,9 @@ namespace CognitiveVR
 #if CVR_TOBIIVR
             worldGazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #endif
+#if CVR_NEURABLE
+            worldGazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+#endif
             //snapshot.Properties.Add("gazeDirection", worldGazeDirection);
             snapshot.GazeDirection = worldGazeDirection;
 
@@ -525,6 +528,9 @@ namespace CognitiveVR
 #endif //pupil screenpoint
 #if CVR_TOBIIVR
             screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+#endif
+#if CVR_NEURABLE
+            screenGazePoint = NeurableUnity.NeurableUser.Instance.NeurableCam.FocalPoint;
 #endif
             //snapshot.Properties.Add("hmdGazePoint", screenGazePoint); //range between 0,0 and 1,1
             snapshot.HMDGazePoint = screenGazePoint;
