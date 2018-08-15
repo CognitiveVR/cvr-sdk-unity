@@ -14,6 +14,7 @@ public class Builder
 	static void MakeCognitiveVRPackage()
 	{
         //preferences should not be exported
+        //TODO search through nested folders to find CognitiveVR_Preferences
         AssetDatabase.DeleteAsset("Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
 
         System.IO.Directory.CreateDirectory(Application.dataPath + "/../../dist");

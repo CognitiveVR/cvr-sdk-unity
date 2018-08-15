@@ -146,6 +146,25 @@ public class Setup360Window : EditorWindow
         if (!sphere.GetComponent<DynamicObject>())
             sphere.AddComponent<DynamicObject>();
 
+        var dyn = sphere.GetComponent<DynamicObject>();
+        dyn.UseCustomMesh = false;
+        if (latlong)
+            dyn.CommonMesh = DynamicObject.CommonDynamicMesh.VideoSphereLatitude;
+        else
+            dyn.CommonMesh = DynamicObject.CommonDynamicMesh.VideoSphereCubemap;
+
+
+
+        var camMain = Camera.main;
+        if (camMain == null)
+        {
+            Debug.LogError("could not find camera.main!");
+        }
+        else
+        {
+            camMain.transform.position = Vector3.zero;
+        }
+
         Selection.activeGameObject = sphere;
     }
 }

@@ -131,7 +131,7 @@ namespace CognitiveVR
             var hmd = HMD;
             if (hmd == null)
             {
-                Util.logDebug("PlayerRecorder CheckCameraSettings HMD is null");
+                Util.logError("PlayerRecorder CheckCameraSettings HMD is null");
                 return;
             }
 
