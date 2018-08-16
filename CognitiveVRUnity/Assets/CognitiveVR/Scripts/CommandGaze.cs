@@ -32,7 +32,7 @@ public class CommandGaze : GazeBase {
             CameraComponent.depthTextureMode = DepthTextureMode.Depth;
             CameraComponent.AddCommandBuffer(camevent, buf);
             //stolen from debugview
-            var material = new Material(Shader.Find("Hidden/Post FX/Builtin Debug Views"));
+            var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
             //var settings = model.settings.depth;
 
             buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
@@ -89,6 +89,7 @@ public class CommandGaze : GazeBase {
             Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+            Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
             return;
         }
 

@@ -14,14 +14,14 @@ public class GazeReticle : MonoBehaviour
 #endif
 
 #if CVR_FOVE
-    FoveInterface _foveInstance;
-    FoveInterface FoveInstance
+    FoveInterfaceBase _foveInstance;
+    FoveInterfaceBase FoveInstance
     {
         get
         {
             if (_foveInstance == null)
             {
-                _foveInstance = FindObjectOfType<FoveInterface>();
+                _foveInstance = FindObjectOfType<FoveInterfaceBase>();
             }
             return _foveInstance;
         }
@@ -96,7 +96,6 @@ public class GazeReticle : MonoBehaviour
     void Start()
     {
         t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
-        if (CognitiveVR_Manager.HMD == null) { return; }
     }
 
     void Update()

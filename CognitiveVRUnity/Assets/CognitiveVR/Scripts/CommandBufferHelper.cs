@@ -11,13 +11,11 @@ public class CommandBufferHelper : MonoBehaviour
     Texture2D readTexture;
     RenderTexture rt;
     Camera cam;
-    ColorSpace colorSpace;
 
     public delegate void PostRenderCommandCallback(Ray ray, Vector3 gazepoint);
     PostRenderCommandCallback onPostRenderCommand;
     public void Initialize(RenderTexture src_rt, Camera src_cam, PostRenderCommandCallback postcallback)
     {
-        colorSpace = QualitySettings.activeColorSpace;
         cam = src_cam;
         rt = src_rt;
         res = rt.width;
@@ -26,14 +24,21 @@ public class CommandBufferHelper : MonoBehaviour
         temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
         enabled = false;
 
+#if CVR_FOVE
+        //fove does it's own rendering stuff and doesn't render singlepass side by side to a texture
+        rect = new Rect(0, 0, res, res);
+#else
         if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1) //ie singlepass
         {
+            //steam renders this side by side with mask
+            //oculus renders side by side full size
             rect = new Rect(0, 0, res / 2, res);
         }
         else
         {
             rect = new Rect(0, 0, res, res);
         }
+#endif
     }
 
     float depthR;
@@ -48,12 +53,12 @@ public class CommandBufferHelper : MonoBehaviour
         ViewportRay = viewportray;
     }
 
-    private void OnDrawGizmos()
+    /*private void OnDrawGizmos()
     {
         UnityEditor.Handles.BeginGUI();
         GUI.Label(new Rect(0, 0, 128, 128), rt);
         UnityEditor.Handles.EndGUI();
-    }
+    }*/
 
     private void OnPreRender()
     {
@@ -62,17 +67,9 @@ public class CommandBufferHelper : MonoBehaviour
 
         RenderTexture.active = temp;
         readTexture.ReadPixels(rect, 0, 0);
-        if (colorSpace == ColorSpace.Linear)
-        {
-            depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
-        }
-        else
-        {
-            depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
-        }
+        depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
 
         depthR *= cam.farClipPlane;
-        Debug.Log(depthR);
         enabled = false;
         onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR);
     }

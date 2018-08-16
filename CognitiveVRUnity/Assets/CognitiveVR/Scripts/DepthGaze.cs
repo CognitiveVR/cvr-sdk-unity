@@ -11,7 +11,6 @@ namespace CognitiveVR
     public class DepthGaze : GazeBase
     {
         private int Resolution = 64;
-        private ColorSpace colorSpace = ColorSpace.Gamma;
         private RenderTexture RTex;
         private Texture2D tex;
         CognitiveVR.Components.PlayerRecorderHelper helper;
@@ -29,8 +28,7 @@ namespace CognitiveVR
                 CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
                 helper = CameraTransform.gameObject.AddComponent<CognitiveVR.Components.PlayerRecorderHelper>();
                 helper.Initialize(() => OnHelperPostRender());
-                RTex = new RenderTexture(Resolution, Resolution, 0);
-                colorSpace = QualitySettings.activeColorSpace;
+                RTex = new RenderTexture(Resolution, Resolution, 0, RenderTextureFormat.ARGBFloat);
                 helper.enabled = false;
             }
         }
@@ -136,14 +134,7 @@ namespace CognitiveVR
             snapshotPixel.y = Mathf.Clamp(snapshotPixel.y, 0, Resolution-1);
 
             var color = GetRTColor(RTex, (int)snapshotPixel.x, (int)snapshotPixel.y);
-            if (colorSpace == ColorSpace.Linear)
-            {
-                relativeDepth = color.linear.r; //does running the color through this linear multiplier cause NaN issues? GetAdjustedDistance passed in essentially 0?
-            }
-            else
-            {
-                relativeDepth = color.r;
-            }
+            relativeDepth = color.r;
 
             if (relativeDepth > 0.99f) //far plance
             {
@@ -161,15 +152,7 @@ namespace CognitiveVR
 
             //var color = GetRTColor((RenderTexture)Properties["renderDepth"], width / 2, height / 2);
             var color = GetRTColor(RTex, width / 2, height / 2);
-            if (colorSpace == ColorSpace.Linear)
-            {
-                relativeDepth = color.linear.r;
-
-            }
-            else
-            {
-                relativeDepth = color.r;
-            }
+            relativeDepth = color.r;
 
             if (relativeDepth > 0.99f)
             {
@@ -188,8 +171,8 @@ namespace CognitiveVR
         {
             if (tex == null)
             {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
-                tex = new Texture2D(Resolution, Resolution);
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
+                tex = new Texture2D(Resolution, Resolution, TextureFormat.RGBAFloat,false);
 #else
                 //tex = new Texture2D(Resolution, Resolution,TextureFormat.ARGB32, false);
                 tex = new Texture2D(1, 1);
@@ -199,7 +182,7 @@ namespace CognitiveVR
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR //TODO read 1 pixel from the render texture where the request point is
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE //TODO read 1 pixel from the render texture where the request point is
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
             //Graphics.CopyTexture(rt, tex);
             var color = tex.GetPixel(x,y);

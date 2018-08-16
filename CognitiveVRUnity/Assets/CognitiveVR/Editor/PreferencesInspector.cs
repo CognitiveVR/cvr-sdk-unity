@@ -72,9 +72,9 @@ namespace CognitiveVR
                 p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy","Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
             }
             EditorGUI.indentLevel--;
-            p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
-
             EditorGUI.EndDisabledGroup();
+
+            p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);

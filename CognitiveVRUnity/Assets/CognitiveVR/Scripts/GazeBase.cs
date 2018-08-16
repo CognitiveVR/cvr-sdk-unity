@@ -80,14 +80,12 @@ namespace CognitiveVR
                     hmdname = "arcore";
 #elif CVR_META
                     hmdname = "meta";
-#else
-#if UNITY_2017_2_OR_NEWER
+#elif UNITY_2017_2_OR_NEWER
             string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
 #else
             string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
 #endif
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
-#endif
 
 #if CVR_TOBIIVR
             _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
@@ -241,12 +239,12 @@ namespace CognitiveVR
             gazeDirection.Normalize();
 #elif CVR_PUPIL
             //var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
-            var v2 = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            var v2 = PupilData._2D.GetEyeGaze("0");
 
             //if it doesn't find the eyes, skip this snapshot
-            if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
+            //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = instance.cam.ViewportPointToRay(v2);
+                var ray = cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
 #elif CVR_TOBIIVR
@@ -272,7 +270,7 @@ namespace CognitiveVR
 
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
 #elif CVR_PUPIL//screenpoint
-            screenGazePoint = PupilData._2D.GetEyeGaze(Pupil.GazeSource.BothEyes);
+            screenGazePoint = PupilData._2D.GetEyeGaze("0");
 #elif CVR_TOBIIVR
             screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
 #endif
