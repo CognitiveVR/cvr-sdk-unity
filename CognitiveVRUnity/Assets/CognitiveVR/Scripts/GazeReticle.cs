@@ -4,29 +4,12 @@ using CognitiveVR;
 
 //debug helper for gaze tracking with Fove and Pupil
 
+namespace CognitiveVR
+{
 public class GazeReticle : MonoBehaviour
 {
     public float Speed = 0.3f;
     public float Distance = 3;
-
-#if CVR_TOBIIVR
-    private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
-#endif
-
-#if CVR_FOVE
-    FoveInterface _foveInstance;
-    FoveInterface FoveInstance
-    {
-        get
-        {
-            if (_foveInstance == null)
-            {
-                _foveInstance = FindObjectOfType<FoveInterface>();
-            }
-            return _foveInstance;
-        }
-    }
-#endif //cvr_fove
 
     Transform _transform;
     Transform t
@@ -76,16 +59,9 @@ public class GazeReticle : MonoBehaviour
         Vector3 newPosition = t.position;
         if (PupilTools.IsGazing)
         {
-            if (PupilTools.CalibrationMode == Calibration.Mode._2D)
-            {
-                Vector3 position = PupilData._2D.GazePosition;
-                position.z = Distance;
-                newPosition = Cam.ViewportToWorldPoint(position);
-            }
-            else if (PupilTools.CalibrationMode == Calibration.Mode._3D)
-            {
-                newPosition = PupilData._3D.GazePosition;
-            }
+            var v2 = PupilData._2D.GetEyeGaze("0");
+            var ray = cam.ViewportPointToRay(v2);
+            newPosition = ray.GetPoint(Distance);
         }
 
         t.position = Vector3.Lerp(t.position, newPosition, Speed);
@@ -93,10 +69,23 @@ public class GazeReticle : MonoBehaviour
     }
 
 #elif CVR_FOVE
+
+    FoveInterfaceBase _foveInstance;
+    FoveInterfaceBase FoveInstance
+    {
+        get
+        {
+            if (_foveInstance == null)
+            {
+                _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+            }
+            return _foveInstance;
+        }
+    }
+
     void Start()
     {
         t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
-        if (CognitiveVR_Manager.HMD == null) { return; }
     }
 
     void Update()
@@ -118,6 +107,7 @@ public class GazeReticle : MonoBehaviour
         return v.normalized;
     }
 #elif CVR_TOBIIVR
+    private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
     void Start()
     {
         t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
@@ -139,8 +129,27 @@ public class GazeReticle : MonoBehaviour
         {
             return CognitiveVR_Manager.HMD.forward;
         }
-        var eyeray = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld;
-        return eyeray.direction.normalized;
+        return _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+    }
+#elif CVR_NEURABLE
+    void Start()
+    {
+        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+        if (CognitiveVR_Manager.HMD == null) { return; }
+    }
+
+    void Update()
+    {
+        if (CognitiveVR_Manager.HMD == null) { return; }
+
+        t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(CognitiveVR_Manager.HMD.position);
+    }
+
+    Vector3 GetLookDirection()
+    {
+        return NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
     }
 #endif
+    }
 }

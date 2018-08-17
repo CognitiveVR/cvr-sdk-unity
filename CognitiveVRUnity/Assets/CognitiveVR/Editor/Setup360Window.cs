@@ -5,10 +5,12 @@ using UnityEditor;
 using CognitiveVR;
 using UnityEngine.Video;
 
+namespace CognitiveVR
+{
 public class Setup360Window : EditorWindow
 {
     VideoClip selectedClip;
-    bool latlong;
+    bool latlong = true;
 
     public static void Init()
     {
@@ -173,4 +175,5 @@ public class Setup360Window : EditorWindow
 
         Close();
     }
+}
 }
