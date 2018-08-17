@@ -12,7 +12,7 @@ namespace CognitiveVR
         Physics, //raycast
         Command, //command buffer
         Depth, //classic depth rendering
-        Sphere, //inverted sphere media
+        //Sphere, //inverted sphere media
     }
 
     public static class GazeCore
@@ -153,7 +153,47 @@ namespace CognitiveVR
         //looking at a media dynamic object
         public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatime, Vector2 uvs, Vector3 floorPos)
         {
+            gazebuilder.Append("{");
 
+            JsonUtil.SetDouble("time", timestamp, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetString("o", objectid, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetString("mediaId", mediasource, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetInt("mediatime", mediatime, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetVector2("uvs", uvs, gazebuilder);
+
+            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", compass, gazebuilder);
+            }
+            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("f", floorPos, gazebuilder);
+            }
+
+            gazebuilder.Append("}");
+            gazeCount++;
+            if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            {
+                SendGazeData();
+            }
+            else
+            {
+                gazebuilder.Append(",");
+            }
         }
 
         private static void SendGazeData()

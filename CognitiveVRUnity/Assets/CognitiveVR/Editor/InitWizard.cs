@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 using CognitiveVR;
 
+namespace CognitiveVR
+{
 public class InitWizard : EditorWindow
 {
     Rect steptitlerect = new Rect(30, 0, 100, 440);
@@ -124,11 +126,11 @@ public class InitWizard : EditorWindow
         }
     }
 
-    #endregion
+        #endregion
 
-    void GetSelectedSDKs()
-    {
-        selectedsdks.Clear();
+        void GetSelectedSDKs()
+        {
+            selectedsdks.Clear();
 #if CVR_STEAMVR
             selectedsdks.Add("CVR_STEAMVR");
 #endif
@@ -139,7 +141,7 @@ public class InitWizard : EditorWindow
             selectedsdks.Add("CVR_GOOGLEVR");
 #endif
 #if CVR_DEFAULT
-        selectedsdks.Add("CVR_DEFAULT");
+            selectedsdks.Add("CVR_DEFAULT");
 #endif
 #if CVR_FOVE
             selectedsdks.Add("CVR_FOVE");
@@ -156,25 +158,28 @@ public class InitWizard : EditorWindow
 #if CVR_ARCORE //google
             selectedsdks.Add("CVR_ARCORE");
 #endif
-#if CVR_META 
+#if CVR_META
             selectedsdks.Add("CVR_META");
 #endif
-    }
+#if CVR_NEURABLE
+            selectedsdks.Add("CVR_NEURABLE");
+#endif
+        }
 
-    List<string> selectedsdks = new List<string>();
+        List<string> selectedsdks = new List<string>();
     void SelectSDKUpdate()
     {
         GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.3.017" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE" };
 
         for(int i = 0;i <sdknames.Count;i++)
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
-            if (GUI.Button(new Rect(30, i * 32 + 110, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            if (GUI.Button(new Rect(30, i * 32 + 100, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -193,7 +198,7 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32 + 110, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(new Rect(420, i * 32 + 100, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
         }
     }
 
@@ -636,9 +641,12 @@ public class InitWizard : EditorWindow
                     var found = Object.FindObjectOfType<CognitiveVR_Manager>();
                     if (found == null) //add cognitivevr_manager
                     {
-                        GameObject newManager = new GameObject("CognitiveVR_Manager");
-                        Undo.RegisterCreatedObjectUndo(newManager, "Create CognitiveVR Manager");
-                        newManager.AddComponent<CognitiveVR_Manager>();
+                        string gameobjectName = "CognitiveVR_Manager";
+#if CVR_NEURABLE
+                        gameobjectName = "Neurable Cognitive Engine";
+#endif
+
+                        EditorCore.SpawnManager(gameobjectName);
                     }
                 };
                 break;
@@ -849,4 +857,5 @@ public class InitWizard : EditorWindow
             }
         }
     }
+}
 }

@@ -45,8 +45,12 @@ namespace CognitiveVR.Components
 
         YieldInstruction endOfFrame = new WaitForEndOfFrame();
 
+        int LastRenderedFrame;
+
         public IEnumerator OnPostRender()
         {
+            if (LastRenderedFrame == Time.frameCount) { yield break; }
+            LastRenderedFrame = Time.frameCount;
             yield return endOfFrame;
             onPostRender.Invoke();
         }

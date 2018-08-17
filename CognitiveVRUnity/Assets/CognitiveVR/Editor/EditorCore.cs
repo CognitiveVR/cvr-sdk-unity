@@ -13,6 +13,8 @@ using System.IO;
 //check for sdk updates
 //pre/post build inferfaces
 
+namespace CognitiveVR
+{
 [InitializeOnLoad]
 public class EditorCore: IPreprocessBuild, IPostprocessBuild
 {
@@ -30,6 +32,20 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         EditorPrefs.SetBool("cognitive_init_popup", true);
     }
 
+    public static void SpawnManager(string gameobjectName)
+    {
+        GameObject newManager = new GameObject(gameobjectName);
+        Selection.activeGameObject = newManager;
+        Undo.RegisterCreatedObjectUndo(newManager, "Create "+ gameobjectName);
+        newManager.AddComponent<CognitiveVR_Manager>();
+
+#if CVR_NEURABLE
+        if (GameObject.FindObjectOfType<NeurableUnity.NeurableAffectiveStateEngine>() == null)
+            newManager.AddComponent<NeurableUnity.NeurableAffectiveStateEngine>();
+        if (GameObject.FindObjectOfType<NeurableUnity.FixationEngine>() == null)
+            newManager.AddComponent<NeurableUnity.FixationEngine>();
+#endif
+    }
     public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
 
     static GUIStyle headerStyle;
@@ -298,7 +314,11 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
             if (_prefs == null)
             {
                 _prefs = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
-                AssetDatabase.CreateAsset(_prefs, "Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset");
+                string filepath = "";
+                if (!RecursiveDirectorySearch("", out filepath, "CognitiveVR" + System.IO.Path.DirectorySeparatorChar + "Resources"))
+                { Debug.LogError("couldn't find CognitiveVR/Resources folder"); }
+
+                AssetDatabase.CreateAsset(_prefs, filepath + System.IO.Path.DirectorySeparatorChar + "CognitiveVR_Preferences.asset");
 
                 List<string> names = new List<string>();
                 List<string> paths = new List<string>();
@@ -318,9 +338,25 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         return _prefs;
     }
 
-    #region Editor Screenshot
+    public static bool RecursiveDirectorySearch(string directory, out string filepath, string searchDir)
+    {
+        if (directory.EndsWith(searchDir))
+        {
+            filepath = "Assets" + directory.Substring(Application.dataPath.Length);
+            return true;
+        }
+        foreach (var dir in System.IO.Directory.GetDirectories(System.IO.Path.Combine(Application.dataPath,directory)))
+        {
+            RecursiveDirectorySearch(dir,out filepath,searchDir);
+            if (filepath != "") { return true; }
+        }
+        filepath = "";
+        return false;
+    }
 
-    static RenderTexture sceneRT = null;
+        #region Editor Screenshot
+
+        static RenderTexture sceneRT = null;
     public static RenderTexture GetSceneRenderTexture()
     {
         if (SceneView.lastActiveSceneView != null)
@@ -564,6 +600,89 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         {
             RefreshSceneVersionComplete.Invoke();
         }
+    }
+
+    //static System.Action RefreshSceneVersionComplete;
+    /// <summary>
+    /// get collection of versions of scene
+    /// </summary>
+    /// <param name="refreshSceneVersionComplete"></param>
+    public static void RefreshMediaSources()
+    {
+        Debug.Log("refresh media sources");
+        //gets the scene version from api and sets it to the current scene
+        string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+        var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
+        if (currentSettings != null)
+        {
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            if (currentSettings == null)
+            {
+                Debug.Log("SendSceneVersionRequest no scene settings!");
+                return;
+            }
+            string url = Constants.GETMEDIASOURCELIST();
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+
+            EditorNetwork.Get(url, GetMediaSourcesResponse, headers, true, "Get Scene Version");//AUTH
+        }
+        else
+        {
+            Debug.Log("No scene versions for scene: " + currentSceneName);
+        }
+    }
+
+    private static void GetMediaSourcesResponse(int responsecode, string error, string text)
+    {
+        if (responsecode != 200)
+        {
+            RefreshSceneVersionComplete = null;
+            //internal server error
+            Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
+            return;
+        }
+        //var settings = CognitiveVR_Preferences.FindCurrentScene();
+        //if (settings == null)
+        //{
+        //    //this should be impossible, but might happen if changing scenes at exact time
+        //    RefreshSceneVersionComplete = null;
+        //    Debug.LogWarning("Scene version request returned 200, but current scene cannot be found");
+        //    return;
+        //}
+        SetMediaSources(text);
+    }
+
+    [Serializable]
+    public class MediaSource
+    {
+        public string name;
+        public string uploadId;
+        public string description;
+    }
+
+    public static MediaSource[] MediaSources = new MediaSource[] {};
+
+    [UnityEditor.Callbacks.DidReloadScripts]
+    public static void SetMediaSourcesFromEditorPrefs()
+    {
+        if (EditorPrefs.HasKey("cognitive_mediasources"))
+        {
+            SetMediaSources(EditorPrefs.GetString("cognitive_mediasources"));
+        }
+    }
+
+    public static void SetMediaSources(string rawmediasources)
+    {
+        MediaSource[] sources = JsonUtil.GetJsonArray<MediaSource>(rawmediasources);
+        Debug.Log("Response contains " + sources.Length + " media sources");
+
+        UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
+        MediaSources = sources;
+        //EditorPrefs.SetString("cognitive_mediasources", rawmediasources);
     }
 
     #region GUI
@@ -1032,4 +1151,5 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
         rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
     }
     #endregion
+}
 }

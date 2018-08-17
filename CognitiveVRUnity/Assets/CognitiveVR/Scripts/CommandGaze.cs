@@ -5,8 +5,8 @@ using CognitiveVR;
 using UnityEngine.Rendering;
 
 //use command buffer
-//TODO media
-
+namespace CognitiveVR
+{
 public class CommandGaze : GazeBase {
 
     public RenderTexture rt;
@@ -63,6 +63,12 @@ public class CommandGaze : GazeBase {
 
     private void CognitiveVR_Manager_TickEvent()
     {
+        if (helper == null) //if there's a scene change and camera is destroyed, replace helper
+        {
+            helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
+            helper.Initialize(rt, CameraComponent, OnHelperPostRender);
+        }
+
         Vector3 viewport = GetViewportGazePoint();
         viewport.z = 100;
         var viewportray = CameraComponent.ViewportPointToRay(viewport);
@@ -83,12 +89,24 @@ public class CommandGaze : GazeBase {
         float hitDistance;
         DynamicObject hitDynamic;
         Vector3 hitWorld;
-        if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld)) //hit dynamic
+        Vector2 hitcoord;
+        if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
         {
             string ObjectId = hitDynamic.ObjectId.Id;
             Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+
+            var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
+            if (mediacomponent != null)
+            {
+                var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
+                var mediauvs = hitcoord;
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+            }
+            else
+            {
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+            }
             Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
             return;
         }
@@ -125,4 +143,5 @@ public class CommandGaze : GazeBase {
         CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
         CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
     }
+}
 }

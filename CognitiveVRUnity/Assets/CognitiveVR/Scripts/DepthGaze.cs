@@ -27,7 +27,7 @@ namespace CognitiveVR
             {
                 CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
                 helper = CameraTransform.gameObject.AddComponent<CognitiveVR.Components.PlayerRecorderHelper>();
-                helper.Initialize(() => OnHelperPostRender());
+                helper.Initialize(OnHelperPostRender);
                 RTex = new RenderTexture(Resolution, Resolution, 0, RenderTextureFormat.ARGBFloat);
                 helper.enabled = false;
             }
@@ -35,6 +35,11 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_TickEvent()
         {
+            if (helper == null)
+            {
+                helper = CameraTransform.gameObject.AddComponent<CognitiveVR.Components.PlayerRecorderHelper>();
+                helper.Initialize(OnHelperPostRender);
+            }
             helper.enabled = true;
             RTex = helper.DoRender(RTex);
             helper.enabled = false;
@@ -57,7 +62,8 @@ namespace CognitiveVR
             Vector3 hitWorld;
             string objectId="";
             Vector3 localGaze = Vector3.zero;
-            if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld)) //hit dynamic
+            Vector2 hitcoord;
+            if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
             {
                 objectId = hitDynamic.ObjectId.Id;
                 localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
@@ -74,7 +80,18 @@ namespace CognitiveVR
             {
                 //TODO check for media
                 hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+
+                var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
+                if (mediacomponent != null)
+                {
+                    var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
+                    var mediauvs = hitcoord;
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), objectId, localGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                }
+                else
+                {
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), objectId, localGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+                }                
                 Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
             }
             else //didn't hit a dynamic, or hit one further away than the depth buffer
@@ -125,7 +142,7 @@ namespace CognitiveVR
         /// <returns></returns>
         private bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint, float neardepth, float fardepth, Vector3 hmdforward, Vector3 hmdpos, Vector3 HMDGazePoint, Vector3 GazeDirection)
         {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
             float relativeDepth = 0;
             Vector2 snapshotPixel = HMDGazePoint;
 

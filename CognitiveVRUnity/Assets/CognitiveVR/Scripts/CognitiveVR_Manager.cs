@@ -95,7 +95,7 @@ namespace CognitiveVR
                 case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
                 case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                 case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
-                case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
+                //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
 
             if (InitEvent != null) { InitEvent(initError); }
@@ -139,7 +139,7 @@ namespace CognitiveVR
 
         public delegate void TickHandler();
         /// <summary>
-        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval. Only if the sceneid is valid
         /// </summary>
         public static event TickHandler TickEvent;
         public void OnTick() { if (TickEvent != null) { TickEvent(); } }

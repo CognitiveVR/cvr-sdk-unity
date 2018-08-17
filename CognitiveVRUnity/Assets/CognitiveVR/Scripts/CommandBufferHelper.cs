@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace CognitiveVR
+{
 public class CommandBufferHelper : MonoBehaviour
 {
     int res;// set in Initialize
@@ -73,4 +75,5 @@ public class CommandBufferHelper : MonoBehaviour
         enabled = false;
         onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR);
     }
+}
 }

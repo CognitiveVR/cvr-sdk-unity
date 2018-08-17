@@ -26,9 +26,14 @@ namespace CognitiveVR
                     }
                     IsSet = true;
                     S_SnapshotInterval = instance.SnapshotInterval;
+                    //S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
+                    //S_TrackGazePoint = instance.TrackGazePoint;
+                    //S_GazePointFromDirection = instance.GazePointFromDirection;
+                    //S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
+                    //S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }

@@ -154,7 +154,7 @@ namespace CognitiveVR
         /// <param name="distance"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint)
+        public virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector2 hitTextureCoord)
         {
             //TODO raycast to dynamic. if failed, spherecast with radius
             //if hit dynamic, return info
@@ -164,6 +164,7 @@ namespace CognitiveVR
             hitDynamic = null;
             hitDistance = 0;
             worldHitPoint = Vector3.zero;
+            hitTextureCoord = Vector2.zero;
 
             if (Physics.Raycast(pos, direction, out hit, distance))
             {
@@ -181,6 +182,7 @@ namespace CognitiveVR
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
                     hitDistance = hit.distance;
+                    hitTextureCoord = hit.textureCoord;
                 }
             }
             if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance))
@@ -199,6 +201,7 @@ namespace CognitiveVR
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
                     hitDistance = hit.distance;
+                    hitTextureCoord = hit.textureCoord;
                 }
             }
 
@@ -249,6 +252,8 @@ namespace CognitiveVR
             } //else uses HMD forward
 #elif CVR_TOBIIVR
             gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+#elif CVR_NEURABLE
+            gazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #endif
             return gazeDirection;
         }
@@ -273,6 +278,8 @@ namespace CognitiveVR
             screenGazePoint = PupilData._2D.GetEyeGaze("0");
 #elif CVR_TOBIIVR
             screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+#elif CVR_NEURABLE
+            screenGazePoint = NeurableUnity.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
 #endif
             return screenGazePoint;
         }
