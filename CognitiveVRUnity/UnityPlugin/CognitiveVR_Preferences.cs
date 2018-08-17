@@ -60,7 +60,7 @@ namespace CognitiveVR
         public string Dashboard = "app.cognitive3d.com";
         public string Viewer = "sceneexplorer.com/scene/";
 
-        public GazeType GazeType;
+        public GazeType GazeType = GazeType.Command;
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
         public int RenderPassType;
 
