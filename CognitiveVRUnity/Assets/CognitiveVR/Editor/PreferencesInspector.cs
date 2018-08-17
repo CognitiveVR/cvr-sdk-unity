@@ -10,9 +10,38 @@ namespace CognitiveVR
     public class PreferencesInspector : Editor
     {
         bool gpsFoldout;
+        bool hasCheckedRenderType = false;
+
+        [UnityEditor.Callbacks.DidReloadScripts]
+        public static void CheckGazeRenderType()
+        {
+            var p = EditorCore.GetPreferences();
+
+            if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
+            {
+                p.RenderPassType = 0;
+                EditorUtility.SetDirty(p);
+            }
+            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.SinglePass && p.RenderPassType != 1)
+            {
+                p.RenderPassType = 1;
+                EditorUtility.SetDirty(p);
+            }
+            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.Instancing)
+            {
+                if (p.GazeType == GazeType.Command)
+                    Debug.LogError("Cognitive3D Analytics does not support Command Buffer Gaze with SinglePass (Instanced) stereo rendering. Please change the gaze type in Cognitive3D->Advanced Options menu");
+            }
+        }
 
         public override void OnInspectorGUI()
         {
+            if (!hasCheckedRenderType)
+            {
+                CheckGazeRenderType();
+                hasCheckedRenderType = true;
+            }
+
             var p = (CognitiveVR_Preferences)target;
 
             p.APIKey = EditorGUILayout.TextField("API Key", p.APIKey);
@@ -20,8 +49,15 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
+            p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
+            if (GUI.changed)
+            {
+                CheckGazeRenderType();
+            }
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
+
+            //TODO change tooltip based on selected gaze type
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
@@ -36,15 +72,16 @@ namespace CognitiveVR
                 p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy","Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
             }
             EditorGUI.indentLevel--;
-            p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
-
             EditorGUI.EndDisabledGroup();
+
+            p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval), 0, 10);
-            p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
-            p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
+            //p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
+            //p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
+
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);

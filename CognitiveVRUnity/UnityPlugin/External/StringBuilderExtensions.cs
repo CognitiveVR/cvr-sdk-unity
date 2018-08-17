@@ -135,12 +135,12 @@ namespace CognitiveVR.External
 		{
 			Debug.Assert( pad_amount >= 0 );
 
-			if ( decimal_places == 0 )
+            if ( decimal_places == 0 )
 			{
-				// No decimal places, just round up and print it as an int
+                // No decimal places, just round up and print it as an int
 
-				// Agh, Math.Floor() just works on doubles/decimals. Don't want to cast! Let's do this the old-fashioned way.
-				/*int int_val;
+                // Agh, Math.Floor() just works on doubles/decimals. Don't want to cast! Let's do this the old-fashioned way.
+                /*int int_val;
 				if ( float_val >= 0.0f )
 				{
 					// Round up
@@ -158,11 +158,16 @@ namespace CognitiveVR.External
 			{
 				int int_part = (int)float_val;
 
-				// First part is easy, just cast to an integer
-				string_builder.Concat( int_part, pad_amount, pad_char, 10 );
+                if (float_val < 0 && int_part > -1)
+                {
+                    string_builder.Append('-');
+                }
 
-				// Decimal point
-				string_builder.Append( '.' );
+                // First part is easy, just cast to an integer
+                string_builder.Concat( int_part, pad_amount, pad_char, 10 );
+
+                // Decimal point
+                string_builder.Append( '.' );
 
 				// Work out remainder we need to print after the d.p.
 				float remainder = Math.Abs( float_val - int_part );
@@ -240,6 +245,11 @@ namespace CognitiveVR.External
             else
             {
                 int int_part = (int)double_val;
+
+                if (double_val < 0 && int_part > -1)
+                {
+                    string_builder.Append('-');
+                }
 
                 // First part is easy, just cast to an integer
                 string_builder.Concat(int_part, pad_amount, pad_char, 10);

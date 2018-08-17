@@ -2,6 +2,8 @@
 using UnityEditor;
 using System.Collections.Generic;
 
+namespace CognitiveVR
+{
 public class Builder 
 {
 	static string[] cognitivevr_files = new string[] {
@@ -23,4 +25,5 @@ public class Builder
 
 		AssetDatabase.ExportPackage(cognitivevr_files, "../dist/CognitiveVR_"+ sdkversion + ".unitypackage", ExportPackageOptions.Recurse);
 	}
+}
 }

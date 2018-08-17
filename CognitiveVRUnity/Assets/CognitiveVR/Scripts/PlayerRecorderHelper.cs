@@ -22,14 +22,20 @@ namespace CognitiveVR.Components
             }
         }
 
-        RenderTexture lastTexture;
+        public delegate void PostRenderCallback();
+        PostRenderCallback onPostRender;
+        public void Initialize(PostRenderCallback PostRenderCallback)
+        {
+            onPostRender = PostRenderCallback;
+        }
+
         public RenderTexture DoRender(RenderTexture rt)
         {
             if (cam == null)
             {
                 cam = GetComponent<Camera>();
             }
-            lastTexture = cam.targetTexture;
+            var lastTexture = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
             cam.targetTexture = lastTexture;
@@ -46,7 +52,7 @@ namespace CognitiveVR.Components
             if (LastRenderedFrame == Time.frameCount) { yield break; }
             LastRenderedFrame = Time.frameCount;
             yield return endOfFrame;
-            CognitiveVR_Manager.Instance.TickPostRender();
+            onPostRender.Invoke();
         }
 
         //steamvr freezes unity if this is enabled in unity 5.4
