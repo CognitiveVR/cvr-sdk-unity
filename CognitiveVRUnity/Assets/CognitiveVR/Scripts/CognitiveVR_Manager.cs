@@ -502,22 +502,22 @@ namespace CognitiveVR
             Core.UserId = userName;
 
             CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
-            UpdateSessionState(Util.GetDeviceProperties() as Dictionary<string,object>);
+            Core.UpdateSessionState(Util.GetDeviceProperties() as Dictionary<string,object>);
 
 #if UNITY_2017_2_OR_NEWER
-            UpdateSessionState("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
-            UpdateSessionState("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
-            UpdateSessionState("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
+            Core.UpdateSessionState("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
+            Core.UpdateSessionState("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
+            Core.UpdateSessionState("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
 #else
-            UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
-            UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
-            UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRSettings.loadedDeviceName : "Not Found");
+            Core.UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
+            Core.UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
+            Core.UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRSettings.loadedDeviceName : "Not Found");
 #endif
 
 
-            UpdateSessionState("cvr.deviceId", Core.DeviceId);
-            UpdateSessionState(userProperties);
-            UpdateSessionState("cvr.name", userName);
+            Core.UpdateSessionState("cvr.deviceId", Core.DeviceId);
+            Core.UpdateSessionState(userProperties);
+            Core.UpdateSessionState("cvr.name", userName);
 
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
@@ -528,7 +528,7 @@ namespace CognitiveVR
         /// <param name="name"></param>
         public static void SetSessionName(string name)
         {
-            UpdateSessionState("cvr.sessionname", name);
+            Core.UpdateSessionState("cvr.sessionname", name);
         }
 
         public static void SetLobbyId(string lobbyId)
@@ -809,18 +809,5 @@ namespace CognitiveVR
         }
 
         #endregion
-
-        public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
-        {
-            return Core.GetNewSessionProperties(clearNewProperties);
-        }
-        public static void UpdateSessionState(Dictionary<string, object> dictionary)
-        {
-            Core.UpdateSessionState(dictionary);
-        }
-        public static void UpdateSessionState(string key, object value)
-        {
-            Core.UpdateSessionState(key, value);
-        }
     }
 }

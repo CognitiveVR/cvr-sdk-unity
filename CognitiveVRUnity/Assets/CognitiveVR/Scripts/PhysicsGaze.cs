@@ -41,22 +41,25 @@ public class PhysicsGaze : GazeBase
         Vector2 hitcoord;
         if (DynamicRaycast(ray.origin,ray.direction,CameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
         {
-            string ObjectId = hitDynamic.ObjectId.Id;
-            Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
-            hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
+            if (hitDynamic.ObjectId != null)
+            {
+                string ObjectId = hitDynamic.ObjectId.Id;
+                Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
+                hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
 
-            var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
-            if (mediacomponent != null)
-            {
-                var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
-                var mediauvs = hitcoord;
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
+                if (mediacomponent != null)
+                {
+                    var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
+                    var mediauvs = hitcoord;
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                }
+                else
+                {
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+                }
+                return;
             }
-            else
-            {
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
-            }
-            return;
         }
 
         if (Physics.Raycast(ray,out hit, cam.farClipPlane))

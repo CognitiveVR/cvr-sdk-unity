@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
 namespace CognitiveVR
 {
 public class CommandBufferHelper : MonoBehaviour
@@ -22,7 +24,12 @@ public class CommandBufferHelper : MonoBehaviour
         rt = src_rt;
         res = rt.width;
         onPostRenderCommand = postcallback;
-        readTexture = new Texture2D(res, res, TextureFormat.RGBAFloat, false);
+#if SRP_LW3_0_0
+            readTexture = new Texture2D(rt.width, rt.height, TextureFormat.RGBAFloat, false);
+            UnityEngine.Experimental.Rendering.RenderPipeline.beginCameraRendering += RenderPipeline_beginCameraRendering;
+#else
+            readTexture = new Texture2D(res, res, TextureFormat.RGBAFloat, false);
+#endif
         temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
         enabled = false;
 
@@ -30,15 +37,15 @@ public class CommandBufferHelper : MonoBehaviour
         //fove does it's own rendering stuff and doesn't render singlepass side by side to a texture
         rect = new Rect(0, 0, res, res);
 #else
-        if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1) //ie singlepass
+        if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
         {
             //steam renders this side by side with mask
             //oculus renders side by side full size
-            rect = new Rect(0, 0, res / 2, res);
+            rect = new Rect(0, 0, rt.width / 2, rt.height);
         }
         else
         {
-            rect = new Rect(0, 0, res, res);
+            rect = new Rect(0, 0, rt.width, rt.height);
         }
 #endif
     }
@@ -55,13 +62,31 @@ public class CommandBufferHelper : MonoBehaviour
         ViewportRay = viewportray;
     }
 
-    /*private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
+        {
+            UnityEditor.Handles.BeginGUI();
+            GUI.Label(new Rect(0, 0, 128, 128), rt);
+            UnityEditor.Handles.EndGUI();
+        }*/
+#if SRP_LW3_0_0
+    private void RenderPipeline_beginCameraRendering(Camera obj)
     {
-        UnityEditor.Handles.BeginGUI();
-        GUI.Label(new Rect(0, 0, 128, 128), rt);
-        UnityEditor.Handles.EndGUI();
-    }*/
+            if (obj.name != "Main Camera") { return; }
 
+            RenderTexture.active = rt;
+            readTexture.ReadPixels(rect, 0, 0);
+            depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
+            depthR *= cam.farClipPlane;
+            enabled = false;
+
+            onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR);
+        }
+
+        private void OnDestroy()
+        {
+            UnityEngine.Experimental.Rendering.RenderPipeline.beginCameraRendering -= RenderPipeline_beginCameraRendering;
+        }
+#else
     private void OnPreRender()
     {
         //TODO do i need to blit rt to temp? i don't wait for frames, so no need to put into a temporary variable?
@@ -75,5 +100,6 @@ public class CommandBufferHelper : MonoBehaviour
         enabled = false;
         onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR);
     }
-}
+#endif
+    }
 }

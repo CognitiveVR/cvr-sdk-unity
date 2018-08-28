@@ -13,7 +13,7 @@ namespace CognitiveVR
     public class NetworkManager : MonoBehaviour
     {
         static NetworkManager _sender;
-        static NetworkManager Sender
+        internal static NetworkManager Sender
         {
             get
             {

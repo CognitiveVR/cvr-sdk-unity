@@ -61,11 +61,11 @@ namespace CognitiveVR
                 builder.Append(",");
             }
 
-            JsonUtil.SetObject("timestamp", Core.SessionTimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", Core.SessionTimeStamp, builder);
             builder.Append(",");
             JsonUtil.SetString("sessionid", Core.SessionID, builder);
             builder.Append(",");
-            JsonUtil.SetObject("part", partCount, builder);
+            JsonUtil.SetInt("part", partCount, builder);
             partCount++;
             builder.Append(",");
 
@@ -111,7 +111,7 @@ namespace CognitiveVR
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
 
@@ -130,7 +130,7 @@ namespace CognitiveVR
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
 
@@ -155,7 +155,7 @@ namespace CognitiveVR
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetObject("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
 

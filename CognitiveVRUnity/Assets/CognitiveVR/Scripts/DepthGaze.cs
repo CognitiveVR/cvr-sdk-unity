@@ -65,8 +65,11 @@ namespace CognitiveVR
             Vector2 hitcoord;
             if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
             {
-                objectId = hitDynamic.ObjectId.Id;
-                localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
+                if (hitDynamic.ObjectId != null)
+                {
+                    objectId = hitDynamic.ObjectId.Id;
+                    localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
+                }
             }
 
             //get depth world point
@@ -142,7 +145,7 @@ namespace CognitiveVR
         /// <returns></returns>
         private bool GetGazePoint(int width, int height, out Vector3 gazeWorldPoint, float neardepth, float fardepth, Vector3 hmdforward, Vector3 hmdpos, Vector3 HMDGazePoint, Vector3 GazeDirection)
         {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE || CVR_AH
             float relativeDepth = 0;
             Vector2 snapshotPixel = HMDGazePoint;
 
@@ -188,7 +191,7 @@ namespace CognitiveVR
         {
             if (tex == null)
             {
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE || CVR_AH
                 tex = new Texture2D(Resolution, Resolution, TextureFormat.RGBAFloat,false);
 #else
                 //tex = new Texture2D(Resolution, Resolution,TextureFormat.ARGB32, false);
@@ -199,7 +202,7 @@ namespace CognitiveVR
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE //TODO read 1 pixel from the render texture where the request point is
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE || CVR_AH //TODO read 1 pixel from the render texture where the request point is
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
             //Graphics.CopyTexture(rt, tex);
             var color = tex.GetPixel(x,y);

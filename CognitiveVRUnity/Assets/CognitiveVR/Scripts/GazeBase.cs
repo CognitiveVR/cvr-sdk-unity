@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using CognitiveVR;
 
+#if CVR_AH
+using AdhawkApi;
+using AdhawkApi.Numerics.Filters;
+#endif
+
 //deals with most generic integration stuff
 //hmd removed - send data
 
@@ -34,6 +39,9 @@ namespace CognitiveVR
                 return _foveInstance;
             }
         }
+#endif
+#if CVR_AH
+        private static Calibrator ah_calibrator;
 #endif
 
         public static Vector3 LastGazePoint;
@@ -89,6 +97,10 @@ namespace CognitiveVR
 
 #if CVR_TOBIIVR
             _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
+#endif
+
+#if CVR_AH
+            ah_calibrator = Calibrator.Instance;
 #endif
 
             GazeCore.SetHMDType(hmdname);
@@ -231,7 +243,6 @@ namespace CognitiveVR
         /// <summary>
         /// get the raw gaze direction in world space. includes fove/pupil labs eye tracking
         /// </summary>
-        /// <returns></returns>
         public Vector3 GetWorldGazeDirection()
         {
             Vector3 gazeDirection = CameraTransform.forward;
@@ -254,10 +265,15 @@ namespace CognitiveVR
             gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #elif CVR_NEURABLE
             gazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+#elif CVR_AH
+            gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #endif
             return gazeDirection;
         }
 
+        /// <summary>
+        /// get the position of the eye gaze in normalized viewport space
+        /// </summary>
         public Vector3 GetViewportGazePoint()
         {
             Vector2 screenGazePoint = Vector2.one * 0.5f;
@@ -270,7 +286,7 @@ namespace CognitiveVR
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))
             {
-                return;
+                return screenGazePoint;
             }
 
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
@@ -280,6 +296,10 @@ namespace CognitiveVR
             screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
 #elif CVR_NEURABLE
             screenGazePoint = NeurableUnity.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
+#elif CVR_AH
+            Vector3 x = ah_calibrator.GetGazeOrigin();
+            Vector3 r = ah_calibrator.GetGazeVector();
+            screenGazePoint = cam.WorldToViewportPoint(x + 10 * r);
 #endif
             return screenGazePoint;
         }
