@@ -25,39 +25,28 @@ public class CommandGaze : GazeBase {
     {
         if (initError == Error.Success)
         {
-            //should reparent to camera or add helper component?
-
             var buf = new CommandBuffer();
             buf.name = "cognitive depth";
             CameraComponent.depthTextureMode = DepthTextureMode.Depth;
             CameraComponent.AddCommandBuffer(camevent, buf);
-            //stolen from debugview
             var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
-            //var settings = model.settings.depth;
 
             buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
             buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
-            //cam.AddCommandBuffer(CameraEvent.BeforeImageEffectsOpaque, buf);
 
-            rt = new RenderTexture(256, 256, 24);
-            
+#if SRP_LW3_0_0 
+            rt = new RenderTexture(Screen.width, Screen.height,0);
+#else
+            rt = new RenderTexture(256, 256, 0);
+#endif
+
 
             buf.Blit(blitTo, rt);
-            //buf.Blit(rt, (RenderTexture)null);
-
-            //StartCoroutine(EndOfFrame());
-            //if (debugImage != null)
-            //    debugImage.texture = readTexture;
-
 
             CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
 
             helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
             helper.Initialize(rt, CameraComponent, OnHelperPostRender);
-            //enable command buffer helper
-            //let it do its thing
-            //register a callback with parameters when it's finished
-
         }
     }
 
@@ -78,8 +67,6 @@ public class CommandGaze : GazeBase {
 
     void OnHelperPostRender(Ray ray, Vector3 gazepoint)
     {
-        //RaycastHit hit = new RaycastHit();
-
         Vector3 gpsloc = new Vector3();
         float compass = 0;
         Vector3 floorPos = new Vector3();
@@ -90,10 +77,22 @@ public class CommandGaze : GazeBase {
         DynamicObject hitDynamic;
         Vector3 hitWorld;
         Vector2 hitcoord;
+        string ObjectId = "";
+        Vector3 LocalGaze = Vector3.zero;
+        
         if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
         {
-            string ObjectId = hitDynamic.ObjectId.Id;
-            Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
+            if (hitDynamic.ObjectId != null)
+            {
+                ObjectId = hitDynamic.ObjectId.Id;
+                LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
+            }
+        }
+
+        float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
+
+        if (hitDistance > 0 && hitDistance < depthDistance)
+        {
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
 
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();

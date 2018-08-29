@@ -11,20 +11,6 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        //!!important no data is sent unless begin session has been called (TODO make this true). need some place to set timestamp and sessionid
-
-        //public variables
-        //session timestamp
-        //session id
-
-        //public functions
-        //begin session + send default device data
-        //end session
-        //set current scene settings (id, version number, version id)
-        //set user data
-        //set device data
-
-
         public delegate void onSendData(); //send data
         /// <summary>
         /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
@@ -34,7 +20,7 @@ namespace CognitiveVR
 
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.8.1";
+        public const string SDK_VERSION = "0.8.2";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -127,15 +113,7 @@ namespace CognitiveVR
             }
         }
 
-        //public static string CurrentSceneId;
-        //public static int CurrentSceneVersionNumber;
-        //public static int CurrensSceneVersionId; //was set in cognitivevr_manager on scene change; never used
-
         public static bool Initialized { get; private set; }
-
-        // //////////////////////////
-        // Private helper methods //
-        // //////////////////////////
 
         public static void reset()
         {
@@ -159,19 +137,7 @@ namespace CognitiveVR
         /// <param name="cb">Application defined callback which will occur on completion</param>
         public static void init(Callback cb)
         {
-            Debug.Log("CognitivrVR.Core.init()");
-            // this should only be enabled during android development!!!
-            //AndroidJNIHelper.debug = true;
-
             Error error = Error.Success;
-
-            // Enable/disable logging
-            //Util.setLogEnabled(initParams.logEnabled);
-
-            /*if (null == deviceInfo)
-                deviceInfo = EntityInfo.createDeviceInfo();
-            if (null == userInfo)
-                userInfo = EntityInfo.createUserInfo(null);*/
 
             if (null == cb)
             {
@@ -198,45 +164,14 @@ namespace CognitiveVR
                 if (Error.Success == ret)
                 {
                     Util.cacheDeviceAndAppInfo();
-
-                    // set up device id & user id now, in case initial server call doesn't make it back (offline usage, etc)
-                    //if (isValidId(deviceId)) DeviceId = deviceId;
-                    //if (isValidId(userId)) UserId = userId;
-
                     DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
 
-                    // add any auto-scraped device state
-                    /*IDictionary<string, object> deviceAndAppInfo = Util.GetDeviceProperties();
-                    if (null == deviceProperties)
-                    {
-                        deviceProperties = deviceAndAppInfo as Dictionary<string, object>;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            foreach (var info in deviceAndAppInfo)
-                            {
-                                if (!deviceProperties.ContainsKey(info.Key))
-                                    deviceProperties.Add(info.Key, info.Value);
-                            }
-                        }
-                        catch (ArgumentException)
-                        {
-                            Util.logError("device properties passed in have a duplicate key to the auto-scraped properties!");
-                        }
-                    }*/
-
-                    //HttpRequest.init(hubObjName, false);
+                    //initialize Network Manager early, before gameplay actually starts
+                    var temp = NetworkManager.Sender;
 
                     //set session timestamp
                     CheckSessionId();
                     Util.logDebug("Begin session " + SessionID);
-
-                    //update device state
-                    //update user state
-                    //new device - from response
-                    //new user - from response
 
                     Initialized = true;
 
@@ -244,7 +179,7 @@ namespace CognitiveVR
                     cb.Invoke(Error.Success);
                 }
             }
-            else if (null != cb)
+            else
             {
                 // Some argument error, just call the callback immediately
                 cb(error);

@@ -6,7 +6,7 @@ using CognitiveVR.External;
 
 namespace CognitiveVR
 {
-	public class Util
+	public static class Util
 	{
         public static Vector3 vector_zero = new Vector3(0, 0, 0);
         public static Vector3 vector_forward = new Vector3(0, 0, 1);

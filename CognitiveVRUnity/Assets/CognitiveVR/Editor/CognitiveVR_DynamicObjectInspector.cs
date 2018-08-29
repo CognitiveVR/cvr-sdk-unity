@@ -77,7 +77,7 @@ namespace CognitiveVR
 #if UNITY_5_6_OR_NEWER
             //video
             //var flipVideo = serializedObject.FindProperty("FlipVideo");
-            var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
+            //var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
             var videoPlayer = serializedObject.FindProperty("VideoPlayer");
 #endif
 
@@ -246,7 +246,7 @@ namespace CognitiveVR
 
                 EditorGUILayout.PropertyField(videoPlayer, new GUIContent("Video Player"));
 
-                EditorGUILayout.PropertyField(externalVideoSource, new GUIContent("External Video Source", "The URL source of the video"));
+                //EditorGUILayout.PropertyField(externalVideoSource, new GUIContent("External Video Source", "The URL source of the video"));
                 //EditorGUILayout.PropertyField(flipVideo, new GUIContent("Flip Video Horizontally"));
 #endif
             } //advanced foldout

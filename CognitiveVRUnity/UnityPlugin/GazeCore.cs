@@ -29,7 +29,7 @@ namespace CognitiveVR
             Core.OnSendData += SendGazeData;
             Core.CheckSessionId();
 
-            gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
+            gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 1200);
             gazebuilder.Append("{\"data\":[");
         }
 

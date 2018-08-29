@@ -14,8 +14,8 @@ public class InitWizard : EditorWindow
     public static void Init()
     {
         InitWizard window = (InitWizard)EditorWindow.GetWindow(typeof(InitWizard), true, "");
-        window.minSize = new Vector2(500, 500);
-        window.maxSize = new Vector2(500, 500);
+        window.minSize = new Vector2(500, 550);
+        window.maxSize = new Vector2(500, 550);
         window.Show();
 
         window.LoadKeys(); 
@@ -32,7 +32,7 @@ public class InitWizard : EditorWindow
     private void OnGUI()
     {
         GUI.skin = EditorCore.WizardGUISkin;
-        GUI.DrawTexture(new Rect(0, 0, 500, 500), EditorGUIUtility.whiteTexture);
+        GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
         switch (pageids[currentPage])
         {
@@ -152,6 +152,9 @@ public class InitWizard : EditorWindow
 #if CVR_TOBIIVR
         selectedsdks.Add("CVR_TOBIIVR");
 #endif
+#if CVR_AH
+        selectedsdks.Add("CVR_AH");
+#endif
 #if CVR_ARKIT //apple
             selectedsdks.Add("CVR_ARKIT");
 #endif
@@ -173,8 +176,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.3.017" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.3.017" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE" };
 
         for(int i = 0;i <sdknames.Count;i++)
         {
@@ -568,14 +571,14 @@ public class InitWizard : EditorWindow
     void DrawFooter()
     {
         GUI.color = EditorCore.BlueishGrey;
-        GUI.DrawTexture(new Rect(0, 450, 500, 50), EditorGUIUtility.whiteTexture);
+        GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
         GUI.color = Color.white;
 
         DrawBackButton();
 
         if (pageids[currentPage] == "uploadscene")
         {
-            Rect buttonrect = new Rect(350, 460, 140, 30);
+            Rect buttonrect = new Rect(350, 510, 140, 30);
             if (GUI.Button(buttonrect, "Export Scene"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
@@ -613,14 +616,14 @@ public class InitWizard : EditorWindow
         bool appearDisabled = false; //used on dynamic upload page to skip step
         string text = "Next";
         System.Action onclick = () => currentPage++;
-        Rect buttonrect = new Rect(410, 460, 80, 30);
+        Rect buttonrect = new Rect(410, 510, 80, 30);
 
         switch (pageids[currentPage])
         {
             case "welcome":
                 break;
             case "authenticate":
-                buttonrect = new Rect(350, 460, 140, 30);
+                buttonrect = new Rect(350, 510, 140, 30);
                 onclick += () => SaveKeys();
                 buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
                 if (buttonDisabled)
@@ -675,7 +678,7 @@ public class InitWizard : EditorWindow
                 {
                     text = dynamicsFromSceneExported + "/" + dynamics.Length + " Uploaded";
                 }
-                buttonrect = new Rect(350, 460, 140, 30);
+                buttonrect = new Rect(350, 510, 140, 30);
                 break;
             case "uploadscene":
                 //buttonDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
@@ -696,7 +699,7 @@ public class InitWizard : EditorWindow
                     buttonDisabled = true;
                 }
                 text = "I understand, Continue";
-                buttonrect = new Rect(290, 460, 200, 30);
+                buttonrect = new Rect(290, 510, 200, 30);
                 break;
             case "uploadsummary":
 
@@ -810,7 +813,7 @@ public class InitWizard : EditorWindow
         bool buttonDisabled = false;
         string text = "Back";
         System.Action onclick = () => currentPage--;
-        Rect buttonrect = new Rect(320, 460, 80, 30);
+        Rect buttonrect = new Rect(320, 510, 80, 30);
 
         switch (pageids[currentPage])
         {
@@ -818,22 +821,22 @@ public class InitWizard : EditorWindow
             case "authenticate":
                 //buttonDisabled = true;
                 text = "Back";
-                buttonrect = new Rect(260, 460, 80, 30);
+                buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "listdynamics":
                 //buttonDisabled = true;
                 text = "Back";
-                buttonrect = new Rect(260, 460, 80, 30);
+                buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "upload":
                 //buttonDisabled = true;
                 text = "Back";
-                buttonrect = new Rect(200, 460, 80, 30);
+                buttonrect = new Rect(200, 510, 80, 30);
                 break;
             case "uploadscene":
                 //buttonDisabled = true;
                 text = "Back";
-                buttonrect = new Rect(260, 460, 80, 30);
+                buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "uploadsummary":
                 //buttonDisabled = true;
