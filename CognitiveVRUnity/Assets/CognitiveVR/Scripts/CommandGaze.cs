@@ -34,7 +34,7 @@ public class CommandGaze : GazeBase {
             buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
             buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
 
-#if CVR_2018LWSRP3_0_0
+#if SRP_LW3_0_0 
             rt = new RenderTexture(Screen.width, Screen.height,0);
 #else
             rt = new RenderTexture(256, 256, 0);
