@@ -20,13 +20,13 @@ namespace CognitiveVR.Components
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
-                CognitiveVR_Manager.UpdateSessionState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
+                Core.UpdateSessionState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
                 //Instrumentation.updateDeviceState(new Dictionary<string, object>() { { "cvr.vr.roomsize", "0 x 0" }, { "cvr.vr.roomscale", false } });
             }
             else
             {
                 bool seated = Mathf.Approximately(roomX, 1f) && roomX == roomY;
-                CognitiveVR_Manager.UpdateSessionState(new Dictionary<string, object>()
+                Core.UpdateSessionState(new Dictionary<string, object>()
                 {
                     { "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", roomX, roomY) },
                     { "cvr.vr.roomscale", !seated }
@@ -38,7 +38,7 @@ namespace CognitiveVR.Components
             //(x = width, y = height, z = depth)
             Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
 
-            CognitiveVR_Manager.UpdateSessionState(new Dictionary<string, object>()
+            Core.UpdateSessionState(new Dictionary<string, object>()
             {
                 { "cvr.vr.roomsize", string.Format("{0:0.0} x {1:0.0}", dimensions.x, dimensions.z) }
             });

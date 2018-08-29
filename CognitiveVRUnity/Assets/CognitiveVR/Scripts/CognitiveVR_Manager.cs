@@ -113,7 +113,7 @@ namespace CognitiveVR
             {              
                 var metaProperties = new Dictionary<string,object>();
                 metaProperties.Add("cvr.vr.serialnumber",serialnumber);
-                UpdateSessionState(metaProperties);
+                Core.UpdateSessionState(metaProperties);
                 //Instrumentation.updateDeviceState(metaProperties);
             }
 #elif CVR_STEAMVR
@@ -124,7 +124,7 @@ namespace CognitiveVR
                 var properties = new Dictionary<string, object>();
                 properties.Add("cvr.vr.serialnumber", serialnumber);
 
-                UpdateSessionState(properties);
+                Core.UpdateSessionState(properties);
                 //Instrumentation.updateDeviceState(properties);
             }
 #endif
