@@ -82,11 +82,8 @@ public class CommandGaze : GazeBase {
         
         if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
         {
-            if (hitDynamic.ObjectId != null)
-            {
-                ObjectId = hitDynamic.ObjectId.Id;
-                LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
-            }
+            ObjectId = hitDynamic.Id;
+            LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
         }
 
         float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);

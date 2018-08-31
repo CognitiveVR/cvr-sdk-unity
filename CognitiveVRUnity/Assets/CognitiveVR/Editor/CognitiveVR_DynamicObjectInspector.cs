@@ -19,13 +19,12 @@ namespace CognitiveVR
         {
             var dynamic = instance.GetComponent<DynamicObject>();
             if (dynamic == null) { return; }
-            dynamic.iId = 0;
-            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
+            dynamic.editorInstanceId = 0;
+            if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
             {
                 if (dynamic.UseCustomId)
                 {
-                    Debug.Log("dynamic instance id is null or new");
-                    dynamic.iId = dynamic.GetInstanceID();
+                    dynamic.editorInstanceId = dynamic.GetInstanceID();
                     CheckCustomId(ref dynamic.CustomId);
                 }
             }
@@ -62,13 +61,13 @@ namespace CognitiveVR
             foreach(var t in serializedObject.targetObjects)
             {
                 var dynamic = t as DynamicObject;
-                if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
+                if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
                 {
                     if (dynamic.UseCustomId)
                     {
-                        dynamic.iId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
+                        dynamic.editorInstanceId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
                         CheckCustomId(ref dynamic.CustomId);
-                        //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
+                        //TODO cache while scene active, but don't bother marking scene dirty if only editorInstanceId is dirty
                     }
                 }
             }

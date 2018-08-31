@@ -25,12 +25,12 @@ namespace CognitiveVR
 
             if (CachedSnapshots.ContainsKey(category))
             {
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             }
             else
             {
                 CachedSnapshots.Add(category, new List<string>());
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(), value));
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             }
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -44,7 +44,13 @@ namespace CognitiveVR
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
             var sceneSettings = Core.TrackingScene;
-            if (sceneSettings == null) { CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings"); return; }
+            if (sceneSettings == null)
+            {
+                CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings");
+                CachedSnapshots.Clear();
+                currentSensorSnapshots = 0;
+                return;
+            }
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
@@ -59,7 +65,7 @@ namespace CognitiveVR
 
             JsonUtil.SetString("sessionid", Core.SessionID, sb);
             sb.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, sb);
+            JsonUtil.SetInt("timestamp", (int)Core.SessionTimeStamp, sb);
             sb.Append(",");
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
@@ -112,11 +118,11 @@ namespace CognitiveVR
             sbdatapoint.Length = 0;
 
             sbdatapoint.Append("[");
-            //sb.ConcatDouble(timestamp);
-            sbdatapoint.Append(timestamp);
+            sbdatapoint.ConcatDouble(timestamp);
+            //sbdatapoint.Append(timestamp);
             sbdatapoint.Append(",");
-            //sb.ConcatDouble(sensorvalue);
-            sbdatapoint.Append(sensorvalue);
+            sbdatapoint.ConcatDouble(sensorvalue);
+            //sbdatapoint.Append(sensorvalue);
             sbdatapoint.Append("]");
 
             return sbdatapoint.ToString();

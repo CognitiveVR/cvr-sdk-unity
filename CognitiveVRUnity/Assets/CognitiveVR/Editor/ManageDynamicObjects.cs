@@ -82,8 +82,6 @@ public class ManageDynamicObjects : EditorWindow
             versionnumber = currentscene.VersionNumber;
         }
 
-        //TODO display uploading label for 2 frames before actually starting to upload. see init wizard implementation
-
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
         if (GUI.Button(new Rect(60, 400, 150, 40), new GUIContent("Upload Selected", "Export and Upload to " + scenename + " version " + versionnumber), buttontextstyle))
         {
@@ -355,7 +353,7 @@ public class ManageDynamicObjects : EditorWindow
         {
             if (string.IsNullOrEmpty(entry.mesh)) { Debug.LogWarning(entry.name + " missing meshname"); continue; }
             if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
-            if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id that already exists in the scene. This may not be aggregated correctly"); } //TODO popup option to choose new GUID for dynamic
+            if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id that already exists in the scene. This may not be aggregated correctly"); }
             usedIds.Add(entry.id);
             json += "{";
             json += "\"id\":\"" + entry.id + "\",";

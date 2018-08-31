@@ -137,6 +137,7 @@ namespace CognitiveVR
         /// <param name="cb">Application defined callback which will occur on completion</param>
         public static void init(Callback cb)
         {
+            Constants.Initialize();
             Error error = Error.Success;
 
             if (null == cb)

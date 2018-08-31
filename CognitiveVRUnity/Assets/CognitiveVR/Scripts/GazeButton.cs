@@ -2,6 +2,10 @@
 using System.Collections;
 using UnityEngine.UI;
 using CognitiveVR;
+#if CVR_AH
+using AdhawkApi;
+using AdhawkApi.Numerics.Filters;
+#endif
 
 //used in cognitivevr exit poll to call actions on the main exit poll panel
 
@@ -38,6 +42,21 @@ namespace CognitiveVR
                 return _t;
             }
         }
+
+#if CVR_FOVE
+        static FoveInterfaceBase _foveInstance;
+        public static FoveInterfaceBase FoveInstance
+        {
+            get
+            {
+                if (_foveInstance == null)
+                {
+                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+                }
+                return _foveInstance;
+            }
+        }
+#endif
 
         void OnEnable()
         {
@@ -146,24 +165,30 @@ namespace CognitiveVR
 
         public Vector3 GetHMDForward()
         {
-#if CVR_FOVE||CVR_PUPIL
+            Vector3 gazeDirection = CognitiveVR_Manager.HMD.forward;
+#if CVR_FOVE //direction
+            var eyeRays = FoveInstance.GetGazeRays();
+            var ray = eyeRays.left;
+            gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
+            gazeDirection.Normalize();
+#elif CVR_PUPIL
+            //var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
+            var v2 = PupilData._2D.GetEyeGaze("0");
 
-#if CVR_FOVE
-            if (CognitiveVR_Manager.FoveInstance != null)
+            //if it doesn't find the eyes, skip this snapshot
+            //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = CognitiveVR_Manager.FoveInstance.GetGazeRays();
-                return ray.left.direction;
-            }
+                var ray = cam.ViewportPointToRay(v2);
+                gazeDirection = ray.direction.normalized;
+            } //else uses HMD forward
+#elif CVR_TOBIIVR
+            gazeDirection = Tobii.Research.Unity.VREyeTracker.Instance.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+#elif CVR_NEURABLE
+            gazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+#elif CVR_AH
+            gazeDirection = Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #endif
-
-#if CVR_PUPIL
-            //TODO return pupil labs gaze direction
-#endif
-
-            return CognitiveVR_Manager.HMD.forward;
-#else
-            return CognitiveVR_Manager.HMD.forward;
-#endif
+            return gazeDirection;
         }
 
         void OnDrawGizmos()

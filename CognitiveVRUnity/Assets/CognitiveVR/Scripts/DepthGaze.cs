@@ -65,11 +65,8 @@ namespace CognitiveVR
             Vector2 hitcoord;
             if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
             {
-                if (hitDynamic.ObjectId != null)
-                {
-                    objectId = hitDynamic.ObjectId.Id;
-                    localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
-                }
+                objectId = hitDynamic.Id;
+                localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             }
 
             //get depth world point
@@ -81,7 +78,6 @@ namespace CognitiveVR
 
             if (hitDistance > 0 && hitDistance < depthDistance) //hit a dynamic object closer than the scene depth
             {
-                //TODO check for media
                 hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
 
                 var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -202,7 +198,7 @@ namespace CognitiveVR
             RenderTexture currentActiveRT = RenderTexture.active;
             RenderTexture.active = rt;
 
-#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE || CVR_AH //TODO read 1 pixel from the render texture where the request point is
+#if CVR_FOVE || CVR_PUPIL || CVR_TOBIIVR || CVR_NEURABLE || CVR_AH
             tex.ReadPixels(new Rect(0, 0, Resolution, Resolution), 0, 0, false);
             //Graphics.CopyTexture(rt, tex);
             var color = tex.GetPixel(x,y);

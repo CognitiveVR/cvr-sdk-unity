@@ -712,7 +712,6 @@ public class InitWizard : EditorWindow
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
-                    //TODO this might cause a race condition for uploading dynamics and manifest
                     ManageDynamicObjects.UploadManifest(completedmanifestupload);
                 };
 

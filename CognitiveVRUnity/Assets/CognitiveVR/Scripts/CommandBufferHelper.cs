@@ -11,7 +11,7 @@ public class CommandBufferHelper : MonoBehaviour
     int res;// set in Initialize
 
     //int readpostrender = 3;
-    RenderTexture temp;
+    //RenderTexture temp;
     Texture2D readTexture;
     RenderTexture rt;
     Camera cam;
@@ -30,7 +30,7 @@ public class CommandBufferHelper : MonoBehaviour
 #else
             readTexture = new Texture2D(res, res, TextureFormat.RGBAFloat, false);
 #endif
-        temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
+        //temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
         enabled = false;
 
 #if CVR_FOVE
@@ -89,10 +89,10 @@ public class CommandBufferHelper : MonoBehaviour
 #else
     private void OnPreRender()
     {
-        //TODO do i need to blit rt to temp? i don't wait for frames, so no need to put into a temporary variable?
-        Graphics.Blit(rt, temp);
+        //do i need to blit rt to temp? i don't wait for frames, so no need to put into a temporary variable?
+        //Graphics.Blit(rt, temp);
 
-        RenderTexture.active = temp;
+        RenderTexture.active = rt;
         readTexture.ReadPixels(rect, 0, 0);
         depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
 

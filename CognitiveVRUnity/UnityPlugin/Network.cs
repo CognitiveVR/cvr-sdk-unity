@@ -41,7 +41,6 @@ namespace CognitiveVR
         static Stack<int> linesizes = new Stack<int>();
         static int totalBytes = 0;
 
-        //TODO close sr, sw, fs on end session
         private void OnDestroy()
         {
             if (sr != null) sr.Close();
@@ -269,9 +268,7 @@ namespace CognitiveVR
                 }
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
                 WWW www = new WWW(tempurl, bytes, postHeaders);
-                //Debug.Log("www whatever sent");
                 yield return Sender.StartCoroutine(Sender.WaitForFullResponse(www, tempcontent, Sender.GenericPostFullResponse, false));
-                //Debug.Log("www got a response");
 
                 //check internet access
                 var headers = www.responseHeaders;

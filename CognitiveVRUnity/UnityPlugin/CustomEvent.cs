@@ -9,6 +9,7 @@ namespace CognitiveVR
     public class CustomEvent
     {
         private string _category;
+        private string _dynamicObjectId;
         private Dictionary<string, object> _properties = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
 
         public CustomEvent(string category)
@@ -58,6 +59,16 @@ namespace CognitiveVR
         }
 
         /// <summary>
+        /// Associates this event with a dynamic object, by Id
+        /// </summary>
+        /// <param name="sourceObjectId">The dynamic object that 'caused' this event</param>
+        public CustomEvent SetDynamicObject(string sourceObjectId)
+        {
+            _dynamicObjectId = sourceObjectId;
+            return this;
+        }
+
+        /// <summary>
         /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
         /// </summary>
         /// <param name="timeout">How long to keep the transaction 'open' without new activity</param>
@@ -70,7 +81,7 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos);
+            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }
 
         /// <summary>
@@ -88,7 +99,7 @@ namespace CognitiveVR
             pos[1] = HMD.position.y;
             pos[2] = HMD.position.z;
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos);
+            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }
     }
 }

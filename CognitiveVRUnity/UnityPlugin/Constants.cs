@@ -64,29 +64,39 @@ namespace CognitiveVR
         }
 
         //session urls
-
+        internal static void Initialize()
+        {
+            dynamicUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/dynamics/");
+            gazeUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/gaze/");
+            eventUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/events/");
+            sensorUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/sensors/");
+        }
+        static string dynamicUrl;
+        static string gazeUrl;
+        static string eventUrl;
+        static string sensorUrl;
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol,"://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/dynamics/", sceneid, "?version=",versionnumber.ToString());
+            return string.Concat(dynamicUrl, sceneid, "?version=",versionnumber.ToString());
         }
 
         //POST gaze json data to scene explorer
         public static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/gaze/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat(gazeUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST event json data to scene explorer
         public static string POSTEVENTDATA(string sceneid, int versionnumber)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/events/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat(eventUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST sensor json data to scene explorer
         public static string POSTSENSORDATA(string sceneid, int versionnumber)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/sensors/", sceneid, "?version=", versionnumber.ToString());
+            return string.Concat(sensorUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
 

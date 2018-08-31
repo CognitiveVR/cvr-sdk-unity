@@ -170,7 +170,7 @@ public class Setup360Window : EditorWindow
             camMain.transform.position = Vector3.zero;
         }
 
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+        UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
         Selection.activeGameObject = sphere;
 
         Close();
