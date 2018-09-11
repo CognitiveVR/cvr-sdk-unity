@@ -453,6 +453,8 @@ namespace CognitiveVR
             if (StartupDelayTime < 0) { StartupDelayTime = 0;}
         }
 
+        public static bool IsQuitting = false;
+
         public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
         {
             Util.logDebug("CognitiveVR_Manager Initialize");
@@ -480,11 +482,7 @@ namespace CognitiveVR
             }
             
             OutstandingInitRequest = true;
-
-            //string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-
-            //Core.SetTrackingScene(sceneName);
-
+            
             Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
@@ -497,7 +495,11 @@ namespace CognitiveVR
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-            SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
+            //SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
+            Core.SetTrackingScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            OnLevelLoaded();
+
+
 
             Core.UserId = userName;
 
@@ -558,13 +560,11 @@ namespace CognitiveVR
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
             {
                 DynamicObject.ClearObjectIds();
-                //CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
                     if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
-                        //CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
                         Core.SetTrackingScene(scene.name);
                     }
                 }
@@ -775,6 +775,7 @@ namespace CognitiveVR
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            IsQuitting = true;
             if (hasCanceled) { return; }
 
             if (InitResponse != Error.Success) { return; }

@@ -1149,7 +1149,7 @@ namespace CognitiveVR
 
             cam.Render();
 
-            //TODO write non-square textures, do full 0-1 uvs
+            //TODO write non-square textures, do full 0-1 uvs instead of saving blank space
 
             //write rendertexture to png
             Texture2D tex = new Texture2D(resolution, resolution);

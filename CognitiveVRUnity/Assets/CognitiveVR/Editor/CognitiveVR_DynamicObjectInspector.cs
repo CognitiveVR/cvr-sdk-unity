@@ -19,13 +19,12 @@ namespace CognitiveVR
         {
             var dynamic = instance.GetComponent<DynamicObject>();
             if (dynamic == null) { return; }
-            dynamic.iId = 0;
-            if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
+            dynamic.editorInstanceId = 0;
+            if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
             {
                 if (dynamic.UseCustomId)
                 {
-                    Debug.Log("dynamic instance id is null or new");
-                    dynamic.iId = dynamic.GetInstanceID();
+                    dynamic.editorInstanceId = dynamic.GetInstanceID();
                     CheckCustomId(ref dynamic.CustomId);
                 }
             }
@@ -47,7 +46,7 @@ namespace CognitiveVR
             var updateRate = serializedObject.FindProperty("UpdateRate");
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
-            var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
+            //var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
             var updateTicksOnEnable = serializedObject.FindProperty("UpdateTicksOnEnable");
             var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
             var releaseOnDestroy = serializedObject.FindProperty("ReleaseIdOnDestroy");
@@ -62,13 +61,13 @@ namespace CognitiveVR
             foreach(var t in serializedObject.targetObjects)
             {
                 var dynamic = t as DynamicObject;
-                if (dynamic.iId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
+                if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
                 {
                     if (dynamic.UseCustomId)
                     {
-                        dynamic.iId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
+                        dynamic.editorInstanceId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
                         CheckCustomId(ref dynamic.CustomId);
-                        //TODO cache while scene active, but don't bother marking scene dirty if only iId is dirty
+                        //TODO cache while scene active, but don't bother marking scene dirty if only editorInstanceId is dirty
                     }
                 }
             }
@@ -182,7 +181,7 @@ namespace CognitiveVR
                 //Setup
                 GUILayout.Label("Setup", EditorStyles.boldLabel);
 
-                UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
+                //UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
 
                 //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
                 UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));

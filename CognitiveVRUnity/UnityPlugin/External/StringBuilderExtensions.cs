@@ -9,7 +9,7 @@
 
 //modified namespace and added doubles
 //FIXED decimal values on floats ignores 0 if it's the first decimal
-//TODO BUG some float values are not correctly written to negative. noticably quaternion values. issue with small (<1) values?
+//FIXED some negative float values are not correctly written if > -1
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

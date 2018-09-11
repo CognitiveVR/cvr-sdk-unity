@@ -16,7 +16,7 @@ using System.IO;
 namespace CognitiveVR
 {
 [InitializeOnLoad]
-public class EditorCore: IPreprocessBuild, IPostprocessBuild
+public class EditorCore
 {
     static EditorCore()
     {
@@ -873,31 +873,6 @@ public class EditorCore: IPreprocessBuild, IPostprocessBuild
 #endif
         return "";
     }
-
-    #region Build Callbacks
-
-    public int callbackOrder
-    {
-        get
-        {
-            return 0;
-        }
-    }
-
-    public void OnPostprocessBuild(BuildTarget target, string path)
-    {
-        //TODO send dynamic object manifest from local json file
-        /*if (EditorUtility.DisplayDialog("Object Manifest", "Upload all object ids to SceneExplorer for aggregation?", "Ok", "No"))
-        {
-            ManageDynamicObjects.UploadManifest();
-        }*/
-    }
-
-    public void OnPreprocessBuild(BuildTarget target, string path)
-    {
-        
-    }
-    #endregion
     
     public static void GetAllScenes(List<string>names, List<string>paths)
     {

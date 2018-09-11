@@ -102,8 +102,6 @@ namespace CognitiveVR
         public bool HotkeyAlt = false;
         public KeyCode SendDataHotkey = KeyCode.F9;
 
-        //TODO add option for unlimited cache size
-        //TODO add option for never save locally
         //defualt 10MB cache size
         public long LocalDataCacheSize = 1024 * 1024 * 10;
         public bool LocalStorage = true;

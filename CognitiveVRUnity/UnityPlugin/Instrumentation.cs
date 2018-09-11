@@ -106,15 +106,19 @@ namespace CognitiveVR
             NetworkManager.Post(url, packagedEvents);
         }
 
-        public static void SendCustomEvent(string category, float[] position)
+        public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
         {
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            if (!string.IsNullOrEmpty(dynamicObjectId))
+            {
+                TransactionBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+            }
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
-
             TransactionBuilder.Append("}"); //close transaction object
             TransactionBuilder.Append(",");
 
@@ -125,12 +129,17 @@ namespace CognitiveVR
             }
         }
 
-        public static void SendCustomEvent(string category, Vector3 position)
+        public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            if (!string.IsNullOrEmpty(dynamicObjectId))
+            {
+                TransactionBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+            }
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
 
@@ -145,17 +154,22 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position)
+        public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position, string dynamicObjectId = "")
         {
-            SendCustomEvent(category, properties, new float[3]{ position.x,position.y,position.z});
+            SendCustomEvent(category, properties, new float[3]{ position.x,position.y,position.z},dynamicObjectId);
         }
 
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position)
+        public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position, string dynamicObjectId = "")
         {
             TransactionBuilder.Append("{");
             JsonUtil.SetString("name", category, TransactionBuilder);
             TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(), TransactionBuilder);
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            if (!string.IsNullOrEmpty(dynamicObjectId))
+            {
+                TransactionBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+            }
             TransactionBuilder.Append(",");
             JsonUtil.SetVector("point", position, TransactionBuilder);
 
@@ -188,12 +202,5 @@ namespace CognitiveVR
                 SendTransactions();
             }
         }
-
-#pragma warning disable 618
-        public static Transaction Transaction(string category)
-        {
-            return new CognitiveVR.Transaction(category);
-        }
-#pragma warning restore 618
     }
 }

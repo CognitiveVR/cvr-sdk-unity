@@ -82,11 +82,8 @@ public class CommandGaze : GazeBase {
         
         if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
         {
-            if (hitDynamic.ObjectId != null)
-            {
-                ObjectId = hitDynamic.ObjectId.Id;
-                LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
-            }
+            ObjectId = hitDynamic.Id;
+            LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
         }
 
         float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
@@ -115,7 +112,7 @@ public class CommandGaze : GazeBase {
             Vector3 pos = CameraTransform.position;
             Quaternion rot = CameraTransform.rotation;
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawRay(transform.position, transform.forward * CameraComponent.farClipPlane, Color.cyan, 1);
+            Debug.DrawRay(pos, CameraTransform.forward * CameraComponent.farClipPlane, Color.cyan, 1);
         }
         else
         {
