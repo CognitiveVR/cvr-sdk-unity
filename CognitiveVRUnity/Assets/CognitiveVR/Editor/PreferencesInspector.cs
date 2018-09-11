@@ -49,6 +49,7 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
+            //TODO change tooltip based on selected gaze type
             p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
             if (GUI.changed)
             {
@@ -57,7 +58,6 @@ namespace CognitiveVR
             p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
-            //TODO change tooltip based on selected gaze type
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);

@@ -8,10 +8,7 @@ namespace CognitiveVR
 {
 public class CommandBufferHelper : MonoBehaviour
 {
-    int res;// set in Initialize
-
-    //int readpostrender = 3;
-    //RenderTexture temp;
+    RenderTexture temp;
     Texture2D readTexture;
     RenderTexture rt;
     Camera cam;
@@ -22,15 +19,14 @@ public class CommandBufferHelper : MonoBehaviour
     {
         cam = src_cam;
         rt = src_rt;
-        res = rt.width;
         onPostRenderCommand = postcallback;
 #if SRP_LW3_0_0
             readTexture = new Texture2D(rt.width, rt.height, TextureFormat.RGBAFloat, false);
             UnityEngine.Experimental.Rendering.RenderPipeline.beginCameraRendering += RenderPipeline_beginCameraRendering;
 #else
-            readTexture = new Texture2D(res, res, TextureFormat.RGBAFloat, false);
+            readTexture = new Texture2D(rt.width, rt.width, TextureFormat.RGBAFloat, false);
 #endif
-        //temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
+        temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
         enabled = false;
 
 #if CVR_FOVE
@@ -89,10 +85,10 @@ public class CommandBufferHelper : MonoBehaviour
 #else
     private void OnPreRender()
     {
-        //do i need to blit rt to temp? i don't wait for frames, so no need to put into a temporary variable?
-        //Graphics.Blit(rt, temp);
+        //need this blit to temp. setting rt as RenderTexture.active crashes Unity with access violation
+        Graphics.Blit(rt, temp);
 
-        RenderTexture.active = rt;
+        RenderTexture.active = temp;
         readTexture.ReadPixels(rect, 0, 0);
         depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
 

@@ -46,7 +46,7 @@ namespace CognitiveVR
             var updateRate = serializedObject.FindProperty("UpdateRate");
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
-            var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
+            //var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
             var updateTicksOnEnable = serializedObject.FindProperty("UpdateTicksOnEnable");
             var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
             var releaseOnDestroy = serializedObject.FindProperty("ReleaseIdOnDestroy");
@@ -181,7 +181,7 @@ namespace CognitiveVR
                 //Setup
                 GUILayout.Label("Setup", EditorStyles.boldLabel);
 
-                UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
+                //UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
 
                 //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
                 UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
