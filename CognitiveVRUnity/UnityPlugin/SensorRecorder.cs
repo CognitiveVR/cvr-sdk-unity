@@ -39,18 +39,27 @@ namespace CognitiveVR
             }
         }
 
+        static float lastSendTime;
         private static void Core_OnSendData()
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
-            var sceneSettings = Core.TrackingScene;
-            if (sceneSettings == null)
+            //TODO should hold until extreme batch size reached
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings");
                 CachedSnapshots.Clear();
                 currentSensorSnapshots = 0;
                 return;
             }
+
+            //within last send interval and less than extreme count
+            if (lastSendTime - CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer < Time.realtimeSinceStartup && currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount)
+            {
+                return;
+            }
+            lastSendTime = Time.realtimeSinceStartup;
+
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
@@ -101,7 +110,7 @@ namespace CognitiveVR
             CachedSnapshots.Clear();
             currentSensorSnapshots = 0;
 
-            string url = Constants.POSTSENSORDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             NetworkManager.Post(url, sb.ToString());

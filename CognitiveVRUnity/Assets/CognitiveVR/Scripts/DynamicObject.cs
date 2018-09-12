@@ -769,6 +769,7 @@ namespace CognitiveVR
             return new DynamicObjectId("runtime_" + (currentUniqueId + uniqueIdOffset).ToString(), MeshName, target);
         }
 
+        static float lastSendTime;
         //from SendDataEvent. either manual 'send all data' or onquit
         static void Core_OnSendData()
         {
@@ -828,22 +829,23 @@ namespace CognitiveVR
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
+            //TODO should hold until extreme batch size reached
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 CognitiveVR.Util.logError("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
-                /*for (int i = 0; i < NewSnapshots.Count; i++)
-                {
-                    NewSnapshots[i].ReturnToPool();
-                }*/
-                //NewSnapshots.Clear();
+
                 NewSnapshotQueue.Clear();
-                //NewObjectManifest.Clear();
                 NewObjectManifestQueue.Clear();
-                //savedDynamicManifest.Clear();
-                //savedDynamicSnapshots.Clear();
                 sendSnapshotBuilder.Length = 0;
                 return;
             }
+
+            //within last send interval and less than extreme count
+            if (lastSendTime - CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer < Time.realtimeSinceStartup && stringEntries.Count + stringSnapshots.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount)
+            {
+                return;
+            }
+            lastSendTime = Time.realtimeSinceStartup;
 
             sendSnapshotBuilder.Append("{");
 

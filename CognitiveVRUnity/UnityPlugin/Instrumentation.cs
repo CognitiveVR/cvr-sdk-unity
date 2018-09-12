@@ -38,8 +38,26 @@ namespace CognitiveVR
         private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
+        static float lastSendTime = 0;
         static void SendTransactions()
         {
+            //TODO should hold until extreme batch size reached
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            {
+                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
+                cachedEvents = 0;
+                TransactionBuilder.Length = 0;
+                return;
+            }
+
+            //within last send interval and less than extreme count
+            if (lastSendTime - CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer < Time.realtimeSinceStartup && cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount)
+            {
+                return;
+            }
+            lastSendTime = Time.realtimeSinceStartup;
+            
+
             cachedEvents = 0;
             //bundle up header stuff and transaction data
 
@@ -88,12 +106,6 @@ namespace CognitiveVR
             //send transaction contents to scene explorer
 
             string packagedEvents = builder.ToString();
-
-            if (string.IsNullOrEmpty(Core.TrackingSceneId))
-            {
-                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
-                return;
-            }
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
             string url = Constants.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
