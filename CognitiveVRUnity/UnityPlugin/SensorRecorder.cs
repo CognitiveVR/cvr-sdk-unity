@@ -17,6 +17,23 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             Core.CheckSessionId();
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+        }
+
+        static float nextSendTime = 0;
+        internal static IEnumerator AutomaticSendTimer()
+        {
+            while (true)
+            {
+                while (nextSendTime > Time.realtimeSinceStartup)
+                {
+                    yield return null;
+                }
+                //try to send!
+                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                Core_OnSendData();
+            }
         }
 
         public static void RecordDataPoint(string category, float value)
@@ -53,11 +70,16 @@ namespace CognitiveVR
                 return;
             }
 
+            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount;
+
             //within last send interval and less than extreme count
-            if (lastSendTime - CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer < Time.realtimeSinceStartup && currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount)
+            if (withinMinTimer && withinExtremeBatchSize)
             {
                 return;
             }
+
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
 
 
