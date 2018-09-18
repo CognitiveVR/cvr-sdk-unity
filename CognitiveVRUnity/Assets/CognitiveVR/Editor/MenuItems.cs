@@ -8,28 +8,26 @@ namespace CognitiveVR
     public class MenuItems
     {
 #if CVR_NEURABLE
-        public const string Menu = "Neurable/cognitive3D/";
+        public const string Menu = "Neurable/Analytics Portal/";
 #else
         public const string Menu = "cognitive3D/";
 #endif
 
-        [MenuItem(Menu + "Add Cognitive Manager", priority = 0)]
+        [MenuItem(Menu + "Add Analytics Manager", priority = 0)]
         static void Cognitive3DManager()
         {
             var found = Object.FindObjectOfType<CognitiveVR_Manager>();
             if (found != null)
             {
+#if CVR_NEURABLE
+                NeurableUnity.NeurableCognitiveMenu.InstantiateAnalyticsManager();
+#endif
                 Selection.activeGameObject = found.gameObject;
                 return;
             }
             else
             {
-                string gameobjectName = "CognitiveVR_Manager";
-#if CVR_NEURABLE
-                gameobjectName = "Neurable Cognitive Engine";
-#endif
-
-                EditorCore.SpawnManager(gameobjectName);
+                EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
             }
         }
 

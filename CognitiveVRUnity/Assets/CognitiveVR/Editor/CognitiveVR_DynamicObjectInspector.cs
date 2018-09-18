@@ -148,7 +148,7 @@ namespace CognitiveVR
                         foreach (var t in serializedObject.targetObjects)
                         {
                             var dyn = t as DynamicObject;
-                            if (!dyn.UseCustomId)
+                            //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
                             {
                                 EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
                             }

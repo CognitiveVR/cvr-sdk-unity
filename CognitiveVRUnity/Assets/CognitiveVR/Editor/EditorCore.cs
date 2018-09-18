@@ -15,6 +15,19 @@ using System.IO;
 
 namespace CognitiveVR
 {
+public enum DisplayKey
+{
+    FullName,
+    ShortName,
+    ViewerName,
+    Other,
+    ManagerName,
+    GatewayURL,
+    DashboardURL,
+    ViewerURL,
+    DocumentationURL,
+}
+
 [InitializeOnLoad]
 public class EditorCore
 {
@@ -40,10 +53,7 @@ public class EditorCore
         newManager.AddComponent<CognitiveVR_Manager>();
 
 #if CVR_NEURABLE
-        if (GameObject.FindObjectOfType<NeurableUnity.NeurableAffectiveStateEngine>() == null)
-            newManager.AddComponent<NeurableUnity.NeurableAffectiveStateEngine>();
-        if (GameObject.FindObjectOfType<NeurableUnity.FixationEngine>() == null)
-            newManager.AddComponent<NeurableUnity.FixationEngine>();
+        NeurableUnity.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif
     }
     public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
@@ -888,6 +898,38 @@ public class EditorCore
         }
     }
 
+
+    #region DisplayNames
+    static Dictionary<DisplayKey, string> displayNames;
+    public static string DisplayValue(DisplayKey key)
+    {
+        if (displayNames == null)
+        {
+            displayNames = new Dictionary<DisplayKey, string>();
+            foreach (var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
+            {
+                displayNames.Add(keyvalue, "");
+            }
+            var ta = Resources.Load<TextAsset>("DisplayNames");
+            var lines = ta.text.Split('\n');
+            foreach(var line in lines)
+            {
+                if (line.Length == 0) { continue; }
+                if (line.StartsWith("//")) { continue; }
+                var split = line.Split('|');
+                foreach(var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
+                {
+                    if (keyvalue.ToString().ToUpper() == split[0].ToUpper())
+                    {
+                        displayNames[keyvalue] = split[1];
+                        break;
+                    }
+                }
+            }
+        }
+        return displayNames[key];
+    }
+    #endregion
 
     #region Updates
 

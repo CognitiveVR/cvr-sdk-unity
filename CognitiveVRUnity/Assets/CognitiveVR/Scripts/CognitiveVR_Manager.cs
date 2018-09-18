@@ -483,8 +483,6 @@ namespace CognitiveVR
             
             OutstandingInitRequest = true;
             
-            Instrumentation.SetMaxTransactions(CognitiveVR_Preferences.S_TransactionSnapshotCount);
-
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
             GPSUpdateInverval = new WaitForSeconds(CognitiveVR_Preferences.Instance.GPSInterval);
             StartCoroutine(Tick());
@@ -699,76 +697,6 @@ namespace CognitiveVR
             //CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
-        }
-
-        //writes manifest entry and object snapshot to string then send http request
-        public IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots, CognitiveVR_Preferences.SceneSettings trackingSettings, string uniqueid, double sessiontimestamp, string sessionid)
-        {
-            //save and clear snapshots and manifest entries
-            DynamicObjectManifestEntry[] tempObjectManifest = new DynamicObjectManifestEntry[SendObjectManifest.Count];
-            SendObjectManifest.CopyTo(tempObjectManifest,0);
-            SendObjectManifest.Clear();
-
-
-            DynamicObjectSnapshot[] tempSnapshots = new DynamicObjectSnapshot[SendObjectSnapshots.Count];
-            SendObjectSnapshots.CopyTo(tempSnapshots, 0);
-
-            //for (int i = 0; i<tempSnapshots.Length; i++)
-            //{
-            //    var s = DynamicObject.SetSnapshot(tempSnapshots[i]);
-            //    Debug.Log(">>>>>>>>>>>>>queue snapshot  " + s);
-            //}
-
-
-            //write manifest entries to thread
-            List<string> manifestEntries = new List<string>();
-            bool done = true;
-            if (tempObjectManifest.Length > 0)
-            {
-                done = false;
-                new System.Threading.Thread(() =>
-                {
-                    for (int i = 0; i < tempObjectManifest.Length; i++)
-                    {
-                        manifestEntries.Add(DynamicObject.SetManifestEntry(tempObjectManifest[i]));
-                    }
-                    done = true;
-                }).Start();
-
-                while (!done)
-                {
-                    yield return null;
-                }
-            }
-
-
-
-            List<string> snapshots = new List<string>();
-            if (tempSnapshots.Length > 0)
-            {
-                done = false;
-                new System.Threading.Thread(() =>
-                {
-                    for (int i = 0; i < tempSnapshots.Length; i++)
-                    {
-                        snapshots.Add(DynamicObject.SetSnapshot(tempSnapshots[i]));
-                    }
-                    //System.GC.Collect();
-                    done = true;
-                }).Start();
-
-                while (!done)
-                {
-                    yield return null;
-                }
-            }
-
-            while (SendObjectSnapshots.Count > 0)
-            {
-                SendObjectSnapshots.Dequeue().ReturnToPool();
-            }
-
-            DynamicObject.SendSavedSnapshots(manifestEntries, snapshots,trackingSettings,uniqueid,sessiontimestamp,sessionid);
         }
 
 #region Application Quit
