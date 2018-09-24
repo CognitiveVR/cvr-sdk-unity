@@ -267,6 +267,8 @@ namespace CognitiveVR
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
+#elif CVR_SNAPDRAGON
+            gazeDirection = SvrManager.Instance.eyeDirection;
 #endif
             return gazeDirection;
         }
@@ -300,6 +302,8 @@ namespace CognitiveVR
             Vector3 x = ah_calibrator.GetGazeOrigin();
             Vector3 r = ah_calibrator.GetGazeVector();
             screenGazePoint = cam.WorldToViewportPoint(x + 10 * r);
+#elif CVR_SNAPDRAGON
+            screenGazePoint = cam.WorldToScreenPoint(CameraTransform.position + 10 * SvrManager.Instance.eyeDirection);
 #endif
             return screenGazePoint;
         }

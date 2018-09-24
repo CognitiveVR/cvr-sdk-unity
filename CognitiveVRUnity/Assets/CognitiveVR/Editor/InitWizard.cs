@@ -191,8 +191,12 @@ public class InitWizard : EditorWindow
 #if CVR_NEURABLE
             selectedsdks.Add("CVR_NEURABLE");
 #endif
+#if CVR_SNAPDRAGON
+            selectedsdks.Add("CVR_SNAPDRAGON");
+#endif
         }
 
+        Vector2 sdkScrollPos;
         List<string> selectedsdks = new List<string>();
     void SelectSDKUpdate()
     {
@@ -200,13 +204,16 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
-        for(int i = 0;i <sdknames.Count;i++)
+        Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
+        sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
+
+        for (int i = 0;i <sdknames.Count;i++)
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
-            if (GUI.Button(new Rect(30, i * 32 + 100, 440, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            if (GUI.Button(new Rect(30, i * 32, 420, 30), sdknames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -225,8 +232,10 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32 + 100, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
         }
+
+        GUI.EndScrollView();
     }
 
     #region Terminology
@@ -416,7 +425,7 @@ public class InitWizard : EditorWindow
 
 
         //GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.", "boldlabel");
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> will be prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
 
         GUI.Label(new Rect(30, 110, 440, 440), "You can reduce load times on the Dashboard by reducing scene geometry and textures. We can automatically do this using Blender. Blender is free and open source.", "normallabel");
 
