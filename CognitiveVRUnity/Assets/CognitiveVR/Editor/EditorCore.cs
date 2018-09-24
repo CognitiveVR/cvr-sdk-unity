@@ -53,7 +53,7 @@ public class EditorCore
         newManager.AddComponent<CognitiveVR_Manager>();
 
 #if CVR_NEURABLE
-        NeurableUnity.NeurableCognitiveMenu.InstantiateAnalyticsManager();
+        Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif
     }
     public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
