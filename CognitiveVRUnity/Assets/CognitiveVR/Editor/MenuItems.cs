@@ -20,7 +20,7 @@ namespace CognitiveVR
             if (found != null)
             {
 #if CVR_NEURABLE
-                NeurableUnity.NeurableCognitiveMenu.InstantiateAnalyticsManager();
+                Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif
                 Selection.activeGameObject = found.gameObject;
                 return;

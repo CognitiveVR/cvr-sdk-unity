@@ -152,7 +152,7 @@ public class GazeReticle : MonoBehaviour
 
     Vector3 GetLookDirection()
     {
-        return NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+        return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
     }
 #elif CVR_AH
     void Start()
