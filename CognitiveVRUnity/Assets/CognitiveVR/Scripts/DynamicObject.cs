@@ -43,7 +43,7 @@ namespace CognitiveVR
         public Transform _t;
 
         public bool SnapshotOnEnable = true;
-        public bool UpdateTicksOnEnable = true;
+        public bool ContinuallyUpdateTransform = true;
 
         public float PositionThreshold = 0.001f;
         public Vector3 lastPosition;
@@ -52,8 +52,8 @@ namespace CognitiveVR
 
         public bool UseCustomId = true;
         public string CustomId = "";
-        public bool ReleaseIdOnDestroy = true; //only release the id for reuse if not tracking gaze
-        public bool ReleaseIdOnDisable = true; //only release the id for reuse if not tracking gaze
+        public bool ReleaseIdOnDestroy = false; //only release the id for reuse if not tracking gaze
+        public bool ReleaseIdOnDisable = false; //only release the id for reuse if not tracking gaze
 
         public string GroupName;
 
@@ -225,7 +225,7 @@ namespace CognitiveVR
 
             NewSnapshot().UpdateTransform().SetEnabled(true);
 
-            if (UpdateTicksOnEnable || IsVideoPlayer)
+            if (ContinuallyUpdateTransform || IsVideoPlayer)
             {
                 if (SyncWithPlayerUpdate)
                 {
@@ -675,6 +675,10 @@ namespace CognitiveVR
                 }
                 ObjectIds.Add(viewerId);
                 NewObjectManifestQueue.Enqueue(manifestEntry);
+                if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+                {
+                    CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
+                }
             }
 
             if (IsVideoPlayer)
