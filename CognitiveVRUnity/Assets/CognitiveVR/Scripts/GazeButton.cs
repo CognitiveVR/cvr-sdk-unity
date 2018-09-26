@@ -184,7 +184,7 @@ namespace CognitiveVR
 #elif CVR_TOBIIVR
             gazeDirection = Tobii.Research.Unity.VREyeTracker.Instance.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #elif CVR_NEURABLE
-            gazeDirection = NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+            gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH
             gazeDirection = Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #endif

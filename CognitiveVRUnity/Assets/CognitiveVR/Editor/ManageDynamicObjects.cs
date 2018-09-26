@@ -39,7 +39,7 @@ public class ManageDynamicObjects : EditorWindow
             GUI.Label(steptitlerect, "DYNAMIC OBJECTS   " + currentscene.SceneName + " Version: " + currentscene.VersionNumber, "steptitle");
         }
 
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the current <color=#8A9EB7FF>Dynamic Object</color> components in your scene:", "boldlabel");
+        GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
         //headers
         Rect mesh = new Rect(30, 95, 120, 30);
@@ -50,12 +50,18 @@ public class ManageDynamicObjects : EditorWindow
         //GUI.Label(ids, "Ids", "dynamicheader");
         Rect uploaded = new Rect(380, 95, 120, 30);
         GUI.Label(uploaded, "Uploaded", "dynamicheader");
-
+        
 
         //content
         DynamicObject[] tempdynamics = GetDynamicObjects;
+
+        if (tempdynamics.Length == 0)
+        {
+            GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
+        }
+
         Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
-        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 270), dynamicScrollPosition, innerScrollSize, false, true);
+        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 285), dynamicScrollPosition, innerScrollSize, false, true);
 
         Rect dynamicrect;
         for (int i = 0; i < tempdynamics.Length; i++)
@@ -65,7 +71,7 @@ public class ManageDynamicObjects : EditorWindow
             DrawDynamicObject(tempdynamics[i], dynamicrect, i % 2 == 0);
         }
         GUI.EndScrollView();
-        GUI.Box(new Rect(30, 120, 425, 270), "", "box_sharp_alpha");
+        GUI.Box(new Rect(30, 120, 425, 285), "", "box_sharp_alpha");
 
         //buttons
 
@@ -82,8 +88,16 @@ public class ManageDynamicObjects : EditorWindow
             versionnumber = currentscene.VersionNumber;
         }
 
+        int selectionCount = 0;
+        foreach(var v in Selection.gameObjects)
+        {
+            if (v.GetComponentInChildren<DynamicObject>())
+                selectionCount++;
+        }
+
+
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
-        if (GUI.Button(new Rect(60, 400, 150, 40), new GUIContent("Upload Selected", "Export and Upload to " + scenename + " version " + versionnumber), buttontextstyle))
+        if (GUI.Button(new Rect(20, 415, 260, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", "Export and Upload to " + scenename + " version " + versionnumber), "button_bluetext"))
         {
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
@@ -95,7 +109,7 @@ public class ManageDynamicObjects : EditorWindow
             });
         }
 
-        if (GUI.Button(new Rect(320, 400, 100, 40), new GUIContent("Upload All","Export and Upload to "+ scenename + " version " + versionnumber), buttontextstyle))
+        if (GUI.Button(new Rect(260, 415, 260, 30), new GUIContent("Upload All Meshes","Export and Upload to "+ scenename + " version " + versionnumber),"button_bluetext"))
         {
             EditorCore.RefreshSceneVersion(() =>
             {
@@ -208,24 +222,19 @@ public class ManageDynamicObjects : EditorWindow
             tooltip = "Upload list of all Dynamic Object IDs and Mesh Names to " + currentScene.SceneName + " version " + currentScene.VersionNumber;
         }
 
-        EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
-        if (GUI.Button(new Rect(130, 450, 250, 50), new GUIContent("Save & Sync with Server", tooltip), "button_bluetext"))
-        {
-            EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(null); });
-        }
-        EditorGUI.EndDisabledGroup();
+        bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
 
-        //if (GUI.Button(new Rect(0,450,100,50),"get"))
-        //{
-        //    EditorCore.RefreshSceneVersion(delegate () {
-        //        Dictionary<string, string> headers = new Dictionary<string, string>();
-        //        if (EditorCore.IsDeveloperKeyValid)
-        //        {
-        //            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-        //        }
-        //        EditorNetwork.Get(Constants.GETDYNAMICMANIFEST(currentScene.VersionId), GetManifestResponse, headers, false);
-        //    });
-        //}
+        //EditorGUI.BeginDisabledGroup(enabled);
+        //EditorGUI.EndDisabledGroup();
+        if (enabled)
+        {
+            if (GUI.Button(new Rect(80, 460, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
+            {
+                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(null); });
+            }
+        }
+        else
+            GUI.Button(new Rect(80, 460, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip), "button_disabled");
     }
 
     //get dynamic object aggregation manifest for the current scene
