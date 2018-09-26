@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine.Networking;
 
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
@@ -48,16 +49,16 @@ namespace CognitiveVR
             if (fs != null) fs.Close();
         }
 
-        System.Collections.IEnumerator WaitForResponse(WWW www, Response callback)
+        System.Collections.IEnumerator WaitForResponse(UnityWebRequest www, Response callback)
         {
-            yield return www;
+            yield return new WaitUntil(() => www.isDone);
             if (callback != null)
             {
-                callback.Invoke(Util.GetResponseCode(www.responseHeaders), www.error, www.text);
+                callback.Invoke((int)www.responseCode, www.error, www.downloadHandler.text);
             }
         }
 
-        System.Collections.IEnumerator WaitForExitpollResponse(WWW www, string hookname, Response callback, float timeout)
+        System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
         {
             float time = 0;
             while (time < timeout)
@@ -67,8 +68,8 @@ namespace CognitiveVR
                 time += Time.deltaTime;
             }
 
-            var headers = www.responseHeaders;
-            int responsecode = Util.GetResponseCode(headers);
+            var headers = www.GetResponseHeaders();
+            int responsecode = (int)www.responseCode;
             //check cvr header to make sure not blocked by capture portal
 
             if (!www.isDone)
@@ -102,18 +103,18 @@ namespace CognitiveVR
             {
                 if (callback != null)
                 {
-                    callback.Invoke(responsecode, www.error, www.text);
+                    callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
             }
         }
 
-        System.Collections.IEnumerator WaitForFullResponse(WWW www, string contents, FullResponse callback, bool allowLocalUpload)
+        System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload)
         {
-            yield return www;
+            yield return new WaitUntil(() => www.isDone);
             if (callback != null)
             {
-                var headers = www.responseHeaders;
-                int responsecode = Util.GetResponseCode(headers);
+                var headers = www.GetResponseHeaders();
+                int responsecode = (int)www.responseCode;
                 if (responsecode == 200)
                 {
                     //check cvr header to make sure not blocked by capture portal
@@ -122,7 +123,7 @@ namespace CognitiveVR
                         responsecode = 404;
                     }
                 }
-                callback.Invoke(www.url, contents, responsecode, www.error, www.text, allowLocalUpload);
+                callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text, allowLocalUpload);
             }
         }
 
@@ -262,17 +263,22 @@ namespace CognitiveVR
                 fs.SetLength(originallength - lastrequestsize);
 
                 //wait for post response
-                if (postHeaders == null)//AUTH
-                {
-                    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-                }
+                //if (postHeaders == null)//AUTH
+                //{
+                //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
+                //}
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
-                WWW www = new WWW(tempurl, bytes, postHeaders);
-                yield return Sender.StartCoroutine(Sender.WaitForFullResponse(www, tempcontent, Sender.GenericPostFullResponse, false));
+                //WWW www = new WWW(tempurl, bytes, postHeaders);
+                var request = UnityWebRequest.Put(tempurl, bytes);
+                request.method = "POST";
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+                yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
 
                 //check internet access
-                var headers = www.responseHeaders;
-                int responsecode = Util.GetResponseCode(headers);
+                var headers = request.GetResponseHeaders();
+                int responsecode = (int)request.responseCode;
                 if (responsecode == 200)
                 {
                     //check cvr header to make sure not blocked by capture portal
@@ -343,42 +349,58 @@ namespace CognitiveVR
             }
         }
 
-        static Dictionary<string, string> getHeaders;
+        //static Dictionary<string, string> getHeaders;
 
         public static void GetExitPollQuestions(string url, string hookname, Response callback, float timeout = 3)
         {
+            //if (getHeaders == null)//AUTH
+            //{
+            //    getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
+            //}
+            //WWW www = new WWW(url, null, getHeaders);
+            var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "GET");
+            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
 
-            if (getHeaders == null)//AUTH
-            {
-                getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
-            WWW www = new WWW(url, null, getHeaders);
-            Sender.StartCoroutine(Sender.WaitForExitpollResponse(www, hookname, callback,timeout));
+            Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
 
-        static Dictionary<string, string> postHeaders;
+        //static Dictionary<string, string> postHeaders;
 
         public static void Post(string url, string stringcontent)
         {
-            if (postHeaders == null)//AUTH
-            {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
+            //if (postHeaders == null)//AUTH
+            //{
+            //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
+            //}
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            WWW www = new WWW(url, bytes,postHeaders);
-            Sender.StartCoroutine(Sender.WaitForFullResponse(www, stringcontent, Sender.GenericPostFullResponse,true));
+            //WWW www = new WWW(url, bytes,postHeaders);
+
+            var request = UnityWebRequest.Put(url, bytes);
+            request.method = "POST";
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
         }
 
         //used internally so uploading a file from cache doesn't trigger more files
         public static void LocalCachePost(string url, string stringcontent)
         {
-            if (postHeaders == null)//AUTH
-            {
-                postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            }
+            //if (postHeaders == null)//AUTH
+            //{
+            //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
+            //}
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            WWW www = new WWW(url, bytes, postHeaders);
-            Sender.StartCoroutine(Sender.WaitForFullResponse(www, stringcontent, Sender.GenericPostFullResponse,false));
+            //WWW www = new WWW(url, bytes, postHeaders);
+            var request = UnityWebRequest.Put(url, bytes);
+            request.method = "POST";
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));
         }
     }
 }
