@@ -916,7 +916,8 @@ public class EditorCore
             {
                 if (line.Length == 0) { continue; }
                 if (line.StartsWith("//")) { continue; }
-                var split = line.Split('|');
+                string replacement = System.Text.RegularExpressions.Regex.Replace(line, @"\t|\n|\r", "");
+                var split = replacement.Split('|');
                 foreach(var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
                 {
                     if (keyvalue.ToString().ToUpper() == split[0].ToUpper())
@@ -956,11 +957,13 @@ public class EditorCore
         EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
         SaveEditorVersion();
 
-        checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+        //checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+        checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+        checkForUpdatesRequest.Send();
         EditorApplication.update += UpdateCheckForUpdates;
     }
 
-    static WWW checkForUpdatesRequest;
+    static UnityEngine.Networking.UnityWebRequest checkForUpdatesRequest;
     static void CheckForUpdates()
     {
         System.DateTime remindDate; //current date must be this or beyond to show popup window
@@ -972,7 +975,9 @@ public class EditorCore
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                 SaveEditorVersion();
 
-                checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+                //checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+                checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+                checkForUpdatesRequest.Send();
                 EditorApplication.update += UpdateCheckForUpdates;
             }
         }
@@ -995,9 +1000,9 @@ public class EditorCore
                 Debug.Log("Check for cognitiveVR SDK version update error: " + checkForUpdatesRequest.error);
             }
 
-            if (!string.IsNullOrEmpty(checkForUpdatesRequest.text))
+            if (!string.IsNullOrEmpty(checkForUpdatesRequest.downloadHandler.text))
             {
-                var info = JsonUtility.FromJson<ReleaseInfo>(checkForUpdatesRequest.text);
+                var info = JsonUtility.FromJson<ReleaseInfo>(checkForUpdatesRequest.downloadHandler.text);
 
                 var version = info.tag_name;
                 string summary = info.body;

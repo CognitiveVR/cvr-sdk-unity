@@ -325,7 +325,7 @@ public class ManageDynamicObjects : EditorWindow
     /// <summary>
     /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
     /// </summary>
-    public static void UploadManifest(System.Action callback)
+    public static void UploadManifest(System.Action callback, System.Action nodynamicscallback = null)
     {
         if (Manifest == null) { Manifest = new AggregationManifest(); }
         //if (SceneVersionCollection == null) { Debug.LogError("SceneVersionCollection is null! Make sure RefreshSceneVersion was called before this"); return; }
@@ -337,6 +337,10 @@ public class ManageDynamicObjects : EditorWindow
         if (Manifest.objects.Count == 0)
         {
             Debug.LogWarning("Aggregation Manifest has nothing in list!");
+            if (nodynamicscallback != null)
+            {
+                nodynamicscallback.Invoke();
+            }
             return;
         }
 

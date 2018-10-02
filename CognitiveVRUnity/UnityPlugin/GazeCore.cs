@@ -207,6 +207,11 @@ namespace CognitiveVR
                 return;
             }
 
+            if (gazebuilder[gazebuilder.Length-1] == ',')
+            {
+                gazebuilder = gazebuilder.Remove(gazebuilder.Length-1, 1);
+            }
+
             gazebuilder.Append("],");
 
             gazeCount =0;

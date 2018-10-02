@@ -76,6 +76,7 @@ namespace CognitiveVR
         public string APIKey;
 
         public bool EnableLogging = true;
+        public bool EnableDevLogging = false;
 
         [Header("Player Tracking")]
         //player tracking
