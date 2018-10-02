@@ -55,7 +55,7 @@ namespace CognitiveVR
             {
                 CheckGazeRenderType();
             }
-            p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval),0,10);
+            p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
@@ -78,17 +78,44 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
-            p.SnapshotInterval = Mathf.Clamp(EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval), 0, 10);
-            //p.VideoSphereDynamicObjectId = EditorGUILayout.TextField("Video Sphere Dynamic Object Id", p.VideoSphereDynamicObjectId);
-            //p.GazeDirectionMultiplier = Mathf.Clamp(EditorGUILayout.FloatField("Video Sphere Radius", p.GazeDirectionMultiplier), 0, 1000);
-
+            p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
+            p.SnapshotInterval = Mathf.Clamp(p.SnapshotInterval, 0.1f, 10);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);
-            p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Gaze Snapshot Batch Size", p.GazeSnapshotCount),0,1000);
-            p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Snapshot Batch Size", p.TransactionSnapshotCount), 0, 1000);
-            p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 0, 1000);
-            p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 0, 1000);
+            
+            //gaze
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Gaze Snapshot Batch Size", p.GazeSnapshotCount),64,1500);
+            
+            //transactions
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Snapshot Batch Size", p.TransactionSnapshotCount), 1, 1000);
+            p.TransactionExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Extreme Snapshot Batch Size", p.TransactionExtremeSnapshotCount), p.TransactionSnapshotCount, 1000);
+            p.TransactionSnapshotMinTimer = EditorGUILayout.IntField("Event Min Interval", Mathf.Clamp(p.TransactionSnapshotMinTimer, 1, 10));
+            p.TransactionSnapshotMaxTimer = EditorGUILayout.IntField("Event Max Interval", Mathf.Clamp(p.TransactionSnapshotMaxTimer, p.TransactionSnapshotMinTimer, 60));
+
+            //dynamics
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Dynamics", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 16, 1000);
+            p.DynamicExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Extreme Snapshot Batch Size", p.DynamicExtremeSnapshotCount), p.DynamicSnapshotCount, 1000);
+            p.DynamicSnapshotMinTimer = EditorGUILayout.IntField("Dynamic Min Interval", Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 10));
+            p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField("Dynamic Max Interval", Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 60));
+
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 64, 1500);
+            p.SensorExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Extreme Snapshot Batch Size", p.SensorExtremeSnapshotCount), p.SensorSnapshotCount, 1500);
+            p.SensorSnapshotMinTimer = EditorGUILayout.IntField("Sensor Min Interval", Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 10));
+            p.SensorSnapshotMaxTimer = EditorGUILayout.IntField("Sensor Max Interval", Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 60));
+
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Local Data Cache", EditorStyles.boldLabel);

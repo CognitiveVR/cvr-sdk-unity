@@ -812,6 +812,13 @@ namespace CognitiveVR
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
+            //within last send interval and less than extreme count
+            if (lastSendTime - CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer < Time.realtimeSinceStartup && stringEntries.Count + stringSnapshots.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount)
+            {
+                return;
+            }
+            lastSendTime = Time.realtimeSinceStartup;
+
             sendSnapshotBuilder.Append("{");
 
             //header

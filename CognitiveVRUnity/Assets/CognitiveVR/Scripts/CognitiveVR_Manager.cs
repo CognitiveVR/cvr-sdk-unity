@@ -482,7 +482,7 @@ namespace CognitiveVR
             }
             
             OutstandingInitRequest = true;
-            
+
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
             GPSUpdateInverval = new WaitForSeconds(CognitiveVR_Preferences.Instance.GPSInterval);
             StartCoroutine(Tick());
