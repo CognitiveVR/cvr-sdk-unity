@@ -46,6 +46,7 @@ namespace CognitiveVR
 
             p.APIKey = EditorGUILayout.TextField("API Key", p.APIKey);
             p.EnableLogging = EditorGUILayout.Toggle("Enable Logging", p.EnableLogging);
+            p.EnableDevLogging = EditorGUILayout.Toggle("Enable Development Logging", p.EnableDevLogging);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);

@@ -111,6 +111,9 @@ namespace CognitiveVR
         System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload)
         {
             yield return new WaitUntil(() => www.isDone);
+
+            Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
+
             if (callback != null)
             {
                 var headers = www.GetResponseHeaders();
@@ -120,6 +123,7 @@ namespace CognitiveVR
                     //check cvr header to make sure not blocked by capture portal
                     if (!headers.ContainsKey("cvr-request-time"))
                     {
+                        Util.logDevelopment("capture portal error! " + www.url);
                         responsecode = 404;
                     }
                 }
@@ -362,6 +366,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
             request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.Send();
 
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
@@ -382,8 +387,11 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
+
+            Util.logDevelopment(url + " " + stringcontent);
         }
 
         //used internally so uploading a file from cache doesn't trigger more files
@@ -400,7 +408,11 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.Send();
+
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));
+
+            Util.logDevelopment(url + " " + stringcontent);
         }
     }
 }
