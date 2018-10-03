@@ -47,6 +47,7 @@ namespace CognitiveVR
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                Util.logDevelopment("check to automatically send events");
                 SendTransactions();
             }
         }
@@ -54,6 +55,11 @@ namespace CognitiveVR
         static float lastSendTime = 0;
         static void SendTransactions()
         {
+            if (cachedEvents == 0)
+            {
+                return;
+            }
+
             //TODO should hold until extreme batch size reached
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {

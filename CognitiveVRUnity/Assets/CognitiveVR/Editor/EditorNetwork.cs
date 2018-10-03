@@ -92,11 +92,7 @@ public class EditorNetwork
     }
 
     public static void Post(string url, WWWForm formcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
-    {
-        //if (headers == null) { headers = new Dictionary<string, string>(); }
-        //if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
-            //WWW www = new WWW(url, formcontent.data,headers);
-            
+    {            
         var p = UnityWebRequest.Post(url, formcontent);
         p.SetRequestHeader("X-HTTP-Method-Override", "POST");
         foreach (var v in headers)

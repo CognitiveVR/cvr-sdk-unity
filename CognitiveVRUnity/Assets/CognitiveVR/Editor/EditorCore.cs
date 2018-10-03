@@ -956,8 +956,7 @@ public class EditorCore
         EditorApplication.update -= UpdateCheckForUpdates;
         EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
         SaveEditorVersion();
-
-        //checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+        
         checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
         checkForUpdatesRequest.Send();
         EditorApplication.update += UpdateCheckForUpdates;
@@ -974,8 +973,7 @@ public class EditorCore
             {
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                 SaveEditorVersion();
-
-                //checkForUpdatesRequest = new UnityEngine.WWW(Constants.GITHUB_SDKVERSION);
+                
                 checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
                 checkForUpdatesRequest.Send();
                 EditorApplication.update += UpdateCheckForUpdates;

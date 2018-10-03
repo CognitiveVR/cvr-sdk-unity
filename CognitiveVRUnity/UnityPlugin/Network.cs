@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
 
-//IMPROVEMENT single coroutine queue waiting for network responses instead of creating many
+//IMPROVEMENT? single coroutine queue waiting for network responses instead of creating many
 
 namespace CognitiveVR
 {
@@ -179,13 +179,8 @@ namespace CognitiveVR
         void WriteRequestToFile(string url, string contents)
         {
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
-
-            //Debug.Log("<<<<<<<<<write request to file");
-
+            
             contents = contents.Replace('\n', ' ');
-
-            //byte[] b64bytes = System.Text.Encoding.UTF8.GetBytes(contents);
-            //string b64 = System.Convert.ToBase64String(b64bytes);
 
             int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(url);
             int contentByteCount = System.Text.Encoding.UTF8.GetByteCount(contents);
@@ -267,12 +262,7 @@ namespace CognitiveVR
                 fs.SetLength(originallength - lastrequestsize);
 
                 //wait for post response
-                //if (postHeaders == null)//AUTH
-                //{
-                //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-                //}
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
-                //WWW www = new WWW(tempurl, bytes, postHeaders);
                 var request = UnityWebRequest.Put(tempurl, bytes);
                 request.method = "POST";
                 request.SetRequestHeader("Content-Type", "application/json");
@@ -353,15 +343,8 @@ namespace CognitiveVR
             }
         }
 
-        //static Dictionary<string, string> getHeaders;
-
         public static void GetExitPollQuestions(string url, string hookname, Response callback, float timeout = 3)
         {
-            //if (getHeaders == null)//AUTH
-            //{
-            //    getHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "GET" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            //}
-            //WWW www = new WWW(url, null, getHeaders);
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
@@ -371,16 +354,9 @@ namespace CognitiveVR
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
 
-        //static Dictionary<string, string> postHeaders;
-
         public static void Post(string url, string stringcontent)
         {
-            //if (postHeaders == null)//AUTH
-            //{
-            //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            //}
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            //WWW www = new WWW(url, bytes,postHeaders);
 
             var request = UnityWebRequest.Put(url, bytes);
             request.method = "POST";
@@ -397,12 +373,7 @@ namespace CognitiveVR
         //used internally so uploading a file from cache doesn't trigger more files
         public static void LocalCachePost(string url, string stringcontent)
         {
-            //if (postHeaders == null)//AUTH
-            //{
-            //    postHeaders = new Dictionary<string, string>() { { "Content-Type", "application/json" }, { "X-HTTP-Method-Override", "POST" }, { "Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey } };
-            //}
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            //WWW www = new WWW(url, bytes, postHeaders);
             var request = UnityWebRequest.Put(url, bytes);
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");

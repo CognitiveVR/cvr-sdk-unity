@@ -400,24 +400,19 @@ namespace CognitiveVR
             {
                 //posting wwwform with headers
                 
-
-                //sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)
                 {
                     headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    //headers.Add("Content-Type", "multipart/form-data; boundary=\""+)
                     foreach(var v in wwwForm.headers)
                     {
                         headers[v.Key] = v.Value;
                     }
                 }
                 EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
-                //Debug.Log("Upload new scene");
             }
 
             UploadComplete = uploadComplete;
-            //EditorApplication.update += UpdateUploadData;
         }
 
         static void PostSceneUploadResponse(int responseCode, string error, string text)
@@ -881,7 +876,6 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    //dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form.data,dynamicObjectForms[0].Headers);
                     dynamicUploadWWW = UnityWebRequest.Post(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
                     foreach (var v in dynamicObjectForms[0].Headers)
                         dynamicUploadWWW.SetRequestHeader(v.Key, v.Value);

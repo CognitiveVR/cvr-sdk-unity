@@ -384,6 +384,24 @@ namespace CognitiveVR
             }
         }
 
+        static float nextSendTime = 0;
+        internal static IEnumerator AutomaticSendTimer()
+        {
+            while (true)
+            {
+                while (nextSendTime > Time.realtimeSinceStartup)
+                {
+                    yield return null;
+                }
+                //try to send!
+                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+
+                Util.logDevelopment("check to automatically send dynamics");
+                if (NewObjectManifestQueue.Count + NewSnapshotQueue.Count > 0)
+                    CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
+            }
+        }
+
         //writes manifest entry and object snapshot to string in threads, then passes value to send saved snapshots
         static IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots, CognitiveVR_Preferences.SceneSettings trackingSettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
@@ -691,6 +709,7 @@ namespace CognitiveVR
                 HasRegisteredAnyDynamics = true;
                 CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
                 Core.OnSendData += Core_OnSendData;
+                CognitiveVR_Manager.Instance.StartCoroutine(AutomaticSendTimer());
             }
         }
 

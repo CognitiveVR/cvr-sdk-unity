@@ -32,6 +32,7 @@ namespace CognitiveVR
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                Util.logDevelopment("check to automatically send sensors");
                 Core_OnSendData();
             }
         }
