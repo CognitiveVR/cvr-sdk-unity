@@ -46,7 +46,7 @@ namespace CognitiveVR
         {
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
             {
-                Debug.Log(LOG_TAG + msg);
+                Debug.Log("[COGNITIVE3D DEV] "+ msg);
             }
         }
 

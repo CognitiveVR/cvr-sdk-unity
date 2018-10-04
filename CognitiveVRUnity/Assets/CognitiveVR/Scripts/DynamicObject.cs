@@ -379,7 +379,7 @@ namespace CognitiveVR
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                lastSendTime = Time.realtimeSinceStartup;
+                //lastSendTime = Time.realtimeSinceStartup;
                 CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
             }
         }
@@ -387,6 +387,7 @@ namespace CognitiveVR
         static float nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
             while (true)
             {
                 while (nextSendTime > Time.realtimeSinceStartup)
@@ -398,7 +399,9 @@ namespace CognitiveVR
 
                 Util.logDevelopment("check to automatically send dynamics");
                 if (NewObjectManifestQueue.Count + NewSnapshotQueue.Count > 0)
+                {
                     CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
+                }
             }
         }
 
@@ -827,13 +830,17 @@ namespace CognitiveVR
                 NewObjectManifestQueue.Clear();
                 return;
             }
-            lastSendTime = Time.realtimeSinceStartup;
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
+
+            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer < Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = stringEntries.Count + stringSnapshots.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount;
+
             //within last send interval and less than extreme count
-            if (lastSendTime - CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer < Time.realtimeSinceStartup && stringEntries.Count + stringSnapshots.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount)
+            if (withinMinTimer && withinExtremeBatchSize)
             {
+                Util.logDebug("Dynamic Last Send Time than timer, less than extreme batch size");
                 return;
             }
             lastSendTime = Time.realtimeSinceStartup;
