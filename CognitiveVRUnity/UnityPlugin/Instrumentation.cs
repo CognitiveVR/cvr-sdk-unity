@@ -52,7 +52,7 @@ namespace CognitiveVR
             }
         }
 
-        static float lastSendTime = 0;
+        static float lastSendTime = -60;
         static void SendTransactions()
         {
             if (cachedEvents == 0)

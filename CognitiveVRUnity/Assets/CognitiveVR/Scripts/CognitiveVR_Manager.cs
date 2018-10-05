@@ -249,6 +249,8 @@ namespace CognitiveVR
                             return null;
                         _hmd = Camera.main.transform;
                     }
+#elif CVR_SNAPDRAGON
+                    _hmd = FindObjectOfType<Camera>().transform;
 #else
                     if (Camera.main == null)
                         return null;

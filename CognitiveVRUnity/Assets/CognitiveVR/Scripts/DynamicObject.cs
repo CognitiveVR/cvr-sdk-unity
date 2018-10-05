@@ -36,7 +36,8 @@ namespace CognitiveVR
             MicrosoftMixedRealityLeft,
             MicrosoftMixedRealityRight,
             VideoSphereLatitude,
-            VideoSphereCubemap
+            VideoSphereCubemap,
+            SnapdragonVRController,
         }
 
         [HideInInspector]
@@ -379,7 +380,16 @@ namespace CognitiveVR
             //queue
             if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                //lastSendTime = Time.realtimeSinceStartup;
+
+                bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer > Time.realtimeSinceStartup;
+                bool withinExtremeBatchSize = NewObjectManifestQueue.Count + NewSnapshotQueue.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount;
+
+                //within last send interval and less than extreme count
+                if (withinMinTimer && withinExtremeBatchSize)
+                {
+                    return;
+                }
+                lastSendTime = Time.realtimeSinceStartup;
                 CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
             }
         }
@@ -400,6 +410,9 @@ namespace CognitiveVR
                 Util.logDevelopment("check to automatically send dynamics");
                 if (NewObjectManifestQueue.Count + NewSnapshotQueue.Count > 0)
                 {
+
+                    //don't bother checking min timer here
+
                     CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                 }
             }
@@ -462,7 +475,7 @@ namespace CognitiveVR
             {
                 SendObjectSnapshots.Dequeue().ReturnToPool();
             }
-
+            
             SendSavedSnapshots(manifestEntries, snapshots, trackingSettings, uniqueid, sessiontimestamp, sessionid);
         }
 
@@ -653,6 +666,15 @@ namespace CognitiveVR
 
                     if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
                     {
+                        bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer > Time.realtimeSinceStartup;
+                        bool withinExtremeBatchSize = NewObjectManifestQueue.Count + NewSnapshotQueue.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount;
+
+                        //within last send interval and less than extreme count
+                        if (withinMinTimer && withinExtremeBatchSize)
+                        {
+                            return;
+                        }
+                        lastSendTime = Time.realtimeSinceStartup;
                         CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                     }
                 }
@@ -698,6 +720,15 @@ namespace CognitiveVR
                 NewObjectManifestQueue.Enqueue(manifestEntry);
                 if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
                 {
+                    bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer > Time.realtimeSinceStartup;
+                    bool withinExtremeBatchSize = NewObjectManifestQueue.Count + NewSnapshotQueue.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount;
+
+                    //within last send interval and less than extreme count
+                    if (withinMinTimer && withinExtremeBatchSize)
+                    {
+                        return;
+                    }
+                    lastSendTime = Time.realtimeSinceStartup;
                     CognitiveVR_Manager.Instance.StartCoroutine(Thread_StringThenSend(NewObjectManifestQueue, NewSnapshotQueue, Core.TrackingScene, Core.UniqueID, Core.SessionTimeStamp, Core.SessionID));
                 }
             }
@@ -770,7 +801,7 @@ namespace CognitiveVR
         }
 
         //the last realtime dynamic data was successfully sent
-        static float lastSendTime;
+        static float lastSendTime = -60;
 
         static void Core_OnSendData()
         {
@@ -833,17 +864,7 @@ namespace CognitiveVR
 
             System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
 
-
-            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.DynamicSnapshotMinTimer < Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = stringEntries.Count + stringSnapshots.Count < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount;
-
-            //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
-            {
-                Util.logDebug("Dynamic Last Send Time than timer, less than extreme batch size");
-                return;
-            }
-            lastSendTime = Time.realtimeSinceStartup;
+            //lastSendTime = Time.realtimeSinceStartup;
 
             sendSnapshotBuilder.Append("{");
 

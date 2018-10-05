@@ -76,10 +76,14 @@ namespace CognitiveVR
                 Util.logWarning("Network::WaitForExitpollResponse timeout");
             if (responsecode != 200)
                 Util.logWarning("Network::WaitForExitpollResponse responsecode is " + responsecode);
-            if (!headers.ContainsKey("cvr-request-time"))
-                Util.logWarning("Network::WaitForExitpollResponse does not contain cvr-request-time header");
 
-            if (!www.isDone || responsecode != 200 || !headers.ContainsKey("cvr-request-time"))
+            if (headers != null)
+            {
+                if (!headers.ContainsKey("cvr-request-time"))
+                    Util.logWarning("Network::WaitForExitpollResponse does not contain cvr-request-time header");
+            }
+
+            if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
             {
                 //try to read from file
                 if (CognitiveVR_Preferences.Instance.LocalStorage && File.Exists(localExitPollPath+hookname))

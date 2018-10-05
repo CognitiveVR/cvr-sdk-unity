@@ -77,10 +77,10 @@ public class ManageDynamicObjects : EditorWindow
 
         string scenename = "Not Saved";
         int versionnumber = 0;
-        string buttontextstyle = "button_bluetext";
+        //string buttontextstyle = "button_bluetext";
         if (currentscene == null || string.IsNullOrEmpty(currentscene.SceneId))
         {
-            buttontextstyle = "button_disabledtext";
+            //buttontextstyle = "button_disabledtext";
         }
         else
         {

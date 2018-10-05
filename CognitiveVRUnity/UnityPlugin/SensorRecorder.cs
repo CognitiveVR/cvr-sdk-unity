@@ -57,7 +57,7 @@ namespace CognitiveVR
             }
         }
 
-        static float lastSendTime;
+        static float lastSendTime = -60;
         private static void Core_OnSendData()
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
