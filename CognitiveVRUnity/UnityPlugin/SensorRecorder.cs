@@ -53,8 +53,21 @@ namespace CognitiveVR
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
-                Core_OnSendData();
+                TrySendData();
             }
+        }
+
+        static void TrySendData()
+        {
+            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount;
+
+            //within last send interval and less than extreme count
+            if (withinMinTimer && withinExtremeBatchSize)
+            {
+                return;
+            }
+            Core_OnSendData();
         }
 
         static float lastSendTime = -60;
@@ -71,14 +84,6 @@ namespace CognitiveVR
                 return;
             }
 
-            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount;
-
-            //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
-            {
-                return;
-            }
 
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;

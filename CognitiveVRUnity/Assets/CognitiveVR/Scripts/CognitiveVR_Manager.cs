@@ -459,7 +459,6 @@ namespace CognitiveVR
 
         public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
         {
-            Util.logDebug("CognitiveVR_Manager Initialize");
             if (instance != null && instance != this)
             {
                 Util.logDebug("CognitiveVR_Manager Initialize instance is not null and not this! Destroy");
@@ -482,7 +481,8 @@ namespace CognitiveVR
                 Util.logDebug("CognitiveVR_Manager Initialize already called. Waiting for response");
                 return;
             }
-            
+            Util.logDebug("CognitiveVR_Manager Initialize");
+
             OutstandingInitRequest = true;
 
             playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);

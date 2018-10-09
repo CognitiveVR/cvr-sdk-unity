@@ -18,7 +18,7 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             Core.CheckSessionId();
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
             NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
         }
 
@@ -36,23 +36,39 @@ namespace CognitiveVR
         private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
-        static float nextSendTime = 0;
+        static float autoTimer_nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
             while (true)
             {
-                while (nextSendTime > Time.realtimeSinceStartup)
+                while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
                 {
                     yield return null;
                 }
                 //try to send!
-                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
                 Util.logDevelopment("check to automatically send events");
                 SendTransactions();
             }
         }
 
-        static float lastSendTime = -60;
+        //checks for min send time and extreme batch size before calling send
+        static void TrySendTransactions()
+        {
+
+            bool withinMinTimer = minTimer_lastSendTime + CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount;
+
+            //within last send interval and less than extreme count
+            if (withinMinTimer && withinExtremeBatchSize)
+            {
+                //Util.logDebug("instrumentation less than timer, less than extreme batch size");
+                return;
+            }
+            SendTransactions();
+        }
+
+        static float minTimer_lastSendTime = -60;
         static void SendTransactions()
         {
             if (cachedEvents == 0)
@@ -69,18 +85,9 @@ namespace CognitiveVR
                 return;
             }
 
-            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount;
 
-            //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
-            {
-                Util.logDebug("instrumentation less than timer, less than extreme batch size");
-                return;
-            }
-
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
-            lastSendTime = Time.realtimeSinceStartup;
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            minTimer_lastSendTime = Time.realtimeSinceStartup;
 
             cachedEvents = 0;
             //bundle up header stuff and transaction data
@@ -161,7 +168,7 @@ namespace CognitiveVR
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
 
@@ -185,7 +192,7 @@ namespace CognitiveVR
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
 
@@ -235,7 +242,7 @@ namespace CognitiveVR
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
     }
