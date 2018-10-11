@@ -407,7 +407,8 @@ namespace CognitiveVR
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
 
-                Util.logDevelopment("check to automatically send dynamics");
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("check to automatically send dynamics");
                 if (NewObjectManifestQueue.Count + NewSnapshotQueue.Count > 0)
                 {
 
@@ -417,7 +418,7 @@ namespace CognitiveVR
                 }
             }
         }
-
+        
         //writes manifest entry and object snapshot to string in threads, then passes value to send saved snapshots
         static IEnumerator Thread_StringThenSend(Queue<DynamicObjectManifestEntry> SendObjectManifest, Queue<DynamicObjectSnapshot> SendObjectSnapshots, CognitiveVR_Preferences.SceneSettings trackingSettings, string uniqueid, double sessiontimestamp, string sessionid)
         {
@@ -426,10 +427,20 @@ namespace CognitiveVR
             SendObjectManifest.CopyTo(tempObjectManifest, 0);
             SendObjectManifest.Clear();
 
+            //copy snapshots into temporary collection
             DynamicObjectSnapshot[] tempSnapshots = new DynamicObjectSnapshot[SendObjectSnapshots.Count];
-            SendObjectSnapshots.CopyTo(tempSnapshots, 0);
-            //snapshots not cleared - return to pool after writing
+            //SendObjectSnapshots.CopyTo(tempSnapshots, 0);
+            //SendObjectSnapshots.Clear();
 
+            int index=0;
+            while (SendObjectSnapshots.Count > 0)
+            {
+                var oldsnapshot = SendObjectSnapshots.Dequeue();
+                tempSnapshots[index] = oldsnapshot.Copy();
+                index++;
+                oldsnapshot.ReturnToPool();
+            }
+            
             //write manifest entries to list in thread
             List<string> manifestEntries = new List<string>();
             bool done = true;
@@ -471,9 +482,9 @@ namespace CognitiveVR
                 }
             }
 
-            while (SendObjectSnapshots.Count > 0)
+            for(int i = 0;i< tempSnapshots.Length;i++)
             {
-                SendObjectSnapshots.Dequeue().ReturnToPool();
+                tempSnapshots[i].ReturnToPool();
             }
             
             SendSavedSnapshots(manifestEntries, snapshots, trackingSettings, uniqueid, sessiontimestamp, sessionid);
@@ -567,15 +578,8 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot NewSnapshot()
         {
-            bool needObjectId = false;
-            //add object to manifest and set ObjectId
-            if (ViewerId == null)
-            {
-                needObjectId = true;
-            }
-
             //new objectId and manifest entry (if required)
-            if (needObjectId)
+            if (ViewerId == null)
             {
                 GenerateDynamicObjectId();
             }
@@ -862,7 +866,7 @@ namespace CognitiveVR
                 return;
             }
 
-            System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder();
+            System.Text.StringBuilder sendSnapshotBuilder = new System.Text.StringBuilder(256*CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount + 8000);
 
             //lastSendTime = Time.realtimeSinceStartup;
 
@@ -925,7 +929,7 @@ namespace CognitiveVR
             string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
-
+            
             CognitiveVR.NetworkManager.Post(url, content);
         }
 
@@ -1249,6 +1253,20 @@ namespace CognitiveVR
     public class DynamicObjectSnapshot
     {
         public static Queue<DynamicObjectSnapshot> snapshotQueue = new Queue<DynamicObjectSnapshot>();
+
+        public DynamicObjectSnapshot Copy()
+        {
+            var dyn = GetSnapshot(Dynamic);
+            dyn.Timestamp = Timestamp;
+            dyn.Id = Id;
+            dyn.Position = Position;
+            dyn.Rotation = Rotation;
+            dyn.Buttons = Buttons;
+            dyn.Dynamic = Dynamic;
+            dyn.Engagements = Engagements;
+            dyn.Properties = Properties;
+            return dyn;
+        }
 
         public void ReturnToPool()
         {

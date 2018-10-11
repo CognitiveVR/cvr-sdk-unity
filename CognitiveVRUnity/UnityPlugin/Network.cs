@@ -116,7 +116,8 @@ namespace CognitiveVR
         {
             yield return new WaitUntil(() => www.isDone);
 
-            Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
 
             if (callback != null)
             {
@@ -127,7 +128,8 @@ namespace CognitiveVR
                     //check cvr header to make sure not blocked by capture portal
                     if (!headers.ContainsKey("cvr-request-time"))
                     {
-                        Util.logDevelopment("capture portal error! " + www.url);
+                        if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                            Util.logDevelopment("capture portal error! " + www.url);
                         responsecode = 404;
                     }
                 }
@@ -271,7 +273,7 @@ namespace CognitiveVR
                 request.method = "POST";
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+                request.SetRequestHeader("Authorization", Constants.APIKey);
                 yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
 
                 //check internet access
@@ -352,7 +354,7 @@ namespace CognitiveVR
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
-            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.SetRequestHeader("Authorization", Constants.APIKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
@@ -366,12 +368,13 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.SetRequestHeader("Authorization", Constants.APIKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
 
-            Util.logDevelopment(url + " " + stringcontent);
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment(url + " " + stringcontent);
         }
 
         //used internally so uploading a file from cache doesn't trigger more files
@@ -382,12 +385,13 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
+            request.SetRequestHeader("Authorization", Constants.APIKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));
 
-            Util.logDevelopment(url + " " + stringcontent);
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment(url + " " + stringcontent);
         }
     }
 }

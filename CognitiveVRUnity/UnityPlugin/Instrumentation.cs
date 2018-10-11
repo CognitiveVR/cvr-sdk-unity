@@ -47,7 +47,8 @@ namespace CognitiveVR
                 }
                 //try to send!
                 autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
-                Util.logDevelopment("check to automatically send events");
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("check to automatically send events");
                 SendTransactions();
             }
         }

@@ -89,33 +89,33 @@ namespace CognitiveVR
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Gaze Snapshot Batch Size", p.GazeSnapshotCount),64,1500);
+            p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
             
             //transactions
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Snapshot Batch Size", p.TransactionSnapshotCount), 1, 1000);
-            p.TransactionExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Event Extreme Snapshot Batch Size", p.TransactionExtremeSnapshotCount), p.TransactionSnapshotCount, 1000);
-            p.TransactionSnapshotMinTimer = EditorGUILayout.IntField("Event Min Interval", Mathf.Clamp(p.TransactionSnapshotMinTimer, 1, 10));
-            p.TransactionSnapshotMaxTimer = EditorGUILayout.IntField("Event Max Interval", Mathf.Clamp(p.TransactionSnapshotMaxTimer, p.TransactionSnapshotMinTimer, 60));
+            p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Event Snapshot Batch Size", "The number of Events to record before automatically sending a web request to the dashboard"), p.TransactionSnapshotCount), 1, 1000);
+            p.TransactionExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Event Extreme Batch Size", "Threshold for ignoring the Event Minimum Timer. If this many Events have been recorded, immediately send"), p.TransactionExtremeSnapshotCount), p.TransactionSnapshotCount, 1000);
+            p.TransactionSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Event Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Event data. Ignored if the batch size reaches Event Extreme Limit"), Mathf.Clamp(p.TransactionSnapshotMinTimer, 1, 10));
+            p.TransactionSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Event Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Event data"), Mathf.Clamp(p.TransactionSnapshotMaxTimer, p.TransactionSnapshotMinTimer, 60));
 
             //dynamics
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Dynamics", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Snapshot Batch Size", p.DynamicSnapshotCount), 16, 1000);
-            p.DynamicExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Dynamic Extreme Snapshot Batch Size", p.DynamicExtremeSnapshotCount), p.DynamicSnapshotCount, 1000);
-            p.DynamicSnapshotMinTimer = EditorGUILayout.IntField("Dynamic Min Interval", Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 10));
-            p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField("Dynamic Max Interval", Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 60));
+            p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Snapshot Batch Size", "The number of Dynamic snapshots and manifest entries to record before automatically sending a web request to the dashboard"), p.DynamicSnapshotCount), 16, 1500);
+            p.DynamicExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Extreme Batch Size", "Threshold for ignoring the Dynamic Minimum Timer. If this many Dynamic snapshots have been recorded, immediately send"), p.DynamicExtremeSnapshotCount), p.DynamicSnapshotCount, 1500);
+            p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
+            p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Snapshot Batch Size", p.SensorSnapshotCount), 64, 1500);
-            p.SensorExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField("Sensor Extreme Snapshot Batch Size", p.SensorExtremeSnapshotCount), p.SensorSnapshotCount, 1500);
-            p.SensorSnapshotMinTimer = EditorGUILayout.IntField("Sensor Min Interval", Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 10));
-            p.SensorSnapshotMaxTimer = EditorGUILayout.IntField("Sensor Max Interval", Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 60));
+            p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Sensor Snapshot Batch Size", "The number of Sensor datapoints to record before automatically sending a web request to the dashboard"), p.SensorSnapshotCount), 64, 1500);
+            p.SensorExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Sensor Extreme Batch Size", "Threshold for ignoring the Sensor Minimum Timer. If this many Sensor datapoints have been recorded, immediately send"), p.SensorExtremeSnapshotCount), p.SensorSnapshotCount, 1500);
+            p.SensorSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Sensor Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit"), Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 60));
+            p.SensorSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Sensor Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Sensor data"), Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
 
             EditorGUILayout.Space();
