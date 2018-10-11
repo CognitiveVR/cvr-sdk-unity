@@ -24,8 +24,10 @@ namespace CognitiveVR
             {
                 if (_hmd == null)
                 {
-                    if (Camera.main == null) { return Object.FindObjectOfType<Transform>(); }
-                    _hmd = Camera.main.transform;
+                    if (Camera.main == null)
+                        _hmd = Object.FindObjectOfType<Camera>().transform;
+                    else
+                        _hmd = Camera.main.transform;
                 }
                 return _hmd;
             }

@@ -40,8 +40,17 @@ namespace CognitiveVR
 				Debug.Log(LOG_TAG + msg);
 			}
 		}
-		
-		public static void logError(Exception e)
+
+        // Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
+        public static void logDevelopment(string msg)
+        {
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+            {
+                Debug.Log("[COGNITIVE3D DEV] "+ msg);
+            }
+        }
+
+        public static void logError(Exception e)
 		{
 			if (CognitiveVR_Preferences.Instance.EnableLogging)
 			{

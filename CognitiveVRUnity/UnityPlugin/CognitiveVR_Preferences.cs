@@ -59,6 +59,7 @@ namespace CognitiveVR
         public string Gateway = "data.cognitive3d.com";
         public string Dashboard = "app.cognitive3d.com";
         public string Viewer = "sceneexplorer.com/scene/";
+        public string Documentation = "docs.cognitive3d.com";
 
         public GazeType GazeType = GazeType.Command;
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
@@ -75,6 +76,7 @@ namespace CognitiveVR
         public string APIKey;
 
         public bool EnableLogging = true;
+        public bool EnableDevLogging = false;
 
         [Header("Player Tracking")]
         //player tracking
@@ -88,10 +90,31 @@ namespace CognitiveVR
         public bool RecordFloorPosition = true;
 
         [Header("Send Data")]
+        //min batch size
         public int GazeSnapshotCount = 64;
-        public int SensorSnapshotCount = 64; //beyond this threshold? write to json (if not realtime) and send
+        public int SensorSnapshotCount = 64;
         public int DynamicSnapshotCount = 64;
         public int TransactionSnapshotCount = 64;
+
+        //min timer
+        //public int GazeSnapshotMinTimer = 6;
+        public int SensorSnapshotMinTimer = 6;
+        public int DynamicSnapshotMinTimer = 2;
+        public int TransactionSnapshotMinTimer = 2;
+
+        //extreme batch size
+        //public int GazeExtremeSnapshotCount = 256;
+        public int SensorExtremeSnapshotCount = 256;
+        public int DynamicExtremeSnapshotCount = 256;
+        public int TransactionExtremeSnapshotCount = 256;
+
+        //max timer
+        //public int GazeSnapshotMaxTimer = 10;
+        public int SensorSnapshotMaxTimer = 10;
+        public int DynamicSnapshotMaxTimer = 10;
+        public int TransactionSnapshotMaxTimer = 10;
+
+
 
         public bool SendDataOnQuit = true;
         public bool SendDataOnHMDRemove = true;

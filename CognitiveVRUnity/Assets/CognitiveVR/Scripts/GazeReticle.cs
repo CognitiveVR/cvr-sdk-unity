@@ -152,7 +152,7 @@ public class GazeReticle : MonoBehaviour
 
     Vector3 GetLookDirection()
     {
-        return NeurableUnity.NeurableUser.Instance.NeurableCam.GazeRay().direction;
+        return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
     }
 #elif CVR_AH
     void Start()
@@ -170,6 +170,22 @@ public class GazeReticle : MonoBehaviour
     {
         return Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
     }
+#elif CVR_SNAPDRAGON
+        void Start()
+        {
+            t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+            if (CognitiveVR_Manager.HMD == null) { return; }
+        }
+        void Update()
+        {
+            if (CognitiveVR_Manager.HMD == null) { return; }
+            t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
+            t.LookAt(CognitiveVR_Manager.HMD.position);
+        }
+        Vector3 GetLookDirection()
+        {
+            return SvrManager.Instance.eyeDirection;
+        }
 #endif
     }
 }

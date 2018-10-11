@@ -17,6 +17,25 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             Core.CheckSessionId();
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+        }
+
+        static float nextSendTime = 0;
+        internal static IEnumerator AutomaticSendTimer()
+        {
+            while (true)
+            {
+                while (nextSendTime > Time.realtimeSinceStartup)
+                {
+                    yield return null;
+                }
+                //try to send!
+                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("check to automatically send sensors");
+                Core_OnSendData();
+            }
         }
 
         public static void RecordDataPoint(string category, float value)
@@ -35,22 +54,41 @@ namespace CognitiveVR
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
-                Core_OnSendData();
+                TrySendData();
             }
         }
 
+        static void TrySendData()
+        {
+            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount;
+
+            //within last send interval and less than extreme count
+            if (withinMinTimer && withinExtremeBatchSize)
+            {
+                return;
+            }
+            Core_OnSendData();
+        }
+
+        static float lastSendTime = -60;
         private static void Core_OnSendData()
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
-            var sceneSettings = Core.TrackingScene;
-            if (sceneSettings == null)
+            //TODO should hold until extreme batch size reached
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings");
                 CachedSnapshots.Clear();
                 currentSensorSnapshots = 0;
                 return;
             }
+
+
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            lastSendTime = Time.realtimeSinceStartup;
+
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
@@ -101,7 +139,7 @@ namespace CognitiveVR
             CachedSnapshots.Clear();
             currentSensorSnapshots = 0;
 
-            string url = Constants.POSTSENSORDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = Constants.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             NetworkManager.Post(url, sb.ToString());

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
@@ -17,29 +18,78 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             Core.CheckSessionId();
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
         }
 
         private static void Core_OnSendData()
         {
             SendTransactions();
         }
-
-        public static void SetMaxTransactions(int max)
-        {
-            maxCachedEvents = max;
-        }
+        
 
         //used for unique identifier for sceneexplorer file names
         private static int partCount = 1;
-
-        static int maxCachedEvents = 16;
+        
         static int cachedEvents = 0;
 
         private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
+        static float autoTimer_nextSendTime = 0;
+        internal static IEnumerator AutomaticSendTimer()
+        {
+            while (true)
+            {
+                while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
+                {
+                    yield return null;
+                }
+                //try to send!
+                autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("check to automatically send events");
+                SendTransactions();
+            }
+        }
+
+        //checks for min send time and extreme batch size before calling send
+        static void TrySendTransactions()
+        {
+
+            bool withinMinTimer = minTimer_lastSendTime + CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount;
+
+            //within last send interval and less than extreme count
+            if (withinMinTimer && withinExtremeBatchSize)
+            {
+                //Util.logDebug("instrumentation less than timer, less than extreme batch size");
+                return;
+            }
+            SendTransactions();
+        }
+
+        static float minTimer_lastSendTime = -60;
         static void SendTransactions()
         {
+            if (cachedEvents == 0)
+            {
+                return;
+            }
+
+            //TODO should hold until extreme batch size reached
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            {
+                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
+                cachedEvents = 0;
+                TransactionBuilder.Length = 0;
+                return;
+            }
+
+
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            minTimer_lastSendTime = Time.realtimeSinceStartup;
+
             cachedEvents = 0;
             //bundle up header stuff and transaction data
 
@@ -89,12 +139,6 @@ namespace CognitiveVR
 
             string packagedEvents = builder.ToString();
 
-            if (string.IsNullOrEmpty(Core.TrackingSceneId))
-            {
-                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
-                return;
-            }
-
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
             string url = Constants.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
@@ -123,9 +167,9 @@ namespace CognitiveVR
             TransactionBuilder.Append(",");
 
             cachedEvents++;
-            if (cachedEvents >= maxCachedEvents)
+            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
 
@@ -147,9 +191,9 @@ namespace CognitiveVR
             TransactionBuilder.Append(",");
 
             cachedEvents++;
-            if (cachedEvents >= maxCachedEvents)
+            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
 
@@ -197,9 +241,9 @@ namespace CognitiveVR
             TransactionBuilder.Append(",");
 
             cachedEvents++;
-            if (cachedEvents >= maxCachedEvents)
+            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
-                SendTransactions();
+                TrySendTransactions();
             }
         }
     }

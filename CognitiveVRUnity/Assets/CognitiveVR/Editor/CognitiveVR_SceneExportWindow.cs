@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using System;
+using UnityEngine.Networking;
 
 //an interface for exporting/decimating and uploading scenes and dynamic objects
 
@@ -59,87 +60,6 @@ namespace CognitiveVR
 
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
-
-        #region Screenshot
-
-        List<Camera> tempDisabledCameras = new List<Camera>();
-
-        Texture2D cachedScreenshot;
-
-        bool LoadScreenshot(string sceneName, out Texture2D returnTexture)
-        {
-            if (cachedScreenshot)
-            {
-                returnTexture = cachedScreenshot;
-                return true;
-            }
-            //if file exists
-            if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
-            {
-                if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
-                {
-                    //load texture from file
-                    Texture2D tex = new Texture2D(1, 1);
-                    tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"));
-                    returnTexture = tex;
-                    cachedScreenshot = returnTexture;
-                    return true;
-                }
-            }
-            returnTexture = null;
-            return false;
-        }
-
-        bool HasSavedScreenshot(string sceneName)
-        {
-            if (!Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot")) { return false; }
-            if (!File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png")) { return false; }
-            return true;
-        }
-
-        public void SaveScreenshot(string sceneName, Texture2D tex)
-        {
-            //create directory
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
-
-            //save file
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
-        }
-
-        static void UploadScreenshot(CognitiveVR_Preferences.SceneSettings settings)
-        {
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
-            string[] screenshotPath = new string[0];
-            if (Directory.Exists(sceneExportDirectory + "screenshot"))
-            {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot");
-            }
-            else
-            {
-                Debug.Log("SceneExportWindow Upload can't find directory to screenshot");
-                return;
-            }
-
-            if (screenshotPath.Length == 0)
-            {
-                Debug.Log("SceneExportWindow can't load data from screenshot directory");
-                return;
-            }
-
-            string url = Constants.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
-
-            Debug.Log("SceneExportWIndow upload screenshot to " + url);
-
-            WWWForm wwwForm = new WWWForm();
-            wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
-            new WWW(url, wwwForm);
-        }
-
-        #endregion
-
-
         //returns true if savedblenderpath ends with blender.exe/app
         static bool IsBlenderPathValid()
         {
@@ -480,24 +400,19 @@ namespace CognitiveVR
             {
                 //posting wwwform with headers
                 
-
-                //sceneUploadWWW = new WWW(Constants.POSTNEWSCENE(), wwwForm);
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)
                 {
                     headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    //headers.Add("Content-Type", "multipart/form-data; boundary=\""+)
                     foreach(var v in wwwForm.headers)
                     {
                         headers[v.Key] = v.Value;
                     }
                 }
                 EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
-                //Debug.Log("Upload new scene");
             }
 
             UploadComplete = uploadComplete;
-            //EditorApplication.update += UpdateUploadData;
         }
 
         static void PostSceneUploadResponse(int responseCode, string error, string text)
@@ -944,7 +859,7 @@ namespace CognitiveVR
         static int DynamicUploadTotal;
         static int DynamicUploadSuccess;
 
-        static WWW dynamicUploadWWW;
+        static UnityWebRequest dynamicUploadWWW;
         static void UpdateUploadDynamics()
         {
             if (dynamicUploadWWW == null)
@@ -961,7 +876,10 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    dynamicUploadWWW = new WWW(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form.data,dynamicObjectForms[0].Headers);
+                    dynamicUploadWWW = UnityWebRequest.Post(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
+                    foreach (var v in dynamicObjectForms[0].Headers)
+                        dynamicUploadWWW.SetRequestHeader(v.Key, v.Value);
+                    dynamicUploadWWW.Send();
                     currentDynamicUploadName = dynamicObjectForms[0].Name;
                     dynamicObjectForms.RemoveAt(0);
                 }
@@ -985,17 +903,5 @@ namespace CognitiveVR
             dynamicUploadWWW = null;
         }
         #endregion
-
-        private void OnDestroy()
-        {
-            if (tempDisabledCameras.Count > 0)
-            {
-                foreach (var c in tempDisabledCameras)
-                {
-                    c.enabled = true;
-                }
-                tempDisabledCameras.Clear();
-            }
-        }
     }
 }

@@ -47,7 +47,7 @@ namespace CognitiveVR
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
             //var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
-            var updateTicksOnEnable = serializedObject.FindProperty("UpdateTicksOnEnable");
+            var continuallyUpdateTransform = serializedObject.FindProperty("ContinuallyUpdateTransform");
             var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
             var releaseOnDestroy = serializedObject.FindProperty("ReleaseIdOnDestroy");
             var useCustomID = serializedObject.FindProperty("UseCustomId");
@@ -141,14 +141,14 @@ namespace CognitiveVR
                     //UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
 
                     //EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
-                    UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
-                    if (GUILayout.Button("Export", "ButtonLeft", GUILayout.MaxWidth(100)))
+                    //UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
+                    if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
                         CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
                         foreach (var t in serializedObject.targetObjects)
                         {
                             var dyn = t as DynamicObject;
-                            if (!dyn.UseCustomId)
+                            //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
                             {
                                 EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
                             }
@@ -156,7 +156,17 @@ namespace CognitiveVR
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                    if (GUILayout.Button("Upload", "ButtonRight", GUILayout.MaxWidth(100)))
+                    if (GUILayout.Button("Thumbnail from\nSceneView", "ButtonMid", GUILayout.Height(30)))
+                    {
+                        foreach (var v in serializedObject.targetObjects)
+                        {
+                            EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
+                        }
+                    }
+                    EditorGUI.EndDisabledGroup();
+
+                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                    if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                     {
                         CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
                     }
@@ -165,36 +175,22 @@ namespace CognitiveVR
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                    if (GUILayout.Button("Thumbnail from SceneView", GUILayout.MaxWidth(180)))
-                    {
-                        foreach (var v in serializedObject.targetObjects)
-                        {
-                            EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
-                        }
-                    }
-                    EditorGUI.EndDisabledGroup();
+                    //GUILayout.FlexibleSpace();
+
                     GUILayout.EndHorizontal();
                 }
 
                 //Setup
-                GUILayout.Label("Setup", EditorStyles.boldLabel);
+                //GUILayout.Space(5);
+                //GUILayout.Label("Setup", EditorStyles.boldLabel);
 
                 //UnityEditor.EditorGUILayout.PropertyField(snapshotOnEnable, new GUIContent("Snapshot On Enable", "Save the transform when this object is first enabled"));
 
-                //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
-                UnityEditor.EditorGUILayout.PropertyField(updateTicksOnEnable, new GUIContent("Update Ticks on Enable", "Begin coroutine that saves the transform of this object when it moves"));
-                //EditorGUI.EndDisabledGroup();
-
-                EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
-
-                DisplayGazeTrackHelpbox(trackGaze.boolValue);
-
-                EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable", "If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
+                
 
 
                 //Object ID
+                GUILayout.Space(5);
                 GUILayout.Label("Ids", EditorStyles.boldLabel);
 
                 GUILayout.BeginHorizontal();
@@ -210,25 +206,46 @@ namespace CognitiveVR
                 EditorGUILayout.PropertyField(groupName, new GUIContent("Group Name", "This is used to identify types of objects and combine aggregated data"));
 
                 EditorGUILayout.PropertyField(releaseOnDisable, new GUIContent("Release Id OnDisable", "Allow other objects to use this Id when this object is no longer active"));
-                EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object is no longer active"));
+                EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object no longer exists"));
 
                 //Snapshot Threshold
-                GUILayout.Label("Snapshot Threshold", EditorStyles.boldLabel);
+                GUILayout.Space(5);
+                GUILayout.Label("Snapshot", EditorStyles.boldLabel);
 
+                EditorGUILayout.PropertyField(requiresManualEnable, new GUIContent("Requires Manual Enable", "If true, ManualEnable must be called before OnEnable will function. Used to set initial variables on an object"));
 
+                //EditorGUI.BeginDisabledGroup(!snapshotOnEnable.boolValue);
+                UnityEditor.EditorGUILayout.PropertyField(continuallyUpdateTransform, new GUIContent("Continually Record Transform", "Continually records the transform of this object at an interval"));
+                //EditorGUI.EndDisabledGroup();
+
+                //EditorGUILayout.PropertyField(trackGaze, new GUIContent("Track Gaze on Dynamic Object"));
+
+                //DisplayGazeTrackHelpbox(trackGaze.boolValue);
+
+                EditorGUI.BeginDisabledGroup(!continuallyUpdateTransform.boolValue);
+
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(syncWithPlayerUpdate, new GUIContent("Sync with Player Update", "This is the Snapshot interval in the Tracker Options Window"));
 
-                EditorGUI.BeginDisabledGroup(syncWithPlayerUpdate.boolValue);
-                if (syncWithPlayerUpdate.boolValue)
+                if (!syncWithPlayerUpdate.boolValue) //custom interval
                 {
-                    EditorGUILayout.FloatField(new GUIContent("Update Rate", "Synced with Player Update.\nThe interval between checking for modified position and rotation"), EditorCore.GetPreferences().SnapshotInterval);
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Update Rate",GUILayout.MaxWidth(100));
+                    //EditorGUILayout.FloatField(0.5f, GUILayout.MinWidth(50));
+                    EditorGUILayout.PropertyField(updateRate, new GUIContent("", "This is the Snapshot interval in the Tracker Options Window"), GUILayout.MinWidth(50));
+                    EditorGUILayout.EndHorizontal();
                 }
-                else
+                else //player interval
                 {
-                    EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "The interval between checking for modified position and rotation"));
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.LabelField("Update Rate", GUILayout.MaxWidth(100));
+                    EditorGUILayout.FloatField(EditorCore.GetPreferences().SnapshotInterval, GUILayout.MinWidth(50));
+                    EditorGUI.EndDisabledGroup();
                 }
+
+                EditorGUILayout.EndHorizontal();
+                
                 updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
-                EditorGUI.EndDisabledGroup();
 
 
                 EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot. Checked each 'Tick'"));
@@ -237,10 +254,13 @@ namespace CognitiveVR
                 EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
                 rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
 
+                EditorGUI.EndDisabledGroup();
+
 #if !UNITY_5_6_OR_NEWER
             GUILayout.Label("Video Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Video Player requires Unity 5.6 or newer!", MessageType.Warning);
 #else
+                GUILayout.Space(5);
                 GUILayout.Label("Video Settings", EditorStyles.boldLabel);
 
                 EditorGUILayout.PropertyField(videoPlayer, new GUIContent("Video Player"));
