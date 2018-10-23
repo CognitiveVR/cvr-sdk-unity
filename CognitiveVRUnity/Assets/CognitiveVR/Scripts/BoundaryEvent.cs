@@ -20,7 +20,6 @@ namespace CognitiveVR.Components
 
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
-                chaperoneGUID = Util.GetUniqueId();
                 new CustomEvent("cvr.boundary").Send();
                 Util.logDebug("chaperone visible");
             }
@@ -28,14 +27,12 @@ namespace CognitiveVR.Components
         }
 
 #if CVR_STEAMVR
-        string chaperoneGUID;
         void CognitiveVR_Manager_PoseEventHandler(Valve.VR.EVREventType evrevent)
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_ChaperoneDataHasChanged)
             {
                 if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
                 {
-                    chaperoneGUID = Util.GetUniqueId();
                     new CustomEvent("cvr.boundary").SetProperty("visible", true).Send();
                     Util.logDebug("chaperone visible");
                 }
@@ -48,19 +45,19 @@ namespace CognitiveVR.Components
 #endif
 
 #if CVR_OCULUS
-        string transactionID;
+        bool BoundsVisible;
         void Update()
         {
-            if (OVRManager.boundary.GetVisible() && string.IsNullOrEmpty(transactionID))
+            if (OVRManager.boundary.GetVisible() && !BoundsVisible)
             {
-                transactionID = Util.GetUniqueId();
                 new CustomEvent("cvr.boundary").SetProperty("visible", true).Send();
+                BoundsVisible = true;
 
             }
-            if (!OVRManager.boundary.GetVisible() && !string.IsNullOrEmpty(transactionID))
+            if (!OVRManager.boundary.GetVisible() && BoundsVisible)
             {
                 new CustomEvent("cvr.boundary").SetProperty("visible", false).Send();
-                transactionID = string.Empty;
+                BoundsVisible = false;
             }
         }
 #endif

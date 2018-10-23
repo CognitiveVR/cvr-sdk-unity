@@ -28,7 +28,7 @@ namespace CognitiveVR.Components
         }
 
         public Valve.VR.VRControllerState_t controllerState;
-        uint stateSize;
+        uint stateSize=0;
         private void CognitiveVR_Manager_OnUpdate()
         {
             var system = Valve.VR.OpenVR.System;
@@ -54,9 +54,9 @@ namespace CognitiveVR.Components
                 samples++;
                 if (samples >= SampleCount)
                 {
-                    Util.logDebug("arm length " + maxSqrDistance);
-                    Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    //Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
+                    float distance = Mathf.Sqrt(maxSqrDistance);
+                    Util.logDebug("arm length " + distance);
+                    Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", distance } });
                     CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }
@@ -84,14 +84,13 @@ namespace CognitiveVR.Components
             if (samples < SampleCount)
             {
                 maxSqrDistance = Mathf.Max(maxSqrDistance, OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch).sqrMagnitude, OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch).sqrMagnitude);
-                //maxSqrDistance = Mathf.Max(Vector3.SqrMagnitude(CognitiveVR_Manager.GetController(0).position - CognitiveVR_Manager.HMD.position));
 
                 samples++;
                 if (samples >= SampleCount)
                 {
-                    Util.logDebug("arm length " + maxSqrDistance);
-                    Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", Mathf.Sqrt(maxSqrDistance) } });
-                    //Instrumentation.updateUserState(new Dictionary<string, object> { { "armlength", Mathf.Sqrt(maxSqrDistance) } });
+                    float distance = Mathf.Sqrt(maxSqrDistance);
+                    Util.logDebug("arm length " + distance);
+                    Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.armlength", distance } });
                     CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
                 }
             }

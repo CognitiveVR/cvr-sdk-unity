@@ -106,7 +106,7 @@ namespace CognitiveVR
 
 #if CVR_STEAMVR
         //used to append changes in button states to snapshots
-        private DynamicObjectButtonStates ButtonStates = null;
+        //private DynamicObjectButtonStates ButtonStates = null;
 #endif
 
         //engagement name, engagement event. cleared when snapshots sent
@@ -300,12 +300,6 @@ namespace CognitiveVR
                 StopAllCoroutines();
                 return;
             }
-
-            if (CommonMesh != CommonDynamicMesh.ViveController) { return; }
-#if CVR_STEAMVR
-            ButtonStates = new DynamicObjectButtonStates();
-            ButtonStates.ButtonStateInit(transform);
-#endif
         }
 
         /// <summary>
@@ -436,9 +430,9 @@ namespace CognitiveVR
             while (SendObjectSnapshots.Count > 0)
             {
                 var oldsnapshot = SendObjectSnapshots.Dequeue();
-                tempSnapshots[index] = oldsnapshot.Copy();
+                tempSnapshots[index] = oldsnapshot;//.Copy();
                 index++;
-                oldsnapshot.ReturnToPool();
+                //oldsnapshot.ReturnToPool();
             }
             
             //write manifest entries to list in thread
@@ -586,18 +580,18 @@ namespace CognitiveVR
 
             //create snapshot for this object
             var snapshot = DynamicObjectSnapshot.GetSnapshot(this);
-#if CVR_STEAMVR
-            if (ButtonStates != null)
-            {
-                //snapshot.Buttons = ButtonStates.GetDirtyStates();
-                snapshot.Buttons = new Dictionary<string, DynamicObjectButtonStates.ButtonState>();
-                var dirtyButtonStates = ButtonStates.GetDirtyStates();
-                foreach (var v in dirtyButtonStates)
-                {
-                    snapshot.Buttons.Add(v.Key, v.Value);
-                }
-            }
-#endif
+//#if CVR_STEAMVR
+//            if (ButtonStates != null)
+//            {
+//                //snapshot.Buttons = ButtonStates.GetDirtyStates();
+//                snapshot.Buttons = new Dictionary<string, DynamicObjectButtonStates.ButtonState>();
+//                var dirtyButtonStates = ButtonStates.GetDirtyStates();
+//                foreach (var v in dirtyButtonStates)
+//                {
+//                    snapshot.Buttons.Add(v.Key, v.Value);
+//                }
+//            }
+//#endif
 
             if (IsVideoPlayer)
             {
@@ -1100,7 +1094,7 @@ namespace CognitiveVR
             if (!ReleaseIdOnDisable)
             {
                 //don't release id to be used again. makes sure tracked gaze on this will be unique
-                NewSnapshot().SetEnabled(false);
+                NewSnapshot().UpdateTransform().SetEnabled(false);
                 new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
                 ViewerId = null;
@@ -1108,7 +1102,7 @@ namespace CognitiveVR
             }
             if (CognitiveVR_Manager.Instance != null)
             {
-                NewSnapshot().SetEnabled(false).ReleaseUniqueId();
+                NewSnapshot().UpdateTransform().SetEnabled(false).ReleaseUniqueId();
             }
         }
 
@@ -1140,7 +1134,7 @@ namespace CognitiveVR
             }
             if (CognitiveVR_Manager.Instance != null && viewerId != null) //creates another snapshot to destroy an already probably disabled thing
             {
-                NewSnapshot().ReleaseUniqueId();
+                NewSnapshot().UpdateTransform().ReleaseUniqueId();
             }
         }
 
@@ -1261,10 +1255,13 @@ namespace CognitiveVR
             dyn.Id = Id;
             dyn.Position = Position;
             dyn.Rotation = Rotation;
-            dyn.Buttons = Buttons;
-            dyn.Dynamic = Dynamic;
-            dyn.Engagements = Engagements;
-            dyn.Properties = Properties;
+            if (Buttons != null)
+                dyn.Buttons = new Dictionary<string, ButtonState>(Buttons);
+            dyn.Dynamic = null;
+            if (Engagements != null)
+                dyn.Engagements = new List<DynamicObject.EngagementEvent>(Engagements);
+            if (Properties != null)
+                dyn.Properties = new Dictionary<string, object> (Properties);
             return dyn;
         }
 
@@ -1279,6 +1276,7 @@ namespace CognitiveVR
 
         public static DynamicObjectSnapshot GetSnapshot(DynamicObject dynamic)
         {
+            return new DynamicObjectSnapshot(dynamic); //TODO fix pooling dynamic object snapshots
             if (snapshotQueue.Count > 0)
             {
                 DynamicObjectSnapshot dos = snapshotQueue.Dequeue();
@@ -1300,7 +1298,7 @@ namespace CognitiveVR
         public DynamicObject Dynamic;
         public string Id;
         public Dictionary<string, object> Properties;
-        public Dictionary<string, DynamicObjectButtonStates.ButtonState> Buttons;
+        public Dictionary<string, ButtonState> Buttons;
         public List<DynamicObject.EngagementEvent> Engagements;
         public float[] Position = new float[3] { 0, 0, 0 };
         public float[] Rotation = new float[4] { 0, 0, 0, 1 };
@@ -1390,6 +1388,8 @@ namespace CognitiveVR
             return this;
         }
 
+        //TODO this shouldn't be part of a dynamic obejct snapshot!
+
         /// <summary>
         /// Enable or Disable the Tick coroutine to automatically update the dynamic object's position and rotation
         /// </summary>
@@ -1472,6 +1472,7 @@ namespace CognitiveVR
             return this;
         }
 
+        //TODO this shouldn't set the dynamic object viewer!
         //releasing an id allows a new object with the same mesh to be used instead of bloating the object manifest
         //also sets the dynamic object to be disabled
         public DynamicObjectSnapshot ReleaseUniqueId()
@@ -1532,9 +1533,9 @@ namespace CognitiveVR
     }
 
     //deals with writing new controller inputs into snapshot
-    public class DynamicObjectButtonStates
+    /*public class DynamicObjectButtonStates
     {
-        public class ButtonState
+        /*public class ButtonState
         {
             public int ButtonPercent = 0;
             public float X = 0;
@@ -1584,7 +1585,7 @@ namespace CognitiveVR
                 X = source.X;
                 Y = source.Y;
             }
-        }
+        }*//*
 
         public Dictionary<string, ButtonState> CurrentStates = new Dictionary<string, ButtonState>();
         public Dictionary<string, ButtonState> LastStates = new Dictionary<string, ButtonState>();
@@ -1753,5 +1754,5 @@ namespace CognitiveVR
             CurrentStates["vive_homebtn"].ButtonPercent = 100;
         }
 #endif
-    }
+    }*/
 }
