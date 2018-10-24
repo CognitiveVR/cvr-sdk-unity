@@ -105,8 +105,6 @@ namespace CognitiveVR.Components
 #if CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
-            base.CognitiveVR_Init(initError);
-
             SteamVR_TrackedController controller;
             for (int i = 0; i<2; i++)
             {

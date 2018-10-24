@@ -13,7 +13,7 @@ namespace CognitiveVR.Components
         [DisplaySetting]
         public LayerMask CollisionLayerMask = 1;
 
-        string HMDGuid;
+        bool HMDColliding;
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.Success) { return; }
@@ -26,16 +26,16 @@ namespace CognitiveVR.Components
             if (CognitiveVR_Manager.HMD == null) { return; }
 
             bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CollisionLayerMask);
-            if (hit && string.IsNullOrEmpty(HMDGuid))
+            if (hit && !HMDColliding)
             {
                 Util.logDebug("hmd collision");
-                HMDGuid = Util.GetUniqueId();
+                HMDColliding = true;
                 new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "begin").Send();
             }
-            else if (!hit && !string.IsNullOrEmpty(HMDGuid))
+            else if (!hit && HMDColliding)
             {
                 new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "end").Send();
-                HMDGuid = string.Empty;
+                HMDColliding = false;
             }
         }
         public static string GetDescription()
