@@ -431,12 +431,6 @@ namespace CognitiveVR
             }
 
             instance = this;
-
-            //TODO expose this value to initialize a pool when writing lots of dynamic objects
-            for (int i = 0; i < 100; i++)
-            {
-                DynamicObjectSnapshot.snapshotQueue.Enqueue(new DynamicObjectSnapshot());
-            }
         }
 
         IEnumerator Start()

@@ -100,7 +100,6 @@ public class ControllerTracker : MonoBehaviour
 
     void Init()
     {
-        Debug.Log("init " + gameObject.name);
         dynamic = GetComponent<DynamicObject>();
         SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
         if (o != null)
@@ -134,7 +133,6 @@ public class ControllerTracker : MonoBehaviour
     //updates for interaction hand implementation
     private void Update()
     {
-
         if (Time.time > nextUpdateTime)
         {
             RecordAnalogInputs(); //should this go at the end? double inputs on triggers
@@ -575,36 +573,9 @@ public class ControllerTracker : MonoBehaviour
         while (true)
         {
             yield return wait;
-            //TODO foreach controller. move this into a core manager eventually
             RecordAnalogInputs();
         }
     }
-
-    //struct ComplexButtonState
-    //{
-    //    public string name; //touchpad
-    //    SimpleButtonState one; //x 0.1
-    //    SimpleButtonState two; //y -0.4
-    //
-    //    public ComplexButtonState(string name, SimpleButtonState one, SimpleButtonState two)
-    //    {
-    //        this.name = name;
-    //        this.one = one;
-    //        this.two = two;
-    //    }
-    //}
-    //
-    //struct SimpleButtonState
-    //{
-    //    public string name; //x
-    //    public float value; //0-100
-    //
-    //    public SimpleButtonState(string name, float value)
-    //    {
-    //        this.name = name;
-    //        this.value = value;
-    //    }
-    //}
 
     void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down)
     {
@@ -612,21 +583,6 @@ public class ControllerTracker : MonoBehaviour
         v.Add(name, new ButtonState(down ? 100 : 0));
         var snap = dynamic.NewSnapshot().UpdateTransform();
         snap.Buttons = v;
-
-        Debug.Log("button changed " + dynamic.gameObject.name + " " + name + " " + down);
-
-        //ComplexButtonState cbs = new ComplexButtonState();
-        //SimpleButtonState sbs = new SimpleButtonState(name, down ? 100 : 0);
-        //Debug.Log(sizeof(cbs));
-
-        //System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        //sb.Append("{\"x'");//...whatever is used in the event, just write it here?
-
-        //collection of structs?
-
-        //figure out some replacement for these dictionaries. don't need something this huge for few properties and nice json formatting
-
-        //DynamicObjectCore.RecordDynamic(snap);
     }
 
     //writes for 0-100 inputs (triggers)
@@ -636,25 +592,6 @@ public class ControllerTracker : MonoBehaviour
         v.Add(name, new ButtonState(single));
         var snap = dynamic.NewSnapshot().UpdateTransform();
         snap.Buttons = v;
-
-        Debug.Log("single changed " + dynamic.gameObject.name + " " + name + " " + single);
-
-        //SimpleButtonState sbs = new SimpleButtonState(name, single);
-        //ComplexButtonState cbs = new ComplexButtonState();
-        //Debug.Log(sizeof(cbs));
-
-        //System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        //sb.Append("{\"x'");//...whatever is used in the event, just write it here?
-
-        //buttons are serialized here?
-
-        //DynamicObjectCore.RecordDynamic(Util.Timestamp(Time.frameCount), dynamicObject.Id, dynamicObject.transform.position, dynamicObject.transform.rotation, null);
-
-        //collection of structs?
-
-        //figure out some replacement for these dictionaries. don't need something this huge for few properties and nice json formatting
-
-        //DynamicObjectCore.RecordDynamic(snap);
     }
 
     void OnVectorChanged(DynamicObject dynamic, bool right, string name, int input, float x, float y)
@@ -663,8 +600,6 @@ public class ControllerTracker : MonoBehaviour
         v.Add(name, new ButtonState(input, x, y, true));
         var snap = dynamic.NewSnapshot().UpdateTransform();
         snap.Buttons = v;
-
-        Debug.Log("vector changed " + dynamic.gameObject.name + " " + name + " " + x + "," + y);
     }
 
     //writes for normalized inputs (touchpads)
@@ -674,19 +609,5 @@ public class ControllerTracker : MonoBehaviour
         v.Add(name, new ButtonState(input,vector.x,vector.y,true));
         var snap = dynamic.NewSnapshot().UpdateTransform();
         snap.Buttons = v;
-
-        Debug.Log("vector changed " + dynamic.gameObject.name + " " + name + " " + vector);
-
-        //ComplexButtonState cbs = new ComplexButtonState(name,new SimpleButtonState("x",vector.x), new SimpleButtonState("y", vector.y));
-        //Debug.Log(sizeof(cbs));
-
-        //System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        //sb.Append("{\"x'");//...whatever is used in the event, just write it here?
-
-        //collection of structs?
-
-        //figure out some replacement for these dictionaries. don't need something this huge for few properties and nice json formatting
-
-        //DynamicObjectCore.RecordDynamic(snap);
     }
 }

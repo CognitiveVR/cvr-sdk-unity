@@ -217,7 +217,9 @@ namespace CognitiveVR
             }
 
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            {
                 return;
+            }
 
             if (CognitiveVR_Manager.InitResponse == Error.Success)
             {
@@ -364,7 +366,11 @@ namespace CognitiveVR
                 if (NewSnapshotQueue.Count + NewObjectManifestQueue.Count > 0)
                 {
                     CognitiveVR.Util.logError("Dynamic Object Update - sceneid is empty! do not send Dynamic Objects to sceneexplorer");
-                    NewSnapshotQueue.Clear();
+                    
+                    while(NewSnapshotQueue.Count > 0)
+                    {
+                        NewSnapshotQueue.Dequeue().ReturnToPool();
+                    }
                     NewObjectManifestQueue.Clear();
                 }
                 return;
@@ -430,13 +436,13 @@ namespace CognitiveVR
             while (SendObjectSnapshots.Count > 0)
             {
                 var oldsnapshot = SendObjectSnapshots.Dequeue();
-                tempSnapshots[index] = oldsnapshot;//.Copy();
+                tempSnapshots[index] = oldsnapshot.Copy();
                 index++;
-                //oldsnapshot.ReturnToPool();
+                oldsnapshot.ReturnToPool();
             }
             
             //write manifest entries to list in thread
-            List<string> manifestEntries = new List<string>();
+            List<string> manifestEntries = new List<string>(tempObjectManifest.Length);
             bool done = true;
             if (tempObjectManifest.Length > 0)
             {
@@ -457,7 +463,7 @@ namespace CognitiveVR
             }
 
             //write snapshots to list in thread
-            List<string> snapshots = new List<string>();
+            List<string> snapshots = new List<string>(tempSnapshots.Length);
             if (tempSnapshots.Length > 0)
             {
                 done = false;
@@ -742,6 +748,12 @@ namespace CognitiveVR
                 CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_Update;
                 Core.OnSendData += Core_OnSendData;
                 CognitiveVR_Manager.Instance.StartCoroutine(AutomaticSendTimer());
+
+                for (int i = 0; i < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount; i++)
+                {
+                    DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
+                }
+
             }
         }
 
@@ -855,7 +867,10 @@ namespace CognitiveVR
             {
                 CognitiveVR.Util.logError("SceneId is empty. Do not send Dynamic Objects to SceneExplorer");
 
-                NewSnapshotQueue.Clear();
+                while (NewSnapshotQueue.Count > 0)
+                {
+                    NewSnapshotQueue.Dequeue().ReturnToPool();
+                }
                 NewObjectManifestQueue.Clear();
                 return;
             }
@@ -1083,7 +1098,6 @@ namespace CognitiveVR
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
             CognitiveVR_Manager.LevelLoadedEvent -= CognitiveVR_Manager_LevelLoadedEvent;
-            if (string.IsNullOrEmpty(Core.TrackingSceneId)) { return; }
             if (IsVideoPlayer)
             {
                 VideoPlayer.prepareCompleted -= VideoPlayer_prepareCompleted;
@@ -1091,6 +1105,7 @@ namespace CognitiveVR
                 VideoPlayer.loopPointReached -= VideoPlayer_loopPointReached;
             }
             registeredToEvents = false;
+            if (string.IsNullOrEmpty(Core.TrackingSceneId)) { return; }
             if (!ReleaseIdOnDisable)
             {
                 //don't release id to be used again. makes sure tracked gaze on this will be unique
@@ -1246,7 +1261,7 @@ namespace CognitiveVR
 
     public class DynamicObjectSnapshot
     {
-        public static Queue<DynamicObjectSnapshot> snapshotQueue = new Queue<DynamicObjectSnapshot>();
+        public static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
 
         public DynamicObjectSnapshot Copy()
         {
@@ -1255,13 +1270,32 @@ namespace CognitiveVR
             dyn.Id = Id;
             dyn.Position = Position;
             dyn.Rotation = Rotation;
-            if (Buttons != null)
-                dyn.Buttons = new Dictionary<string, ButtonState>(Buttons);
             dyn.Dynamic = null;
+
+            if (Buttons != null)
+            {
+                dyn.Buttons = new Dictionary<string, ButtonState>(Buttons.Count);
+                foreach(var v in Buttons)
+                {
+                    dyn.Buttons.Add(v.Key, new ButtonState(v.Value));
+                }
+            }
             if (Engagements != null)
-                dyn.Engagements = new List<DynamicObject.EngagementEvent>(Engagements);
+            {
+                dyn.Engagements = new List<DynamicObject.EngagementEvent>(Engagements.Count);
+                foreach (var v in Engagements)
+                {
+                    dyn.Engagements.Add(new DynamicObject.EngagementEvent(v));
+                }
+            }
             if (Properties != null)
-                dyn.Properties = new Dictionary<string, object> (Properties);
+            {
+                dyn.Properties = new Dictionary<string, object>(Properties.Count);
+                foreach (var v in Properties)
+                {
+                    dyn.Properties.Add(v.Key, v.Value); //as long as the property value is a value type, everything should be fine
+                }
+            }
             return dyn;
         }
 
@@ -1271,15 +1305,14 @@ namespace CognitiveVR
             Properties = null;
             Buttons = null;
             Engagements = null;
-            snapshotQueue.Enqueue(this);
+            SnapshotPool.Enqueue(this);
         }
 
         public static DynamicObjectSnapshot GetSnapshot(DynamicObject dynamic)
         {
-            return new DynamicObjectSnapshot(dynamic); //TODO fix pooling dynamic object snapshots
-            if (snapshotQueue.Count > 0)
+            if (SnapshotPool.Count > 0)
             {
-                DynamicObjectSnapshot dos = snapshotQueue.Dequeue();
+                DynamicObjectSnapshot dos = SnapshotPool.Dequeue();
                 if (dos == null)
                 {
                     dos = new DynamicObjectSnapshot(dynamic);
@@ -1531,228 +1564,4 @@ namespace CognitiveVR
             this.Properties = props;
         }
     }
-
-    //deals with writing new controller inputs into snapshot
-    /*public class DynamicObjectButtonStates
-    {
-        /*public class ButtonState
-        {
-            public int ButtonPercent = 0;
-            public float X = 0;
-            public float Y = 0;
-            public bool IncludeXY = false;
-
-            public ButtonState(int buttonPercent, float x = 0, float y = 0, bool includexy = false)
-            {
-                ButtonPercent = buttonPercent;
-                X = x;
-                Y = y;
-                IncludeXY = includexy;
-            }
-
-            public ButtonState(ButtonState source)
-            {
-                ButtonPercent = source.ButtonPercent;
-                IncludeXY = source.IncludeXY;
-                X = source.X;
-                Y = source.Y;
-            }
-
-            //compare as if simply a container for data
-            public override bool Equals(object obj)
-            {
-                var s = (ButtonState)obj;
-
-                if (!IncludeXY)
-                {
-                    return s.ButtonPercent == ButtonPercent;
-                }
-                else
-                {
-                    return s.ButtonPercent == ButtonPercent && Mathf.Approximately(s.X, X) && Mathf.Approximately(s.Y, Y);
-                }
-            }
-
-            public override int GetHashCode()
-            {
-                return base.GetHashCode();
-            }
-
-            public void Copy(ButtonState source)
-            {
-                ButtonPercent = source.ButtonPercent;
-                IncludeXY = source.IncludeXY;
-                X = source.X;
-                Y = source.Y;
-            }
-        }*//*
-
-        public Dictionary<string, ButtonState> CurrentStates = new Dictionary<string, ButtonState>();
-        public Dictionary<string, ButtonState> LastStates = new Dictionary<string, ButtonState>();
-
-        public Dictionary<string, ButtonState> DirtyStates = new Dictionary<string, ButtonState>();
-        public Dictionary<string, ButtonState> GetDirtyStates()
-        {
-            DirtyStates.Clear();
-
-            if (!CurrentStates["vive_homebtn"].Equals(LastStates["vive_homebtn"])) { DirtyStates.Add("vive_homebtn", new ButtonState(CurrentStates["vive_homebtn"])); }
-            if (!CurrentStates["vive_menubtn"].Equals(LastStates["vive_menubtn"])) { DirtyStates.Add("vive_menubtn", new ButtonState(CurrentStates["vive_menubtn"])); }
-            if (!CurrentStates["vive_gripbtn"].Equals(LastStates["vive_gripbtn"])) { DirtyStates.Add("vive_gripbtn", new ButtonState(CurrentStates["vive_gripbtn"])); }
-            if (!CurrentStates["vive_padbtn"].Equals(LastStates["vive_padbtn"])) { DirtyStates.Add("vive_padbtn", new ButtonState(CurrentStates["vive_padbtn"])); }
-            if (!CurrentStates["vive_trigger"].Equals(LastStates["vive_trigger"])) { DirtyStates.Add("vive_trigger", new ButtonState(CurrentStates["vive_trigger"])); }
-
-            LastStates["vive_homebtn"].Copy(CurrentStates["vive_homebtn"]);
-            LastStates["vive_menubtn"].Copy(CurrentStates["vive_menubtn"]);
-            LastStates["vive_gripbtn"].Copy(CurrentStates["vive_gripbtn"]);
-            LastStates["vive_padbtn"].Copy(CurrentStates["vive_padbtn"]);
-            LastStates["vive_trigger"].Copy(CurrentStates["vive_trigger"]);
-
-            return DirtyStates;
-        }
-
-#if CVR_STEAMVR
-        int Id;
-        //TODO if controller is not present at cognitivevrmanager init, it doesn't initialize input tracking
-        public void ButtonStateInit(Transform transform)
-        {
-            SteamVR_TrackedController controller;
-            for (int i = 0; i<2; i++)
-            {
-                bool right = i == 0 ? true : false;
-                if (CognitiveVR_Manager.GetController(right) == null)
-                {
-                    Util.logDebug("Dynamic Object Controller - Button State Init cannot get "+ (right?"right":"left") + " controller");
-                    continue;
-                }
-                if (CognitiveVR_Manager.GetController(right) != transform)
-                {
-                    continue;
-                }
-
-                controller = CognitiveVR_Manager.GetController(right).GetComponent<SteamVR_TrackedController>();
-
-                if (controller == null)
-                {
-                    Util.logDebug("------------------Must have a SteamVR_TrackedController component to capture inputs!");
-                    continue;
-                }
-                //controller = CognitiveVR_Manager.GetController(right).gameObject.AddComponent<SteamVR_TrackedController>(); //need to have start called and set controllerindex
-
-                Id = (int)controller.controllerIndex;
-
-                controller.SteamClicked -= Controller_SteamClicked;
-
-                controller.MenuButtonClicked -= Controller_MenuButtonClicked;
-                controller.MenuButtonUnclicked -= Controller_MenuButtonUnclicked;
-
-                controller.TriggerClicked -= Controller_TriggerClicked;
-                controller.TriggerUnclicked -= Controller_TriggerUnclicked;
-
-                controller.Gripped -= Controller_Gripped;
-                controller.Ungripped -= Controller_Ungripped;
-
-                controller.PadTouched -= Controller_PadTouched;
-                controller.PadUntouched -= Controller_PadUntouched;
-
-                controller.PadClicked -= Controller_PadClicked;
-                controller.PadUnclicked -= Controller_PadUnclicked;
-
-
-                controller.SteamClicked += Controller_SteamClicked;
-
-                controller.MenuButtonClicked += Controller_MenuButtonClicked;
-                controller.MenuButtonUnclicked += Controller_MenuButtonUnclicked;
-
-                controller.TriggerClicked += Controller_TriggerClicked;
-                controller.TriggerUnclicked += Controller_TriggerUnclicked;
-
-                controller.Gripped += Controller_Gripped;
-                controller.Ungripped += Controller_Ungripped;
-
-                controller.PadTouched += Controller_PadTouched;
-                controller.PadUntouched += Controller_PadUntouched;
-
-                controller.PadClicked += Controller_PadClicked;
-                controller.PadUnclicked += Controller_PadUnclicked;
-
-                //CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
-            }
-
-            LastStates.Add("vive_menubtn", new ButtonState(0));
-            LastStates.Add("vive_homebtn", new ButtonState(0));
-            LastStates.Add("vive_gripbtn", new ButtonState(0));
-            LastStates.Add("vive_padbtn", new ButtonState(0,0,0,true));
-            LastStates.Add("vive_trigger", new ButtonState(0));
-
-            CurrentStates.Add("vive_menubtn", new ButtonState(0));
-            CurrentStates.Add("vive_homebtn", new ButtonState(0));
-            CurrentStates.Add("vive_gripbtn", new ButtonState(0));
-            CurrentStates.Add("vive_padbtn", new ButtonState(0, 0, 0,true));
-            CurrentStates.Add("vive_trigger", new ButtonState(0));
-        }
-
-        private void Controller_TriggerUnclicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_trigger"].ButtonPercent = 0;//trigger
-        }
-
-        private void Controller_TriggerClicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_trigger"].ButtonPercent = 100;//trigger
-        }
-
-        private void Controller_PadUnclicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_padbtn"].ButtonPercent = 0;
-            CurrentStates["vive_padbtn"].X = e.padX;
-            CurrentStates["vive_padbtn"].Y = e.padY;
-        }
-
-        private void Controller_PadClicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_padbtn"].ButtonPercent = 100;
-            CurrentStates["vive_padbtn"].X = e.padX;
-            CurrentStates["vive_padbtn"].Y = e.padY;
-        }
-
-        private void Controller_PadUntouched(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_padbtn"].ButtonPercent = 0;
-            CurrentStates["vive_padbtn"].X = e.padX;
-            CurrentStates["vive_padbtn"].Y = e.padY;
-        }
-
-        private void Controller_PadTouched(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_padbtn"].ButtonPercent = 0;
-            CurrentStates["vive_padbtn"].X = e.padX;
-            CurrentStates["vive_padbtn"].Y = e.padY;
-        }
-
-        private void Controller_Ungripped(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_gripbtn"].ButtonPercent = 0;
-        }
-
-        private void Controller_Gripped(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_gripbtn"].ButtonPercent = 100;
-        }
-
-        private void Controller_MenuButtonUnclicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_menubtn"].ButtonPercent = 0;
-        }
-
-        private void Controller_MenuButtonClicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_menubtn"].ButtonPercent = 100;
-        }
-
-        private void Controller_SteamClicked(object sender, ClickedEventArgs e)
-        {
-            CurrentStates["vive_homebtn"].ButtonPercent = 100;
-        }
-#endif
-    }*/
 }
