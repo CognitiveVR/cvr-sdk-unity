@@ -5,7 +5,7 @@ using CognitiveVR;
 #if CVR_MAGICLEAP
 using UnityEngine.XR.MagicLeap;
 #endif
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2
 using Valve.VR;
 #endif
 
@@ -69,11 +69,10 @@ public class ButtonState
     }
 }
 
-#if CVR_OCULUS
-#elif CVR_STEAMVR
+#if CVR_STEAMVR
 [RequireComponent(typeof(DynamicObject))]
 #endif
-public class ControllerTracker : MonoBehaviour
+public class ControllerInputTracker : MonoBehaviour
 {
     bool isRight;
 

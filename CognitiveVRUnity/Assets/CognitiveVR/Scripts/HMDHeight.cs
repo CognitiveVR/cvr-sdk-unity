@@ -13,33 +13,33 @@ namespace CognitiveVR.Components
         [DisplaySetting(5,100)]
         [Tooltip("Number of samples taken. The average is assumed to be HMD height")]
         public int SampleCount = 50;
+        public float Interval = 1;
 
-        int samples = 0;
-        float hmdAccumHeight;
+
 
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+            StartCoroutine(Tick());
         }
 
-        private void CognitiveVR_Manager_OnTick()
+        IEnumerator Tick()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
-            if (samples < SampleCount)
+            int samples = 0;
+            float hmdAccumHeight = 0;
+            YieldInstruction wait = new WaitForSeconds(Interval);
+
+            while (samples < SampleCount)
             {
-                hmdAccumHeight += CognitiveVR_Manager.HMD.position.y;
+                yield return wait;
+                hmdAccumHeight += CognitiveVR_Manager.HMD.localPosition.y;
                 samples++;
-                if (samples >= SampleCount)
-                {
-                    float averageHeight = hmdAccumHeight / samples;
-                    Util.logDebug("head height " + averageHeight);
-                    Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.height", averageHeight } });
-                    CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
-                }
             }
+
+            float averageHeight = hmdAccumHeight / samples;
+            Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.height", averageHeight } });
         }
 
         public static string GetDescription()
@@ -54,11 +54,6 @@ namespace CognitiveVR.Components
 #else
             return false;
 #endif
-        }
-
-        void OnDestroy()
-        {
-            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

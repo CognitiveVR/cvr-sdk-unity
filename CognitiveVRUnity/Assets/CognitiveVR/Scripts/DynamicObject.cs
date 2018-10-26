@@ -104,11 +104,6 @@ namespace CognitiveVR
 
         public bool RequiresManualEnable = false;
 
-#if CVR_STEAMVR
-        //used to append changes in button states to snapshots
-        //private DynamicObjectButtonStates ButtonStates = null;
-#endif
-
         //engagement name, engagement event. cleared when snapshots sent
         List<EngagementEvent> DirtyEngagements = null;
 
@@ -586,18 +581,6 @@ namespace CognitiveVR
 
             //create snapshot for this object
             var snapshot = DynamicObjectSnapshot.GetSnapshot(this);
-//#if CVR_STEAMVR
-//            if (ButtonStates != null)
-//            {
-//                //snapshot.Buttons = ButtonStates.GetDirtyStates();
-//                snapshot.Buttons = new Dictionary<string, DynamicObjectButtonStates.ButtonState>();
-//                var dirtyButtonStates = ButtonStates.GetDirtyStates();
-//                foreach (var v in dirtyButtonStates)
-//                {
-//                    snapshot.Buttons.Add(v.Key, v.Value);
-//                }
-//            }
-//#endif
 
             if (IsVideoPlayer)
             {

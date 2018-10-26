@@ -159,6 +159,9 @@ public class InitWizard : EditorWindow
 #if CVR_STEAMVR
             selectedsdks.Add("CVR_STEAMVR");
 #endif
+#if CVR_STEAMVR2
+            selectedsdks.Add("CVR_STEAMVR2");
+#endif
 #if CVR_OCULUS
             selectedsdks.Add("CVR_OCULUS");
 #endif
@@ -205,8 +208,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -287,7 +290,6 @@ public class InitWizard : EditorWindow
         GameObject cameraBase;
         GameObject leftcontroller;
         GameObject rightcontroller;
-        Texture controllerIcon;
 
         void ControllerUpdate()
         {
@@ -324,7 +326,7 @@ public class InitWizard : EditorWindow
             if (leftcontroller != null)
             {
                 var dyn = leftcontroller.GetComponent<DynamicObject>();
-                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerTracker>() != null)
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
                 {
                     leftSetupComplete = true;
                 }
@@ -332,7 +334,7 @@ public class InitWizard : EditorWindow
             if (rightcontroller != null)
             {
                 var dyn = rightcontroller.GetComponent<DynamicObject>();
-                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerTracker>() != null)
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
                 {
                     rightSetupComplete = true;
                 }
@@ -375,7 +377,7 @@ public class InitWizard : EditorWindow
 
             if (rightSetupComplete && leftSetupComplete)
             {
-                var manager = FindObjectOfType<ControllerTracker>();
+                var manager = FindObjectOfType<ControllerInputTracker>();
                 if (manager.LeftHand == leftcontroller.GetComponent<DynamicObject>() && manager.RightHand == rightcontroller.GetComponent<DynamicObject>())
                 {
                     setupComplete = true;
@@ -521,13 +523,13 @@ public class InitWizard : EditorWindow
 
 #if CVR_STEAMVR
             
-            if (left != null && left.GetComponent<ControllerTracker>() == null)
+            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
             {
-                left.AddComponent<ControllerTracker>();
+                left.AddComponent<ControllerInputTracker>();
             }
-            if (right != null && right.GetComponent<ControllerTracker>() == null)
+            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
             {
-                right.AddComponent<ControllerTracker>();
+                right.AddComponent<ControllerInputTracker>();
             }
 
             if (left != null)
@@ -563,7 +565,7 @@ public class InitWizard : EditorWindow
             if (cameraBase != null)
             {
                 //add controller tracker to camera base
-                var tracker = cameraBase.AddComponent<ControllerTracker>();
+                var tracker = cameraBase.AddComponent<ControllerInputTracker>();
                 if (left != null)
                     tracker.LeftHand = left.GetComponent<DynamicObject>();
                 if (right != null)
@@ -572,7 +574,7 @@ public class InitWizard : EditorWindow
             else
             {
                 var trackergo = new GameObject("Controller Tracker");
-                var tracker = trackergo.AddComponent<ControllerTracker>();
+                var tracker = trackergo.AddComponent<ControllerInputTracker>();
                 if (left != null)
                     tracker.LeftHand = left.GetComponent<DynamicObject>();
                 if (right != null)
