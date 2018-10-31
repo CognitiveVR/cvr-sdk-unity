@@ -231,9 +231,19 @@ namespace CognitiveVR
                     if (cam != null){ _hmd = cam.transform; }
                     if (_hmd == null)
                     {
-                        if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                        if (Camera.main != null)
+                        {
+                            _hmd = Camera.main.transform;
+                        }
+                        else
+                        {
+                            var c = FindObjectOfType<Camera>();
+                            if (c != null)
+                            {
+                                _hmd = c.transform;
+                            }
+                        }
+                        return _hmd;
                     }
 #elif CVR_OCULUS
                     OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
