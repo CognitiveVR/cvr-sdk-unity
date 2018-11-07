@@ -342,13 +342,13 @@ public class ControllerInputTracker : MonoBehaviour
 
         //trigger buttons
         if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-            OnButtonChanged(LeftHand, false, "rift_trigger_btn", true);
+            OnButtonChanged(LeftHand, false, "rift_trigger", true);
         if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-            OnButtonChanged(RightHand, true, "rift_trigger_btn", true);
+            OnButtonChanged(RightHand, true, "rift_trigger", true);
         if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-            OnButtonChanged(LeftHand, false, "rift_trigger_btn", false);
+            OnButtonChanged(LeftHand, false, "rift_trigger", false);
         if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-            OnButtonChanged(RightHand, true, "rift_trigger_btn", false);
+            OnButtonChanged(RightHand, true, "rift_trigger", false);
 
         //grip
         if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch))
