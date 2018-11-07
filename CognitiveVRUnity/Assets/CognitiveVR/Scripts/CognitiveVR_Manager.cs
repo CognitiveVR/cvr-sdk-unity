@@ -71,6 +71,8 @@ namespace CognitiveVR
                 StopAllCoroutines();
             }
 
+            InitializeControllers();
+
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
             {

@@ -641,6 +641,28 @@ namespace CognitiveVR
                             manifestEntry.Properties.Add("controller", controllerName);
                         }
                     }
+                    else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
+                    {
+                        if (manifestEntry.Properties == null)
+                        {
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
+                        }
+                        else
+                        {
+                            manifestEntry.Properties.Add("controller", "left");
+                        }
+                    }
+                    else if (string.Compare(MeshName, "oculustouchright", true) == 0)
+                    {
+                        if (manifestEntry.Properties == null)
+                        {
+                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
+                        }
+                        else
+                        {
+                            manifestEntry.Properties.Add("controller", "right");
+                        }
+                    }
 
                     if (!string.IsNullOrEmpty(ExternalVideoSource))
                     {
@@ -690,6 +712,28 @@ namespace CognitiveVR
                     else
                     {
                         manifestEntry.Properties.Add("controller", controllerName);
+                    }
+                }
+                else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
+                {
+                    if (manifestEntry.Properties == null)
+                    {
+                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
+                    }
+                    else
+                    {
+                        manifestEntry.Properties.Add("controller", "left");
+                    }
+                }
+                else if (string.Compare(MeshName, "oculustouchright", true) == 0)
+                {
+                    if (manifestEntry.Properties == null)
+                    {
+                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
+                    }
+                    else
+                    {
+                        manifestEntry.Properties.Add("controller", "right");
                     }
                 }
 

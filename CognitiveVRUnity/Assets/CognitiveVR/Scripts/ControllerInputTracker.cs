@@ -175,7 +175,7 @@ public class ControllerInputTracker : MonoBehaviour
                 var y = touchpadaxis.y;
                 int force = 50;
                 Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "vive_touchpad", 0, touchpadaxis);
+                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis);
                 LastTouchpadVector = currentVector;
             }
             if (ControllerDevice.GetPressDown(EVRButtonId.k_EButton_SteamVR_Touchpad))
@@ -186,7 +186,7 @@ public class ControllerInputTracker : MonoBehaviour
                 var y = touchpadaxis.y;
                 int force = 100;
                 Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "vive_touchpad", 0, touchpadaxis);
+                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis);
                 LastTouchpadVector = currentVector;
             }
             if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
@@ -197,7 +197,7 @@ public class ControllerInputTracker : MonoBehaviour
                 var y = touchpadaxis.y;
                 int force = 50;
                 Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "vive_touchpad", 0, touchpadaxis);
+                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis);
                 LastTouchpadVector = currentVector;
             }
             if (ControllerDevice.GetTouchUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
@@ -208,7 +208,7 @@ public class ControllerInputTracker : MonoBehaviour
                 var y = touchpadaxis.y;
                 int force = 0;
                 Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "vive_touchpad", 0, touchpadaxis);
+                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis);
                 LastTouchpadVector = currentVector;
             }
         }
@@ -263,7 +263,7 @@ public class ControllerInputTracker : MonoBehaviour
         Vector3 currentVector = new Vector3(x, y, force);
         if (Vector3.Magnitude(LastTouchpadVector-currentVector)>minMagnitude)
         {
-            OnVectorChanged(dynamic, isRight, "vive_touchpad", 0, touchpadaxis);
+            OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis);
             LastTouchpadVector = currentVector;
         }
 
@@ -359,6 +359,16 @@ public class ControllerInputTracker : MonoBehaviour
             OnButtonChanged(LeftHand, false, "rift_grip", false);
         if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch))
             OnButtonChanged(RightHand, true, "rift_grip", false);
+
+        //thumbstick buttons
+        if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
+            OnButtonChanged(LeftHand, false, "rift_joystick", true);
+        if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
+            OnButtonChanged(RightHand, true, "rift_joystick", true);
+        if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
+            OnButtonChanged(LeftHand, false, "rift_joystick", false);
+        if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
+            OnButtonChanged(RightHand, true, "rift_joystick", false);
     }
 
     Vector3 LeftHandVector;
@@ -383,7 +393,7 @@ public class ControllerInputTracker : MonoBehaviour
             Vector3 currentVector = new Vector3(x, y, force);
             if (Vector3.Magnitude(LeftHandVector - currentVector) > minMagnitude)
             {
-                OnVectorChanged(LeftHand, false, "rift_joystick", 0, touchpadaxis);
+                OnVectorChanged(LeftHand, false, "rift_joystick", force, touchpadaxis);
                 LeftHandVector = currentVector;
             }
         }
@@ -396,7 +406,7 @@ public class ControllerInputTracker : MonoBehaviour
             Vector3 currentVector = new Vector3(x, y, force);
             if (Vector3.Magnitude(RightHandVector - currentVector) > minMagnitude)
             {
-                OnVectorChanged(RightHand, true, "rift_joystick", 0, touchpadaxis);
+                OnVectorChanged(RightHand, true, "rift_joystick", force, touchpadaxis);
                 RightHandVector = currentVector;
             }
         }
