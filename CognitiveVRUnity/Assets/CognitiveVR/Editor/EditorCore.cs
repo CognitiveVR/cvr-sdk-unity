@@ -505,6 +505,23 @@ public class EditorCore
 
         var saveRenderTexture = GetSceneRenderTexture();
 
+        if (saveRenderTexture == null)
+        {
+            Debug.LogWarning("EditorCore::SaveScreenshot could not save screenshot for scene: "  + saveScreenshotSceneName + ". Scene Render texture is null");
+
+            foreach (var c in tempDisabledCameras)
+            {
+                c.enabled = true;
+            }
+            tempDisabledCameras.Clear();
+
+            EditorApplication.update -= DelaySaveScreenshot;
+            if (SaveScreenshotComplete != null)
+                SaveScreenshotComplete.Invoke();
+            SaveScreenshotComplete = null;
+            return;
+        }
+
         //write rendertexture to png
         Texture2D tex = new Texture2D(saveRenderTexture.width, saveRenderTexture.height);
         RenderTexture.active = saveRenderTexture;
