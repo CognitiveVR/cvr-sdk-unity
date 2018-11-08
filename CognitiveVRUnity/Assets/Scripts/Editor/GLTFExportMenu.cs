@@ -36,20 +36,32 @@ public class GLTFExportMenu : EditorWindow
     [MenuItem("GLTF/Export Selected")]
 	static void ExportSelected()
 	{
+        foreach(var selected in Selection.transforms)
+        {
+            //exporting nested dynamics gets messy
+
+            var exporter = new GLTFSceneExporter(new Transform[1] { selected }, RetrieveTexturePath);
+
+        }
+
 		string name;
-		if (Selection.transforms.Length > 1)
-			name = SceneManager.GetActiveScene().name;
-		else if (Selection.transforms.Length == 1)
-			name = Selection.activeGameObject.name;
-		else
-			throw new Exception("No objects selected, cannot export.");
+		//if (Selection.transforms.Length > 1)
+		//	name = SceneManager.GetActiveScene().name;
+		//else if (Selection.transforms.Length == 1)
+		//	name = Selection.activeGameObject.name;
+		//else
+		//	throw new Exception("No objects selected, cannot export.");
 
-		var exporter = new GLTFSceneExporter(Selection.transforms, RetrieveTexturePath);
+		//var exporter = new GLTFSceneExporter(Selection.transforms, RetrieveTexturePath);
 
-		var path = EditorUtility.OpenFolderPanel("glTF Export Path", "", "");
-		if (!string.IsNullOrEmpty(path)) {
-			exporter.SaveGLTFandBin (path, name);
-		}
+
+
+        //string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamics" + Path.DirectorySeparatorChar + ;
+        //
+        //var path = EditorUtility.OpenFolderPanel("glTF Export Path", "", "");
+		//if (!string.IsNullOrEmpty(path)) {
+		//	exporter.SaveGLTFandBin (path, name);
+		//}
 	}
 
     class BakeableMesh
