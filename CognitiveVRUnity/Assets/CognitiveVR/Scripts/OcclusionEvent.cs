@@ -11,139 +11,122 @@ namespace CognitiveVR.Components
     public class OcclusionEvent : CognitiveVRAnalyticsComponent
     {
 
+#if CVR_OCULUS
 
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
 
-#if CVR_STEAMVR
-            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
-            //CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateEvent; //1.1
-#elif CVR_OCULUS
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
-#endif
         }
 
-#if CVR_OCULUS
-        string rRouchGUID;
-        string lTouchGUID;
+        bool LeftControllerVisible = true;
+        bool RightControllerVisible = true;
+
         void Update()
         {
-            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && string.IsNullOrEmpty(rRouchGUID))
+            //TODO move this stuff into cognitivevr_manager and get states from there
+            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && RightControllerVisible)
             {
-                rRouchGUID = Util.GetUniqueId();
+                RightControllerVisible = false;
                 new CustomEvent("cvr.tracking").SetProperty("device","right controller").SetProperty("visible",false).Send();
             }
-            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && !string.IsNullOrEmpty(rRouchGUID))
+            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && !RightControllerVisible)
             {
                 new CustomEvent("cvr.tracking").SetProperty("device","right controller").SetProperty("visible", true).Send();
-                rRouchGUID = string.Empty;
+                RightControllerVisible = true;
             }
 
-            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && string.IsNullOrEmpty(lTouchGUID))
+            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && LeftControllerVisible)
             {
-                lTouchGUID = Util.GetUniqueId();
+                LeftControllerVisible = false;
                 new CustomEvent("cvr.tracking").SetProperty("device", "left controller").SetProperty("visible", false).Send();
             }
-            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && !string.IsNullOrEmpty(lTouchGUID))
+            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && !LeftControllerVisible)
             {
                 new CustomEvent("cvr.tracking").SetProperty("device", "left controller").SetProperty("visible", true).Send();
-                lTouchGUID = string.Empty;
+                LeftControllerVisible = true;
             }
         }
 
-        string hmdGUID;
         private void OVRManager_TrackingLost()
         {
-            hmdGUID = Util.GetUniqueId();
             new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", false).Send();
         }
 
         private void OVRManager_TrackingAcquired()
         {
             new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", true).Send();
-            hmdGUID = string.Empty;
+        }
+
+        void OnDestroy()
+        {
+            OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;
+            OVRManager.TrackingLost -= OVRManager_TrackingLost;
         }
 #endif
 
-#if CVR_STEAMVR
-        string chaperoneGUID;
-        List<TrackedDevice> Devices = new List<TrackedDevice>();
-
-        [System.Serializable]
-        class TrackedDevice
+        //known bug - steamvr1.2 occlusion events will not be correctly reported if only 1 controller is enabled. need to test steamvr2
+#if CVR_STEAMVR2 || CVR_STEAMVR
+        public override void CognitiveVR_Init(Error initError)
         {
-            public int deviceID;
-            public string ValidTransID = string.Empty;
-            public string ConnectedTransID = string.Empty;
-        }
-
-        //steam 1.1
-        private void CognitiveVR_Manager_PoseUpdateEvent(params object[] args)
-        {
-            CognitiveVR_Manager_PoseUpdateHandler((Valve.VR.TrackedDevicePose_t[])args[0]);
+            if (initError != Error.Success) { return; }
+            base.CognitiveVR_Init(initError);
+            
+            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
+            //CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateEvent; //1.1
         }
 
         //steam 1.2
         private void CognitiveVR_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
         {
-            for (int i = 0; i < 16; i++)
-            {
-                if (args.Length <= i) { break; }
-
-                if (args[i].bDeviceIsConnected && args[i].bPoseIsValid)
-                {
-                    bool foundMatchingDevice = false;
-                    for (int j = 0; j < Devices.Count; j++)
-                    {
-                        if (Devices[j].deviceID == i) { foundMatchingDevice = true; break; }
-                    }
-                    if (!foundMatchingDevice)
-                        Devices.Add(new TrackedDevice() { deviceID = i });
-                }
-            }
-
-            for (int j = 0; j < Devices.Count; j++)
-            {
-                if (args[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID != string.Empty)
-                {
-                    new CustomEvent("cvr.tracking").SetProperty("device", GetViveDeviceName(Devices[j].deviceID)).SetProperty("visible", true).Send();
-                    Devices[j].ValidTransID = string.Empty;
-                }
-                if (!args[Devices[j].deviceID].bPoseIsValid && Devices[j].ValidTransID == string.Empty)
-                {
-                    Devices[j].ValidTransID = Util.GetUniqueId();
-                    new CustomEvent("cvr.tracking").SetProperty("device", GetViveDeviceName(Devices[j].deviceID)).SetProperty("visible", false).Send();
-                }
-
-                if (args[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID != string.Empty)
-                {
-                    new CustomEvent("cvr.tracking").SetProperty("device", GetViveDeviceName(Devices[j].deviceID)).SetProperty("connected", true).Send();
-                    Devices[j].ConnectedTransID = string.Empty;
-                }
-                if (!args[Devices[j].deviceID].bDeviceIsConnected && Devices[j].ConnectedTransID == string.Empty)
-                {
-                    Devices[j].ConnectedTransID = Util.GetUniqueId();
-                    new CustomEvent("cvr.tracking").SetProperty("device", GetViveDeviceName(Devices[j].deviceID)).SetProperty("connected", false).Send();
-                }
-            }
-        }
-
-        string GetViveDeviceName(int deviceID)
-        {
-            if (deviceID == 0)
-            {
-                return "hmd";
-            }
-            CognitiveVR_Manager.ControllerInfo cont = CognitiveVR_Manager.GetControllerInfo(deviceID);
-
-            if (cont != null) { return cont.isRight ? "right controller" : "left controller"; }
-
-            return "unknown id " + deviceID;
+            OcclusionChanged();
         }
 #endif
+        bool leftWasVisible;
+        bool leftWasConnected;
+
+        bool rightWasVisible;
+        bool rightWasConnected;
+
+        void OcclusionChanged()
+        {
+            var left = CognitiveVR_Manager.GetControllerInfo(false);
+            if (left != null && left.transform != null)
+            {
+                if (left.connected != leftWasConnected)
+                {
+                    //event
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", left.connected).Send();
+                    leftWasConnected = left.connected;
+                }
+                if (left.visible != leftWasVisible)
+                {
+                    //event
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", left.visible).Send();
+                    leftWasVisible = left.visible;
+                }
+            }
+
+            var right = CognitiveVR_Manager.GetControllerInfo(true);
+            if (right != null && right.transform != null)
+            {
+                if (right.connected != rightWasConnected)
+                {
+                    //event
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", right.connected).Send();
+                    rightWasConnected = right.connected;
+                }
+                if (right.visible != rightWasVisible)
+                {
+                    //event
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", right.visible).Send();
+                    rightWasVisible = right.visible;
+                }
+            }
+        }
 
         public static bool GetWarning()
         {
@@ -157,18 +140,6 @@ namespace CognitiveVR.Components
         public static string GetDescription()
         {
             return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
-        }
-
-        void OnDestroy()
-        {
-#if CVR_STEAMVR
-            CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateHandler; //1.2
-            //CognitiveVR_Manager.PoseUpdateEvent -= CognitiveVR_Manager_PoseUpdateEvent; //1.1
-#endif
-#if CVR_OCULUS
-            OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;
-            OVRManager.TrackingLost -= OVRManager_TrackingLost;
-#endif
         }
     }
 }

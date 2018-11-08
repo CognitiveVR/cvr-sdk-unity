@@ -10,8 +10,8 @@ namespace CognitiveVR.Components
 {
     public class ControllerCollisionEvent : CognitiveVRAnalyticsComponent
     {
-        string controller0GUID;
-        string controller1GUID;
+        bool LeftControllerColliding;
+        bool RightControllerColliding;
 
         [DisplaySetting]
         public LayerMask CollisionLayerMask = 1;
@@ -27,44 +27,36 @@ namespace CognitiveVR.Components
         {
             bool hit;
 
-#if CVR_STEAMVR
-            if (CognitiveVR_Manager.GetController(false) != null)
-#endif
+            var lefthand = CognitiveVR_Manager.GetControllerInfo(false);
+            if (lefthand != null && lefthand.connected && lefthand.visible)
             {
-                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(false);
-
-                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
-                if (hit && string.IsNullOrEmpty(controller0GUID))
+                hit = Physics.CheckSphere(lefthand.transform.position, 0.1f, CollisionLayerMask);
+                if (hit && !LeftControllerColliding)
                 {
-                    Util.logDebug("controller collision");
-                    controller0GUID = Util.GetUniqueId();
+                    LeftControllerColliding = true;
                     new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state","begin").Send();
                 }
-                else if (!hit && !string.IsNullOrEmpty(controller0GUID))
+                else if (!hit && LeftControllerColliding)
                 {
                     new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
-                    controller0GUID = string.Empty;
+                    LeftControllerColliding = false;
                 }
             }
 
 
-#if CVR_STEAMVR
-            if (CognitiveVR_Manager.GetController(true) != null)
-#endif
+            var righthand = CognitiveVR_Manager.GetControllerInfo(true);
+            if (righthand != null && righthand.connected && righthand.visible)
             {
-                Vector3 pos = CognitiveVR_Manager.GetControllerPosition(true);
-
-                hit = Physics.CheckSphere(pos, 0.1f, CollisionLayerMask);
-                if (hit && string.IsNullOrEmpty(controller1GUID))
+                hit = Physics.CheckSphere(righthand.transform.position, 0.1f, CollisionLayerMask);
+                if (hit && !RightControllerColliding)
                 {
-                    Util.logDebug("controller collision");
-                    controller1GUID = Util.GetUniqueId();
+                    RightControllerColliding = true;
                     new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
                 }
-                else if (!hit && !string.IsNullOrEmpty(controller1GUID))
+                else if (!hit && RightControllerColliding)
                 {
                     new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
-                    controller1GUID = string.Empty;
+                    RightControllerColliding = false;
                 }
             }
         }

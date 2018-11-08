@@ -26,7 +26,7 @@ public class InitWizard : EditorWindow
         CognitiveVR_SceneExportWindow.ClearUploadSceneSettings();
     }
 
-    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "listdynamics", "uploadscene", /*"upload",*/ "uploadsummary", "done" };
+    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", /*"upload",*/ "uploadsummary", "done" };
     public int currentPage;
 
     private void OnGUI()
@@ -43,6 +43,7 @@ public class InitWizard : EditorWindow
             case "selectsdk": SelectSDKUpdate(); break;
             case "explainscene": SceneExplainUpdate(); break;
             case "explaindynamic": DynamicExplainUpdate(); break;
+            case "setupcontrollers": ControllerUpdate(); break;
             case "listdynamics": ListDynamicUpdate(); break;
             case "uploadscene": UploadSceneUpdate(); break;
             case "upload": UploadUpdate(); break;
@@ -158,6 +159,9 @@ public class InitWizard : EditorWindow
 #if CVR_STEAMVR
             selectedsdks.Add("CVR_STEAMVR");
 #endif
+#if CVR_STEAMVR2
+            selectedsdks.Add("CVR_STEAMVR2");
+#endif
 #if CVR_OCULUS
             selectedsdks.Add("CVR_OCULUS");
 #endif
@@ -204,8 +208,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK", "SteamVR SDK", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -279,11 +283,311 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
     }
 
-#endregion
+        #endregion
 
-    #region Dynamic Objects
+        #region Controllers
 
-    Vector2 dynamicScrollPosition;
+        GameObject cameraBase;
+        GameObject leftcontroller;
+        GameObject rightcontroller;
+
+        void ControllerUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 5 - CONTROLLER SETUP", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Dynamic Objects can also easily track your controllers. Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
+
+            bool setupComplete = false;
+            bool leftSetupComplete = false;
+            bool rightSetupComplete = false;
+
+#if CVR_STEAMVR
+            if (cameraBase == null)
+            {
+                //basic setup
+                var manager = FindObjectOfType<SteamVR_ControllerManager>();
+                if (manager != null)
+                {
+                    cameraBase = manager.gameObject;
+                    leftcontroller = manager.left;
+                    rightcontroller = manager.right;
+                }
+                else
+                {
+                    //interaction system setup
+                    var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                    if (player)
+                    {
+                        leftcontroller = player.hands[0].gameObject;
+                        rightcontroller = player.hands[1].gameObject;
+                    }
+                }
+            }
+
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
+                {
+                    leftSetupComplete = true;
+                }
+            }
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
+                {
+                    rightSetupComplete = true;
+                }
+            }
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                setupComplete = true;
+            }
+
+#elif CVR_OCULUS
+            //GUI.Label(new Rect(30, 45, 440, 440), "looks like oculus", "boldlabel");
+            if (cameraBase == null)
+            {
+                //basic setup
+                var manager = FindObjectOfType<OVRCameraRig>();
+                if (manager != null)
+                {
+                    cameraBase = manager.gameObject;
+                    leftcontroller = manager.leftHandAnchor.gameObject;
+                    rightcontroller = manager.rightHandAnchor.gameObject;
+                }
+            }
+
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.OculusTouchLeft && dyn.UseCustomMesh == false)
+                {
+                    leftSetupComplete = true;
+                }
+            }
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.OculusTouchRight && dyn.UseCustomMesh == false)
+                {
+                    rightSetupComplete = true;
+                }
+            }
+
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                var manager = FindObjectOfType<ControllerInputTracker>();
+                if (manager.LeftHand == leftcontroller.GetComponent<DynamicObject>() && manager.RightHand == rightcontroller.GetComponent<DynamicObject>())
+                {
+                    setupComplete = true;
+                }
+            }
+
+#else
+            //TODO add support for this stuff
+            //hand motion stuff (hololens, meta, leapmotion, magicleap)
+            //ar stuff (arkit, arcore)
+            //other oculus stuff (gear, go, quest_touch)
+            //magic leap, snapdragon, daydream
+            GUI.Label(new Rect(30, 245, 440, 30), "We do not automatically support input tracking for the selected SDK at this time.", "boldlabel");
+            return;
+#endif
+
+            //left hand label
+            GUI.Label(new Rect(30, 245, 50, 30), "Left", "boldlabel");
+
+            string leftname = "null";
+            if (leftcontroller != null)
+                leftname = leftcontroller.gameObject.name;
+            if(GUI.Button(new Rect(80, 245, 290, 30), leftname, "button_blueoutline"))
+            {
+                Selection.activeGameObject = leftcontroller;
+            }
+
+            int pickerID = 5689465;
+            if (GUI.Button(new Rect(370, 245, 100, 30), "Select..."))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    leftcontroller, true, "", pickerID);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
+                {
+                    leftcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                    Debug.Log("selected " + leftcontroller.name);
+                }
+            }
+
+            if (leftSetupComplete)
+            {
+                GUI.Label(new Rect(320, 245, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(320, 245, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+            }
+
+            //right hand label
+            GUI.Label(new Rect(30, 285, 50, 30), "Right", "boldlabel");
+
+            string rightname = "null";
+            if (rightcontroller != null)
+                rightname = rightcontroller.gameObject.name;
+
+            if (GUI.Button(new Rect(80, 285, 290, 30), rightname, "button_blueoutline"))
+            {
+                Selection.activeGameObject = rightcontroller;
+            }
+
+            pickerID = 5689469;
+            if (GUI.Button(new Rect(370, 285, 100, 30), "Select..."))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    rightcontroller, true, "", pickerID);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
+                {
+                    rightcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                    Debug.Log("selected " + rightcontroller.name);
+                }
+            }
+
+            if (rightSetupComplete)
+            {
+                GUI.Label(new Rect(320, 285, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(320, 285, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+            }
+
+            //drag and drop
+            if (new Rect(30, 285, 440, 30).Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.dragPerform)
+                {
+                    rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
+                }
+            }
+            else if (new Rect(30, 245, 440, 30).Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.dragPerform)
+                {
+                    leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
+                }
+            }
+            else
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+            }
+
+            if (GUI.Button(new Rect(125, 400, 250, 30), "Setup Controller Dynamics"))
+            {
+                SetupControllers(leftcontroller, rightcontroller);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                Event.current.Use();
+            }
+
+            if (setupComplete)
+            {
+                GUI.Label(new Rect(360, 400, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(360, 400, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+            }
+        }
+
+        void SetupControllers(GameObject left, GameObject right)
+        {
+            Debug.Log("setup controllers");
+
+            if (left != null && left.GetComponent<DynamicObject>() == null)
+            {
+                left.AddComponent<DynamicObject>();
+            }
+            if (right != null && right.GetComponent<DynamicObject>() == null)
+            {
+                right.AddComponent<DynamicObject>();
+            }
+
+#if CVR_STEAMVR
+            
+            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
+            {
+                left.AddComponent<ControllerInputTracker>();
+            }
+            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
+            {
+                right.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
+                dyn.TrackGaze = false;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
+                dyn.TrackGaze = false;
+            }
+#elif CVR_OCULUS
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchLeft;
+                dyn.TrackGaze = false;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchRight;
+                dyn.TrackGaze = false;
+            }
+
+            if (cameraBase != null)
+            {
+                //add controller tracker to camera base
+                var tracker = cameraBase.AddComponent<ControllerInputTracker>();
+                if (left != null)
+                    tracker.LeftHand = left.GetComponent<DynamicObject>();
+                if (right != null)
+                    tracker.RightHand = right.GetComponent<DynamicObject>();
+            }
+            else
+            {
+                var trackergo = new GameObject("Controller Tracker");
+                var tracker = trackergo.AddComponent<ControllerInputTracker>();
+                if (left != null)
+                    tracker.LeftHand = left.GetComponent<DynamicObject>();
+                if (right != null)
+                    tracker.RightHand = right.GetComponent<DynamicObject>();
+            }
+#endif
+        }
+
+        #endregion
+
+        #region Dynamic Objects
+
+        Vector2 dynamicScrollPosition;
 
     DynamicObject[] _cachedDynamics;
     DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
@@ -303,7 +607,7 @@ public class InitWizard : EditorWindow
     int delayDisplayUploading = -1;
     void ListDynamicUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 5 - PREPARE DYNAMIC OBJECTS", "steptitle");
+        GUI.Label(steptitlerect, "STEP 6 - PREPARE DYNAMIC OBJECTS", "steptitle");
 
         GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
@@ -413,7 +717,7 @@ public class InitWizard : EditorWindow
         
     }
 
-    #endregion
+#endregion
 
 
     int qualityindex = 2; //0 low, 1 normal, 2 maximum
@@ -421,7 +725,7 @@ public class InitWizard : EditorWindow
 
     void UploadSceneUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 6 - PREPARE SCENE", "steptitle");
+        GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
 
 
         //GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.", "boldlabel");
@@ -561,7 +865,7 @@ public class InitWizard : EditorWindow
         if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
         {
             //upload new version
-            GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
+            GUI.Label(steptitlerect, "STEP 8 - UPLOAD", "steptitle");
 
             Color scene1color = Color.HSVToRGB(0.55f, 0.5f, 1);
             Color scene2color = Color.HSVToRGB(0.55f, 1f, 1);
@@ -597,7 +901,7 @@ public class InitWizard : EditorWindow
             understandRevealTime = EditorApplication.timeSinceStartup + 3;
         }
 
-        GUI.Label(steptitlerect, "STEP 8 - UPLOAD", "steptitle");
+        GUI.Label(steptitlerect, "STEP 9 - UPLOAD", "steptitle");
         GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
         var settings = CognitiveVR_Preferences.FindCurrentScene();
@@ -644,7 +948,7 @@ public class InitWizard : EditorWindow
 
     void DoneUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 9 - DONE", "steptitle");
+        GUI.Label(steptitlerect, "STEP 10 - DONE", "steptitle");
         GUI.Label(new Rect(30, 45, 440, 440), "That's it!\n\nThe <color=#8A9EB7FF>"+EditorCore.DisplayValue(DisplayKey.ManagerName)+"</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
         if (GUI.Button(new Rect(150,200,200,40),"Open Dashboard","button_bluetext"))
         {

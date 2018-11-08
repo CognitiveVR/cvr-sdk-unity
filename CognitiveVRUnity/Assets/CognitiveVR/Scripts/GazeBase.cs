@@ -52,18 +52,20 @@ namespace CognitiveVR
             get
             {
                 if (cam == null)
-                    cam = Camera.main;
+                {
+                    if (CognitiveVR_Manager.HMD != null)
+                    {
+                        cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
+                    }
+                }
                 return cam;
             }
         }
-        protected Transform camtransform;
         protected Transform CameraTransform
         {
             get
             {
-                if (camtransform == null)
-                    camtransform = CameraComponent.transform;
-                return camtransform;
+                return CognitiveVR_Manager.HMD;
             }
         }
         protected bool headsetPresent;
@@ -233,7 +235,7 @@ namespace CognitiveVR
                     cameraRoot = CameraTransform.root;
                 }
                 RaycastHit floorhit = new RaycastHit();
-                if (Physics.Raycast(camtransform.position, -cameraRoot.up, out floorhit))
+                if (Physics.Raycast(CameraTransform.position, -cameraRoot.up, out floorhit))
                 {
                     floorPos = floorhit.point;
                 }

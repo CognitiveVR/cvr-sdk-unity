@@ -96,26 +96,27 @@ namespace CognitiveVR
                 }
             }
 
+            //8 times higher res than the heightmap data, up to 4096 texture
+            Texture2D outTex = new Texture2D(Mathf.Min(4096, data.alphamapWidth * 8), Mathf.Min(4096, data.alphamapHeight * 8));
 
-            //get the highest value layer and write pixels to texture
-            //Texture2D tempTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
-            Texture2D outTex = new Texture2D(data.alphamapWidth, data.alphamapHeight);
-            for (int y = 0; y < data.alphamapHeight; y++)
+            float upscalewidth = outTex.width / data.alphamapWidth;
+            float upscaleheight = outTex.height / data.alphamapHeight;
+
+            for (int y = 0; y < outTex.height; y++)
             {
-                for (int x = 0; x < data.alphamapWidth; x++)
+                for (int x = 0; x < outTex.width; x++)
                 {
+
                     float[] colorAtLayer = new float[layerCount];
                     for (int i = 0; i < colorAtLayer.Length; i++)
                     {
                         //put layers into colours
-                        colorAtLayer[i] = maps[x, y, i];
+                        colorAtLayer[i] = maps[(int)(x / upscalewidth), (int)(y / upscaleheight), i];
                     }
 
 
                     int highestMap = 0;
                     float highestMapValue = 0;
-
-
 
                     for (int i = 0; i < colorAtLayer.Length; i++)
                     {
@@ -126,21 +127,11 @@ namespace CognitiveVR
                         }
                     }
 
-                    if (data.splatPrototypes.Length > highestMap)
-                    {
-                        try
-                        {
-                            int xpixel = x * 10 % (data.splatPrototypes[highestMap].texture.width * 1);
-                            int ypixel = y * 10 % (data.splatPrototypes[highestMap].texture.height * 1);
-                            Color color = data.splatPrototypes[highestMap].texture.GetPixel(xpixel, ypixel);
+                    SplatPrototype sourceSplat = data.splatPrototypes[highestMap];
+                    //TODO figure out correct tiling for textures
+                    Color color = sourceSplat.texture.GetPixel(x,y);
+                    outTex.SetPixel(x, y, color);
 
-                            outTex.SetPixel(x, y, color);
-                        }
-                        catch
-                        {
-
-                        }
-                    }
                 }
             }
 

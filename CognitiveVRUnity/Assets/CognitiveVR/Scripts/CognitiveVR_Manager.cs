@@ -3,7 +3,7 @@ using CognitiveVR;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2
 using Valve.VR;
 #endif
 
@@ -30,17 +30,6 @@ namespace CognitiveVR
 #if CVR_META
         [DllImport("MetaVisionDLL", EntryPoint = "getSerialNumberAndCalibration")]
         internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
-#elif CVR_STEAMVR
-        string GetStringProperty(CVRSystem system, uint deviceId, ETrackedDeviceProperty prop)
-        {
-            var error = ETrackedPropertyError.TrackedProp_Success;
-            var result = new System.Text.StringBuilder();
-
-            var capacity = system.GetStringTrackedDeviceProperty(deviceId, prop, result, 64, ref error);
-            if (capacity > 0)
-                return result.ToString();
-            return string.Empty;
-        }
 #endif
 
         #region Events
@@ -82,6 +71,8 @@ namespace CognitiveVR
                 StopAllCoroutines();
             }
 
+            InitializeControllers();
+
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
             {
@@ -117,7 +108,15 @@ namespace CognitiveVR
                 //Instrumentation.updateDeviceState(metaProperties);
             }
 #elif CVR_STEAMVR
-            var serialnumber = GetStringProperty(OpenVR.System, 0, ETrackedDeviceProperty.Prop_SerialNumber_String);
+
+            string serialnumber = null;
+
+            var error = ETrackedPropertyError.TrackedProp_Success;
+            var result = new System.Text.StringBuilder();
+
+            var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
+            if (capacity > 0)
+                serialnumber = result.ToString();
 
             if (!string.IsNullOrEmpty(serialnumber))
             {
@@ -184,11 +183,26 @@ namespace CognitiveVR
         /// </summary>
         public static event PoseEventHandler PoseEvent;
         public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
-
 #endif
-#endregion
+#if CVR_STEAMVR2
+        public delegate void PoseUpdateHandler(params Valve.VR.TrackedDevicePose_t[] args);
+        /// <summary>
+        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
+        /// </summary>
+        public static event PoseUpdateHandler PoseUpdateEvent;
+        public void OnPoseUpdate(params Valve.VR.TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
 
-#region HMD and Controllers
+        //1.1 and 1.2
+        public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
+        /// <summary>
+        /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
+        /// </summary>
+        public static event PoseEventHandler PoseEvent;
+        public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
+#endif
+        #endregion
+
+        #region HMD and Controllers
 
 
 #if CVR_OCULUS
@@ -220,8 +234,9 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                            _hmd = FindObjectOfType<Camera>().transform;
+                        else
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_OCULUS
                     OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
@@ -233,8 +248,9 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                            _hmd = FindObjectOfType<Camera>().transform;
+                        else
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_FOVE
                     /*FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
@@ -246,77 +262,189 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                            _hmd = FindObjectOfType<Camera>().transform;
+                        else
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_SNAPDRAGON
                     _hmd = FindObjectOfType<Camera>().transform;
 #else
                     if (Camera.main == null)
-                        return null;
-                    _hmd = Camera.main.transform;
+                        _hmd = FindObjectOfType<Camera>().transform;
+                    else
+                        _hmd = Camera.main.transform;
+
 #endif
                 }
                 return _hmd;
             }
         }
 
-#if CVR_STEAMVR
-
+#if CVR_OCULUS
+        //records controller transforms from either interaction player or behaviour poses
         static void InitializeControllers()
         {
-            //OnEnable order breaks everything. just read the controller variables from controller manager - cannot compare indexes
-
-            SteamVR_ControllerManager cm = FindObjectOfType<SteamVR_ControllerManager>();
-            if (cm == null)
+            if (controllers == null)
             {
-                Util.logError("Can't find SteamVR_ControllerManager. Unable to initialize controllers");
-                return;
+                controllers = new ControllerInfo[2];
             }
 
             if (controllers[0] == null)
             {
-                controllers[0] = new ControllerInfo() { transform = cm.left.transform, isRight = false };
+                controllers[0] = new ControllerInfo() { transform = CameraRig.leftHandAnchor, isRight = false, id = 1 };
+                controllers[0].connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
+                controllers[0].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
+                
             }
-
-            if (controllers[0].id < 0)
-            {
-                if (cm.left != null)
-                {
-                    int controllerIndex = (int)cm.left.GetComponent<SteamVR_TrackedObject>().index;
-                    if (controllerIndex > 0)
-                    {
-                        controllers[0].id = controllerIndex;
-                    }
-                }
-            }
-
+            
             if (controllers[1] == null)
             {
-                controllers[1] = new ControllerInfo() { transform = cm.right.transform, isRight = true };
+                controllers[1] = new ControllerInfo() { transform = CameraRig.rightHandAnchor, isRight = true, id = 2 };
+                controllers[1].connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
+                controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
             }
-            if (controllers[1].id < 0)
-            {
-                if (cm.right != null)
-                {
+        }
+#elif CVR_STEAMVR2
 
-                    int controllerIndex = (int)cm.right.GetComponent<SteamVR_TrackedObject>().index;
-                    if (controllerIndex > 0)
-                    {
-                        controllers[1].id = controllerIndex;
-                    }
+        static Valve.VR.SteamVR_Behaviour_Pose[] poses;
+
+        //records controller transforms from either interaction player or behaviour poses
+        static void InitializeControllers()
+        {
+            if (controllers == null || controllers[0].transform == null || controllers[1].transform == null)
+            {
+                if (controllers == null)
+                {
+                    controllers = new ControllerInfo[2];
+                    controllers[0] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
+                    controllers[1] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
+                }
+
+                if (poses == null)
+                {
+                    poses = FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
+                }
+                if (poses != null && poses.Length > 1)
+                {
+                    controllers[0].transform = poses[0].transform;
+                    controllers[1].transform = poses[1].transform;
+                    controllers[0].isRight = poses[0].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
+                    controllers[1].isRight = poses[1].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
+                    controllers[0].id = poses[0].GetDeviceIndex();
+                    controllers[1].id = poses[1].GetDeviceIndex();
                 }
             }
         }
+
+#elif CVR_STEAMVR
+
+        static SteamVR_ControllerManager cm;
+        static Valve.VR.InteractionSystem.Player player;
+
+        static void InitializeControllers()
+        {
+            if (controllers != null && controllers[0].transform != null && controllers[1].transform != null && controllers[0].id >0 && controllers[1].id > 0) {return;}
+
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+                controllers[0] = new ControllerInfo();
+                controllers[1] = new ControllerInfo();
+            }
+            //try to initialize with controllermanager
+            //otherwise try to initialize with player.hands
+
+            if (cm == null)
+            {
+                cm = FindObjectOfType<SteamVR_ControllerManager>();
+            }
+            if (cm != null)
+            {
+                var left = cm.left.GetComponent<SteamVR_TrackedObject>();
+                controllers[0].transform = left.transform;
+                controllers[0].id = (int)left.index;
+                controllers[0].isRight = false;
+                if (left.index != SteamVR_TrackedObject.EIndex.None)
+                {
+                    controllers[0].connected = SteamVR_Controller.Input((int)left.index).connected;
+                    controllers[0].visible = SteamVR_Controller.Input((int)left.index).valid;
+                }
+                else
+                {
+                    controllers[0].connected = false;
+                    controllers[0].visible = false;
+                }
+
+                var right = cm.right.GetComponent<SteamVR_TrackedObject>();
+                controllers[1].transform = right.transform;
+                controllers[1].id = (int)right.index;
+                controllers[1].isRight = true;
+                if (right.index != SteamVR_TrackedObject.EIndex.None)
+                {
+                    controllers[1].connected = SteamVR_Controller.Input((int)right.index).connected;
+                    controllers[1].visible = SteamVR_Controller.Input((int)right.index).valid;
+                }
+                else
+                {
+                    controllers[1].connected = false;
+                    controllers[1].visible = false;
+                }
+            }
+            else
+            {
+                if (player == null)
+                {
+                    player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                }
+                if (player != null)
+                {
+                    var left = player.leftHand;
+                    if (left != null && left.controller != null)
+                    {
+                        controllers[0].transform = player.leftHand.transform;
+                        controllers[0].id = (int)player.leftHand.controller.index;
+                        controllers[0].isRight = false;
+                        controllers[0].connected = left.controller.connected;
+                        controllers[0].visible = left.controller.valid;
+                    }
+
+                    var right = player.rightHand;
+                    if (right != null && right.controller != null)
+                    {
+                        controllers[1].transform = player.rightHand.transform;
+                        controllers[1].id = (int)player.rightHand.controller.index;
+                        controllers[1].isRight = true;
+                        controllers[1].connected = right.controller.connected;
+                        controllers[1].visible = right.controller.valid;
+                    }
+                }
+            }
+
+        }
+#else
+        static void InitializeControllers()
+        {
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+            }
+        }
+#endif
+
+
+
 
         public class ControllerInfo
         {
             public Transform transform;
             public bool isRight;
             public int id = -1;
+
+            public bool connected;
+            public bool visible;
         }
 
-        static ControllerInfo[] controllers = new ControllerInfo[2];
+        static ControllerInfo[] controllers;
 
         public static ControllerInfo GetControllerInfo(int deviceID)
         {
@@ -325,20 +453,26 @@ namespace CognitiveVR
             if (controllers[1].id == deviceID) { return controllers[1]; }
             return null;
         }
-#endif
+
+        public static ControllerInfo GetControllerInfo(bool right)
+        {
+            InitializeControllers();
+            if (controllers[0].isRight == right && controllers[0].id > 0) { return controllers[0]; }
+            if (controllers[1].isRight == right && controllers[1].id > 0) { return controllers[1]; }
+            return null;
+        }
+
+
         /// <summary>
         /// steamvr ID is tracked device id
         /// oculus ID 0 is right, 1 is left controller
         /// </summary>
         public static Transform GetController(int deviceid)
         {
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             InitializeControllers();
             if (controllers[0].id == deviceid) { return controllers[0].transform; }
             if (controllers[1].id == deviceid) { return controllers[1].transform; }
-            return null;
-#elif CVR_OCULUS
-            // OVR doesn't allow access to controller transforms - Position and Rotation available in OVRInput
             return null;
 #else
             return null;
@@ -347,12 +481,10 @@ namespace CognitiveVR
 
         public static Transform GetController(bool right)
         {
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             InitializeControllers();
-            if (right == controllers[0].isRight) { return controllers[0].transform; }
-            if (right == controllers[1].isRight) { return controllers[1].transform; }
-            return null;
-#elif CVR_OCULUS
+            if (right == controllers[0].isRight && controllers[0].id > 0) { return controllers[0].transform; }
+            if (right == controllers[1].isRight && controllers[1].id > 0) { return controllers[1].transform; }
             return null;
 #else
             return null;
@@ -360,39 +492,20 @@ namespace CognitiveVR
         }
 
         /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
-        public static Vector3 GetControllerPosition(bool rightController)
+        public static Vector3 GetControllerPosition(bool right)
         {
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
+
             InitializeControllers();
-            if (rightController)
-            {
-                if (controllers[0].transform != null)
-                { return controllers[0].transform.position; }
-            }
-            else
-            {
-                if (controllers[1].transform != null)
-                { return controllers[1].transform.position; }
-            }
-            return Vector3.zero;
-#elif CVR_OCULUS
-            if (rightController)
-            {
-                if (CameraRig != null)
-                    return CameraRig.rightHandAnchor.position;
-            }
-            else
-            {
-                if (CameraRig != null)
-                    return CameraRig.leftHandAnchor.position;
-            }
+            if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { return controllers[0].transform.position; }
+            if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { return controllers[1].transform.position; }
             return Vector3.zero;
 #else
             return Vector3.zero;
 #endif
         }
 
-#endregion
+        #endregion
 
         private static CognitiveVR_Manager instance;
         public static CognitiveVR_Manager Instance
@@ -431,12 +544,6 @@ namespace CognitiveVR
             }
 
             instance = this;
-
-            //TODO expose this value to initialize a pool when writing lots of dynamic objects
-            for (int i = 0; i < 100; i++)
-            {
-                DynamicObjectSnapshot.snapshotQueue.Enqueue(new DynamicObjectSnapshot());
-            }
         }
 
         IEnumerator Start()
@@ -491,7 +598,13 @@ namespace CognitiveVR
 
 #if CVR_STEAMVR
             SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
+            PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
             //SteamVR_Utils.Event.Listen("new_poses", OnPoseUpdate); //steamvr 1.1
+#endif
+
+#if CVR_STEAMVR2
+            Valve.VR.SteamVR_Events.NewPoses.AddListener(OnPoseUpdate);
+            PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
@@ -523,6 +636,25 @@ namespace CognitiveVR
 
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
+
+#if CVR_STEAMVR || CVR_STEAMVR2
+        private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
+        {
+            InitializeControllers();
+
+            for (int i = 0; i<args.Length;i++)
+            {
+                for (int j = 0; j<controllers.Length;j++)
+                {
+                    if (controllers[j].id == i)
+                    {
+                        controllers[j].connected = args[i].bDeviceIsConnected;
+                        controllers[j].visible = args[i].bPoseIsValid;
+                    }
+                }
+            }
+        }
+#endif
 
         /// <summary>
         /// sets a user friendly label for the session on the dashboard. automatically generated if not supplied
@@ -627,7 +759,7 @@ namespace CognitiveVR
             OnUpdate();
             UpdateSendHotkeyCheck();
 
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2
             var system = Valve.VR.OpenVR.System;
             if (system != null)
             {
@@ -640,6 +772,14 @@ namespace CognitiveVR
                     OnPoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
                 }
             }
+#endif
+
+#if CVR_OCULUS
+            controllers[0].connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
+            controllers[0].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
+
+            controllers[1].connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
+            controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
 #endif
         }
 
