@@ -233,19 +233,10 @@ namespace CognitiveVR
                     if (cam != null){ _hmd = cam.transform; }
                     if (_hmd == null)
                     {
-                        if (Camera.main != null)
-                        {
-                            _hmd = Camera.main.transform;
-                        }
+                        if (Camera.main == null)
+                            _hmd = FindObjectOfType<Camera>().transform;
                         else
-                        {
-                            var c = FindObjectOfType<Camera>();
-                            if (c != null)
-                            {
-                                _hmd = c.transform;
-                            }
-                        }
-                        return _hmd;
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_OCULUS
                     OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
@@ -257,8 +248,9 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                            _hmd = FindObjectOfType<Camera>().transform;
+                        else
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_FOVE
                     /*FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
@@ -270,15 +262,18 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            return null;
-                        _hmd = Camera.main.transform;
+                            _hmd = FindObjectOfType<Camera>().transform;
+                        else
+                            _hmd = Camera.main.transform;
                     }
 #elif CVR_SNAPDRAGON
                     _hmd = FindObjectOfType<Camera>().transform;
 #else
                     if (Camera.main == null)
-                        return null;
-                    _hmd = Camera.main.transform;
+                        _hmd = FindObjectOfType<Camera>().transform;
+                    else
+                        _hmd = Camera.main.transform;
+
 #endif
                 }
                 return _hmd;
