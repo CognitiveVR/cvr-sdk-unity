@@ -270,7 +270,7 @@ namespace CognitiveVR
 #elif CVR_AH
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
-            gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.eyeDirection);
+            gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #endif
             return gazeDirection;
         }
@@ -305,7 +305,7 @@ namespace CognitiveVR
             Vector3 r = ah_calibrator.GetGazeVector();
             screenGazePoint = cam.WorldToViewportPoint(x + 10 * r);
 #elif CVR_SNAPDRAGON
-            var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.eyeDirection);
+            var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = cam.WorldToScreenPoint(CameraTransform.position + 10 * worldgazeDirection);
 #endif
             return screenGazePoint;
