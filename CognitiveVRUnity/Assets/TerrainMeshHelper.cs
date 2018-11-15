@@ -133,10 +133,16 @@ public class TerrainMeshHelper
                     }
                 }
                 
-                //TODO figure out correct tiling for textures
-                Color color = prototypes[highestMap].texture.GetPixel(y, x);
-                outTex.SetPixel(y, x, color);
-
+                if (prototypes.Length > 0 && prototypes[highestMap].texture != null)
+                {
+                    //TODO figure out correct tiling for textures
+                    Color color = prototypes[highestMap].texture.GetPixel(y, x);
+                    outTex.SetPixel(y, x, color);
+                }
+                else
+                {
+                    outTex.SetPixel(y, x, Color.white);
+                }
             }
         }
 
@@ -171,7 +177,10 @@ public class TerrainMeshHelper
         //
         //
         byte[] bytes = outTex.EncodeToPNG(); //TODO replace ' ' with '_'
-        System.IO.File.WriteAllBytes(destinationFolder + "/" + data.name.Replace(' ', '_') + ".png", bytes);
+
+        Debug.Log("write file " + destinationFolder + data.name.Replace(' ', '_') + ".png");
+
+        System.IO.File.WriteAllBytes(destinationFolder + data.name.Replace(' ', '_') + ".png", bytes);
         //AssetDatabase.Refresh();
         //var t = AssetDatabase.LoadAssetAtPath<Texture2D>("Terrain_Generated" + data.name + ".png");
 
