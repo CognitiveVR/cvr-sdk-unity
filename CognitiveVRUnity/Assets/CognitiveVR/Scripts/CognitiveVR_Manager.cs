@@ -574,7 +574,7 @@ namespace CognitiveVR
             } //destroy if there's already another manager
             if (instance == this && Core.Initialized)
             {
-                Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=red>Skip Initialize</color>");
+                Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=yellow>Skip Initialize</color>");
                 return;
             } //skip if this manage has already been initialized
 
@@ -816,6 +816,7 @@ namespace CognitiveVR
             CleanupEvents();
             Core.reset();
             initResponse = Error.NotInitialized;
+            DynamicObject.ClearObjectIds();
         }
 
         void OnDestroy()
