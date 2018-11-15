@@ -73,16 +73,19 @@ namespace UnityGLTF
 		private readonly Dictionary<Mesh, MeshPrimitive[]> _meshToPrims = new Dictionary<Mesh, MeshPrimitive[]>();
 
 		// Settings
-		public static bool ExportNames = true;
-		public static bool ExportFullPath = true;
-		public static bool RequireExtensions = false;
+		public static bool ExportNames = true; //MUST BE TRUE
+        public static bool ExportFullPath = false; //MUST BE FALSE
+		public static bool RequireExtensions = false; //PROBABLY FALSE
+
+        public CognitiveVR.DynamicObject Dynamic;
 
 		/// <summary>
-		/// Create a GLTFExporter that exports out a transform
+		/// Create a GLTFExporter that exports out a transform. if dynamic is NOT set, skip any dynamic objects in nodes. if dynamic IS set, skip any dynamics that are not equal to this object
 		/// </summary>
 		/// <param name="rootTransforms">Root transform of object to export</param>
-		public GLTFSceneExporter(Transform[] rootTransforms, RetrieveTexturePathDelegate retrieveTexturePathDelegate)
+		public GLTFSceneExporter(Transform[] rootTransforms, RetrieveTexturePathDelegate retrieveTexturePathDelegate, CognitiveVR.DynamicObject dynamic = null)
 		{
+            Dynamic = dynamic;
 			_retrieveTexturePathDelegate = retrieveTexturePathDelegate;
 
 			var metalGlossChannelSwapShader = Resources.Load("MetalGlossChannelSwap", typeof(Shader)) as Shader;
@@ -371,6 +374,7 @@ namespace UnityGLTF
 			exportTexture.Apply();
 
 			var finalFilenamePath = ConstructImageFilenamePath(texture, outputPath);
+            Debug.Log("GLTF EXPORT TEXTURE TO " + finalFilenamePath);
 			File.WriteAllBytes(finalFilenamePath, exportTexture.EncodeToPNG());
 
 			destRenderTexture.Release();
@@ -394,6 +398,7 @@ namespace UnityGLTF
 			}
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
+            Debug.Log("contruct image filename path "+filenamePath);
 			return Path.ChangeExtension(filenamePath, ".png");
 		}
 
@@ -406,10 +411,13 @@ namespace UnityGLTF
 				scene.Name = name;
 			}
 
-			scene.Nodes = new List<NodeId>(rootObjTransforms.Length);
+			scene.Nodes = new List<NodeId>(rootObjTransforms.Length); //skip dynamic objects here //TODO
 			foreach (var transform in rootObjTransforms)
 			{
-				scene.Nodes.Add(ExportNode(transform));
+                //skip dynamics
+                if ((Dynamic == null && transform.GetComponent<CognitiveVR.DynamicObject>() != null) //export scene and skip all dynamics
+                    || (Dynamic != null && transform.GetComponent<CognitiveVR.DynamicObject>() != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
+                scene.Nodes.Add(ExportNode(transform));
 			}
 
 			_root.Scenes.Add(scene);
@@ -474,7 +482,12 @@ namespace UnityGLTF
 				node.Children = new List<NodeId>(nonPrimitives.Length);
 				foreach (var child in nonPrimitives)
 				{
-					node.Children.Add(ExportNode(child.transform));
+                    //skip dynamics
+                    //if (child.GetComponent<CognitiveVR.DynamicObject>() != null)
+                    if ((Dynamic == null && child.GetComponent<CognitiveVR.DynamicObject>() != null) //exporting scene and found dynamic in non-root
+                        || (Dynamic != null && (child.GetComponent<CognitiveVR.DynamicObject>() != null && child.GetComponent<CognitiveVR.DynamicObject>() != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
+                    { Debug.Log("skip child export" + child.gameObject.name ); continue; }
+                    node.Children.Add(ExportNode(child.transform));
 				}
 			}
 
@@ -1168,7 +1181,7 @@ namespace UnityGLTF
             Debug.Log("image path " + imagePath);
             if (string.IsNullOrEmpty(imagePath))
             {
-                Debug.Log("export texture from null path " + texture.name);
+                Debug.Log("export texture from NULL path " + texture.name);
                 image.Uri = Uri.EscapeUriString(texture.name+".png");
             }
             else

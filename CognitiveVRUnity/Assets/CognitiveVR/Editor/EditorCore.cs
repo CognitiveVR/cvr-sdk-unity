@@ -1140,6 +1140,7 @@ public class EditorCore
                 v.Key.layer = v.Value;
             }
         }
+            Debug.DrawRay(go.transform.position, go.transform.forward, Color.cyan, 5);
 
         //remove camera
         GameObject.DestroyImmediate(renderCam.gameObject);
@@ -1164,6 +1165,11 @@ public class EditorCore
                 boundsMag = renderer.bounds.size.magnitude;
                 largestBounds = renderer.bounds;
             }
+        }
+
+        if (largestBounds.size.magnitude <= 0)
+        {
+            largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
         }
 
         //include target's rotation

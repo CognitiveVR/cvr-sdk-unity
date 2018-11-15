@@ -1030,6 +1030,7 @@ namespace CognitiveVR
             Vector3 pivot = size / 2;
 
             Mesh m = new Mesh();
+            m.name = meshName;
 
             //GameObject go = new GameObject("TEMP_MESH");
             //go.AddComponent<MeshFilter>().mesh = m;
@@ -1132,7 +1133,10 @@ namespace CognitiveVR
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
             cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
-            cam.clearFlags = CameraClearFlags.Depth;
+            cam.clearFlags = CameraClearFlags.Color;
+            cam.backgroundColor = Color.clear;
+
+            Debug.DrawRay(cameraGo.transform.position, cameraGo.transform.forward, Color.magenta, 5);
 
             //create render texture and assign to camera
             RenderTexture rt = new RenderTexture(resolution, resolution, 16);
