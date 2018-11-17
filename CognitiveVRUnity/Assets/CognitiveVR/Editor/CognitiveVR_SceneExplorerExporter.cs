@@ -1133,14 +1133,20 @@ namespace CognitiveVR
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
             cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
-            cam.clearFlags = CameraClearFlags.Color;
+            cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
 
             Debug.DrawRay(cameraGo.transform.position, cameraGo.transform.forward, Color.magenta, 5);
 
             //create render texture and assign to camera
-            RenderTexture rt = new RenderTexture(resolution, resolution, 16);
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
+            RenderTexture.active = rt;
+            //GL.Clear(true, true, Color.clear);
             cam.targetTexture = rt;
+            //GL.Clear(true, true, Color.clear);
+
+
+            //RenderTexture.active = rt;
 
             cam.Render();
 
@@ -1152,7 +1158,7 @@ namespace CognitiveVR
 
             tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
             tex.Apply();
-
+            //GL.Clear(true, true, Color.clear);
             RenderTexture.active = null;
 
             //delete stuff

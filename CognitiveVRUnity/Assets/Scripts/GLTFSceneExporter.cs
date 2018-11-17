@@ -364,7 +364,6 @@ namespace UnityGLTF
 
 		private void ExportTexture(Texture2D texture, string outputPath)
 		{
-            Debug.Log("gltf export texture " + texture.name);
 			var destRenderTexture = RenderTexture.GetTemporary(texture.width, texture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
 
 			Graphics.Blit(texture, destRenderTexture);
@@ -374,7 +373,6 @@ namespace UnityGLTF
 			exportTexture.Apply();
 
 			var finalFilenamePath = ConstructImageFilenamePath(texture, outputPath);
-            Debug.Log("GLTF EXPORT TEXTURE TO " + finalFilenamePath);
 			File.WriteAllBytes(finalFilenamePath, exportTexture.EncodeToPNG());
 
 			destRenderTexture.Release();
@@ -398,7 +396,6 @@ namespace UnityGLTF
 			}
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
-            Debug.Log("contruct image filename path "+filenamePath);
 			return Path.ChangeExtension(filenamePath, ".png");
 		}
 
@@ -843,7 +840,7 @@ namespace UnityGLTF
 			material.DoubleSided = materialObj.HasProperty("_Cull") &&
 				materialObj.GetInt("_Cull") == (float)CullMode.Off;
 
-			if (materialObj.HasProperty("_EmissionColor"))
+			if (materialObj.HasProperty("_EmissionColor") && materialObj.IsKeywordEnabled("_EMISSION")) //TODO should support non-standard emission shader names
 			{
 				material.EmissiveFactor = materialObj.GetColor("_EmissionColor").ToNumericsColorRaw();
 			}
@@ -900,6 +897,14 @@ namespace UnityGLTF
                     material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
                     ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_MainTex");
                 }
+                if (materialObj.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
+                {
+                    if (material.PbrMetallicRoughness == null)
+                        material.PbrMetallicRoughness = new PbrMetallicRoughness();
+
+                    material.PbrMetallicRoughness.BaseColorFactor = materialObj.GetColor("_TintColor").ToNumericsColorRaw();
+                }
+                material.DoubleSided = true;
             }
 
             _materials.Add(materialObj);
@@ -1010,8 +1015,20 @@ namespace UnityGLTF
 			{
 				pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorRaw();
 			}
+            if (material.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
+            {
+                float white = 1;
+                if (material.HasProperty("_Color"))
+                {
+                    var c = material.GetColor("_Color");
+                    white = (c.r + c.g + c.b) / 3.0f; //multiply alpha by overall whiteness of TintColor
+                }
 
-			if (material.HasProperty("_MainTex"))
+                pbr.BaseColorFactor = (material.GetColor("_TintColor") * white).ToNumericsColorRaw() ;
+                Debug.Log("export tinted color>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            }
+
+            if (material.HasProperty("_MainTex")) //TODO if additive particle, render black into alpha
 			{
 				var mainTex = material.GetTexture("_MainTex");
 
@@ -1031,7 +1048,7 @@ namespace UnityGLTF
 			if (material.HasProperty("_Glossiness"))
 			{
 				var metallicGlossMap = material.GetTexture("_MetallicGlossMap");
-				pbr.RoughnessFactor = (metallicGlossMap != null) ? 1.0 : material.GetFloat("_Glossiness");
+				pbr.RoughnessFactor = (metallicGlossMap != null) ? 1.0 : 1-material.GetFloat("_Glossiness");
 			}
 
 			if (material.HasProperty("_MetallicGlossMap"))

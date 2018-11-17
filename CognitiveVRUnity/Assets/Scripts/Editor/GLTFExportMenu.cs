@@ -77,7 +77,7 @@ public class GLTFExportMenu : EditorWindow
             var exporter = new GLTFSceneExporter(new Transform[1] { v.transform }, RetrieveTexturePath, v);
             exporter.SaveGLTFandBin(path + v.MeshName + Path.DirectorySeparatorChar, v.MeshName);
 
-            EditorCore.SaveDynamicThumbnailAutomatic(v.gameObject);
+            
 
             for (int i = 0; i < temp.Count; i++)
             {
@@ -87,7 +87,7 @@ public class GLTFExportMenu : EditorWindow
                 DestroyImmediate(temp[i].meshRenderer);
             }
 
-            
+            EditorCore.SaveDynamicThumbnailAutomatic(v.gameObject);
 
             //destroy baked skin, terrain, canvases
         }
@@ -128,7 +128,7 @@ public class GLTFExportMenu : EditorWindow
         Debug.Log(path);
         Debug.Log(Application.dataPath + "CognitiveVR_SceneExplorerExport");
 
-        exporter.SaveGLTFandBin(path, scene.name);
+        exporter.SaveGLTFandBin(path, "scene");
 
         for (int i = 0; i < temp.Count; i++)
         {
@@ -219,7 +219,7 @@ public class GLTFExportMenu : EditorWindow
 
             BakeableMesh bm = new BakeableMesh();
             bm.meshRenderer = v.gameObject.AddComponent<MeshRenderer>();
-            bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
+            bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Transparent/Diffuse"));
 
             var width = v.GetComponent<RectTransform>().sizeDelta.x * v.transform.localScale.x;
             var height = v.GetComponent<RectTransform>().sizeDelta.y * v.transform.localScale.y;
