@@ -34,8 +34,8 @@ public class InitWizard : EditorWindow
         GUI.skin = EditorCore.WizardGUISkin;
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
         
-        //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-        //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+        if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
+        if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
         switch (pageids[currentPage])
         {
             case "welcome":WelcomeUpdate(); break;
@@ -648,7 +648,9 @@ public class InitWizard : EditorWindow
         else if (delayDisplayUploading == 0)
         {
             GUI.Button(new Rect(180, 450, 140, 40), "Preparing...", "button_bluetext"); //fake replacement for button
-            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            //CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            Selection.objects = GameObject.FindObjectsOfType<GameObject>();
+            GLTFExportMenu.ExportSelected();
             delayDisplayUploading--;
         }
         else
@@ -992,7 +994,15 @@ public class InitWizard : EditorWindow
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
+                GLTFExportMenu.ExportScene();
+
+                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+
+                //CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
                 CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 

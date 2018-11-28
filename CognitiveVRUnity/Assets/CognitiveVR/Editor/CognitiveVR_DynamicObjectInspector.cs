@@ -144,7 +144,10 @@ namespace CognitiveVR
                     //UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
-                        CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        //CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        GLTFExportMenu.ExportSelected();
+                        //EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+
                         foreach (var t in serializedObject.targetObjects)
                         {
                             var dyn = t as DynamicObject;

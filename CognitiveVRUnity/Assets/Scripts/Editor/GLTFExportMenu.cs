@@ -48,7 +48,7 @@ public class GLTFExportMenu : EditorWindow
     }
 
     [MenuItem("GLTF/Export Selected")]
-	static void ExportSelected()
+	public static void ExportSelected()
 	{
         //recursively get all dynamic objects to export
         List<DynamicObject> AllDynamics = new List<DynamicObject>();
@@ -63,6 +63,11 @@ public class GLTFExportMenu : EditorWindow
 
         foreach (var v in AllDynamics)
         {
+            Vector3 originalOffset = v.transform.localPosition;
+            v.transform.localPosition = Vector3.zero;
+            Quaternion originalRot = v.transform.localRotation;
+            v.transform.localRotation = Quaternion.identity;
+
             //bake skin, terrain, canvas
 
             Debug.Log("path " + path + v.MeshName + Path.DirectorySeparatorChar + "   mesh " + v.gameObject.name);
@@ -89,6 +94,10 @@ public class GLTFExportMenu : EditorWindow
 
             EditorCore.SaveDynamicThumbnailAutomatic(v.gameObject);
 
+
+            v.transform.localPosition = originalOffset;
+            v.transform.localRotation = originalRot;
+
             //destroy baked skin, terrain, canvases
         }
 	}
@@ -102,7 +111,7 @@ public class GLTFExportMenu : EditorWindow
     }
 
 	[MenuItem("GLTF/Export Scene")]
-	static void ExportScene()
+	public static void ExportScene()
 	{
 		var scene = SceneManager.GetActiveScene();
 		var gameObjects = scene.GetRootGameObjects();
@@ -165,6 +174,11 @@ public class GLTFExportMenu : EditorWindow
                 continue;
             }
 
+            var pos = v.transform.localPosition;
+            v.transform.localPosition = Vector3.zero;
+            //var rot = v.transform.localRotation;
+            //v.transform.localRotation = Quaternion.identity;
+
             BakeableMesh bm = new BakeableMesh();
             bm.meshRenderer = v.gameObject.AddComponent<MeshRenderer>();
             bm.meshRenderer.sharedMaterial = v.sharedMaterial;
@@ -175,6 +189,9 @@ public class GLTFExportMenu : EditorWindow
             v.BakeMesh(bm.meshFilter.sharedMesh);
             v.transform.localScale = Vector3.one;
             meshes.Add(bm);
+
+            //v.transform.localPosition = pos;
+            //v.transform.localRotation = rot;
         }
 
         //TODO ignore parent rotation and scale

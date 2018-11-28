@@ -127,11 +127,13 @@ namespace CognitiveVR
                         }
                     }
 
-                    SplatPrototype sourceSplat = data.splatPrototypes[highestMap];
-                    //TODO figure out correct tiling for textures
-                    Color color = sourceSplat.texture.GetPixel(x,y);
-                    outTex.SetPixel(x, y, color);
-
+                    if (data.splatPrototypes.Length > highestMap)
+                    {
+                        SplatPrototype sourceSplat = data.splatPrototypes[highestMap];
+                        //TODO figure out correct tiling for textures
+                        Color color = sourceSplat.texture.GetPixel(x, y);
+                        outTex.SetPixel(x, y, color);
+                    }
                 }
             }
 

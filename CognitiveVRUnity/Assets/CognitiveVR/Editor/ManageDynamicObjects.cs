@@ -102,10 +102,12 @@ public class ManageDynamicObjects : EditorWindow
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
             {
-                if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
-                {
-                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
-                }
+                GLTFExportMenu.ExportSelected();
+                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                //if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+                //{
+                //    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                //}
             });
         }
 
@@ -113,10 +115,14 @@ public class ManageDynamicObjects : EditorWindow
         {
             EditorCore.RefreshSceneVersion(() =>
             {
-                if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
-                {
-                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true)); });
-                }
+                Selection.objects = GameObject.FindObjectsOfType<GameObject>();
+                GLTFExportMenu.ExportSelected();
+                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+
+                //if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
+                //{
+                //    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true)); });
+                //}
             });
         }
         EditorGUI.EndDisabledGroup();

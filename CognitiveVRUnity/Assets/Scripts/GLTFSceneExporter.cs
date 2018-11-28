@@ -114,7 +114,10 @@ namespace UnityGLTF
 				Textures = new List<GLTFTexture>()
 			};
 
-			_imageInfos = new List<ImageInfo>();
+            if (_root.ExtensionsUsed == null)
+                _root.ExtensionsUsed = new List<string>(new[] { "KHR_lights_punctual" });
+
+            _imageInfos = new List<ImageInfo>();
 			_materials = new List<Material>();
 			_textures = new List<Texture>();
 
@@ -278,7 +281,6 @@ namespace UnityGLTF
 
 		private void ExportImages(string outputPath)
 		{
-            Debug.Log("export images " + _imageInfos.Count);
 			for (int t = 0; t < _imageInfos.Count; ++t)
 			{
 				var image = _imageInfos[t].texture;
@@ -483,7 +485,7 @@ namespace UnityGLTF
                     //if (child.GetComponent<CognitiveVR.DynamicObject>() != null)
                     if ((Dynamic == null && child.GetComponent<CognitiveVR.DynamicObject>() != null) //exporting scene and found dynamic in non-root
                         || (Dynamic != null && (child.GetComponent<CognitiveVR.DynamicObject>() != null && child.GetComponent<CognitiveVR.DynamicObject>() != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
-                    { Debug.Log("skip child export" + child.gameObject.name ); continue; }
+                    { continue; }
                     node.Children.Add(ExportNode(child.transform));
 				}
 			}
@@ -806,6 +808,7 @@ namespace UnityGLTF
 
 		private MaterialId ExportMaterial(Material materialObj)
 		{
+            //TODO if material is null
 			MaterialId id = GetMaterialId(_root, materialObj);
 			if (id != null)
 			{
@@ -813,6 +816,24 @@ namespace UnityGLTF
 			}
 
 			var material = new GLTFMaterial();
+
+            if (materialObj == null)
+            {
+                if (ExportNames)
+                {
+                    material.Name = "null";
+                }
+                _materials.Add(materialObj);
+                material.PbrMetallicRoughness = new PbrMetallicRoughness();
+
+                id = new MaterialId
+                {
+                    Id = _root.Materials.Count,
+                    Root = _root
+                };
+                _root.Materials.Add(material);
+                return id;
+            }
 
 			if (ExportNames)
 			{
@@ -1025,7 +1046,6 @@ namespace UnityGLTF
                 }
 
                 pbr.BaseColorFactor = (material.GetColor("_TintColor") * white).ToNumericsColorRaw() ;
-                Debug.Log("export tinted color>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             }
 
             if (material.HasProperty("_MainTex")) //TODO if additive particle, render black into alpha
@@ -1086,7 +1106,7 @@ namespace UnityGLTF
 				_root.ExtensionsUsed.Add("KHR_materials_common");
 			}
 
-			if (RequireExtensions)
+            if (RequireExtensions)
 			{
 				if (_root.ExtensionsRequired == null)
 				{
@@ -1177,7 +1197,6 @@ namespace UnityGLTF
 			ImageId id = GetImageId(_root, texture);
 			if (id != null)
 			{
-                Debug.Log("export image id is not null");
 				return id;
 			}
 
@@ -1195,10 +1214,8 @@ namespace UnityGLTF
 			});
 
 			var imagePath = _retrieveTexturePathDelegate(texture);
-            Debug.Log("image path " + imagePath);
             if (string.IsNullOrEmpty(imagePath))
             {
-                Debug.Log("export texture from NULL path " + texture.name);
                 image.Uri = Uri.EscapeUriString(texture.name+".png");
             }
             else
@@ -1209,7 +1226,6 @@ namespace UnityGLTF
                     filenamePath = Path.ChangeExtension(texture.name, ".png");
                 }
                 image.Uri = Uri.EscapeUriString(filenamePath);
-                Debug.Log("export texture with path " + texture.name);
             }
 
 			id = new ImageId
