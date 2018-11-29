@@ -448,11 +448,21 @@ namespace UnityGLTF
             if (unityLight != null)
             {
                 node.Light = ExportLight(unityLight);
+
+                nodeTransform.rotation *= new Quaternion(0, -1, 0, 0);
+
+                node.SetUnityTransform(nodeTransform);
+
+                nodeTransform.rotation *= new Quaternion(0, 1, 0, 0);
+
+                //node.SetUnityTransformForce(nodeTransform,false); //forward is flipped
+            }
+            else
+            {
+                node.SetUnityTransform(nodeTransform);
             }
 
-            node.SetUnityTransform(nodeTransform);
-
-			var id = new NodeId
+            var id = new NodeId
 			{
 				Id = _root.Nodes.Count,
 				Root = _root
@@ -561,7 +571,7 @@ namespace UnityGLTF
 
             if (unityLight.type == LightType.Spot)
             {
-                light = new GLTFSpotLight() { innerConeAngle = unityLight.spotAngle * Mathf.Deg2Rad, outerConeAngle = unityLight.spotAngle * Mathf.Deg2Rad };
+                light = new GLTFSpotLight() { innerConeAngle = unityLight.spotAngle / 2 * Mathf.Deg2Rad*0.8f, outerConeAngle = unityLight.spotAngle / 2 * Mathf.Deg2Rad };
                 //name
                 light.Name = unityLight.name;
 
