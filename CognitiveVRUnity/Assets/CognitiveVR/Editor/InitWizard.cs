@@ -98,7 +98,7 @@ public class InitWizard : EditorWindow
         }
 
         //api key
-        GUI.Label(new Rect(30, 350, 100, 30), "API Key", "miniheader");
+        GUI.Label(new Rect(30, 350, 100, 30), "Application Key", "miniheader");
         apikey = EditorCore.TextField(new Rect(30, 380, 400, 40), apikey, 32);
         if (string.IsNullOrEmpty(apikey))
         {
