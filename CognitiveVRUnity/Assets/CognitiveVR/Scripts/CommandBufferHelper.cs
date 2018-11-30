@@ -31,7 +31,7 @@ public class CommandBufferHelper : MonoBehaviour
 
 #if CVR_FOVE
         //fove does it's own rendering stuff and doesn't render singlepass side by side to a texture
-        rect = new Rect(0, 0, res, res);
+        rect = new Rect(0, 0, rt.width, rt.height);
 #else
         if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
         {
