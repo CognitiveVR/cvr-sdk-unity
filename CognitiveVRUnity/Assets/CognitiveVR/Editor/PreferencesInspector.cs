@@ -255,7 +255,14 @@ namespace CognitiveVR
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
+                CognitiveVR_SceneExportWindow.ExportGLTFScene();
+
+                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
+                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
                 CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 UnityEditor.AssetDatabase.SaveAssets();
             }

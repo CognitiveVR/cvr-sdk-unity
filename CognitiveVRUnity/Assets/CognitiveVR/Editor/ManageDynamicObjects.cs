@@ -102,7 +102,8 @@ public class ManageDynamicObjects : EditorWindow
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
             {
-                GLTFExportMenu.ExportSelected();
+                CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                //GLTFExportMenu.ExportSelected();
                 EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
                 //if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 //{
@@ -116,7 +117,8 @@ public class ManageDynamicObjects : EditorWindow
             EditorCore.RefreshSceneVersion(() =>
             {
                 Selection.objects = GameObject.FindObjectsOfType<GameObject>();
-                GLTFExportMenu.ExportSelected();
+                //GLTFExportMenu.ExportSelected();
+                CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
                 EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
 
                 //if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())

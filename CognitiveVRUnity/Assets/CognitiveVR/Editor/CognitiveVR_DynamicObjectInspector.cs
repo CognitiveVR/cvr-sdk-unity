@@ -144,18 +144,18 @@ namespace CognitiveVR
                     //UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
-                        //CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
-                        GLTFExportMenu.ExportSelected();
+                        CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        //GLTFExportMenu.ExportSelected();
                         //EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
 
-                        foreach (var t in serializedObject.targetObjects)
-                        {
-                            var dyn = t as DynamicObject;
-                            //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
-                            {
-                                EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                            }
-                        }
+                        //foreach (var t in serializedObject.targetObjects)
+                        //{
+                        //    var dyn = t as DynamicObject;
+                        //    //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
+                        //    {
+                        //        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                        //    }
+                        //}
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));

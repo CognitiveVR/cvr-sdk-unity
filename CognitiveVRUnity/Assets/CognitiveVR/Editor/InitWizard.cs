@@ -650,7 +650,8 @@ public class InitWizard : EditorWindow
             GUI.Button(new Rect(180, 450, 140, 40), "Preparing...", "button_bluetext"); //fake replacement for button
             //CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             Selection.objects = GameObject.FindObjectsOfType<GameObject>();
-            GLTFExportMenu.ExportSelected();
+            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
+            //GLTFExportMenu.ExportSelected();
             delayDisplayUploading--;
         }
         else
@@ -994,10 +995,10 @@ public class InitWizard : EditorWindow
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                GLTFExportMenu.ExportScene();
+                CognitiveVR_SceneExportWindow.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+                string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
