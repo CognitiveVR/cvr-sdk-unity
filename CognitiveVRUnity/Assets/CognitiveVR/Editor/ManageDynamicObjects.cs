@@ -102,9 +102,11 @@ public class ManageDynamicObjects : EditorWindow
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
             {
-                CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 //GLTFExportMenu.ExportSelected();
-                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                {
+                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                }
                 //if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 //{
                 //    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
@@ -116,10 +118,20 @@ public class ManageDynamicObjects : EditorWindow
         {
             EditorCore.RefreshSceneVersion(() =>
             {
-                Selection.objects = GameObject.FindObjectsOfType<GameObject>();
+                var dynamics = GameObject.FindObjectsOfType<DynamicObject>();
+                List<GameObject> gos = new List<GameObject>();
+                foreach (var v in dynamics)
+                {
+                    gos.Add(v.gameObject);
+                }
+
+                Selection.objects = gos.ToArray();
+
                 //GLTFExportMenu.ExportSelected();
-                CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
-                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+                {
+                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                }
 
                 //if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
                 //{
