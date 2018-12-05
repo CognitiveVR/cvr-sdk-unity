@@ -578,7 +578,7 @@ namespace CognitiveVR
                 return;
             } //skip if this manage has already been initialized
 
-            if (!CognitiveVR_Preferences.Instance.IsAPIKeyValid)
+            if (!CognitiveVR_Preferences.Instance.IsApplicationKeyValid)
             {
                 Util.logDebug("CognitiveVR_Manager Initialize does not have valid apikey");
                 return;

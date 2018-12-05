@@ -65,15 +65,16 @@ namespace CognitiveVR
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
         public int RenderPassType;
 
-        public bool IsAPIKeyValid
+        public bool IsApplicationKeyValid
         {
             get
             {
-                return !string.IsNullOrEmpty(APIKey);
+                return !string.IsNullOrEmpty(ApplicationKey);
             }
         }
 
-        public string APIKey;
+        [UnityEngine.Serialization.FormerlySerializedAs("APIKey")]
+        public string ApplicationKey;
 
         public bool EnableLogging = true;
         public bool EnableDevLogging = false;

@@ -114,7 +114,7 @@ public class InitWizard : EditorWindow
     void SaveKeys()
     {
         EditorPrefs.SetString("developerkey", developerkey);
-        EditorCore.GetPreferences().APIKey = apikey;
+        EditorCore.GetPreferences().ApplicationKey = apikey;
 
         EditorUtility.SetDirty(EditorCore.GetPreferences());
         AssetDatabase.SaveAssets();
@@ -144,7 +144,7 @@ public class InitWizard : EditorWindow
     void LoadKeys()
     {
         developerkey = EditorPrefs.GetString("developerkey");
-        apikey = EditorCore.GetPreferences().APIKey;
+        apikey = EditorCore.GetPreferences().ApplicationKey;
         if (apikey == null)
         {
             apikey = "";

@@ -44,7 +44,7 @@ namespace CognitiveVR
 
             var p = (CognitiveVR_Preferences)target;
 
-            p.APIKey = EditorGUILayout.TextField("API Key", p.APIKey);
+            p.ApplicationKey = EditorGUILayout.TextField("Application Key", p.ApplicationKey);
             p.EnableLogging = EditorGUILayout.Toggle("Enable Logging", p.EnableLogging);
             p.EnableDevLogging = EditorGUILayout.Toggle("Enable Development Logging", p.EnableDevLogging);
 
