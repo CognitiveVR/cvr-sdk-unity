@@ -13,6 +13,7 @@ namespace CognitiveVR
 {
     public class BakeableMesh
     {
+        public GameObject tempGo;
         public MeshRenderer meshRenderer;
         public MeshFilter meshFilter;
         public bool useOriginalscale;
@@ -134,70 +135,6 @@ namespace CognitiveVR
 
         //export and try to decimate the scene
         
-
-        static float blenderStartTime = 0;
-        static float currentBlenderTime = 0;
-        static float maxBlenderTime = 240;
-
-        static bool BlenderRequest;
-        static bool HasOpenedBlender;
-        static Process blenderProcess;
-
-        static void UpdateProcess()
-        {
-            currentBlenderTime = (float)(EditorApplication.timeSinceStartup - blenderStartTime);
-            if (EditorUtility.DisplayCancelableProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", currentBlenderTime / maxBlenderTime))
-            {
-                Debug.Log("Cancel Blender process");
-                blenderProcess.Kill();
-                blenderProcess.Close();
-                EditorApplication.update -= UpdateProcess;
-                HasOpenedBlender = false;
-                blenderProcess = null;
-                EditorUtility.ClearProgressBar();
-                UploadSceneSettings = null;
-                return;
-            }
-
-            //could probably clean up some of this
-            Process[] blenders;
-            if (BlenderRequest == true)
-            {
-                //Debug.Log("BLENDER - opening");
-                blenders = Process.GetProcessesByName("blender");
-                if (blenders.Length > 0)
-                {
-                    BlenderRequest = false;
-                    HasOpenedBlender = true;
-                }
-            }
-            if (HasOpenedBlender)
-            {
-                blenders = Process.GetProcessesByName("blender");
-                if (blenderProcess.HasExited)
-                {
-                    //Debug.Log("BLENDER - finished work");
-                    EditorApplication.update -= UpdateProcess;
-                    HasOpenedBlender = false;
-
-                    if (blenderProcess.ExitCode != 0)
-                    {
-                        blenderProcess = null;
-                        EditorUtility.ClearProgressBar();
-                        UploadSceneSettings = null;
-                        return;
-                    }
-
-                    blenderProcess = null;
-                    
-                    EditorUtility.ClearProgressBar();
-                    UploadSceneSettings = null;
-
-                    //var blenderSceneSettings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-                    //UploadDecimatedScene(blenderSceneSettings);
-                }
-            }
-        }
 
         #endregion
 
@@ -453,20 +390,84 @@ namespace CognitiveVR
 
             //make directories
             Directory.CreateDirectory(path);
-
-            Debug.Log(path);
-            Debug.Log(Application.dataPath + "CognitiveVR_SceneExplorerExport");
-
+            
             exporter.SaveGLTFandBin(path, "scene");
-
+            
             for (int i = 0; i < temp.Count; i++)
             {
                 if (temp[i].useOriginalscale)
+                {
                     temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                }
                 DestroyImmediate(temp[i].meshFilter);
                 DestroyImmediate(temp[i].meshRenderer);
+                if (temp[i].tempGo != null)
+                    DestroyImmediate(temp[i].tempGo);
+            }
+
+            ResizeTexturesInExportFolder(path);
+        }
+
+        static void ResizeTexturesInExportFolder(string folderpath)
+        {
+            Debug.Log("ResizeTexturesInExportFolder: " + folderpath);
+
+            var textureDivisor = CognitiveVR_Preferences.Instance.TextureResize;
+
+            if (textureDivisor == 1) { return; }
+            Texture2D texture = new Texture2D(2, 2);
+            var files = Directory.GetFiles(folderpath);
+
+            foreach (var file in files)
+            {
+                if (!file.EndsWith(".png")) { continue; }
+
+                //skip thumbnails
+                if (file.EndsWith("cvr_object_thumbnail.png")) { continue; }
+
+                string path = file;
+
+                texture.LoadImage(File.ReadAllBytes(file));
+
+                texture = RescaleForExport(texture, Mathf.NextPowerOfTwo(texture.width) / textureDivisor, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
+                byte[] bytes = texture.EncodeToPNG();
+                File.WriteAllBytes(path, bytes);
             }
         }
+
+        public static Texture2D RescaleForExport(Texture2D tex, int newWidth, int newHeight)
+        {
+            Color[] texColors;
+            Color[] newColors;
+            float ratioX;
+            float ratioY;
+
+            newHeight = Mathf.Max(1, newHeight);
+            newWidth = Mathf.Max(1, newWidth);
+
+            texColors = tex.GetPixels();
+            newColors = new Color[newWidth * newHeight];
+            ratioX = ((float)tex.width) / newWidth;
+            ratioY = ((float)tex.height) / newHeight;
+
+            int w = tex.width;
+            int w2 = newWidth;
+
+            for (var y = 0; y < newHeight; y++)
+            {
+                var thisY = (int)(ratioY * y) * w;
+                var yw = y * w2;
+                for (var x = 0; x < w2; x++)
+                {
+                    newColors[yw + x] = texColors[(int)(thisY + ratioX * x)];
+                }
+            }
+
+            Texture2D newText = new Texture2D(newWidth, newHeight);
+            newText.SetPixels(newColors);
+            return newText;
+        }
+
 
         static void BakeNonstandardRenderers(DynamicObject rootDynamic, List<BakeableMesh> meshes, string path)
         {
@@ -480,34 +481,43 @@ namespace CognitiveVR
                 Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
             }
 
-            foreach (var v in SkinnedMeshes)
+            foreach (var skinnedMeshRenderer in SkinnedMeshes)
             {
-                if (!v.gameObject.activeInHierarchy) { continue; }
-                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
+                if (!skinnedMeshRenderer.gameObject.activeInHierarchy) { continue; }
+                if (rootDynamic == null && skinnedMeshRenderer.GetComponentInParent<DynamicObject>() != null)
                 {
                     //skinned mesh as child of dynamic when exporting scene
                     continue;
                 }
-                else if (rootDynamic != null && v.GetComponentInParent<DynamicObject>() != rootDynamic)
+                else if (rootDynamic != null && skinnedMeshRenderer.GetComponentInParent<DynamicObject>() != rootDynamic)
                 {
                     //exporting dynamic, found skinned mesh in some other dynamic
                     continue;
                 }
 
-                var pos = v.transform.localPosition;
-                v.transform.localPosition = Vector3.zero;
+                var pos = skinnedMeshRenderer.transform.localPosition;
+                skinnedMeshRenderer.transform.localPosition = Vector3.zero;
                 //var rot = v.transform.localRotation;
                 //v.transform.localRotation = Quaternion.identity;
 
                 BakeableMesh bm = new BakeableMesh();
-                bm.meshRenderer = v.gameObject.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = v.sharedMaterial;
-                bm.meshFilter = v.gameObject.AddComponent<MeshFilter>();
-                bm.meshFilter.sharedMesh = new Mesh();
-                bm.originalScale = v.transform.localScale;
+
+                bm.tempGo = new GameObject(skinnedMeshRenderer.gameObject.name);
+                bm.tempGo.transform.parent = skinnedMeshRenderer.transform;
+                bm.tempGo.transform.localScale = Vector3.one;
+                bm.tempGo.transform.localRotation = Quaternion.identity;
+                bm.tempGo.transform.localPosition = Vector3.zero;
+
+                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = skinnedMeshRenderer.sharedMaterial;
+                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+                var m = new Mesh();
+                m.name = skinnedMeshRenderer.sharedMesh.name;
+                bm.originalScale = skinnedMeshRenderer.transform.localScale;
                 bm.useOriginalscale = true;
-                v.BakeMesh(bm.meshFilter.sharedMesh);
-                v.transform.localScale = Vector3.one;
+                skinnedMeshRenderer.transform.localScale = Vector3.one;
+                skinnedMeshRenderer.BakeMesh(m);
+                bm.meshFilter.sharedMesh = m;
                 meshes.Add(bm);
 
                 //v.transform.localPosition = pos;
@@ -563,11 +573,9 @@ namespace CognitiveVR
 
                 //bake texture from render
                 var screenshot = Snapshot(v.transform);
-                Debug.Log("bake canvas texture for " + v.gameObject.name);
                 screenshot.name = v.gameObject.name.Replace(' ', '_');
                 bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
                 byte[] bytes = screenshot.EncodeToPNG();
-                Debug.Log("write file " + path + "/" + screenshot.name + ".png");
                 //System.IO.File.WriteAllBytes(path + "/" + screenshot.name + ".png", bytes);
 
                 bm.meshFilter = v.gameObject.AddComponent<MeshFilter>();
@@ -728,9 +736,7 @@ namespace CognitiveVR
             cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
             cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
-
-            Debug.DrawRay(cameraGo.transform.position, cameraGo.transform.forward, Color.magenta, 5);
-
+            
             //create render texture and assign to camera
             RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
             RenderTexture.active = rt;
@@ -826,7 +832,7 @@ namespace CognitiveVR
                 var dynamic = v;
 
                 //TODO remove successfully exported count. not really useful
-                if (exportedMeshNames.Contains(dynamic.MeshName)) { Debug.Log("COPY-----------> " + dynamic.MeshName, dynamic.gameObject); successfullyExportedCount++; continue; } //skip exporting same mesh
+                if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
 
                 foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
                 {
@@ -861,8 +867,7 @@ namespace CognitiveVR
 
                 var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
                 exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
-
-                Debug.Log("-----------> " + dynamic.MeshName, dynamic.gameObject);
+                
                 successfullyExportedCount++;
 
 
@@ -883,11 +888,11 @@ namespace CognitiveVR
                     exportedMeshNames.Add(dynamic.MeshName);
                 }
 
-
+                //destroy baked skin, terrain, canvases
                 v.transform.localPosition = originalOffset;
                 v.transform.localRotation = originalRot;
 
-                //destroy baked skin, terrain, canvases
+                ResizeTexturesInExportFolder(path + dynamic.MeshName + Path.DirectorySeparatorChar);
             }
 
             //destroy the temporary prefabs
@@ -907,8 +912,6 @@ namespace CognitiveVR
                 EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
                 return false;
             }
-            Debug.Log("entire selectin count " + entireSelection.Count);
-            Debug.Log("successfullyExportedCount is " + successfullyExportedCount);
             if (successfullyExportedCount == 1 && entireSelection.Count == 1)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
@@ -948,7 +951,7 @@ namespace CognitiveVR
 
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
-            float downsample = 4f;
+            float downsample = 4;
 
             Mesh mesh = new Mesh();
             mesh.name = "temp";
@@ -1042,14 +1045,18 @@ namespace CognitiveVR
                 }
             }
 
-            //8 times higher res than the heightmap data, up to 4096 texture
-            Texture2D outTex = new Texture2D(Mathf.Min(4096, data.alphamapWidth * 8), Mathf.Min(4096, data.alphamapHeight * 8));
+            //TODO writing texture with non-square terrain is wrong
+            Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
             outTex.name = data.name.Replace(' ', '_');
-            float upscalewidth = outTex.width / data.alphamapWidth;
-            float upscaleheight = outTex.height / data.alphamapHeight;
+            float upscalewidth = (float)outTex.width / (float)data.alphamapWidth; //(data.heightmapScale.x * data.heightmapResolution * 64);
+            float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;// (data.heightmapScale.z * data.heightmapResolution * 64);
 
             float[] colorAtLayer = new float[layerCount];
             SplatPrototype[] prototypes = data.splatPrototypes;
+
+            //TODO should limit resolution to 64pixels per meter
+            //Debug.Log("height " + outTex.height + " upscale width " + upscaleheight);
+            //Debug.Log("width " + outTex.width + " upscale height " + upscalewidth);
 
             for (int y = 0; y < outTex.height; y++)
             {
@@ -1057,7 +1064,6 @@ namespace CognitiveVR
                 {
                     for (int i = 0; i < colorAtLayer.Length; i++)
                     {
-                        //put layers into colours
                         colorAtLayer[i] = maps[(int)(x / upscalewidth), (int)(y / upscaleheight), i];
                     }
 
@@ -1082,7 +1088,7 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        outTex.SetPixel(y, x, Color.white);
+                        outTex.SetPixel(y, x, Color.red);
                     }
                 }
             }
@@ -1118,12 +1124,11 @@ namespace CognitiveVR
             //
             //
             byte[] bytes = outTex.EncodeToPNG(); //TODO replace ' ' with '_'
-
-            Debug.Log("write file " + destinationFolder + data.name.Replace(' ', '_') + ".png");
-
-            System.IO.File.WriteAllBytes(destinationFolder + data.name.Replace(' ', '_') + ".png", bytes);
+            //System.IO.File.WriteAllBytes(destinationFolder + "/"+data.name.Replace(' ', '_') + ".png", bytes);
             //AssetDatabase.Refresh();
             //var t = AssetDatabase.LoadAssetAtPath<Texture2D>("Terrain_Generated" + data.name + ".png");
+
+            outTex.Apply();
 
             //texture importer to original
 

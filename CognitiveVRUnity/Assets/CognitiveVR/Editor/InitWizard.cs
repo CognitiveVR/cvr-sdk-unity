@@ -19,7 +19,7 @@ public class InitWizard : EditorWindow
         window.Show();
 
         window.LoadKeys(); 
-        window.selectedExportQuality = ExportSettings.HighSettings;
+        //window.selectedExportQuality = ExportSettings.HighSettings;
 
         window.GetSelectedSDKs();
 
@@ -720,11 +720,11 @@ public class InitWizard : EditorWindow
         
     }
 
-#endregion
+        #endregion
 
-
-    int qualityindex = 2; //0 low, 1 normal, 2 maximum
-    ExportSettings selectedExportQuality;
+    int textureResolutionSettings = 1; //1 full resolution, 2 is half resolution, 4 is quarter res
+    //int qualityindex = 2; //0 low, 1 normal, 2 maximum
+    //ExportSettings selectedExportQuality;
 
     void UploadSceneUpdate()
     {
@@ -734,46 +734,16 @@ public class InitWizard : EditorWindow
         //GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.", "boldlabel");
         GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
 
-        GUI.Label(new Rect(30, 110, 440, 440), "You can reduce load times on the Dashboard by reducing scene geometry and textures. We can automatically do this using Blender. Blender is free and open source.", "normallabel");
-
-        string selectBlender = "Select Blender.exe";
-#if UNITY_EDITOR_OSX
-        selectBlender = "Select Blender.app";
-#endif
-        GUI.Label(new Rect(30, 200, 100, 30), selectBlender, "miniheader");
-        
-        //GUI.Label(new Rect(130, 170, 30, 30), new GUIContent(EditorGUIUtility.FindTexture("d_console.infoicon.sml"), "Blender is used to reduce complex scene geometry. It is free and open source.\nDownload from Blender.org"),"image_centered");
-        
-        if (GUI.Button(new Rect(30, 230, 100, 30), new GUIContent("Website", "https://www.blender.org/"), "button"))
-        {
-            Application.OpenURL("https://www.blender.org/");
-            //EditorCore.BlenderPath = EditorUtility.OpenFilePanel("Select Blender", string.IsNullOrEmpty(EditorCore.BlenderPath) ? "c:\\" : EditorCore.BlenderPath, "");
-        }
-
-        if (GUI.Button(new Rect(140, 230, 100, 30), "Browse...", "button"))
-        {
-            EditorCore.BlenderPath = EditorUtility.OpenFilePanel("Select Blender", string.IsNullOrEmpty(EditorCore.BlenderPath) ? "c:\\" : EditorCore.BlenderPath, "");
-        }
-
-        GUI.Label(new Rect(30,275,430,60), EditorCore.BlenderPath, "label_disabledtext");
-
-        if (!EditorCore.IsBlenderPathValid)
-        {
-            qualityindex = -1;
-        }
-        else if (qualityindex < 0)
-        {
-            qualityindex = 2;
-        }
-
         GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Quality", "miniheader");
+        
+        //texture resolution settings
 
-        if (GUI.Button(new Rect(30, 350, 140, 100), "Low\n\n", qualityindex == 0 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(30, 350, 140, 100), "Low\n\n", textureResolutionSettings == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
-            qualityindex = 0;
-            selectedExportQuality = ExportSettings.LowSettings;
+                textureResolutionSettings = 4;
+            //selectedExportQuality = ExportSettings.LowSettings;
         }
-        if (qualityindex == 0)
+        if (textureResolutionSettings == 4)
         {
             GUI.Label(new Rect(88, 355, 24, 100), EditorCore.Checkmark, "image_centered");
         }
@@ -783,12 +753,12 @@ public class InitWizard : EditorWindow
             GUI.Box(new Rect(30, 350, 140, 100), "","box_sharp_alpha");
         }
             
-        if (GUI.Button(new Rect(180, 350, 140, 100), "Medium\n\n", qualityindex == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(180, 350, 140, 100), "Medium\n\n", textureResolutionSettings == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
-            qualityindex = 1;
-            selectedExportQuality = ExportSettings.DefaultSettings;
+            textureResolutionSettings = 2;
+            //selectedExportQuality = ExportSettings.DefaultSettings;
         }
-        if (qualityindex == 1)
+        if (textureResolutionSettings == 2)
         {
             GUI.Label(new Rect(238, 355, 24, 100), EditorCore.Checkmark, "image_centered");
         }
@@ -798,12 +768,12 @@ public class InitWizard : EditorWindow
             GUI.Box(new Rect(180, 350, 140, 100), "","box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(330, 350, 140, 100), "Maximum\n\n", qualityindex == 2 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(330, 350, 140, 100), "Maximum\n\n", textureResolutionSettings == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
-            qualityindex = 2;
-            selectedExportQuality = ExportSettings.HighSettings;
+            textureResolutionSettings = 1;
+            //selectedExportQuality = ExportSettings.HighSettings;
         }
-        if (qualityindex == 2)
+        if (textureResolutionSettings == 1)
         {
             GUI.Label(new Rect(388, 355, 24, 100), EditorCore.Checkmark, "image_centered");
         }
@@ -918,8 +888,8 @@ public class InitWizard : EditorWindow
                 scenename = "SCENE NOT SAVED";
             }
             string settingsname = "Maximum Quality";
-            if (qualityindex == 0) { settingsname = "Low Quality"; }
-            if (qualityindex == 1) { settingsname = "Medium Quality"; }
+            if (textureResolutionSettings == 4) { settingsname = "Low Quality"; }
+            if (textureResolutionSettings == 2) { settingsname = "Medium Quality"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
             "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
@@ -934,8 +904,8 @@ public class InitWizard : EditorWindow
                 scenename = "SCENE NOT SAVED";
             }
             string settingsname = "Maximum Quality";
-            if (qualityindex == 0) { settingsname = "Low Quality"; }
-            if (qualityindex == 1) { settingsname = "Medium Quality"; }
+            if (textureResolutionSettings == 4) { settingsname = "Low Quality"; }
+            if (textureResolutionSettings == 2) { settingsname = "Medium Quality"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
             
             GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");

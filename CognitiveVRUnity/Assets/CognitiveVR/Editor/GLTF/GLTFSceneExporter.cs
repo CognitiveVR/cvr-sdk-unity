@@ -614,7 +614,6 @@ namespace UnityGLTF
             if (_root.Lights == null)
             {
                 _root.Lights = new List<GLTFLight>();
-                Debug.LogWarning("generated root gltf lights on export!");
             }
 
             var id = new LightId
@@ -1169,7 +1168,6 @@ namespace UnityGLTF
 			TextureId id = GetTextureId(_root, textureObj);
 			if (id != null)
 			{
-                Debug.Log("get texture id is not null");
 				return id;
 			}
 

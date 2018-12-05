@@ -224,8 +224,6 @@ public class EditorCore
         }
     }
 
-    public static ExportSettings ExportSettings = ExportSettings.HighSettings;
-
     public static bool IsDeveloperKeyValid
     {
         get
@@ -1157,7 +1155,6 @@ public class EditorCore
                 v.Key.layer = v.Value;
             }
         }
-            Debug.DrawRay(go.transform.position, go.transform.forward, Color.cyan, 5);
 
         //remove camera
         GameObject.DestroyImmediate(renderCam.gameObject);
