@@ -98,7 +98,7 @@ public class InitWizard : EditorWindow
         }
 
         //api key
-        GUI.Label(new Rect(30, 350, 100, 30), "API Key", "miniheader");
+        GUI.Label(new Rect(30, 350, 100, 30), "Application Key", "miniheader");
         apikey = EditorCore.TextField(new Rect(30, 380, 400, 40), apikey, 32);
         if (string.IsNullOrEmpty(apikey))
         {
@@ -915,11 +915,11 @@ public class InitWizard : EditorWindow
                 scenename = "SCENE NOT SAVED";
             }
             string settingsname = "Maximum Quality";
+            if (qualityindex == 0) { settingsname = "Low Quality"; }
+            if (qualityindex == 1) { settingsname = "Medium Quality"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
             "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
-            if (qualityindex == 0) { settingsname = "Low Quality"; }
-            if (qualityindex == 1) { settingsname = "Medium Quality"; }
             GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
         }
         else
@@ -931,10 +931,10 @@ public class InitWizard : EditorWindow
                 scenename = "SCENE NOT SAVED";
             }
             string settingsname = "Maximum Quality";
-            GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
-
             if (qualityindex == 0) { settingsname = "Low Quality"; }
             if (qualityindex == 1) { settingsname = "Medium Quality"; }
+            GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
+            
             GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");

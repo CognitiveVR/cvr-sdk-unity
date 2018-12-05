@@ -92,10 +92,12 @@ namespace CognitiveVR
                     hmdname = "meta";
 #elif UNITY_2017_2_OR_NEWER
             string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 #else
             string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
-#endif
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
+#endif
+
 
 #if CVR_TOBIIVR
             _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
@@ -270,7 +272,7 @@ namespace CognitiveVR
 #elif CVR_AH
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
-            gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.eyeDirection);
+            gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #endif
             return gazeDirection;
         }
@@ -285,7 +287,7 @@ namespace CognitiveVR
 #if CVR_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = cam.WorldToViewportPoint(ray.GetPoint(1000));
+            var normalizedPoint = cam.WorldToViewportPoint(FoveInstance.GetGazeRays().left.GetPoint(1000));
 
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))
@@ -305,7 +307,7 @@ namespace CognitiveVR
             Vector3 r = ah_calibrator.GetGazeVector();
             screenGazePoint = cam.WorldToViewportPoint(x + 10 * r);
 #elif CVR_SNAPDRAGON
-            var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.eyeDirection);
+            var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = cam.WorldToScreenPoint(CameraTransform.position + 10 * worldgazeDirection);
 #endif
             return screenGazePoint;

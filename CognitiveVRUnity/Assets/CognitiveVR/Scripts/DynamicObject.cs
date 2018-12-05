@@ -776,10 +776,10 @@ namespace CognitiveVR
                 Core.OnSendData += Core_OnSendData;
                 CognitiveVR_Manager.Instance.StartCoroutine(AutomaticSendTimer());
 
-                for (int i = 0; i < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount; i++)
+                /*for (int i = 0; i < CognitiveVR_Preferences.Instance.DynamicExtremeSnapshotCount; i++)
                 {
                     DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
-                }
+                }*/
 
             }
         }
@@ -1288,7 +1288,7 @@ namespace CognitiveVR
 
     public class DynamicObjectSnapshot
     {
-        public static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
+        //public static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
 
         public DynamicObjectSnapshot Copy()
         {
@@ -1332,12 +1332,14 @@ namespace CognitiveVR
             Properties = null;
             Buttons = null;
             Engagements = null;
-            SnapshotPool.Enqueue(this);
+            //SnapshotPool.Enqueue(this);
         }
 
         public static DynamicObjectSnapshot GetSnapshot(DynamicObject dynamic)
         {
-            if (SnapshotPool.Count > 0)
+            return new DynamicObjectSnapshot(dynamic);
+
+            /*if (SnapshotPool.Count > 0)
             {
                 DynamicObjectSnapshot dos = SnapshotPool.Dequeue();
                 if (dos == null)
@@ -1352,7 +1354,7 @@ namespace CognitiveVR
             else
             {
                 return new DynamicObjectSnapshot(dynamic);
-            }
+            }*/
         }
 
         public DynamicObject Dynamic;

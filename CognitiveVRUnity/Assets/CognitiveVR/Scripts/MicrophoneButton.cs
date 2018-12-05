@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using CognitiveVR;
 using System.IO;
+#if CVR_AH
+using AdhawkApi;
+using AdhawkApi.Numerics.Filters;
+#endif
 
 //used in cognitivevr exit poll to call actions on the main exit poll panel
 
