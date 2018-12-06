@@ -221,7 +221,9 @@ namespace CognitiveVR
                 CognitiveVR_Manager_InitEvent(Error.Success);
             }
 
-            NewSnapshot().UpdateTransform().SetEnabled(true);
+            NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(true);
+            lastPosition = transform.position;
+            lastRotation = transform.rotation;
 
             if (ContinuallyUpdateTransform || IsVideoPlayer)
             {
@@ -269,11 +271,15 @@ namespace CognitiveVR
             if (VideoPlayer.isLooping)
             {
                 //snapshot at end, then snapshot at beginning
-                NewSnapshot().UpdateTransform().SetProperty("videotime", 0);
+                NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetProperty("videotime", 0);
+                lastPosition = transform.position;
+                lastRotation = transform.rotation;
             }
             else
             {
-                NewSnapshot().UpdateTransform().SetProperty("videoplay", false).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+                NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetProperty("videoplay", false).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+                lastPosition = transform.position;
+                lastRotation = transform.rotation;
                 wasPlayingVideo = false;
             }
         }
@@ -350,7 +356,10 @@ namespace CognitiveVR
         public DynamicObjectSnapshot SendVideoTime()
         {
             SendFrameTimeRemaining = MaxSendFrameTime;
-            return NewSnapshot().UpdateTransform().SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+            var snap = NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetProperty("videotime", (int)((VideoPlayer.frame / VideoPlayer.frameRate) * 1000));
+            lastPosition = transform.position;
+            lastRotation = transform.rotation;
+            return snap;
         }
 
         //puts outstanding snapshots (from last update) into json
@@ -580,7 +589,7 @@ namespace CognitiveVR
             }
 
             //create snapshot for this object
-            var snapshot = DynamicObjectSnapshot.GetSnapshot(this);
+            var snapshot = DynamicObjectSnapshot.GetSnapshot(Id);
 
             if (IsVideoPlayer)
             {
@@ -780,7 +789,6 @@ namespace CognitiveVR
                 {
                     DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
                 }
-
             }
         }
 
@@ -1136,7 +1144,9 @@ namespace CognitiveVR
             if (!ReleaseIdOnDisable)
             {
                 //don't release id to be used again. makes sure tracked gaze on this will be unique
-                NewSnapshot().UpdateTransform().SetEnabled(false);
+                NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(false);
+                lastPosition = transform.position;
+                lastRotation = transform.rotation;
                 new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
                 TotalGazeDuration = 0; //reset to not send OnDestroy event
                 ViewerId = null;
@@ -1144,7 +1154,16 @@ namespace CognitiveVR
             }
             if (CognitiveVR_Manager.Instance != null)
             {
-                NewSnapshot().UpdateTransform().SetEnabled(false).ReleaseUniqueId();
+                NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(false);
+                lastPosition = transform.position;
+                lastRotation = transform.rotation;
+                var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
+
+                if (foundId != null)
+                {
+                    foundId.Used = false;
+                }
+                ViewerId = null;
             }
         }
 
@@ -1176,7 +1195,16 @@ namespace CognitiveVR
             }
             if (CognitiveVR_Manager.Instance != null && viewerId != null) //creates another snapshot to destroy an already probably disabled thing
             {
-                NewSnapshot().UpdateTransform().ReleaseUniqueId();
+                NewSnapshot().UpdateTransform(transform.position,transform.rotation);
+                lastPosition = transform.position;
+                lastRotation = transform.rotation;
+                var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
+
+                if (foundId != null)
+                {
+                    foundId.Used = false;
+                }
+                ViewerId = null;
             }
         }
 
@@ -1292,12 +1320,11 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot Copy()
         {
-            var dyn = GetSnapshot(Dynamic);
+            var dyn = GetSnapshot(Id);
             dyn.Timestamp = Timestamp;
             dyn.Id = Id;
             dyn.Position = Position;
             dyn.Rotation = Rotation;
-            dyn.Dynamic = null;
 
             if (Buttons != null)
             {
@@ -1328,34 +1355,36 @@ namespace CognitiveVR
 
         public void ReturnToPool()
         {
-            Dynamic = null;
             Properties = null;
             Buttons = null;
             Engagements = null;
+            Position = new float[3] { 0, 0, 0 };
+            Rotation = new float[4] { 0, 0, 0, 1 };
             SnapshotPool.Enqueue(this);
         }
 
-        public static DynamicObjectSnapshot GetSnapshot(DynamicObject dynamic)
+        public static DynamicObjectSnapshot GetSnapshot(string id)
         {
             if (SnapshotPool.Count > 0)
             {
                 DynamicObjectSnapshot dos = SnapshotPool.Dequeue();
                 if (dos == null)
                 {
-                    dos = new DynamicObjectSnapshot(dynamic);
+                    dos = new DynamicObjectSnapshot();
                 }
-                dos.Dynamic = dynamic;
-                dos.Id = dynamic.Id;
+                dos.Id = id;
                 dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
                 return dos;
             }
             else
             {
-                return new DynamicObjectSnapshot(dynamic);
+                var dos = new DynamicObjectSnapshot();
+                dos.Id = id;
+                dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+                return dos;
             }
         }
 
-        public DynamicObject Dynamic;
         public string Id;
         public Dictionary<string, object> Properties;
         public Dictionary<string, ButtonState> Buttons;
@@ -1366,7 +1395,6 @@ namespace CognitiveVR
 
         public DynamicObjectSnapshot(DynamicObject dynamic)
         {
-            this.Dynamic = dynamic;
             Id = dynamic.Id;
             Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
         }
@@ -1378,7 +1406,6 @@ namespace CognitiveVR
 
         private DynamicObjectSnapshot(DynamicObject dynamic, Vector3 pos, Quaternion rot, Dictionary<string, object> props = null)
         {
-            this.Dynamic = dynamic;
             Id = dynamic.Id;
             Properties = props;
 
@@ -1396,36 +1423,12 @@ namespace CognitiveVR
 
         private DynamicObjectSnapshot(DynamicObject dynamic, float[] pos, float[] rot, Dictionary<string, object> props = null)
         {
-            this.Dynamic = dynamic;
             Id = dynamic.Id;
             Properties = props;
             Position = pos;
 
             Rotation = rot;
             Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
-        }
-
-        /// <summary>
-        /// Add the position and rotation to the snapshot, even if the dynamic object hasn't moved beyond its threshold
-        /// </summary>
-        public DynamicObjectSnapshot UpdateTransform()
-        {
-            //TODO allow using cached _t transform with some compiler flag. default to defensive code rather than faster code
-            Vector3 pos = Dynamic._t.position;
-            Quaternion rot = Dynamic._t.rotation;
-
-            Position[0] = pos.x;
-            Position[1] = pos.y;
-            Position[2] = pos.z;
-
-            Rotation[0] = rot.x;
-            Rotation[1] = rot.y;
-            Rotation[2] = rot.z;
-            Rotation[3] = rot.w;
-
-            Dynamic.UpdateLastPositions(pos, rot);
-
-            return this;
         }
 
         /// <summary>
@@ -1442,34 +1445,6 @@ namespace CognitiveVR
             Rotation[2] = rot.z;
             Rotation[3] = rot.w;
 
-            Dynamic.lastPosition = pos;
-            Dynamic.lastRotation = rot;
-
-            return this;
-        }
-
-        //TODO this shouldn't be part of a dynamic obejct snapshot!
-
-        /// <summary>
-        /// Enable or Disable the Tick coroutine to automatically update the dynamic object's position and rotation
-        /// </summary>
-        /// <param name="enable"></param>
-        public DynamicObjectSnapshot SetTick(bool enable)
-        {
-            CognitiveVR_Manager.TickEvent -= Dynamic.CognitiveVR_Manager_TickEvent;
-            Dynamic.StopAllCoroutines();
-            if (enable)
-            {
-                if (Dynamic.SyncWithPlayerUpdate)
-                {
-                    CognitiveVR_Manager.TickEvent -= Dynamic.CognitiveVR_Manager_TickEvent;
-                    CognitiveVR_Manager.TickEvent += Dynamic.CognitiveVR_Manager_TickEvent;
-                }
-                else
-                {
-                    Dynamic.StartCoroutine(Dynamic.UpdateTick());
-                }
-            }
             return this;
         }
 
@@ -1529,21 +1504,6 @@ namespace CognitiveVR
                 Properties = new Dictionary<string, object>();
             }
             Properties["enabled"] = enable;
-            return this;
-        }
-
-        //TODO this shouldn't set the dynamic object viewer!
-        //releasing an id allows a new object with the same mesh to be used instead of bloating the object manifest
-        //also sets the dynamic object to be disabled
-        public DynamicObjectSnapshot ReleaseUniqueId()
-        {
-            var foundId = DynamicObject.ObjectIds.Find(x => x.Id == this.Id);
-
-            if (foundId != null)
-            {
-                foundId.Used = false;
-            }
-            this.Dynamic.ViewerId = null;
             return this;
         }
     }
