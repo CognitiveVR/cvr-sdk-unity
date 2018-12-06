@@ -774,8 +774,12 @@ namespace CognitiveVR
         {
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
-
-            if (entireSelection.Count == 0) { Debug.Log("No Dynamic Objects selected"); return false; }
+            
+            if (entireSelection.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
+                return false;
+            }
 
             Debug.Log("Starting export of " + entireSelection.Count + " Dynamic Objects");
 
@@ -901,24 +905,18 @@ namespace CognitiveVR
                 GameObject.DestroyImmediate(v);
             }
 
-            if (entireSelection.Count == 0)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
-                return false;
-            }
-
             if (successfullyExportedCount == 0)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
                 return false;
             }
-            if (successfullyExportedCount == 1 && entireSelection.Count == 1)
+            if (totalExportedMeshNames.Count == 1)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
             }
             else
             {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names and successfully exported " + successfullyExportedCount, "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names", "Ok");
             }
             return true;
         }
@@ -1045,6 +1043,8 @@ namespace CognitiveVR
                 }
             }
 
+
+
             //TODO writing texture with non-square terrain is wrong
             Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
             outTex.name = data.name.Replace(' ', '_');
@@ -1092,42 +1092,8 @@ namespace CognitiveVR
                     }
                 }
             }
-
-
-
-            //write material into list
-            //StringBuilder sb = new StringBuilder();
-            //
-            //sb.Append("\n");
-            //sb.Append("newmtl Terrain_Generated\n");
-            //sb.Append("Ka  0.6 0.6 0.6\n");
-            //sb.Append("Kd  1.0 1.0 1.0\n");
-            //sb.Append("Ks  0.0 0.0 0.0\n");
-            //sb.Append("d  1.0\n");
-            //sb.Append("Ns  96.0\n");
-            //sb.Append("Ni  1.0\n");
-            //sb.Append("illum 1\n");
-            //sb.Append("map_Kd Terrain_Generated.png");
-            //
-            //TerrainAppendMaterial = sb.ToString();
-            //
-            //
-            //
-            //
-            ////write texture to file
-            //
-            //string destinationFile = "";
-            //int stripIndex = destinationFile.LastIndexOf('/');
-            //if (stripIndex >= 0)
-            //    destinationFile = destinationFile.Substring(stripIndex + 1).Trim();
-            //destinationFile = folder + "/" + destinationFile;
-            //
-            //
-            byte[] bytes = outTex.EncodeToPNG(); //TODO replace ' ' with '_'
-            //System.IO.File.WriteAllBytes(destinationFolder + "/"+data.name.Replace(' ', '_') + ".png", bytes);
-            //AssetDatabase.Refresh();
-            //var t = AssetDatabase.LoadAssetAtPath<Texture2D>("Terrain_Generated" + data.name + ".png");
-
+            
+            byte[] bytes = outTex.EncodeToPNG();
             outTex.Apply();
 
             //texture importer to original

@@ -13,8 +13,8 @@ public class ManageDynamicObjects : EditorWindow
     public static void Init()
     {
         ManageDynamicObjects window = (ManageDynamicObjects)EditorWindow.GetWindow(typeof(ManageDynamicObjects), true, "");
-        window.minSize = new Vector2(500, 500);
-        window.maxSize = new Vector2(500, 500);
+        window.minSize = new Vector2(500, 550);
+        window.maxSize = new Vector2(500, 550);
         window.Show();
     }
 
@@ -22,7 +22,7 @@ public class ManageDynamicObjects : EditorWindow
     {
         GUI.skin = EditorCore.WizardGUISkin;
 
-        GUI.DrawTexture(new Rect(0, 0, 500, 500), EditorGUIUtility.whiteTexture);
+        GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
         var currentscene = CognitiveVR_Preferences.FindCurrentScene();
 
@@ -96,8 +96,48 @@ public class ManageDynamicObjects : EditorWindow
         }
 
 
+
+        //texture resolution
+
+        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+
+        //resolution settings here
+
+        if (GUI.Button(new Rect(30, 415, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 4;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+        {
+            GUI.Box(new Rect(30, 415, 140, 35), "", "box_sharp_alpha");
+        }
+
+        if (GUI.Button(new Rect(180, 415, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 2;
+            //selectedExportQuality = ExportSettings.DefaultSettings;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+        {
+            GUI.Box(new Rect(180, 415, 140, 35), "", "box_sharp_alpha");
+        }
+
+        if (GUI.Button(new Rect(330, 415, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 1;
+            //selectedExportQuality = ExportSettings.HighSettings;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+        {
+            GUI.Box(new Rect(330, 415, 140, 35), "", "box_sharp_alpha");
+        }
+
+
+
+
+
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
-        if (GUI.Button(new Rect(20, 415, 260, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", "Export and Upload to " + scenename + " version " + versionnumber), "button_bluetext"))
+        if (GUI.Button(new Rect(30, 460, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", "Export and Upload to " + scenename + " version " + versionnumber)))
         {
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
@@ -114,7 +154,7 @@ public class ManageDynamicObjects : EditorWindow
             });
         }
 
-        if (GUI.Button(new Rect(260, 415, 260, 30), new GUIContent("Upload All Meshes","Export and Upload to "+ scenename + " version " + versionnumber),"button_bluetext"))
+        if (GUI.Button(new Rect(270, 460, 200, 30), new GUIContent("Upload All Meshes","Export and Upload to "+ scenename + " version " + versionnumber)))
         {
             EditorCore.RefreshSceneVersion(() =>
             {
@@ -227,7 +267,7 @@ public class ManageDynamicObjects : EditorWindow
     void DrawFooter()
     {
         GUI.color = EditorCore.BlueishGrey;
-        GUI.DrawTexture(new Rect(0, 450, 500, 50), EditorGUIUtility.whiteTexture);
+        GUI.DrawTexture(new Rect(0, 500, 550, 50), EditorGUIUtility.whiteTexture);
         GUI.color = Color.white;
 
         string tooltip = "";
@@ -248,7 +288,7 @@ public class ManageDynamicObjects : EditorWindow
         //EditorGUI.EndDisabledGroup();
         if (enabled)
         {
-            if (GUI.Button(new Rect(80, 460, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
+            if (GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
             {
                 EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(null); });
             }

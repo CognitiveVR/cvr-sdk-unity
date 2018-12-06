@@ -627,7 +627,7 @@ public class InitWizard : EditorWindow
         }
 
         Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
-        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 320), dynamicScrollPosition, innerScrollSize,false,true);
+        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 280), dynamicScrollPosition, innerScrollSize,false,true);
 
         Rect dynamicrect;
         for (int i = 0; i< tempdynamics.Length;i++)
@@ -639,15 +639,50 @@ public class InitWizard : EditorWindow
 
         GUI.EndScrollView();
 
-        GUI.Box(new Rect(30, 120, 425, 320), "","box_sharp_alpha");
+        GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
+
+        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+
+        //resolution settings here
+
+        if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 4;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+        {
+            GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
+        }
+
+        if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 2;
+            //selectedExportQuality = ExportSettings.DefaultSettings;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+        {
+            GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
+        }
+
+        if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 1;
+            //selectedExportQuality = ExportSettings.HighSettings;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+        {
+            GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
+        }
+        
+        
         if (delayDisplayUploading>0)
         {
-            GUI.Button(new Rect(180, 450, 140, 40), "Preparing...", "button_bluetext"); //fake replacement for button
+            GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
             delayDisplayUploading--;
         }
         else if (delayDisplayUploading == 0)
         {
-            GUI.Button(new Rect(180, 450, 140, 40), "Preparing...", "button_bluetext"); //fake replacement for button
+            GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
             //CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             Selection.objects = GameObject.FindObjectsOfType<GameObject>();
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
@@ -657,7 +692,7 @@ public class InitWizard : EditorWindow
         else
         {
             //GUI.Label(new Rect(180, 450, 140, 40), "", "button_blueoutline");
-            if (GUI.Button(new Rect(180, 450, 140, 40), "Prepare All", "button_bluetext"))
+            if (GUI.Button(new Rect(180, 455, 140, 35), "Prepare All"))
             {
                 delayDisplayUploading = 2;
             }
@@ -722,7 +757,7 @@ public class InitWizard : EditorWindow
 
         #endregion
 
-    int textureResolutionSettings = 1; //1 full resolution, 2 is half resolution, 4 is quarter res
+    //int textureResolutionSettings = 1; //1 full resolution, 2 is half resolution, 4 is quarter res
     //int qualityindex = 2; //0 low, 1 normal, 2 maximum
     //ExportSettings selectedExportQuality;
 
@@ -734,53 +769,41 @@ public class InitWizard : EditorWindow
         //GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.", "boldlabel");
         GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
 
-        GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Quality", "miniheader");
+        GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
         
         //texture resolution settings
 
-        if (GUI.Button(new Rect(30, 350, 140, 100), "Low\n\n", textureResolutionSettings == 4 ? "button_blueoutline" : "button_disabledtext"))
+        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+
+        //resolution settings here
+
+        if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
-                textureResolutionSettings = 4;
-            //selectedExportQuality = ExportSettings.LowSettings;
+            CognitiveVR_Preferences.Instance.TextureResize = 4;
         }
-        if (textureResolutionSettings == 4)
+        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
         {
-            GUI.Label(new Rect(88, 355, 24, 100), EditorCore.Checkmark, "image_centered");
-        }
-        else
-        {
-            GUI.Label(new Rect(88, 355, 24, 100), EditorCore.EmptyCheckmark, "image_centered");
-            GUI.Box(new Rect(30, 350, 140, 100), "","box_sharp_alpha");
-        }
-            
-        if (GUI.Button(new Rect(180, 350, 140, 100), "Medium\n\n", textureResolutionSettings == 2 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            textureResolutionSettings = 2;
-            //selectedExportQuality = ExportSettings.DefaultSettings;
-        }
-        if (textureResolutionSettings == 2)
-        {
-            GUI.Label(new Rect(238, 355, 24, 100), EditorCore.Checkmark, "image_centered");
-        }
-        else
-        {
-            GUI.Label(new Rect(238, 355, 24, 100), EditorCore.EmptyCheckmark, "image_centered");
-            GUI.Box(new Rect(180, 350, 140, 100), "","box_sharp_alpha");
+            GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(330, 350, 140, 100), "Maximum\n\n", textureResolutionSettings == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
-            textureResolutionSettings = 1;
+            CognitiveVR_Preferences.Instance.TextureResize = 2;
+            //selectedExportQuality = ExportSettings.DefaultSettings;
+        }
+        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+        {
+            GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
+        }
+
+        if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution","Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        {
+            CognitiveVR_Preferences.Instance.TextureResize = 1;
             //selectedExportQuality = ExportSettings.HighSettings;
         }
-        if (textureResolutionSettings == 1)
+        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
         {
-            GUI.Label(new Rect(388, 355, 24, 100), EditorCore.Checkmark, "image_centered");
-        }
-        else
-        {
-            GUI.Label(new Rect(388, 355, 24, 100), EditorCore.EmptyCheckmark, "image_centered");
-            GUI.Box(new Rect(330, 350, 140, 100), "","box_sharp_alpha");
+            GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
         }
 
         
@@ -887,9 +910,9 @@ public class InitWizard : EditorWindow
             {
                 scenename = "SCENE NOT SAVED";
             }
-            string settingsname = "Maximum Quality";
-            if (textureResolutionSettings == 4) { settingsname = "Low Quality"; }
-            if (textureResolutionSettings == 2) { settingsname = "Medium Quality"; }
+            string settingsname = "1/1 Resolution";
+            if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+            if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
             "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
@@ -903,9 +926,9 @@ public class InitWizard : EditorWindow
             {
                 scenename = "SCENE NOT SAVED";
             }
-            string settingsname = "Maximum Quality";
-            if (textureResolutionSettings == 4) { settingsname = "Low Quality"; }
-            if (textureResolutionSettings == 2) { settingsname = "Medium Quality"; }
+            string settingsname = "1/1 Resolution";
+            if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+            if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
             
             GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
