@@ -590,7 +590,9 @@ public class ControllerInputTracker : MonoBehaviour
     {
         var v = new Dictionary<string, ButtonState>();
         v.Add(name, new ButtonState(down ? 100 : 0));
-        var snap = dynamic.NewSnapshot().UpdateTransform();
+        var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
+        dynamic.lastPosition = dynamic.transform.position;
+        dynamic.lastRotation = dynamic.transform.rotation;
         snap.Buttons = v;
     }
 
@@ -599,7 +601,9 @@ public class ControllerInputTracker : MonoBehaviour
     {
         var v = new Dictionary<string, ButtonState>();
         v.Add(name, new ButtonState(single));
-        var snap = dynamic.NewSnapshot().UpdateTransform();
+        var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
+        dynamic.lastPosition = dynamic.transform.position;
+        dynamic.lastRotation = dynamic.transform.rotation;
         snap.Buttons = v;
     }
 
@@ -607,7 +611,9 @@ public class ControllerInputTracker : MonoBehaviour
     {
         var v = new Dictionary<string, ButtonState>();
         v.Add(name, new ButtonState(input, x, y, true));
-        var snap = dynamic.NewSnapshot().UpdateTransform();
+        var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
+        dynamic.lastPosition = dynamic.transform.position;
+        dynamic.lastRotation = dynamic.transform.rotation;
         snap.Buttons = v;
     }
 
@@ -616,7 +622,9 @@ public class ControllerInputTracker : MonoBehaviour
     {
         var v = new Dictionary<string, ButtonState>();
         v.Add(name, new ButtonState(input,vector.x,vector.y,true));
-        var snap = dynamic.NewSnapshot().UpdateTransform();
+        var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
+        dynamic.lastPosition = dynamic.transform.position;
+        dynamic.lastRotation = dynamic.transform.rotation;
         snap.Buttons = v;
     }
 }
