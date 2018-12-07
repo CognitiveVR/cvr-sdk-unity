@@ -1042,22 +1042,23 @@ namespace CognitiveVR
 
                 }
             }
+            
+            var sizemax = Mathf.Max(
+                Mathf.NextPowerOfTwo((int)(data.heightmapScale.z * data.heightmapResolution * 16)),
+                Mathf.NextPowerOfTwo((int)(data.heightmapScale.x * data.heightmapResolution * 16)));
 
+            int sizelimit = Mathf.Min(4096, sizemax);
 
+            Texture2D outTex = new Texture2D(sizelimit, sizelimit);
 
-            //TODO writing texture with non-square terrain is wrong
-            Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
+            //Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
             outTex.name = data.name.Replace(' ', '_');
             float upscalewidth = (float)outTex.width / (float)data.alphamapWidth; //(data.heightmapScale.x * data.heightmapResolution * 64);
             float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;// (data.heightmapScale.z * data.heightmapResolution * 64);
 
             float[] colorAtLayer = new float[layerCount];
             SplatPrototype[] prototypes = data.splatPrototypes;
-
-            //TODO should limit resolution to 64pixels per meter
-            //Debug.Log("height " + outTex.height + " upscale width " + upscaleheight);
-            //Debug.Log("width " + outTex.width + " upscale height " + upscalewidth);
-
+            
             for (int y = 0; y < outTex.height; y++)
             {
                 for (int x = 0; x < outTex.width; x++)
