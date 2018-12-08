@@ -101,11 +101,8 @@ namespace CognitiveVR
             string serialnumber;
             string xml;
             if (GetSerialNumberAndCalibration(out serialnumber, out xml))
-            {              
-                var metaProperties = new Dictionary<string,object>();
-                metaProperties.Add("cvr.vr.serialnumber",serialnumber);
-                Core.UpdateSessionState(metaProperties);
-                //Instrumentation.updateDeviceState(metaProperties);
+            {
+                Core.UpdateSessionState("c3d.device.serialnumber",serialnumber);
             }
 #elif CVR_STEAMVR
 
@@ -120,11 +117,7 @@ namespace CognitiveVR
 
             if (!string.IsNullOrEmpty(serialnumber))
             {
-                var properties = new Dictionary<string, object>();
-                properties.Add("cvr.vr.serialnumber", serialnumber);
-
-                Core.UpdateSessionState(properties);
-                //Instrumentation.updateDeviceState(properties);
+                Core.UpdateSessionState("c3d.device.serialnumber", serialnumber);
             }
 #endif
         }
@@ -612,27 +605,109 @@ namespace CognitiveVR
             Core.SetTrackingScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             OnLevelLoaded();
 
-
-
             Core.UserId = userName;
+            Core.UpdateSessionState("c3d.username", userName);
 
             CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
-            Core.UpdateSessionState(Util.GetDeviceProperties() as Dictionary<string,object>);
 
-#if UNITY_2017_2_OR_NEWER
-            Core.UpdateSessionState("cvr.vr.enabled", UnityEngine.XR.XRSettings.enabled);
-            Core.UpdateSessionState("cvr.vr.display.model", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRDevice.model : "Not Found"); //vive mvt, vive. mv, oculus rift cv1, acer ah100
-            Core.UpdateSessionState("cvr.vr.display.family", UnityEngine.XR.XRSettings.enabled && UnityEngine.XR.XRDevice.isPresent ? UnityEngine.XR.XRSettings.loadedDeviceName : "Not Found"); //openvr, oculus, windowsmr
+#if UNITY_EDITOR
+            Core.UpdateSessionState("c3d.app.inEditor", "true");
 #else
-            Core.UpdateSessionState("cvr.vr.enabled", UnityEngine.VR.VRSettings.enabled);
-            Core.UpdateSessionState("cvr.vr.display.model", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRDevice.model : "Not Found");
-            Core.UpdateSessionState("cvr.vr.display.family", UnityEngine.VR.VRSettings.enabled && UnityEngine.VR.VRDevice.isPresent ? UnityEngine.VR.VRSettings.loadedDeviceName : "Not Found");
+            Core.UpdateSessionState("c3d.app.inEditor", "false");
 #endif
 
+            //TODO support multiple hmds (tobii + pupil + vive)
+            //addon sdks - tobii, ah, pupil
 
-            Core.UpdateSessionState("cvr.deviceId", Core.DeviceId);
-            Core.UpdateSessionState(userProperties);
-            Core.UpdateSessionState("cvr.name", userName);
+#if CVR_STEAMVR2 || CVR_STEAMVR
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "HTC");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "Vive");
+#elif CVR_FOVE
+            Core.UpdateSessionState("c3d.device.hmd.type", "Fove");
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Fove");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Fove");
+            Core.UpdateSessionState("c3d.app.sdktype", "Fove");
+#elif CVR_SNAPDRAGON
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Qualcomm");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Snapdragon");
+            Core.UpdateSessionState("c3d.app.sdktype", "Snapdragon");
+#elif CVR_OCULUS
+            Core.UpdateSessionState("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Oculus");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type", "None");
+            Core.UpdateSessionState("c3d.app.sdktype", "Oculus");
+#elif CVR_NEURABLE
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "HTC");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Neurable");
+            Core.UpdateSessionState("c3d.app.sdktype", "Neurable");
+#elif CVR_ARKIT
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Apple");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "ARKit");
+#elif CVR_ARCORE
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Android");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "ARCore");
+#elif CVR_GOOGLEVR
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Android");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "Google VR");
+#elif CVR_HOLOLENS
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Microsoft");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "Hololens");
+#elif CVR_META
+            Core.UpdateSessionState("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionState("c3d.device.hmd.manufacturer", "Meta");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","None");
+            Core.UpdateSessionState("c3d.app.sdktype", "Meta");
+#endif
+
+            //eye tracker addons
+#if CVR_TOBIIVR
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.manufacturer","HTC");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Tobii");
+            Core.UpdateSessionState("c3d.app.sdktype", "Tobii");
+#elif CVR_PUPIL
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.manufacturer", "HTC");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Pupil");
+            Core.UpdateSessionState("c3d.app.sdktype", "Pupil");
+#elif CVR_AH
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.manufacturer", "Google");
+            Core.UpdateSessionState("c3d.device.eyetracking.enabled", "true");
+            Core.UpdateSessionState("c3d.device.eyetracking.type","Adhawk");
+            Core.UpdateSessionState("c3d.app.sdktype", "Adhawk");
+#endif
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.UpdateSessionStateIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
+            Core.UpdateSessionStateIfEmpty("c3d.device.eyetracking.enabled", "false");
+            Core.UpdateSessionStateIfEmpty("c3d.device.eyetracking.type", "None");
+            Core.UpdateSessionStateIfEmpty("c3d.app.sdktype", "Default");
+
+            Core.UpdateSessionState("c3d.app.engine", "Unity");
 
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
@@ -662,7 +737,7 @@ namespace CognitiveVR
         /// <param name="name"></param>
         public static void SetSessionName(string name)
         {
-            Core.UpdateSessionState("cvr.sessionname", name);
+            Core.UpdateSessionState("c3d.sessionname", name);
         }
 
         public static void SetLobbyId(string lobbyId)
@@ -880,6 +955,6 @@ namespace CognitiveVR
             Application.Quit();
         }
 
-        #endregion
+#endregion
     }
 }
