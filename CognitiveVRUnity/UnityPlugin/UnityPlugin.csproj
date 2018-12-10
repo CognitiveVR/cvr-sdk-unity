@@ -53,16 +53,15 @@
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SensorRecorder.cs" />
-    <Compile Include="Transaction.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y "$(TargetPath)" "$(SolutionDir)\Assets\Plugins"
+    <PostBuildEvent>xcopy /Y "$(TargetPath)" "$(SolutionDir)\Assets\CognitiveVR\Plugins"
 if $(ConfigurationName) == Debug (xcopy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)\Assets\Plugins")</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>del "$(SolutionDir)\Assets\Plugins\$(TargetName).pdb"</PreBuildEvent>
+    <PreBuildEvent>del "$(SolutionDir)Assets\CognitiveVR\Plugins\$(TargetName).pdb"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

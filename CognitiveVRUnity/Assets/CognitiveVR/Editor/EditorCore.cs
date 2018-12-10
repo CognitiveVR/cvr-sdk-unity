@@ -224,8 +224,6 @@ public class EditorCore
         }
     }
 
-    public static ExportSettings ExportSettings = ExportSettings.HighSettings;
-
     public static bool IsDeveloperKeyValid
     {
         get
@@ -1181,6 +1179,11 @@ public class EditorCore
                 boundsMag = renderer.bounds.size.magnitude;
                 largestBounds = renderer.bounds;
             }
+        }
+
+        if (largestBounds.size.magnitude <= 0)
+        {
+            largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
         }
 
         //include target's rotation

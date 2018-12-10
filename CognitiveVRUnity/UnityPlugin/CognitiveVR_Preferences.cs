@@ -65,15 +65,16 @@ namespace CognitiveVR
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
         public int RenderPassType;
 
-        public bool IsAPIKeyValid
+        public bool IsApplicationKeyValid
         {
             get
             {
-                return !string.IsNullOrEmpty(APIKey);
+                return !string.IsNullOrEmpty(ApplicationKey);
             }
         }
 
-        public string APIKey;
+        [UnityEngine.Serialization.FormerlySerializedAs("APIKey")]
+        public string ApplicationKey;
 
         public bool EnableLogging = true;
         public bool EnableDevLogging = false;
@@ -129,6 +130,8 @@ namespace CognitiveVR
         public long LocalDataCacheSize = 1024 * 1024 * 10;
         public bool LocalStorage = true;
         public int ReadLocalCacheCount = 2;
+
+        public int TextureResize = 1;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
@@ -201,43 +204,6 @@ namespace CognitiveVR
                 SceneName = name;
                 ScenePath = path;
             }
-        }
-    }
-
-    [System.Serializable]
-    public class ExportSettings
-    {
-        public bool ExportStaticOnly = false;
-        public float MinExportGeoSize = 1;
-        public int ExplorerMinimumFaceCount = 100;
-        public int ExplorerMaximumFaceCount = 8000;
-        public int TextureQuality = 4;
-        public string DiffuseTextureName = "_MainTex";
-
-        public static ExportSettings LowSettings = new ExportSettings() { MinExportGeoSize = 0.5f, ExplorerMaximumFaceCount = 8000, ExplorerMinimumFaceCount = 1000, TextureQuality = 4 };
-        public static ExportSettings DefaultSettings = new ExportSettings() { MinExportGeoSize = 0.25f, ExplorerMaximumFaceCount = 16000, ExplorerMinimumFaceCount = 2000, TextureQuality = 2 };
-        public static ExportSettings HighSettings = new ExportSettings() { MinExportGeoSize = 0, ExplorerMaximumFaceCount = 131072, ExplorerMinimumFaceCount = 65536, TextureQuality = 1 };
-
-        public static bool Match(ExportSettings a, ExportSettings b)
-        {
-            if (!Mathf.Approximately(a.MinExportGeoSize, b.MinExportGeoSize)) { return false; }
-            if (a.ExportStaticOnly != b.ExportStaticOnly) { return false; }
-            if (a.ExplorerMinimumFaceCount != b.ExplorerMinimumFaceCount) { return false; }
-            if (a.ExplorerMaximumFaceCount != b.ExplorerMaximumFaceCount) { return false; }
-            if (a.TextureQuality != b.TextureQuality) { return false; }
-            if (a.DiffuseTextureName != b.DiffuseTextureName) { return false; }
-            return true;
-        }
-
-        public static ExportSettings Copy(ExportSettings target)
-        {
-            return new ExportSettings() { ExportStaticOnly = target.ExportStaticOnly,
-                MinExportGeoSize = target.MinExportGeoSize,
-                ExplorerMaximumFaceCount = target.ExplorerMaximumFaceCount,
-                ExplorerMinimumFaceCount = target.ExplorerMinimumFaceCount,
-                TextureQuality = target.TextureQuality,
-                DiffuseTextureName = target.DiffuseTextureName
-            };
         }
     }
 }

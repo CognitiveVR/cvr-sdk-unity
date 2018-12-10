@@ -145,14 +145,17 @@ namespace CognitiveVR
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
                         CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
-                        foreach (var t in serializedObject.targetObjects)
-                        {
-                            var dyn = t as DynamicObject;
-                            //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
-                            {
-                                EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                            }
-                        }
+                        //GLTFExportMenu.ExportSelected();
+                        //EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+
+                        //foreach (var t in serializedObject.targetObjects)
+                        //{
+                        //    var dyn = t as DynamicObject;
+                        //    //if (!dyn.UseCustomId) //why should this skip saving a snapshot if customid is not set
+                        //    {
+                        //        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                        //    }
+                        //}
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
@@ -174,10 +177,15 @@ namespace CognitiveVR
 
                     GUILayout.EndHorizontal();
 
-                    GUILayout.BeginHorizontal();
-                    //GUILayout.FlexibleSpace();
+                    //GUILayout.BeginHorizontal();
 
-                    GUILayout.EndHorizontal();
+
+                    GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth") };
+                    int[] textureQualities = new int[] { 1, 2, 4, 8, 16 };
+                    CognitiveVR_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), CognitiveVR_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
+
+
+                    //GUILayout.EndHorizontal();
                 }
 
                 //Setup
