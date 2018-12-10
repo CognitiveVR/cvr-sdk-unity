@@ -198,6 +198,9 @@ public class InitWizard : EditorWindow
 #if CVR_SNAPDRAGON
             selectedsdks.Add("CVR_SNAPDRAGON");
 #endif
+#if CVR_HOLOLENS
+            selectedsdks.Add("CVR_HOLOLENS");
+#endif
         }
 
         Vector2 sdkScrollPos;

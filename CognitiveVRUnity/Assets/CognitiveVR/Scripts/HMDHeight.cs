@@ -39,7 +39,7 @@ namespace CognitiveVR.Components
             }
 
             float averageHeight = hmdAccumHeight / samples;
-            Core.UpdateSessionState(new Dictionary<string, object> { { "cvr.height", averageHeight } });
+            Core.UpdateSessionState("c3d.height", averageHeight);
         }
 
         public static string GetDescription()

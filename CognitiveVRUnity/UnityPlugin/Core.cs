@@ -20,7 +20,7 @@ namespace CognitiveVR
 
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.8.6";
+        public const string SDK_VERSION = "0.8.7";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -164,8 +164,19 @@ namespace CognitiveVR
 
                 if (Error.Success == ret)
                 {
-                    Util.cacheDeviceAndAppInfo();
+                    UpdateSessionState("c3d.app.name", Application.productName);
+                    UpdateSessionState("c3d.app.version", Application.version);
+                    UpdateSessionState("c3d.app.engine.version", Application.unityVersion);
+                    UpdateSessionState("cvr.device.type", SystemInfo.deviceType.ToString());
+                    UpdateSessionState("c3d.device.cpu", SystemInfo.processorType);
+                    UpdateSessionState("c3d.device.model", SystemInfo.deviceModel);
+                    UpdateSessionState("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                    UpdateSessionState("c3d.device.os", SystemInfo.operatingSystem);
+                    UpdateSessionState("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+
+                    //Util.cacheDeviceAndAppInfo();
                     DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
+                    UpdateSessionState("c3d.deviceid", DeviceId);
 
                     //initialize Network Manager early, before gameplay actually starts
                     var temp = NetworkManager.Sender;
@@ -232,6 +243,34 @@ namespace CognitiveVR
         }
         public static void UpdateSessionState(string key, object value)
         {
+            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            {
+                if (newSessionProperties.ContainsKey(key))
+                {
+                    newSessionProperties[key] = value;
+                }
+                else
+                {
+                    newSessionProperties.Add(key, value);
+                }
+                knownSessionProperties[key] = value;
+            }
+            else if (!knownSessionProperties.ContainsKey(key)) //add value
+            {
+                knownSessionProperties.Add(key, value);
+                newSessionProperties.Add(key, value);
+            }
+        }
+
+        /// <summary>
+        /// writes a value into the session properties if the key has not already been added
+        /// for easy use of 'addon' sdks
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public static void UpdateSessionStateIfEmpty(string key, object value)
+        {
+            if (knownSessionProperties.ContainsKey(key)) { return; }
             if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
             {
                 if (newSessionProperties.ContainsKey(key))

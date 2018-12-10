@@ -76,28 +76,6 @@ namespace CognitiveVR
             return uniqueId++.ToString();
         }
 
-        internal static void cacheDeviceAndAppInfo()
-        {
-            // Clear out any previously set data
-            sDeviceAndAppInfo.Clear();
-
-            // Get the rest of the information about the device
-            sDeviceAndAppInfo.Add("cvr.app.name", Application.productName);
-            sDeviceAndAppInfo.Add("cvr.app.version", Application.version);
-            sDeviceAndAppInfo.Add("cvr.unity.version", Application.unityVersion);
-            sDeviceAndAppInfo.Add("cvr.device.model", SystemInfo.deviceModel);
-            sDeviceAndAppInfo.Add("cvr.device.type", SystemInfo.deviceType.ToString());
-            sDeviceAndAppInfo.Add("cvr.device.platform", Application.platform.ToString());
-            sDeviceAndAppInfo.Add("cvr.device.os", SystemInfo.operatingSystem);
-            sDeviceAndAppInfo.Add("cvr.device.graphics.name", SystemInfo.graphicsDeviceName);
-            sDeviceAndAppInfo.Add("cvr.device.graphics.type", SystemInfo.graphicsDeviceType.ToString());
-            sDeviceAndAppInfo.Add("cvr.device.graphics.vendor", SystemInfo.graphicsDeviceVendor);
-            sDeviceAndAppInfo.Add("cvr.device.graphics.version", SystemInfo.graphicsDeviceVersion);
-            sDeviceAndAppInfo.Add("cvr.device.graphics.memory", SystemInfo.graphicsMemorySize);
-            sDeviceAndAppInfo.Add("cvr.device.processor", SystemInfo.processorType);
-            sDeviceAndAppInfo.Add("cvr.device.memory", SystemInfo.systemMemorySize);
-        }
-
         static string _hmdname;
         //returns vive/rift/gear/unknown based on hmd model name
         public static string GetSimpleHMDName(string rawHMDName)
