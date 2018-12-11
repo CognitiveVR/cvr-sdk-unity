@@ -70,13 +70,13 @@ namespace CognitiveVR
             gazeUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/gaze/");
             eventUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/events/");
             sensorUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/sensors/");
-            APIKey = "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey;
+            ApplicationKey = "APIKEY:DATA " + CognitiveVR_Preferences.Instance.ApplicationKey;
         }
         static string dynamicUrl;
         static string gazeUrl;
         static string eventUrl;
         static string sensorUrl;
-        internal static string APIKey;
+        internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {

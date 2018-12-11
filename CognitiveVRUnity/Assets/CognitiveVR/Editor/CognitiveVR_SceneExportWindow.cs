@@ -11,6 +11,15 @@ using UnityEngine.Networking;
 
 namespace CognitiveVR
 {
+    public class BakeableMesh
+    {
+        public GameObject tempGo;
+        public MeshRenderer meshRenderer;
+        public MeshFilter meshFilter;
+        public bool useOriginalscale;
+        public Vector3 originalScale;
+    }
+
     //returned from get scene version. contains info about all versions of a single scene
     public class SceneVersionCollection
     {
@@ -80,11 +89,34 @@ namespace CognitiveVR
 
         #region Export Scene
 
+        private static bool CreateTargetFolder(string fullName)
+        {
+            try
+            {
+                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
+            }
+            catch
+            {
+                EditorUtility.DisplayDialog("Error!", "Failed to create folder: CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
+                return false;
+            }
+
+            return true;
+        }
+
+        //retrun path to CognitiveVR_SceneExplorerExport. create if it doesn't exist
+        public static string GetDirectory(string fullName)
+        {
+            CreateTargetFolder(fullName);
+
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar;
+        }
+
         //don't even try exporting the scene. just generate the folder and json file
         public static void ExportSceneAR()
         {
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
+            string objPath = GetDirectory(fullName);
 
             //if folder exists, delete mtl, obj, png and json contents
             if (Directory.Exists(objPath))
@@ -102,142 +134,7 @@ namespace CognitiveVR
         }
 
         //export and try to decimate the scene
-        public static void ExportScene(bool includeTextures, bool staticGeometry, float minSize, int textureDivisor, string developerkey,string texturename)
-        {
-            if (blenderProcess != null)
-            {
-                Debug.LogError("Currently decimating a scene. Please wait until this is finished!");
-                return;
-            }
-
-            if (UploadSceneSettings != null)
-            {
-                Debug.LogError("Currently uploading a scene. Please wait until this is finished!");
-                return;
-            }
-
-            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-
-            //export scene from unity
-            bool successfulExport = CognitiveVR_SceneExplorerExporter.ExportScene(fullName, includeTextures,staticGeometry,minSize,textureDivisor, texturename);
-
-            string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(fullName);
-
-            //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
-            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-            if (!successfulExport)
-            {
-                Debug.LogError("Scene export failed!");
-                return;
-            }
-
-            //begin scene decimation
-            if (!EditorCore.IsBlenderPathValid)
-            {
-                Debug.LogWarning("Blender not found during scene export. May result in large files uploaded to Scene Explorer");
-                return;
-            }
-
-            string filepath = "";
-            if (!EditorCore.RecursiveDirectorySearch("", out filepath, "CognitiveVR"+System.IO.Path.DirectorySeparatorChar+"Editor"))
-            {
-                Debug.LogError("Could not find CognitiveVR/Editor/decimateall.py");
-            }
-
-            string decimateScriptPath = filepath + System.IO.Path.DirectorySeparatorChar +"decimateall.py";
-            decimateScriptPath = decimateScriptPath.Replace(" ", "\" \"");
-            objPath = objPath.Replace(" ", "\" \"");
-            fullName = fullName.Replace(" ", "\" \"");
-
-            EditorUtility.ClearProgressBar();
-
-            ProcessStartInfo processInfo;
-#if UNITY_EDITOR_WIN
-            processInfo = new ProcessStartInfo(EditorCore.BlenderPath);
-            processInfo.UseShellExecute = true;
-            processInfo.Arguments = "-P " + decimateScriptPath + " " + objPath + " " + EditorCore.ExportSettings.ExplorerMinimumFaceCount + " " + EditorCore.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
-
-#elif UNITY_EDITOR_OSX
-            processInfo = new ProcessStartInfo("open");
-            processInfo.Arguments = EditorCore.BlenderPath + " --args -P " + decimateScriptPath + " " + objPath + " " + EditorCore.ExportSettings.ExplorerMinimumFaceCount + " " + EditorCore.ExportSettings.ExplorerMaximumFaceCount + " " + fullName;
-            processInfo.UseShellExecute = false;
-#endif
-
-            //changing scene while blender is decimating the level will break the file that will be automatically uploaded
-            blenderProcess = Process.Start(processInfo);
-            BlenderRequest = true;
-            HasOpenedBlender = false;
-            EditorApplication.update += UpdateProcess;
-            UploadSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
-
-            blenderStartTime = (float)EditorApplication.timeSinceStartup;
-        }
-
-        static float blenderStartTime = 0;
-        static float currentBlenderTime = 0;
-        static float maxBlenderTime = 240;
-
-        static bool BlenderRequest;
-        static bool HasOpenedBlender;
-        static Process blenderProcess;
-
-        static void UpdateProcess()
-        {
-            currentBlenderTime = (float)(EditorApplication.timeSinceStartup - blenderStartTime);
-            if (EditorUtility.DisplayCancelableProgressBar("Blender Decimate", "Reducing the polygons and scene complexity using Blender", currentBlenderTime / maxBlenderTime))
-            {
-                Debug.Log("Cancel Blender process");
-                blenderProcess.Kill();
-                blenderProcess.Close();
-                EditorApplication.update -= UpdateProcess;
-                HasOpenedBlender = false;
-                blenderProcess = null;
-                EditorUtility.ClearProgressBar();
-                UploadSceneSettings = null;
-                return;
-            }
-
-            //could probably clean up some of this
-            Process[] blenders;
-            if (BlenderRequest == true)
-            {
-                //Debug.Log("BLENDER - opening");
-                blenders = Process.GetProcessesByName("blender");
-                if (blenders.Length > 0)
-                {
-                    BlenderRequest = false;
-                    HasOpenedBlender = true;
-                }
-            }
-            if (HasOpenedBlender)
-            {
-                blenders = Process.GetProcessesByName("blender");
-                if (blenderProcess.HasExited)
-                {
-                    //Debug.Log("BLENDER - finished work");
-                    EditorApplication.update -= UpdateProcess;
-                    HasOpenedBlender = false;
-
-                    if (blenderProcess.ExitCode != 0)
-                    {
-                        blenderProcess = null;
-                        EditorUtility.ClearProgressBar();
-                        UploadSceneSettings = null;
-                        return;
-                    }
-
-                    blenderProcess = null;
-                    
-                    EditorUtility.ClearProgressBar();
-                    UploadSceneSettings = null;
-
-                    //var blenderSceneSettings = EditorCore.GetPreferences().FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-                    //UploadDecimatedScene(blenderSceneSettings);
-                }
-            }
-        }
+        
 
         #endregion
 
@@ -274,7 +171,7 @@ namespace CognitiveVR
                 {
                     uploadConfirmed = true;
                     //create a json.settings file in the directory
-                    string objPath = CognitiveVR_SceneExplorerExporter.GetDirectory(sceneName);
+                    string objPath = GetDirectory(sceneName);
 
                     Directory.CreateDirectory(objPath);
 
@@ -467,9 +364,238 @@ namespace CognitiveVR
             UploadSceneSettings = null;
         }
         static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
-        
+
         #endregion
-        
+
+
+        public static void ExportGLTFScene()
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+            var gameObjects = scene.GetRootGameObjects();
+
+            List<Transform> t = new List<Transform>();
+            foreach (var v in gameObjects)
+            {
+                if (v.GetComponent<MeshFilter>() != null && v.GetComponent<MeshFilter>().sharedMesh == null) { continue; }
+                if (v.activeInHierarchy) { t.Add(v.transform); }
+                //check for mesh renderers here, before nodes are constructed for invalid objects?
+            }
+
+            List<BakeableMesh> temp = new List<BakeableMesh>();
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f);
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
+            BakeNonstandardRenderers(null, temp, path);
+            var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+            Directory.CreateDirectory(path);
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
+            exporter.SaveGLTFandBin(path, "scene");
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f);
+            for (int i = 0; i < temp.Count; i++)
+            {
+                if (temp[i].useOriginalscale)
+                {
+                    temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                }
+                DestroyImmediate(temp[i].meshFilter);
+                DestroyImmediate(temp[i].meshRenderer);
+                if (temp[i].tempGo != null)
+                    DestroyImmediate(temp[i].tempGo);
+            }
+
+            ResizeQueue.Enqueue(path);
+            EditorApplication.update -= UpdateResize;
+            EditorApplication.update += UpdateResize;
+        }
+
+        //wait for update message from the editor - reading files without this delay has issues reading data
+        static Queue<string> ResizeQueue = new Queue<string>();
+        static void UpdateResize()
+        {
+            while(ResizeQueue.Count > 0)
+            {
+                ResizeTexturesInExportFolder(ResizeQueue.Dequeue());
+            }
+
+            EditorApplication.update -= UpdateResize;
+            EditorUtility.ClearProgressBar();
+        }
+
+        static void ResizeTexturesInExportFolder(string folderpath)
+        {
+            var textureDivisor = CognitiveVR_Preferences.Instance.TextureResize;
+
+            if (textureDivisor == 1) { return; }
+            Texture2D texture = new Texture2D(2, 2);
+            var files = Directory.GetFiles(folderpath);
+
+            foreach (var file in files)
+            {
+                if (!file.EndsWith(".png")) { continue; }
+
+                //skip thumbnails
+                if (file.EndsWith("cvr_object_thumbnail.png")) { continue; }
+
+                string path = file;
+
+                texture.LoadImage(File.ReadAllBytes(file));
+
+                texture = RescaleForExport(texture, Mathf.NextPowerOfTwo(texture.width) / textureDivisor, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
+                byte[] bytes = texture.EncodeToPNG();
+                File.WriteAllBytes(path, bytes);
+            }
+        }
+
+        public static Texture2D RescaleForExport(Texture2D tex, int newWidth, int newHeight)
+        {
+            Color[] texColors;
+            Color[] newColors;
+            float ratioX;
+            float ratioY;
+
+            newHeight = Mathf.Max(1, newHeight);
+            newWidth = Mathf.Max(1, newWidth);
+
+            texColors = tex.GetPixels();
+            newColors = new Color[newWidth * newHeight];
+            ratioX = ((float)tex.width) / newWidth;
+            ratioY = ((float)tex.height) / newHeight;
+
+            int w = tex.width;
+            int w2 = newWidth;
+
+            for (var y = 0; y < newHeight; y++)
+            {
+                var thisY = (int)(ratioY * y) * w;
+                var yw = y * w2;
+                for (var x = 0; x < w2; x++)
+                {
+                    newColors[yw + x] = texColors[(int)(thisY + ratioX * x)];
+                }
+            }
+
+            Texture2D newText = new Texture2D(newWidth, newHeight);
+            newText.SetPixels(newColors);
+            return newText;
+        }
+
+
+        static void BakeNonstandardRenderers(DynamicObject rootDynamic, List<BakeableMesh> meshes, string path)
+        {
+            SkinnedMeshRenderer[] SkinnedMeshes = FindObjectsOfType<SkinnedMeshRenderer>();
+            Terrain[] Terrains = FindObjectsOfType<Terrain>();
+            Canvas[] Canvases = FindObjectsOfType<Canvas>();
+            if (rootDynamic != null)
+            {
+                SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
+                Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
+                Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
+            }
+
+            foreach (var skinnedMeshRenderer in SkinnedMeshes)
+            {
+                if (!skinnedMeshRenderer.gameObject.activeInHierarchy) { continue; }
+                if (rootDynamic == null && skinnedMeshRenderer.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //skinned mesh as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && skinnedMeshRenderer.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found skinned mesh in some other dynamic
+                    continue;
+                }
+
+                var pos = skinnedMeshRenderer.transform.localPosition;
+                skinnedMeshRenderer.transform.localPosition = Vector3.zero;
+                //var rot = v.transform.localRotation;
+                //v.transform.localRotation = Quaternion.identity;
+
+                BakeableMesh bm = new BakeableMesh();
+
+                bm.tempGo = new GameObject(skinnedMeshRenderer.gameObject.name);
+                bm.tempGo.transform.parent = skinnedMeshRenderer.transform;
+                bm.tempGo.transform.localScale = Vector3.one;
+                bm.tempGo.transform.localRotation = Quaternion.identity;
+                bm.tempGo.transform.localPosition = Vector3.zero;
+
+                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = skinnedMeshRenderer.sharedMaterial;
+                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+                var m = new Mesh();
+                m.name = skinnedMeshRenderer.sharedMesh.name;
+                bm.originalScale = skinnedMeshRenderer.transform.localScale;
+                bm.useOriginalscale = true;
+                skinnedMeshRenderer.transform.localScale = Vector3.one;
+                skinnedMeshRenderer.BakeMesh(m);
+                bm.meshFilter.sharedMesh = m;
+                meshes.Add(bm);
+
+                //v.transform.localPosition = pos;
+                //v.transform.localRotation = rot;
+            }
+
+            //TODO ignore parent rotation and scale
+            foreach (var v in Terrains)
+            {
+                if (!v.isActiveAndEnabled) { continue; }
+                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //terrain as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && v.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found terrain in some other dynamic
+                    continue;
+                }
+
+                //generate mesh from heightmap
+                BakeableMesh bm = new BakeableMesh();
+                bm.meshRenderer = v.gameObject.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
+                bm.meshRenderer.sharedMaterial.mainTexture = BakeTerrainTexture(path, v.terrainData);
+                bm.meshFilter = v.gameObject.AddComponent<MeshFilter>();
+                bm.meshFilter.sharedMesh = GenerateTerrainMesh(v);
+                meshes.Add(bm);
+            }
+
+            foreach (var v in Canvases)
+            {
+                if (!v.isActiveAndEnabled) { continue; }
+                if (v.renderMode != RenderMode.WorldSpace) { continue; }
+                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //canvas as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && v.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found canvas in some other dynamic
+                    continue;
+                }
+
+                BakeableMesh bm = new BakeableMesh();
+                bm.meshRenderer = v.gameObject.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+
+                var width = v.GetComponent<RectTransform>().sizeDelta.x * v.transform.localScale.x;
+                var height = v.GetComponent<RectTransform>().sizeDelta.y * v.transform.localScale.y;
+
+                //bake texture from render
+                var screenshot = Snapshot(v.transform);
+                screenshot.name = v.gameObject.name.Replace(' ', '_');
+                bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
+
+                bm.meshFilter = v.gameObject.AddComponent<MeshFilter>();
+                //write simple quad
+                var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                bm.meshFilter.sharedMesh = mesh;
+                meshes.Add(bm);
+            }
+        }
 
         #region Export Dynamic Objects
         /// <summary>
@@ -482,77 +608,173 @@ namespace CognitiveVR
             //entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
 
             var dynamics = FindObjectsOfType<DynamicObject>();
+            List<GameObject> gos = new List<GameObject>();
+            foreach (var v in dynamics)
+                gos.Add(v.gameObject);
 
-            Debug.Log("Starting export of " + dynamics.Length + " Dynamic Objects");
+            Selection.objects = gos.ToArray();
+            return ExportSelectedObjectsPrefab();
+        }
+
+        public static string RetrieveTexturePath(UnityEngine.Texture texture)
+        {
+            return AssetDatabase.GetAssetPath(texture);
+        }
+
+        static void RecurseThroughChildren(Transform t, List<DynamicObject> dynamics)
+        {
+            var d = t.GetComponent<DynamicObject>();
+            if (d != null)
+            {
+                dynamics.Add(d);
+            }
+            for (int i = 0; i < t.childCount; i++)
+            {
+                RecurseThroughChildren(t.GetChild(i), dynamics);
+            }
+        }
+
+        public static Mesh ExportQuad(string meshName, float width, float height, Transform transform, string sceneName, Texture2D tex = null)
+        {
+            //this writes data into a mesh class then passes it through to dynamic object exporter. to futureproof when we move from obj to gltf
+
+            Vector3 size = new Vector3(width, height, 0);
+            Vector3 pivot = size / 2;
+
+            Mesh m = new Mesh();
+            m.name = meshName;
+
+            //GameObject go = new GameObject("TEMP_MESH");
+            //go.AddComponent<MeshFilter>().mesh = m;
+
+            /*//DEBUGGING
+            go.AddComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
+            if (tex != null)
+            {
+                go.GetComponent<MeshRenderer>().material.mainTexture = tex;
+                go.GetComponent<MeshRenderer>().material.SetInt("_Mode", 2);
+            }
+            */
+
+            var verts = new Vector3[4];
+            verts[0] = new Vector3(0, 0, 0) - pivot;
+            verts[1] = new Vector3(width, 0, 0) - pivot;
+            verts[2] = new Vector3(0, height, 0) - pivot;
+            verts[3] = new Vector3(width, height, 0) - pivot;
+            m.vertices = verts;
+
+            var tris = new int[6];
+            tris[0] = 0;
+            tris[1] = 2;
+            tris[2] = 1;
+            tris[3] = 2;
+            tris[4] = 3;
+            tris[5] = 1;
+            m.triangles = tris;
+
+            var norms = new Vector3[4];
+            norms[0] = -Vector3.forward;
+            norms[1] = -Vector3.forward;
+            norms[2] = -Vector3.forward;
+            norms[3] = -Vector3.forward;
+            m.normals = norms;
+
+            //if width == height, 0-1 uvs are fine
+            if (Mathf.Approximately(width, height))
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(1, 0);
+                uvs[2] = new Vector2(0, 1);
+                uvs[3] = new Vector2(1, 1);
+                m.uv = uvs;
+            }
+            else if (height > width)
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(width / height, 0);
+                uvs[2] = new Vector2(0, 1);
+                uvs[3] = new Vector2(width / height, 1);
+                m.uv = uvs;
+            }
+            else
+            {
+                var uvs = new Vector2[4];
+                uvs[0] = new Vector2(0, 0);
+                uvs[1] = new Vector2(1, 0);
+                uvs[2] = new Vector2(0, height / width);
+                uvs[3] = new Vector2(1, height / width);
+                m.uv = uvs;
+            }
+
+            return m;
+        }
+
+        public static Texture2D Snapshot(Transform target, int resolution = 128)
+        {
+            //var sceneview = (SceneView)SceneView.sceneViews[0];
+            //target = Selection.activeTransform;
+
+            GameObject cameraGo = new GameObject("Temp_Camera");
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //put camera in editor camera position
+
+            cameraGo.transform.rotation = target.rotation;
+            cameraGo.transform.position = target.position - target.forward * 0.05f;
+
+            var width = target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x;
+            var height = target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y;
+            if (Mathf.Approximately(width, height))
+            {
+                //whatever. centered
+            }
+            else if (height > width) //tall
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
+            }
+            else //wide
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+            }
+
+            cam.nearClipPlane = 0.04f;
+            cam.farClipPlane = 0.06f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
+            cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
+            cam.backgroundColor = Color.clear;
             
+            //create render texture and assign to camera
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
+            RenderTexture.active = rt;
+            //GL.Clear(true, true, Color.clear);
+            cam.targetTexture = rt;
+            //GL.Clear(true, true, Color.clear);
 
-            //export all the objects
-            int successfullyExportedCount = 0;
-            List<string> exportedMeshNames = new List<string>();
-            List<string> totalExportedMeshNames = new List<string>();
 
-            foreach (var dynamic in dynamics)
-            {
-                if (!dynamic.UseCustomMesh)
-                {
-                    //skip exporting a mesh with no name
-                    continue;
-                }
-                if (string.IsNullOrEmpty(dynamic.MeshName))
-                {
-                    if (!totalExportedMeshNames.Contains(""))
-                        totalExportedMeshNames.Add("");
-                    Debug.LogWarning("GameObject " + dynamic.gameObject + " has empty mesh name");
-                    continue;
-                }
+            //RenderTexture.active = rt;
 
-                if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
+            cam.Render();
 
-                if (dynamic.GetComponent<Canvas>() != null)
-                {
-                    //TODO merge this deeper in the export process. do this recurively ignoring child dynamics
-                    //take a snapshot
-                    var width = dynamic.GetComponent<RectTransform>().sizeDelta.x * dynamic.transform.localScale.x;
-                    var height = dynamic.GetComponent<RectTransform>().sizeDelta.y * dynamic.transform.localScale.y;
+            //TODO write non-square textures, do full 0-1 uvs instead of saving blank space
 
-                    var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(dynamic.transform);
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = rt;
 
-                    var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, dynamic.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
-                    CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
-                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-                    successfullyExportedCount++;
-                }
-                else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(dynamic.transform))
-                {
-                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-                    successfullyExportedCount++;
-                }
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+            //GL.Clear(true, true, Color.clear);
+            RenderTexture.active = null;
 
-                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
-                {
-                    if (common.ToLower() == dynamic.MeshName.ToLower())
-                    {
-                        //don't export common meshes!
-                        continue;
-                    }
-                }
-                if (!totalExportedMeshNames.Contains(dynamic.MeshName))
-                    totalExportedMeshNames.Add(dynamic.MeshName);
+            //delete stuff
+            UnityEngine.Object.DestroyImmediate(cameraGo);
 
-                if (!exportedMeshNames.Contains(dynamic.MeshName))
-                {
-                    exportedMeshNames.Add(dynamic.MeshName);
-                }
-            }
-
-            if (successfullyExportedCount == 0)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
-                return false;
-            }
-
-            EditorUtility.DisplayDialog("Dynamic Object Export", "From all Dynamic Objects in scene, found " + totalExportedMeshNames.Count + " unique mesh names and successfully exported " + successfullyExportedCount, "Ok");
-            return true;
+            return tex;
         }
 
         /// <summary>
@@ -563,8 +785,12 @@ namespace CognitiveVR
         {
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
-
-            if (entireSelection.Count == 0) { Debug.Log("No Dynamic Objects selected"); return false; }
+            
+            if (entireSelection.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
+                return false;
+            }
 
             Debug.Log("Starting export of " + entireSelection.Count + " Dynamic Objects");
 
@@ -596,45 +822,32 @@ namespace CognitiveVR
             List<string> exportedMeshNames = new List<string>();
             List<string> totalExportedMeshNames = new List<string>();
 
-            foreach (var v in sceneObjects)
+            //recursively get all dynamic objects to export
+            List<DynamicObject> AllDynamics = new List<DynamicObject>();
+
+            //add spawned things to selection
+            //List<Transform> t = new List<Transform>(Selection.transforms);
+            //t.AddRange(sceneObjects);
+            //Selection.objects = t.ToArray();
+
+            foreach (var selected in Selection.transforms)
             {
-                var dynamic = v.GetComponent<DynamicObject>();
-                if (dynamic == null) { continue; }
+                //GLTFExportMenu.RecurseThroughChildren(selected, AllDynamics);
+            }
+            foreach (var selected in sceneObjects)
+            {
+                RecurseThroughChildren(selected.transform, AllDynamics);
+            }
 
-                if (!dynamic.UseCustomMesh)
-                {
-                    //skip exporting a mesh with no name
-                    continue;
-                }
-                if (string.IsNullOrEmpty(dynamic.MeshName))
-                {
-                    if (!totalExportedMeshNames.Contains(""))
-                        totalExportedMeshNames.Add("");
-                    Debug.LogWarning("GameObject " + dynamic.gameObject + " has empty mesh name");
-                    continue;
-                }
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+            //create directory
 
+            foreach (var v in AllDynamics)
+            {
+                var dynamic = v;
+
+                //TODO remove successfully exported count. not really useful
                 if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
-
-                if (v.GetComponent<Canvas>() != null)
-                {
-                    //TODO merge this deeper in the export process. do this recurively ignoring child dynamics
-                    //take a snapshot
-                    var width = v.GetComponent<RectTransform>().sizeDelta.x * v.localScale.x;
-                    var height = v.GetComponent<RectTransform>().sizeDelta.y * v.localScale.y;
-
-                    var screenshot = CognitiveVR_SceneExplorerExporter.Snapshot(v);
-
-                    var mesh = CognitiveVR_SceneExplorerExporter.ExportQuad(dynamic.MeshName, width, height, v, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
-                    CognitiveVR_SceneExplorerExporter.ExportDynamicObject(mesh, dynamic.MeshName, screenshot, dynamic.MeshName);
-                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-                    successfullyExportedCount++;
-                }
-                else if (CognitiveVR_SceneExplorerExporter.ExportDynamicObject(v))
-                {
-                    EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-                    successfullyExportedCount++;
-                }
 
                 foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
                 {
@@ -644,12 +857,59 @@ namespace CognitiveVR
                         continue;
                     }
                 }
+
+                if (!dynamic.UseCustomMesh)
+                {
+                    //skip exporting a mesh with no name
+                    continue;
+                }
+
+                Vector3 originalOffset = v.transform.localPosition;
+                v.transform.localPosition = Vector3.zero;
+                Quaternion originalRot = v.transform.localRotation;
+                v.transform.localRotation = Quaternion.identity;
+
+                //bake skin, terrain, canvas
+
+                //Debug.Log("path " + path + dynamic.MeshName + Path.DirectorySeparatorChar + "   mesh " + dynamic.gameObject.name);
+
+                Directory.CreateDirectory(path + dynamic.MeshName + Path.DirectorySeparatorChar);
+
+                List<BakeableMesh> temp = new List<BakeableMesh>();
+
+                //string path2 = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
+                BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
+
+                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
+                exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                
+                successfullyExportedCount++;
+
+
+                for (int i = 0; i < temp.Count; i++)
+                {
+                    if (temp[i].useOriginalscale)
+                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                    DestroyImmediate(temp[i].meshFilter);
+                    DestroyImmediate(temp[i].meshRenderer);
+                }
+
+                EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
+
                 if (!totalExportedMeshNames.Contains(dynamic.MeshName))
                     totalExportedMeshNames.Add(dynamic.MeshName);
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
                 {
                     exportedMeshNames.Add(dynamic.MeshName);
                 }
+
+                //destroy baked skin, terrain, canvases
+                v.transform.localPosition = originalOffset;
+                v.transform.localRotation = originalRot;
+                
+                ResizeQueue.Enqueue(path + dynamic.MeshName + Path.DirectorySeparatorChar);
+                EditorApplication.update -= UpdateResize;
+                EditorApplication.update += UpdateResize;
             }
 
             //destroy the temporary prefabs
@@ -658,25 +918,18 @@ namespace CognitiveVR
                 GameObject.DestroyImmediate(v);
             }
 
-            if (entireSelection.Count == 0)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
-                return false;
-            }
-
             if (successfullyExportedCount == 0)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
                 return false;
             }
-
-            if (successfullyExportedCount == 1 && entireSelection.Count == 1)
+            if (totalExportedMeshNames.Count == 1)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
             }
             else
             {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names and successfully exported " + successfullyExportedCount, "Ok");
+                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names", "Ok");
             }
             return true;
         }
@@ -705,6 +958,213 @@ namespace CognitiveVR
             if (dynamicMeshNames.Count == 0) { return false; }
 
             return UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
+        }
+
+        public static Mesh GenerateTerrainMesh(Terrain terrain)
+        {
+            float downsample = 4;
+
+            Mesh mesh = new Mesh();
+            mesh.name = "temp";
+
+            var w = (int)(terrain.terrainData.heightmapWidth / downsample);
+            var h = (int)(terrain.terrainData.heightmapHeight / downsample);
+
+            Vector3[] vertices = new Vector3[w * h];
+            Vector2[] uv = new Vector2[w * h];
+            Vector4[] tangents = new Vector4[w * h];
+
+            //all points
+
+            Vector2 uvScale = new Vector2(1.0f / (w - 1), 1.0f / (w - 1));
+            Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (w - 1), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (h - 1));
+
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float pixelHeight = terrain.terrainData.GetHeight((int)(x * downsample), (int)(y * downsample));
+                    Vector3 vertex = new Vector3(x, pixelHeight, y);
+                    vertices[y * w + x] = Vector3.Scale(sizeScale, vertex);
+                    uv[y * w + x] = Vector2.Scale(new Vector2(x, y), uvScale);
+
+                    // Calculate tangent vector: a vector that goes from previous vertex
+                    // to next along X direction. We need tangents if we intend to
+                    // use bumpmap shaders on the mesh.
+                    //Vector3 vertexL = new Vector3(x - 1, heightMap.GetPixel(x - 1, y).grayscale, y);
+                    //Vector3 vertexR = new Vector3(x + 1, heightMap.GetPixel(x + 1, y).grayscale, y);
+                    //Vector3 tan = Vector3.Scale(sizeScale, vertexR - vertexL).normalized;
+                    //tangents[y * w + x] = new Vector4(tan.x, tan.y, tan.z, -1.0f);
+
+                    tangents[y * w + x] = new Vector4(1, 1, 1, -1.0f);
+                }
+            }
+
+            //generate mesh strips
+            // Assign them to the mesh
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+
+            // Build triangle indices: 3 indices into vertex array for each triangle
+            int[] triangles = new int[(h - 1) * (w - 1) * 6];
+            int index = 0;
+            for (int y = 0; y < h - 1; y++)
+            {
+                for (int x = 0; x < w - 1; x++)
+                {
+                    // For each grid cell output two triangles
+                    triangles[index++] = (y * w) + x;
+                    triangles[index++] = ((y + 1) * w) + x;
+                    triangles[index++] = (y * w) + x + 1;
+
+                    triangles[index++] = ((y + 1) * w) + x;
+                    triangles[index++] = ((y + 1) * w) + x + 1;
+                    triangles[index++] = (y * w) + x + 1;
+                }
+            }
+
+            mesh.triangles = triangles;
+            mesh.RecalculateNormals();
+            mesh.tangents = tangents;
+
+            return mesh;
+        }
+
+        public static Texture2D BakeTerrainTexture(string destinationFolder, TerrainData data)
+        {
+            float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
+
+            //LIMIT to 6 layers for now! rbga + black + transparency?
+            int layerCount = Mathf.Min(maps.GetLength(2), 6);
+
+
+            //set terrain textures to readable
+            bool[] textureReadable = new bool[layerCount];
+            for (int i = 0; i < layerCount; i++)
+            {
+                try
+                {
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i]))
+                    {
+                        Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
+                        SetTextureImporterFormat(originalTexture, true);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+            
+            var sizemax = Mathf.Max(
+                Mathf.NextPowerOfTwo((int)(data.heightmapScale.z * data.heightmapResolution * 16)),
+                Mathf.NextPowerOfTwo((int)(data.heightmapScale.x * data.heightmapResolution * 16)));
+
+            int sizelimit = Mathf.Min(4096, sizemax);
+
+            Texture2D outTex = new Texture2D(sizelimit, sizelimit);
+
+            //Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
+            outTex.name = data.name.Replace(' ', '_');
+            float upscalewidth = (float)outTex.width / (float)data.alphamapWidth; //(data.heightmapScale.x * data.heightmapResolution * 64);
+            float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;// (data.heightmapScale.z * data.heightmapResolution * 64);
+
+            float[] colorAtLayer = new float[layerCount];
+            SplatPrototype[] prototypes = data.splatPrototypes;
+            
+            for (int y = 0; y < outTex.height; y++)
+            {
+                for (int x = 0; x < outTex.width; x++)
+                {
+                    for (int i = 0; i < colorAtLayer.Length; i++)
+                    {
+                        colorAtLayer[i] = maps[(int)(x / upscalewidth), (int)(y / upscaleheight), i];
+                    }
+
+
+                    int highestMap = 0;
+                    float highestMapValue = 0;
+
+                    for (int i = 0; i < colorAtLayer.Length; i++)
+                    {
+                        if (colorAtLayer[i] > highestMapValue)
+                        {
+                            highestMapValue = colorAtLayer[i];
+                            highestMap = i;
+                        }
+                    }
+
+                    if (prototypes.Length > 0 && prototypes[highestMap].texture != null)
+                    {
+                        //TODO figure out correct tiling for textures
+                        Color color = prototypes[highestMap].texture.GetPixel(y, x);
+                        outTex.SetPixel(y, x, color);
+                    }
+                    else
+                    {
+                        outTex.SetPixel(y, x, Color.red);
+                    }
+                }
+            }
+
+            outTex.Apply();
+
+            //texture importer to original
+
+            for (int i = 0; i < layerCount; i++)
+            {
+                try
+                {
+                    bool ignored;
+                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored))
+                    {
+                        SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i]);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+
+            return outTex;
+        }
+
+        public static bool GetTextureImportFormat(Texture2D texture, out bool isReadable)
+        {
+            isReadable = false;
+            if (null == texture)
+            {
+                return false;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(texture);
+            var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (tImporter != null)
+            {
+                tImporter.textureType = TextureImporterType.Default;
+
+                isReadable = tImporter.isReadable;
+                return true;
+            }
+            return false;
+        }
+
+        public static void SetTextureImporterFormat(Texture2D texture, bool isReadable)
+        {
+            if (null == texture) return;
+
+            string assetPath = AssetDatabase.GetAssetPath(texture);
+            var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (tImporter != null)
+            {
+                tImporter.textureType = TextureImporterType.Default;
+
+                tImporter.isReadable = isReadable;
+
+                AssetDatabase.ImportAsset(assetPath);
+                AssetDatabase.Refresh();
+            }
         }
 
         /// <summary>

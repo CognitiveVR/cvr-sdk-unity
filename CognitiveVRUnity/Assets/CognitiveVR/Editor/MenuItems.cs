@@ -13,7 +13,7 @@ namespace CognitiveVR
         public const string Menu = "cognitive3D/";
 #endif
 
-        [MenuItem(Menu + "Add Analytics Manager", priority = 0)]
+        [MenuItem(Menu + "Select Cognitive3D Analytics Manager", priority = 0)]
         static void Cognitive3DManager()
         {
             var found = Object.FindObjectOfType<CognitiveVR_Manager>();

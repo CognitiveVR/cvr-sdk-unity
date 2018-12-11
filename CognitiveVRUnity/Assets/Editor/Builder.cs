@@ -7,8 +7,6 @@ namespace CognitiveVR
 public class Builder 
 {
 	static string[] cognitivevr_files = new string[] {
-		"Assets/Plugins/CognitiveVR.dll",
-		"Assets/Plugins/CognitiveVR",
 		"Assets/CognitiveVR",
 	};
 
