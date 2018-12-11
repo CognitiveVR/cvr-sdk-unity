@@ -383,16 +383,16 @@ namespace CognitiveVR
 
             List<BakeableMesh> temp = new List<BakeableMesh>();
 
+            EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f);
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
             BakeNonstandardRenderers(null, temp, path);
-
             var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
-
-            //make directories
             Directory.CreateDirectory(path);
-            
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
             exporter.SaveGLTFandBin(path, "scene");
-            
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f);
             for (int i = 0; i < temp.Count; i++)
             {
                 if (temp[i].useOriginalscale)
@@ -405,13 +405,26 @@ namespace CognitiveVR
                     DestroyImmediate(temp[i].tempGo);
             }
 
-            ResizeTexturesInExportFolder(path);
+            ResizeQueue.Enqueue(path);
+            EditorApplication.update -= UpdateResize;
+            EditorApplication.update += UpdateResize;
+        }
+
+        //wait for update message from the editor - reading files without this delay has issues reading data
+        static Queue<string> ResizeQueue = new Queue<string>();
+        static void UpdateResize()
+        {
+            while(ResizeQueue.Count > 0)
+            {
+                ResizeTexturesInExportFolder(ResizeQueue.Dequeue());
+            }
+
+            EditorApplication.update -= UpdateResize;
+            EditorUtility.ClearProgressBar();
         }
 
         static void ResizeTexturesInExportFolder(string folderpath)
         {
-            Debug.Log("ResizeTexturesInExportFolder: " + folderpath);
-
             var textureDivisor = CognitiveVR_Preferences.Instance.TextureResize;
 
             if (textureDivisor == 1) { return; }
@@ -575,8 +588,6 @@ namespace CognitiveVR
                 var screenshot = Snapshot(v.transform);
                 screenshot.name = v.gameObject.name.Replace(' ', '_');
                 bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
-                byte[] bytes = screenshot.EncodeToPNG();
-                //System.IO.File.WriteAllBytes(path + "/" + screenshot.name + ".png", bytes);
 
                 bm.meshFilter = v.gameObject.AddComponent<MeshFilter>();
                 //write simple quad
@@ -895,8 +906,10 @@ namespace CognitiveVR
                 //destroy baked skin, terrain, canvases
                 v.transform.localPosition = originalOffset;
                 v.transform.localRotation = originalRot;
-
-                ResizeTexturesInExportFolder(path + dynamic.MeshName + Path.DirectorySeparatorChar);
+                
+                ResizeQueue.Enqueue(path + dynamic.MeshName + Path.DirectorySeparatorChar);
+                EditorApplication.update -= UpdateResize;
+                EditorApplication.update += UpdateResize;
             }
 
             //destroy the temporary prefabs
@@ -1093,8 +1106,7 @@ namespace CognitiveVR
                     }
                 }
             }
-            
-            byte[] bytes = outTex.EncodeToPNG();
+
             outTex.Apply();
 
             //texture importer to original

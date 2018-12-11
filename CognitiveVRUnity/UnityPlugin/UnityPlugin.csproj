@@ -58,7 +58,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /Y "$(TargetPath)" "$(SolutionDir)\Assets\CognitiveVR\Plugins"
-if $(ConfigurationName) == Debug (xcopy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)\Assets\Plugins")</PostBuildEvent>
+if $(ConfigurationName) == Debug (xcopy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)\Assets\CognitiveVR\Plugins")</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>del "$(SolutionDir)Assets\CognitiveVR\Plugins\$(TargetName).pdb"</PreBuildEvent>

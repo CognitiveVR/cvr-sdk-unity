@@ -34,8 +34,8 @@ public class InitWizard : EditorWindow
         GUI.skin = EditorCore.WizardGUISkin;
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
         
-        if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-        if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+        //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
+        //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
         switch (pageids[currentPage])
         {
             case "welcome":WelcomeUpdate(); break;
@@ -764,8 +764,21 @@ public class InitWizard : EditorWindow
     //int qualityindex = 2; //0 low, 1 normal, 2 maximum
     //ExportSettings selectedExportQuality;
 
+    Texture2D halfRes;
+    Texture2D quarterRes;
+
     void UploadSceneUpdate()
     {
+        if (halfRes == null)
+        {
+            halfRes = CognitiveVR_SceneExportWindow.RescaleForExport(EditorCore.SceneBackground, 128, 90);
+            halfRes = CognitiveVR_SceneExportWindow.RescaleForExport(halfRes, 256, 180);
+            halfRes.Apply();
+
+            quarterRes = CognitiveVR_SceneExportWindow.RescaleForExport(EditorCore.SceneBackground, 64, 45);
+            quarterRes = CognitiveVR_SceneExportWindow.RescaleForExport(quarterRes, 256, 180);
+            quarterRes.Apply();
+        }
         GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
 
 
@@ -788,6 +801,10 @@ public class InitWizard : EditorWindow
         {
             GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
         }
+        else
+        {
+            GUI.Box(new Rect(100, 70, 300, 300), quarterRes, "image_centered");
+        }
 
         if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
@@ -797,6 +814,10 @@ public class InitWizard : EditorWindow
         if (CognitiveVR_Preferences.Instance.TextureResize != 2)
         {
             GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
+        }
+        else
+        {
+            GUI.Box(new Rect(100, 70, 300, 300), halfRes, "image_centered");
         }
 
         if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution","Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
@@ -808,7 +829,10 @@ public class InitWizard : EditorWindow
         {
             GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
         }
-
+        else
+        {
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
+        }
         
         //GUI.Label(new Rect(255, 465, 215, 30), "", "button_blueoutline"); //full
         //GUI.Label(new Rect(367, 465, 103, 30), "", "button_blueoutline"); //partial
@@ -938,12 +962,19 @@ public class InitWizard : EditorWindow
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
-        var sceneRT = EditorCore.GetSceneRenderTexture();
+#if UNITY_2018_3_OR_NEWER
+
+            var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
             GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
+#else
+            var sceneRT = EditorCore.GetSceneRenderTexture();
+            if (sceneRT != null)
+                GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
+#endif
 
-        //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
-    }
+            //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
+        }
 
     void DoneUpdate()
     {
@@ -972,7 +1003,19 @@ public class InitWizard : EditorWindow
         if (pageids[currentPage] == "uploadscene")
         {
             Rect buttonrect = new Rect(350, 510, 140, 30);
-            if (GUI.Button(buttonrect, "Prepare Scene"))
+            if (Event.current.shift)
+            {
+                if (GUI.Button(buttonrect, "SKIP EXPORT"))
+                {
+                    CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                    EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+                    UnityEditor.AssetDatabase.SaveAssets();
+                    currentPage++;
+                    EditorCore.RefreshSceneVersion(null);
+                }
+            }
+            else if (GUI.Button(buttonrect, "Prepare Scene"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -1144,7 +1187,12 @@ public class InitWizard : EditorWindow
                 //second save screenshot
                 System.Action completedRefreshSceneVersion1 = delegate ()
                 {
+#if UNITY_2018_3_OR_NEWER
+                    //EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                    EditorCore.SceneViewCameraScreenshot(screenshotCamera, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+#else
                     EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+#endif
                 };
 
                 //first refresh scene version

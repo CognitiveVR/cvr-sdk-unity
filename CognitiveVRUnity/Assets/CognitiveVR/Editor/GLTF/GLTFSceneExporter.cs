@@ -377,6 +377,7 @@ namespace UnityGLTF
 			var finalFilenamePath = ConstructImageFilenamePath(texture, outputPath);
 			File.WriteAllBytes(finalFilenamePath, exportTexture.EncodeToPNG());
 
+            RenderTexture.active = null;
 			destRenderTexture.Release();
 			if (Application.isEditor)
 			{

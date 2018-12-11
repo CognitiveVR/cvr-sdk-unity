@@ -475,8 +475,70 @@ public class EditorCore
         return false;
     }
 
+#if UNITY_2018_3_OR_NEWER
+    public static void SceneViewCameraScreenshot(Camera cam, string sceneName, System.Action saveCameraScreenshot)
+    {
+        //create render texture
+        RenderTexture rt = new RenderTexture(512, 512, 0);
+        cam.targetTexture = rt;
+
+        //write render texture to texture
+        Texture2D tex = new Texture2D(512, 512);
+        RenderTexture.active = rt;
+        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        tex.Apply();
+
+        Selection.activeTransform = cam.transform;
+
+        delay = 1;
+        saveScreenshotSceneName = sceneName;
+        SaveScreenshotComplete = saveCameraScreenshot;
+        EditorApplication.update += DelayScreenshot;
+    }
+
+    static string saveScreenshotSceneName;
+    static int delay = 0;
+    static System.Action SaveScreenshotComplete;
+
+    static void DelayScreenshot()
+    {
+        if (delay > 0) { delay--; return; }
+        EditorApplication.update -= DelayScreenshot;
+        var t = Selection.activeTransform;
+        var cam = t.GetComponent<Camera>();
+
+        //write render texture to texture
+        Texture2D tex = new Texture2D(512, 512);
+        RenderTexture.active = cam.targetTexture;
+        tex.ReadPixels(new Rect(0, 0, cam.targetTexture.width, cam.targetTexture.height), 0, 0);
+        tex.Apply();
+
+        //write texture to disk
+        RenderTexture.active = null;
+        //var bytes = tex.EncodeToPNG();
+        //System.IO.File.WriteAllBytes(Application.dataPath + "sceneview.png", bytes);
+
+        //release render texture
+        //destroy camera
+        cam.targetTexture.Release();
+        UnityEngine.Object.DestroyImmediate(t.gameObject);
+
+
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
+
+        //save file
+        File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+        //use editor update to delay teh screenshot 1 frame?
+
+        if (SaveScreenshotComplete != null)
+            SaveScreenshotComplete.Invoke();
+        SaveScreenshotComplete = null;
+    }
+#else
+
     static List<Camera> tempDisabledCameras = new List<Camera>();
-    //static RenderTexture saveRenderTexture;
     static string saveScreenshotSceneName;
     static int delay = 0;
     static System.Action SaveScreenshotComplete;
@@ -549,6 +611,7 @@ public class EditorCore
             SaveScreenshotComplete.Invoke();
         SaveScreenshotComplete = null;
     }
+#endif
 
     #endregion
 
