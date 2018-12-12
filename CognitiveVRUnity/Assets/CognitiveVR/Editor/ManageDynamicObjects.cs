@@ -10,6 +10,16 @@ public class ManageDynamicObjects : EditorWindow
 {
     Rect steptitlerect = new Rect(30, 0, 100, 440);
 
+    bool DisableButtons
+    {
+        get
+        {
+            var currentscene = CognitiveVR_Preferences.FindCurrentScene();
+            bool sceneIsNull = currentscene == null || string.IsNullOrEmpty(currentscene.SceneId);
+            return !EditorCore.IsDeveloperKeyValid || sceneIsNull;
+        }
+    }
+
     public static void Init()
     {
         ManageDynamicObjects window = (ManageDynamicObjects)EditorWindow.GetWindow(typeof(ManageDynamicObjects), true, "");
@@ -17,7 +27,7 @@ public class ManageDynamicObjects : EditorWindow
         window.maxSize = new Vector2(500, 550);
         window.Show();
     }
-
+    
     private void OnGUI()
     {
         GUI.skin = EditorCore.WizardGUISkin;
@@ -102,8 +112,8 @@ public class ManageDynamicObjects : EditorWindow
         if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
 
         //resolution settings here
-
-        if (GUI.Button(new Rect(30, 415, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        EditorGUI.BeginDisabledGroup(DisableButtons);
+        if (GUI.Button(new Rect(30, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 4;
         }
@@ -112,7 +122,7 @@ public class ManageDynamicObjects : EditorWindow
             GUI.Box(new Rect(30, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(180, 415, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(180, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 2;
             //selectedExportQuality = ExportSettings.DefaultSettings;
@@ -122,7 +132,7 @@ public class ManageDynamicObjects : EditorWindow
             GUI.Box(new Rect(180, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(330, 415, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(330, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 1;
             //selectedExportQuality = ExportSettings.HighSettings;
@@ -131,13 +141,11 @@ public class ManageDynamicObjects : EditorWindow
         {
             GUI.Box(new Rect(330, 415, 140, 35), "", "box_sharp_alpha");
         }
+        EditorGUI.EndDisabledGroup();
 
-
-
-
-
+        
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
-        if (GUI.Button(new Rect(30, 460, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", "Export and Upload to " + scenename + " version " + versionnumber)))
+        if (GUI.Button(new Rect(30, 460, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
         {
             //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
@@ -154,7 +162,7 @@ public class ManageDynamicObjects : EditorWindow
             });
         }
 
-        if (GUI.Button(new Rect(270, 460, 200, 30), new GUIContent("Upload All Meshes","Export and Upload to "+ scenename + " version " + versionnumber)))
+        if (GUI.Button(new Rect(270, 460, 200, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
         {
             EditorCore.RefreshSceneVersion(() =>
             {
@@ -294,7 +302,28 @@ public class ManageDynamicObjects : EditorWindow
             }
         }
         else
-            GUI.Button(new Rect(80, 460, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip), "button_disabled");
+        {
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+            string errorMessage = "<color=#880000ff>This scene <color=red>" + scene.name.ToUpper() + "</color> does not have a valid SceneId.\n\nPlease upload this scene using the Scene Setup Window</color>";
+            if (!EditorCore.IsDeveloperKeyValid)
+            {
+                errorMessage = "Developer Key not set";
+            }
+            
+            EditorGUI.BeginDisabledGroup(true);
+            GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip));
+            EditorGUI.EndDisabledGroup();
+
+            GUI.color = new Color(1, 0.9f, 0.9f);
+            GUI.DrawTexture(new Rect(0, 420, 550, 150), EditorGUIUtility.whiteTexture);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(30, 430, 430, 30), errorMessage,"normallabel");
+        
+            if (GUI.Button(new Rect(380, 510, 80, 30), "Fix"))
+            {
+                InitWizard.Init();
+            }
+        }
     }
 
     //get dynamic object aggregation manifest for the current scene
