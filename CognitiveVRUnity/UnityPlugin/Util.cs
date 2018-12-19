@@ -16,7 +16,6 @@ namespace CognitiveVR
 		
 		static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
         public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
-        internal static string getSDKName(string namePrefix) { return namePrefix; }
 
         //private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
         //private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
@@ -114,12 +113,6 @@ namespace CognitiveVR
 			TimeSpan span = DateTime.UtcNow - epoch;
 			return span.TotalSeconds;
 		}
-
-        internal static void AddPref(string key, string value)
-        {
-            PlayerPrefs.SetString(key, value);
-            PlayerPrefs.Save();
-        }
 
         internal static bool TryGetPrefValue(string key, out string value)
         {
