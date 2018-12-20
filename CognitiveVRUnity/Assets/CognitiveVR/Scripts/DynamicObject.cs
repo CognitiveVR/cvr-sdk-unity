@@ -238,7 +238,7 @@ namespace CognitiveVR
                     StartCoroutine(UpdateTick());
                 }
             }
-
+#if UNITY_EDITOR
             if (TrackGaze)
             {
                 if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
@@ -256,6 +256,7 @@ namespace CognitiveVR
                     }
                 }
             }
+#endif
         }
 
         //post level loaded. also called when cognitive manager first initialized, to make sure onenable registers everything correctly

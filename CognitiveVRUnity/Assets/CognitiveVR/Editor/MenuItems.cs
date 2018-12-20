@@ -71,7 +71,7 @@ namespace CognitiveVR
             Selection.activeObject = EditorCore.GetPreferences();
         }
 
-        [MenuItem(Menu + "Refresh Media", priority = 110)]
+        [MenuItem(Menu + "Fetch Media from Dashboard", priority = 110)]
         static void RefreshMediaSources()
         {
             EditorCore.RefreshMediaSources();
