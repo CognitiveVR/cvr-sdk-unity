@@ -153,7 +153,7 @@ namespace CognitiveVR
                 // Have we already initialized CognitiveVR?
                 if (Initialized)
                 {
-                    Util.logError("CognitiveVR has already been initialized, no need to re-initialize");
+                    Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
                     ret = Error.AlreadyInitialized;
                 }
                 else if (null == cb)

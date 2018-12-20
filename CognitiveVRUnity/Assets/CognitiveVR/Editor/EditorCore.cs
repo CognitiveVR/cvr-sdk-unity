@@ -51,6 +51,9 @@ public class EditorCore
         Selection.activeGameObject = newManager;
         Undo.RegisterCreatedObjectUndo(newManager, "Create "+ gameobjectName);
         newManager.AddComponent<CognitiveVR_Manager>();
+        newManager.AddComponent<CognitiveVR.Components.HMDHeight>();
+        newManager.AddComponent<CognitiveVR.Components.RoomSize>();
+        newManager.AddComponent<CognitiveVR.Components.ArmLength>();
 
 #if CVR_NEURABLE
         Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();

@@ -80,5 +80,10 @@ namespace CognitiveVR
                 }
             }
         }
+
+        private void OnDestroy()
+        {
+            CognitiveVR.CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+        }
     }
 }

@@ -78,7 +78,7 @@ public class ControllerInputTracker : MonoBehaviour
 
     public bool RecordInputsAsEvents = false;
     public bool RecordInputsAsDynamicSnapshots = true;
-    public float UpdateRate = 0.5f;
+    public float UpdateRate = 0.1f;
     float nextUpdateTime;
     //records analogue inputs at this interval
 

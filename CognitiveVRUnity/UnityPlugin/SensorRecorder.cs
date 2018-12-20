@@ -79,7 +79,7 @@ namespace CognitiveVR
             //TODO should hold until extreme batch size reached
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
-                CognitiveVR.Util.logDebug("Sensor.SendData found no SceneKeySettings");
+                CognitiveVR.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
                 CachedSnapshots.Clear();
                 currentSensorSnapshots = 0;
                 return;
