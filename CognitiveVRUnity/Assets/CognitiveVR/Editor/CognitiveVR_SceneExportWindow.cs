@@ -842,9 +842,10 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
             //create directory
 
-            foreach (var v in AllDynamics)
+            foreach (var dynamic in AllDynamics)
             {
-                var dynamic = v;
+                if (dynamic == null) { Debug.LogError("ExportSelectedObjectsPrefab trying to export null DynamicObject"); continue; }
+                if (string.IsNullOrEmpty(dynamic.MeshName)) { Debug.LogError(dynamic.gameObject.name + " Skipping export because of null/empty mesh name", dynamic.gameObject); continue; }
 
                 //TODO remove successfully exported count. not really useful
                 if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
@@ -864,10 +865,10 @@ namespace CognitiveVR
                     continue;
                 }
 
-                Vector3 originalOffset = v.transform.localPosition;
-                v.transform.localPosition = Vector3.zero;
-                Quaternion originalRot = v.transform.localRotation;
-                v.transform.localRotation = Quaternion.identity;
+                Vector3 originalOffset = dynamic.transform.localPosition;
+                dynamic.transform.localPosition = Vector3.zero;
+                Quaternion originalRot = dynamic.transform.localRotation;
+                dynamic.transform.localRotation = Quaternion.identity;
 
                 //bake skin, terrain, canvas
 
@@ -904,8 +905,8 @@ namespace CognitiveVR
                 }
 
                 //destroy baked skin, terrain, canvases
-                v.transform.localPosition = originalOffset;
-                v.transform.localRotation = originalRot;
+                dynamic.transform.localPosition = originalOffset;
+                dynamic.transform.localRotation = originalRot;
                 
                 ResizeQueue.Enqueue(path + dynamic.MeshName + Path.DirectorySeparatorChar);
                 EditorApplication.update -= UpdateResize;

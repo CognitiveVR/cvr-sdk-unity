@@ -1216,7 +1216,30 @@ namespace UnityGLTF
 				image.Name = texture.name;
 			}
 
-			_imageInfos.Add(new ImageInfo
+            if (texture.GetType() == typeof(RenderTexture))
+            {
+                Texture2D tempTexture = new Texture2D(texture.width, texture.height);
+                tempTexture.name = texture.name;
+
+                RenderTexture.active = texture as RenderTexture;
+                tempTexture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+                tempTexture.Apply();
+                texture = tempTexture;
+            }
+#if UNITY_2017_1_OR_NEWER
+            if (texture.GetType() == typeof(CustomRenderTexture))
+            {
+                Texture2D tempTexture = new Texture2D(texture.width, texture.height);
+                tempTexture.name = texture.name;
+
+                RenderTexture.active = texture as CustomRenderTexture;
+                tempTexture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+                tempTexture.Apply();
+                texture = tempTexture;
+            }
+#endif
+
+            _imageInfos.Add(new ImageInfo
 			{
 				texture = texture as Texture2D,
 				textureMapType = texturMapType
