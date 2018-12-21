@@ -103,7 +103,6 @@ namespace CognitiveVR
                     }
                     if (targets.Length == 1)
                         dyn.MeshName = UnityEditor.EditorGUILayout.TextField("", dyn.MeshName);
-                    //dyn.MeshName = dyn.MeshName.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_");
                 }
             }
             if (!anycustomnames)

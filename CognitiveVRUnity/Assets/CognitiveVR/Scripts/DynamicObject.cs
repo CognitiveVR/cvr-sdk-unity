@@ -168,6 +168,26 @@ namespace CognitiveVR
 
         bool registeredToEvents = false;
 
+#if UNITY_EDITOR
+        private void Reset()
+        {
+            //set name is not set otherwise
+            if (UseCustomMesh && string.IsNullOrEmpty(MeshName))
+            {
+                MeshName = gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
+            //set custom id if not set otherwise
+            if (UseCustomId && string.IsNullOrEmpty(CustomId))
+            {
+                string s = System.Guid.NewGuid().ToString();
+                CustomId = "editor_" + s;
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+        }
+#endif
+
         /// <summary>
         /// called on enable and after scene load. registers to tick and records 'onenable' snapshot for new scene
         /// </summary>
