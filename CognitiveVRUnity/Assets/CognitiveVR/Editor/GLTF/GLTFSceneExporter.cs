@@ -834,7 +834,7 @@ namespace UnityGLTF
                     material.Name = "null";
                 }
                 _materials.Add(materialObj);
-                material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
                 id = new MaterialId
                 {
@@ -924,14 +924,14 @@ namespace UnityGLTF
 
                 if (mainTex != null)
                 {
-                    material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
                     material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
                     ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_MainTex");
                 }
                 if (materialObj.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
                 {
                     if (material.PbrMetallicRoughness == null)
-                        material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
                     material.PbrMetallicRoughness.BaseColorFactor = materialObj.GetColor("_TintColor").ToNumericsColorRaw();
                 }
@@ -1040,9 +1040,9 @@ namespace UnityGLTF
 
 		private PbrMetallicRoughness ExportPBRMetallicRoughness(Material material)
 		{
-			var pbr = new PbrMetallicRoughness();
+			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
-			if (material.HasProperty("_Color"))
+            if (material.HasProperty("_Color"))
 			{
 				pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorRaw();
 			}
