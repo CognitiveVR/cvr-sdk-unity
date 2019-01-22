@@ -96,24 +96,28 @@ namespace CognitiveVR
         public int SensorSnapshotCount = 64;
         public int DynamicSnapshotCount = 64;
         public int TransactionSnapshotCount = 64;
+        public int FixationSnapshotCount = 64;
 
         //min timer
         //public int GazeSnapshotMinTimer = 6;
         public int SensorSnapshotMinTimer = 6;
         public int DynamicSnapshotMinTimer = 2;
         public int TransactionSnapshotMinTimer = 2;
+        public int FixationSnapshotMinTimer = 2;
 
         //extreme batch size
         //public int GazeExtremeSnapshotCount = 256;
         public int SensorExtremeSnapshotCount = 256;
         public int DynamicExtremeSnapshotCount = 256;
         public int TransactionExtremeSnapshotCount = 256;
+        public int FixationExtremeSnapshotCount = 2;
 
         //max timer
         //public int GazeSnapshotMaxTimer = 10;
         public int SensorSnapshotMaxTimer = 10;
         public int DynamicSnapshotMaxTimer = 10;
         public int TransactionSnapshotMaxTimer = 10;
+        public int FixationSnapshotMaxTimer = 10;
 
 
 
