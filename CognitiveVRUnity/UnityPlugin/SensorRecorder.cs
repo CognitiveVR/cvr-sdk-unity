@@ -17,7 +17,7 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             Core.CheckSessionId();
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
             NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
         }
 
@@ -31,7 +31,7 @@ namespace CognitiveVR
                     yield return null;
                 }
                 //try to send!
-                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
                 if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                     Util.logDevelopment("check to automatically send sensors");
                 Core_OnSendData();
@@ -86,7 +86,7 @@ namespace CognitiveVR
             }
 
 
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
 
 

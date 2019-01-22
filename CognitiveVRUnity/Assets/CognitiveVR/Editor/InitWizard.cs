@@ -971,16 +971,11 @@ public class InitWizard : EditorWindow
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
-#if UNITY_2018_3_OR_NEWER
 
-            var sceneRT = EditorCore.GetSceneRenderTexture();
+        var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
             GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-#else
-            var sceneRT = EditorCore.GetSceneRenderTexture();
-            if (sceneRT != null)
-                GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-#endif
+
 
             //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
         }
@@ -1197,8 +1192,7 @@ public class InitWizard : EditorWindow
                 System.Action completedRefreshSceneVersion1 = delegate ()
                 {
 #if UNITY_2018_3_OR_NEWER
-                    //EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-                    EditorCore.SceneViewCameraScreenshot(screenshotCamera, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                    EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #else
                     EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #endif
