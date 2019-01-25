@@ -443,13 +443,13 @@ namespace UnityGLTF
 
 			//export camera attached to node
 			Camera unityCamera = nodeTransform.GetComponent<Camera>();
-			if (unityCamera != null)
+			if (unityCamera != null && unityCamera.enabled)
 			{
 				node.Camera = ExportCamera(unityCamera);
 			}
 
             Light unityLight = nodeTransform.GetComponent<Light>();
-            if (unityLight != null)
+            if (unityLight != null && unityLight.enabled)
             {
                 node.Light = ExportLight(unityLight);
 
