@@ -412,11 +412,14 @@ namespace UnityGLTF
 			}
 
 			scene.Nodes = new List<NodeId>(rootObjTransforms.Length); //skip dynamic objects here //TODO
-			foreach (var transform in rootObjTransforms)
+            CognitiveVR.DynamicObject dyn;
+
+            foreach (var transform in rootObjTransforms)
 			{
+                dyn = transform.GetComponent<CognitiveVR.DynamicObject>();
                 //skip dynamics
-                if ((Dynamic == null && transform.GetComponent<CognitiveVR.DynamicObject>() != null) //export scene and skip all dynamics
-                    || (Dynamic != null && transform.GetComponent<CognitiveVR.DynamicObject>() != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
+                if ((Dynamic == null && dyn != null) //export scene and skip all dynamics
+                    || (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
                 scene.Nodes.Add(ExportNode(transform));
 			}
 
@@ -440,13 +443,13 @@ namespace UnityGLTF
 
 			//export camera attached to node
 			Camera unityCamera = nodeTransform.GetComponent<Camera>();
-			if (unityCamera != null)
+			if (unityCamera != null && unityCamera.enabled)
 			{
 				node.Camera = ExportCamera(unityCamera);
 			}
 
             Light unityLight = nodeTransform.GetComponent<Light>();
-            if (unityLight != null)
+            if (unityLight != null && unityLight.enabled)
             {
                 node.Light = ExportLight(unityLight);
 
@@ -490,12 +493,14 @@ namespace UnityGLTF
 			if (nonPrimitives.Length > 0)
 			{
 				node.Children = new List<NodeId>(nonPrimitives.Length);
+                CognitiveVR.DynamicObject dyn;
 				foreach (var child in nonPrimitives)
 				{
+                    dyn = child.GetComponent<CognitiveVR.DynamicObject>();
                     //skip dynamics
                     //if (child.GetComponent<CognitiveVR.DynamicObject>() != null)
-                    if ((Dynamic == null && child.GetComponent<CognitiveVR.DynamicObject>() != null) //exporting scene and found dynamic in non-root
-                        || (Dynamic != null && (child.GetComponent<CognitiveVR.DynamicObject>() != null && child.GetComponent<CognitiveVR.DynamicObject>() != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
+                    if ((Dynamic == null && dyn != null) //exporting scene and found dynamic in non-root
+                        || (Dynamic != null && (dyn != null && dyn != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
                     { continue; }
                     node.Children.Add(ExportNode(child.transform));
 				}
@@ -635,11 +640,16 @@ namespace UnityGLTF
 			var prims = new List<GameObject>(childCount + 1);
 			var nonPrims = new List<GameObject>(childCount);
 
+            var mf = transform.gameObject.GetComponent<MeshFilter>();
+            var mr = transform.gameObject.GetComponent<MeshRenderer>();
+
 			// add another primitive if the root object also has a mesh
-			if (transform.gameObject.GetComponent<MeshFilter>() != null
-                && transform.gameObject.GetComponent<MeshFilter>().sharedMesh != null
-                && transform.gameObject.activeInHierarchy
-                && transform.gameObject.GetComponent<MeshRenderer>() != null)
+			if (mf != null
+                && mr != null
+                && mr.enabled
+                && mf.sharedMesh != null
+                && !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh))
+                && transform.gameObject.activeInHierarchy)
 			{
 				prims.Add(transform.gameObject);
 			}
@@ -659,18 +669,23 @@ namespace UnityGLTF
 
 		private static bool IsPrimitive(GameObject gameObject)
 		{
-			/*
+            var mf = gameObject.GetComponent<MeshFilter>();
+            var mr = gameObject.GetComponent<MeshRenderer>();
+
+            /*
 			 * Primitives have the following properties:
 			 * - have no children
 			 * - have no non-default local transform properties
 			 * - have MeshFilter and MeshRenderer components
 			 */
-			return gameObject.transform.childCount == 0
+            return gameObject.transform.childCount == 0
 				&& gameObject.transform.localPosition == Vector3.zero
 				&& gameObject.transform.localRotation == Quaternion.identity
 				&& gameObject.transform.localScale == Vector3.one
-				&& gameObject.GetComponent<MeshFilter>() != null
-				&& gameObject.GetComponent<MeshRenderer>() != null;
+				&& mf != null
+                && mr != null
+                && !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh))
+                && mr.enabled;
 		}
 
 		private MeshId ExportMesh(string name, GameObject[] primitives)
@@ -834,7 +849,7 @@ namespace UnityGLTF
                     material.Name = "null";
                 }
                 _materials.Add(materialObj);
-                material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
                 id = new MaterialId
                 {
@@ -924,14 +939,14 @@ namespace UnityGLTF
 
                 if (mainTex != null)
                 {
-                    material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
                     material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
                     ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_MainTex");
                 }
                 if (materialObj.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
                 {
                     if (material.PbrMetallicRoughness == null)
-                        material.PbrMetallicRoughness = new PbrMetallicRoughness();
+                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
                     material.PbrMetallicRoughness.BaseColorFactor = materialObj.GetColor("_TintColor").ToNumericsColorRaw();
                 }
@@ -1040,9 +1055,9 @@ namespace UnityGLTF
 
 		private PbrMetallicRoughness ExportPBRMetallicRoughness(Material material)
 		{
-			var pbr = new PbrMetallicRoughness();
+			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
-			if (material.HasProperty("_Color"))
+            if (material.HasProperty("_Color"))
 			{
 				pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorRaw();
 			}
