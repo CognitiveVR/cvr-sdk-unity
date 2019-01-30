@@ -277,7 +277,12 @@ namespace UnityGLTF
 #endif
 			ExportImages(path);
 
-		}
+            foreach(var v in LODDisabledRenderers)
+            {
+                v.enabled = true;
+            }
+
+        }
 
 		private void ExportImages(string outputPath)
 		{
@@ -432,6 +437,8 @@ namespace UnityGLTF
 			};
 		}
 
+        List<Renderer> LODDisabledRenderers = new List<Renderer>();
+
 		private NodeId ExportNode(Transform nodeTransform)
 		{
 			var node = new Node();
@@ -440,6 +447,44 @@ namespace UnityGLTF
 			{
 				node.Name = nodeTransform.name;
 			}
+
+            LODGroup lodgroup = nodeTransform.GetComponent<LODGroup>();
+            if (lodgroup != null && lodgroup.enabled)
+            {
+                var lods = lodgroup.GetLODs();
+                var lodCount = lodgroup.lodCount;
+                if (lods.Length > 0)
+                {
+                    if (CognitiveVR.CognitiveVR_Preferences.Instance.ExportSceneLODLowest)
+                    {
+                        for (int i = 0; i < lodCount-1; i++)
+                        {
+                            foreach (var renderer in lods[i].renderers)
+                            {
+                                if (renderer.enabled)
+                                {
+                                    renderer.enabled = false;
+                                    LODDisabledRenderers.Add(renderer);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 1; i < lodCount; i++)
+                        {
+                            foreach (var renderer in lods[i].renderers)
+                            {
+                                if (renderer.enabled)
+                                {
+                                    renderer.enabled = false;
+                                    LODDisabledRenderers.Add(renderer);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
 			//export camera attached to node
 			Camera unityCamera = nodeTransform.GetComponent<Camera>();
@@ -915,7 +960,7 @@ namespace UnityGLTF
 				}
 			}
 
-			if (materialObj.HasProperty("_OcclusionMap"))
+			if (materialObj.HasProperty("_OcclusionMap") && CognitiveVR.CognitiveVR_Preferences.Instance.ExportAOMaps)
 			{
 				var occTex = materialObj.GetTexture("_OcclusionMap");
 				if (occTex != null)
