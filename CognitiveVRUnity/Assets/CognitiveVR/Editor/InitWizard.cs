@@ -700,6 +700,7 @@ public class InitWizard : EditorWindow
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             //GLTFExportMenu.ExportSelected();
             delayDisplayUploading--;
+            EditorCore.ExportedDynamicObjects = null; //force refresh
         }
         else
         {
