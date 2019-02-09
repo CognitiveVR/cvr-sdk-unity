@@ -439,7 +439,12 @@ namespace CognitiveVR
 
                 texture.LoadImage(File.ReadAllBytes(file));
 
-                texture = RescaleForExport(texture, Mathf.NextPowerOfTwo(texture.width) / textureDivisor, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
+                var newWidth = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.width) / textureDivisor);
+                var newHeight = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
+
+                TextureScale.Bilinear(texture, newWidth, newHeight);
+
+                //texture = RescaleForExport(texture, Mathf.NextPowerOfTwo(texture.width) / textureDivisor, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
                 byte[] bytes = texture.EncodeToPNG();
                 File.WriteAllBytes(path, bytes);
             }

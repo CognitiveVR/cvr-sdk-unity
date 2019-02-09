@@ -425,6 +425,7 @@ namespace UnityGLTF
                 //skip dynamics
                 if ((Dynamic == null && dyn != null) //export scene and skip all dynamics
                     || (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
+                if (!transform.gameObject.activeInHierarchy) continue;
                 scene.Nodes.Add(ExportNode(transform));
 			}
 
@@ -547,6 +548,7 @@ namespace UnityGLTF
                     if ((Dynamic == null && dyn != null) //exporting scene and found dynamic in non-root
                         || (Dynamic != null && (dyn != null && dyn != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
                     { continue; }
+                    if (!child.gameObject.activeInHierarchy) continue;
                     node.Children.Add(ExportNode(child.transform));
 				}
 			}
@@ -894,7 +896,7 @@ namespace UnityGLTF
                     material.Name = "null";
                 }
                 _materials.Add(materialObj);
-                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
                 id = new MaterialId
                 {
@@ -984,14 +986,14 @@ namespace UnityGLTF
 
                 if (mainTex != null)
                 {
-                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
                     material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
                     ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_MainTex");
                 }
                 if (materialObj.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
                 {
                     if (material.PbrMetallicRoughness == null)
-                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
                     material.PbrMetallicRoughness.BaseColorFactor = materialObj.GetColor("_TintColor").ToNumericsColorRaw();
                 }
@@ -1100,7 +1102,7 @@ namespace UnityGLTF
 
 		private PbrMetallicRoughness ExportPBRMetallicRoughness(Material material)
 		{
-			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
             if (material.HasProperty("_Color"))
 			{
