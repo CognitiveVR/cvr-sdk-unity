@@ -20,7 +20,7 @@ namespace CognitiveVR
 
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.9.4";
+        public const string SDK_VERSION = "0.9.7";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -167,7 +167,7 @@ namespace CognitiveVR
                     UpdateSessionState("c3d.app.name", Application.productName);
                     UpdateSessionState("c3d.app.version", Application.version);
                     UpdateSessionState("c3d.app.engine.version", Application.unityVersion);
-                    UpdateSessionState("cvr.device.type", SystemInfo.deviceType.ToString());
+                    UpdateSessionState("c3d.device.type", SystemInfo.deviceType.ToString());
                     UpdateSessionState("c3d.device.cpu", SystemInfo.processorType);
                     UpdateSessionState("c3d.device.model", SystemInfo.deviceModel);
                     UpdateSessionState("c3d.device.gpu", SystemInfo.graphicsDeviceName);

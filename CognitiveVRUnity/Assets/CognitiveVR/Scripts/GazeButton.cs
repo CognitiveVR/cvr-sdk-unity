@@ -30,6 +30,19 @@ namespace CognitiveVR
 
         public UnityEngine.Events.UnityEvent OnLook;
 
+        Camera _cam;
+        Camera Cam
+        {
+            get
+            {
+                if (_cam == null)
+                {
+                    _cam = Camera.main;
+                }
+                return _cam;
+            }
+        }
+
         Transform _t;
         Transform _transform
         {
@@ -178,7 +191,7 @@ namespace CognitiveVR
             //if it doesn't find the eyes, skip this snapshot
             //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = cam.ViewportPointToRay(v2);
+                var ray = Cam.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
 #elif CVR_TOBIIVR

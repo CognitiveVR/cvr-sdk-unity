@@ -1013,6 +1013,8 @@ namespace CognitiveVR
                 builder.Append(",");
             }
             JsonUtil.SetString("mesh", entry.MeshName, builder);
+            builder.Append(",");
+            JsonUtil.SetString("fileType", DynamicObjectManifestEntry.FileType, builder);
 
             if (!string.IsNullOrEmpty(entry.videoURL))
             {
@@ -1550,6 +1552,8 @@ namespace CognitiveVR
 
     public class DynamicObjectManifestEntry
     {
+        public static string FileType = "gltf";
+
         public string Id;
         public string Name;
         public string MeshName;

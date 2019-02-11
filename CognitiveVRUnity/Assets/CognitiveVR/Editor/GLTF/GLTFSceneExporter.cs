@@ -277,7 +277,12 @@ namespace UnityGLTF
 #endif
 			ExportImages(path);
 
-		}
+            foreach(var v in LODDisabledRenderers)
+            {
+                v.enabled = true;
+            }
+
+        }
 
 		private void ExportImages(string outputPath)
 		{
@@ -420,6 +425,7 @@ namespace UnityGLTF
                 //skip dynamics
                 if ((Dynamic == null && dyn != null) //export scene and skip all dynamics
                     || (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
+                if (!transform.gameObject.activeInHierarchy) continue;
                 scene.Nodes.Add(ExportNode(transform));
 			}
 
@@ -432,6 +438,8 @@ namespace UnityGLTF
 			};
 		}
 
+        List<Renderer> LODDisabledRenderers = new List<Renderer>();
+
 		private NodeId ExportNode(Transform nodeTransform)
 		{
 			var node = new Node();
@@ -440,6 +448,44 @@ namespace UnityGLTF
 			{
 				node.Name = nodeTransform.name;
 			}
+
+            LODGroup lodgroup = nodeTransform.GetComponent<LODGroup>();
+            if (lodgroup != null && lodgroup.enabled)
+            {
+                var lods = lodgroup.GetLODs();
+                var lodCount = lodgroup.lodCount;
+                if (lods.Length > 0)
+                {
+                    if (CognitiveVR.CognitiveVR_Preferences.Instance.ExportSceneLODLowest)
+                    {
+                        for (int i = 0; i < lodCount-1; i++)
+                        {
+                            foreach (var renderer in lods[i].renderers)
+                            {
+                                if (renderer.enabled)
+                                {
+                                    renderer.enabled = false;
+                                    LODDisabledRenderers.Add(renderer);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 1; i < lodCount; i++)
+                        {
+                            foreach (var renderer in lods[i].renderers)
+                            {
+                                if (renderer.enabled)
+                                {
+                                    renderer.enabled = false;
+                                    LODDisabledRenderers.Add(renderer);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
 			//export camera attached to node
 			Camera unityCamera = nodeTransform.GetComponent<Camera>();
@@ -502,6 +548,7 @@ namespace UnityGLTF
                     if ((Dynamic == null && dyn != null) //exporting scene and found dynamic in non-root
                         || (Dynamic != null && (dyn != null && dyn != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
                     { continue; }
+                    if (!child.gameObject.activeInHierarchy) continue;
                     node.Children.Add(ExportNode(child.transform));
 				}
 			}
@@ -849,7 +896,7 @@ namespace UnityGLTF
                     material.Name = "null";
                 }
                 _materials.Add(materialObj);
-                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
                 id = new MaterialId
                 {
@@ -915,7 +962,7 @@ namespace UnityGLTF
 				}
 			}
 
-			if (materialObj.HasProperty("_OcclusionMap"))
+			if (materialObj.HasProperty("_OcclusionMap") && CognitiveVR.CognitiveVR_Preferences.Instance.ExportAOMaps)
 			{
 				var occTex = materialObj.GetTexture("_OcclusionMap");
 				if (occTex != null)
@@ -939,14 +986,14 @@ namespace UnityGLTF
 
                 if (mainTex != null)
                 {
-                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                    material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
                     material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
                     ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_MainTex");
                 }
                 if (materialObj.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
                 {
                     if (material.PbrMetallicRoughness == null)
-                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+                        material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
                     material.PbrMetallicRoughness.BaseColorFactor = materialObj.GetColor("_TintColor").ToNumericsColorRaw();
                 }
@@ -1055,7 +1102,7 @@ namespace UnityGLTF
 
 		private PbrMetallicRoughness ExportPBRMetallicRoughness(Material material)
 		{
-			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
+			var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
             if (material.HasProperty("_Color"))
 			{
