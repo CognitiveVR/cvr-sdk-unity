@@ -2,7 +2,7 @@
 
 //http://wiki.unity3d.com/index.php/TextureScale
 //author : eric haines
-//cc3.0
+//cc by sa 3.0
 
 using System.Threading;
 using UnityEngine;
