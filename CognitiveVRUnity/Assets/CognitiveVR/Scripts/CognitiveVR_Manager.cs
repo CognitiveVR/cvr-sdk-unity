@@ -88,6 +88,10 @@ namespace CognitiveVR
                 case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
                 //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
+#if CVR_TOBII || CVR_AH || CVR_FOVE || CVR_PUPIL
+            //fixation requires some kind of eye tracking hardware
+            gameObject.AddComponent<FixationRecorder>().Initialize();
+#endif
 
             if (InitEvent != null) { InitEvent(initError); }
 
@@ -193,9 +197,9 @@ namespace CognitiveVR
         public static event PoseEventHandler PoseEvent;
         public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
 #endif
-        #endregion
+#endregion
 
-        #region HMD and Controllers
+#region HMD and Controllers
 
 
 #if CVR_OCULUS
@@ -498,7 +502,7 @@ namespace CognitiveVR
 #endif
         }
 
-        #endregion
+#endregion
 
         private static CognitiveVR_Manager instance;
         public static CognitiveVR_Manager Instance

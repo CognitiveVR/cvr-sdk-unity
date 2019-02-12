@@ -1,6 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if CVR_AH
+using AdhawkApi;
+using AdhawkApi.Numerics.Filters;
+#endif
 
 namespace CognitiveVR
 {
@@ -25,7 +29,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            return (long)(Time.realtimeSinceStartup * 1000;)
+            return (long)(Time.realtimeSinceStartup * 1000);
         }
 
         int lastProcessedFrame;
@@ -63,7 +67,10 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_ADHAWK
+#elif CVR_AH
+
+        private static Calibrator ah_calibrator;
+        AdhawkApi.EyeTracker eyetracker;
         public Ray CombinedWorldGazeRay()
         {
             Vector3 r = ah_calibrator.GetGazeVector(filterType: AdhawkApi.Numerics.Filters.FilterType.ExponentialMovingAverage);
@@ -173,15 +180,32 @@ namespace CognitiveVR
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         public List<Vector3> VISGazepoints = new List<Vector3>(4096);
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        //visualization
+        //shoudl use gaze reticle or something??
+        GameObject lastEyeTrackingPointer;
+#endif
+
         //cognitive3d stuff
         //CognitiveVR.CommandBufferHelper commandBufferHelper;
 
-        private void Start()
+        public void Initialize()
         {
+            FocusSizeFromCenter = new AnimationCurve();
+            FocusSizeFromCenter.AddKey(new Keyframe(0.01f, 1,0,0));
+            FocusSizeFromCenter.AddKey(new Keyframe(0.3f, 4, 30, 0));
+
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
             VISFixationEnds.Add("off transform", new List<Fixation>());
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            gameObject.AddComponent<FixationVisualizer>().SetTarget(this);
+            lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
+            Destroy(lastEyeTrackingPointer.GetComponent<SphereCollider>());
+#endif
 
             ActiveFixation = new Fixation();
             
@@ -194,6 +218,9 @@ namespace CognitiveVR
             fovebase = FindObjectOfType<FoveInterfaceBase>();
 #elif CVR_TOBII
             EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
+#elif CVR_AH
+            ah_calibrator = Calibrator.Instance;
+            eyetracker = EyeTracker.Instance;
 #endif
 
             //StartCoroutine(DelayFindHelper());
@@ -308,6 +335,9 @@ namespace CognitiveVR
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].WorldPosition = world;
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            lastEyeTrackingPointer.transform.position = world;
+#endif
 
             VISGazepoints.Add(EyeCaptures[index].WorldPosition);
             index = (index + 1) % CachedEyeCaptures;
