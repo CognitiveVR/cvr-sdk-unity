@@ -211,7 +211,7 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.5.1 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -700,6 +700,7 @@ public class InitWizard : EditorWindow
             CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             //GLTFExportMenu.ExportSelected();
             delayDisplayUploading--;
+            EditorCore.ExportedDynamicObjects = null; //force refresh
         }
         else
         {
@@ -971,16 +972,11 @@ public class InitWizard : EditorWindow
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
-#if UNITY_2018_3_OR_NEWER
 
-            var sceneRT = EditorCore.GetSceneRenderTexture();
+        var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
             GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-#else
-            var sceneRT = EditorCore.GetSceneRenderTexture();
-            if (sceneRT != null)
-                GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-#endif
+
 
             //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
         }
@@ -1197,8 +1193,7 @@ public class InitWizard : EditorWindow
                 System.Action completedRefreshSceneVersion1 = delegate ()
                 {
 #if UNITY_2018_3_OR_NEWER
-                    //EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-                    EditorCore.SceneViewCameraScreenshot(screenshotCamera, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                    EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #else
                     EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #endif

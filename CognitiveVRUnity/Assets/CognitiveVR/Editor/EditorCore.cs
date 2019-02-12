@@ -365,11 +365,24 @@ public class EditorCore
         return false;
     }
 
-        #region Editor Screenshot
+    #region Editor Screenshot
 
-        static RenderTexture sceneRT = null;
+    static RenderTexture sceneRT = null;
     public static RenderTexture GetSceneRenderTexture()
     {
+#if UNITY_2018_3_OR_NEWER
+        if (sceneRT == null)
+            sceneRT = new RenderTexture(256, 256, 24);
+
+        var cameras = UnityEditor.SceneView.GetAllSceneCameras();
+
+        if (cameras != null && cameras.Length > 0 && cameras[0] != null)
+        {
+            cameras[0].targetTexture = sceneRT;
+            cameras[0].Render();
+        }
+        return sceneRT;
+#else
         if (SceneView.lastActiveSceneView != null)
         {
             System.Reflection.FieldInfo[] fields = typeof(SceneView).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -382,6 +395,7 @@ public class EditorCore
             }
         }
         return sceneRT;
+#endif
     }
 
     static Texture2D cachedScreenshot;
@@ -484,60 +498,27 @@ public class EditorCore
         //create render texture
         RenderTexture rt = new RenderTexture(512, 512, 0);
         cam.targetTexture = rt;
+        cam.Render();
 
-        //write render texture to texture
-        Texture2D tex = new Texture2D(512, 512);
-        RenderTexture.active = rt;
-        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-        tex.Apply();
-
-        Selection.activeTransform = cam.transform;
-
-        delay = 1;
-        saveScreenshotSceneName = sceneName;
-        SaveScreenshotComplete = saveCameraScreenshot;
-        EditorApplication.update += DelayScreenshot;
-    }
-
-    static string saveScreenshotSceneName;
-    static int delay = 0;
-    static System.Action SaveScreenshotComplete;
-
-    static void DelayScreenshot()
-    {
-        if (delay > 0) { delay--; return; }
-        EditorApplication.update -= DelayScreenshot;
-        var t = Selection.activeTransform;
-        var cam = t.GetComponent<Camera>();
-
-        //write render texture to texture
         Texture2D tex = new Texture2D(512, 512);
         RenderTexture.active = cam.targetTexture;
         tex.ReadPixels(new Rect(0, 0, cam.targetTexture.width, cam.targetTexture.height), 0, 0);
         tex.Apply();
-
-        //write texture to disk
         RenderTexture.active = null;
-        //var bytes = tex.EncodeToPNG();
-        //System.IO.File.WriteAllBytes(Application.dataPath + "sceneview.png", bytes);
 
-        //release render texture
-        //destroy camera
         cam.targetTexture.Release();
-        UnityEngine.Object.DestroyImmediate(t.gameObject);
-
 
         Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
-        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+        Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
 
         //save file
-        File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+        File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
         //use editor update to delay teh screenshot 1 frame?
 
-        if (SaveScreenshotComplete != null)
-            SaveScreenshotComplete.Invoke();
-        SaveScreenshotComplete = null;
+        if (saveCameraScreenshot != null)
+            saveCameraScreenshot.Invoke();
+        saveCameraScreenshot = null;
     }
 #else
 

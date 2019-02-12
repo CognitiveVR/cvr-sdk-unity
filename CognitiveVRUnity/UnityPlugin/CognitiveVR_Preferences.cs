@@ -136,6 +136,8 @@ namespace CognitiveVR
         public int ReadLocalCacheCount = 2;
 
         public int TextureResize = 1;
+        public bool ExportSceneLODLowest = true;
+        public bool ExportAOMaps = false;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible

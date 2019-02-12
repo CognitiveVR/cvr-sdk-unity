@@ -64,7 +64,7 @@ public class GazeReticle : MonoBehaviour
         if (PupilTools.IsGazing)
         {
             var v2 = PupilData._2D.GetEyeGaze("0");
-            var ray = cam.ViewportPointToRay(v2);
+            var ray = Cam.ViewportPointToRay(v2);
             newPosition = ray.GetPoint(Distance);
         }
 
