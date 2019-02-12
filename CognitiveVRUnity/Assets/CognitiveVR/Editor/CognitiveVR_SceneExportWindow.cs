@@ -428,6 +428,8 @@ namespace CognitiveVR
             Texture2D texture = new Texture2D(2, 2);
             var files = Directory.GetFiles(folderpath);
 
+            int minTextureSize = Mathf.NextPowerOfTwo(textureDivisor);
+
             foreach (var file in files)
             {
                 if (!file.EndsWith(".png")) { continue; }
@@ -438,6 +440,8 @@ namespace CognitiveVR
                 string path = file;
 
                 texture.LoadImage(File.ReadAllBytes(file));
+
+                if (texture.width < minTextureSize && texture.height < minTextureSize) { continue; }
 
                 var newWidth = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.width) / textureDivisor);
                 var newHeight = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
