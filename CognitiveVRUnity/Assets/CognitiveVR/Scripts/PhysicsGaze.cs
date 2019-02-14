@@ -38,11 +38,11 @@ public class PhysicsGaze : GazeBase
         float hitDistance;
         DynamicObject hitDynamic;
         Vector3 hitWorld;
+        Vector3 hitLocal;
         Vector2 hitcoord;
-        if (DynamicRaycast(ray.origin,ray.direction,CameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
+        if (DynamicRaycast(ray.origin,ray.direction,CameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
             string ObjectId = hitDynamic.Id;
-            Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
 
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -50,12 +50,15 @@ public class PhysicsGaze : GazeBase
             {
                 var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
                 var mediauvs = hitcoord;
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
             }
             else
             {
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, ray.origin, CameraTransform.rotation, gpsloc, compass, floorPos);
             }
+
+            Debug.DrawLine(CameraTransform.position, hitWorld, new Color(1,0,1,0.5f), CognitiveVR_Preferences.Instance.SnapshotInterval);
+
             return;
         }
 
@@ -67,12 +70,14 @@ public class PhysicsGaze : GazeBase
 
             //hit world
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
+            Debug.DrawLine(pos, pos + gazepoint, Color.red, CognitiveVR_Preferences.Instance.SnapshotInterval);
         }
         else //hit sky / farclip
         {
             Vector3 pos = CameraTransform.position;
             Quaternion rot = CameraTransform.rotation;
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
+            Debug.DrawRay(pos, CameraTransform.forward * CameraComponent.farClipPlane, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
         }
     }
 

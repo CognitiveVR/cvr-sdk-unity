@@ -63,10 +63,9 @@ namespace CognitiveVR
             string objectId="";
             Vector3 localGaze = Vector3.zero;
             Vector2 hitcoord;
-            if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
+            if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out localGaze, out hitcoord)) //hit dynamic
             {
                 objectId = hitDynamic.Id;
-                localGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
             }
 
             //get depth world point

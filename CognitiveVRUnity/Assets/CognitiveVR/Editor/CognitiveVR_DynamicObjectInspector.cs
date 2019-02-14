@@ -46,6 +46,7 @@ namespace CognitiveVR
             var updateRate = serializedObject.FindProperty("UpdateRate");
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
+            var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
             //var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
             var continuallyUpdateTransform = serializedObject.FindProperty("ContinuallyUpdateTransform");
             var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
@@ -261,6 +262,9 @@ namespace CognitiveVR
 
                 EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
                 rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
+
+                EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot. Checked each 'Tick'"));
+                scaleThreshold.floatValue = Mathf.Max(0, scaleThreshold.floatValue);
 
                 EditorGUI.EndDisabledGroup();
 
