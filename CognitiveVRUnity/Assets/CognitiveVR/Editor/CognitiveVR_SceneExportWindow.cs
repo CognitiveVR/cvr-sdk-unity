@@ -312,7 +312,9 @@ namespace CognitiveVR
 
         static void PostSceneUploadResponse(int responseCode, string error, string text)
         {
-            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode + " [ERROR] " + error + " [TEXT] " + text);
+            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode
+                + (!string.IsNullOrEmpty(error) ? " [ERROR] " + error : "")
+                + (!string.IsNullOrEmpty(text) ? " [TEXT] " + text : ""));
 
             if (responseCode != 200 && responseCode != 201)
             {
@@ -384,6 +386,7 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
             BakeNonstandardRenderers(null, temp, path);
             var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+            exporter.SetNonStandardOverrides(temp);
             Directory.CreateDirectory(path);
 
             EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
@@ -428,6 +431,8 @@ namespace CognitiveVR
             Texture2D texture = new Texture2D(2, 2);
             var files = Directory.GetFiles(folderpath);
 
+            int minTextureSize = Mathf.NextPowerOfTwo(textureDivisor);
+
             foreach (var file in files)
             {
                 if (!file.EndsWith(".png")) { continue; }
@@ -438,6 +443,8 @@ namespace CognitiveVR
                 string path = file;
 
                 texture.LoadImage(File.ReadAllBytes(file));
+
+                if (texture.width < minTextureSize && texture.height < minTextureSize) { continue; }
 
                 var newWidth = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.width) / textureDivisor);
                 var newHeight = Mathf.Max(1, Mathf.NextPowerOfTwo(texture.height) / textureDivisor);
@@ -897,8 +904,20 @@ namespace CognitiveVR
                 //string path2 = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
                 BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
 
-                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
-                exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
+                Vector3 startScale = dynamic.transform.localScale;
+                dynamic.transform.localScale = dynamic.transform.lossyScale;
+                try
+                {
+                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
+                    exporter.SetNonStandardOverrides(temp);
+                    exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                dynamic.transform.localScale = startScale;
 
                 successfullyExportedCount++;
 

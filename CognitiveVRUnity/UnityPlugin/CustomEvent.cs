@@ -15,7 +15,10 @@ namespace CognitiveVR
         public CustomEvent(string category)
         {
             _category = category;
+            startTime = Time.realtimeSinceStartup;
         }
+
+        private float startTime;
 
         private static Transform _hmd;
         private static Transform HMD
@@ -25,7 +28,11 @@ namespace CognitiveVR
                 if (_hmd == null)
                 {
                     if (Camera.main == null)
-                        _hmd = Object.FindObjectOfType<Camera>().transform;
+                    {
+                        Camera c = Object.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
                     else
                         _hmd = Camera.main.transform;
                 }
@@ -83,6 +90,15 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
+
             Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }
 
@@ -93,13 +109,23 @@ namespace CognitiveVR
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
-            if (HMD == null) { return; }
-
             float[] pos = new float[3] { 0, 0, 0 };
 
-            pos[0] = HMD.position.x;
-            pos[1] = HMD.position.y;
-            pos[2] = HMD.position.z;
+            if (HMD != null)
+            {
+                pos[0] = HMD.position.x;
+                pos[1] = HMD.position.y;
+                pos[2] = HMD.position.z;
+            }
+
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
 
             Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }

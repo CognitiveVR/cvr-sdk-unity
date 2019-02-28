@@ -541,6 +541,9 @@ public class InitWizard : EditorWindow
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.TrackGaze = false;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivecontroller";
             }
             if (right != null)
             {
@@ -548,6 +551,9 @@ public class InitWizard : EditorWindow
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.TrackGaze = false;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivecontroller";
             }
 #elif CVR_OCULUS
             if (left != null)
@@ -556,6 +562,9 @@ public class InitWizard : EditorWindow
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchLeft;
                 dyn.TrackGaze = false;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "oculustouchleft";
             }
             if (right != null)
             {
@@ -563,6 +572,9 @@ public class InitWizard : EditorWindow
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchRight;
                 dyn.TrackGaze = false;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "oculustouchright";
             }
 
             if (cameraBase != null)

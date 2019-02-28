@@ -51,12 +51,23 @@ namespace CognitiveVR
         public float RotationThreshold = 0.1f;
         public Quaternion lastRotation;
 
+        //original scale, set on enable
+        //assuming that this is the scale used to export this mesh and that this should be divided by current scale to get 'relative scale from upload'
+        //THIS IS ONLY USED IN SDK TO DETERMINE IF SCALE CHANGED
+        private bool HasSetScale = false;
+        public Vector3 StartingScale { get; private set; }
+
+        public float ScaleThreshold = 0.1f;
+        Vector3 lastRelativeScale = Vector3.one;
+
         public bool UseCustomId = true;
         public string CustomId = "";
         public bool ReleaseIdOnDestroy = false; //only release the id for reuse if not tracking gaze
         public bool ReleaseIdOnDisable = false; //only release the id for reuse if not tracking gaze
 
-        public string GroupName;
+        public bool IsController = false;
+        public string ControllerType;
+        public bool IsRight = false;
 
         private DynamicObjectId viewerId;
         //used internally for scene explorer
@@ -100,7 +111,6 @@ namespace CognitiveVR
         bool wasBufferingVideo = false;
 
         public bool TrackGaze = true;
-        float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
 
@@ -201,6 +211,11 @@ namespace CognitiveVR
             {
                 Util.logWarning("Dynamic Object destroyed");
                 return;
+            }
+            if (!HasSetScale)
+            {
+                HasSetScale = true;
+                StartingScale = _t.lossyScale;
             }
 
             if (!Application.isPlaying) { return; }
@@ -515,12 +530,6 @@ namespace CognitiveVR
             SendSavedSnapshots(manifestEntries, snapshots, trackingSettings, uniqueid, sessiontimestamp, sessionid);
         }
 
-        public void OnGaze(float time)
-        {
-            if (!TrackGaze) { return; }
-            TotalGazeDuration += time;
-        }
-
         /// <summary>
         /// send a snapshot of the position and rotation if the object has moved beyond its threshold
         /// </summary>
@@ -531,7 +540,7 @@ namespace CognitiveVR
 
             var pos = _t.position;
             var rot = _t.rotation;
-
+            var relativescale = new Vector3(_t.lossyScale.x / StartingScale.x, _t.lossyScale.y / StartingScale.y, _t.lossyScale.z / StartingScale.z);
 
             Vector3 heading;
             heading.x = pos.x - lastPosition.x;
@@ -541,6 +550,7 @@ namespace CognitiveVR
             var distanceSquared = heading.x * heading.x + heading.y * heading.y + heading.z * heading.z;
 
             bool doWrite = false;
+            bool writeScale = false;
             if (distanceSquared > PositionThreshold * PositionThreshold)
             {
                 doWrite = true;
@@ -553,9 +563,13 @@ namespace CognitiveVR
                     doWrite = true;
                 }
             }
+            if (Vector3.SqrMagnitude(relativescale - lastRelativeScale) > ScaleThreshold * ScaleThreshold)
+            {
+                writeScale = true;
+            }
 
             DynamicObjectSnapshot snapshot = null;
-            if (doWrite)
+            if (doWrite || writeScale)
             {
                 snapshot = NewSnapshot();
                 snapshot.Position[0] = pos.x;
@@ -568,6 +582,14 @@ namespace CognitiveVR
                 snapshot.Rotation[3] = rot.w;
                 lastPosition = pos;
                 lastRotation = rot;
+                if (writeScale)
+                {
+                    snapshot.DirtyScale = true;
+                    snapshot.Scale[0] = relativescale.x;
+                    snapshot.Scale[1] = relativescale.y;
+                    snapshot.Scale[2] = relativescale.z;
+                    lastRelativeScale = relativescale;
+                }
             }
 
             if (DirtyEngagements != null)
@@ -587,6 +609,14 @@ namespace CognitiveVR
                         snapshot.Rotation[3] = rot.w;
                         lastPosition = pos;
                         lastRotation = rot;
+                        if (writeScale)
+                        {
+                            snapshot.DirtyScale = true;
+                            snapshot.Scale[0] = relativescale.x;
+                            snapshot.Scale[1] = relativescale.y;
+                            snapshot.Scale[2] = relativescale.z;
+                            lastRelativeScale = relativescale;
+                        }
                     }
                     snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements.Count);
                     for (int i = 0; i < DirtyEngagements.Count; i++)
@@ -645,23 +675,16 @@ namespace CognitiveVR
                 {
                     viewerId = GetUniqueID(MeshName, this);
                     var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
-                    if (!string.IsNullOrEmpty(GroupName))
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                    }
 
-                    if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                    if (IsController)
                     {
+                        manifestEntry.isController = true;
+                        manifestEntry.controllerType = ControllerType;
                         string controllerName = "left";
-                        if (_t == CognitiveVR_Manager.GetController(true))
-                        {
-                            controllerName = "right";
-                        }
-                        else if (_t == CognitiveVR_Manager.GetController(false))
-                        {
-                            controllerName = "left";
-                        }
 
+                        if (IsRight)
+                            controllerName = "right";
+                        
                         if (manifestEntry.Properties == null)
                         {
                             manifestEntry.Properties = new Dictionary<string, object>() { { "controller", controllerName } };
@@ -669,28 +692,6 @@ namespace CognitiveVR
                         else
                         {
                             manifestEntry.Properties.Add("controller", controllerName);
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "left");
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "right");
                         }
                     }
 
@@ -723,17 +724,14 @@ namespace CognitiveVR
                 viewerId = new DynamicObjectId(CustomId, MeshName, this);
                 var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
 
-                if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                if (IsController)
                 {
+                    manifestEntry.isController = true;
+                    manifestEntry.controllerType = ControllerType;
                     string controllerName = "left";
-                    if (_t == CognitiveVR_Manager.GetController(true) || name.Contains("right"))
-                    {
+
+                    if (IsRight)
                         controllerName = "right";
-                    }
-                    else if (_t == CognitiveVR_Manager.GetController(false) || name.Contains("left"))
-                    {
-                        controllerName = "left";
-                    }
 
                     if (manifestEntry.Properties == null)
                     {
@@ -744,39 +742,14 @@ namespace CognitiveVR
                         manifestEntry.Properties.Add("controller", controllerName);
                     }
                 }
-                else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "left");
-                    }
-                }
-                else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "right");
-                    }
-                }
 
-                if (!string.IsNullOrEmpty(GroupName))
-                {
-                    manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                }
                 if (!string.IsNullOrEmpty(ExternalVideoSource))
                 {
                     manifestEntry.videoURL = ExternalVideoSource;
                     manifestEntry.videoFlipped = FlipVideo;
                     IsVideoPlayer = true;
                 }
+                
                 ObjectIds.Add(viewerId);
                 NewObjectManifestQueue.Enqueue(manifestEntry);
                 if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
@@ -1024,6 +997,12 @@ namespace CognitiveVR
                 JsonUtil.SetObject("flipVideo", entry.videoFlipped, builder);
             }
 
+            if (entry.isController)
+            {
+                builder.Append(",");
+                JsonUtil.SetString("controllerType", entry.controllerType, builder);
+            }
+
             if (entry.Properties != null && entry.Properties.Keys.Count > 0)
             {
                 builder.Append(",");
@@ -1062,6 +1041,11 @@ namespace CognitiveVR
             JsonUtil.SetVector("p", snap.Position, builder);
             builder.Append(",");
             JsonUtil.SetQuat("r", snap.Rotation, builder);
+            if (snap.DirtyScale)
+            {
+                builder.Append(",");
+                JsonUtil.SetVector("s", snap.Scale, builder);
+            }
 
 
             if (snap.Properties != null && snap.Properties.Keys.Count > 0)
@@ -1170,8 +1154,6 @@ namespace CognitiveVR
                 NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(false);
                 lastPosition = transform.position;
                 lastRotation = transform.rotation;
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
                 ViewerId = null;
                 return;
             }
@@ -1193,12 +1175,6 @@ namespace CognitiveVR
         //destroyed, scene unloaded or quit. also called when disabled then destroyed
         void OnDestroy()
         {
-            if (TotalGazeDuration > 0)
-            {
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
-            }
-
             if (CognitiveVR_Manager.IsQuitting) { return; }
             if (!Application.isPlaying) { return; }
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
@@ -1348,6 +1324,8 @@ namespace CognitiveVR
             dyn.Id = Id;
             dyn.Position = Position;
             dyn.Rotation = Rotation;
+            dyn.DirtyScale = DirtyScale;
+            dyn.Scale = Scale;
 
             if (Buttons != null)
             {
@@ -1382,6 +1360,8 @@ namespace CognitiveVR
             Buttons = null;
             Engagements = null;
             Position = new float[3] { 0, 0, 0 };
+            Scale = new float[3] { 0, 0, 0 };
+            DirtyScale = false;
             Rotation = new float[4] { 0, 0, 0, 1 };
             SnapshotPool.Enqueue(this);
         }
@@ -1414,6 +1394,8 @@ namespace CognitiveVR
         public List<DynamicObject.EngagementEvent> Engagements;
         public float[] Position = new float[3] { 0, 0, 0 };
         public float[] Rotation = new float[4] { 0, 0, 0, 1 };
+        public bool DirtyScale = false;
+        public float[] Scale = new float[3] { 1, 1, 1 };
         public double Timestamp;
 
         public DynamicObjectSnapshot(DynamicObject dynamic)
@@ -1560,6 +1542,8 @@ namespace CognitiveVR
         public Dictionary<string, object> Properties;
         public string videoURL;
         public bool videoFlipped;
+        public bool isController;
+        public string controllerType;
 
         public DynamicObjectManifestEntry(string id, string name, string meshName)
         {

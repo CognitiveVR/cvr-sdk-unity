@@ -170,7 +170,7 @@ namespace CognitiveVR
         /// <param name="distance"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector2 hitTextureCoord)
+        public virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
         {
             //TODO raycast to dynamic. if failed, spherecast with radius
             //if hit dynamic, return info
@@ -180,9 +180,10 @@ namespace CognitiveVR
             hitDynamic = null;
             hitDistance = 0;
             worldHitPoint = Vector3.zero;
+            localHitPoint = Vector3.zero;
             hitTextureCoord = Vector2.zero;
 
-            if (Physics.Raycast(pos, direction, out hit, distance))
+            if (Physics.Raycast(pos, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
@@ -197,11 +198,27 @@ namespace CognitiveVR
                 {
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
+
+                    Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(worldHitPoint);
+                    float relativeScalex = hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x;
+                    float relativeScaley = hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y;
+                    float relativeScalez = hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z;
+
+                    localHitPoint.x = LocalGaze.x / relativeScalex;
+                    localHitPoint.y = LocalGaze.y / relativeScaley;
+                    localHitPoint.z = LocalGaze.z / relativeScalez;
+
+                    //Vector3 relativeScale = new Vector3(
+                    //    hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x,
+                    //    hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y,
+                    //    hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z);
+                    //localHitPoint = new Vector3(LocalGaze.x / relativeScale.x, LocalGaze.y / relativeScale.y, LocalGaze.z / relativeScale.z);
+
                     hitDistance = hit.distance;
                     hitTextureCoord = hit.textureCoord;
                 }
             }
-            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance))
+            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {
@@ -216,6 +233,21 @@ namespace CognitiveVR
                 {
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
+
+                    Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(worldHitPoint);
+                    float relativeScalex = hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x;
+                    float relativeScaley = hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y;
+                    float relativeScalez = hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z;
+
+                    localHitPoint.x = LocalGaze.x / relativeScalex;
+                    localHitPoint.y = LocalGaze.y / relativeScaley;
+                    localHitPoint.z = LocalGaze.z / relativeScalez;
+
+                    //Vector3 relativeScale = new Vector3(
+                    //    hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x,
+                    //    hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y,
+                    //    hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z);
+                    //localHitPoint = new Vector3(LocalGaze.x / relativeScale.x, LocalGaze.y / relativeScale.y, LocalGaze.z / relativeScale.z);
                     hitDistance = hit.distance;
                     hitTextureCoord = hit.textureCoord;
                 }
