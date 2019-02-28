@@ -86,7 +86,8 @@ namespace CognitiveVR.Components
             {
                 //send arm length
                 float distance = Mathf.Sqrt(maxSqrDistance);
-                Core.UpdateSessionState("c3d.armlength", distance);
+                //dashboard expects centimeters
+                Core.UpdateSessionState("c3d.armlength", distance * 100);
             }
         }
 

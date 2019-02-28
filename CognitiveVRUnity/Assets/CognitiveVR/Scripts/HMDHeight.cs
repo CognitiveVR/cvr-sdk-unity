@@ -39,7 +39,8 @@ namespace CognitiveVR.Components
             }
 
             float averageHeight = hmdAccumHeight / samples;
-            Core.UpdateSessionState("c3d.height", averageHeight);
+            //centimeters
+            Core.UpdateSessionState("c3d.height", averageHeight * 100);
         }
 
         public static string GetDescription()

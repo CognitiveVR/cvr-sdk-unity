@@ -726,7 +726,8 @@ namespace UnityGLTF
 			 * - have no non-default local transform properties
 			 * - have MeshFilter and MeshRenderer components
 			 */
-            return gameObject.transform.childCount == 0
+            return gameObject.activeInHierarchy
+                && gameObject.transform.childCount == 0
 				&& gameObject.transform.localPosition == Vector3.zero
 				&& gameObject.transform.localRotation == Quaternion.identity
 				&& gameObject.transform.localScale == Vector3.one

@@ -20,15 +20,15 @@ namespace CognitiveVR.Components
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
-                Core.UpdateSessionState("c3d.roomsize", 0);
-                Core.UpdateSessionState("c3d.roomsizeDescription", "0 x 0");
-                Core.UpdateSessionState("c3d.roomscale", false);
+                //Core.UpdateSessionState("c3d.roomsize", 0);
+                //Core.UpdateSessionState("c3d.roomsizeDescription", "0 x 0");
+                //Core.UpdateSessionState("c3d.roomscale", false);
             }
             else
             {
                 bool seated = Mathf.Approximately(roomX, 1f) && Mathf.Approximately(roomY, 1f);
-                Core.UpdateSessionState("c3d.roomscale", roomX * roomY);
-                Core.UpdateSessionState("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", roomX, roomY));
+                Core.UpdateSessionState("c3d.roomsize", roomX * roomY*100);
+                Core.UpdateSessionState("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", roomX*100, roomY*100));
                 Core.UpdateSessionState("c3d.roomscale", !seated);
             }
 #elif CVR_OCULUS
@@ -36,8 +36,8 @@ namespace CognitiveVR.Components
             //(x = width, y = height, z = depth)
             Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
 
-            Core.UpdateSessionState("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", dimensions.x, dimensions.z));
-            Core.UpdateSessionState("c3d.roomsize", dimensions.x * dimensions.z);
+            Core.UpdateSessionState("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", dimensions.x*100, dimensions.z*100));
+            Core.UpdateSessionState("c3d.roomsize", dimensions.x * dimensions.z*100);
             Core.UpdateSessionState("c3d.roomscale", OVRManager.boundary.GetConfigured());
 #endif
         }

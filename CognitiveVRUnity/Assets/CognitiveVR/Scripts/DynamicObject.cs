@@ -65,7 +65,9 @@ namespace CognitiveVR
         public bool ReleaseIdOnDestroy = false; //only release the id for reuse if not tracking gaze
         public bool ReleaseIdOnDisable = false; //only release the id for reuse if not tracking gaze
 
-        public string GroupName;
+        public bool IsController = false;
+        public string ControllerType;
+        public bool IsRight = false;
 
         private DynamicObjectId viewerId;
         //used internally for scene explorer
@@ -680,23 +682,16 @@ namespace CognitiveVR
                 {
                     viewerId = GetUniqueID(MeshName, this);
                     var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
-                    if (!string.IsNullOrEmpty(GroupName))
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                    }
 
-                    if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                    if (IsController)
                     {
+                        manifestEntry.isController = true;
+                        manifestEntry.controllerType = ControllerType;
                         string controllerName = "left";
-                        if (_t == CognitiveVR_Manager.GetController(true))
-                        {
-                            controllerName = "right";
-                        }
-                        else if (_t == CognitiveVR_Manager.GetController(false))
-                        {
-                            controllerName = "left";
-                        }
 
+                        if (IsRight)
+                            controllerName = "right";
+                        
                         if (manifestEntry.Properties == null)
                         {
                             manifestEntry.Properties = new Dictionary<string, object>() { { "controller", controllerName } };
@@ -704,28 +699,6 @@ namespace CognitiveVR
                         else
                         {
                             manifestEntry.Properties.Add("controller", controllerName);
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "left");
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "right");
                         }
                     }
 
@@ -758,17 +731,14 @@ namespace CognitiveVR
                 viewerId = new DynamicObjectId(CustomId, MeshName, this);
                 var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
 
-                if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                if (IsController)
                 {
+                    manifestEntry.isController = true;
+                    manifestEntry.controllerType = ControllerType;
                     string controllerName = "left";
-                    if (_t == CognitiveVR_Manager.GetController(true) || name.Contains("right"))
-                    {
+
+                    if (IsRight)
                         controllerName = "right";
-                    }
-                    else if (_t == CognitiveVR_Manager.GetController(false) || name.Contains("left"))
-                    {
-                        controllerName = "left";
-                    }
 
                     if (manifestEntry.Properties == null)
                     {
@@ -779,33 +749,7 @@ namespace CognitiveVR
                         manifestEntry.Properties.Add("controller", controllerName);
                     }
                 }
-                else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "left");
-                    }
-                }
-                else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "right");
-                    }
-                }
 
-                if (!string.IsNullOrEmpty(GroupName))
-                {
-                    manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                }
                 if (!string.IsNullOrEmpty(ExternalVideoSource))
                 {
                     manifestEntry.videoURL = ExternalVideoSource;
@@ -1058,6 +1002,12 @@ namespace CognitiveVR
                 JsonUtil.SetString("externalVideoSource", entry.videoURL, builder);
                 builder.Append(",");
                 JsonUtil.SetObject("flipVideo", entry.videoFlipped, builder);
+            }
+
+            if (entry.isController)
+            {
+                builder.Append(",");
+                JsonUtil.SetString("controllerType", entry.controllerType, builder);
             }
 
             if (entry.Properties != null && entry.Properties.Keys.Count > 0)
@@ -1607,6 +1557,8 @@ namespace CognitiveVR
         public Dictionary<string, object> Properties;
         public string videoURL;
         public bool videoFlipped;
+        public bool isController;
+        public string controllerType;
 
         public DynamicObjectManifestEntry(string id, string name, string meshName)
         {

@@ -183,7 +183,7 @@ namespace CognitiveVR
             localHitPoint = Vector3.zero;
             hitTextureCoord = Vector2.zero;
 
-            if (Physics.Raycast(pos, direction, out hit, distance))
+            if (Physics.Raycast(pos, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
@@ -218,7 +218,7 @@ namespace CognitiveVR
                     hitTextureCoord = hit.textureCoord;
                 }
             }
-            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance))
+            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {

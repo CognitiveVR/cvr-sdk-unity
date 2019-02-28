@@ -15,7 +15,10 @@ namespace CognitiveVR
         public CustomEvent(string category)
         {
             _category = category;
+            startTime = Time.realtimeSinceStartup;
         }
+
+        private float startTime;
 
         private static Transform _hmd;
         private static Transform HMD
@@ -83,6 +86,15 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
+
             Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }
 
@@ -100,6 +112,15 @@ namespace CognitiveVR
             pos[0] = HMD.position.x;
             pos[1] = HMD.position.y;
             pos[2] = HMD.position.z;
+
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
 
             Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
         }

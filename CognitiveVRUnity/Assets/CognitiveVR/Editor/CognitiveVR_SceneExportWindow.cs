@@ -901,8 +901,19 @@ namespace CognitiveVR
                 //string path2 = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
                 BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
 
-                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
-                exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
+                Vector3 startScale = dynamic.transform.localScale;
+                dynamic.transform.localScale = dynamic.transform.lossyScale;
+                try
+                {
+                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
+                    exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                dynamic.transform.localScale = startScale;
 
                 successfullyExportedCount++;
 
