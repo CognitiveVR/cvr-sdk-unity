@@ -130,6 +130,12 @@ namespace UnityGLTF
 			_root.Buffers.Add(_buffer);
 		}
 
+        List<CognitiveVR.BakeableMesh> OverrideBakeables = new List<CognitiveVR.BakeableMesh>();
+        public void SetNonStandardOverrides(List<CognitiveVR.BakeableMesh> meshes)
+        {
+            OverrideBakeables = meshes;
+        }
+
 		/// <summary>
 		/// Gets the root object of the exported GLTF
 		/// </summary>
@@ -696,7 +702,7 @@ namespace UnityGLTF
                 && mr != null
                 && mr.enabled
                 && mf.sharedMesh != null
-                && !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh))
+                && (OverrideBakeables.Find(delegate (CognitiveVR.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
                 && transform.gameObject.activeInHierarchy)
 			{
 				prims.Add(transform.gameObject);
@@ -715,7 +721,7 @@ namespace UnityGLTF
 			nonPrimitives = nonPrims.ToArray();
 		}
 
-		private static bool IsPrimitive(GameObject gameObject)
+		private bool IsPrimitive(GameObject gameObject)
 		{
             var mf = gameObject.GetComponent<MeshFilter>();
             var mr = gameObject.GetComponent<MeshRenderer>();
@@ -733,7 +739,7 @@ namespace UnityGLTF
 				&& gameObject.transform.localScale == Vector3.one
 				&& mf != null
                 && mr != null
-                && !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh))
+                && (OverrideBakeables.Find(delegate (CognitiveVR.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
                 && mr.enabled;
 		}
 
