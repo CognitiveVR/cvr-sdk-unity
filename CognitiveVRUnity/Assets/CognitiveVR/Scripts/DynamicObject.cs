@@ -111,7 +111,6 @@ namespace CognitiveVR
         bool wasBufferingVideo = false;
 
         public bool TrackGaze = true;
-        float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
 
@@ -529,12 +528,6 @@ namespace CognitiveVR
             }
             
             SendSavedSnapshots(manifestEntries, snapshots, trackingSettings, uniqueid, sessiontimestamp, sessionid);
-        }
-
-        public void OnGaze(float time)
-        {
-            if (!TrackGaze) { return; }
-            TotalGazeDuration += time;
         }
 
         /// <summary>
@@ -1161,8 +1154,6 @@ namespace CognitiveVR
                 NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(false);
                 lastPosition = transform.position;
                 lastRotation = transform.rotation;
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
                 ViewerId = null;
                 return;
             }
@@ -1184,12 +1175,6 @@ namespace CognitiveVR
         //destroyed, scene unloaded or quit. also called when disabled then destroyed
         void OnDestroy()
         {
-            if (TotalGazeDuration > 0)
-            {
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
-            }
-
             if (CognitiveVR_Manager.IsQuitting) { return; }
             if (!Application.isPlaying) { return; }
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
