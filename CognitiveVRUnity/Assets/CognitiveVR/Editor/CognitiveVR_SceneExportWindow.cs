@@ -312,7 +312,9 @@ namespace CognitiveVR
 
         static void PostSceneUploadResponse(int responseCode, string error, string text)
         {
-            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode + " [ERROR] " + error + " [TEXT] " + text);
+            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode
+                + (!string.IsNullOrEmpty(error) ? " [ERROR] " + error : "")
+                + (!string.IsNullOrEmpty(text) ? " [TEXT] " + text : ""));
 
             if (responseCode != 200 && responseCode != 201)
             {
@@ -384,6 +386,7 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
             BakeNonstandardRenderers(null, temp, path);
             var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+            exporter.SetNonStandardOverrides(temp);
             Directory.CreateDirectory(path);
 
             EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
@@ -907,6 +910,7 @@ namespace CognitiveVR
                 try
                 {
                     var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
+                    exporter.SetNonStandardOverrides(temp);
                     exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
                 }
                 catch (Exception e)

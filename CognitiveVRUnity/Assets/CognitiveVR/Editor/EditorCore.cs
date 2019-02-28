@@ -714,7 +714,7 @@ public class EditorCore
         {
             RefreshSceneVersionComplete = null;
             //internal server error
-            Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
+            Util.logDebug("GetMediaSourcesResponse Error [CODE] " + responsecode);
             return;
         }
         //var settings = CognitiveVR_Preferences.FindCurrentScene();

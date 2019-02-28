@@ -28,7 +28,11 @@ namespace CognitiveVR
                 if (_hmd == null)
                 {
                     if (Camera.main == null)
-                        _hmd = Object.FindObjectOfType<Camera>().transform;
+                    {
+                        Camera c = Object.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
                     else
                         _hmd = Camera.main.transform;
                 }
@@ -105,13 +109,14 @@ namespace CognitiveVR
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
-            if (HMD == null) { return; }
-
             float[] pos = new float[3] { 0, 0, 0 };
 
-            pos[0] = HMD.position.x;
-            pos[1] = HMD.position.y;
-            pos[2] = HMD.position.z;
+            if (HMD != null)
+            {
+                pos[0] = HMD.position.x;
+                pos[1] = HMD.position.y;
+                pos[2] = HMD.position.z;
+            }
 
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)

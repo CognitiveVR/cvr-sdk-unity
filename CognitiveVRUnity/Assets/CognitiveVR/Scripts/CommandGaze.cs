@@ -89,8 +89,6 @@ public class CommandGaze : GazeBase {
 
         if (hitDistance > 0 && hitDistance < depthDistance)
         {
-            hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
             if (mediacomponent != null)
             {

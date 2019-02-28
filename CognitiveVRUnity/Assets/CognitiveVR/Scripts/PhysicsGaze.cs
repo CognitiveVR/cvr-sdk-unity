@@ -43,8 +43,6 @@ public class PhysicsGaze : GazeBase
         if (DynamicRaycast(ray.origin,ray.direction,CameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
             string ObjectId = hitDynamic.Id;
-            hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
             if (mediacomponent != null)
             {

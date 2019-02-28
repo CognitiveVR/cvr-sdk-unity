@@ -91,41 +91,20 @@ public class ControllerInputTracker : MonoBehaviour
 #if CVR_STEAMVR
 
     DynamicObject dynamic;
-
     SteamVR_Controller.Device ControllerDevice;
-    static SteamVR_ControllerManager controllerManager;
-    bool interactionSystemImplementation;
-    Valve.VR.InteractionSystem.Hand hand;
 
     void Init()
     {
         dynamic = GetComponent<DynamicObject>();
+        if (dynamic.IsRight)
+            isRight = true;
+        else
+            isRight = false;
         SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
         if (o != null)
         {
-            if (controllerManager == null)
-            {
-                controllerManager = FindObjectOfType<SteamVR_ControllerManager>();
-            }
-            if (controllerManager.left == gameObject)
-                isRight = false;
-            else
-                isRight = true;
-
             ControllerDevice = SteamVR_Controller.Input((int)o.index);
             StartCoroutine(UpdateTick());
-        }
-    }
-
-    public void OnHandInitialized()
-    {
-        Debug.Log("contrller tracker hand OnInitialized");
-
-        hand = GetComponent<Valve.VR.InteractionSystem.Hand>();
-        if (hand)
-        {
-            ControllerDevice = hand.controller;
-            interactionSystemImplementation = true;
         }
     }
 
@@ -141,10 +120,6 @@ public class ControllerInputTracker : MonoBehaviour
         if (ControllerDevice == null)
         {
             return;
-        }
-        if (interactionSystemImplementation)
-        {
-            isRight = hand.GuessCurrentHandType() == Valve.VR.InteractionSystem.Hand.HandType.Right;
         }
 
         //menu
@@ -250,11 +225,6 @@ public class ControllerInputTracker : MonoBehaviour
     public void RecordAnalogInputs()
     {
         if (ControllerDevice == null) { return; }
-
-        if (interactionSystemImplementation)
-        {
-            isRight = hand.GuessCurrentHandType() == Valve.VR.InteractionSystem.Hand.HandType.Right;
-        }
 
         var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
         var x = touchpadaxis.x;
