@@ -68,8 +68,12 @@ public class PhysicsGaze : GazeBase
 
             //hit world
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawLine(pos, pos + gazepoint, Color.red, CognitiveVR_Preferences.Instance.SnapshotInterval);
-        }
+            Debug.DrawLine(pos, gazepoint, Color.red, CognitiveVR_Preferences.Instance.SnapshotInterval);
+
+                Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
+                Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
+                Debug.DrawRay(gazepoint, Vector3.up, Color.green, 10);
+            }
         else //hit sky / farclip
         {
             Vector3 pos = CameraTransform.position;
