@@ -619,7 +619,7 @@ namespace CognitiveVR
 #else
             Core.UpdateSessionState("c3d.app.inEditor", false);
 #endif
-
+            Core.UpdateSessionState("c3d.version", Core.SDK_VERSION);
             //TODO support multiple hmds (tobii + pupil + vive)
             //addon sdks - tobii, ah, pupil
 

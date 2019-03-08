@@ -714,7 +714,7 @@ public class EditorCore
         {
             RefreshSceneVersionComplete = null;
             //internal server error
-            Util.logDebug("GetMediaSourcesResponse [ERROR] " + responsecode);
+            Util.logDebug("GetMediaSourcesResponse Error [CODE] " + responsecode);
             return;
         }
         //var settings = CognitiveVR_Preferences.FindCurrentScene();
@@ -1124,7 +1124,7 @@ public class EditorCore
 
     #region dynamic object thumbnails
     //returns unused layer int. returns -1 if no unused layer is found
-    static int FindUnusedLayer()
+    public static int FindUnusedLayer()
     {
         for (int i = 31; i > 0; i--)
         {
@@ -1150,6 +1150,24 @@ public class EditorCore
         SaveDynamicThumbnail(target, pos, rot);
     }
 
+    /// <summary>
+    /// recursively get child transforms, skipping nested dynamic objects
+    /// </summary>
+    /// <param name="transforms"></param>
+    /// <param name="current"></param>
+    public static void RecursivelyGetChildren(List<Transform> transforms, Transform current)
+    {
+        transforms.Add(current);
+        for (int i = 0; i < current.childCount; i++)
+        {
+            var dyn = current.GetChild(i).GetComponent<DynamicObject>();
+            if (!dyn)
+            {
+                RecursivelyGetChildren(transforms, current.GetChild(i));
+            }
+        }
+    }
+
     static void SaveDynamicThumbnail(GameObject target, Vector3 position, Quaternion rotation)
     {
         Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
@@ -1171,29 +1189,38 @@ public class EditorCore
         }
         var rt = new RenderTexture(512, 512, 16);
         renderCam.targetTexture = rt;
+        Texture2D tex = new Texture2D(rt.width, rt.height);
 
         //position camera
         go.transform.position = position;
         go.transform.rotation = rotation;
 
+        //do this recursively, skipping nested dynamic objects
+        List<Transform> relayeredTransforms = new List<Transform>();
+        RecursivelyGetChildren(relayeredTransforms, target.transform);
         //set dynamic gameobject layers
-        if (layer != -1)
+        try
         {
-            foreach (var v in target.GetComponentsInChildren<Transform>())
+            if (layer != -1)
             {
-                originallayers.Add(v.gameObject, v.gameObject.layer);
-                v.gameObject.layer = layer;
+                foreach (var v in relayeredTransforms)
+                {
+                    originallayers.Add(v.gameObject, v.gameObject.layer);
+                    v.gameObject.layer = layer;
+                }
             }
+
+            //render to texture
+            renderCam.Render();
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
         }
-
-        //render to texture
-        renderCam.Render();
-        Texture2D tex = new Texture2D(rt.width, rt.height);
-        RenderTexture.active = rt;
-        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-        tex.Apply();
-        RenderTexture.active = null;
-
+        catch(Exception e)
+        {
+            Debug.LogException(e);
+        }
         if (layer != -1)
         {
             //reset dynamic object layers
@@ -1216,20 +1243,16 @@ public class EditorCore
         //position at bounds center
 
         Bounds largestBounds = new Bounds();
-        float boundsMag = 0;
-        //TODO combine bounds of meshes
         //TODO canvas dynamic objects
         foreach (var renderer in target.GetComponentsInChildren<Renderer>())
         {
-            if (renderer.bounds.size.magnitude > boundsMag)
-            {
-                boundsMag = renderer.bounds.size.magnitude;
-                largestBounds = renderer.bounds;
-            }
+            largestBounds.Encapsulate(renderer.bounds);
         }
 
         if (largestBounds.size.magnitude <= 0)
         {
+            //might happen if exporting temporary canvas meshes
+            //(since they don't have a renderer and the temp mesh is destroyed before taking screenshot so it doesn't cause z-fighting)
             largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
         }
 

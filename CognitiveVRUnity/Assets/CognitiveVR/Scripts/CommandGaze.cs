@@ -76,32 +76,29 @@ public class CommandGaze : GazeBase {
         float hitDistance;
         DynamicObject hitDynamic;
         Vector3 hitWorld;
+        Vector3 hitLocal;
         Vector2 hitcoord;
         string ObjectId = "";
-        Vector3 LocalGaze = Vector3.zero;
         
-        if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitcoord)) //hit dynamic
+        if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
             ObjectId = hitDynamic.Id;
-            LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(hitWorld);
         }
 
         float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
 
         if (hitDistance > 0 && hitDistance < depthDistance)
         {
-            hitDynamic.OnGaze(CognitiveVR_Preferences.S_SnapshotInterval);
-
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
             if (mediacomponent != null)
             {
                 var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
                 var mediauvs = hitcoord;
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
             }
             else
             {
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, LocalGaze, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
             }
             Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
             return;

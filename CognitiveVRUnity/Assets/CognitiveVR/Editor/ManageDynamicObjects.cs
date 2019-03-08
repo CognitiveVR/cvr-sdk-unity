@@ -503,7 +503,7 @@ public class ManageDynamicObjects : EditorWindow
 
     static void PostManifestResponse(int responsecode, string error, string text)
     {
-        Util.logDebug("Manifest upload complete. response: " + text + " error: " + error);
+        Util.logDebug("Manifest upload complete. response: " + text + (!string.IsNullOrEmpty(error)? " error: " + error:""));
         if (PostManifestResponseAction != null)
         {
             PostManifestResponseAction.Invoke();

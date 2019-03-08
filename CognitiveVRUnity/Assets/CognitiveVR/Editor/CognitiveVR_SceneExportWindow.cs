@@ -312,7 +312,9 @@ namespace CognitiveVR
 
         static void PostSceneUploadResponse(int responseCode, string error, string text)
         {
-            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode + " [ERROR] " + error + " [TEXT] " + text);
+            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode
+                + (!string.IsNullOrEmpty(error) ? " [ERROR] " + error : "")
+                + (!string.IsNullOrEmpty(text) ? " [TEXT] " + text : ""));
 
             if (responseCode != 200 && responseCode != 201)
             {
@@ -384,6 +386,7 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
             BakeNonstandardRenderers(null, temp, path);
             var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+            exporter.SetNonStandardOverrides(temp);
             Directory.CreateDirectory(path);
 
             EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
@@ -732,9 +735,6 @@ namespace CognitiveVR
 
         public static Texture2D Snapshot(Transform target, int resolution = 128)
         {
-            //var sceneview = (SceneView)SceneView.sceneViews[0];
-            //target = Selection.activeTransform;
-
             GameObject cameraGo = new GameObject("Temp_Camera");
             Camera cam = cameraGo.AddComponent<Camera>();
 
@@ -770,25 +770,55 @@ namespace CognitiveVR
             //create render texture and assign to camera
             RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
             RenderTexture.active = rt;
-            //GL.Clear(true, true, Color.clear);
             cam.targetTexture = rt;
-            //GL.Clear(true, true, Color.clear);
 
+            Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, target);
 
-            //RenderTexture.active = rt;
+            //layer stuff
+            int layer = EditorCore.FindUnusedLayer();
+            if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); }
 
-            cam.Render();
-            //TODO write non-square textures, do full 0-1 uvs instead of saving blank space
+            if (layer != -1)
+            {
+                cam.cullingMask = 1 << layer;
+            }
 
+            try
+            {
+                if (layer != -1)
+                {
+                    foreach (var v in children)
+                    {
+                        originallayers.Add(v.gameObject, v.gameObject.layer);
+                        v.gameObject.layer = layer;
+                    }
+                }
 
+                //render to texture
+                cam.Render();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            if (layer != -1)
+            {
+                //reset dynamic object layers
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+            
             //write rendertexture to png
             Texture2D tex = new Texture2D(resolution, resolution);
             RenderTexture.active = rt;
 
             tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
             tex.Apply();
-
-            //GL.Clear(true, true, Color.clear);
+            
             RenderTexture.active = null;
 
             //delete stuff
@@ -901,8 +931,20 @@ namespace CognitiveVR
                 //string path2 = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
                 BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
 
-                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
-                exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
+                Vector3 startScale = dynamic.transform.localScale;
+                dynamic.transform.localScale = dynamic.transform.lossyScale;
+                try
+                {
+                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
+                    exporter.SetNonStandardOverrides(temp);
+                    exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+                dynamic.transform.localScale = startScale;
 
                 successfullyExportedCount++;
 

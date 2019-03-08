@@ -51,12 +51,23 @@ namespace CognitiveVR
         public float RotationThreshold = 0.1f;
         public Quaternion lastRotation;
 
+        //original scale, set on enable
+        //assuming that this is the scale used to export this mesh and that this should be divided by current scale to get 'relative scale from upload'
+        //THIS IS ONLY USED IN SDK TO DETERMINE IF SCALE CHANGED
+        private bool HasSetScale = false;
+        public Vector3 StartingScale { get; private set; }
+
+        public float ScaleThreshold = 0.1f;
+        Vector3 lastRelativeScale = Vector3.one;
+
         public bool UseCustomId = true;
         public string CustomId = "";
         public bool ReleaseIdOnDestroy = false; //only release the id for reuse if not tracking gaze
         public bool ReleaseIdOnDisable = false; //only release the id for reuse if not tracking gaze
 
-        public string GroupName;
+        public bool IsController = false;
+        public string ControllerType;
+        public bool IsRight = false;
 
         private DynamicObjectId viewerId;
         //used internally for scene explorer
@@ -100,44 +111,11 @@ namespace CognitiveVR
         bool wasBufferingVideo = false;
 
         public bool TrackGaze = true;
-        float TotalGazeDuration;
 
         public bool RequiresManualEnable = false;
 
-        //engagement name, engagement event. cleared when snapshots sent
-        List<EngagementEvent> DirtyEngagements = null;
-
-        //engagement name, engagement event
-        List<EngagementEvent> Engagements = null;
-
-        //each engagement event
-        public class EngagementEvent
-        {
-            //internal
-            public bool Active = true;
-
-            //written to snapshot
-            public string EngagementType;
-            public string Parent = "-1";
-            public float EngagementTime = 0;
-            public int EngagementNumber;
-            //public int EngagementCount = 1; count is figured out by list.count in engagementsDict
-
-            public EngagementEvent(EngagementEvent source)
-            {
-                EngagementType = source.EngagementType;
-                Parent = source.Parent;
-                EngagementTime = source.EngagementTime;
-                EngagementNumber = source.EngagementNumber;
-            }
-
-            public EngagementEvent(string name, string parent, int engagementNumber)
-            {
-                EngagementType = name;
-                Parent = parent;
-                EngagementNumber = engagementNumber;
-            }
-        }
+        //custom events with a uniqueid + dynamicid
+        Dictionary<string, CustomEvent> EngagementsDict;
 
         //static variables
         private static int uniqueIdOffset = 1000;
@@ -201,6 +179,11 @@ namespace CognitiveVR
             {
                 Util.logWarning("Dynamic Object destroyed");
                 return;
+            }
+            if (!HasSetScale)
+            {
+                HasSetScale = true;
+                StartingScale = _t.lossyScale;
             }
 
             if (!Application.isPlaying) { return; }
@@ -515,12 +498,6 @@ namespace CognitiveVR
             SendSavedSnapshots(manifestEntries, snapshots, trackingSettings, uniqueid, sessiontimestamp, sessionid);
         }
 
-        public void OnGaze(float time)
-        {
-            if (!TrackGaze) { return; }
-            TotalGazeDuration += time;
-        }
-
         /// <summary>
         /// send a snapshot of the position and rotation if the object has moved beyond its threshold
         /// </summary>
@@ -531,7 +508,7 @@ namespace CognitiveVR
 
             var pos = _t.position;
             var rot = _t.rotation;
-
+            var relativescale = new Vector3(_t.lossyScale.x / StartingScale.x, _t.lossyScale.y / StartingScale.y, _t.lossyScale.z / StartingScale.z);
 
             Vector3 heading;
             heading.x = pos.x - lastPosition.x;
@@ -541,6 +518,7 @@ namespace CognitiveVR
             var distanceSquared = heading.x * heading.x + heading.y * heading.y + heading.z * heading.z;
 
             bool doWrite = false;
+            bool writeScale = false;
             if (distanceSquared > PositionThreshold * PositionThreshold)
             {
                 doWrite = true;
@@ -553,9 +531,13 @@ namespace CognitiveVR
                     doWrite = true;
                 }
             }
+            if (Vector3.SqrMagnitude(relativescale - lastRelativeScale) > ScaleThreshold * ScaleThreshold)
+            {
+                writeScale = true;
+            }
 
             DynamicObjectSnapshot snapshot = null;
-            if (doWrite)
+            if (doWrite || writeScale)
             {
                 snapshot = NewSnapshot();
                 snapshot.Position[0] = pos.x;
@@ -568,34 +550,14 @@ namespace CognitiveVR
                 snapshot.Rotation[3] = rot.w;
                 lastPosition = pos;
                 lastRotation = rot;
-            }
-
-            if (DirtyEngagements != null)
-            {
-                if (DirtyEngagements.Count > 0)
+                if (writeScale)
                 {
-                    if (snapshot == null)
-                    {
-                        snapshot = NewSnapshot();
-                        snapshot.Position[0] = pos.x;
-                        snapshot.Position[1] = pos.y;
-                        snapshot.Position[2] = pos.z;
-
-                        snapshot.Rotation[0] = rot.x;
-                        snapshot.Rotation[1] = rot.y;
-                        snapshot.Rotation[2] = rot.z;
-                        snapshot.Rotation[3] = rot.w;
-                        lastPosition = pos;
-                        lastRotation = rot;
-                    }
-                    snapshot.Engagements = new List<EngagementEvent>(DirtyEngagements.Count);
-                    for (int i = 0; i < DirtyEngagements.Count; i++)
-                    {
-                        DirtyEngagements[i].EngagementTime += timeSinceLastCheck;
-                        snapshot.Engagements.Add(new EngagementEvent(DirtyEngagements[i]));
-                    }
+                    snapshot.DirtyScale = true;
+                    snapshot.Scale[0] = relativescale.x;
+                    snapshot.Scale[1] = relativescale.y;
+                    snapshot.Scale[2] = relativescale.z;
+                    lastRelativeScale = relativescale;
                 }
-                DirtyEngagements.RemoveAll(delegate (EngagementEvent obj) { return !obj.Active; });
             }
         }
 
@@ -645,23 +607,16 @@ namespace CognitiveVR
                 {
                     viewerId = GetUniqueID(MeshName, this);
                     var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
-                    if (!string.IsNullOrEmpty(GroupName))
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                    }
 
-                    if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                    if (IsController)
                     {
+                        manifestEntry.isController = true;
+                        manifestEntry.controllerType = ControllerType;
                         string controllerName = "left";
-                        if (_t == CognitiveVR_Manager.GetController(true))
-                        {
-                            controllerName = "right";
-                        }
-                        else if (_t == CognitiveVR_Manager.GetController(false))
-                        {
-                            controllerName = "left";
-                        }
 
+                        if (IsRight)
+                            controllerName = "right";
+                        
                         if (manifestEntry.Properties == null)
                         {
                             manifestEntry.Properties = new Dictionary<string, object>() { { "controller", controllerName } };
@@ -669,28 +624,6 @@ namespace CognitiveVR
                         else
                         {
                             manifestEntry.Properties.Add("controller", controllerName);
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "left");
-                        }
-                    }
-                    else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                    {
-                        if (manifestEntry.Properties == null)
-                        {
-                            manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                        }
-                        else
-                        {
-                            manifestEntry.Properties.Add("controller", "right");
                         }
                     }
 
@@ -723,17 +656,14 @@ namespace CognitiveVR
                 viewerId = new DynamicObjectId(CustomId, MeshName, this);
                 var manifestEntry = new DynamicObjectManifestEntry(viewerId.Id, gameObject.name, MeshName);
 
-                if (string.Compare(MeshName, "vivecontroller", true) == 0)
+                if (IsController)
                 {
+                    manifestEntry.isController = true;
+                    manifestEntry.controllerType = ControllerType;
                     string controllerName = "left";
-                    if (_t == CognitiveVR_Manager.GetController(true) || name.Contains("right"))
-                    {
+
+                    if (IsRight)
                         controllerName = "right";
-                    }
-                    else if (_t == CognitiveVR_Manager.GetController(false) || name.Contains("left"))
-                    {
-                        controllerName = "left";
-                    }
 
                     if (manifestEntry.Properties == null)
                     {
@@ -744,39 +674,14 @@ namespace CognitiveVR
                         manifestEntry.Properties.Add("controller", controllerName);
                     }
                 }
-                else if (string.Compare(MeshName, "oculustouchleft", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "left" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "left");
-                    }
-                }
-                else if (string.Compare(MeshName, "oculustouchright", true) == 0)
-                {
-                    if (manifestEntry.Properties == null)
-                    {
-                        manifestEntry.Properties = new Dictionary<string, object>() { { "controller", "right" } };
-                    }
-                    else
-                    {
-                        manifestEntry.Properties.Add("controller", "right");
-                    }
-                }
 
-                if (!string.IsNullOrEmpty(GroupName))
-                {
-                    manifestEntry.Properties = new Dictionary<string, object>() { { "groupname", GroupName } };
-                }
                 if (!string.IsNullOrEmpty(ExternalVideoSource))
                 {
                     manifestEntry.videoURL = ExternalVideoSource;
                     manifestEntry.videoFlipped = FlipVideo;
                     IsVideoPlayer = true;
                 }
+                
                 ObjectIds.Add(viewerId);
                 NewObjectManifestQueue.Enqueue(manifestEntry);
                 if ((NewObjectManifestQueue.Count + NewSnapshotQueue.Count) > CognitiveVR_Preferences.S_DynamicSnapshotCount)
@@ -1024,6 +929,12 @@ namespace CognitiveVR
                 JsonUtil.SetObject("flipVideo", entry.videoFlipped, builder);
             }
 
+            if (entry.isController)
+            {
+                builder.Append(",");
+                JsonUtil.SetString("controllerType", entry.controllerType, builder);
+            }
+
             if (entry.Properties != null && entry.Properties.Keys.Count > 0)
             {
                 builder.Append(",");
@@ -1062,6 +973,11 @@ namespace CognitiveVR
             JsonUtil.SetVector("p", snap.Position, builder);
             builder.Append(",");
             JsonUtil.SetQuat("r", snap.Rotation, builder);
+            if (snap.DirtyScale)
+            {
+                builder.Append(",");
+                JsonUtil.SetVector("s", snap.Scale, builder);
+            }
 
 
             if (snap.Properties != null && snap.Properties.Keys.Count > 0)
@@ -1112,37 +1028,6 @@ namespace CognitiveVR
                     builder.Append("}");
                 }
             }
-            if (snap.Engagements != null)
-            {
-                if (snap.Engagements.Count > 0)
-                {
-                    builder.Append(",");
-                    builder.Append("\"engagements\":[");
-
-                    for (int i = 0; i < snap.Engagements.Count; i++)
-                    {
-                        builder.Append("{\"engagementtype\":\"");
-                        builder.Append(snap.Engagements[i].EngagementType);
-                        builder.Append("\",");
-
-                        if (snap.Engagements[i].Parent != "-1")
-                        {
-                            builder.Append("\"engagementparent\":\"");
-                            builder.Append(snap.Engagements[i].Parent);
-                            builder.Append("\",");
-                        }
-                        builder.Append("\"engagement_time\":");
-                        builder.Append(snap.Engagements[i].EngagementTime);
-                        builder.Append(",");
-
-                        builder.Append("\"engagement_count\":");
-                        builder.Append(snap.Engagements[i].EngagementNumber);
-                        builder.Append("},");
-                    }
-                    builder.Remove(builder.Length - 1, 1); //remove last comma
-                    builder.Append("]");
-                }
-            }
 
             builder.Append("}"); //close object snapshot
 
@@ -1164,14 +1049,20 @@ namespace CognitiveVR
             }
             registeredToEvents = false;
             if (string.IsNullOrEmpty(Core.TrackingSceneId)) { return; }
+
+            if (EngagementsDict != null)
+            {
+                foreach (var engagement in EngagementsDict)
+                { engagement.Value.Send(transform.position); }
+                EngagementsDict = null;
+            }
+
             if (!ReleaseIdOnDisable)
             {
                 //don't release id to be used again. makes sure tracked gaze on this will be unique
                 NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(false);
                 lastPosition = transform.position;
                 lastRotation = transform.rotation;
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
                 ViewerId = null;
                 return;
             }
@@ -1193,18 +1084,20 @@ namespace CognitiveVR
         //destroyed, scene unloaded or quit. also called when disabled then destroyed
         void OnDestroy()
         {
-            if (TotalGazeDuration > 0)
-            {
-                new CustomEvent("cvr.objectgaze").SetProperty("object name", gameObject.name).SetProperty("duration", TotalGazeDuration).Send();
-                TotalGazeDuration = 0; //reset to not send OnDestroy event
-            }
-
             if (CognitiveVR_Manager.IsQuitting) { return; }
             if (!Application.isPlaying) { return; }
             CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
             CognitiveVR_Manager.LevelLoadedEvent -= CognitiveVR_Manager_LevelLoadedEvent;
             if (string.IsNullOrEmpty(Core.TrackingSceneId)) { return; }
+
+            if (EngagementsDict != null)
+            {
+                foreach (var engagement in EngagementsDict)
+                { engagement.Value.Send(transform.position); }
+                EngagementsDict = null;
+            }
+
             if (IsVideoPlayer)
             {
                 VideoPlayer.prepareCompleted -= VideoPlayer_prepareCompleted;
@@ -1271,68 +1164,83 @@ namespace CognitiveVR
             Gizmos.DrawRay(transform.position, transform.forward);
         }
 
-        /// <summary>
-        /// parentDynamicObjectId is optional but recommended. it will use a dynamic object id to identify what is engaging with this object - likely a controller
-        /// </summary>
-        /// <param name="engagementName"></param>
-        /// <param name="parentDynamicObjectId"></param>
-        public void BeginEngagement(string engagementName = "default", string parentDynamicObjectId = "-1")
-        {
-            if (DirtyEngagements == null)
-            {
-                DirtyEngagements = new List<EngagementEvent>();
-            }
-            if (Engagements == null)
-            {
-                Engagements = new List<EngagementEvent>();
-            }
 
-            var previousEngagementsOfType = Engagements.FindAll(delegate (EngagementEvent obj)
-            {
-                return obj.EngagementType == engagementName;
-            });
-
-            EngagementEvent newEngagement = new EngagementEvent(engagementName, parentDynamicObjectId, previousEngagementsOfType.Count + 1);
-
-            DirtyEngagements.Add(newEngagement);
-            Engagements.Add(newEngagement);
-        }
 
         /// <summary>
-        /// parentDynamicObjectId is optional. it is used to identify an engagement if there are multiple engagements with the same type occuring
+        /// begin an engagement on this dynamic object with a name 'engagementName'. if multiple engagements with the same name may be active at once on this dynamic, uniqueEngagementId should be set
         /// </summary>
         /// <param name="engagementName"></param>
-        /// <param name="parentDynamicObjectId"></param>
-        public void EndEngagement(string engagementName = "default", string parentDynamicObjectId = "-1")
+        /// <param name="uniqueEngagementId"></param>
+        public void BeginEngagement(string engagementName = "default", string uniqueEngagementId = null, Dictionary<string,object> properties = null)
         {
-            if (DirtyEngagements == null)
-            {
-                DirtyEngagements = new List<EngagementEvent>();
-            }
-            if (Engagements == null)
-            {
-                Engagements = new List<EngagementEvent>();
-            }
+            if (EngagementsDict == null) EngagementsDict = new Dictionary<string, CustomEvent>();
 
-            var type = DirtyEngagements.Find(delegate (EngagementEvent obj)
+            if (uniqueEngagementId == null)
             {
-                return obj.EngagementType == engagementName && obj.Active && (obj.Parent == parentDynamicObjectId || parentDynamicObjectId == "-1");
-            });
-
-            if (type != null)
-            {
-                type.Active = false;
+                CustomEvent ce = new CustomEvent(engagementName).SetProperties(properties).SetDynamicObject(Id);
+                if (!EngagementsDict.ContainsKey(engagementName))
+                {
+                    EngagementsDict.Add(engagementName, ce);
+                }
+                else
+                {
+                    //send old engagement, record this new one
+                    EngagementsDict[engagementName].Send(transform.position);
+                    EngagementsDict[engagementName] = ce;
+                }
             }
             else
             {
-                var previousEngagementsOfType = Engagements.FindAll(delegate (EngagementEvent obj)
+                CustomEvent ce = new CustomEvent(engagementName).SetProperties(properties).SetDynamicObject(Id);
+                string key = uniqueEngagementId + Id;
+                if (!EngagementsDict.ContainsKey(key))
+                    EngagementsDict.Add(key,ce);
+                else
                 {
-                    return obj.EngagementType == engagementName;
-                });
-                EngagementEvent newEngagement = new EngagementEvent(engagementName, parentDynamicObjectId, previousEngagementsOfType.Count + 1);
-                newEngagement.Active = false;
-                DirtyEngagements.Add(newEngagement);
-                Engagements.Add(newEngagement);
+                    //send existing engagement and start a new one. this uniqueEngagementId isn't very unique
+                    EngagementsDict[key].Send(transform.position);
+                    EngagementsDict[key] = ce;
+                }
+            }
+        }
+
+        /// <summary>
+        /// ends an engagement on this dynamic object with the matchign uniqueEngagementId. if this is not set, ends an engagement with a name 'engagementName'
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public void EndEngagement(string engagementName = "default", string uniqueEngagementId = null, Dictionary<string, object> properties = null)
+        {
+            if (EngagementsDict == null) EngagementsDict = new Dictionary<string, CustomEvent>();
+
+            if (uniqueEngagementId == null)
+            {
+                CustomEvent ce = null;
+                if (EngagementsDict.TryGetValue(engagementName, out ce))
+                {
+                    ce.SetProperties(properties).Send(transform.position);
+                    EngagementsDict.Remove(engagementName);
+                }
+                else
+                {
+                    //create and send immediately
+                    new CustomEvent(engagementName).SetProperties(properties).SetDynamicObject(Id).Send(transform.position);
+                }
+            }
+            else
+            {
+                CustomEvent ce = null;
+                string key = uniqueEngagementId + Id;
+                if (EngagementsDict.TryGetValue(key, out ce))
+                {
+                    ce.SetProperties(properties).Send(transform.position);
+                    EngagementsDict.Remove(key);
+                }
+                else
+                {
+                    //create and send immediately
+                    new CustomEvent(engagementName).SetProperties(properties).SetDynamicObject(Id).Send(transform.position);
+                }
             }
         }
     }
@@ -1348,6 +1256,8 @@ namespace CognitiveVR
             dyn.Id = Id;
             dyn.Position = Position;
             dyn.Rotation = Rotation;
+            dyn.DirtyScale = DirtyScale;
+            dyn.Scale = Scale;
 
             if (Buttons != null)
             {
@@ -1355,14 +1265,6 @@ namespace CognitiveVR
                 foreach(var v in Buttons)
                 {
                     dyn.Buttons.Add(v.Key, new ButtonState(v.Value));
-                }
-            }
-            if (Engagements != null)
-            {
-                dyn.Engagements = new List<DynamicObject.EngagementEvent>(Engagements.Count);
-                foreach (var v in Engagements)
-                {
-                    dyn.Engagements.Add(new DynamicObject.EngagementEvent(v));
                 }
             }
             if (Properties != null)
@@ -1380,8 +1282,9 @@ namespace CognitiveVR
         {
             Properties = null;
             Buttons = null;
-            Engagements = null;
             Position = new float[3] { 0, 0, 0 };
+            Scale = new float[3] { 0, 0, 0 };
+            DirtyScale = false;
             Rotation = new float[4] { 0, 0, 0, 1 };
             SnapshotPool.Enqueue(this);
         }
@@ -1411,9 +1314,10 @@ namespace CognitiveVR
         public string Id;
         public Dictionary<string, object> Properties;
         public Dictionary<string, ButtonState> Buttons;
-        public List<DynamicObject.EngagementEvent> Engagements;
         public float[] Position = new float[3] { 0, 0, 0 };
         public float[] Rotation = new float[4] { 0, 0, 0, 1 };
+        public bool DirtyScale = false;
+        public float[] Scale = new float[3] { 1, 1, 1 };
         public double Timestamp;
 
         public DynamicObjectSnapshot(DynamicObject dynamic)
@@ -1560,6 +1464,8 @@ namespace CognitiveVR
         public Dictionary<string, object> Properties;
         public string videoURL;
         public bool videoFlipped;
+        public bool isController;
+        public string controllerType;
 
         public DynamicObjectManifestEntry(string id, string name, string meshName)
         {

@@ -122,7 +122,9 @@ public class EditorNetwork
             try
             {
                     int responseCode = (int)EditorWebRequests[i].Request.responseCode;// CognitiveVR.Util.GetResponseCode();
-                Util.logDebug("Got Response from " + EditorWebRequests[i].Request.url + ": [CODE] " + responseCode + " [TEXT] " + EditorWebRequests[i].Request.downloadHandler.text + " [ERROR] " + EditorWebRequests[i].Request.error);
+                Util.logDebug("Got Response from " + EditorWebRequests[i].Request.url + ": [CODE] " + responseCode
+                    + (!string.IsNullOrEmpty(EditorWebRequests[i].Request.downloadHandler.text) ? " [TEXT] " + EditorWebRequests[i].Request.downloadHandler.text:"")
+                    + (!string.IsNullOrEmpty(EditorWebRequests[i].Request.error) ? " [ERROR] " + EditorWebRequests[i].Request.error:""));
                 if (EditorWebRequests[i].Response != null)
                 {
                     EditorWebRequests[i].Response.Invoke(responseCode, EditorWebRequests[i].Request.error, EditorWebRequests[i].Request.downloadHandler.text);

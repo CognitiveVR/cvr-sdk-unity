@@ -41,11 +41,11 @@ namespace CognitiveVR
             serializedObject.Update();
 
             var script = serializedObject.FindProperty("m_Script");
-            var groupName = serializedObject.FindProperty("GroupName");
             var syncWithPlayerUpdate = serializedObject.FindProperty("SyncWithPlayerUpdate");
             var updateRate = serializedObject.FindProperty("UpdateRate");
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
+            var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
             //var snapshotOnEnable = serializedObject.FindProperty("SnapshotOnEnable");
             var continuallyUpdateTransform = serializedObject.FindProperty("ContinuallyUpdateTransform");
             var releaseOnDisable = serializedObject.FindProperty("ReleaseIdOnDisable");
@@ -57,8 +57,10 @@ namespace CognitiveVR
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
+            var isController = serializedObject.FindProperty("IsController");
+            var controllerType = serializedObject.FindProperty("ControllerType");
 
-            foreach(var t in serializedObject.targetObjects)
+            foreach (var t in serializedObject.targetObjects)
             {
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
@@ -211,7 +213,43 @@ namespace CognitiveVR
 
                 GUILayout.EndHorizontal();
 
-                EditorGUILayout.PropertyField(groupName, new GUIContent("Group Name", "This is used to identify types of objects and combine aggregated data"));
+
+
+                //controller stuff
+                GUILayout.BeginHorizontal();
+
+                UnityEditor.EditorGUILayout.PropertyField(isController, new GUIContent("Is Controller", "If true, this will record user's inputs and display the inputs in a popup on SceneExplorer"));
+
+                if (targets.Length == 1)
+                {
+                    
+                    var dyn = targets[0] as DynamicObject;
+
+                    if (dyn.IsController)
+                    {
+                        string[] controllernames = new string[3] { "vivecontroller", "oculustouchleft", "oculustouchright" };
+                        int selected = 0;
+                        if (dyn.ControllerType == "vivecontroller") selected = 0;
+                        if (dyn.ControllerType == "oculustouchleft") selected = 1;
+                        if (dyn.ControllerType == "oculustouchright") selected = 2;
+
+                        selected = EditorGUILayout.Popup(selected, controllernames);
+                        dyn.ControllerType = controllernames[selected];
+                    }
+                    
+                    if (dyn.IsController)
+                    {
+                        EditorGUILayout.LabelField("Is Right",GUILayout.Width(60));
+                        dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight,GUILayout.Width(20));
+                    }
+                }
+
+                GUILayout.EndHorizontal();
+
+
+
+
+
 
                 EditorGUILayout.PropertyField(releaseOnDisable, new GUIContent("Release Id OnDisable", "Allow other objects to use this Id when this object is no longer active"));
                 EditorGUILayout.PropertyField(releaseOnDestroy, new GUIContent("Release Id OnDestroy", "Allow other objects to use this Id when this object no longer exists"));
@@ -261,6 +299,9 @@ namespace CognitiveVR
 
                 EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
                 rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
+
+                EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot. Checked each 'Tick'"));
+                scaleThreshold.floatValue = Mathf.Max(0, scaleThreshold.floatValue);
 
                 EditorGUI.EndDisabledGroup();
 

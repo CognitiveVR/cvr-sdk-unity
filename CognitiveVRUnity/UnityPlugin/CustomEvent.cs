@@ -8,14 +8,17 @@ namespace CognitiveVR
     /// </summary>
     public class CustomEvent
     {
-        private string _category;
-        private string _dynamicObjectId;
-        private Dictionary<string, object> _properties = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
+        public string category { get; private set; }
+        public string dynamicObjectId { get; private set; }
+        private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
 
         public CustomEvent(string category)
         {
-            _category = category;
+            this.category = category;
+            startTime = Time.realtimeSinceStartup;
         }
+
+        private float startTime;
 
         private static Transform _hmd;
         private static Transform HMD
@@ -25,7 +28,11 @@ namespace CognitiveVR
                 if (_hmd == null)
                 {
                     if (Camera.main == null)
-                        _hmd = Object.FindObjectOfType<Camera>().transform;
+                    {
+                        Camera c = Object.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
                     else
                         _hmd = Camera.main.transform;
                 }
@@ -40,9 +47,13 @@ namespace CognitiveVR
         /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
         public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
-            if (null != properties)
+            if (properties == null) { return this; }
+            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            foreach (KeyValuePair<string, object> kvp in properties)
             {
-                foreach (KeyValuePair<string, object> kvp in properties)
+                if (_properties.ContainsKey(kvp.Key))
+                    _properties[kvp.Key] = kvp.Value;
+                else
                     _properties.Add(kvp.Key, kvp.Value);
             }
             return this;
@@ -56,7 +67,11 @@ namespace CognitiveVR
         /// <param name="value">Value for transaction state property</param>
         public CustomEvent SetProperty(string key, object value)
         {
-            _properties.Add(key, value);
+            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            if (_properties.ContainsKey(key))
+                _properties[key] = value;
+            else
+                _properties.Add(key, value);
             return this;
         }
 
@@ -66,7 +81,7 @@ namespace CognitiveVR
         /// <param name="sourceObjectId">The dynamic object that 'caused' this event</param>
         public CustomEvent SetDynamicObject(string sourceObjectId)
         {
-            _dynamicObjectId = sourceObjectId;
+            dynamicObjectId = sourceObjectId;
             return this;
         }
 
@@ -83,7 +98,17 @@ namespace CognitiveVR
             pos[1] = position.y;
             pos[2] = position.z;
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties == null) { _properties = new Dictionary<string, object>(); }
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
+
+            Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
         }
 
         /// <summary>
@@ -93,15 +118,26 @@ namespace CognitiveVR
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
-            if (HMD == null) { return; }
-
             float[] pos = new float[3] { 0, 0, 0 };
 
-            pos[0] = HMD.position.x;
-            pos[1] = HMD.position.y;
-            pos[2] = HMD.position.z;
+            if (HMD != null)
+            {
+                pos[0] = HMD.position.x;
+                pos[1] = HMD.position.y;
+                pos[2] = HMD.position.z;
+            }
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
+            float duration = Time.realtimeSinceStartup - startTime;
+            if (duration > 0.011f)
+            {
+                if (_properties == null) { _properties = new Dictionary<string, object>(); }
+                if (_properties.ContainsKey("duration"))
+                    _properties["duration"] = duration;
+                else
+                    _properties.Add("duration", duration);
+            }
+
+            Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
         }
     }
 }
