@@ -89,7 +89,7 @@ namespace CognitiveVR
 
             float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
 
-            Debug.DrawRay(CameraTransform.position, transform.forward * 100, Color.white);
+            //Debug.DrawRay(CameraTransform.position, transform.forward * 100, Color.white);
             //Debug.Log(Vector3.Distance(CameraTransform.position, gazepoint));
 
 
@@ -127,7 +127,7 @@ namespace CognitiveVR
                 //Debug.DrawLine(pos, pos + gazepoint, Color.red, 1);
 
 
-                //Debug.DrawLine(ray.origin, worldpos, Color.red, 1);
+                Debug.DrawLine(ray.origin, worldpos, Color.yellow, 1);
                 Debug.DrawRay(worldpos, Vector3.right, Color.red, 10);
                 Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 10);
                 Debug.DrawRay(worldpos, Vector3.up, Color.green, 10);
