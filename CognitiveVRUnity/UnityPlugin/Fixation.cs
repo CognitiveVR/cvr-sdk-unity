@@ -16,8 +16,7 @@ namespace CognitiveVR
 
             IsLocal = src.IsLocal;
             DynamicObjectId = src.DynamicObjectId;
-            MinRadius = src.MinRadius;
-            StartDistance = src.StartDistance;
+            MaxRadius = src.MaxRadius;
         }
 
         //used for all eye tracking
@@ -39,7 +38,7 @@ namespace CognitiveVR
 
         public float StartDistance;
         //radius in meters that this fixation covers
-        public float MinRadius;
+        public float MaxRadius;
         public bool IsLocal;
         public string DynamicObjectId;
 

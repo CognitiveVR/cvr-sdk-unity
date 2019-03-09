@@ -92,9 +92,7 @@ namespace CognitiveVR
                 sb.Append(",");
                 JsonUtil.SetDouble("duration", Fixations[i].DurationMs * 1000, sb);
                 sb.Append(",");
-                JsonUtil.SetFloat("minradius", Fixations[i].MinRadius, sb);
-                sb.Append(",");
-                JsonUtil.SetDouble("startdistance", Fixations[i].StartDistance, sb);
+                JsonUtil.SetFloat("maxradius", Fixations[i].MaxRadius, sb);
                 sb.Append(",");
                 JsonUtil.SetVector("p", Fixations[i].WorldPosition, sb);
                 sb.Append(",");
