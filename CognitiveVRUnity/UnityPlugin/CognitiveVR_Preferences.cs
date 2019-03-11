@@ -81,8 +81,19 @@ namespace CognitiveVR
 
         [Header("Player Tracking")]
         //player tracking
-        
-        public float SnapshotInterval = 0.1f;
+
+        float snapshotInterval = 0.1f;
+        public float SnapshotInterval
+        {
+            get
+            {
+                return snapshotInterval;
+            }
+            set
+            {
+                snapshotInterval = Mathf.Max(0.1f, value);
+            }
+        }
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
         public float GPSInterval = 1;

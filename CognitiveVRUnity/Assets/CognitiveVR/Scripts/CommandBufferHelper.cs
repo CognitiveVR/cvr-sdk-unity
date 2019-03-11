@@ -15,6 +15,9 @@ namespace CognitiveVR
 
         CommandGaze gaze;
 
+        bool supportsAsyncGPUReadback = false;
+        bool singlePass = false;
+
         public delegate void PostRenderCommandCallback(Ray ray, Vector3 viewportVector, Vector3 worldHitPoint);
         PostRenderCommandCallback onPostRenderCommand;
         public void Initialize(RenderTexture src_rt, Camera src_cam, PostRenderCommandCallback postcallback, CommandGaze gaze)
@@ -54,7 +57,14 @@ namespace CognitiveVR
                 rect = new Rect(0, 0, rt.width, rt.height);
             }
 #endif
-            }
+
+#if UNITY_2018_2_OR_NEWER
+            if (SystemInfo.supportsAsyncGPUReadback)
+                supportsAsyncGPUReadback = true;
+#endif
+
+
+        }
 
         float depthR;
         Rect rect;
@@ -76,43 +86,32 @@ namespace CognitiveVR
 
             //save camera projection
             var savedProjection = cam.projectionMatrix;
-            //set to openvr projection
-            //cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
+            //set to eye projection
 
             cam.projectionMatrix = matrix;
 
-            //project viewport into world
+            //project from eye viewport into world
             viewportray = cam.ViewportPointToRay(ViewportGazePoint);
 
             //reset camera projection
             cam.projectionMatrix = savedProjection;
-            //Debug.DrawRay(viewportray.origin, viewportray.direction * 100, Color.magenta,100);
-
-            //world to viewport
-            //var direction = cam.WorldToViewportPoint(adjustedRay.GetPoint(100));
-            //viewportray = new Ray(viewportray.origin, adjustedRay.direction);
 
             ViewportRay = viewportray;
         }
 
-        /*private void OnDrawGizmos()
-        {
-            UnityEditor.Handles.BeginGUI();
-            GUI.Label(new Rect(0, 0, 128, 128), rt);
-            UnityEditor.Handles.EndGUI();
-        }*/
 #if SRP_LW3_0_0
-    private void RenderPipeline_beginCameraRendering(Camera obj)
-    {
+        private void RenderPipeline_beginCameraRendering(Camera obj)
+        {
             if (obj.name != "Main Camera") { return; }
 
+            //basic implementation without using async read requests
             RenderTexture.active = rt;
             readTexture.ReadPixels(rect, 0, 0);
             depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
             depthR *= cam.farClipPlane;
             enabled = false;
 
-            onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR);
+            onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR, ViewportRay.origin + ViewportRay.direction * depthR);
         }
 
         private void OnDestroy()
@@ -123,46 +122,35 @@ namespace CognitiveVR
         public Texture2D debugtex;
         private void OnPreRender()
         {
-            //need this blit to temp. setting rt as RenderTexture.active crashes Unity with access violation
-
-
 #if UNITY_2018_2_OR_NEWER
-            //will use async read request
-            //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, callback: AsyncDone);
-            enabled = false;
-            var x = (int)((ViewportGazePoint.x + offsetx) * rect.width);
-            var y = (int)((ViewportGazePoint.y + offsety) * rect.height);
-
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1) //singlepass??
+            if (supportsAsyncGPUReadback)
             {
-                //x = (int)((ViewportGazePoint.x + offsetx*-1) * rect.width);
-            }
+                //will use async read request
+                //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, callback: AsyncDone);
+                enabled = false;
+                var x = (int)((ViewportGazePoint.x + offsetx) * rect.width);
+                var y = (int)((ViewportGazePoint.y + offsety) * rect.height);
 
-
-            //Vector4 center = new Vector4(0, 0, -cam.nearClipPlane, 1);
-            //var proj = cam.projectionMatrix * center;
-            //Debug.Log("proj " + proj);
-
-            //Debug.DrawRay(transform.position, transform.forward * 10, Color.magenta, 0.1f);
-
-            //cam.projectionMatrix = proj;
-
-
-            //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBAFloat, AsyncDone); //TEXTURE
-            if (x < 0 || y < 0 || x > rect.width || y > rect.height)
-            {
-                Debug.LogError(x + " " + y + " out of bounds!");
+                //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBAFloat, AsyncDone); //TEXTURE
+                if (x < 0 || y < 0 || x > rect.width || y > rect.height)
+                {
+                    Debug.LogError(x + " " + y + " out of bounds!");
+                }
+                else
+                    UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, x, 1, y, 1, 0, 1, TextureFormat.RGBAFloat, AsyncDone); //PIXEL
             }
             else
-                UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, x, 1, y, 1, 0, 1, TextureFormat.RGBAFloat, AsyncDone); //PIXEL
 #else
-            Graphics.Blit(rt, temp);
-            RenderTexture.active = temp;
-            readTexture.ReadPixels(rect, 0, 0);
-            depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
-            depthR *= cam.farClipPlane;
-            enabled = false;
-            onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR, ViewportRay.origin + ViewportRay.direction * depthR);
+            {
+                //need this blit to temp. setting rt as RenderTexture.active crashes Unity with access violation
+                Graphics.Blit(rt, temp);
+                RenderTexture.active = temp;
+                readTexture.ReadPixels(rect, 0, 0);
+                depthR = readTexture.GetPixel((int)(ViewportGazePoint.x * rect.width), (int)(ViewportGazePoint.y * rect.height)).r;
+                depthR *= cam.farClipPlane;
+                enabled = false;
+                onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR, ViewportRay.origin + ViewportRay.direction * depthR);
+            }
 #endif
         }
 
@@ -177,11 +165,10 @@ namespace CognitiveVR
                 //when fwdAmount == far, Acos returns NaN for some reason
                 gazeRads = 0;
             }
-
-
-
+            
             float dist = farclipplane * Mathf.Tan(gazeRads);
-            float hypotenuseDist = Mathf.Sqrt(Mathf.Pow(dist, 2) + Mathf.Pow(farclipplane, 2));
+            //float hypotenuseDist = Mathf.Sqrt(Mathf.Pow(dist, 2) + Mathf.Pow(farclipplane, 2));
+            float hypotenuseDist = Mathf.Sqrt(dist* dist + farclipplane * farclipplane);
             return hypotenuseDist;
         }
 
