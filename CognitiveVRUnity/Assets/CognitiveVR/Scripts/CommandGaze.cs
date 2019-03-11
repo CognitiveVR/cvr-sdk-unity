@@ -20,6 +20,9 @@ namespace CognitiveVR
         {
             base.Initialize();
             CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
+#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH
+            Debug.LogError("Cognitive3D does not support eye tracking using Command Gaze. From 'Advanced Options' in the cognitive3D menu, please change 'Gaze Type' to 'Physics'");
+#endif
         }
 
         private void CognitiveVR_Manager_InitEvent(Error initError)

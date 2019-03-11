@@ -39,18 +39,22 @@ namespace CognitiveVR
 #else
             if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
             {
-                //steam renders this side by side with mask
-                //oculus renders side by side full size
+#if CVR_OCULUS
+                //oculus renders side by side without a mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
-                //rect = new Rect(0, 0, 1134, 1200);
-                //assuming 1512 x 1680
+#elif CVR_DEFAULT || CVR_STEAMVR || CVR_STEAMVR2 //eye tracking should use physics gaze!
+                //steam renders this side by side with mask
+                rect = new Rect(0, 0, rt.width / 2, rt.height);
+#else //adhawk, tobii, fove, pupil, neurable
+                rect = new Rect(0, 0, rt.width / 2, rt.height);
+#endif
             }
             else
             {
                 rect = new Rect(0, 0, rt.width, rt.height);
             }
 #endif
-        }
+            }
 
         float depthR;
         Rect rect;
@@ -64,78 +68,29 @@ namespace CognitiveVR
 
             //this viewport gaze point needs to be projected into openvr's camera projection matrix
 
-#if CVR_OCULUS //the plugin, not the builtin package. ARGH UNITY WHY ARE YOU MAKING THIS SO HARD
-#endif
-
-            bool bOculus = true;
-            Matrix4x4 matrix;
+            Matrix4x4 matrix = Matrix4x4.identity;
+            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
+                matrix = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+            else //multipass
+                matrix = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
 
             //save camera projection
             var savedProjection = cam.projectionMatrix;
+            //set to openvr projection
+            //cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
 
-            if (bOculus)
-            {
-                //var pm = Valve.VR.OpenVR.System.GetProjectionMatrix(Valve.VR.EVREye.Eye_Right, cam.nearClipPlane, cam.farClipPlane);
-                var pm = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
+            cam.projectionMatrix = matrix;
 
-                matrix.m00 = pm.m00;
-                matrix.m01 = pm.m01;
-                matrix.m02 = pm.m02;
-                matrix.m03 = pm.m03;
-                matrix.m10 = pm.m10;
-                matrix.m11 = pm.m11;
-                matrix.m12 = pm.m12;
-                matrix.m13 = pm.m13;
-                matrix.m20 = pm.m20 / 2f;
-                matrix.m21 = (pm.m21 / 2f) * -1f;
-                matrix.m22 = pm.m22;
-                matrix.m23 = pm.m23;
-                matrix.m30 = pm.m30;
-                matrix.m31 = pm.m31;
-                matrix.m32 = pm.m32;
-                matrix.m33 = pm.m33;
-            }
-            else //OpenVR
-            {
-                //var pm1 = Valve.VR.OpenVR.System.GetProjectionMatrix(Valve.VR.EVREye.Eye_Right, cam.nearClipPlane, cam.farClipPlane);
-                var pm = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+            //project viewport into world
+            viewportray = cam.ViewportPointToRay(ViewportGazePoint);
 
-                matrix.m00 = pm.m00;
-                matrix.m01 = pm.m01;
-                matrix.m02 = pm.m02;
-                matrix.m03 = pm.m03;
-                matrix.m10 = pm.m10;
-                matrix.m11 = pm.m11;
-                matrix.m12 = pm.m12;
-                matrix.m13 = pm.m13;
-                matrix.m20 = pm.m20;
-                matrix.m21 = pm.m21;
-                matrix.m22 = pm.m22 / 2f;
-                matrix.m23 = pm.m23;
-                matrix.m30 = pm.m30;
-                matrix.m31 = pm.m31;
-                matrix.m32 = pm.m32 / 2f;
-                matrix.m33 = pm.m33;
-            }
+            //reset camera projection
+            cam.projectionMatrix = savedProjection;
+            //Debug.DrawRay(viewportray.origin, viewportray.direction * 100, Color.magenta,100);
 
-            if (true)
-            {
-                //set to openvr projection
-                //cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
-
-                cam.projectionMatrix = matrix;
-
-                //project viewport into world
-                viewportray = cam.ViewportPointToRay(ViewportGazePoint);
-
-                //reset camera projection
-                cam.projectionMatrix = savedProjection;
-                //Debug.DrawRay(viewportray.origin, viewportray.direction * 100, Color.magenta,100);
-
-                //world to viewport
-                //var direction = cam.WorldToViewportPoint(adjustedRay.GetPoint(100));
-                //viewportray = new Ray(viewportray.origin, adjustedRay.direction);
-            }
+            //world to viewport
+            //var direction = cam.WorldToViewportPoint(adjustedRay.GetPoint(100));
+            //viewportray = new Ray(viewportray.origin, adjustedRay.direction);
 
             ViewportRay = viewportray;
         }
@@ -211,15 +166,6 @@ namespace CognitiveVR
 #endif
         }
 
-        //PREFER NOT TO HARD CODE MAGIC PROJECTION NUMBERS
-        //oculus rift
-        //public float offsetx = -0.075f;
-        //public float offsety = 0.054f;
-
-        //vive projection
-        public float offsetx = 0;//-0.03f;
-        public float offsety = 0;//0.0f;
-
         //returns the depth adjusted by near/farplanes. without this, gaze distance doesn't scale correctly when looking off center
         private float GetAdjustedDistance(float farclipplane, Vector3 gazeDir, Vector3 camForward)
         {
@@ -247,26 +193,15 @@ namespace CognitiveVR
 
             if (false) //TEXTURE
             {
-                var x = (int)((ViewportGazePoint.x + offsetx) * rect.width);
-                var y = (int)((ViewportGazePoint.y + offsety) * rect.height);
-
-
-                //var viewport = cam.WorldToViewportPoint(cam.transform.position + cam.transform.forward);
-                //Debug.Log(viewport);
+                var x = (int)((ViewportGazePoint.x) * rect.width);
+                var y = (int)((ViewportGazePoint.y) * rect.height);
 
                 //Debug.Log(x + " " + y);
-                //depthR = pixels[y * rt.width + x].r;
-                //depthR = pixels[16384];
-
-                //Color[] colors = new Color[rt.width * rt.height];
 
                 debugtex.SetPixels(pixels.ToArray());
-                //debugtex.Apply(); //EXPENSIVE BUT OK FOR DEBBUGING.
-                //don't need to call Apply() to read pixels from this texture! awesome!
+                //debugtex.Apply(); //EXPENSIVE BUT OK FOR DEBBUGING
 
                 depthR = debugtex.GetPixel(x, y).r;
-                //Debug.Log(depthR - depthR2 + " depth sample error");
-                //depthR = depthR2;
             }
             else //PIXEL
             {
@@ -274,24 +209,10 @@ namespace CognitiveVR
                 c = pixels[0];
             }
 
-            //c.a = 1;
-            //c.r = depthR;
-            //c.g = depthR;
-            //c.b = depthR;
-            //
-            //Debug.DrawRay(ViewportRay.origin, Vector3.up,c,1f);            
-
             var wg = gaze.GetWorldGazeDirection();
             float actualDepth = GetAdjustedDistance(cam.farClipPlane, wg, cam.transform.forward);
 
-            //depthR = Mathf.LinearToGammaSpace(depthR);
-
-            //depthR = Mathf.Log(depthR, 10);
-            //depthR = Mathf.Pow(depthR, 10);
-            //linear to gamma color
-            //gamma to linear color
-
-            float actualDistance = Mathf.Lerp(cam.nearClipPlane, actualDepth, depthR - Mathf.Pow(depthR,10)); //AAAAA LERP IS DEFINITELY NOT RIGHT
+            float actualDistance = Mathf.Lerp(cam.nearClipPlane, actualDepth, depthR);
 
             if (actualDistance > cam.farClipPlane * 2)
             {
@@ -305,25 +226,17 @@ namespace CognitiveVR
                 return;
             }
 
-            //gazeWorldPoint = hmdpos + GazeDirection * actualDistance;
-
             depthR *= cam.farClipPlane;
-
-            //Debug.Log(depthR);
-            RaycastHit hit = new RaycastHit();
-            //Physics.Raycast(ViewportRay, out hit);
-            //Debug.Log(depthR);// + " " + Vector3.Distance(cam.transform.position, hit.point));
-
-            //depthR = hit.distance;
 
             Debug.DrawRay(cam.transform.position, ViewportRay.direction * actualDistance, Color.magenta, 100.1f); //with adjustment
 
             //SEEMS MORE CORRECT WHEN LOOKING IN CENTER
             Debug.DrawRay(cam.transform.position, ViewportRay.direction * depthR, new Color(1, 1, 1, 0.5f), 100.1f); //depth without accounting for difference from farclip and angle
 
+            //TODO when using eye tracking, use 'actualDistance'
 
-            Vector3 world = ViewportRay.origin + ViewportRay.direction * actualDistance;
-            //onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * actualDistance, world);
+            Vector3 world = ViewportRay.origin + ViewportRay.direction * depthR;
+            onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR, world);
         }
 #endif
 #endif
