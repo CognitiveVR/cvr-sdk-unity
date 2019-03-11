@@ -227,29 +227,16 @@ namespace CognitiveVR
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
 #endif
-
-            //StartCoroutine(DelayFindHelper());
         }
-
-        //IEnumerator DelayFindHelper()
-        //{
-        //    yield return new WaitForSeconds(4);
-        //    commandBufferHelper = FindObjectOfType<CognitiveVR.CommandBufferHelper>();
-        //    if (commandBufferHelper)
-        //    {
-        //        commandBufferHelper.ConnectFixation(PostGazeCallback);
-        //    }
-        //}
 
         private void Update()
         {
             PostGazeCallback();
         }
 
-        //assuming command buffer will send a callback, use this when the command buffer is ready to read
+        //get data each update. could this double up gaze samples for low frequency eye trackers?
         void PostGazeCallback()
         {
-            //Debug.Log("fixation post gaze callbacl");
             //go through eye capture queue
             while (GetNextData())
             {
@@ -378,13 +365,6 @@ namespace CognitiveVR
         /// <returns></returns>
         bool AreEyesClosed()
         {
-            //discard if one eye isn't tracked
-            //if (!LeftEyeOpen() && RightEyeOpen() ||
-            //    LeftEyeOpen() && !RightEyeOpen())
-            //{
-            //    EyeCaptures[index].Discard = true;
-            //}
-
             if (!LeftEyeOpen() && !RightEyeOpen()) //eyes are closed / begin blink?
             {
                 //when blinking started, discard previous eye capture
@@ -514,7 +494,7 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        //looking at skybox will not update fixation radius
+                        //looking at skybox will not update fixation radius but it _could_ continue the fixation
 
                         //float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - capture.HmdPosition);
                         //float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
