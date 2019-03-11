@@ -235,7 +235,7 @@ namespace CognitiveVR
                     OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
                     if (rig != null)
                     {
-                        Camera cam = rig.GetComponentInChildren<Camera>();
+                        Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
                     }
                     if (_hmd == null)

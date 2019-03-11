@@ -7,134 +7,151 @@ using UnityEngine.Rendering;
 //use command buffer
 namespace CognitiveVR
 {
-public class CommandGaze : GazeBase {
-
-    public RenderTexture rt;
-    public BuiltinRenderTextureType blitTo = BuiltinRenderTextureType.CurrentActive;
-    public CameraEvent camevent = CameraEvent.BeforeForwardOpaque;
-
-    CommandBufferHelper helper;
-
-    public override void Initialize()
+    public class CommandGaze : GazeBase
     {
-        base.Initialize();
-        CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
-    }
 
-    private void CognitiveVR_Manager_InitEvent(Error initError)
-    {
-        if (initError == Error.Success)
+        public RenderTexture rt;
+        public BuiltinRenderTextureType blitTo = BuiltinRenderTextureType.CurrentActive;
+        public CameraEvent camevent = CameraEvent.BeforeForwardOpaque;
+
+        CommandBufferHelper helper;
+
+        public override void Initialize()
         {
-            var buf = new CommandBuffer();
-            buf.name = "cognitive depth";
-            CameraComponent.depthTextureMode = DepthTextureMode.Depth;
-            CameraComponent.AddCommandBuffer(camevent, buf);
-            var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
+            base.Initialize();
+            CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
+#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH
+            Debug.LogError("Cognitive3D does not support eye tracking using Command Gaze. From 'Advanced Options' in the cognitive3D menu, please change 'Gaze Type' to 'Physics'");
+#endif
+        }
 
-            buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
-            buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
+        private void CognitiveVR_Manager_InitEvent(Error initError)
+        {
+            if (initError == Error.Success)
+            {
+                var buf = new CommandBuffer();
+                buf.name = "cognitive depth";
+                CameraComponent.depthTextureMode = DepthTextureMode.Depth;
+                CameraComponent.AddCommandBuffer(camevent, buf);
+                var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
 
-#if SRP_LW3_0_0 
+                //buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
+                //buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
+
+#if SRP_LW3_0_0
             rt = new RenderTexture(Screen.width, Screen.height,0);
 #else
-            rt = new RenderTexture(256, 256, 0);
+                //rt = new RenderTexture(256, 256, 0);
+                rt = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGBFloat);
 #endif
+                buf.Blit(BuiltinRenderTextureType.CurrentActive, rt, material, (int)0);
 
+                //buf.Blit(blitTo, rt);
 
-            buf.Blit(blitTo, rt);
+                CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
 
-            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
-
-            helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
-            helper.Initialize(rt, CameraComponent, OnHelperPostRender);
-        }
-    }
-
-    private void CognitiveVR_Manager_TickEvent()
-    {
-        if (helper == null) //if there's a scene change and camera is destroyed, replace helper
-        {
-            helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
-            helper.Initialize(rt, CameraComponent, OnHelperPostRender);
+                helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
+                helper.Initialize(rt, CameraComponent, OnHelperPostRender, this);
+            }
         }
 
-        Vector3 viewport = GetViewportGazePoint();
-        viewport.z = 100;
-        var viewportray = CameraComponent.ViewportPointToRay(viewport);
-
-        helper.Begin(GetViewportGazePoint(), viewportray);
-    }
-
-    void OnHelperPostRender(Ray ray, Vector3 gazepoint)
-    {
-        Vector3 gpsloc = new Vector3();
-        float compass = 0;
-        Vector3 floorPos = new Vector3();
-
-        GetOptionalSnapshotData(ref gpsloc, ref compass, ref floorPos);
-
-        float hitDistance;
-        DynamicObject hitDynamic;
-        Vector3 hitWorld;
-        Vector3 hitLocal;
-        Vector2 hitcoord;
-        string ObjectId = "";
-        
-        if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
+        private void CognitiveVR_Manager_TickEvent()
         {
-            ObjectId = hitDynamic.Id;
-        }
-
-        float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
-
-        if (hitDistance > 0 && hitDistance < depthDistance)
-        {
-            var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
-            if (mediacomponent != null)
+            if (helper == null) //if there's a scene change and camera is destroyed, replace helper
             {
-                var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
-                var mediauvs = hitcoord;
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                helper = CameraTransform.gameObject.AddComponent<CommandBufferHelper>();
+                helper.Initialize(rt, CameraComponent, OnHelperPostRender, this);
+            }
+
+            Vector3 viewport = GetViewportGazePoint();
+            viewport.z = 100;
+            var viewportray = CameraComponent.ViewportPointToRay(viewport);
+
+            helper.Begin(GetViewportGazePoint(), viewportray);
+        }
+
+        void OnHelperPostRender(Ray ray, Vector3 gazepoint, Vector3 worldpos)
+        {
+            Vector3 gpsloc = new Vector3();
+            float compass = 0;
+            Vector3 floorPos = new Vector3();
+
+            GetOptionalSnapshotData(ref gpsloc, ref compass, ref floorPos);
+
+            float hitDistance;
+            DynamicObject hitDynamic;
+            Vector3 hitWorld;
+            Vector3 hitLocal;
+            Vector2 hitcoord;
+            string ObjectId = "";
+
+            if (DynamicRaycast(ray.origin, ray.direction, CameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
+            {
+                ObjectId = hitDynamic.Id;
+            }
+
+            float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
+
+            //Debug.DrawRay(CameraTransform.position, transform.forward * 100, Color.white);
+            //Debug.Log(Vector3.Distance(CameraTransform.position, gazepoint));
+
+
+            if (hitDistance > 0 && hitDistance < depthDistance)
+            {
+                var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
+                if (mediacomponent != null)
+                {
+                    var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
+                    var mediauvs = hitcoord;
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                }
+                else
+                {
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+                }
+                Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
+                return;
+            }
+
+            if (gazepoint.magnitude > CameraComponent.farClipPlane * 0.99f) //compare to farplane. skybox
+            {
+                Vector3 pos = CameraTransform.position;
+                Quaternion rot = CameraTransform.rotation;
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
+                Debug.DrawRay(pos, CameraTransform.forward * CameraComponent.farClipPlane, Color.cyan, 1);
             }
             else
             {
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
+                Vector3 pos = CameraTransform.position;
+                Quaternion rot = CameraTransform.rotation;
+
+                //hit world
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), worldpos, pos, rot, gpsloc, compass, floorPos);
+                //Debug.DrawLine(pos, pos + gazepoint, Color.red, 1);
+
+
+                Debug.DrawLine(ray.origin, worldpos, Color.yellow, 1);
+                Debug.DrawRay(worldpos, Vector3.right, Color.red, 10);
+                Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 10);
+                Debug.DrawRay(worldpos, Vector3.up, Color.green, 10);
+
+                //Debug.Log("hit world");
+                LastGazePoint = worldpos;
             }
-            Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
-            return;
         }
 
-        if (gazepoint.magnitude > CameraComponent.farClipPlane * 0.99f) //compare to farplane. skybox
+        /*private void OnDrawGizmos()
         {
-            Vector3 pos = CameraTransform.position;
-            Quaternion rot = CameraTransform.rotation;
-            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawRay(pos, CameraTransform.forward * CameraComponent.farClipPlane, Color.cyan, 1);
-        }
-        else
-        {
-            Vector3 pos = CameraTransform.position;
-            Quaternion rot = CameraTransform.rotation;
+            UnityEditor.Handles.BeginGUI();
+            GUI.Label(new Rect(0, 0, 128, 128), rt);
+            UnityEditor.Handles.EndGUI();
+        }*/
 
-            //hit world
-            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos+gazepoint, pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawLine(pos, pos + gazepoint, Color.red, 1);
-            LastGazePoint = pos + gazepoint;
+        private void OnDestroy()
+        {
+            Destroy(helper);
+            CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
+            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
         }
     }
-
-    /*private void OnDrawGizmos()
-    {
-        UnityEditor.Handles.BeginGUI();
-        GUI.Label(new Rect(0, 0, 128, 128), rt);
-        UnityEditor.Handles.EndGUI();
-    }*/
-
-    private void OnDestroy()
-    {
-        Destroy(helper);
-        CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
-        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
-    }
-}
 }
