@@ -70,7 +70,7 @@ namespace CognitiveVR
             helper.Begin(GetViewportGazePoint(), viewportray);
         }
 
-        void OnHelperPostRender(Ray ray, Vector3 gazepoint, Vector3 worldpos)
+        void OnHelperPostRender(Ray ray, Vector3 gazeVector, Vector3 worldpos)
         {
             Vector3 gpsloc = new Vector3();
             float compass = 0;
@@ -90,11 +90,7 @@ namespace CognitiveVR
                 ObjectId = hitDynamic.Id;
             }
 
-            float depthDistance = Vector3.Distance(CameraTransform.position, gazepoint);
-
-            //Debug.DrawRay(CameraTransform.position, transform.forward * 100, Color.white);
-            //Debug.Log(Vector3.Distance(CameraTransform.position, gazepoint));
-
+            float depthDistance = Vector3.Distance(CameraTransform.position, worldpos);
 
             if (hitDistance > 0 && hitDistance < depthDistance)
             {
@@ -109,11 +105,14 @@ namespace CognitiveVR
                 {
                     GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, CameraTransform.position, CameraTransform.rotation, gpsloc, compass, floorPos);
                 }
-                Debug.DrawLine(CameraTransform.position, hitWorld, Color.magenta, 1);
+                Debug.DrawLine(CameraTransform.position, hitDynamic.transform.position + hitLocal, Color.magenta, 1);
+                Debug.DrawRay(worldpos, Vector3.right, Color.red, 1);
+                Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 1);
+                Debug.DrawRay(worldpos, Vector3.up, Color.green, 1);
                 return;
             }
 
-            if (gazepoint.magnitude > CameraComponent.farClipPlane * 0.99f) //compare to farplane. skybox
+            if (gazeVector.magnitude > CameraComponent.farClipPlane * 0.99f) //compare to farplane. skybox
             {
                 Vector3 pos = CameraTransform.position;
                 Quaternion rot = CameraTransform.rotation;
@@ -131,9 +130,9 @@ namespace CognitiveVR
 
 
                 Debug.DrawLine(ray.origin, worldpos, Color.yellow, 1);
-                Debug.DrawRay(worldpos, Vector3.right, Color.red, 10);
-                Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 10);
-                Debug.DrawRay(worldpos, Vector3.up, Color.green, 10);
+                Debug.DrawRay(worldpos, Vector3.right, Color.red, 1);
+                Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 1);
+                Debug.DrawRay(worldpos, Vector3.up, Color.green, 1);
 
                 //Debug.Log("hit world");
                 LastGazePoint = worldpos;
