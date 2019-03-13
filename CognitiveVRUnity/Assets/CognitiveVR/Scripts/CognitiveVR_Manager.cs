@@ -600,9 +600,21 @@ namespace CognitiveVR
             PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
 #endif
 
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-            //SceneManager_SceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
-            Core.SetTrackingScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;            
+
+            //get all loaded scenes. if one has a sceneid, use that
+            var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
+            for(int i = 0; i<count;i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                var cogscene = CognitiveVR_Preferences.FindSceneByPath(scene.path);
+                if (cogscene != null)
+                {
+                    Core.SetTrackingScene(cogscene);
+                    break;
+                }
+            }
+
             OnLevelLoaded();
 
             Core.UserId = userName;
