@@ -16,7 +16,7 @@ namespace CognitiveVR
         CommandGaze gaze;
 
         bool supportsAsyncGPUReadback = false;
-        bool singlePass = false;
+        //bool singlePass = false;
 
         public delegate void PostRenderCommandCallback(Ray ray, Vector3 viewportVector, Vector3 worldHitPoint);
         PostRenderCommandCallback onPostRenderCommand;

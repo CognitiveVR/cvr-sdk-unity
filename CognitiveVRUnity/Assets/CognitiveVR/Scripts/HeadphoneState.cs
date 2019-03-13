@@ -17,7 +17,7 @@ namespace CognitiveVR.Components
 
 #if CVR_OCULUS
             //TODO add oculus audio changed events
-            Core.UpdateSessionState("c3d.headphonespresent", OVRPlugin.headphonesPresent);
+            Core.SetSessionProperty("c3d.headphonespresent", OVRPlugin.headphonesPresent);
 #elif CVR_STEAMVR
             //TODO could check SteamVR_Ears if using speaker?
 #endif
