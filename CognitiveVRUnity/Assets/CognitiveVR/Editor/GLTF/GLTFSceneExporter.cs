@@ -711,10 +711,7 @@ namespace UnityGLTF
 			for (var i = 0; i < childCount; i++)
 			{
 				var go = transform.GetChild(i).gameObject;
-				if (IsPrimitive(go))
-					prims.Add(go);
-				else
-					nonPrims.Add(go);
+				nonPrims.Add(go);
 			}
 
 			primitives = prims.ToArray();
