@@ -49,15 +49,6 @@ namespace CognitiveVR
             if (fs != null) fs.Close();
         }
 
-        System.Collections.IEnumerator WaitForResponse(UnityWebRequest www, Response callback)
-        {
-            yield return new WaitUntil(() => www.isDone);
-            if (callback != null)
-            {
-                callback.Invoke((int)www.responseCode, www.error, www.downloadHandler.text);
-            }
-        }
-
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
         {
             float time = 0;
@@ -110,6 +101,7 @@ namespace CognitiveVR
                     callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
             }
+            www.Dispose();
         }
 
         System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload)
@@ -135,6 +127,7 @@ namespace CognitiveVR
                 }
                 callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text, allowLocalUpload);
             }
+            www.Dispose();
         }
 
         void GenericPostFullResponse(string url, string content, int responsecode, string error, string text, bool allowLocalUpload)
@@ -269,33 +262,35 @@ namespace CognitiveVR
 
                 //wait for post response
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
-                var request = UnityWebRequest.Put(tempurl, bytes);
-                request.method = "POST";
-                request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                request.SetRequestHeader("Authorization", Constants.ApplicationKey);
-                yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
-
-                //check internet access
-                var headers = request.GetResponseHeaders();
-                int responsecode = (int)request.responseCode;
-                if (responsecode == 200)
+                using (UnityWebRequest request = UnityWebRequest.Put(tempurl, bytes))
                 {
-                    //check cvr header to make sure not blocked by capture portal
-                    if (!headers.ContainsKey("cvr-request-time"))
+                    request.method = "POST";
+                    request.SetRequestHeader("Content-Type", "application/json");
+                    request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                    request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+                    yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
+
+                    //check internet access
+                    var headers = request.GetResponseHeaders();
+                    int responsecode = (int)request.responseCode;
+                    if (responsecode == 200)
+                    {
+                        //check cvr header to make sure not blocked by capture portal
+                        if (!headers.ContainsKey("cvr-request-time"))
+                        {
+                            hasFailed = true;
+                            if (failed != null)
+                                failed.Invoke();
+                            yield break;
+                        }
+                    }
+                    else
                     {
                         hasFailed = true;
                         if (failed != null)
                             failed.Invoke();
                         yield break;
                     }
-                }
-                else
-                {
-                    hasFailed = true;
-                    if (failed != null)
-                        failed.Invoke();
-                    yield break;
                 }
             }
 
