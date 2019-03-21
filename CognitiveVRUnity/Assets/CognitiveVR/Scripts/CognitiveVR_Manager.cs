@@ -52,7 +52,7 @@ namespace CognitiveVR
 
             if (initError == Error.Success)
             {
-                new CustomEvent("Session Begin").Send();
+                new CustomEvent("c3d.sessionStart").Send();
                 if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
                 {
                     Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
@@ -893,7 +893,7 @@ namespace CognitiveVR
         public void EndSession()
         {
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
-            new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
+            new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
             Core.SendDataEvent();
 
