@@ -128,8 +128,8 @@ namespace CognitiveVR
                 //will use async read request
                 //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, callback: AsyncDone);
                 enabled = false;
-                var x = (int)((ViewportGazePoint.x + offsetx) * rect.width);
-                var y = (int)((ViewportGazePoint.y + offsety) * rect.height);
+                var x = (int)((ViewportGazePoint.x) * rect.width);
+                var y = (int)((ViewportGazePoint.y) * rect.height);
 
                 //UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBAFloat, AsyncDone); //TEXTURE
                 if (x < 0 || y < 0 || x > rect.width || y > rect.height)
@@ -140,7 +140,7 @@ namespace CognitiveVR
                     UnityEngine.Rendering.AsyncGPUReadback.Request(rt, 0, x, 1, y, 1, 0, 1, TextureFormat.RGBAFloat, AsyncDone); //PIXEL
             }
             else
-#else
+#endif
             {
                 //need this blit to temp. setting rt as RenderTexture.active crashes Unity with access violation
                 Graphics.Blit(rt, temp);
@@ -151,7 +151,6 @@ namespace CognitiveVR
                 enabled = false;
                 onPostRenderCommand.Invoke(ViewportRay, ViewportRay.direction * depthR, ViewportRay.origin + ViewportRay.direction * depthR);
             }
-#endif
         }
 
         //returns the depth adjusted by near/farplanes. without this, gaze distance doesn't scale correctly when looking off center
