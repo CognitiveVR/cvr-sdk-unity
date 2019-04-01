@@ -7,6 +7,7 @@ namespace CognitiveVR
     public class EyeCapture
     {
         public Vector3 WorldPosition;
+        public Vector3 LocalPosition;
 
         //this should be true if gazing at sky. within fixation angle, but position will just mess up the average
         public bool SkipPositionForFixationAverage = false;
