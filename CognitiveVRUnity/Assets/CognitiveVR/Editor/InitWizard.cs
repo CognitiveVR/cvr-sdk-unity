@@ -1101,7 +1101,15 @@ public class InitWizard : EditorWindow
             case "tagdynamics":
                 break;
             case "selectsdk":
-                onclick += () => EditorCore.SetPlayerDefine(selectedsdks);
+                    onclick += () =>
+                    {
+                        EditorCore.SetPlayerDefine(selectedsdks);
+                        if (selectedsdks.Contains("CVR_TOBIIVR") || selectedsdks.Contains("CVR_NEURABLE") || selectedsdks.Contains("CVR_FOVE") || selectedsdks.Contains("CVR_PUPIL") || selectedsdks.Contains("CVR_AH") || selectedsdks.Contains("CVR_SNAPDRAGON"))
+                        {
+                            //eye tracking
+                            CognitiveVR_Preferences.Instance.GazeType = GazeType.Physics;
+                        }
+                    };
                 onclick += () =>
                 {
                     var found = Object.FindObjectOfType<CognitiveVR_Manager>();

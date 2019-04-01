@@ -26,14 +26,9 @@ namespace CognitiveVR
                     }
                     IsSet = true;
                     S_SnapshotInterval = instance.SnapshotInterval;
-                    //S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    //S_TrackGazePoint = instance.TrackGazePoint;
-                    //S_GazePointFromDirection = instance.GazePointFromDirection;
-                    //S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
-                    //S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
@@ -81,8 +76,21 @@ namespace CognitiveVR
 
         [Header("Player Tracking")]
         //player tracking
-        
-        public float SnapshotInterval = 0.1f;
+
+        float snapshotInterval = 0.1f;
+        public float SnapshotInterval
+        {
+            get
+            {
+                return snapshotInterval;
+            }
+            set
+            {
+                //--- IMPORTANT ---
+                //It is against the Cognitive3D terms of service to set this value lower than 0.1 (ie, 10 snapshots per second)
+                snapshotInterval = Mathf.Max(0.1f, value);
+            }
+        }
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
         public float GPSInterval = 1;

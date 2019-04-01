@@ -46,9 +46,9 @@ namespace CognitiveVR.Components
             // Access granted and location value could be retrieved
             Util.logDebug("MobileLocation::InitializeLocation\nLocation: " + Input.location.lastData.latitude + " " + Input.location.lastData.longitude + " " + Input.location.lastData.altitude);
 
-            Core.UpdateSessionState("c3d.geo.latitude", Input.location.lastData.latitude);
-            Core.UpdateSessionState("c3d.geo.longitude", Input.location.lastData.longitude);
-            Core.UpdateSessionState("c3d.geo.altitude", Input.location.lastData.altitude);
+            Core.SetSessionProperty("c3d.geo.latitude", Input.location.lastData.latitude);
+            Core.SetSessionProperty("c3d.geo.longitude", Input.location.lastData.longitude);
+            Core.SetSessionProperty("c3d.geo.altitude", Input.location.lastData.altitude);
 
             if (!CognitiveVR_Preferences.Instance.TrackGPSLocation)
             {

@@ -12,10 +12,35 @@ namespace CognitiveVR
         public string dynamicObjectId { get; private set; }
         private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
 
+        static int lastFrameCount = 0;
+        static int consecutiveEvents = 0;
+
         public CustomEvent(string category)
         {
             this.category = category;
             startTime = Time.realtimeSinceStartup;
+
+            //checks that custom events aren't being created each frame (likely in update)
+            if (CognitiveVR_Preferences.Instance.EnableLogging)
+            {
+                if (lastFrameCount >= Time.frameCount - 1)
+                {
+                    if (lastFrameCount != Time.frameCount)
+                    {
+                        lastFrameCount = Time.frameCount;
+                        consecutiveEvents++;
+                        if (consecutiveEvents > 200)
+                        {
+                            CognitiveVR.Util.logError("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unity/customevents");
+                        }
+                    }
+                }
+                else
+                {
+                    lastFrameCount = Time.frameCount;
+                    consecutiveEvents = 0;
+                }
+            }
         }
 
         private float startTime;

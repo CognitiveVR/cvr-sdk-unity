@@ -37,7 +37,12 @@ namespace CognitiveVR
             {
                 if (_cam == null)
                 {
-                    _cam = Camera.main;
+                    if (CognitiveVR_Manager.HMD != null)
+                    {
+                        _cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
+                    }
+                    else
+                        _cam = Camera.main;
                 }
                 return _cam;
             }
