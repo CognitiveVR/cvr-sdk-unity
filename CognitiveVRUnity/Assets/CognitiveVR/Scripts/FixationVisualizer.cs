@@ -13,23 +13,31 @@ namespace CognitiveVR
 
         [Header("Visualization")]
         public Mesh FixationMesh;
-        public Material FixationMaterial;
+        //public Material FixationMaterial;
 
         public Material FixationMaterialDiscard;
         public Material FixationMaterialRange;
         public Material FixationMaterialSleep;
         public Material FixationMaterialTransform;
+        public Material FixationMaterialDynamic;
 
         public void SetTarget(FixationRecorder target)
         {
             fixationRecorder = target;
         }
 
+        Dictionary<string, DynamicObject> dynamicObjects = new Dictionary<string, DynamicObject>();
+
+        public bool display = true;
+
         //1 record old eye capture to fixation
         //2 check if that fixation ended
         //3 queue new(current) eye capture
         void Update()
         {
+            if (!display) { return; }
+            if (fixationRecorder == null){return;}
+
             foreach (var v in fixationRecorder.VISFixationEnds["discard"])
             {
                 Vector3 scale = Vector3.one * v.DebugScale;
@@ -40,7 +48,37 @@ namespace CognitiveVR
             {
                 Vector3 scale = Vector3.one * v.DebugScale;
                 Matrix4x4 m = Matrix4x4.TRS(v.WorldPosition, Quaternion.identity, scale);
-                Graphics.DrawMesh(FixationMesh, m, FixationMaterialRange, 0);
+                Material mat = FixationMaterialRange;
+
+                if (v.IsLocal)
+                {
+                    DynamicObject dyn;
+                    if (dynamicObjects.TryGetValue(v.DynamicObjectId, out dyn))
+                    {
+
+                    }
+                    else
+                    {
+                        var all = FindObjectsOfType<DynamicObject>();
+                        foreach(var d in all)
+                        {
+                            if (dynamicObjects.ContainsKey(d.Id)) { continue; }
+                            else dynamicObjects.Add(d.Id, d);
+                        }
+                        if (dynamicObjects.TryGetValue(v.DynamicObjectId, out dyn))
+                        {
+                            
+                        }
+                    }
+                    if (dyn != null)
+                    {
+                        scale = Vector3.one * v.DebugScale;
+                        m = Matrix4x4.TRS(dyn.transform.position + v.LocalPosition, Quaternion.identity, scale);
+                        mat = FixationMaterialDynamic;
+                    }
+                }
+                
+                Graphics.DrawMesh(FixationMesh, m, mat, 0);
             }
             foreach (var v in fixationRecorder.VISFixationEnds["microsleep"])
             {

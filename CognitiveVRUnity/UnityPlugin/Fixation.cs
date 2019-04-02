@@ -10,6 +10,7 @@ namespace CognitiveVR
         public Fixation(Fixation src)
         {
             WorldPosition = src.WorldPosition;
+            LocalPosition = src.LocalPosition;
             DebugScale = src.DebugScale;
             DurationMs = src.DurationMs;
             StartMs = src.StartMs;

@@ -52,7 +52,7 @@ namespace CognitiveVR
 
         public bool LeftEyeOpen() { return currentData.Left.PupilDiameterValid && currentData.Left.PupilPosiitionInTrackingAreaValid; }
         public bool RightEyeOpen() { return currentData.Right.PupilDiameterValid && currentData.Right.PupilPosiitionInTrackingAreaValid; }
-        
+
         public long EyeCaptureTimestamp()
         {
             return currentData.TimeStamp / 1000;
@@ -122,7 +122,8 @@ namespace CognitiveVR
 
         #endregion
 
-        List<Vector3> WorldCapturePoints = new List<Vector3>();
+        //used as world or local positions, depending whether fixation is world or local, for updating fixation position
+        List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
 
         int index = 0;
         int GetIndex(int offset)
@@ -173,7 +174,7 @@ namespace CognitiveVR
         //float FixationDotSize = 0.99f;
         //amount of 'noise' allowed when following a dynamic object in a smooth pursuit
         [Tooltip("amount of time gaze can be off the transform before fixation ends. mostly useful when fixation is right on the edge of a dynamic object")]
-        public int MaxFixationConsecutiveNoiseDynamicMs = 20;
+        public int MaxFixationConsecutiveNoiseDynamicMs = 500;
         [Tooltip("multiplier for SMOOTH PURSUIT fixation angle size on dynamic objects. helps reduce incorrect fixation ending")]
         public float DynamicFixationSizeMultiplier = 1.25f;
         [Tooltip("keeps gaze samples up to this far back to sample the fixation point in local space")] //TODO ???? aren't local fixations based on locally saved positions? shouldn't have to store in meaningfully different way?
@@ -182,9 +183,6 @@ namespace CognitiveVR
         [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
         public AnimationCurve FocusSizeFromCenter;
         //DynamicObject LastHitDynamic; //could be the transform for a new moving fixation
-
-        //default setting - reevaluate average fixation position
-        bool useAverageFixationPosition = true;
 
         [Header("saccade")]
         //amount of saccades that must be consecutive before a fixation ends
@@ -215,10 +213,6 @@ namespace CognitiveVR
 
         public void Initialize()
         {
-            //FocusSizeFromCenter = new AnimationCurve();
-            //FocusSizeFromCenter.AddKey(new Keyframe(0.01f, 1,0,0));
-            //FocusSizeFromCenter.AddKey(new Keyframe(0.3f, 4, 30, 0));
-
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
@@ -250,19 +244,7 @@ namespace CognitiveVR
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
 #endif
-
-            //StartCoroutine(DelayFindHelper());
         }
-
-        //IEnumerator DelayFindHelper()
-        //{
-        //    yield return new WaitForSeconds(4);
-        //    commandBufferHelper = FindObjectOfType<CognitiveVR.CommandBufferHelper>();
-        //    if (commandBufferHelper)
-        //    {
-        //        commandBufferHelper.ConnectFixation(PostGazeCallback);
-        //    }
-        //}
 
         private void Update()
         {
@@ -281,8 +263,6 @@ namespace CognitiveVR
         //assuming command buffer will send a callback, use this when the command buffer is ready to read
         void PostGazeCallback()
         {
-            //Debug.Log("fixation post gaze callbacl");
-            //go through eye capture queue
             while (GetNextData())
             {
                 RecordEyeCapture();
@@ -321,8 +301,8 @@ namespace CognitiveVR
                 //center is about 0.01
                 //off screen is ~0.3
 
-                EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
                 EyeCaptures[index].OffTransform = IsGazeOffTransform(EyeCaptures[index]);
+                EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
                 ActiveFixation.AddEyeCapture(EyeCaptures[index]);
 
                 ActiveFixation.DurationMs = EyeCaptures[index].Time - ActiveFixation.StartMs;
@@ -337,7 +317,7 @@ namespace CognitiveVR
                     {
                         ActiveFixation.LocalTransform = null;
                     }
-                    WorldCapturePoints.Clear();
+                    CachedEyeCapturePositions.Clear();
                 }
             }
 
@@ -353,7 +333,6 @@ namespace CognitiveVR
             EyeCaptures[index].Time = EyeCaptureTimestamp();
 
             Vector3 world;
-            //CognitiveVR.DynamicObject hitDynamic;
 
             DynamicObject hitDynamic = null;
 
@@ -420,13 +399,6 @@ namespace CognitiveVR
         /// <returns></returns>
         bool AreEyesClosed()
         {
-            //discard if one eye isn't tracked
-            //if (!LeftEyeOpen() && RightEyeOpen() ||
-            //    LeftEyeOpen() && !RightEyeOpen())
-            //{
-            //    EyeCaptures[index].Discard = true;
-            //}
-
             if (!LeftEyeOpen() && !RightEyeOpen()) //eyes are closed / begin blink?
             {
                 //when blinking started, discard previous eye capture
@@ -458,7 +430,6 @@ namespace CognitiveVR
 
             if (EyeUnblinkTime + BlinkEndWarmupMs > EyeCaptures[index].Time)
             {
-                //EyeCaptures[index].EyesClosed = true; //return value is set to .EyesClosed
                 return true;
             }
 
@@ -492,64 +463,74 @@ namespace CognitiveVR
 
             if (ActiveFixation.IsLocal)
             {
-                //want to check if eye capture is within fixation radius, not specifically if eye capture hit the same transform
-
-                List<Vector3> dynamicAveragePoints = new List<Vector3>(); //constantly review eye captures for local fixations
-                for (int i = 0; i < CachedEyeCaptures; i++)
+                var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
+                var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
+                if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
-                    //go through all eye captures. use timestamps for pick out recent eye captures used in this local fixation
-                    if (EyeCaptures[GetIndex(i)].Time < capture.Time + DynamicRollingAverageMS && EyeCaptures[GetIndex(i)].Time > capture.Time) //this is the old timestamp
+                    var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(ActiveFixation.LocalPosition);
+                    var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
+                    var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
+                    
+                    var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
+                    var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
+                    var _eyeCaptureScreenPos = HMDCam.WorldToViewportPoint(_eyeCaptureWorldPos);
+
+                    var _screendist = Vector2.Distance(_eyeCaptureScreenPos, Vector3.one * 0.5f);
+                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
+                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
+                    if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
                     {
-                        if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { continue; }
-                        dynamicAveragePoints.Add(EyeCaptures[GetIndex(i)].WorldPosition);
+                        return true;
                     }
-                    //if (EyeCaptures[GetIndex(-i)].Time > capture.Time + DynamicRollingAverageMS)
-                    //{
-                    //    //does this make sense?
-                    //    break;
-                    //}
-
-                    //IMPROVEMENT go backward through eye captures instead of forward
-                    //break when reaching a sample outside of DynamicRollingAverageMS
+                    return false;
                 }
-
-
-
-                var _fixationLocalPosition = ActiveFixation.LocalPosition;
-                var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(ActiveFixation.LocalPosition);
-
-                //maybe local fixation is wrong?
-                //
-
-                var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
-                var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
-
-                var _eyeCaptureLocalPos = capture.LocalPosition;
-                var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(_eyeCaptureLocalPos);
-                var _eyeCaptureScreenPos = HMDCam.WorldToViewportPoint(_eyeCaptureWorldPos);
-                var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
-
-
-
-                var _screendist = Vector2.Distance(_eyeCaptureScreenPos, Vector3.one * 0.5f);
-                var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
-                var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
-                if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
+                else
                 {
-                    return true;
+                    //try to move fixation to include this capture too
+                    Vector3 averagelocalpos = Vector3.zero;
+                    foreach (var v in CachedEyeCapturePositions)
+                    {
+                        averagelocalpos += v;
+                    }
+                    averagelocalpos += capture.LocalPosition;
+                    averagelocalpos /= (CachedEyeCapturePositions.Count + 1);
+
+                    var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(averagelocalpos);
+                    var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
+                    var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
+
+                    var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
+                    var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
+                    var _eyeCaptureScreenPos = HMDCam.WorldToViewportPoint(_eyeCaptureWorldPos);
+
+                    var _screendist = Vector2.Distance(_eyeCaptureScreenPos, Vector3.one * 0.5f);
+                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
+                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
+                    if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
+                    {
+                        return true;
+                    }
+
+                    float distance = Vector3.Magnitude(_fixationWorldPosition - capture.HmdPosition);
+                    float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
+                    ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
+
+                    CachedEyeCapturePositions.Add(capture.LocalPosition);
+                    ActiveFixation.LocalPosition = averagelocalpos;
+
+                    return false;
                 }
-                return false;
             }
             else
             {
+                var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
+                var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
                 if (capture.SkipPositionForFixationAverage) //eye capture is invalid (probably from looking at skybox)
                 {
-                    //compare and return true/false
-                    var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
-                    var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
-                    var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                    var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-
                     Vector3 lookDir = (capture.WorldPosition - capture.HmdPosition).normalized;
                     Vector3 fixationDir = (ActiveFixation.WorldPosition - capture.HmdPosition).normalized;
 
@@ -559,29 +540,18 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        //looking at skybox will not update fixation radius
-
-                        //float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - capture.HmdPosition);
-                        //float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-                        //ActiveFixation.MinRadius = Mathf.Min(ActiveFixation.MinRadius, currentRadius);
+                        //looking at skybox. will not update fixation radius
                     }
                 }
-                else if (useAverageFixationPosition)
+                else
                 {
-                    var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
-                    var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
-                    var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                    var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-
-                    //if in range, recalculate average world position
-
                     Vector3 averageworldpos = Vector3.zero;
-                    foreach (var v in WorldCapturePoints)
+                    foreach (var v in CachedEyeCapturePositions)
                     {
                         averageworldpos += v;
                     }
                     averageworldpos += capture.WorldPosition;
-                    averageworldpos /= (WorldCapturePoints.Count + 1);
+                    averageworldpos /= (CachedEyeCapturePositions.Count + 1);
 
 
                     Vector3 lookDir = (capture.WorldPosition - capture.HmdPosition).normalized;
@@ -596,7 +566,7 @@ namespace CognitiveVR
                     float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
                     ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
 
-                    WorldCapturePoints.Add(capture.WorldPosition);
+                    CachedEyeCapturePositions.Add(capture.WorldPosition);
                     ActiveFixation.WorldPosition = averageworldpos;
                 }
             }
@@ -835,7 +805,7 @@ namespace CognitiveVR
                 for (int i = 0; i < sampleCount; i++)
                 {
                     if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
-                    WorldCapturePoints.Add(EyeCaptures[GetIndex(i)].WorldPosition);
+                    CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
                 }
                 return true;
             }

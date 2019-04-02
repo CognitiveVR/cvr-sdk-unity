@@ -14,11 +14,8 @@ namespace CognitiveVR
 
         private const string LOG_TAG = "[COGNITIVE3D] ";
 		
-		static IDictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
-        public static IDictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
-
-        //private static HashSet<string> sValidCurrencyCodes = new HashSet<string>();
-        //private static IDictionary<string, HashSet<string>> sCurrencyCodesBySymbol = new Dictionary<string, HashSet<string>>();
+		static Dictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
+        public static Dictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
 
         public static void logWarning(string msg, UnityEngine.Object context = null)
         {
