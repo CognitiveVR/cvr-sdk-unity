@@ -179,7 +179,7 @@ namespace CognitiveVR
         public float DynamicFixationSizeMultiplier = 1.25f;
         [Tooltip("keeps gaze samples up to this far back to sample the fixation point in local space")] //TODO ???? aren't local fixations based on locally saved positions? shouldn't have to store in meaningfully different way?
         //world fixations use a crazy ever expanding list of points
-        public int DynamicRollingAverageMS = 100;
+        //public int DynamicRollingAverageMS = 100;
         [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
         public AnimationCurve FocusSizeFromCenter;
         //DynamicObject LastHitDynamic; //could be the transform for a new moving fixation

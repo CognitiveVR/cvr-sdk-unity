@@ -94,12 +94,17 @@ namespace CognitiveVR
                 sb.Append(",");
                 JsonUtil.SetFloat("maxradius", Fixations[i].MaxRadius, sb);
                 sb.Append(",");
-                JsonUtil.SetVector("p", Fixations[i].WorldPosition, sb);
-                sb.Append(",");
 
                 if (Fixations[i].IsLocal)
                 {
                     JsonUtil.SetString("dynamicid", Fixations[i].DynamicObjectId, sb);
+                    sb.Append(",");
+                    JsonUtil.SetVector("p", Fixations[i].LocalPosition, sb);
+                    sb.Append(",");
+                }
+                else
+                {
+                    JsonUtil.SetVector("p", Fixations[i].WorldPosition, sb);
                     sb.Append(",");
                 }
             }
