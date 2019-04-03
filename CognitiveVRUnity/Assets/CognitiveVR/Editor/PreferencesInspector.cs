@@ -59,6 +59,19 @@ namespace CognitiveVR
             p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
+            if (p.GazeType == GazeType.Physics)
+            {
+                LayerMask gazeMask = new LayerMask();
+                gazeMask.value = p.PhysicsGazeLayerMask;
+                gazeMask = EditorGUILayout.MaskField("Physics Gaze Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
+                p.PhysicsGazeLayerMask = gazeMask.value;
+            }
+
+            LayerMask dynamicMask = new LayerMask();
+            dynamicMask.value = p.DynamicLayerMask;
+            dynamicMask = EditorGUILayout.MaskField("Dynamic Object Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(dynamicMask), (UnityEditorInternal.InternalEditorUtility.layers));
+            p.DynamicLayerMask = dynamicMask.value;
+
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
@@ -90,7 +103,7 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
-            
+
             //transactions
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
