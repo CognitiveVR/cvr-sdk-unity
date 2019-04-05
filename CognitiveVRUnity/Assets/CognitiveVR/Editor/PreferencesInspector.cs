@@ -59,12 +59,17 @@ namespace CognitiveVR
             p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
-            if (p.GazeType == GazeType.Physics)
+            bool eyetracking = false;
+#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON
+            eyetracking = true;
+#endif
+
+            if (p.GazeType == GazeType.Physics || eyetracking)
             {
                 LayerMask gazeMask = new LayerMask();
-                gazeMask.value = p.PhysicsGazeLayerMask;
-                gazeMask = EditorGUILayout.MaskField("Physics Gaze Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
-                p.PhysicsGazeLayerMask = gazeMask.value;
+                gazeMask.value = p.GazeLayerMask;
+                gazeMask = EditorGUILayout.MaskField("Gaze Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
+                p.GazeLayerMask = gazeMask.value;
             }
 
             LayerMask dynamicMask = new LayerMask();

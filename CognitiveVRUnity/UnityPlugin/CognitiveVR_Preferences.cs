@@ -98,7 +98,7 @@ namespace CognitiveVR
         public bool SyncGPSWithGaze;
         public bool RecordFloorPosition = true;
 
-        public int PhysicsGazeLayerMask = -1;
+        public int GazeLayerMask = -1;
         public int DynamicLayerMask = -1;
 
         [Header("Send Data")]
