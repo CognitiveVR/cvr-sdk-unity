@@ -52,7 +52,8 @@ namespace CognitiveVR
 
         public static void RecordFixation(Fixation newFixation)
         {
-            Fixations.Add(newFixation);
+            Fixation f = new Fixation(newFixation);
+            Fixations.Add(f);
         }
 
         static float lastSendTime = -60;
@@ -88,9 +89,10 @@ namespace CognitiveVR
             sb.Append("\"data\":[");
             for(int i = 0; i<Fixations.Count;i++)
             {
-                JsonUtil.SetDouble("starttime", Fixations[i].StartMs * 1000,sb);
+                sb.Append("{");
+                JsonUtil.SetDouble("time", System.Convert.ToDouble((double)Fixations[i].StartMs / 1000.0),sb);
                 sb.Append(",");
-                JsonUtil.SetDouble("duration", Fixations[i].DurationMs * 1000, sb);
+                JsonUtil.SetLong("duration", Fixations[i].DurationMs, sb);
                 sb.Append(",");
                 JsonUtil.SetFloat("maxradius", Fixations[i].MaxRadius, sb);
                 sb.Append(",");
@@ -100,15 +102,13 @@ namespace CognitiveVR
                     JsonUtil.SetString("dynamicid", Fixations[i].DynamicObjectId, sb);
                     sb.Append(",");
                     JsonUtil.SetVector("p", Fixations[i].LocalPosition, sb);
-                    sb.Append(",");
                 }
                 else
                 {
                     JsonUtil.SetVector("p", Fixations[i].WorldPosition, sb);
-                    sb.Append(",");
                 }
+                sb.Append("},");
             }
-
             if (Fixations.Count > 0)
             {
                 sb.Remove(sb.Length - 1, 1); //remove last comma from fixation object
@@ -121,7 +121,8 @@ namespace CognitiveVR
             string url = Constants.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
-            NetworkManager.Post(url, sb.ToString());
+            Debug.Log(sb.ToString());
+            //NetworkManager.Post(url, sb.ToString());
         }
     }
 }

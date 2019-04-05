@@ -53,9 +53,38 @@ namespace CognitiveVR
         public bool LeftEyeOpen() { return currentData.Left.PupilDiameterValid && currentData.Left.PupilPosiitionInTrackingAreaValid; }
         public bool RightEyeOpen() { return currentData.Right.PupilDiameterValid && currentData.Right.PupilPosiitionInTrackingAreaValid; }
 
+        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+
+        //raw time since computer restarted. in nanoseconds
+        long tobiiStartTimestamp;
+        
+        //start time since epoch. in seconds
+        double epochtobiistart;
+
+        private IEnumerator Start()
+        {
+            if (EyeTracker == null)
+                EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
+
+            while (true)
+            {
+                tobiiStartTimestamp = EyeTracker.LatestGazeData.TimeStamp;
+                if (tobiiStartTimestamp > 0)
+                {
+                    System.TimeSpan span = System.DateTime.UtcNow - epoch;
+                    epochtobiistart = span.TotalSeconds;
+                    break;
+                }
+                yield return null;
+            }
+        }
+
         public long EyeCaptureTimestamp()
         {
-            return currentData.TimeStamp / 1000;
+            long sinceStart = currentData.TimeStamp - tobiiStartTimestamp;
+            sinceStart = (sinceStart / 1000); //remove microseconds
+            var final = epochtobiistart * 1000 + sinceStart;
+            return (long)final;
         }
 
         //returns true if there is another data point to work on
@@ -177,7 +206,7 @@ namespace CognitiveVR
         public int MaxFixationConsecutiveNoiseDynamicMs = 500;
         [Tooltip("multiplier for SMOOTH PURSUIT fixation angle size on dynamic objects. helps reduce incorrect fixation ending")]
         public float DynamicFixationSizeMultiplier = 1.25f;
-        [Tooltip("keeps gaze samples up to this far back to sample the fixation point in local space")] //TODO ???? aren't local fixations based on locally saved positions? shouldn't have to store in meaningfully different way?
+        //[Tooltip("keeps gaze samples up to this far back to sample the fixation point in local space")] //TODO ???? aren't local fixations based on locally saved positions? shouldn't have to store in meaningfully different way?
         //world fixations use a crazy ever expanding list of points
         //public int DynamicRollingAverageMS = 100;
         [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
@@ -213,6 +242,7 @@ namespace CognitiveVR
 
         public void Initialize()
         {
+            if (FocusSizeFromCenter == null) { Reset(); }
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
@@ -220,8 +250,12 @@ namespace CognitiveVR
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 
-            gameObject.GetComponent<FixationVisualizer>().SetTarget(this);
-            FindObjectOfType<SaccadeDrawer>().SetTarget(this);
+            var viewer = FindObjectOfType<FixationVisualizer>();
+            if (viewer != null)
+                viewer.SetTarget(this);
+            var saccade = FindObjectOfType<SaccadeDrawer>();
+            if (saccade != null)
+                saccade.SetTarget(this);
             //gameObject.AddComponent<FixationVisualizer>().SetTarget(this);
             lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
@@ -239,7 +273,8 @@ namespace CognitiveVR
 #if CVR_FOVE
             fovebase = FindObjectOfType<FoveInterfaceBase>();
 #elif CVR_TOBIIVR
-            EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
+            if (EyeTracker == null)
+                EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
@@ -357,7 +392,8 @@ namespace CognitiveVR
                 EyeCaptures[index].WorldPosition = world;
             }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            lastEyeTrackingPointer.transform.position = world; //turned invalid somewhere
+            if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
+            else{ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 #endif
 
             VISGazepoints.Add(EyeCaptures[index].WorldPosition);

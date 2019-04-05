@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 
 namespace CognitiveVR
 {
-    public partial class CognitiveVR_Manager : MonoBehaviour
+    public class CognitiveVR_Manager : MonoBehaviour
     {
 
 #if CVR_META
