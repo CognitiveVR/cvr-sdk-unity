@@ -17,13 +17,14 @@ public class SaccadeDrawer : MonoBehaviour {
     public Material gazeMat;
     Color lightWhite = new Color(1, 1, 1, 0.25f);
     // Update is called once per frame
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     void OnPostRender ()
     {
-
         if (fixationRecorder.IsFixating)
         {
             if (fixationRecorder.ActiveFixation.IsLocal)
             {
+                if (fixationRecorder.ActiveFixation.LocalTransform == null) { return; }
                 GL.Begin(GL.LINES);
 
                 fixationMat.SetPass(0);
@@ -47,7 +48,6 @@ public class SaccadeDrawer : MonoBehaviour {
             }
         }
 
-
         GL.Begin(GL.LINES);
         GL.Color(lightWhite);
         mat.SetPass(0);
@@ -59,4 +59,5 @@ public class SaccadeDrawer : MonoBehaviour {
         }
         GL.End();
     }
+#endif
 }

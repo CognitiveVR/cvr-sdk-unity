@@ -174,17 +174,13 @@ namespace CognitiveVR
         public List<Fixation> Fixations = new List<Fixation>();
 
         public bool IsFixating { get; set; }
-        //public bool IsLocalFixation { get; set; }
         public Fixation ActiveFixation;
-        //the transform used for a local fixation
-        //public Transform FixationTransform { get; set; }
 
         [Header("blink")]
         [Tooltip("the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is conciously closing their eyes")]
         public int MaxBlinkMs = 400;
         [Tooltip("when a blink occurs, ignore gaze preceding the blink up to this far back in time")]
         public int PreBlinkDiscardMs = 20;
-        //how many samples to skip after blink has ended
         [Tooltip("after a blink has ended, ignore gaze up to this long afterwards")]
         public int BlinkEndWarmupMs = 100;
         //the most recent time user has stopped blinking
@@ -195,35 +191,26 @@ namespace CognitiveVR
         [Tooltip("the time that gaze must be within the max fixation angle before a fixation occurs")]
         public int MinFixationMs = 60;
         [Tooltip("the amount of time gaze can be discarded before a fixation is ended. gaze can be discarded if eye tracking values are outside of expected ranges")]
-        public int MaxFixationConsecutiveNoiseMs = 10;
-        //public int PostSaccadeOscillationMs = 20;
-        //the angle that must be achieved to begin/maintain a fixation
+        public int MaxConsecutiveDiscardMs = 10;
         [Tooltip("the angle that a number of gaze samples must fall within to start a fixation event")]
         public float MaxFixationAngle = 1;
-        //float FixationDotSize = 0.99f;
-        //amount of 'noise' allowed when following a dynamic object in a smooth pursuit
         [Tooltip("amount of time gaze can be off the transform before fixation ends. mostly useful when fixation is right on the edge of a dynamic object")]
-        public int MaxFixationConsecutiveNoiseDynamicMs = 500;
+        public int MaxConsecutiveOffDynamicMs = 500;
         [Tooltip("multiplier for SMOOTH PURSUIT fixation angle size on dynamic objects. helps reduce incorrect fixation ending")]
         public float DynamicFixationSizeMultiplier = 1.25f;
-        //[Tooltip("keeps gaze samples up to this far back to sample the fixation point in local space")] //TODO ???? aren't local fixations based on locally saved positions? shouldn't have to store in meaningfully different way?
-        //world fixations use a crazy ever expanding list of points
-        //public int DynamicRollingAverageMS = 100;
-        [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
+        [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
         public AnimationCurve FocusSizeFromCenter;
-        //DynamicObject LastHitDynamic; //could be the transform for a new moving fixation
 
         [Header("saccade")]
-        //amount of saccades that must be consecutive before a fixation ends
-        [Tooltip("amount of saccades that must be consecutive before a fixation ends")]
-        public int FixationEndSaccadeConfirmMS = 10;
+        [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
+        public int SaccadeFixationEndMs = 10;
 
         Camera HMDCam;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         public List<Vector3> VISGazepoints = new List<Vector3>(4096);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
         //visualization
         //shoudl use gaze reticle or something??
         GameObject lastEyeTrackingPointer;
@@ -243,12 +230,11 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
             VISFixationEnds.Add("off transform", new List<Fixation>());
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 
             var viewer = FindObjectOfType<FixationVisualizer>();
             if (viewer != null)
@@ -284,7 +270,7 @@ namespace CognitiveVR
         private void Update()
         {
             PostGazeCallback();
-
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (IsFixating)
             {
                 lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", ActiveFixation.IsLocal ? Color.red : Color.cyan);
@@ -293,6 +279,7 @@ namespace CognitiveVR
             {
                 lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", Color.white);
             }
+#endif
         }
 
         //assuming command buffer will send a callback, use this when the command buffer is ready to read
@@ -362,6 +349,15 @@ namespace CognitiveVR
             EyeCaptures[index].OffTransform = false;
             EyeCaptures[index].OutOfRange = false;
 
+#if CVR_PUPIL
+            // discard gaze point if confidence too low. WILL THIS CONFLICT WITH BLINKING?
+            //EyeCaptures[index].Discard = PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f;
+#endif
+#if CVR_TOBIIVR
+            // discard gaze point if direction from either eye is invalid. WILL THIS CONFLICT WITH BLINKING?
+            //EyeCaptures[index].Discard = currentData.Right.GazeDirectionValid && currentData.Left.GazeDirectionValid ? false : true;
+#endif
+
             //set new current values
             EyeCaptures[index].EyesClosed = AreEyesClosed();
             EyeCaptures[index].HmdPosition = HMDCam.transform.position;
@@ -394,9 +390,9 @@ namespace CognitiveVR
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
             else{ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
-#endif
 
             VISGazepoints.Add(EyeCaptures[index].WorldPosition);
+#endif
             index = (index + 1) % CachedEyeCaptures;
         }
 
@@ -406,7 +402,7 @@ namespace CognitiveVR
             world = Vector3.zero;
             hitDynamic = null;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(CombinedWorldGazeRay(), out hit, CognitiveVR_Preferences.Instance.GazeLayerMask))
+            if (Physics.Raycast(CombinedWorldGazeRay(), out hit, CognitiveVR_Preferences.Instance.PhysicsGazeLayerMask))
             {
                 world = hit.point;
 
@@ -499,6 +495,7 @@ namespace CognitiveVR
 
             if (ActiveFixation.IsLocal)
             {
+                if (ActiveFixation.LocalTransform == null) { return true; }
                 var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
                 var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
@@ -619,31 +616,39 @@ namespace CognitiveVR
             //check for blinking too long
             if (EyeCaptures[index].Time > testFixation.LastEyesOpen + MaxBlinkMs)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["microsleep"].Add(new Fixation(testFixation));
+#endif
                 return true;
             }
 
             //check for general discarding
-            if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxFixationConsecutiveNoiseMs)
+            if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["discard"].Add(new Fixation(testFixation));
+#endif
                 //HMD issue, just a bunch of null data or some other issue
                 return true;
             }
 
             //check for out of fixation point range
-            if (EyeCaptures[index].Time > testFixation.LastInRange + FixationEndSaccadeConfirmMS)
+            if (EyeCaptures[index].Time > testFixation.LastInRange + SaccadeFixationEndMs)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["out of range"].Add(new Fixation(testFixation));
+#endif
                 return true;
             }
 
             if (ActiveFixation.IsLocal)
             {
                 //if not looking at transform for a while, end fixation
-                if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxFixationConsecutiveNoiseDynamicMs)
+                if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
                 {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     VISFixationEnds["off transform"].Add(new Fixation(testFixation));
+#endif
                     return true;
                 }
 

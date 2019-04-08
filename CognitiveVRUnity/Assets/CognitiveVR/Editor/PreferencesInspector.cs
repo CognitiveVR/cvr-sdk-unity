@@ -122,6 +122,7 @@ namespace CognitiveVR
             p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
             p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
+            //sensors
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
@@ -130,6 +131,14 @@ namespace CognitiveVR
             p.SensorSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Sensor Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit"), Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 60));
             p.SensorSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Sensor Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Sensor data"), Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
+            //fixations
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.FixationSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Fixation Snapshot Batch Size", "The number of Fixations to record before automatically sending a web request to the dashboard"), p.FixationSnapshotCount), 1, 1000);
+            p.FixationExtremeSnapshotCount= Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Fixation Extreme Batch Size", "Threshold for ignoring the Fixation Minimum Timer. If this many Fixations have been recorded, immediately send"), p.FixationExtremeSnapshotCount), p.FixationSnapshotCount, 1000);
+            p.FixationSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Fixation Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Fixation data. Ignored if the batch size reaches Fixation Extreme Limit"), Mathf.Clamp(p.FixationSnapshotMinTimer, 1, 10));
+            p.FixationSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Fixation Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Fixation data"), Mathf.Clamp(p.FixationSnapshotMaxTimer, p.FixationSnapshotMinTimer, 60));
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Local Data Cache", EditorStyles.boldLabel);
