@@ -224,7 +224,7 @@ namespace CognitiveVR
         {
             FocusSizeFromCenter = new AnimationCurve();
             FocusSizeFromCenter.AddKey(new Keyframe(0.01f, 1, 0, 0));
-            FocusSizeFromCenter.AddKey(new Keyframe(0.3f, 4, 30, 0));
+            FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
         public void Initialize()
