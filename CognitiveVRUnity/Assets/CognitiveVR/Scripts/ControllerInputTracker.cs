@@ -413,6 +413,7 @@ public class ControllerInputTracker : MonoBehaviour
 #elif CVR_MAGICLEAP
 
     private ControllerConnectionHandler _controllerConnectionHandler;
+    DynamicObject controllerDynamic;
     void Init()
     {
         //hands
@@ -422,32 +423,39 @@ public class ControllerInputTracker : MonoBehaviour
         MLInput.OnControllerButtonUp += HandleOnButtonUp;
         MLInput.OnControllerButtonDown += HandleOnButtonDown;
         _controllerConnectionHandler = GetComponent<ControllerConnectionHandler>();
+        if (_controllerConnectionHandler != null)
+        {
+            controllerDynamic = GetComponent<DynamicObject>();
+        }
     }
 
     private void HandleOnButtonDown(byte controllerId, MLInputControllerButton button)
     {
+        if (controllerDynamic == null) { return; }
         if (_controllerConnectionHandler.IsControllerValid() && _controllerConnectionHandler.ConnectedController.Id == controllerId &&
             button == MLInputControllerButton.Bumper)
         {
-            OnButtonChanged(true,"bumper",true);
+            OnButtonChanged(controllerDynamic, true, "bumper",true);
         }
     }
 
     private void HandleOnButtonUp(byte controllerId, MLInputControllerButton button)
     {
+        if (controllerDynamic == null) { return; }
         if (_controllerConnectionHandler.IsControllerValid() && _controllerConnectionHandler.ConnectedController.Id == controllerId &&
             button == MLInputControllerButton.Bumper)
         {
-            OnButtonChanged(true,"bumper",false);
+            OnButtonChanged(controllerDynamic, true, "bumper",false);
         }
     }
 
     void RecordAnalogInputs()
     {
+        if (controllerDynamic == null) { return; }
         //controller
         MLInputController controller = _controllerConnectionHandler.ConnectedController;
-        OnSingleChanged(true,"trigger",controller.TriggerValue);
-        OnVectorChanged(true,"touchpad",(int)controller.Touch1PosAndForce.z, controller.Touch1PosAndForce.x, controller.Touch1PosAndForce.y);
+        OnSingleChanged(controllerDynamic, true, "trigger",controller.TriggerValue);
+        OnVectorChanged(controllerDynamic, true, "touchpad",(int)controller.Touch1PosAndForce.z, controller.Touch1PosAndForce.x, controller.Touch1PosAndForce.y);
 
         //hands
         //confidence over 60%, then greater than 40%
@@ -460,30 +468,35 @@ public class ControllerInputTracker : MonoBehaviour
     }
 #elif CVR_SNAPDRAGON
 
+    DynamicObject controllerDynamic;
     void Init()
     {
         //only supports a single controller for now!
+        if (SvrInput.Controller != null)
+            controllerDynamic = SvrInput.Controller.GetComponent<DynamicObject>();
     }
 
     private void Update()
     {
+        if(controllerDynamic == null){return;}
         //thumbstick button
         if (SvrInput.Controller.GetButtonDown(SvrController.svrControllerButton.PrimaryThumbstick))
-            OnButtonChanged(true, "thumbstick", true);
+            OnButtonChanged(controllerDynamic, true, "thumbstick", true);
         if (SvrInput.Controller.GetButtonUp(SvrController.svrControllerButton.PrimaryThumbstick))
-            OnButtonChanged(true, "thumbstick", false);
+            OnButtonChanged(controllerDynamic, true, "thumbstick", false);
 
         //trigger
         if (SvrInput.Controller.GetButtonDown(SvrController.svrControllerButton.PrimaryIndexTrigger))
-            OnButtonChanged(true, "trigger", true);
+            OnButtonChanged(controllerDynamic, true, "trigger", true);
         if (SvrInput.Controller.GetButtonUp(SvrController.svrControllerButton.PrimaryIndexTrigger))
-            OnButtonChanged(true, "trigger", false);
+            OnButtonChanged(controllerDynamic, true, "trigger", false);
     }
 
     public void RecordAnalogInputs()
     {
+        if(controllerDynamic == null){return;}
         var vector = SvrInput.Controller.GetAxis2D(SvrController.svrControllerAxis2D.PrimaryThumbstick);
-        OnVectorChanged(true, "touchpad", SvrInput.Controller.GetButton(SvrController.svrControllerButton.PrimaryThumbstick) ? 100 : 0, vector);
+        OnVectorChanged(controllerDynamic, true, "touchpad", SvrInput.Controller.GetButton(SvrController.svrControllerButton.PrimaryThumbstick) ? 100 : 0, vector);
     }
 
 #elif CVR_STEAMVR2

@@ -97,6 +97,33 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_NEURABLE
+        const int CachedEyeCaptures = 120;
+        public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
+
+        //TODO neurable check eye state
+        public bool LeftEyeOpen() { return true; }
+        public bool RightEyeOpen() { return true; }
+
+        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        public long EyeCaptureTimestamp()
+        {
+            //TODO return correct timestamp - might need to use Tobii implementation
+            System.TimeSpan span = System.DateTime.UtcNow - epoch;
+            return (long)(span.TotalSeconds * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #elif CVR_AH
         const int CachedEyeCaptures = 120; //ADHAWK
         private static Calibrator ah_calibrator;
@@ -499,11 +526,11 @@ namespace CognitiveVR
                 var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
                 var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
+                //var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
                     var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(ActiveFixation.LocalPosition);
-                    var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
+                    //var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
                     var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
                     
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
@@ -531,7 +558,7 @@ namespace CognitiveVR
                     averagelocalpos /= (CachedEyeCapturePositions.Count + 1);
 
                     var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(averagelocalpos);
-                    var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
+                    //var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
                     var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
 
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);

@@ -184,7 +184,7 @@ public class GazeReticle : MonoBehaviour
         }
         Vector3 GetLookDirection()
         {
-            return SvrManager.Instance.eyeDirection;
+            return SvrManager.Instance.EyeDirection;
         }
 #endif
     }

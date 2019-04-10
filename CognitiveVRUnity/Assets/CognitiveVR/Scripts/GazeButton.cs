@@ -206,7 +206,7 @@ namespace CognitiveVR
 #elif CVR_AH
             gazeDirection = Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
-            gazeDirection = SvrManager.Instance.eyeDirection;
+            gazeDirection = SvrManager.Instance.EyeDirection;
 #endif
             return gazeDirection;
         }
