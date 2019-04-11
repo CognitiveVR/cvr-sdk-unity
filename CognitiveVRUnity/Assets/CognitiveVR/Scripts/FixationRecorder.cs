@@ -298,6 +298,7 @@ namespace CognitiveVR
         {
             PostGazeCallback();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (lastEyeTrackingPointer == null) { return; }
             if (IsFixating)
             {
                 lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", ActiveFixation.IsLocal ? Color.red : Color.cyan);
@@ -376,6 +377,8 @@ namespace CognitiveVR
             EyeCaptures[index].OffTransform = false;
             EyeCaptures[index].OutOfRange = false;
 
+            bool areEyesClosed = AreEyesClosed();
+
 #if CVR_PUPIL
             // discard gaze point if confidence too low. WILL THIS CONFLICT WITH BLINKING?
             //EyeCaptures[index].Discard = PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f;
@@ -384,9 +387,12 @@ namespace CognitiveVR
             // discard gaze point if direction from either eye is invalid. WILL THIS CONFLICT WITH BLINKING?
             //EyeCaptures[index].Discard = currentData.Right.GazeDirectionValid && currentData.Left.GazeDirectionValid ? false : true;
 #endif
+#if CVR_AH
+            //EyeCaptures[index].Discard = eyetracker.CurrentTrackingState == EyeTracker.TrackingState.TrackingUnknown || (eyetracker.CurrentTrackingState == EyeTracker.TrackingState.TrackingLost && !areEyesClosed);
+#endif
 
             //set new current values
-            EyeCaptures[index].EyesClosed = AreEyesClosed();
+            EyeCaptures[index].EyesClosed = areEyesClosed;
             EyeCaptures[index].HmdPosition = HMDCam.transform.position;
             EyeCaptures[index].Time = EyeCaptureTimestamp();
 
@@ -525,12 +531,9 @@ namespace CognitiveVR
                 if (ActiveFixation.LocalTransform == null) { return true; }
                 var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
                 var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
-                var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                //var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
                     var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(ActiveFixation.LocalPosition);
-                    //var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
                     var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
                     
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
@@ -558,7 +561,6 @@ namespace CognitiveVR
                     averagelocalpos /= (CachedEyeCapturePositions.Count + 1);
 
                     var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(averagelocalpos);
-                    //var _fixationScreenPos = HMDCam.WorldToViewportPoint(_fixationWorldPosition);
                     var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
 
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
@@ -781,10 +783,9 @@ namespace CognitiveVR
             if (withinRadius)
             {
                 //all eye captures within fixation radius. save transform, set ActiveFixation start time and world position
-                ActiveFixation.LocalPosition = averageLocalPosition;// mostUsed.InverseTransformPoint(averageWorldPosition);
+                ActiveFixation.LocalPosition = averageLocalPosition;
                 ActiveFixation.WorldPosition = mostUsed.TransformPoint(averageLocalPosition);
                 Debug.DrawRay(ActiveFixation.WorldPosition, Vector3.up * 0.5f, Color.red, 3);
-                //FixationTransform = mostUsed;
                 ActiveFixation.DynamicObjectId = mostUsed.GetComponent<DynamicObject>().Id;
 
                 float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - EyeCaptures[index].HmdPosition);

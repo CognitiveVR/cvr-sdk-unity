@@ -99,7 +99,7 @@ namespace CognitiveVR
 
                 if (Fixations[i].IsLocal)
                 {
-                    JsonUtil.SetString("dynamicid", Fixations[i].DynamicObjectId, sb);
+                    JsonUtil.SetString("objectid", Fixations[i].DynamicObjectId, sb);
                     sb.Append(",");
                     JsonUtil.SetVector("p", Fixations[i].LocalPosition, sb);
                 }
@@ -119,10 +119,7 @@ namespace CognitiveVR
             Fixations.Clear();
 
             string url = Constants.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
-            //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
-            //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
-            Debug.Log(sb.ToString());
-            //NetworkManager.Post(url, sb.ToString());
+            NetworkManager.Post(url, sb.ToString());
         }
     }
 }
