@@ -60,7 +60,7 @@ public class PhysicsGaze : GazeBase
             return;
         }
 
-        if (Physics.Raycast(ray, out hit, cam.farClipPlane, CognitiveVR_Preferences.Instance.PhysicsGazeLayerMask))
+        if (Physics.Raycast(ray, out hit, cam.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask))
         {
             Vector3 pos = CameraTransform.position;
             Vector3 gazepoint = hit.point;

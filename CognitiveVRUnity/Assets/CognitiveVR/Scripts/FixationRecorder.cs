@@ -435,7 +435,7 @@ namespace CognitiveVR
             world = Vector3.zero;
             hitDynamic = null;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(CombinedWorldGazeRay(), out hit, CognitiveVR_Preferences.Instance.PhysicsGazeLayerMask))
+            if (Physics.Raycast(CombinedWorldGazeRay(), out hit, CognitiveVR_Preferences.Instance.GazeLayerMask))
             {
                 world = hit.point;
 

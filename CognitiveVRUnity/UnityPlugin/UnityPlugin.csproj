@@ -48,6 +48,9 @@
     <Compile Include="Error.cs" />
     <Compile Include="External\StringBuilderExtensions.cs" />
     <Compile Include="External\MiniJSON.cs" />
+    <Compile Include="EyeCapture.cs" />
+    <Compile Include="Fixation.cs" />
+    <Compile Include="FixationCore.cs" />
     <Compile Include="GazeCore.cs" />
     <Compile Include="Instrumentation.cs" />
     <Compile Include="Network.cs" />
