@@ -34,11 +34,13 @@ namespace CognitiveVR.Components
 #elif CVR_OCULUS
 
             //(x = width, y = height, z = depth)
-            Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
-
-            Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", dimensions.x*100, dimensions.z*100));
-            Core.SetSessionProperty("c3d.roomsize", dimensions.x * dimensions.z*100);
-            Core.SetSessionProperty("c3d.roomscale", OVRManager.boundary.GetConfigured());
+            if (OVRManager.boundary.GetConfigured())
+            {
+                Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
+                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", dimensions.x * 100, dimensions.z * 100));
+                Core.SetSessionProperty("c3d.roomsize", dimensions.x * dimensions.z * 100);
+                Core.SetSessionProperty("c3d.roomscale", OVRManager.boundary.GetConfigured());
+            }
 #endif
         }
 
