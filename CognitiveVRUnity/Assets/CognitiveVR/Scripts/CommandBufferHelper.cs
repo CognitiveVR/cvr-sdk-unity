@@ -13,16 +13,19 @@ namespace CognitiveVR
         RenderTexture rt;
         Camera cam;
 
+#if UNITY_2018_2_OR_NEWER
         CommandGaze gaze;
+#endif
 
-        bool supportsAsyncGPUReadback = false;
-        //bool singlePass = false;
+        bool supportsAsyncGPUReadback = false; //used in 2018
 
         public delegate void PostRenderCommandCallback(Ray ray, Vector3 viewportVector, Vector3 worldHitPoint);
         PostRenderCommandCallback onPostRenderCommand;
         public void Initialize(RenderTexture src_rt, Camera src_cam, PostRenderCommandCallback postcallback, CommandGaze gaze)
         {
+#if UNITY_2018_2_OR_NEWER
             this.gaze = gaze;
+#endif
             cam = src_cam;
             rt = src_rt;
             debugtex = new Texture2D(rt.width, rt.height, TextureFormat.RGBAFloat, false);
