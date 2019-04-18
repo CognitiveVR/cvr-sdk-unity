@@ -26,14 +26,9 @@ namespace CognitiveVR
                     }
                     IsSet = true;
                     S_SnapshotInterval = instance.SnapshotInterval;
-                    //S_EvaluateGazeRealtime = instance.EvaluateGazeRealtime;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    //S_TrackGazePoint = instance.TrackGazePoint;
-                    //S_GazePointFromDirection = instance.GazePointFromDirection;
-                    //S_VideoSphereDynamicObjectId = instance.VideoSphereDynamicObjectId;
-                    //S_GazeDirectionMultiplier = instance.GazeDirectionMultiplier;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
@@ -81,8 +76,21 @@ namespace CognitiveVR
 
         [Header("Player Tracking")]
         //player tracking
-        
-        public float SnapshotInterval = 0.1f;
+
+        float snapshotInterval = 0.1f;
+        public float SnapshotInterval
+        {
+            get
+            {
+                return snapshotInterval;
+            }
+            set
+            {
+                //--- IMPORTANT ---
+                //It is against the Cognitive3D terms of service to set this value lower than 0.1 (ie, 10 snapshots per second)
+                snapshotInterval = Mathf.Max(0.1f, value);
+            }
+        }
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
         public float GPSInterval = 1;
@@ -90,30 +98,37 @@ namespace CognitiveVR
         public bool SyncGPSWithGaze;
         public bool RecordFloorPosition = true;
 
+        public int GazeLayerMask = -1;
+        public int DynamicLayerMask = -1;
+
         [Header("Send Data")]
         //min batch size
         public int GazeSnapshotCount = 64;
         public int SensorSnapshotCount = 64;
         public int DynamicSnapshotCount = 64;
         public int TransactionSnapshotCount = 64;
+        public int FixationSnapshotCount = 64;
 
         //min timer
         //public int GazeSnapshotMinTimer = 6;
         public int SensorSnapshotMinTimer = 6;
         public int DynamicSnapshotMinTimer = 2;
         public int TransactionSnapshotMinTimer = 2;
+        public int FixationSnapshotMinTimer = 2;
 
         //extreme batch size
         //public int GazeExtremeSnapshotCount = 256;
         public int SensorExtremeSnapshotCount = 256;
         public int DynamicExtremeSnapshotCount = 256;
         public int TransactionExtremeSnapshotCount = 256;
+        public int FixationExtremeSnapshotCount = 2;
 
         //max timer
         //public int GazeSnapshotMaxTimer = 10;
         public int SensorSnapshotMaxTimer = 10;
         public int DynamicSnapshotMaxTimer = 10;
         public int TransactionSnapshotMaxTimer = 10;
+        public int FixationSnapshotMaxTimer = 10;
 
 
 

@@ -735,9 +735,6 @@ namespace CognitiveVR
 
         public static Texture2D Snapshot(Transform target, int resolution = 128)
         {
-            //var sceneview = (SceneView)SceneView.sceneViews[0];
-            //target = Selection.activeTransform;
-
             GameObject cameraGo = new GameObject("Temp_Camera");
             Camera cam = cameraGo.AddComponent<Camera>();
 
@@ -773,25 +770,55 @@ namespace CognitiveVR
             //create render texture and assign to camera
             RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
             RenderTexture.active = rt;
-            //GL.Clear(true, true, Color.clear);
             cam.targetTexture = rt;
-            //GL.Clear(true, true, Color.clear);
 
+            Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, target);
 
-            //RenderTexture.active = rt;
+            //layer stuff
+            int layer = EditorCore.FindUnusedLayer();
+            if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); }
 
-            cam.Render();
-            //TODO write non-square textures, do full 0-1 uvs instead of saving blank space
+            if (layer != -1)
+            {
+                cam.cullingMask = 1 << layer;
+            }
 
+            try
+            {
+                if (layer != -1)
+                {
+                    foreach (var v in children)
+                    {
+                        originallayers.Add(v.gameObject, v.gameObject.layer);
+                        v.gameObject.layer = layer;
+                    }
+                }
 
+                //render to texture
+                cam.Render();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            if (layer != -1)
+            {
+                //reset dynamic object layers
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+            
             //write rendertexture to png
             Texture2D tex = new Texture2D(resolution, resolution);
             RenderTexture.active = rt;
 
             tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
             tex.Apply();
-
-            //GL.Clear(true, true, Color.clear);
+            
             RenderTexture.active = null;
 
             //delete stuff

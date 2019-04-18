@@ -37,7 +37,12 @@ namespace CognitiveVR
             {
                 if (_cam == null)
                 {
-                    _cam = Camera.main;
+                    if (CognitiveVR_Manager.HMD != null)
+                    {
+                        _cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
+                    }
+                    else
+                        _cam = Camera.main;
                 }
                 return _cam;
             }
@@ -201,7 +206,7 @@ namespace CognitiveVR
 #elif CVR_AH
             gazeDirection = Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
-            gazeDirection = SvrManager.Instance.eyeDirection;
+            gazeDirection = SvrManager.Instance.EyeDirection;
 #endif
             return gazeDirection;
         }

@@ -20,7 +20,7 @@ namespace CognitiveVR
 
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.9.8";
+        public const string SDK_VERSION = "0.10.0";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -164,19 +164,19 @@ namespace CognitiveVR
 
                 if (Error.Success == ret)
                 {
-                    UpdateSessionState("c3d.app.name", Application.productName);
-                    UpdateSessionState("c3d.app.version", Application.version);
-                    UpdateSessionState("c3d.app.engine.version", Application.unityVersion);
-                    UpdateSessionState("c3d.device.type", SystemInfo.deviceType.ToString());
-                    UpdateSessionState("c3d.device.cpu", SystemInfo.processorType);
-                    UpdateSessionState("c3d.device.model", SystemInfo.deviceModel);
-                    UpdateSessionState("c3d.device.gpu", SystemInfo.graphicsDeviceName);
-                    UpdateSessionState("c3d.device.os", SystemInfo.operatingSystem);
-                    UpdateSessionState("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+                    SetSessionProperty("c3d.app.name", Application.productName);
+                    SetSessionProperty("c3d.app.version", Application.version);
+                    SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+                    SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+                    SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+                    SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+                    SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                    SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+                    SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
 
                     //Util.cacheDeviceAndAppInfo();
                     DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
-                    UpdateSessionState("c3d.deviceid", DeviceId);
+                    SetSessionProperty("c3d.deviceid", DeviceId);
 
                     //initialize Network Manager early, before gameplay actually starts
                     var temp = NetworkManager.Sender;
@@ -215,9 +215,15 @@ namespace CognitiveVR
             }
             return newSessionProperties;
         }
-        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>();
-        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>();
+        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>(32);
+        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>(32);
+
+        [System.Obsolete("use SetSessionProperties")]
         public static void UpdateSessionState(Dictionary<string, object> dictionary)
+        {
+            SetSessionProperties(dictionary);
+        }
+        public static void SetSessionProperties(Dictionary<string, object> dictionary)
         {
             if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
             foreach (var kvp in dictionary)
@@ -241,7 +247,12 @@ namespace CognitiveVR
                 }
             }
         }
+        [System.Obsolete("use SetSessionProperty")]
         public static void UpdateSessionState(string key, object value)
+        {
+            SetSessionProperty(key, value);
+        }
+        public static void SetSessionProperty(string key, object value)
         {
             if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
             {
@@ -268,7 +279,12 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
+        [System.Obsolete("use SetSessionPropertyIfEmpty")]
         public static void UpdateSessionStateIfEmpty(string key, object value)
+        {
+            SetSessionPropertyIfEmpty(key, value);
+        }
+        public static void SetSessionPropertyIfEmpty(string key, object value)
         {
             if (knownSessionProperties.ContainsKey(key)) { return; }
             if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value

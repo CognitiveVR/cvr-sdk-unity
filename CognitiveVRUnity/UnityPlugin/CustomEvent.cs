@@ -8,14 +8,39 @@ namespace CognitiveVR
     /// </summary>
     public class CustomEvent
     {
-        private string _category;
-        private string _dynamicObjectId;
-        private Dictionary<string, object> _properties = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
+        public string category { get; private set; }
+        public string dynamicObjectId { get; private set; }
+        private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
+
+        static int lastFrameCount = 0;
+        static int consecutiveEvents = 0;
 
         public CustomEvent(string category)
         {
-            _category = category;
+            this.category = category;
             startTime = Time.realtimeSinceStartup;
+
+            //checks that custom events aren't being created each frame (likely in update)
+            if (CognitiveVR_Preferences.Instance.EnableLogging)
+            {
+                if (lastFrameCount >= Time.frameCount - 1)
+                {
+                    if (lastFrameCount != Time.frameCount)
+                    {
+                        lastFrameCount = Time.frameCount;
+                        consecutiveEvents++;
+                        if (consecutiveEvents > 200)
+                        {
+                            CognitiveVR.Util.logError("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unity/customevents");
+                        }
+                    }
+                }
+                else
+                {
+                    lastFrameCount = Time.frameCount;
+                    consecutiveEvents = 0;
+                }
+            }
         }
 
         private float startTime;
@@ -47,9 +72,13 @@ namespace CognitiveVR
         /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
         public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
-            if (null != properties)
+            if (properties == null) { return this; }
+            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            foreach (KeyValuePair<string, object> kvp in properties)
             {
-                foreach (KeyValuePair<string, object> kvp in properties)
+                if (_properties.ContainsKey(kvp.Key))
+                    _properties[kvp.Key] = kvp.Value;
+                else
                     _properties.Add(kvp.Key, kvp.Value);
             }
             return this;
@@ -63,7 +92,11 @@ namespace CognitiveVR
         /// <param name="value">Value for transaction state property</param>
         public CustomEvent SetProperty(string key, object value)
         {
-            _properties.Add(key, value);
+            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            if (_properties.ContainsKey(key))
+                _properties[key] = value;
+            else
+                _properties.Add(key, value);
             return this;
         }
 
@@ -73,7 +106,7 @@ namespace CognitiveVR
         /// <param name="sourceObjectId">The dynamic object that 'caused' this event</param>
         public CustomEvent SetDynamicObject(string sourceObjectId)
         {
-            _dynamicObjectId = sourceObjectId;
+            dynamicObjectId = sourceObjectId;
             return this;
         }
 
@@ -93,13 +126,14 @@ namespace CognitiveVR
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
+                if (_properties == null) { _properties = new Dictionary<string, object>(); }
                 if (_properties.ContainsKey("duration"))
                     _properties["duration"] = duration;
                 else
                     _properties.Add("duration", duration);
             }
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
+            Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
         }
 
         /// <summary>
@@ -121,13 +155,14 @@ namespace CognitiveVR
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
+                if (_properties == null) { _properties = new Dictionary<string, object>(); }
                 if (_properties.ContainsKey("duration"))
                     _properties["duration"] = duration;
                 else
                     _properties.Add("duration", duration);
             }
 
-            Instrumentation.SendCustomEvent(_category, _properties, pos, _dynamicObjectId);
+            Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
         }
     }
 }

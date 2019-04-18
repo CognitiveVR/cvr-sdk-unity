@@ -1124,7 +1124,7 @@ public class EditorCore
 
     #region dynamic object thumbnails
     //returns unused layer int. returns -1 if no unused layer is found
-    static int FindUnusedLayer()
+    public static int FindUnusedLayer()
     {
         for (int i = 31; i > 0; i--)
         {
@@ -1150,7 +1150,12 @@ public class EditorCore
         SaveDynamicThumbnail(target, pos, rot);
     }
 
-    static void RecursivelyGetChildren(List<Transform> transforms, Transform current)
+    /// <summary>
+    /// recursively get child transforms, skipping nested dynamic objects
+    /// </summary>
+    /// <param name="transforms"></param>
+    /// <param name="current"></param>
+    public static void RecursivelyGetChildren(List<Transform> transforms, Transform current)
     {
         transforms.Add(current);
         for (int i = 0; i < current.childCount; i++)

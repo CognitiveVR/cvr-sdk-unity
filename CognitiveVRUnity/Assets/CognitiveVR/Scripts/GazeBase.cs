@@ -98,7 +98,6 @@ namespace CognitiveVR
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 #endif
 
-
 #if CVR_TOBIIVR
             _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
 #endif
@@ -109,6 +108,15 @@ namespace CognitiveVR
 
             GazeCore.SetHMDType(hmdname);
             cameraRoot = CameraTransform.root;
+
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
+            //var fixationRecorder = FindObjectOfType<FixationRecorder>();
+            //if (fixationRecorder == null)
+            //{
+            //    fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+            //}
+            //fixationRecorder.Initialize();
+#endif
         }
 
 
@@ -183,7 +191,7 @@ namespace CognitiveVR
             localHitPoint = Vector3.zero;
             hitTextureCoord = Vector2.zero;
 
-            if (Physics.Raycast(pos, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(pos, direction, out hit, distance, CognitiveVR_Preferences.Instance.DynamicLayerMask, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
                 {
@@ -218,7 +226,7 @@ namespace CognitiveVR
                     hitTextureCoord = hit.textureCoord;
                 }
             }
-            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, -1, QueryTriggerInteraction.Ignore))
+            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, CognitiveVR_Preferences.Instance.DynamicLayerMask, QueryTriggerInteraction.Ignore))
             {
                 if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
                 {

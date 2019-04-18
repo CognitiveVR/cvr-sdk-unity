@@ -59,6 +59,24 @@ namespace CognitiveVR
             p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
+            bool eyetracking = false;
+#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON
+            eyetracking = true;
+#endif
+
+            if (p.GazeType == GazeType.Physics || eyetracking)
+            {
+                LayerMask gazeMask = new LayerMask();
+                gazeMask.value = p.GazeLayerMask;
+                gazeMask = EditorGUILayout.MaskField("Gaze Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
+                p.GazeLayerMask = gazeMask.value;
+            }
+
+            LayerMask dynamicMask = new LayerMask();
+            dynamicMask.value = p.DynamicLayerMask;
+            dynamicMask = EditorGUILayout.MaskField("Dynamic Object Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(dynamicMask), (UnityEditorInternal.InternalEditorUtility.layers));
+            p.DynamicLayerMask = dynamicMask.value;
+
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
@@ -90,7 +108,7 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
-            
+
             //transactions
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
@@ -109,6 +127,7 @@ namespace CognitiveVR
             p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
             p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
+            //sensors
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
@@ -117,6 +136,14 @@ namespace CognitiveVR
             p.SensorSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Sensor Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit"), Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 60));
             p.SensorSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Sensor Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Sensor data"), Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
 
+            //fixations
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
+            EditorGUI.indentLevel--;
+            p.FixationSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Fixation Snapshot Batch Size", "The number of Fixations to record before automatically sending a web request to the dashboard"), p.FixationSnapshotCount), 1, 1000);
+            p.FixationExtremeSnapshotCount= Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Fixation Extreme Batch Size", "Threshold for ignoring the Fixation Minimum Timer. If this many Fixations have been recorded, immediately send"), p.FixationExtremeSnapshotCount), p.FixationSnapshotCount, 1000);
+            p.FixationSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Fixation Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Fixation data. Ignored if the batch size reaches Fixation Extreme Limit"), Mathf.Clamp(p.FixationSnapshotMinTimer, 1, 10));
+            p.FixationSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Fixation Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Fixation data"), Mathf.Clamp(p.FixationSnapshotMaxTimer, p.FixationSnapshotMinTimer, 60));
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Local Data Cache", EditorStyles.boldLabel);

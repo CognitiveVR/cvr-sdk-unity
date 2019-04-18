@@ -58,7 +58,6 @@ namespace CognitiveVR
             var trackGaze = serializedObject.FindProperty("TrackGaze");
             var requiresManualEnable = serializedObject.FindProperty("RequiresManualEnable");
             var isController = serializedObject.FindProperty("IsController");
-            var controllerType = serializedObject.FindProperty("ControllerType");
 
             foreach (var t in serializedObject.targetObjects)
             {

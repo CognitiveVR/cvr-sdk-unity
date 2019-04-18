@@ -14,7 +14,7 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.Success) { return; }
             base.CognitiveVR_Init(initError);
-            Core.UpdateSessionState("c3d.device.screenresolution", Screen.height + " x " + Screen.width);
+            Core.SetSessionProperty("c3d.device.screenresolution", Screen.height + " x " + Screen.width);
         }
 
         public static bool GetWarning()
