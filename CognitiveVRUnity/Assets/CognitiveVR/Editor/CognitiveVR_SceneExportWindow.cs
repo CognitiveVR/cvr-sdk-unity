@@ -69,19 +69,6 @@ namespace CognitiveVR
 
     public class CognitiveVR_SceneExportWindow : EditorWindow
     {
-        //returns true if savedblenderpath ends with blender.exe/app
-        static bool IsBlenderPathValid()
-        {
-            if (string.IsNullOrEmpty(EditorCore.BlenderPath)) { return false; }
-#if UNITY_EDITOR_WIN
-            return EditorCore.BlenderPath.ToLower().EndsWith("blender.exe");
-#elif UNITY_EDITOR_OSX
-            return EditorCore.BlenderPath.ToLower().EndsWith("blender.app");
-#else
-            return false;
-#endif
-        }
-
         private void Update()
         {
             Repaint();

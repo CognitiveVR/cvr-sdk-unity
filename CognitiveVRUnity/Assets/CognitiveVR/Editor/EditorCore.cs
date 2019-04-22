@@ -195,38 +195,6 @@ public class EditorCore
         }
     }
 
-    private static string _blenderPath;
-    public static string BlenderPath
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(_blenderPath))
-            {
-                _blenderPath = FindBlender();
-            }
-            return _blenderPath;
-        }
-        set
-        {
-            _blenderPath = value;
-        }
-    }
-
-    public static bool IsBlenderPathValid
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(BlenderPath)) { Debug.Log("EditorCore BlenderPath is null or empty"); return false; }
-#if UNITY_EDITOR_WIN
-            return BlenderPath.ToLower().EndsWith("blender.exe");
-#elif UNITY_EDITOR_OSX
-            return BlenderPath.ToLower().EndsWith("blender.app");
-#else
-            return false;
-#endif
-        }
-    }
-
     public static bool IsDeveloperKeyValid
     {
         get
@@ -912,38 +880,6 @@ public class EditorCore
         }
         ExportedDynamicObjects = ObjectNames;
         return ObjectNames;
-    }
-
-    static string FindBlender()
-    {
-#if UNITY_EDITOR_WIN
-        if (Directory.Exists(@"C:/Program Files/"))
-        {
-            if (Directory.Exists(@"C:/Program Files/Blender Foundation/"))
-            {
-                if (Directory.Exists(@"C:/Program Files/Blender Foundation/Blender"))
-                {
-                    if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
-                    {
-                        return @"C:/Program Files/Blender Foundation/Blender/blender.exe";
-                    }
-                }
-            }
-        }
-#elif UNITY_EDITOR_OSX
-            //check /Applications/Blender/blender.app
-            if (Directory.Exists(@"/Applications/"))
-            {
-                if (Directory.Exists(@"/Applications/Blender/"))
-                {
-                    if (File.Exists(@"/Applications/Blender/blender.app"))
-                    {
-                        return @"/Applications/Blender/blender.app";
-                    }
-                }
-            }
-#endif
-        return "";
     }
     
     public static void GetAllScenes(List<string>names, List<string>paths)
