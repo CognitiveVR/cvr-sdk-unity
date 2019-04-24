@@ -11,6 +11,7 @@ using UnityEngine.Networking;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("")]
     public class NetworkManager : MonoBehaviour
     {
         static NetworkManager _sender;
@@ -286,7 +287,7 @@ namespace CognitiveVR
                     request.method = "POST";
                     request.SetRequestHeader("Content-Type", "application/json");
                     request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                    request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+                    request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
                     yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
 
                     //check internet access
@@ -368,7 +369,7 @@ namespace CognitiveVR
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
@@ -381,7 +382,7 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
@@ -398,7 +399,7 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));

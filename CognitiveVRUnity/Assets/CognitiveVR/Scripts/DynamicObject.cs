@@ -17,6 +17,8 @@ using System.Collections.Generic;
 //iterate through and write updates
 namespace CognitiveVR
 {
+    [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
+    [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
     public class DynamicObject : MonoBehaviour
     {
 #if UNITY_EDITOR
@@ -219,9 +221,9 @@ namespace CognitiveVR
                 return;
             }
 
-            if (CognitiveVR_Manager.InitResponse == Error.Success)
+            if (CognitiveVR_Manager.InitResponse == Error.None)
             {
-                CognitiveVR_Manager_InitEvent(Error.Success);
+                CognitiveVR_Manager_InitEvent(Error.None);
             }
 
             NewSnapshot().UpdateTransform(transform.position, transform.rotation).SetEnabled(true);
@@ -302,7 +304,7 @@ namespace CognitiveVR
         {
             CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
 
-            if (initError != Error.Success)
+            if (initError != Error.None)
             {
                 StopAllCoroutines();
                 return;
@@ -896,7 +898,7 @@ namespace CognitiveVR
 
             sendSnapshotBuilder.Append("}");
 
-            string url = Constants.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
+            string url = CognitiveStatics.POSTDYNAMICDATA(trackingsettings.SceneId, trackingsettings.VersionNumber);
 
             string content = sendSnapshotBuilder.ToString();
             

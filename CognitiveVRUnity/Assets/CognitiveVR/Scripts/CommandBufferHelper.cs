@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Command Buffer Helper")]
     public class CommandBufferHelper : MonoBehaviour
     {
         RenderTexture temp;

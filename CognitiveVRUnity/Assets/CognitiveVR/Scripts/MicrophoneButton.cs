@@ -13,6 +13,7 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Microphone Button")]
     public class MicrophoneButton : MonoBehaviour
     {
         [Header("Gaze Settings")]

@@ -340,7 +340,7 @@ public class ManageDynamicObjects : EditorWindow
             return;
         }
 
-        string url = Constants.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
+        string url = CognitiveStatics.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
 
         Dictionary<string, string> headers = new Dictionary<string, string>();
         if (EditorCore.IsDeveloperKeyValid)
@@ -487,7 +487,7 @@ public class ManageDynamicObjects : EditorWindow
             return;
         }
 
-        string url = Constants.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
+        string url = CognitiveStatics.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
         Util.logDebug("Send Manifest Contents: " + json);
 
         //upload manifest

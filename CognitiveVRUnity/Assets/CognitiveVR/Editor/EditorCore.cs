@@ -402,7 +402,7 @@ public class EditorCore
 
         if (EditorUtility.DisplayDialog("Upload Screenshot","Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber+"?","Upload","Cancel"))
         {
-            string url = Constants.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
+            string url = CognitiveStatics.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
 
             var bytes = File.ReadAllBytes(path);
 
@@ -595,7 +595,7 @@ public class EditorCore
             }
 
             RefreshSceneVersionComplete = refreshSceneVersionComplete;
-            string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
+            string url = CognitiveStatics.GETSCENEVERSIONS(currentSettings.SceneId);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             if (EditorCore.IsDeveloperKeyValid)
@@ -662,7 +662,7 @@ public class EditorCore
                 Debug.Log("SendSceneVersionRequest no scene settings!");
                 return;
             }
-            string url = Constants.GETMEDIASOURCELIST();
+            string url = CognitiveStatics.GETMEDIASOURCELIST();
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             if (EditorCore.IsDeveloperKeyValid)
@@ -955,7 +955,7 @@ public class EditorCore
         EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
         SaveEditorVersion();
         
-        checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+        checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
         checkForUpdatesRequest.Send();
         EditorApplication.update += UpdateCheckForUpdates;
     }
@@ -972,7 +972,7 @@ public class EditorCore
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                 SaveEditorVersion();
                 
-                checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+                checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
                 checkForUpdatesRequest.Send();
                 EditorApplication.update += UpdateCheckForUpdates;
             }

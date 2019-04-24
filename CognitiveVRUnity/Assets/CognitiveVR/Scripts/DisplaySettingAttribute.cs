@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 
 //used to identify which fields/methods should be displayed in the component window
@@ -6,7 +7,7 @@ namespace CognitiveVR.Components
 {
     //add max and min values to this
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public class DisplaySettingAttribute : Attribute
+    public class DisplaySettingAttribute : PropertyAttribute
     {
         private bool UseFloatLimits;
         private float fmin;

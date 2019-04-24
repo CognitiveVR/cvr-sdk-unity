@@ -8,17 +8,17 @@ using System.Collections;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Controller Collision Event")]
     public class ControllerCollisionEvent : CognitiveVRAnalyticsComponent
     {
         bool LeftControllerColliding;
         bool RightControllerColliding;
-
-        [DisplaySetting]
+        
         public LayerMask CollisionLayerMask = 1;
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
@@ -61,12 +61,16 @@ namespace CognitiveVR.Components
             }
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transactions when either controller collides in the game world\nCollision layers are set in CognitiveVR_Preferences\nRequires SteamVR or Oculus Touch controllers";
+#if (CVR_OCULUS && !UNITY_ANDROID) || CVR_STEAMVR || CVR_STEAMVR2
+            return "Sends transactions when either controller collides in the game world";
+#else
+            return "Current platform does not support this component";
+#endif
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;

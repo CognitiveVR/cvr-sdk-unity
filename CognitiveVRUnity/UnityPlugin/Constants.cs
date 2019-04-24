@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+//static and constant values used throughout the SDK
+
 namespace CognitiveVR
 {
-    public static class Constants
+    public static class CognitiveStatics
     {
         private const string version = "0";
 

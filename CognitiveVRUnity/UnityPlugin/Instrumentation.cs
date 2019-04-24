@@ -140,7 +140,7 @@ namespace CognitiveVR
             string packagedEvents = builder.ToString();
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = Constants.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
 
             //var headers = new Dictionary<string, string>();

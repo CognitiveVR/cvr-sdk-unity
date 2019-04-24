@@ -21,6 +21,7 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Gaze Base")]
     public class GazeBase : MonoBehaviour
     {
 #if CVR_TOBIIVR

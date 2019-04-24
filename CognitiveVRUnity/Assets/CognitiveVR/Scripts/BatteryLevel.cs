@@ -12,6 +12,7 @@ using CognitiveVR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : CognitiveVRAnalyticsComponent
     {
 #if !CVR_OCULUS
@@ -19,7 +20,7 @@ namespace CognitiveVR.Components
 #endif
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             SendBatteryLevel();
             CognitiveVR_Manager.QuitEvent += CognitiveVR_Manager_OnQuit;
@@ -97,7 +98,7 @@ namespace CognitiveVR.Components
         }
 #endif
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if UNITY_ANDROID
             return false;
@@ -106,9 +107,15 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Send the battery level of Android device after initialization and on quit\nOculus Utilies also includes battery temperature and status" + (GetWarning() ? "\nPlatform not set to Android!" : "");
+#if UNITY_ANDROID && CVR_OCULUS
+            return "Send the battery level of Android device after initialization and on quit\nAlso includes battery temperature and status");
+#elif UNITY_ANDROID
+            return "Send the battery level of Android device after initialization and on quit");
+#else
+            return "Current platform does not support this component. Must be set to Android";
+#endif
         }
 
         void OnDestroy()

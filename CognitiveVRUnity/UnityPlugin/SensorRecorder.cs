@@ -139,7 +139,7 @@ namespace CognitiveVR
             CachedSnapshots.Clear();
             currentSensorSnapshots = 0;
 
-            string url = Constants.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             NetworkManager.Post(url, sb.ToString());

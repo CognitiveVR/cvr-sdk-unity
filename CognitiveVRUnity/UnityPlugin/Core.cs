@@ -135,67 +135,44 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="initParams">Initialization parameters</param>
         /// <param name="cb">Application defined callback which will occur on completion</param>
-        public static void init(Callback cb)
+        public static Error init()
         {
-            Constants.Initialize();
-            Error error = Error.Success;
-
-            if (null == cb)
+            CognitiveStatics.Initialize();
+            Error error = Error.None;
+            // Have we already initialized CognitiveVR?
+            if (Initialized)
             {
-                Util.logError("Please provide a valid CognitiveVR.Callback");
-                error = Error.InvalidArgs;
+                Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
+                error = Error.AlreadyInitialized;
             }
 
-            if (Error.Success == error)
+            if (Error.None == error)
             {
-                Error ret = Error.Success;
+                SetSessionProperty("c3d.app.name", Application.productName);
+                SetSessionProperty("c3d.app.version", Application.version);
+                SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+                SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+                SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+                SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+                SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
 
-                // Have we already initialized CognitiveVR?
-                if (Initialized)
-                {
-                    Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
-                    ret = Error.AlreadyInitialized;
-                }
-                else if (null == cb)
-                {
-                    Util.logError("Please provide a valid callback");
-                    ret = Error.InvalidArgs;
-                }
+                //Util.cacheDeviceAndAppInfo();
+                DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
+                SetSessionProperty("c3d.deviceid", DeviceId);
 
-                if (Error.Success == ret)
-                {
-                    SetSessionProperty("c3d.app.name", Application.productName);
-                    SetSessionProperty("c3d.app.version", Application.version);
-                    SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
-                    SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
-                    SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
-                    SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
-                    SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
-                    SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
-                    SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+                //initialize Network Manager early, before gameplay actually starts
+                var temp = NetworkManager.Sender;
 
-                    //Util.cacheDeviceAndAppInfo();
-                    DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
-                    SetSessionProperty("c3d.deviceid", DeviceId);
+                //set session timestamp
+                CheckSessionId();
+                Util.logDebug("Begin session " + SessionID);
 
-                    //initialize Network Manager early, before gameplay actually starts
-                    var temp = NetworkManager.Sender;
-
-                    //set session timestamp
-                    CheckSessionId();
-                    Util.logDebug("Begin session " + SessionID);
-
-                    Initialized = true;
-
-                    //TODO check that app can reach dashboard
-                    cb.Invoke(Error.Success);
-                }
+                Initialized = true;
             }
-            else
-            {
-                // Some argument error, just call the callback immediately
-                cb(error);
-            }
+
+            return error;
         }
 
         public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)

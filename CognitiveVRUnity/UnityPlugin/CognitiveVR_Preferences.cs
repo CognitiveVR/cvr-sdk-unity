@@ -41,7 +41,6 @@ namespace CognitiveVR
         public static int S_DynamicSnapshotCount;
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
-
         public static bool S_DynamicObjectSearchInParent;
 
         public static void SetLobbyId(string lobbyId)

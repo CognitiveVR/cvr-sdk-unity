@@ -12,6 +12,8 @@ namespace CognitiveVR
     //https://stackoverflow.com/questions/3779763/fast-algorithm-for-computing-percentiles-to-remove-outliers
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
 
+    [HelpURL("https://docs.cognitive3d.com/fixations/")]
+    [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
         #region EyeTracker
@@ -203,7 +205,7 @@ namespace CognitiveVR
         public bool IsFixating { get; set; }
         public Fixation ActiveFixation;
 
-        [Header("blink")]
+        [Header("Blink")]
         [Tooltip("the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is conciously closing their eyes")]
         public int MaxBlinkMs = 400;
         [Tooltip("when a blink occurs, ignore gaze preceding the blink up to this far back in time")]
@@ -214,7 +216,7 @@ namespace CognitiveVR
         long EyeUnblinkTime;
         bool eyesClosed;
 
-        [Header("fixation")]
+        [Header("Fixation")]
         [Tooltip("the time that gaze must be within the max fixation angle before a fixation occurs")]
         public int MinFixationMs = 60;
         [Tooltip("the amount of time gaze can be discarded before a fixation is ended. gaze can be discarded if eye tracking values are outside of expected ranges")]
@@ -228,15 +230,17 @@ namespace CognitiveVR
         [Tooltip("increases the size of the fixation angle as gaze gets toward the edge of the viewport. this is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view")]
         public AnimationCurve FocusSizeFromCenter;
 
-        [Header("saccade")]
+        [Header("Saccade")]
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
 
         Camera HMDCam;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
+
+        [Header("Debug (Editor Only)")]
         public List<Vector3> VISGazepoints = new List<Vector3>(4096);
+        public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
 
         //visualization
         //shoudl use gaze reticle or something??

@@ -12,6 +12,7 @@ namespace CognitiveVR.Components
     /// GPU performance level (int 0-2). Lower performance levels save more power.
     /// PowerSaving? The CPU and GPU are currently throttled to save power and/or reduce the temperature.
 
+    [AddComponentMenu("Cognitive3D/Components/Comfort")]
     public class Comfort : CognitiveVRAnalyticsComponent
     {
         [DisplaySetting(5f,60f)]
@@ -28,7 +29,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
@@ -112,9 +113,13 @@ namespace CognitiveVR.Components
             Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)\nWith Oculus Utilities, includes cpu and gpu levels and device power saving mode";
+#if CVR_OCULUS
+            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
+#else
+            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
+#endif
         }
 
         void OnDestroy()

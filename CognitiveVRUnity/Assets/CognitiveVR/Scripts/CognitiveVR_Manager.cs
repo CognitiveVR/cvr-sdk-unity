@@ -24,6 +24,8 @@ using System.Runtime.InteropServices;
 
 namespace CognitiveVR
 {
+    [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
+    [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
     public class CognitiveVR_Manager : MonoBehaviour
     {
 
@@ -38,97 +40,6 @@ namespace CognitiveVR
         /// CognitiveVR Core.Init callback
         /// </summary>
         public static event CoreInitHandler InitEvent;
-        public void OnInit(Error initError)
-        {
-            if (CognitiveVR_Preferences.Instance.EnableLogging)
-                Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
-            if (initError == Error.AlreadyInitialized)
-            {
-                return;
-            }
-            initResponse = initError;
-
-            OutstandingInitRequest = false;
-
-            if (initError == Error.Success)
-            {
-                new CustomEvent("c3d.sessionStart").Send();
-                if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
-                {
-                    Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
-                    Input.compass.enabled = true;
-                    if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
-                    {
-                        //just get gaze snapshot to grab this
-                    }
-                    else
-                    {
-                        StartCoroutine(GPSTick());
-                    }
-                }
-            }
-            else //some failure
-            {
-                StopAllCoroutines();
-            }
-
-            InitializeControllers();
-
-            var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
-            for (int i = 0; i < components.Length; i++)
-            {
-                components[i].CognitiveVR_Init(initError);
-            }
-
-            //PlayerRecorderInit(initError);
-
-            switch (CognitiveVR_Preferences.Instance.GazeType)
-            {
-                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
-                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
-                case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
-                //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
-            }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
-            //fixation requires some kind of eye tracking hardware
-            FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
-            if (fixationRecorder == null)
-                fixationRecorder = gameObject.AddComponent<FixationRecorder>();
-            fixationRecorder.Initialize();
-#endif
-
-            if (InitEvent != null) { InitEvent(initError); }
-
-            //required for when restarting cognitiveVR manager
-            /*foreach (var d in InitEvent.GetInvocationList())
-            {
-                InitEvent -= (CoreInitHandler)d;
-            }*/
-
-#if CVR_META
-            string serialnumber;
-            string xml;
-            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
-            }
-#elif CVR_STEAMVR
-
-            string serialnumber = null;
-
-            var error = ETrackedPropertyError.TrackedProp_Success;
-            var result = new System.Text.StringBuilder();
-
-            var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
-            if (capacity > 0)
-                serialnumber = result.ToString();
-
-            if (!string.IsNullOrEmpty(serialnumber))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
-            }
-#endif
-        }
 
         public delegate void UpdateHandler();
         /// <summary>
@@ -628,7 +539,95 @@ namespace CognitiveVR
             Core.UserId = userName;
             Core.SetSessionProperty("c3d.username", userName);
 
-            CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
+            Error initError = CognitiveVR.Core.init();
+
+            //on init stuff here
+            if (CognitiveVR_Preferences.Instance.EnableLogging)
+                Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
+            if (initError != Error.AlreadyInitialized)
+            {
+                initResponse = initError;
+
+                OutstandingInitRequest = false;
+
+                if (initError == Error.None)
+                {
+                    new CustomEvent("c3d.sessionStart").Send();
+                    if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+                    {
+                        Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
+                        Input.compass.enabled = true;
+                        if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
+                        {
+                            //just get gaze snapshot to grab this
+                        }
+                        else
+                        {
+                            StartCoroutine(GPSTick());
+                        }
+                    }
+                }
+                else //some failure
+                {
+                    StopAllCoroutines();
+                }
+
+                InitializeControllers();
+
+                var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
+                for (int i = 0; i < components.Length; i++)
+                {
+                    components[i].CognitiveVR_Init(initError);
+                }
+
+                //PlayerRecorderInit(initError);
+
+                switch (CognitiveVR_Preferences.Instance.GazeType)
+                {
+                    case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
+                    case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
+                        //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
+                }
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
+                //fixation requires some kind of eye tracking hardware
+                FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+                if (fixationRecorder == null)
+                    fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                fixationRecorder.Initialize();
+#endif
+
+                if (InitEvent != null) { InitEvent(initError); }
+
+                //required for when restarting cognitiveVR manager
+                /*foreach (var d in InitEvent.GetInvocationList())
+                {
+                    InitEvent -= (CoreInitHandler)d;
+                }*/
+
+#if CVR_META
+                string serialnumber;
+                string xml;
+                if (GetSerialNumberAndCalibration(out serialnumber, out xml))
+                {
+                    Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
+                }
+#elif CVR_STEAMVR
+
+                string serialnumber = null;
+
+                var error = ETrackedPropertyError.TrackedProp_Success;
+                var result = new System.Text.StringBuilder();
+
+                var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
+                if (capacity > 0)
+                    serialnumber = result.ToString();
+
+                if (!string.IsNullOrEmpty(serialnumber))
+                {
+                    Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
+                }
+#endif
+            }
 
 #if UNITY_EDITOR
             Core.SetSessionProperty("c3d.app.inEditor", true);
@@ -844,7 +843,7 @@ namespace CognitiveVR
 
         void Update()
         {
-            if (initResponse != Error.Success)
+            if (initResponse != Error.None)
             {
                 return;
             }
@@ -944,7 +943,7 @@ namespace CognitiveVR
             IsQuitting = true;
             if (hasCanceled) { return; }
 
-            if (InitResponse != Error.Success) { return; }
+            if (InitResponse != Error.None) { return; }
 
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             if (QuitEvent == null)

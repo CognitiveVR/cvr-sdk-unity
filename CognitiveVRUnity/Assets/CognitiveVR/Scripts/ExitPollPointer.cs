@@ -9,6 +9,7 @@ using UnityEngine;
 //the actual functionality is on gaze buttons and microphone buttons
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Exit Poll Pointer")]
     public class ExitPollPointer : MonoBehaviour
     {
         public Transform Target { get; set; }

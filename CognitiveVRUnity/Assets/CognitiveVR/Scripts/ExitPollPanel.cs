@@ -8,6 +8,7 @@ using CognitiveVR.Json;
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Exit Poll Panel")]
     public class ExitPollPanel : MonoBehaviour
     {
         [Header("Components")]

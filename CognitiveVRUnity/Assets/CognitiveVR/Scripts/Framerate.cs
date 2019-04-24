@@ -8,6 +8,7 @@ using CognitiveVR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : CognitiveVRAnalyticsComponent
     {
         [DisplaySetting(0.1f,10f)]
@@ -16,7 +17,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = FramerateTrackingInterval;
@@ -51,9 +52,9 @@ namespace CognitiveVR.Components
             SensorRecorder.RecordDataPoint("FPS", lastFps);
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Display framerate on SceneExplorer over time.";
+            return "Record framerate over time as a sensor";
         }
 
         void OnDestroy()

@@ -10,7 +10,8 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
-public class GazeReticle : MonoBehaviour
+    [AddComponentMenu("Cognitive3D/Testing/Gaze Reticle")]
+    public class GazeReticle : MonoBehaviour
 {
     public float Speed = 0.3f;
     public float Distance = 3;

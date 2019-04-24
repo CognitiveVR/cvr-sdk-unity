@@ -8,18 +8,21 @@ using System.Collections.Generic;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight: CognitiveVRAnalyticsComponent
     {
         [DisplaySetting(5,100)]
         [Tooltip("Number of samples taken. The average is assumed to be HMD height")]
         public int SampleCount = 50;
+
+        [DisplaySetting(1)]
         public float Interval = 1;
 
 
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
             StartCoroutine(Tick());
@@ -43,12 +46,12 @@ namespace CognitiveVR.Components
             Core.SetSessionProperty("c3d.height", averageHeight * 100);
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;

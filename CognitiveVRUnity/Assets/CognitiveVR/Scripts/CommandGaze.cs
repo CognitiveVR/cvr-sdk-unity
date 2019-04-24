@@ -7,6 +7,7 @@ using UnityEngine.Rendering;
 //use command buffer
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Command Gaze")]
     public class CommandGaze : GazeBase
     {
 
@@ -27,7 +28,7 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_InitEvent(Error initError)
         {
-            if (initError == Error.Success)
+            if (initError == Error.None)
             {
                 var buf = new CommandBuffer();
                 buf.name = "cognitive depth";

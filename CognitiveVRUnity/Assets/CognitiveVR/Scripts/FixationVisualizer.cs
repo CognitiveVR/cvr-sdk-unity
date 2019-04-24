@@ -7,6 +7,7 @@ using UnityEngine;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Testing/Fixation Visualizer")]
     public class FixationVisualizer : MonoBehaviour
     {
         FixationRecorder fixationRecorder;

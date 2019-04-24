@@ -12,6 +12,7 @@ using Valve.VR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Arm Length")]
     public class ArmLength : CognitiveVRAnalyticsComponent
     {
         [DisplaySetting(5,100)]
@@ -91,12 +92,18 @@ namespace CognitiveVR.Components
             }
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger\nRequires SteamVR or Oculus Touch controllers";
+#if CVR_STEAMVR
+            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
+#elif CVR_OCULUS
+            return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";
+#else
+            return "Current platform does not support this component";
+#endif
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;

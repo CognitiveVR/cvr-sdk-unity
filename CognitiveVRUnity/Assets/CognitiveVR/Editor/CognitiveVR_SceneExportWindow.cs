@@ -277,7 +277,7 @@ namespace CognitiveVR
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(Constants.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
+                EditorNetwork.Post(CognitiveStatics.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
             }
             else //upload as new scene
             {
@@ -291,7 +291,7 @@ namespace CognitiveVR
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(Constants.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
+                EditorNetwork.Post(CognitiveStatics.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
             }
 
             UploadComplete = uploadComplete;
@@ -1327,7 +1327,7 @@ namespace CognitiveVR
 
                 objectNames += dirname + "\n";
 
-                string uploadUrl = Constants.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
+                string uploadUrl = CognitiveStatics.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)

@@ -10,12 +10,13 @@ using Valve.VR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : CognitiveVRAnalyticsComponent
     {
 #if CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             //CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_PoseEventHandler;
 
@@ -55,7 +56,7 @@ namespace CognitiveVR.Components
 #if CVR_STEAMVR2
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             //CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_PoseEventHandler;
             Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).AddListener(OnChaperoneChanged);
@@ -109,12 +110,18 @@ namespace CognitiveVR.Components
         }
 #endif
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transaction when SteamVR Chaperone or Oculus Guardian becomes visible and becomes hidden";
+#if CVR_STEAMVR || CVR_STEAMVR2
+            return "Sends transaction when SteamVR Chaperone becomes visible and becomes hidden";
+#elif (CVR_OCULUS && !UNITY_ANDROID)
+            return "Sends transaction when Oculus Guardian becomes visible and becomes hidden";
+#else
+            return "Current platform does not support this component";
+#endif
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;

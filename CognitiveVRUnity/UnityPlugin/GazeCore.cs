@@ -265,7 +265,7 @@ namespace CognitiveVR
             gazebuilder.Append("}");
 
             var sceneSettings = Core.TrackingScene;
-            string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = CognitiveStatics.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
 

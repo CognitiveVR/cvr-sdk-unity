@@ -188,7 +188,7 @@ namespace CognitiveVR
             {
                 //CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
                 //hooks/questionsets. ask hook by id what their questionset is
-                string url = Constants.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
+                string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
 
                 CognitiveVR.NetworkManager.GetExitPollQuestions(url, RequestQuestionHookName, QuestionSetResponse, 3);
             }
@@ -553,7 +553,7 @@ namespace CognitiveVR
         //each question is already sent as a transaction
         void SendQuestionResponses(string responses)
         {
-            string url = Constants.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
+            string url = CognitiveStatics.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
             //byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
 
             CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url);

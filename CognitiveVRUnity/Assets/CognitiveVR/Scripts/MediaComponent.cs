@@ -7,8 +7,10 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
+    [HelpURL("https://docs.cognitive3d.com/unity/media/")]
     [RequireComponent(typeof(MeshCollider))]
     [RequireComponent(typeof(DynamicObject))]
+    [AddComponentMenu("Cognitive3D/Common/Media Component")]
     public class MediaComponent : MonoBehaviour
     {
         public string MediaSource;

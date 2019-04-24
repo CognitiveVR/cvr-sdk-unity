@@ -43,7 +43,7 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Download Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {
-                Application.OpenURL(Constants.GITHUB_RELEASES);
+                Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);
             }
 
             GUI.color = Color.white;

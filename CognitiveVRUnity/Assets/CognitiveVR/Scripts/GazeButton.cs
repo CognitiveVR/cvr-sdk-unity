@@ -11,6 +11,7 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Gaze Button")]
     public class GazeButton : MonoBehaviour
     {
         [Header("Gaze Settings")]

@@ -8,11 +8,12 @@ using System.Collections.Generic;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
 #if CVR_STEAMVR || CVR_STEAMVR2
@@ -44,7 +45,7 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;
@@ -53,9 +54,15 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Include Room Size in Device Info from SteamVR Chaperone or Oculus Guardian";
+#if CVR_STEAMVR || CVR_STEAMVR2
+            return "Include Room Size in Device Info from SteamVR Chaperone";
+#elif CVR_OCULUS && !UNITY_ANDROID
+            return "Include Room Size in Device Info from Oculus Guardian";
+#else
+            return "Current platform does not support this component";
+#endif
         }
     }
 }

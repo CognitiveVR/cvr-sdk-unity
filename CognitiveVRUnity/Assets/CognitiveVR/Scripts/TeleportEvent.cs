@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Teleport Event")]
     public class TeleportEvent : CognitiveVRAnalyticsComponent
     {
         Transform _root;
@@ -25,7 +26,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             lastRootPosition = root.position;
@@ -44,7 +45,7 @@ namespace CognitiveVR.Components
             }
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
             return "Sends a transaction when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
         }

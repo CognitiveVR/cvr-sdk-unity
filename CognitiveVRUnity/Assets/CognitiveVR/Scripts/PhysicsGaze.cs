@@ -8,7 +8,8 @@ using CognitiveVR;
 
 namespace CognitiveVR
 {
-public class PhysicsGaze : GazeBase
+    [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
+    public class PhysicsGaze : GazeBase
 {
     public override void Initialize()
     {
@@ -18,7 +19,7 @@ public class PhysicsGaze : GazeBase
 
     private void CognitiveVR_Manager_InitEvent(Error initError)
     {
-        if (initError == Error.Success)
+        if (initError == Error.None)
         {
             CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
         }

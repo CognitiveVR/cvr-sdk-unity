@@ -11,13 +11,14 @@ using Valve.VR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
     public class HMDPresentEvent : CognitiveVRAnalyticsComponent
     {
 #if CVR_OCULUS
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
@@ -44,7 +45,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
             //CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent;
@@ -76,7 +77,7 @@ namespace CognitiveVR.Components
         }
 #endif
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if !CVR_OCULUS && !CVR_STEAMVR
             return true;
@@ -85,9 +86,13 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transactions when a player removes or wears HMD\nNOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
+#if CVR_STEAMVR || CVR_STEAMVR2
+            return "Sends transactions when a player removes or wears HMD. SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
+#else
+            return "Sends transactions when a player removes or wears HMD";
+#endif
         }
     }
 }
