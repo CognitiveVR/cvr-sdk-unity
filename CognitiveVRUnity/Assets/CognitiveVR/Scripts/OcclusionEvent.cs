@@ -94,7 +94,7 @@ namespace CognitiveVR.Components
 
         void OcclusionChanged()
         {
-            var left = CognitiveVR_Manager.GetControllerInfo(false);
+            var left = GameplayReferences.GetControllerInfo(false);
             if (left != null && left.transform != null)
             {
                 if (left.connected != leftWasConnected)
@@ -111,7 +111,7 @@ namespace CognitiveVR.Components
                 }
             }
 
-            var right = CognitiveVR_Manager.GetControllerInfo(true);
+            var right = GameplayReferences.GetControllerInfo(true);
             if (right != null && right.transform != null)
             {
                 if (right.connected != rightWasConnected)

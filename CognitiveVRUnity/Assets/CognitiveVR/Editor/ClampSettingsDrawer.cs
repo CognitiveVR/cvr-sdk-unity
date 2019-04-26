@@ -5,14 +5,14 @@ using UnityEditor;
 
 namespace CognitiveVR.Components
 {
-    [CustomPropertyDrawer(typeof(DisplaySettingAttribute))]
-    public class DisplaySettingsDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(ClampSettingAttribute))]
+    public class ClampSettingsDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             //base.OnGUI(position, property, label);
 
-            var display = attribute as DisplaySettingAttribute;
+            var display = attribute as ClampSettingAttribute;
 
             if (property.propertyType == SerializedPropertyType.Integer)
             {
@@ -31,10 +31,6 @@ namespace CognitiveVR.Components
                 display.GetFloatLimits(out min, out max);
                 if (Mathf.Approximately(max, 0)) { max = float.MaxValue; }
                 property.floatValue = Mathf.Clamp(property.floatValue, min, max);
-            }
-            else if (property.propertyType == SerializedPropertyType.Boolean)
-            {
-                property.boolValue = EditorGUI.Toggle(position, label, property.boolValue);
             }
         }
 

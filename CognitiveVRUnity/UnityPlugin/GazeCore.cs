@@ -221,9 +221,9 @@ namespace CognitiveVR
             JsonUtil.SetString("userid", Core.UniqueID, gazebuilder);
             gazebuilder.Append(",");
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, gazebuilder);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, gazebuilder);
                 gazebuilder.Append(",");
             }
 

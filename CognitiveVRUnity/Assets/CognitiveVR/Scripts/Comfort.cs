@@ -15,15 +15,14 @@ namespace CognitiveVR.Components
     [AddComponentMenu("Cognitive3D/Components/Comfort")]
     public class Comfort : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(5f,60f)]
+        [ClampSetting(5f,60f)]
         [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]
         public float ComfortTrackingInterval = 6;
 
-        [DisplaySetting]
         [Tooltip("Ignore sending Comfort at set intervals. Only send FPS events below the threshold")]
         public bool OnlySendComfortOnLowFPS = true;
 
-        [DisplaySetting(10,240)]
+        [ClampSetting(10,240)]
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 
@@ -33,13 +32,13 @@ namespace CognitiveVR.Components
             base.CognitiveVR_Init(initError);
             CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
-            if (CognitiveVR_Manager.HMD != null)
-                lastRotation = CognitiveVR_Manager.HMD.rotation;
+            if (GameplayReferences.HMD != null)
+                lastRotation = GameplayReferences.HMD.rotation;
         }
 
         private void CognitiveVR_Manager_OnUpdate()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             UpdateFramerate();
             if (OnlySendComfortOnLowFPS == false)
             {
@@ -71,8 +70,8 @@ namespace CognitiveVR.Components
         float lastRps;
         void UpdateHMDRotation()
         {
-            accumRotation += Quaternion.Angle(CognitiveVR_Manager.HMD.rotation, lastRotation) / Time.deltaTime;
-            lastRotation = CognitiveVR_Manager.HMD.rotation;
+            accumRotation += Quaternion.Angle(GameplayReferences.HMD.rotation, lastRotation) / Time.deltaTime;
+            lastRotation = GameplayReferences.HMD.rotation;
             ++rotFrames;
         }
 

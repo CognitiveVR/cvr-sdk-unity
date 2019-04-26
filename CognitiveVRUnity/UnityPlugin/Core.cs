@@ -113,9 +113,15 @@ namespace CognitiveVR
             }
         }
 
-        public static bool Initialized { get; private set; }
+        public static string LobbyId { get; private set; }
+        public static void SetLobbyId(string lobbyId)
+        {
+            LobbyId = lobbyId;
+        }
 
-        public static void reset()
+        public static bool IsInitialized { get; private set; }
+
+        public static void Reset()
         {
             // Reset all of the static vars to their default values
             UserId = null;
@@ -123,7 +129,7 @@ namespace CognitiveVR
             _timestamp = 0;
             _uniqueId = null;
             DeviceId = null;
-            Initialized = false;
+            IsInitialized = false;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
@@ -131,22 +137,20 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// Initializes CognitiveVR Framework for use, including instrumentation and tuning.
+        /// Initializes CognitiveVR Framework for use
         /// </summary>
-        /// <param name="initParams">Initialization parameters</param>
-        /// <param name="cb">Application defined callback which will occur on completion</param>
-        public static Error init()
+        public static Error Init()
         {
             CognitiveStatics.Initialize();
             Error error = Error.None;
             // Have we already initialized CognitiveVR?
-            if (Initialized)
+            if (IsInitialized)
             {
                 Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
                 error = Error.AlreadyInitialized;
             }
 
-            if (Error.None == error)
+            if (error == Error.None)
             {
                 SetSessionProperty("c3d.app.name", Application.productName);
                 SetSessionProperty("c3d.app.version", Application.version);
@@ -157,8 +161,7 @@ namespace CognitiveVR
                 SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
                 SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
                 SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
-
-                //Util.cacheDeviceAndAppInfo();
+                
                 DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
                 SetSessionProperty("c3d.deviceid", DeviceId);
 
@@ -167,9 +170,8 @@ namespace CognitiveVR
 
                 //set session timestamp
                 CheckSessionId();
-                Util.logDebug("Begin session " + SessionID);
 
-                Initialized = true;
+                IsInitialized = true;
             }
 
             return error;
@@ -194,12 +196,7 @@ namespace CognitiveVR
         }
         static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>(32);
         static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>(32);
-
-        [System.Obsolete("use SetSessionProperties")]
-        public static void UpdateSessionState(Dictionary<string, object> dictionary)
-        {
-            SetSessionProperties(dictionary);
-        }
+        
         public static void SetSessionProperties(Dictionary<string, object> dictionary)
         {
             if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
@@ -223,11 +220,6 @@ namespace CognitiveVR
                     newSessionProperties.Add(kvp.Key, kvp.Value);
                 }
             }
-        }
-        [System.Obsolete("use SetSessionProperty")]
-        public static void UpdateSessionState(string key, object value)
-        {
-            SetSessionProperty(key, value);
         }
         public static void SetSessionProperty(string key, object value)
         {
@@ -256,11 +248,6 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        [System.Obsolete("use SetSessionPropertyIfEmpty")]
-        public static void UpdateSessionStateIfEmpty(string key, object value)
-        {
-            SetSessionPropertyIfEmpty(key, value);
-        }
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
             if (knownSessionProperties.ContainsKey(key)) { return; }

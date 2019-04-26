@@ -188,9 +188,9 @@ namespace CognitiveVR
             {
                 //CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
                 //hooks/questionsets. ask hook by id what their questionset is
-                string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
+                //string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
 
-                CognitiveVR.NetworkManager.GetExitPollQuestions(url, RequestQuestionHookName, QuestionSetResponse, 3);
+                CognitiveVR.NetworkManager.GetExitPollQuestions(RequestQuestionHookName, QuestionSetResponse, 3);
             }
             else
             {
@@ -440,7 +440,7 @@ namespace CognitiveVR
             {
                 SendResponsesAsTransaction(); //for personalization api
                 var responses = FormatResponses();
-                SendQuestionResponses(responses); //for exitpoll microservice
+                NetworkManager.PostExitpollAnswers(responses, QuestionSetName, questionSetVersion); //for exitpoll microservice
                 CurrentExitPollPanel = null;
                 if (EndAction != null)
                 {
@@ -482,9 +482,9 @@ namespace CognitiveVR
             builder.Append("{");
             JsonUtil.SetString("userId", CognitiveVR.Core.UniqueID, builder);
             builder.Append(",");
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
                 builder.Append(",");
             }
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
@@ -547,23 +547,6 @@ namespace CognitiveVR
             builder.Append("}");
 
             return builder.ToString();
-        }
-
-        //the responses of all the questions in the set put together in a string and uploaded to the microservice at api.cognitivevr.io
-        //each question is already sent as a transaction
-        void SendQuestionResponses(string responses)
-        {
-            string url = CognitiveStatics.POSTEXITPOLLRESPONSES(QuestionSetName, questionSetVersion);
-            //byte[] bytes = System.Text.Encoding.ASCII.GetBytes(responses);
-
-            CognitiveVR.Util.logDebug("ExitPoll Send Answers\nurl " + url);
-
-            //var headers = new Dictionary<string, string>();//AUTH
-            //headers.Add("Content-Type", "application/json");
-            //headers.Add("X-HTTP-Method-Override", "POST");
-            //headers.Add("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
-
-            NetworkManager.Post(url, responses);
         }
 
         public bool UseTimeout { get; private set; }
@@ -754,7 +737,7 @@ namespace CognitiveVR
             if (OverrideRotation.HasValue)
                 newPanelGo.transform.rotation = OverrideRotation.Value;
             else
-                newPanelGo.transform.rotation = Quaternion.LookRotation(newPanelGo.transform.position - CognitiveVR_Manager.HMD.position, Vector3.up);
+                newPanelGo.transform.rotation = Quaternion.LookRotation(newPanelGo.transform.position - GameplayReferences.HMD.position, Vector3.up);
 
             CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
 
@@ -769,27 +752,27 @@ namespace CognitiveVR
         bool GetSpawnPosition(out Vector3 pos)
         {
             pos = Vector3.zero;
-            if (CognitiveVR_Manager.HMD == null) //no hmd? fail
+            if (GameplayReferences.HMD == null) //no hmd? fail
             {
                 return false;
             }
 
             //set position and rotation
-            Vector3 spawnPosition = CognitiveVR_Manager.HMD.position + CognitiveVR_Manager.HMD.forward * DisplayDistance;
+            Vector3 spawnPosition = GameplayReferences.HMD.position + GameplayReferences.HMD.forward * DisplayDistance;
 
             if (LockYPosition)
             {
-                Vector3 modifiedForward = CognitiveVR_Manager.HMD.forward;
+                Vector3 modifiedForward = GameplayReferences.HMD.forward;
                 modifiedForward.y = 0;
                 modifiedForward.Normalize();
 
-                spawnPosition = CognitiveVR_Manager.HMD.position + modifiedForward * DisplayDistance;
+                spawnPosition = GameplayReferences.HMD.position + modifiedForward * DisplayDistance;
             }
 
             RaycastHit hit = new RaycastHit();
 
             //test slightly in front of the player's hmd
-            Collider[] colliderHits = Physics.OverlapSphere(CognitiveVR_Manager.HMD.position + Vector3.forward * 0.5f, 0.5f, PanelLayerMask);
+            Collider[] colliderHits = Physics.OverlapSphere(GameplayReferences.HMD.position + Vector3.forward * 0.5f, 0.5f, PanelLayerMask);
             if (colliderHits.Length > 0)
             {
                 Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
@@ -798,7 +781,7 @@ namespace CognitiveVR
             }
 
             //ray from player's hmd position
-            if (Physics.SphereCast(CognitiveVR_Manager.HMD.position, 0.5f, spawnPosition - CognitiveVR_Manager.HMD.position, out hit, DisplayDistance, PanelLayerMask))
+            if (Physics.SphereCast(GameplayReferences.HMD.position, 0.5f, spawnPosition - GameplayReferences.HMD.position, out hit, DisplayDistance, PanelLayerMask))
             {
                 if (hit.distance < MinimumDisplayDistance)
                 {
@@ -808,7 +791,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    spawnPosition = CognitiveVR_Manager.HMD.position + (spawnPosition - CognitiveVR_Manager.HMD.position).normalized * (hit.distance);
+                    spawnPosition = GameplayReferences.HMD.position + (spawnPosition - GameplayReferences.HMD.position).normalized * (hit.distance);
                 }
             }
 

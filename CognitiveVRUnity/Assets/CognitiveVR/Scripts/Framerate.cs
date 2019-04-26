@@ -11,7 +11,7 @@ namespace CognitiveVR.Components
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(0.1f,10f)]
+        [ClampSetting(0.1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
 
@@ -25,7 +25,6 @@ namespace CognitiveVR.Components
 
         private void CognitiveVR_Manager_OnUpdate()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
             UpdateFramerate();
 
             timeleft -= Time.deltaTime;

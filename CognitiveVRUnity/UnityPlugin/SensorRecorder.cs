@@ -95,9 +95,9 @@ namespace CognitiveVR
             JsonUtil.SetString("name", Core.UniqueID, sb);
             sb.Append(",");
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, sb);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, sb);
                 sb.Append(",");
             }
 

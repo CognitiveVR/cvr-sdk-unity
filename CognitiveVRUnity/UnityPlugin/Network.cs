@@ -364,8 +364,9 @@ namespace CognitiveVR
             }
         }
 
-        public static void GetExitPollQuestions(string url, string hookname, Response callback, float timeout = 3)
+        public static void GetExitPollQuestions(string hookname, Response callback, float timeout = 3)
         {
+            string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(hookname);
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
@@ -373,6 +374,24 @@ namespace CognitiveVR
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
+        }
+
+        public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
+        {
+            string url = CognitiveStatics.POSTEXITPOLLRESPONSES(questionSetName, questionSetVersion);
+
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var request = UnityWebRequest.Put(url, bytes);
+            request.method = "POST";
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+            request.Send();
+
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse, true));
+
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment(url + " " + stringcontent);
         }
 
         public static void Post(string url, string stringcontent)

@@ -27,7 +27,7 @@ namespace CognitiveVR.Components
         {
             bool hit;
 
-            var lefthand = CognitiveVR_Manager.GetControllerInfo(false);
+            var lefthand = GameplayReferences.GetControllerInfo(false);
             if (lefthand != null && lefthand.connected && lefthand.visible)
             {
                 hit = Physics.CheckSphere(lefthand.transform.position, 0.1f, CollisionLayerMask);
@@ -44,7 +44,7 @@ namespace CognitiveVR.Components
             }
 
 
-            var righthand = CognitiveVR_Manager.GetControllerInfo(true);
+            var righthand = GameplayReferences.GetControllerInfo(true);
             if (righthand != null && righthand.connected && righthand.visible)
             {
                 hit = Physics.CheckSphere(righthand.transform.position, 0.1f, CollisionLayerMask);

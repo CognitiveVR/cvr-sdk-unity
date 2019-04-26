@@ -43,12 +43,6 @@ namespace CognitiveVR
         public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
 
-        public static void SetLobbyId(string lobbyId)
-        {
-            LobbyId = lobbyId;
-        }
-        public static string LobbyId { get; private set; }
-
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
         public string Dashboard = "app.cognitive3d.com";

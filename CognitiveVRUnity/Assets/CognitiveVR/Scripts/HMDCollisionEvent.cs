@@ -11,7 +11,6 @@ namespace CognitiveVR.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Collision Event")]
     public class HMDCollisionEvent : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting]
         public LayerMask CollisionLayerMask = 1;
 
         bool HMDColliding;
@@ -24,9 +23,9 @@ namespace CognitiveVR.Components
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
 
-            bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CollisionLayerMask);
+            bool hit = Physics.CheckSphere(GameplayReferences.HMD.position, 0.25f, CollisionLayerMask);
             if (hit && !HMDColliding)
             {
                 Util.logDebug("hmd collision");

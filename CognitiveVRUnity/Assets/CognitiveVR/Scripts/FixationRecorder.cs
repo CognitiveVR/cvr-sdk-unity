@@ -533,7 +533,6 @@ namespace CognitiveVR
             if (ActiveFixation.IsLocal)
             {
                 if (ActiveFixation.LocalTransform == null) { return true; }
-                var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
                     var _fixationWorldPosition = ActiveFixation.LocalTransform.TransformPoint(ActiveFixation.LocalPosition);

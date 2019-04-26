@@ -47,28 +47,6 @@ namespace CognitiveVR
 
         public static Vector3 LastGazePoint;
 
-        protected Camera cam;
-        protected Camera CameraComponent
-        {
-            get
-            {
-                if (cam == null)
-                {
-                    if (CognitiveVR_Manager.HMD != null)
-                    {
-                        cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
-                    }
-                }
-                return cam;
-            }
-        }
-        protected Transform CameraTransform
-        {
-            get
-            {
-                return CognitiveVR_Manager.HMD;
-            }
-        }
         protected bool headsetPresent;
         protected Transform cameraRoot;
 
@@ -108,16 +86,7 @@ namespace CognitiveVR
 #endif
 
             GazeCore.SetHMDType(hmdname);
-            cameraRoot = CameraTransform.root;
-
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
-            //var fixationRecorder = FindObjectOfType<FixationRecorder>();
-            //if (fixationRecorder == null)
-            //{
-            //    fixationRecorder = gameObject.AddComponent<FixationRecorder>();
-            //}
-            //fixationRecorder.Initialize();
-#endif
+            cameraRoot = GameplayReferences.HMD.root;
         }
 
 
@@ -275,10 +244,10 @@ namespace CognitiveVR
             {
                 if (cameraRoot == null)
                 {
-                    cameraRoot = CameraTransform.root;
+                    cameraRoot = GameplayReferences.HMD.root;
                 }
                 RaycastHit floorhit = new RaycastHit();
-                if (Physics.Raycast(CameraTransform.position, -cameraRoot.up, out floorhit))
+                if (Physics.Raycast(GameplayReferences.HMD.position, -cameraRoot.up, out floorhit))
                 {
                     floorPos = floorhit.point;
                 }
@@ -290,7 +259,7 @@ namespace CognitiveVR
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-            Vector3 gazeDirection = CameraTransform.forward;
+            Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
             var eyeRays = FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
@@ -303,7 +272,7 @@ namespace CognitiveVR
             //if it doesn't find the eyes, skip this snapshot
             //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = cam.ViewportPointToRay(v2);
+                var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
 #elif CVR_TOBIIVR
@@ -328,7 +297,7 @@ namespace CognitiveVR
 #if CVR_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = cam.WorldToViewportPoint(FoveInstance.GetGazeRays().left.GetPoint(1000));
+            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(FoveInstance.GetGazeRays().left.GetPoint(1000));
 
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))
@@ -340,16 +309,16 @@ namespace CognitiveVR
 #elif CVR_PUPIL//screenpoint
             screenGazePoint = PupilData._2D.GetEyeGaze("0");
 #elif CVR_TOBIIVR
-            screenGazePoint = cam.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
 #elif CVR_NEURABLE
             screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
 #elif CVR_AH
             Vector3 x = ah_calibrator.GetGazeOrigin();
             Vector3 r = ah_calibrator.GetGazeVector();
-            screenGazePoint = cam.WorldToViewportPoint(x + 10 * r);
+            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(x + 10 * r);
 #elif CVR_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
-            screenGazePoint = cam.WorldToScreenPoint(CameraTransform.position + 10 * worldgazeDirection);
+            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
 #endif
             return screenGazePoint;
         }

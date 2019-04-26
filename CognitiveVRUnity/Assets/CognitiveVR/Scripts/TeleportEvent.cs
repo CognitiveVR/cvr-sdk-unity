@@ -16,8 +16,8 @@ namespace CognitiveVR.Components
             get
             {
                 if (_root == null)
-                    if (CognitiveVR_Manager.HMD == null) _root = transform;
-                    else { _root = CognitiveVR_Manager.HMD.root; }
+                    if (GameplayReferences.HMD == null) _root = transform;
+                    else { _root = GameplayReferences.HMD.root; }
                 return _root;
             }
         }

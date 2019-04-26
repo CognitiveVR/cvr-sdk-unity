@@ -31,37 +31,6 @@ namespace CognitiveVR
 
         public UnityEngine.Events.UnityEvent OnLook;
 
-        Camera _cam;
-        Camera Cam
-        {
-            get
-            {
-                if (_cam == null)
-                {
-                    if (CognitiveVR_Manager.HMD != null)
-                    {
-                        _cam = CognitiveVR_Manager.HMD.GetComponent<Camera>();
-                    }
-                    else
-                        _cam = Camera.main;
-                }
-                return _cam;
-            }
-        }
-
-        Transform _t;
-        Transform _transform
-        {
-            get
-            {
-                if (_t == null)
-                {
-                    _t = transform;
-                }
-                return _t;
-            }
-        }
-
 #if CVR_FOVE
         static FoveInterfaceBase _foveInstance;
         public static FoveInterfaceBase FoveInstance
@@ -79,10 +48,10 @@ namespace CognitiveVR
 
         void OnEnable()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             _currentLookTime = 0;
             UpdateFillAmount();
-            _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
+            _distanceToTarget = Vector3.Distance(GameplayReferences.HMD.position, transform.position);
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
             if (lastSearchFrame != Time.frameCount && pointer == null)
@@ -105,9 +74,9 @@ namespace CognitiveVR
             if (pointer == null)
             {
                 //use hmd
-                if (CognitiveVR_Manager.HMD == null) { return; }
+                if (GameplayReferences.HMD == null) { return; }
 
-                if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
+                if (Vector3.Dot(GetHMDForward(), (transform.position - GameplayReferences.HMD.position).normalized) > _theta)
                 {
                     _currentLookTime += Time.deltaTime;
                     UpdateFillAmount();
@@ -127,7 +96,7 @@ namespace CognitiveVR
             }
             else //use pointer
             {
-                var tt = Vector3.Dot(pointer.transform.forward, (_transform.position - pointer.transform.position).normalized);
+                var tt = Vector3.Dot(pointer.transform.forward, (transform.position - pointer.transform.position).normalized);
                 if (tt > _theta) //pointing at the button
                 {
                     pointer.Target = transform;
@@ -184,7 +153,7 @@ namespace CognitiveVR
 
         public Vector3 GetHMDForward()
         {
-            Vector3 gazeDirection = CognitiveVR_Manager.HMD.forward;
+            Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
             var eyeRays = FoveInstance.GetGazeRays();
             var ray = eyeRays.left;

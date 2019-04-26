@@ -505,7 +505,7 @@ namespace CognitiveVR
         /// </summary>
         public void CheckUpdate(float timeSinceLastCheck)
         {
-            if (!Core.Initialized) { return; }
+            if (!Core.IsInitialized) { return; }
             if (string.IsNullOrEmpty(Core.TrackingSceneId)) { return; }
 
             var pos = _t.position;
@@ -848,9 +848,9 @@ namespace CognitiveVR
             JsonUtil.SetString("userid", uniqueid, sendSnapshotBuilder);
             sendSnapshotBuilder.Append(",");
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, sendSnapshotBuilder);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, sendSnapshotBuilder);
                 sendSnapshotBuilder.Append(",");
             }
 
@@ -1301,21 +1301,21 @@ namespace CognitiveVR
                     dos = new DynamicObjectSnapshot();
                 }
                 dos.Id = id;
-                dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+                dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.FrameCount);
                 return dos;
             }
             else
             {
                 var dos = new DynamicObjectSnapshot();
                 dos.Id = id;
-                dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+                dos.Timestamp = Util.Timestamp(CognitiveVR_Manager.FrameCount);
                 return dos;
             }
         }
 
         public string Id;
         public Dictionary<string, object> Properties;
-        public Dictionary<string, ButtonState> Buttons;
+        public Dictionary<string, CognitiveVR.ButtonState> Buttons;
         public float[] Position = new float[3] { 0, 0, 0 };
         public float[] Rotation = new float[4] { 0, 0, 0, 1 };
         public bool DirtyScale = false;
@@ -1325,7 +1325,7 @@ namespace CognitiveVR
         public DynamicObjectSnapshot(DynamicObject dynamic)
         {
             Id = dynamic.Id;
-            Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+            Timestamp = Util.Timestamp(CognitiveVR_Manager.FrameCount);
         }
 
         public DynamicObjectSnapshot()
@@ -1347,7 +1347,7 @@ namespace CognitiveVR
             Rotation[2] = rot.z;
             Rotation[3] = rot.w;
 
-            Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+            Timestamp = Util.Timestamp(CognitiveVR_Manager.FrameCount);
         }
 
         private DynamicObjectSnapshot(DynamicObject dynamic, float[] pos, float[] rot, Dictionary<string, object> props = null)
@@ -1357,7 +1357,7 @@ namespace CognitiveVR
             Position = pos;
 
             Rotation = rot;
-            Timestamp = Util.Timestamp(CognitiveVR_Manager.frameCount);
+            Timestamp = Util.Timestamp(CognitiveVR_Manager.FrameCount);
         }
 
         /// <summary>

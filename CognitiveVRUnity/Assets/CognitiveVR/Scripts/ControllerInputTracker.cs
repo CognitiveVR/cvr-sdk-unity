@@ -17,67 +17,17 @@ using Valve.VR;
 //oculus buttons, trigger, joytstick, grip
 //leapmotion hand events
 
-public class ButtonState
+namespace CognitiveVR
 {
-    public int ButtonPercent = 0;
-    public float X = 0;
-    public float Y = 0;
-    public bool IncludeXY = false;
-
-    public ButtonState(int buttonPercent, float x = 0, float y = 0, bool includexy = false)
-    {
-        ButtonPercent = buttonPercent;
-        X = x;
-        Y = y;
-        IncludeXY = includexy;
-    }
-
-    public ButtonState(ButtonState source)
-    {
-        ButtonPercent = source.ButtonPercent;
-        IncludeXY = source.IncludeXY;
-        X = source.X;
-        Y = source.Y;
-    }
-
-    //compare as if simply a container for data
-    public override bool Equals(object obj)
-    {
-        var s = (ButtonState)obj;
-
-        if (!IncludeXY)
-        {
-            return s.ButtonPercent == ButtonPercent;
-        }
-        else
-        {
-            return s.ButtonPercent == ButtonPercent && Mathf.Approximately(s.X, X) && Mathf.Approximately(s.Y, Y);
-        }
-    }
-
-    public override int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
-
-    public void Copy(ButtonState source)
-    {
-        ButtonPercent = source.ButtonPercent;
-        IncludeXY = source.IncludeXY;
-        X = source.X;
-        Y = source.Y;
-    }
-}
 
 #if CVR_STEAMVR
 [RequireComponent(typeof(DynamicObject))]
 #endif
 public class ControllerInputTracker : MonoBehaviour
 {
-    bool isRight;
-
     public bool RecordInputsAsEvents = false;
     public bool RecordInputsAsDynamicSnapshots = true;
+    [CognitiveVR.Components.ClampSetting(0.1f)]
     public float UpdateRate = 0.1f;
     float nextUpdateTime;
     //records analogue inputs at this interval
@@ -89,7 +39,8 @@ public class ControllerInputTracker : MonoBehaviour
     }
 
 #if CVR_STEAMVR
-
+    
+    bool isRight;
     DynamicObject dynamic;
     SteamVR_Controller.Device ControllerDevice;
 
@@ -248,7 +199,7 @@ public class ControllerInputTracker : MonoBehaviour
 
 #elif CVR_OCULUS
 
-    public DynamicObject LeftHand;
+        public DynamicObject LeftHand;
     public DynamicObject RightHand;
 
     void Init()
@@ -610,4 +561,58 @@ public class ControllerInputTracker : MonoBehaviour
         dynamic.lastRotation = dynamic.transform.rotation;
         snap.Buttons = v;
     }
+}
+
+    public class ButtonState
+    {
+        public int ButtonPercent = 0;
+        public float X = 0;
+        public float Y = 0;
+        public bool IncludeXY = false;
+
+        public ButtonState(int buttonPercent, float x = 0, float y = 0, bool includexy = false)
+        {
+            ButtonPercent = buttonPercent;
+            X = x;
+            Y = y;
+            IncludeXY = includexy;
+        }
+
+        public ButtonState(ButtonState source)
+        {
+            ButtonPercent = source.ButtonPercent;
+            IncludeXY = source.IncludeXY;
+            X = source.X;
+            Y = source.Y;
+        }
+
+        //compare as if simply a container for data
+        public override bool Equals(object obj)
+        {
+            var s = (ButtonState)obj;
+
+            if (!IncludeXY)
+            {
+                return s.ButtonPercent == ButtonPercent;
+            }
+            else
+            {
+                return s.ButtonPercent == ButtonPercent && Mathf.Approximately(s.X, X) && Mathf.Approximately(s.Y, Y);
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public void Copy(ButtonState source)
+        {
+            ButtonPercent = source.ButtonPercent;
+            IncludeXY = source.IncludeXY;
+            X = source.X;
+            Y = source.Y;
+        }
+    }
+
 }

@@ -75,50 +75,51 @@ namespace CognitiveVR
             fixationUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/fixations/");
             ApplicationKey = "APIKEY:DATA " + CognitiveVR_Preferences.Instance.ApplicationKey;
         }
-        static string dynamicUrl;
-        static string gazeUrl;
-        static string eventUrl;
-        static string sensorUrl;
-        static string fixationUrl;
+        private static string dynamicUrl;
+        private static string gazeUrl;
+        private static string eventUrl;
+        private static string sensorUrl;
+        private static string fixationUrl;
         internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
+        //TODO make this internal once static dynamic object code is moved into DynamicObjectCore script
         public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
             return string.Concat(dynamicUrl, sceneid, "?version=",versionnumber.ToString());
         }
 
         //POST gaze json data to scene explorer
-        public static string POSTGAZEDATA(string sceneid, int versionnumber)
+        internal static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
             return string.Concat(gazeUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST event json data to scene explorer
-        public static string POSTEVENTDATA(string sceneid, int versionnumber)
+        internal static string POSTEVENTDATA(string sceneid, int versionnumber)
         {
             return string.Concat(eventUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST sensor json data to scene explorer
-        public static string POSTSENSORDATA(string sceneid, int versionnumber)
+        internal static string POSTSENSORDATA(string sceneid, int versionnumber)
         {
             return string.Concat(sensorUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST fixation json data to scene explorer
-        public static string POSTFIXATIONDATA(string sceneid, int versionnumber)
+        internal static string POSTFIXATIONDATA(string sceneid, int versionnumber)
         {
             return string.Concat(fixationUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
 
         //GET request question set
-        public static string GETEXITPOLLQUESTIONSET(string hookname)
+        internal static string GETEXITPOLLQUESTIONSET(string hookname)
         {
             return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
         //POST question set responses
-        public static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
+        internal static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
             return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }

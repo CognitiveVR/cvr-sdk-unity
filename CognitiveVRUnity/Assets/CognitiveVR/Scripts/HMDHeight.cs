@@ -11,11 +11,11 @@ namespace CognitiveVR.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight: CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(5,100)]
+        [ClampSetting(5,100)]
         [Tooltip("Number of samples taken. The average is assumed to be HMD height")]
         public int SampleCount = 50;
 
-        [DisplaySetting(1)]
+        [ClampSetting(1)]
         public float Interval = 1;
 
 
@@ -37,7 +37,7 @@ namespace CognitiveVR.Components
             while (samples < SampleCount)
             {
                 yield return wait;
-                hmdAccumHeight += CognitiveVR_Manager.HMD.localPosition.y;
+                hmdAccumHeight += GameplayReferences.HMD.localPosition.y;
                 samples++;
             }
 

@@ -15,10 +15,11 @@ namespace CognitiveVR.Components
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
     public class ArmLength : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(5,100)]
+        [ClampSetting(5,100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
         public int SampleCount = 50;
         public float StartDelay = 5; //this is an additional start delay after cognitivevr_manager has initialized
+        [ClampSetting(0.1f)]
         public float Interval = 1;
 
 #if CVR_STEAMVR
@@ -68,16 +69,16 @@ namespace CognitiveVR.Components
             {
                 yield return new WaitForSeconds(Interval);
 
-                var left = CognitiveVR_Manager.GetControllerInfo(false);
+                var left = GameplayReferences.GetControllerInfo(false);
                 if (left != null && left.transform != null && left.connected && left.visible)
                 {
-                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(left.transform.position - CognitiveVR_Manager.HMD.position));
+                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(left.transform.position - GameplayReferences.HMD.position));
                 }
 
-                var right = CognitiveVR_Manager.GetControllerInfo(true);
+                var right = GameplayReferences.GetControllerInfo(true);
                 if (right != null && right.transform != null && right.connected && right.visible)
                 {
-                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(right.transform.position - CognitiveVR_Manager.HMD.position));
+                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(right.transform.position - GameplayReferences.HMD.position));
                 }
 
                 samples++;
