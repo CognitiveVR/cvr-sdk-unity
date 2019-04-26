@@ -186,10 +186,6 @@ namespace CognitiveVR
 
             if (CognitiveVR_Manager.Instance != null)
             {
-                //CognitiveVR_Manager.Instance.StartCoroutine(RequestQuestions());
-                //hooks/questionsets. ask hook by id what their questionset is
-                //string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(RequestQuestionHookName);
-
                 CognitiveVR.NetworkManager.GetExitPollQuestions(RequestQuestionHookName, QuestionSetResponse, 3);
             }
             else

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 
 namespace CognitiveVR 
 {
-    public delegate void Callback(Error error);
-
     /// <summary>
     /// The most central pieces of the CognitiveVR Framework.
     /// </summary>
@@ -18,6 +16,26 @@ namespace CognitiveVR
         public static event onSendData OnSendData;
         public static void SendDataEvent() { if (OnSendData != null) { OnSendData(); } }
 
+
+        private static Transform _hmd;
+        internal static Transform HMD
+        {
+            get
+            {
+                if (_hmd == null)
+                {
+                    if (Camera.main == null)
+                    {
+                        Camera c = UnityEngine.Object.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
+                    else
+                        _hmd = Camera.main.transform;
+                }
+                return _hmd;
+            }
+        }
 
         private const string SDK_NAME_PREFIX = "unity";
         public const string SDK_VERSION = "0.10.0";
@@ -139,8 +157,9 @@ namespace CognitiveVR
         /// <summary>
         /// Initializes CognitiveVR Framework for use
         /// </summary>
-        public static Error Init()
+        public static Error Init(Transform HMDCamera)
         {
+            _hmd = HMDCamera;
             CognitiveStatics.Initialize();
             Error error = Error.None;
             // Have we already initialized CognitiveVR?

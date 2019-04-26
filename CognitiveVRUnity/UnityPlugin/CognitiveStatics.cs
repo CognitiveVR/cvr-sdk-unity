@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-//static and constant values used throughout the SDK
+//static and constant strings used throughout the SDK
 
 namespace CognitiveVR
 {

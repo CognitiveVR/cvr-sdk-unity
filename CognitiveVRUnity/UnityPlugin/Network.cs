@@ -364,6 +364,12 @@ namespace CognitiveVR
             }
         }
 
+        /// <summary>
+        /// uses the Response 'callback' when the question set is recieved from the dashboard. if offline, tries to get question set from local cache
+        /// </summary>
+        /// <param name="hookname"></param>
+        /// <param name="callback"></param>
+        /// <param name="timeout"></param>
         public static void GetExitPollQuestions(string hookname, Response callback, float timeout = 3)
         {
             string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(hookname);

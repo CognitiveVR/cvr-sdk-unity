@@ -8,8 +8,8 @@ namespace CognitiveVR
     /// </summary>
     public class CustomEvent
     {
-        public string category { get; private set; }
-        public string dynamicObjectId { get; private set; }
+        private string category;
+        private string dynamicObjectId;
         private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
 
         static int lastFrameCount = 0;
@@ -44,26 +44,6 @@ namespace CognitiveVR
         }
 
         private float startTime;
-
-        private static Transform _hmd;
-        private static Transform HMD
-        {
-            get
-            {
-                if (_hmd == null)
-                {
-                    if (Camera.main == null)
-                    {
-                        Camera c = Object.FindObjectOfType<Camera>();
-                        if (c != null)
-                            _hmd = c.transform;
-                    }
-                    else
-                        _hmd = Camera.main.transform;
-                }
-                return _hmd;
-            }
-        }
 
         /// <summary>
         /// Report any known state about the transaction in key-value pairs
@@ -145,11 +125,11 @@ namespace CognitiveVR
         {
             float[] pos = new float[3] { 0, 0, 0 };
 
-            if (HMD != null)
+            if (Core.HMD != null)
             {
-                pos[0] = HMD.position.x;
-                pos[1] = HMD.position.y;
-                pos[2] = HMD.position.z;
+                pos[0] = Core.HMD.position.x;
+                pos[1] = Core.HMD.position.y;
+                pos[2] = Core.HMD.position.z;
             }
 
             float duration = Time.realtimeSinceStartup - startTime;
