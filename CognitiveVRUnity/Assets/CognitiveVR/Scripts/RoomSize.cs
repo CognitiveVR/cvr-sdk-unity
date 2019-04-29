@@ -35,6 +35,7 @@ namespace CognitiveVR.Components
 #elif CVR_OCULUS
 
             //(x = width, y = height, z = depth)
+            if (OVRManager.boundary == null) { return; }
             if (OVRManager.boundary.GetConfigured())
             {
                 Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);

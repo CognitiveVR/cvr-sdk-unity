@@ -42,28 +42,28 @@ namespace CognitiveVR
 
         public delegate void UpdateHandler();
         /// <summary>
-        /// Update. Called through Manager's update function for easy enabling/disabling
+        /// Update. Called through Manager's update function
         /// </summary>
         public static event UpdateHandler UpdateEvent;
         public void OnUpdate() { if (UpdateEvent != null) { UpdateEvent(); } }
 
         public delegate void TickHandler();
         /// <summary>
-        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval. Only if the sceneid is valid
+        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
         /// </summary>
         public static event TickHandler TickEvent;
         public void OnTick() { if (TickEvent != null) { TickEvent(); } }
 
-        public delegate void QuitHandler(); //quit
+        public delegate void QuitHandler();
         /// <summary>
         /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
         /// </summary>
         public static event QuitHandler QuitEvent;
         public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
 
-        public delegate void LevelLoadedHandler(); //level
+        public delegate void LevelLoadedHandler();
         /// <summary>
-        /// called from Unity's SceneManager.SceneLoaded(scene scene)
+        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
         /// </summary>
         public static event LevelLoadedHandler LevelLoadedEvent;
         public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
@@ -147,6 +147,9 @@ namespace CognitiveVR
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 2;
 
+        /// <summary>
+        /// sets instance of CognitiveVR_Manager
+        /// </summary>
         private void OnEnable()
         {
             if (instance != null && instance != this)
@@ -169,6 +172,12 @@ namespace CognitiveVR
                 Initialize("");
         }
 
+
+        /// <summary>
+        /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="userProperties"></param>
         public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
         {
             if (instance != null && instance != this)
@@ -299,13 +308,16 @@ namespace CognitiveVR
             var error = ETrackedPropertyError.TrackedProp_Success;
             var result = new System.Text.StringBuilder();
 
-            var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
-            if (capacity > 0)
-                serialnumber = result.ToString();
-
-            if (!string.IsNullOrEmpty(serialnumber))
+            if (OpenVR.System != null)
             {
-                Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
+                var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
+                if (capacity > 0)
+                    serialnumber = result.ToString();
+
+                if (!string.IsNullOrEmpty(serialnumber))
+                {
+                    Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
+                }
             }
 #endif
 
@@ -427,6 +439,11 @@ namespace CognitiveVR
             Core.SetLobbyId(lobbyId);
         }
 
+        /// <summary>
+        /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="mode"></param>
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
@@ -480,10 +497,12 @@ namespace CognitiveVR
         }
 #endif
 
-        //start after successful init callback
+        /// <summary>
+        /// start after successful session initialization
+        /// </summary>
         IEnumerator Tick()
         {
-            while (Application.isPlaying) //cognitive manager is destroyed on end session, which will stop this
+            while (Application.isPlaying)
             {
                 yield return playerSnapshotInverval;
                 FrameCount = Time.frameCount;
@@ -498,9 +517,8 @@ namespace CognitiveVR
                 return;
             }
 
-            //doPostRender = false;
-
             OnUpdate();
+            Core.Core_Update();
             UpdateSendHotkeyCheck();
 
 #if CVR_STEAMVR || CVR_STEAMVR2
@@ -616,18 +634,15 @@ namespace CognitiveVR
         {
             IsQuitting = true;
             if (hasCanceled) { return; }
-
             if (InitResponse != Error.None) { return; }
 
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
+            CognitiveVR.Util.logDebug("session length " + playtime);
             if (QuitEvent == null)
             {
-				CognitiveVR.Util.logDebug("session length " + playtime);
                 new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();
                 return;
             }
-
-			CognitiveVR.Util.logDebug("session length " + playtime);
             new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
 namespace CognitiveVR 
@@ -11,12 +10,11 @@ namespace CognitiveVR
     {
         public delegate void onSendData(); //send data
         /// <summary>
-        /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
+        /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
         public static void SendDataEvent() { if (OnSendData != null) { OnSendData(); } }
-
-
+        
         private static Transform _hmd;
         internal static Transform HMD
         {
@@ -110,12 +108,19 @@ namespace CognitiveVR
 
         public static CognitiveVR_Preferences.SceneSettings TrackingScene {get; private set;}
 
+        /// <summary>
+        /// Set the SceneId for recorded data by string
+        /// </summary>
         public static void SetTrackingScene(string sceneName)
         {
             var scene = CognitiveVR_Preferences.FindScene(sceneName);
             SetTrackingScene(scene);
         }
 
+        /// <summary>
+        /// Set the SceneId for recorded data by reference
+        /// </summary>
+        /// <param name="scene"></param>
         public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
         {
             TrackingSceneId = "";
@@ -137,11 +142,16 @@ namespace CognitiveVR
             LobbyId = lobbyId;
         }
 
+        /// <summary>
+        /// has the CognitiveVR session started?
+        /// </summary>
         public static bool IsInitialized { get; private set; }
 
+        /// <summary>
+        /// Reset all of the static vars to their default values. Used when a session ends
+        /// </summary>
         public static void Reset()
         {
-            // Reset all of the static vars to their default values
             UserId = null;
             _sessionId = null;
             _timestamp = 0;
@@ -155,12 +165,13 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// Initializes CognitiveVR Framework for use
+        /// Starts a CognitiveVR session. Records hardware info, creates network manager
         /// </summary>
         public static Error Init(Transform HMDCamera)
         {
             _hmd = HMDCamera;
             CognitiveStatics.Initialize();
+
             Error error = Error.None;
             // Have we already initialized CognitiveVR?
             if (IsInitialized)
@@ -194,6 +205,14 @@ namespace CognitiveVR
             }
 
             return error;
+        }
+
+        /// <summary>
+        /// called from CognitiveVR_Manager. TODO register delegate somewhere
+        /// </summary>
+        public static void Core_Update()
+        {
+            DynamicObjectCore.CognitiveVR_Manager_Update();
         }
 
         public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)

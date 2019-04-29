@@ -259,6 +259,23 @@ namespace CognitiveVR
         }
 
         /// <returns>"name":[0.1,0.2,0.3]</returns>
+        public static StringBuilder SetVectorRaw(string name, float posx, float posy, float posz, StringBuilder builder, bool centimeterLimit = false)
+        {
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            builder.Concat(posx);
+            builder.Append(',');
+            builder.Concat(posy);
+            builder.Append(',');
+            builder.Concat(posz);
+
+            builder.Append(']');
+            return builder;
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static StringBuilder SetVector(string name, Vector3 pos, StringBuilder builder, bool centimeterLimit = false)
         {
             builder.Append("\"");
@@ -341,6 +358,25 @@ namespace CognitiveVR
             builder.Concat(quat[3]);
 
             builder.Append("]");
+            return builder;
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
+        public static StringBuilder SetQuatRaw(string name, float quatx, float quaty, float quatz, float quatw, StringBuilder builder)
+        {
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            builder.Concat(quatx);
+            builder.Append(',');
+            builder.Concat(quaty);
+            builder.Append(',');
+            builder.Concat(quatz);
+            builder.Append(',');
+            builder.Concat(quatw);
+
+            builder.Append(']');
             return builder;
         }
     }
