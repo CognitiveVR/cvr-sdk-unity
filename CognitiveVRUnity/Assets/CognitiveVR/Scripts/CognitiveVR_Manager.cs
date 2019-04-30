@@ -481,16 +481,21 @@ namespace CognitiveVR
         #region Updates and Loops
 
 #if CVR_STEAMVR || CVR_STEAMVR2
+        GameplayReferences.ControllerInfo tempControllerInfo = null;
         private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
         {
             for (int i = 0; i<args.Length;i++)
             {
                 for (int j = 0; j<2;j++)
                 {
-                    if (GameplayReferences.GetControllerInfo(j).id == i)
+                    if (GameplayReferences.GetControllerInfo(j,out tempControllerInfo))
                     {
-                        GameplayReferences.GetControllerInfo(j).connected = args[i].bDeviceIsConnected;
-                        GameplayReferences.GetControllerInfo(j).visible = args[i].bPoseIsValid;
+                        if (tempControllerInfo.id == i)
+                        {
+                            tempControllerInfo.connected = args[i].bDeviceIsConnected;
+                            tempControllerInfo.visible = args[i].bPoseIsValid;
+                        }
+
                     }
                 }
             }

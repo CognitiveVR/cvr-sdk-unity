@@ -92,39 +92,38 @@ namespace CognitiveVR.Components
         bool rightWasVisible;
         bool rightWasConnected;
 
+
+        GameplayReferences.ControllerInfo tempInfo;
         void OcclusionChanged()
         {
-            var left = GameplayReferences.GetControllerInfo(false);
-            if (left != null && left.transform != null)
+            if (GameplayReferences.GetControllerInfo(false,out tempInfo))
             {
-                if (left.connected != leftWasConnected)
+                if (tempInfo.connected != leftWasConnected)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", left.connected).Send();
-                    leftWasConnected = left.connected;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", tempInfo.connected).Send();
+                    leftWasConnected = tempInfo.connected;
                 }
-                if (left.visible != leftWasVisible)
+                if (tempInfo.visible != leftWasVisible)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", left.visible).Send();
-                    leftWasVisible = left.visible;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", tempInfo.visible).Send();
+                    leftWasVisible = tempInfo.visible;
                 }
             }
-
-            var right = GameplayReferences.GetControllerInfo(true);
-            if (right != null && right.transform != null)
+            if (GameplayReferences.GetControllerInfo(true, out tempInfo))
             {
-                if (right.connected != rightWasConnected)
+                if (tempInfo.connected != rightWasConnected)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", right.connected).Send();
-                    rightWasConnected = right.connected;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", tempInfo.connected).Send();
+                    rightWasConnected = tempInfo.connected;
                 }
-                if (right.visible != rightWasVisible)
+                if (tempInfo.visible != rightWasVisible)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", right.visible).Send();
-                    rightWasVisible = right.visible;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", tempInfo.visible).Send();
+                    rightWasVisible = tempInfo.visible;
                 }
             }
         }

@@ -174,7 +174,6 @@ namespace CognitiveVR
             }
             //try to initialize with controllermanager
             //otherwise try to initialize with player.hands
-
             if (cm == null)
             {
                 cm = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
@@ -267,20 +266,22 @@ namespace CognitiveVR
 
         static ControllerInfo[] controllers;
 
-        public static ControllerInfo GetControllerInfo(int deviceID)
+        public static bool GetControllerInfo(int deviceID, out ControllerInfo info)
         {
             InitializeControllers();
-            if (controllers[0].id == deviceID) { return controllers[0]; }
-            if (controllers[1].id == deviceID) { return controllers[1]; }
-            return null;
+            if (controllers[0].id == deviceID && controllers[0].transform != null) { info = controllers[0]; return true; }
+            if (controllers[1].id == deviceID && controllers[1].transform != null) { info = controllers[1]; return true; }
+            info = null;
+            return false;
         }
 
-        public static ControllerInfo GetControllerInfo(bool right)
+        public static bool GetControllerInfo(bool right, out ControllerInfo info)
         {
             InitializeControllers();
-            if (controllers[0].isRight == right && controllers[0].id > 0) { return controllers[0]; }
-            if (controllers[1].isRight == right && controllers[1].id > 0) { return controllers[1]; }
-            return null;
+            if (controllers[0].isRight == right && controllers[0].id > 0 && controllers[0].transform != null) { info = controllers[0]; return true; }
+            if (controllers[1].isRight == right && controllers[1].id > 0 && controllers[1].transform != null) { info = controllers[1]; return true; }
+            info = null;
+            return false;
         }
 
 
@@ -288,41 +289,47 @@ namespace CognitiveVR
         /// steamvr ID is tracked device id
         /// oculus ID 0 is right, 1 is left controller
         /// </summary>
-        public static Transform GetController(int deviceid)
+        public static bool GetController(int deviceid, out Transform transform)
         {
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             InitializeControllers();
-            if (controllers[0].id == deviceid) { return controllers[0].transform; }
-            if (controllers[1].id == deviceid) { return controllers[1].transform; }
-            return null;
+            if (controllers[0].id == deviceid) { transform = controllers[0].transform; return true; }
+            if (controllers[1].id == deviceid) { transform = controllers[1].transform; return true; }
+            transform = null;
+            return false;
 #else
-            return null;
+            transform = null;
+            return false;
 #endif
         }
 
-        public static Transform GetController(bool right)
+        public static bool GetController(bool right, out Transform transform)
         {
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].id > 0) { return controllers[0].transform; }
-            if (right == controllers[1].isRight && controllers[1].id > 0) { return controllers[1].transform; }
-            return null;
+            if (right == controllers[0].isRight && controllers[0].id > 0) { transform = controllers[0].transform; return true; }
+            if (right == controllers[1].isRight && controllers[1].id > 0) { transform = controllers[1].transform; return true; }
+            transform = null;
+            return false;
 #else
-            return null;
+            transform = null;
+            return false;
 #endif
         }
 
         /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
-        public static Vector3 GetControllerPosition(bool right)
+        public static bool GetControllerPosition(bool right, out Vector3 position)
         {
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
 
             InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { return controllers[0].transform.position; }
-            if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { return controllers[1].transform.position; }
-            return Vector3.zero;
+            if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { position = controllers[0].transform.position; return true; }
+            if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { position = controllers[1].transform.position; return true; }
+            position = Vector3.zero;
+            return false;
 #else
-            return Vector3.zero;
+            position = Vector3.zero;
+            return false;
 #endif
         }
 

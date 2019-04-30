@@ -23,40 +23,44 @@ namespace CognitiveVR.Components
             CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
+        GameplayReferences.ControllerInfo tempInfo;
         private void CognitiveVR_Manager_OnTick()
         {
             bool hit;
 
-            var lefthand = GameplayReferences.GetControllerInfo(false);
-            if (lefthand != null && lefthand.connected && lefthand.visible)
+            if (GameplayReferences.GetControllerInfo(false,out tempInfo))
             {
-                hit = Physics.CheckSphere(lefthand.transform.position, 0.1f, CollisionLayerMask);
-                if (hit && !LeftControllerColliding)
+                if (tempInfo.connected && tempInfo.visible)
                 {
-                    LeftControllerColliding = true;
-                    new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state","begin").Send();
-                }
-                else if (!hit && LeftControllerColliding)
-                {
-                    new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
-                    LeftControllerColliding = false;
+                    hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
+                    if (hit && !LeftControllerColliding)
+                    {
+                        LeftControllerColliding = true;
+                        new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "begin").Send();
+                    }
+                    else if (!hit && LeftControllerColliding)
+                    {
+                        new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
+                        LeftControllerColliding = false;
+                    }
                 }
             }
 
-
-            var righthand = GameplayReferences.GetControllerInfo(true);
-            if (righthand != null && righthand.connected && righthand.visible)
+            if (GameplayReferences.GetControllerInfo(true, out tempInfo))
             {
-                hit = Physics.CheckSphere(righthand.transform.position, 0.1f, CollisionLayerMask);
-                if (hit && !RightControllerColliding)
+                if (tempInfo.connected && tempInfo.visible)
                 {
-                    RightControllerColliding = true;
-                    new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
-                }
-                else if (!hit && RightControllerColliding)
-                {
-                    new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
-                    RightControllerColliding = false;
+                    hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
+                    if (hit && !RightControllerColliding)
+                    {
+                        RightControllerColliding = true;
+                        new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
+                    }
+                    else if (!hit && RightControllerColliding)
+                    {
+                        new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
+                        RightControllerColliding = false;
+                    }
                 }
             }
         }

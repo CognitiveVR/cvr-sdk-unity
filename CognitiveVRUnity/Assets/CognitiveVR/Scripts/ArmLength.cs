@@ -7,7 +7,7 @@ using Valve.VR;
 
 /// <summary>
 /// samples distances the the HMD to the player's arm. max is assumed to be roughly player arm length
-/// this only starts tracking when the player has pressed the Steam Controller Trigger
+/// this only starts tracking when the player has pressed a button/trigger/grip
 /// </summary>
 
 namespace CognitiveVR.Components
@@ -18,16 +18,83 @@ namespace CognitiveVR.Components
         [ClampSetting(5,100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
         public int SampleCount = 50;
-        public float StartDelay = 5; //this is an additional start delay after cognitivevr_manager has initialized
         [ClampSetting(0.1f)]
         public float Interval = 1;
 
+        [ClampSetting(0,50)]
+        [Tooltip("Distance from HMD to average shoulder height")]
+        public float EyeToShoulderHeight = 0.186f; //meters
+
 #if CVR_STEAMVR
+
+        //if the left controller isn't null and has had trigger input
+        bool leftControllerTracking;
+        SteamVR_Controller.Device leftController;
+        
+        //if the right controller isn't null and has had trigger input
+        bool rightControllerTracking;
+        SteamVR_Controller.Device rightController;
+
+        GameplayReferences.ControllerInfo tempInfo = null;
+
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
 
-            StartCoroutine(Tick());
+            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
+        }
+
+        bool anyControllerTracking = false;
+        private void CognitiveVR_Manager_UpdateEvent()
+        {
+
+            //get left controller device
+            if (leftController == null && GameplayReferences.GetControllerInfo(false, out tempInfo))
+            {
+                var leftObject = tempInfo.transform.GetComponent<SteamVR_TrackedObject>();
+                if (leftObject != null)
+                {
+                    leftController = SteamVR_Controller.Input((int)leftObject.index);
+                }
+            }
+
+            //get right controller device
+            if (rightController == null && GameplayReferences.GetControllerInfo(true, out tempInfo))
+            {
+                var rightObject = tempInfo.transform.GetComponent<SteamVR_TrackedObject>();
+                if (rightObject != null)
+                {
+                    rightController = SteamVR_Controller.Input((int)rightObject.index);
+                }
+            }
+
+            if (!rightControllerTracking && rightController != null && rightController.GetHairTriggerDown())
+            {
+                //start coroutine if not started already
+                rightControllerTracking = true;
+                if (!anyControllerTracking)
+                {
+                    anyControllerTracking = true;
+                    StartCoroutine(Tick());
+                }
+            }
+            
+            if (!leftControllerTracking && leftController != null && leftController.GetHairTriggerDown())
+            {
+                //start coroutine if not started already
+                leftControllerTracking = true;
+                if (!anyControllerTracking)
+                {
+                    anyControllerTracking = true;
+                    StartCoroutine(Tick());
+                }
+            }
+
+            //if both controllers are actively tracking distance, stop this callback to check for controllers that become active
+            if (leftControllerTracking && rightControllerTracking)
+            {
+                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
+            }
         }
 #endif
 
@@ -59,30 +126,37 @@ namespace CognitiveVR.Components
 
         IEnumerator Tick()
         {
-            //TODO wait for input
-            yield return new WaitForSeconds(StartDelay);
-
             int samples = 0;
             float maxSqrDistance = 0;
 
             while (samples < SampleCount)
             {
                 yield return new WaitForSeconds(Interval);
-
-                var left = GameplayReferences.GetControllerInfo(false);
-                if (left != null && left.transform != null && left.connected && left.visible)
+                
+                //if left controller is active, record max distance
+                if (leftControllerTracking && GameplayReferences.GetControllerInfo(false, out tempInfo))
                 {
-                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(left.transform.position - GameplayReferences.HMD.position));
+                    if (tempInfo.connected && tempInfo.visible)
+                    {
+                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
+                    }
                 }
 
-                var right = GameplayReferences.GetControllerInfo(true);
-                if (right != null && right.transform != null && right.connected && right.visible)
+                //if right controller is active, record max distance
+                if (rightControllerTracking && GameplayReferences.GetControllerInfo(true, out tempInfo))
                 {
-                    maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(right.transform.position - GameplayReferences.HMD.position));
+                    if (tempInfo.connected && tempInfo.visible)
+                    {
+                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
+                        //Debug.DrawLine(GameplayReferences.HMD.position, GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight,Color.red,1);
+                        //Debug.DrawLine(tempInfo.transform.position, GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight,Color.blue,1);
+                    }
                 }
 
                 samples++;
             }
+
+            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
 
             if (maxSqrDistance > 0)
             {
