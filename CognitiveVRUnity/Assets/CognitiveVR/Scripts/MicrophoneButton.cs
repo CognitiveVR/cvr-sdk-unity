@@ -215,7 +215,7 @@ namespace CognitiveVR
             //if it doesn't find the eyes, skip this snapshot
             //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = Cam.ViewportPointToRay(v2);
+                var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
 #elif CVR_TOBIIVR

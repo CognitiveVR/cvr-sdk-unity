@@ -31,23 +31,9 @@ namespace CognitiveVR
 
 #if CVR_PUPIL
 
-    Camera _cam;
-    Camera Cam
-    {
-        get
-        {
-            if (_cam == null)
-            {
-                _cam = Camera.main;
-            }
-            return _cam;
-        }
-    }
-
-
     void Start()
     {
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        if (GameplayReferences.HMD == null) { return; }
         PupilTools.OnCalibrationEnded += PupilTools_OnCalibrationEnded;
     }
 
@@ -59,18 +45,18 @@ namespace CognitiveVR
 
     void Update()
     {
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        if (GameplayReferences.HMD == null) { return; }
 
         Vector3 newPosition = t.position;
         if (PupilTools.IsGazing)
         {
             var v2 = PupilData._2D.GetEyeGaze("0");
-            var ray = Cam.ViewportPointToRay(v2);
+            var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
             newPosition = ray.GetPoint(Distance);
         }
 
         t.position = Vector3.Lerp(t.position, newPosition, Speed);
-        t.LookAt(CognitiveVR_Manager.HMD.position);
+        t.LookAt(GameplayReferences.HMD.position);
     }
 
 #elif CVR_FOVE
@@ -90,22 +76,24 @@ namespace CognitiveVR
 
     void Start()
     {
-        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+        
+
+        t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
     }
 
     void Update()
     {
-        if (CognitiveVR_Manager.HMD == null){return;}
+        if (GameplayReferences.HMD == null){return;}
 
-        t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
-        t.LookAt(CognitiveVR_Manager.HMD.position);
+        t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(GameplayReferences.HMD.position);
     }
 
     Vector3 GetLookDirection()
     {
         if (FoveInstance == null)
         {
-            return CognitiveVR_Manager.HMD.forward;
+            return GameplayReferences.HMD.forward;
         }
         var eyeRays = FoveInstance.GetGazeRays();
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
@@ -115,40 +103,40 @@ namespace CognitiveVR
     private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
     void Start()
     {
-        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
+        t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
         _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        if (GameplayReferences.HMD == null) { return; }
     }
 
     void Update()
     {
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        if (GameplayReferences.HMD == null) { return; }
 
-        t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
-        t.LookAt(CognitiveVR_Manager.HMD.position);
+        t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(GameplayReferences.HMD.position);
     }
 
     Vector3 GetLookDirection()
     {
         if (_eyeTracker == null)
         {
-            return CognitiveVR_Manager.HMD.forward;
+            return GameplayReferences.HMD.forward;
         }
         return _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
     }
 #elif CVR_NEURABLE
     void Start()
     {
-        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+        if (GameplayReferences.HMD == null) { return; }
     }
 
     void Update()
     {
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        if (GameplayReferences.HMD == null) { return; }
 
-        t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
-        t.LookAt(CognitiveVR_Manager.HMD.position);
+        t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(GameplayReferences.HMD.position);
     }
 
     Vector3 GetLookDirection()
@@ -158,14 +146,14 @@ namespace CognitiveVR
 #elif CVR_AH
     void Start()
     {
-        t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
-        if (CognitiveVR_Manager.HMD == null) { return; }
+        t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+        if (GameplayReferences.HMD == null) { return; }
     }
     void Update()
     {
-        if (CognitiveVR_Manager.HMD == null) { return; }
-         t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
-        t.LookAt(CognitiveVR_Manager.HMD.position);
+        if (GameplayReferences.HMD == null) { return; }
+         t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+        t.LookAt(GameplayReferences.HMD.position);
     }
     Vector3 GetLookDirection()
     {
@@ -174,14 +162,14 @@ namespace CognitiveVR
 #elif CVR_SNAPDRAGON
         void Start()
         {
-            t.position = CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance;
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+            if (GameplayReferences.HMD == null) { return; }
         }
         void Update()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
-            t.position = Vector3.Lerp(t.position, CognitiveVR_Manager.HMD.position + GetLookDirection() * Distance, Speed);
-            t.LookAt(CognitiveVR_Manager.HMD.position);
+            if (GameplayReferences.HMD == null) { return; }
+            t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+            t.LookAt(GameplayReferences.HMD.position);
         }
         Vector3 GetLookDirection()
         {

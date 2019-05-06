@@ -449,6 +449,7 @@ namespace CognitiveVR
             var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
 
+            //TODO only call Core.SendDataEvent if replacing scene id
             if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
                 Core.SendDataEvent();
@@ -480,8 +481,9 @@ namespace CognitiveVR
 
         #region Updates and Loops
 
-#if CVR_STEAMVR || CVR_STEAMVR2
         GameplayReferences.ControllerInfo tempControllerInfo = null;
+
+#if CVR_STEAMVR || CVR_STEAMVR2
         private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
         {
             for (int i = 0; i<args.Length;i++)
@@ -542,11 +544,18 @@ namespace CognitiveVR
 #endif
 
 #if CVR_OCULUS
-            GameplayReferences.GetControllerInfo(false).connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-            GameplayReferences.GetControllerInfo(false).visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
 
-            GameplayReferences.GetControllerInfo(true).connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-            GameplayReferences.GetControllerInfo(true).visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
+            if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
+            {
+                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
+                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
+            }
+
+            if (GameplayReferences.GetControllerInfo(true, out tempControllerInfo))
+            {
+                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
+                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
+            }
 #endif
         }
 

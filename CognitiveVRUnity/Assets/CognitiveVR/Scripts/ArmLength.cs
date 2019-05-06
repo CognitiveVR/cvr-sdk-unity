@@ -25,17 +25,16 @@ namespace CognitiveVR.Components
         [Tooltip("Distance from HMD to average shoulder height")]
         public float EyeToShoulderHeight = 0.186f; //meters
 
-#if CVR_STEAMVR
-
         //if the left controller isn't null and has had trigger input
         bool leftControllerTracking;
-        SteamVR_Controller.Device leftController;
-        
         //if the right controller isn't null and has had trigger input
         bool rightControllerTracking;
-        SteamVR_Controller.Device rightController;
-
         GameplayReferences.ControllerInfo tempInfo = null;
+
+#if CVR_STEAMVR
+        
+        SteamVR_Controller.Device leftController;
+        SteamVR_Controller.Device rightController;
 
         public override void CognitiveVR_Init(Error initError)
         {
@@ -155,8 +154,6 @@ namespace CognitiveVR.Components
 
                 samples++;
             }
-
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
 
             if (maxSqrDistance > 0)
             {
