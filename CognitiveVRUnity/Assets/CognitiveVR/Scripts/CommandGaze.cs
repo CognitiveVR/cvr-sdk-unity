@@ -20,7 +20,7 @@ namespace CognitiveVR
         public override void Initialize()
         {
             base.Initialize();
-            CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
+            Core.InitEvent += CognitiveVR_Manager_InitEvent;
 #if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH
             Debug.LogError("Cognitive3D does not support eye tracking using Command Gaze. From 'Advanced Options' in the cognitive3D menu, please change 'Gaze Type' to 'Physics'");
 #endif
@@ -49,7 +49,7 @@ namespace CognitiveVR
 
                 //buf.Blit(blitTo, rt);
 
-                CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
+                Core.TickEvent += CognitiveVR_Manager_TickEvent;
 
                 helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();
                 helper.Initialize(rt, GameplayReferences.HMDCameraComponent, OnHelperPostRender, this);
@@ -88,7 +88,7 @@ namespace CognitiveVR
 
             if (DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
             {
-                ObjectId = hitDynamic.Id;
+                ObjectId = hitDynamic.Data.Id;
             }
 
             float depthDistance = Vector3.Distance(GameplayReferences.HMD.position, worldpos);
@@ -150,8 +150,8 @@ namespace CognitiveVR
         private void OnDestroy()
         {
             Destroy(helper);
-            CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
-            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+            Core.InitEvent -= CognitiveVR_Manager_InitEvent;
+            Core.TickEvent -= CognitiveVR_Manager_TickEvent;
         }
     }
 }

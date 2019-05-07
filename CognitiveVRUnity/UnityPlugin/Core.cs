@@ -13,8 +13,45 @@ namespace CognitiveVR
         /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
-        public static void SendDataEvent() { if (OnSendData != null) { OnSendData(); } }
-        
+        public static void InvokeSendDataEvent() { if (OnSendData != null) { OnSendData(); } }
+
+        public delegate void CoreInitHandler(Error initError);
+        /// <summary>
+        /// CognitiveVR Core.Init callback
+        /// </summary>
+        public static event CoreInitHandler InitEvent;
+        public static void InvokeInitEvent(Error initError) { if (InitEvent != null) { InitEvent.Invoke(initError); } }
+
+        public delegate void UpdateHandler(float deltaTime);
+        /// <summary>
+        /// Update. Called through Manager's update function
+        /// </summary>
+        public static event UpdateHandler UpdateEvent;
+        public static void InvokeUpdateEvent(float deltaTime) { if (UpdateEvent != null) { UpdateEvent(deltaTime); } }
+
+        public delegate void TickHandler();
+        /// <summary>
+        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// </summary>
+        public static event TickHandler TickEvent;
+        public static void InvokeTickEvent() { if (TickEvent != null) { TickEvent(); } }
+
+        public delegate void QuitHandler();
+        /// <summary>
+        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
+        /// </summary>
+        public static event QuitHandler QuitEvent;
+        public static void InvokeQuitEvent() { if (QuitEvent != null) { QuitEvent(); } }
+        public static bool IsQuitEventBound() { return QuitEvent != null; }
+        public static void QuitEventClear() { QuitEvent = null; }
+
+        public delegate void LevelLoadedHandler(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
+        /// <summary>
+        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
+        /// </summary>
+        public static event LevelLoadedHandler LevelLoadedEvent;
+        public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (LevelLoadedEvent != null) { LevelLoadedEvent(scene, mode, newSceneId); } }
+
         private static Transform _hmd;
         internal static Transform HMD
         {
@@ -202,17 +239,11 @@ namespace CognitiveVR
                 CheckSessionId();
 
                 IsInitialized = true;
+
+                //CognitiveVR.Core.UpdateEvent += DynamicObjectCore.CognitiveVR_Manager_Update;
             }
 
             return error;
-        }
-
-        /// <summary>
-        /// called from CognitiveVR_Manager. TODO register delegate somewhere
-        /// </summary>
-        public static void Core_Update()
-        {
-            DynamicObjectCore.CognitiveVR_Manager_Update();
         }
 
         public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)

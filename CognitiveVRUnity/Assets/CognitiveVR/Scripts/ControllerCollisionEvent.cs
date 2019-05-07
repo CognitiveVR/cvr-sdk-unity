@@ -20,7 +20,7 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+            Core.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         GameplayReferences.ControllerInfo tempInfo;
@@ -85,7 +85,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+            Core.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

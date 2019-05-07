@@ -30,13 +30,13 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
             if (GameplayReferences.HMD != null)
                 lastRotation = GameplayReferences.HMD.rotation;
         }
 
-        private void CognitiveVR_Manager_OnUpdate()
+        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
             if (GameplayReferences.HMD == null) { return; }
             UpdateFramerate();
@@ -45,7 +45,7 @@ namespace CognitiveVR.Components
                 UpdateHMDRotation();
             }
 
-            timeleft -= Time.deltaTime;
+            timeleft -= deltaTime;
             if (timeleft <= 0.0f)
             {
                 IntervalEnd();
@@ -123,7 +123,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

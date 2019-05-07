@@ -788,7 +788,7 @@ namespace CognitiveVR
                 ActiveFixation.LocalPosition = averageLocalPosition;
                 ActiveFixation.WorldPosition = mostUsed.TransformPoint(averageLocalPosition);
                 Debug.DrawRay(ActiveFixation.WorldPosition, Vector3.up * 0.5f, Color.red, 3);
-                ActiveFixation.DynamicObjectId = mostUsed.GetComponent<DynamicObject>().Id;
+                ActiveFixation.DynamicObjectId = mostUsed.GetComponent<DynamicObject>().Data.Id;
 
                 float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - EyeCaptures[index].HmdPosition);
                 float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;

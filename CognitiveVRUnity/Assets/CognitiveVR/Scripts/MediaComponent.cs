@@ -26,7 +26,7 @@ namespace CognitiveVR
         private void Start()
         {
             //not every frame + only if initialization is fine. MUST HAVE VALID SCENEID
-            CognitiveVR.CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
+            CognitiveVR.Core.TickEvent += CognitiveVR_Manager_TickEvent;
         }
 
         bool wasPrepared = true;
@@ -85,7 +85,7 @@ namespace CognitiveVR
 
         private void OnDestroy()
         {
-            CognitiveVR.CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+            CognitiveVR.Core.TickEvent -= CognitiveVR_Manager_TickEvent;
         }
     }
 }
