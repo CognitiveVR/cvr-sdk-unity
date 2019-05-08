@@ -89,7 +89,8 @@ namespace CognitiveVR
                     if (string.IsNullOrEmpty(dyn.MeshName))
                     {
                         dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
-                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                        if (!Application.isPlaying)
+                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                     }
                     if (targets.Length == 1)
                         dyn.MeshName = UnityEditor.EditorGUILayout.TextField("", dyn.MeshName);
@@ -123,7 +124,8 @@ namespace CognitiveVR
                     if (string.IsNullOrEmpty(meshname.stringValue))
                     {
                         //meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
-                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                        if (!Application.isPlaying)
+                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                     }
 
                     GUILayout.BeginHorizontal();
@@ -238,7 +240,8 @@ namespace CognitiveVR
                 //remove spaces from meshname
                 //meshname.stringValue = meshname.stringValue.Replace(" ", "_");
 
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                if (!Application.isPlaying)
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             serializedObject.ApplyModifiedProperties();

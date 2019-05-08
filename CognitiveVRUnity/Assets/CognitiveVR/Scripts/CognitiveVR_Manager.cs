@@ -146,7 +146,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="userProperties"></param>
-        public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
+        public void Initialize(string userName="", List<KeyValuePair<string,object>> userProperties = null)
         {
             if (instance != null && instance != this)
             {
@@ -257,6 +257,9 @@ namespace CognitiveVR
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
 
             SetSessionProperties();
+
+            if (userProperties != null)
+                Core.SetSessionProperties(userProperties);
         }
 
         /// <summary>
@@ -419,13 +422,6 @@ namespace CognitiveVR
             var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
 
-            //TODO only call Core.SendDataEvent if replacing scene id
-            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
-            {
-                Core.InvokeSendDataEvent();
-            }
-
-
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
             {
                 //if scene loaded has new scene id
@@ -446,6 +442,12 @@ namespace CognitiveVR
                     }
                 }
             }
+            
+            if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                Core.InvokeSendDataEvent();
+            }
+
             Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 

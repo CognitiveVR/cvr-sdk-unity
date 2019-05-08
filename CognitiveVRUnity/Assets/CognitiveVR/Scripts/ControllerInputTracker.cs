@@ -37,10 +37,10 @@ public class ControllerInputTracker : MonoBehaviour
         wait = new WaitForSeconds(UpdateRate);
         Init();
     }
-        
+
 #if CVR_STEAMVR
     
-    Dictionary<string, ButtonState> CurrentButtonStates = new Dictionary<string, ButtonState>();
+    List<ButtonState> CurrentButtonStates = new List<ButtonState>();
 
     bool isRight;
     DynamicObject dynamic;
@@ -171,17 +171,13 @@ public class ControllerInputTracker : MonoBehaviour
 
         if (CurrentButtonStates.Count > 0)
         {
-            //for each ButtonState in current that doesn't match previous, add to dictionary
-
-            Dictionary<string, ButtonState> copy = new Dictionary<string, ButtonState>(CurrentButtonStates.Count);
-
-            foreach(var entry in CurrentButtonStates)
+            List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
+            for(int i = 0; i<CurrentButtonStates.Count;i++)
             {
-                copy[entry.Key] = entry.Value;
+                copy[i].Copy(CurrentButtonStates[i]);
             }
             CurrentButtonStates.Clear();
-
-            DynamicManager.RecordControllerEvent(dynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(controllerDynamic.Data, copy);
         }
     }
 
@@ -227,8 +223,8 @@ public class ControllerInputTracker : MonoBehaviour
         public DynamicObject LeftHand;
     public DynamicObject RightHand;
 
-        Dictionary<string, ButtonState> CurrentLeftButtonStates = new Dictionary<string, ButtonState>();
-        Dictionary<string, ButtonState> CurrentRightButtonStates = new Dictionary<string, ButtonState>();
+        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
+        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
 
     void Init()
     {
@@ -373,29 +369,28 @@ public class ControllerInputTracker : MonoBehaviour
             }
         if (CurrentRightButtonStates.Count > 0)
         {
-            //for each ButtonState in current that doesn't match previous, add to dictionary
-
-            Dictionary<string, ButtonState> copy = new Dictionary<string, ButtonState>(CurrentRightButtonStates.Count);
-
-            foreach(var entry in CurrentButtonStates)
+            List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
+            for(int i = 0; i< CurrentRightButtonStates.Count;i++)
             {
-                copy[entry.Key] = entry.Value;
+                    copy[i].Copy(CurrentRightButtonStates[i]);
             }
-            CurrentButtonStates.Clear();
+
+            //for each ButtonState in current that doesn't match previous, add to list
+            
+                CurrentRightButtonStates.Clear();
 
             DynamicManager.RecordControllerEvent(RightHand.Data, copy);
         }
         if (CurrentLeftButtonStates.Count > 0)
         {
-            //for each ButtonState in current that doesn't match previous, add to dictionary
-
-            Dictionary<string, ButtonState> copy = new Dictionary<string, ButtonState>(CurrentLeftButtonStates.Count);
-
-            foreach(var entry in CurrentButtonStates)
+            List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
+            for(int i = 0; i< CurrentLeftButtonStates.Count;i++)
             {
-                copy[entry.Key] = entry.Value;
+                    copy[i].Copy(CurrentLeftButtonStates[i]);
             }
-            CurrentButtonStates.Clear();
+            //for each ButtonState in current that doesn't match previous, add to list
+            
+            CurrentLeftButtonStates.Clear();
 
             DynamicManager.RecordControllerEvent(LeftHand.Data, copy);
         }
@@ -472,7 +467,7 @@ public class ControllerInputTracker : MonoBehaviour
 
 #elif CVR_MAGICLEAP
     
-    Dictionary<string, ButtonState> CurrentButtonStates = new Dictionary<string, ButtonState>();
+    List<ButtonState> CurrentButtonStates = new List<ButtonState>();
     private ControllerConnectionHandler _controllerConnectionHandler;
     DynamicObject controllerDynamic;
     void Init()
@@ -496,7 +491,7 @@ public class ControllerInputTracker : MonoBehaviour
         if (_controllerConnectionHandler.IsControllerValid() && _controllerConnectionHandler.ConnectedController.Id == controllerId &&
             button == MLInputControllerButton.Bumper)
         {
-            OnButtonChanged(controllerDynamic, true, "bumper",true);
+            OnButtonChanged(controllerDynamic, true, "bumper",true,CurrentButtonStates);
         }
     }
 
@@ -506,7 +501,7 @@ public class ControllerInputTracker : MonoBehaviour
         if (_controllerConnectionHandler.IsControllerValid() && _controllerConnectionHandler.ConnectedController.Id == controllerId &&
             button == MLInputControllerButton.Bumper)
         {
-            OnButtonChanged(controllerDynamic, true, "bumper",false);
+            OnButtonChanged(controllerDynamic, true, "bumper",false,CurrentButtonStates);
         }
     }
 
@@ -515,8 +510,8 @@ public class ControllerInputTracker : MonoBehaviour
         if (controllerDynamic == null) { return; }
         //controller
         MLInputController controller = _controllerConnectionHandler.ConnectedController;
-        OnSingleChanged(controllerDynamic, true, "trigger",controller.TriggerValue);
-        OnVectorChanged(controllerDynamic, true, "touchpad",(int)controller.Touch1PosAndForce.z, controller.Touch1PosAndForce.x, controller.Touch1PosAndForce.y);
+        OnSingleChanged(controllerDynamic, true, "trigger",controller.TriggerValue,CurrentButtonStates);
+        OnVectorChanged(controllerDynamic, true, "touchpad",(int)controller.Touch1PosAndForce.z, controller.Touch1PosAndForce.x, controller.Touch1PosAndForce.y,CurrentButtonStates);
 
         //hands
         //confidence over 60%, then greater than 40%
@@ -529,7 +524,7 @@ public class ControllerInputTracker : MonoBehaviour
     }
 #elif CVR_SNAPDRAGON
 
-        Dictionary<string, ButtonState> CurrentButtonStates = new Dictionary<string, ButtonState>();
+        List<ButtonState> CurrentButtonStates = new List<ButtonState>();
     DynamicObject controllerDynamic;
     void Init()
     {
@@ -562,13 +557,10 @@ public class ControllerInputTracker : MonoBehaviour
         }
         if (CurrentButtonStates.Count > 0)
         {
-            //for each ButtonState in current that doesn't match previous, add to dictionary
-
-            Dictionary<string, ButtonState> copy = new Dictionary<string, ButtonState>(CurrentButtonStates.Count);
-
-            foreach(var entry in CurrentButtonStates)
+            List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
+            for(int i = 0; i<CurrentButtonStates.Count;i++)
             {
-                copy[entry.Key] = entry.Value;
+                copy[i].Copy(CurrentButtonStates[i]);
             }
             CurrentButtonStates.Clear();
 
@@ -663,47 +655,26 @@ public class ControllerInputTracker : MonoBehaviour
         }
     }
 
-    void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, Dictionary<string,ButtonState> states)
+    void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
     {
-        //TODO
-        //var v = new Dictionary<string, ButtonState>();
-        states.Add(name, new ButtonState(down ? 100 : 0));
-        //var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
-        //dynamic.lastPosition = dynamic.transform.position;
-        //dynamic.lastRotation = dynamic.transform.rotation;
-        //snap.Buttons = v;
+        states.Add(new ButtonState(name, down ? 100 : 0));
     }
 
     //writes for 0-100 inputs (triggers)
-    void OnSingleChanged(DynamicObject dynamic, bool right, string name, int single, Dictionary<string, ButtonState> states)
+    void OnSingleChanged(DynamicObject dynamic, bool right, string name, int single,List<ButtonState> states)
     {
-        //var v = new Dictionary<string, ButtonState>();
-        states.Add(name, new ButtonState(single));
-        //var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
-        //dynamic.lastPosition = dynamic.transform.position;
-        //dynamic.lastRotation = dynamic.transform.rotation;
-        //snap.Buttons = v;
+        states.Add(new ButtonState(name, single));
     }
 
-    void OnVectorChanged(DynamicObject dynamic, bool right, string name, int input, float x, float y, Dictionary<string, ButtonState> states)
+    void OnVectorChanged(DynamicObject dynamic, bool right, string name, int input, float x, float y,List<ButtonState> states)
     {
-        //var v = new Dictionary<string, ButtonState>();
-        states.Add(name, new ButtonState(input, x, y, true));
-        //var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
-        //dynamic.lastPosition = dynamic.transform.position;
-        //dynamic.lastRotation = dynamic.transform.rotation;
-        //snap.Buttons = v;
+        states.Add(new ButtonState(name, input, x, y, true));
     }
 
     //writes for normalized inputs (touchpads)
-    void OnVectorChanged(DynamicObject dynamic, bool right, string name, int input, Vector2 vector, Dictionary<string, ButtonState> states)
+    void OnVectorChanged(DynamicObject dynamic, bool right, string name, int input, Vector2 vector, List<ButtonState> states)
     {
-        //var v = new Dictionary<string, ButtonState>();
-        states.Add(name, new ButtonState(input,vector.x,vector.y,true));
-        //var snap = dynamic.NewSnapshot().UpdateTransform(dynamic.transform.position, dynamic.transform.rotation);
-        //dynamic.lastPosition = dynamic.transform.position;
-        //dynamic.lastRotation = dynamic.transform.rotation;
-        //snap.Buttons = v;
+        states.Add(new ButtonState(name, input, vector.x, vector.y, true));
     }
 }
 }

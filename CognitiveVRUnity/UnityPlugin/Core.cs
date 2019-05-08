@@ -235,24 +235,25 @@ namespace CognitiveVR
                 //initialize Network Manager early, before gameplay actually starts
                 var temp = NetworkManager.Sender;
 
+                DynamicManager.Initialize();
+                DynamicObjectCore.Initialize();
+
                 //set session timestamp
                 CheckSessionId();
 
                 IsInitialized = true;
-
-                //CognitiveVR.Core.UpdateEvent += DynamicObjectCore.CognitiveVR_Manager_Update;
             }
 
             return error;
         }
 
-        public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
+        public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
         {
             if (clearNewProperties)
             {
                 if (newSessionProperties.Count > 0)
                 {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newSessionProperties);
+                    List<KeyValuePair<string, object>> returndict = new List<KeyValuePair<string, object>>(newSessionProperties);
                     newSessionProperties.Clear();
                     return returndict;
                 }
@@ -263,51 +264,69 @@ namespace CognitiveVR
             }
             return newSessionProperties;
         }
-        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>(32);
-        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>(32);
+
+        static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
+        static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
         
-        public static void SetSessionProperties(Dictionary<string, object> dictionary)
+        public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
         {
-            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
-            foreach (var kvp in dictionary)
+
+            if (kvpList == null) { return; }
+
+            for(int i = 0; i<kvpList.Count;i++)
             {
-                if (knownSessionProperties.ContainsKey(kvp.Key) && knownSessionProperties[kvp.Key] != kvp.Value) //update value
-                {
-                    if (newSessionProperties.ContainsKey(kvp.Key))
-                    {
-                        newSessionProperties[kvp.Key] = kvp.Value;
-                    }
-                    else
-                    {
-                        newSessionProperties.Add(kvp.Key, kvp.Value);
-                    }
-                    knownSessionProperties[kvp.Key] = kvp.Value;
-                }
-                else if (!knownSessionProperties.ContainsKey(kvp.Key)) //add value
-                {
-                    knownSessionProperties.Add(kvp.Key, kvp.Value);
-                    newSessionProperties.Add(kvp.Key, kvp.Value);
-                }
+                SetSessionProperty(kvpList[i].Key, kvpList[i].Value);
             }
         }
         public static void SetSessionProperty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            int foundIndex = 0;
+            bool foundKey = false;
+            for(int i = 0; i< knownSessionProperties.Count;i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    foundKey = true;
+                    foundIndex = i;
+                    break;
+                }
+            }
+
+            if (foundKey) //update value
+            {
+                if (knownSessionProperties[foundIndex].Value != value) //skip setting property if it hasn't actually changed
+                {
+                    return;
                 }
                 else
                 {
-                    newSessionProperties.Add(key, value);
+                    knownSessionProperties[foundIndex] = new KeyValuePair<string, object>(key, value);
+
+                    bool foundNewSessionPropKey = false;
+                    int foundNewSessionPropIndex = 0;
+                    for (int i = 0; i < newSessionProperties.Count; i++) //add/replace in 'newSessionProperty' (ie dirty value that will be sent with gaze)
+                    {
+                        if (newSessionProperties[i].Key == key)
+                        {
+                            foundNewSessionPropKey = true;
+                            foundNewSessionPropIndex = i;
+                            break;
+                        }
+                    }
+                    if (foundNewSessionPropKey)
+                    {
+                        newSessionProperties[foundNewSessionPropIndex] = new KeyValuePair<string, object>(key, value);
+                    }
+                    else
+                    {
+                        newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                    }
                 }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
+            else
             {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
+                knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             }
         }
 
@@ -319,24 +338,16 @@ namespace CognitiveVR
         /// <param name="value"></param>
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key)) { return; }
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            for (int i = 0; i < knownSessionProperties.Count; i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    return;
                 }
-                else
-                {
-                    newSessionProperties.Add(key, value);
-                }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
-            {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
-            }
+
+            knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+            newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
         }
     }
 }

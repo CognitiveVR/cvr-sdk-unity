@@ -18,9 +18,9 @@ namespace CognitiveVR
     public static class DynamicManager
     {
         //this can track up to 1024 dynamic objects in a single scene AT THE SAME TIME before it needs to expand
-        static DynamicData[] ActiveDynamicObjectsArray = new DynamicData[1024];
+        public static DynamicData[] ActiveDynamicObjectsArray = new DynamicData[1024];
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
-        static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
+        public static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
         public static void Initialize()
         {
@@ -37,7 +37,7 @@ namespace CognitiveVR
             bool foundSpot = false;
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
-                if (string.IsNullOrEmpty(ActiveDynamicObjectsArray[i].Id))
+                if (!ActiveDynamicObjectsArray[i].active)
                 {
                     ActiveDynamicObjectsArray[i] = data;
                     foundSpot = true;
@@ -63,7 +63,7 @@ namespace CognitiveVR
             bool foundSpot = false;
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
-                if (string.IsNullOrEmpty(ActiveDynamicObjectsArray[i].Id))
+                if (!ActiveDynamicObjectsArray[i].active)
                 {
                     ActiveDynamicObjectsArray[i] = data;
                     foundSpot = true;
@@ -88,7 +88,8 @@ namespace CognitiveVR
         //    bool foundSpot = false;
         //    for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
         //    {
-        //        if (string.IsNullOrEmpty(ActiveDynamicObjectsArray[i].Id))
+        //        //if (string.IsNullOrEmpty(ActiveDynamicObjectsArray[i].Id))
+        //        if (!ActiveDynamicObjectsArray[i].active)
         //        {
         //            ActiveDynamicObjectsArray[i] = data;
         //            foundSpot = true;
@@ -121,6 +122,8 @@ namespace CognitiveVR
                     ActiveDynamicObjectsArray[i].dirty = true;
                     ActiveDynamicObjectsArray[i].remove = true;
 
+                    //TODO TEST what happens if dynamic removed and spawned in the same frame (ie new object reuses custom id immediately?)
+                    //MAYBE set dynamicobjectidarray[j].used = false during update loop?
                     if (!ActiveDynamicObjectsArray[i].UseCustomId)
                     {
                         for (int j = 0; j < DynamicObjectIdArray.Length; j++)
@@ -138,7 +141,7 @@ namespace CognitiveVR
 
         static Dictionary<string, CustomEvent> Engagements = new Dictionary<string, CustomEvent>();
 
-        public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, Dictionary<string, object> properties = null)
+        public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (uniqueEngagementId == null)
             {
@@ -165,7 +168,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, Dictionary<string, object> properties = null)
+        public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (uniqueEngagementId == null)
             {
@@ -199,8 +202,9 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="data"></param>
         /// <param name="changedInputs"></param>
-        public static void RecordControllerEvent(DynamicData data, Dictionary<string, ButtonState> changedInputs)
+        public static void RecordControllerEvent(DynamicData data, List<ButtonState> changedInputs)
         {
+            if (!Core.IsInitialized) { return; }
             Vector3 pos = data.Transform.position;
             Vector3 scale = data.Transform.lossyScale;
             Quaternion rot = data.Transform.rotation;
@@ -220,27 +224,27 @@ namespace CognitiveVR
             {
                 data.dirty = true;
                 builder.Append(",\"buttons\":{");
-                foreach (var button in changedInputs)
+                for(int i = 0; i<changedInputs.Count;i++)
                 {
+                    if (i != 0) { builder.Append(","); }
                     builder.Append("\"");
-                    builder.Append(button.Key);
+                    builder.Append(changedInputs[i].ButtonName);
                     builder.Append("\":{");
                     builder.Append("\"buttonPercent\":");
-                    builder.Append(button.Value.ButtonPercent);
-                    if (button.Value.IncludeXY)
+                    builder.Append(changedInputs[i].ButtonPercent);
+                    if (changedInputs[i].IncludeXY)
                     {
                         builder.Append(",\"x\":");
-                        builder.Append(button.Value.X.ToString("0.000"));
+                        builder.Append(changedInputs[i].X.ToString("0.000"));
                         builder.Append(",\"y\":");
-                        builder.Append(button.Value.Y.ToString("0.000"));
+                        builder.Append(changedInputs[i].Y.ToString("0.000"));
                     }
-                    builder.Append("},");
+                    builder.Append("}");
                 }
-                builder.Remove(builder.Length - 1, 1); //remove last comma
                 builder.Append("}");
             }
 
-            if (data.dirty)
+            if (data.dirty || data.HasProperties || !data.hasEnabled || data.remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
             {
                 data.dirty = false;
                 data.LastPosition = pos;
@@ -318,9 +322,23 @@ namespace CognitiveVR
                 //used to skip through position and rotation check if one of them has already been set, or if the data was already marked as 'dirty'
                 bool writeData = ActiveDynamicObjectsArray[i].dirty;
 
-                Vector3 pos = ActiveDynamicObjectsArray[i].Transform.position;
-                Vector3 scale = ActiveDynamicObjectsArray[i].Transform.lossyScale;
-                Quaternion rot = ActiveDynamicObjectsArray[i].Transform.rotation;
+                //if removing, don't compare to current transform (possibly destroyed)
+                Vector3 pos;
+                Vector3 scale;
+                Quaternion rot;
+
+                if (ActiveDynamicObjectsArray[i].remove)
+                {
+                    pos = ActiveDynamicObjectsArray[i].LastPosition;
+                    scale = ActiveDynamicObjectsArray[i].LastScale;
+                    rot = ActiveDynamicObjectsArray[i].LastRotation;
+                }
+                else
+                {
+                    pos = ActiveDynamicObjectsArray[i].Transform.position;
+                    scale = ActiveDynamicObjectsArray[i].Transform.lossyScale;
+                    rot = ActiveDynamicObjectsArray[i].Transform.rotation;
+                }
 
 
                 //check distance
@@ -361,7 +379,7 @@ namespace CognitiveVR
                     ActiveDynamicObjectsArray[i].dirty = true;
                 }
 
-                if (ActiveDynamicObjectsArray[i].dirty)
+                if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove)
                 {
                     ActiveDynamicObjectsArray[i].dirty = false;
                     ActiveDynamicObjectsArray[i].LastPosition = pos;
@@ -431,6 +449,9 @@ namespace CognitiveVR
             i = 0;
         }
 
+        /// <summary>
+        /// used to manually send all outstanding dynamic data immediately
+        /// </summary>
         public static void SendData()
         {
             i = 0;

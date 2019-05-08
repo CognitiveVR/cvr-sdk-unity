@@ -7,8 +7,7 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
-
-    public class DynamicObjectSnapshot
+    internal class DynamicObjectSnapshot
     {
         public static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
 

@@ -4,13 +4,15 @@ using UnityEngine;
 
 public class ButtonState
 {
+    public string ButtonName;
     public int ButtonPercent = 0;
     public float X = 0;
     public float Y = 0;
     public bool IncludeXY = false;
 
-    public ButtonState(int buttonPercent, float x = 0, float y = 0, bool includexy = false)
+    public ButtonState(string buttonName, int buttonPercent, float x = 0, float y = 0, bool includexy = false)
     {
+        ButtonName = buttonName;
         ButtonPercent = buttonPercent;
         X = x;
         Y = y;
@@ -19,6 +21,7 @@ public class ButtonState
 
     public ButtonState(ButtonState source)
     {
+        ButtonName = source.ButtonName;
         ButtonPercent = source.ButtonPercent;
         IncludeXY = source.IncludeXY;
         X = source.X;
@@ -29,6 +32,8 @@ public class ButtonState
     public override bool Equals(object obj)
     {
         var s = (ButtonState)obj;
+
+        if (ButtonName != s.ButtonName) { return false; }
 
         if (!IncludeXY)
         {
@@ -47,6 +52,7 @@ public class ButtonState
 
     public void Copy(ButtonState source)
     {
+        ButtonName = source.ButtonName;
         ButtonPercent = source.ButtonPercent;
         IncludeXY = source.IncludeXY;
         X = source.X;

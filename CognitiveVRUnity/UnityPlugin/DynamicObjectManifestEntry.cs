@@ -6,8 +6,7 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
-
-    public class DynamicObjectManifestEntry
+    internal class DynamicObjectManifestEntry
     {
         public static string FileType = "gltf";
 

@@ -11,43 +11,69 @@ using System.Threading;
 
 namespace CognitiveVR
 {
-    public static class DynamicObjectCore
+    internal static class DynamicObjectCore
     {
-        public static int FrameCount;
-        static bool ReadyToWriteJson = false;
+        private static int FrameCount;
+        private static bool ReadyToWriteJson = false;
 
         private static int jsonPart = 1;
 
-        static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
-        static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
+        private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
+        private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
 
         private static int tempsnapshots = 0;
 
-        static DynamicObjectCore()
-        {
-            CognitiveVR.Core.CheckSessionId();
-        }
-
         public static void Initialize()
         {
+            CognitiveVR.Core.CheckSessionId();
             NetworkManager.Sender.StartCoroutine(WriteJson());
-            //TODO use dynamic extreme snapshot count
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
             }
+            Core.UpdateEvent += Core_UpdateEvent;
+
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+        }
+
+        private static float nextSendTime = 0;
+        private static IEnumerator AutomaticSendTimer()
+        {
+            while (true)
+            {
+                while (nextSendTime > Time.realtimeSinceStartup)
+                {
+                    yield return null;
+                }
+                //try to send!
+                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("check to automatically send dynamics");
+                if (queuedManifest.Count > 0 || queuedSnapshots.Count > 0)
+                {
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true;
+                }
+            }
+        }
+
+        private static void Core_UpdateEvent(float deltaTime)
+        {
+            FrameCount = Time.frameCount;
         }
 
         public static void RegisterController(DynamicData data, string controllerName)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
+            dome.controllerType = controllerName;
+            dome.isController = true;
             dome.HasProperties = true;
-            dome.Properties = "\"controller\":\"" + controllerName + "\"";
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -61,7 +87,7 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -77,7 +103,7 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -91,7 +117,7 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -112,6 +138,7 @@ namespace CognitiveVR
 
             if (writeScale)
             {
+                s.DirtyScale = true;
                 s.scaleX = data.LastScale.x;
                 s.scaleY = data.LastScale.y;
                 s.scaleZ = data.LastScale.z;
@@ -121,7 +148,7 @@ namespace CognitiveVR
 
             queuedSnapshots.Enqueue(s);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -154,7 +181,7 @@ namespace CognitiveVR
 
             queuedSnapshots.Enqueue(s);
             tempsnapshots++;
-            if (tempsnapshots > 128)
+            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
                 tempsnapshots = 0;
                 ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -165,8 +192,11 @@ namespace CognitiveVR
         static bool WriteImmediate = false;
         internal static void FlushData()
         {
+            if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { Debug.Log("flush 0 data"); return; }
+
             ReadyToWriteJson = true;
             WriteImmediate = true;
+            //TODO TEST that this correctly moves the WriteJson coroutine forward
             WriteJson().MoveNext();
             WriteImmediate = false;
         }
@@ -178,10 +208,10 @@ namespace CognitiveVR
                 if (!ReadyToWriteJson) { yield return null; }
                 else
                 {
-                    var builder = new System.Text.StringBuilder(10000); //TODO 128 per snapshot * number of snapshots + 200 for header stuff
+                    var builder = new System.Text.StringBuilder(200 + 128* CognitiveVR_Preferences.S_DynamicSnapshotCount);
 
-                    int manifestCount = Mathf.Min(queuedManifest.Count, 128);
-                    int count = Mathf.Min(queuedSnapshots.Count,128 - manifestCount);
+                    int manifestCount = Mathf.Min(queuedManifest.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount);
+                    int count = Mathf.Min(queuedSnapshots.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount - manifestCount);
                     //Debug.Log("write " + manifestCount + " manifest entires and " + count + " snapshots");
 
                     if (queuedSnapshots.Count - count == 0 && queuedManifest.Count - manifestCount == 0)
@@ -194,7 +224,7 @@ namespace CognitiveVR
                     builder.Append("{");
 
                     //header
-                    JsonUtil.SetString("userid", Core.UserId, builder);
+                    JsonUtil.SetString("userid", Core.UniqueID, builder);
                     builder.Append(",");
 
                     if (!string.IsNullOrEmpty(Core.LobbyId))
@@ -216,7 +246,7 @@ namespace CognitiveVR
                     //manifest entries
                     if (manifestCount > 0)
                     {
-                        builder.Append("\"manifest\":[");
+                        builder.Append("\"manifest\":{");
                         threadDone = false;
 
                         if (WriteImmediate)
@@ -254,11 +284,11 @@ namespace CognitiveVR
 
                         if (count>0)
                         {
-                            builder.Append("],");
+                            builder.Append("},");
                         }
                         else
                         {
-                            builder.Append("]");
+                            builder.Append("}");
                         }
                     }
 
@@ -306,10 +336,6 @@ namespace CognitiveVR
                     string s = builder.ToString();
                     string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
                     NetworkManager.Post(url, s);
-                    //var wr = UnityEngine.Networking.UnityWebRequest.Put(url, s);
-                    //wr.method = "POST";
-                    //wr.Send();
-                    //Debug.Log(s);
                 }
             }
         }

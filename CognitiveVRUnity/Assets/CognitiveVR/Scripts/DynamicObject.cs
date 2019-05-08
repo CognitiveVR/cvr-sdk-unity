@@ -103,6 +103,24 @@ namespace CognitiveVR
             OnEnable();
         }
 
+        /// <summary>
+        /// manually record position and rotation on this dynamic object
+        /// </summary>
+        public void RecordSnapshot()
+        {
+            Data.dirty = true;
+        }
+
+        /// <summary>
+        /// manually record position and rotation on this dynamic object
+        /// </summary>
+        public void RecordSnapshot(List<KeyValuePair<string, string>> properties)
+        {
+            Data.dirty = true;
+            Data.HasProperties = true;
+            Data.Properties = properties;
+        }
+
         private void OnDisable()
         {
             //if quitting, return
