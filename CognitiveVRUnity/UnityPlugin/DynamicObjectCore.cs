@@ -63,12 +63,20 @@ namespace CognitiveVR
             FrameCount = Time.frameCount;
         }
 
-        public static void RegisterController(DynamicData data, string controllerName)
+        public static void RegisterController(DynamicData data)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
-            dome.controllerType = controllerName;
+            dome.controllerType = data.ControllerType;
             dome.isController = true;
+            if (data.IsRightHand)
+            {
+                dome.Properties = "\"controller\": \"right\"";
+            }
+            else
+            {
+                dome.Properties = "\"controller\": \"left\"";
+            }
             dome.HasProperties = true;
 
             queuedManifest.Enqueue(dome);
@@ -111,7 +119,7 @@ namespace CognitiveVR
         }
 
         // put into dynamic manifest. reuses or creates new objectid. returns objectid. prefer using custom id when possible. also adds a snapshot with the property 'enabled'
-        public static void RegisterObject(DynamicData data)
+        public static void RegisterDynamic(DynamicData data)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
@@ -192,12 +200,14 @@ namespace CognitiveVR
         static bool WriteImmediate = false;
         internal static void FlushData()
         {
-            if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { Debug.Log("flush 0 data"); return; }
+            if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { return; }
 
             ReadyToWriteJson = true;
             WriteImmediate = true;
-            //TODO TEST that this correctly moves the WriteJson coroutine forward
-            WriteJson().MoveNext();
+
+            while (ReadyToWriteJson == true)
+                WriteJson().MoveNext();
+
             WriteImmediate = false;
         }
 
@@ -212,7 +222,6 @@ namespace CognitiveVR
 
                     int manifestCount = Mathf.Min(queuedManifest.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount);
                     int count = Mathf.Min(queuedSnapshots.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount - manifestCount);
-                    //Debug.Log("write " + manifestCount + " manifest entires and " + count + " snapshots");
 
                     if (queuedSnapshots.Count - count == 0 && queuedManifest.Count - manifestCount == 0)
                     {

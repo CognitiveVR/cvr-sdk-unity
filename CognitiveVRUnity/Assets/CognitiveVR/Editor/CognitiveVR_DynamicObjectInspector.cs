@@ -63,6 +63,7 @@ namespace CognitiveVR
                         //TODO cache while scene active, but don't bother marking scene dirty if only editorInstanceId is dirty
                     }
                 }
+                EditorGUILayout.LabelField("id: "+dynamic.Data.Id);
             }
             
             //video

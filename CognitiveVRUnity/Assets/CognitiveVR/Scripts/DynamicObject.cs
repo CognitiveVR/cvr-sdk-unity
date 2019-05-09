@@ -71,20 +71,18 @@ namespace CognitiveVR
         private void OnEnable()
         {
             StartingScale = transform.lossyScale;
-
-            string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
-
-            Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController);
-
             if (CognitiveVR.Core.IsInitialized)
             {
+                string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
+                Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController, ControllerType,IsRight);
+
                 if (false /*IsMedia*/)
                 {
                     //DynamicManager.RegisterMedia(Data, VideoUrl);
                 }
                 else if (IsController)
                 {
-                    CognitiveVR.DynamicManager.RegisterController(Data, ControllerType);
+                    CognitiveVR.DynamicManager.RegisterController(Data);
                 }
                 else
                 {

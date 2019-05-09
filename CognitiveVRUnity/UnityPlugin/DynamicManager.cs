@@ -54,10 +54,10 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.RegisterObject(data);
+            CognitiveVR.DynamicObjectCore.RegisterDynamic(data);
         }
 
-        public static void RegisterController(DynamicData data, string controllerName)
+        public static void RegisterController(DynamicData data)
         {
             //register controller and set manifest entry properties
             bool foundSpot = false;
@@ -80,7 +80,7 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.RegisterController(data, controllerName);
+            CognitiveVR.DynamicObjectCore.RegisterController(data);
         }
 
         //public static void RegisterMedia(DynamicData data, string videoUrl)
@@ -477,13 +477,21 @@ namespace CognitiveVR
             {
                 for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
                 {
-                    //all dynamics will probably have set 'remove' true from OnDisable when scene changed
-                    //this needs to re-enable all dynamic objects that persist
-                    //also if the scene was loaded additively
                     if (!ActiveDynamicObjectsArray[i].remove)
+                    {
                         ActiveDynamicObjectsArray[i].hasEnabled = false;
+
+                        if (ActiveDynamicObjectsArray[i].active)
+                        {
+                            if (ActiveDynamicObjectsArray[i].IsController)
+                                DynamicObjectCore.RegisterController(ActiveDynamicObjectsArray[i]);
+                            else
+                                DynamicObjectCore.RegisterDynamic(ActiveDynamicObjectsArray[i]);
+                        }
+                    }
                 }
-                SendData();
+
+                SendData(); //not 100% necessary. immediately sends dynamic manifest and snapshot to new scene
             }
         }
 
@@ -492,15 +500,16 @@ namespace CognitiveVR
         {
             for (int i = 0; i < DynamicObjectIdArray.Length; i++)
             {
-                if (!DynamicObjectIdArray[i].MeshSet)
+                if (!DynamicObjectIdArray[i].MeshSet) //there's an id that does not have a mesh set (ie, never been used)
                 {
                     DynamicObjectIdArray[i].MeshSet = true;
+                    DynamicObjectIdArray[i].Used = true;
                     DynamicObjectIdArray[i].MeshName = meshname;
                     id++;
                     DynamicObjectIdArray[i].Id = id.ToString();
                     return DynamicObjectIdArray[i].Id;
                 }
-                else if (DynamicObjectIdArray[i].Used == false && DynamicObjectIdArray[i].MeshName == meshname)
+                else if (DynamicObjectIdArray[i].Used == false && DynamicObjectIdArray[i].MeshName == meshname) //an unused id with a matching mesh name
                 {
                     DynamicObjectIdArray[i].Used = true;
                     return DynamicObjectIdArray[i].Id;
@@ -512,6 +521,7 @@ namespace CognitiveVR
             Array.Resize<DynamicObjectId>(ref DynamicObjectIdArray, DynamicObjectIdArray.Length * 2);
 
             DynamicObjectIdArray[nextFreeIndex].MeshSet = true;
+            DynamicObjectIdArray[nextFreeIndex].Used = true;
             DynamicObjectIdArray[nextFreeIndex].MeshName = meshname;
             id++;
             DynamicObjectIdArray[nextFreeIndex].Id = id.ToString();

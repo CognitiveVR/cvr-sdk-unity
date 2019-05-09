@@ -433,6 +433,16 @@ namespace CognitiveVR
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
             {
                 //DynamicObject.ClearObjectIds();
+                replacingSceneId = true;
+            }
+            
+            if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                Core.InvokeSendDataEvent();
+            }
+
+            if (replacingSceneId)
+            {
                 Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
@@ -441,11 +451,6 @@ namespace CognitiveVR
                         Core.SetTrackingScene(scene.name);
                     }
                 }
-            }
-            
-            if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
-            {
-                Core.InvokeSendDataEvent();
             }
 
             Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);

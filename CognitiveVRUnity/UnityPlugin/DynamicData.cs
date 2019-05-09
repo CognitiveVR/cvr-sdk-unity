@@ -56,8 +56,10 @@ public struct DynamicData
     public List<KeyValuePair<string, string>> Properties;
 
     public bool IsController;
+    public bool IsRightHand;
+    public string ControllerType;
 
-    public DynamicData(string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller)
+    public DynamicData(string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller, string controllerType,bool isRightHand)
     {
         if (string.IsNullOrEmpty(customid))
         {
@@ -86,7 +88,9 @@ public struct DynamicData
         HasProperties = false;
         Properties = null;
         IsController = iscontroller;
-    
+        ControllerType = controllerType;
+        IsRightHand = isRightHand;
+
         DesiredUpdateRate = updateInterval;
         UpdateInterval = 0;
     }
