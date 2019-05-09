@@ -13,6 +13,9 @@ namespace CognitiveVR
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
 
+        //holds the latest value of each sensor type. can be appended to custom events
+        internal static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
+
         static SensorRecorder()
         {
             Core.OnSendData += Core_OnSendData;
@@ -51,6 +54,16 @@ namespace CognitiveVR
                 CachedSnapshots.Add(category, new List<string>());
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             }
+
+            if (LastSensorValues.ContainsKey(category))
+            {
+                LastSensorValues[category] = value;
+            }
+            else
+            {
+                LastSensorValues.Add(category, value);
+            }
+
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
