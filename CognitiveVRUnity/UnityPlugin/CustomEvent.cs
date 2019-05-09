@@ -119,6 +119,89 @@ namespace CognitiveVR
             dynamicObjectId = sourceObjectId;
             return this;
         }
+		
+		/// <summary>
+        /// Appends the latest value of each sensor to this event
+        /// </summary>
+        /// <returns></returns>
+        public CustomEvent AppendSensors()
+        {
+            if (SensorRecorder.LastSensorValues.Count == 0) { CognitiveVR.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
+            if (_properties == null)
+            {
+                _properties = new List<KeyValuePair<string, object>>();
+
+                //don't check for name collisions, since there are no previous properties
+                foreach (var sensor in SensorRecorder.LastSensorValues)
+                {
+                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor."+sensor.Key, sensor.Value));
+                }
+                return this;
+            }
+            int propertyCount = _properties.Count;
+
+            foreach(var sensor in SensorRecorder.LastSensorValues)
+            {
+                string key = "c3d.sensor." + sensor.Key;
+                bool foundExistingKey = false;
+                for (int i = 0; i < propertyCount; i++)
+                {
+                    if (_properties[i].Key == key)
+                    {
+                        //replace
+                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value);
+                        foundExistingKey = true;
+                        break;
+                    }
+                }
+                if (!foundExistingKey)
+                {
+                    //add
+                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value));
+                }
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Appends the latest value of each specified sensor to this event
+        /// </summary>
+        /// <param name="sensorNames">all the sensors to append</param>
+        /// <returns></returns>
+        public CustomEvent AppendSensors(params string[] sensorNames)
+        {
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            int propertyCount = _properties.Count;
+
+            foreach (var sensorName in sensorNames)
+            {
+                string name = "c3d.sensor." + sensorName;
+
+                float sensorValue = 0;
+                if (SensorRecorder.LastSensorValues.TryGetValue(name, out sensorValue))
+                {
+                    bool foundExistingKey = false;
+                    for (int i = 0; i < propertyCount; i++)
+                    {
+                        if (_properties[i].Key == name)
+                        {
+                            //replace
+                            _properties[i] = new KeyValuePair<string, object>(name, sensorValue);
+                            foundExistingKey = true;
+                            break;
+                        }
+                    }
+                    if (!foundExistingKey)
+                    {
+                        //add
+                        _properties.Add(new KeyValuePair<string, object>(name, sensorValue));
+                    }
+                }
+                //else - sensor with this name doesn't exist
+            }
+
+            return this;
+        }
 
         /// <summary>
         /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
