@@ -34,6 +34,19 @@ namespace CognitiveVR
 
         public static void RegisterDynamicObject(DynamicData data)
         {
+            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            {
+                if (!ActiveDynamicObjectsArray[i].active)
+                {
+                    return;
+                }
+            }
+
+            //TODO if data customid matches somethign already in list
+            //get a new, unique id
+            //set the data to use that value
+            //return the value back to the dynamic object
+
             bool foundSpot = false;
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
@@ -59,6 +72,15 @@ namespace CognitiveVR
 
         public static void RegisterController(DynamicData data)
         {
+            //check for duplicate ids in all data
+            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            {
+                if (!ActiveDynamicObjectsArray[i].active)
+                {
+                    return;
+                }
+            }
+
             //register controller and set manifest entry properties
             bool foundSpot = false;
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
@@ -217,13 +239,13 @@ namespace CognitiveVR
                 writeScale = true;
                 data.dirty = true;
             }
-
+            
             //write changedinputs into string
             System.Text.StringBuilder builder = new System.Text.StringBuilder(256 * changedInputs.Count);
             if (changedInputs.Count > 0)
             {
                 data.dirty = true;
-                builder.Append(",\"buttons\":{");
+                //builder.Append(",\"buttons\":{");
                 for(int i = 0; i<changedInputs.Count;i++)
                 {
                     if (i != 0) { builder.Append(","); }
@@ -241,7 +263,7 @@ namespace CognitiveVR
                     }
                     builder.Append("}");
                 }
-                builder.Append("}");
+                //builder.Append("}");
             }
 
             if (data.dirty || data.HasProperties || !data.hasEnabled || data.remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time

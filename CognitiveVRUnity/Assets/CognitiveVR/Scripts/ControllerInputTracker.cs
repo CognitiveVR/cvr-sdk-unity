@@ -172,12 +172,13 @@ public class ControllerInputTracker : MonoBehaviour
         if (CurrentButtonStates.Count > 0)
         {
             List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
-            for(int i = 0; i<CurrentButtonStates.Count;i++)
+
+            for (int i = 0; i < CurrentButtonStates.Count; i++)
             {
-                copy[i].Copy(CurrentButtonStates[i]);
+                copy.Add(CurrentButtonStates[i]); //move the reference over to the copy
             }
             CurrentButtonStates.Clear();
-            DynamicManager.RecordControllerEvent(controllerDynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(dynamic.Data, copy);
         }
     }
 

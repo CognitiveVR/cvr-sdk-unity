@@ -16,6 +16,8 @@ namespace CognitiveVR
         /// \"propname1\":\"propvalue1\",\"propname2\":\"propvalue2\"
         /// </summary>
         public string Properties;
+        
+        //"rift_abtn": {"buttonPercent": 100.0},"rift_bbtn": {"buttonPercent": 100.0},"rift_joystick": {"buttonPercent": 100.0,"x": 1.0,"y": 1.0}
         public string Buttons;
 
         public float posX, posY, posZ;

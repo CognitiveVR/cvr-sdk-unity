@@ -45,6 +45,7 @@ namespace CognitiveVR
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
             var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
+            var useCustomId = serializedObject.FindProperty("UseCustomId");
             var customId = serializedObject.FindProperty("CustomId");
             var commonMeshName = serializedObject.FindProperty("CommonMesh");
             var meshname = serializedObject.FindProperty("MeshName");
@@ -56,16 +57,15 @@ namespace CognitiveVR
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
                 {
-                    if (!string.IsNullOrEmpty(dynamic.CustomId))
+                    if (dynamic.UseCustomId)
                     {
                         dynamic.editorInstanceId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
                         CheckCustomId(ref dynamic.CustomId);
                         //TODO cache while scene active, but don't bother marking scene dirty if only editorInstanceId is dirty
                     }
                 }
-                EditorGUILayout.LabelField("id: "+dynamic.Data.Id);
             }
-            
+
             //video
             //var flipVideo = serializedObject.FindProperty("FlipVideo");
             //var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
@@ -76,10 +76,9 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
+            //use custom mesh and mesh text field
             GUILayout.BeginHorizontal();
-
             UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-
             bool anycustomnames = false;
             foreach (var t in targets)
             {
@@ -101,13 +100,67 @@ namespace CognitiveVR
             {
                 UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
             }
-
             GUILayout.EndHorizontal();
 
-            EditorGUILayout.PropertyField(customId, new GUIContent("Custom Id"));
+
+            //use custom id and custom id text field
+            GUILayout.BeginHorizontal();
+            bool previousUseCustomId = useCustomId.boolValue;
+            EditorGUILayout.PropertyField(useCustomId, new GUIContent("Custom Id"));
+
+            if (Selection.activeGameObject)
+            {
+                string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    //display small warning icon when prefab has custom id set
+                    EditorGUILayout.LabelField(new GUIContent(EditorCore.Alert,"Prefabs should not have CustomId set, unless there will be only 1 instance spawned during runtime"), GUILayout.Width(20));
+                }
+            }
+
+            if (previousUseCustomId != useCustomId.boolValue)
+            {
+                if (previousUseCustomId != useCustomId.boolValue) //use custom id changed
+                {
+                    if (useCustomId.boolValue == false) //changed to false
+                    {
+                        customId.stringValue = string.Empty;
+                    }
+                    else
+                    {
+                        foreach (var t in targets)
+                        {
+                            var dyn = t as DynamicObject;
+                            CheckCustomId(ref dyn.CustomId);
+                        }
+                    }
+                }
+            }
+
+            if (!useCustomId.boolValue) //display custom id field
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.LabelField("auto-generated at runtime");
+                EditorGUI.EndDisabledGroup();
+            }
+            else
+            {
+                if (targets.Length > 1)
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.LabelField("multiple values");
+                    EditorGUI.EndDisabledGroup();
+                }
+                else
+                {
+                    EditorGUILayout.PropertyField(customId, new GUIContent(""));
+                }
+            }            
+            GUILayout.EndHorizontal();
+
+
 
             GUILayout.Space(10);
-
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
@@ -312,7 +365,6 @@ namespace CognitiveVR
 
             for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {
-                if (string.IsNullOrEmpty(dynamics[i].CustomId)) { continue; }
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     string s = System.Guid.NewGuid().ToString();

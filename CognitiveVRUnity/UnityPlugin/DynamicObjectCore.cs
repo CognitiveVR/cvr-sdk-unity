@@ -118,7 +118,10 @@ namespace CognitiveVR
             }
         }
 
-        // put into dynamic manifest. reuses or creates new objectid. returns objectid. prefer using custom id when possible. also adds a snapshot with the property 'enabled'
+        /// <summary>
+        /// put data into dynamic manifest
+        /// </summary>
+        /// <param name="data"></param>
         public static void RegisterDynamic(DynamicData data)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
@@ -416,9 +419,9 @@ namespace CognitiveVR
             
             if (!string.IsNullOrEmpty(snap.Buttons))
             {
-                builder.Append(",\"buttons\"[{");
+                builder.Append(",\"buttons\":{");
                 builder.Append(snap.Buttons);
-                builder.Append("}]");
+                builder.Append("}");
             }
 
             builder.Append("}"); //close object snapshot

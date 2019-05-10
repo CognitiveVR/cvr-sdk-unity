@@ -47,6 +47,8 @@ namespace CognitiveVR
 #endif
 
         public DynamicData Data;
+        //this is only used for a custom editor to help CustomId be set correctly
+        public bool UseCustomId = true;
         public string CustomId;
         public float UpdateRate = 0.1f;
 
@@ -73,7 +75,10 @@ namespace CognitiveVR
             StartingScale = transform.lossyScale;
             if (CognitiveVR.Core.IsInitialized)
             {
+                if (Data.active == true && Data.remove == false) { return; }
+                
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
+
                 Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController, ControllerType,IsRight);
 
                 if (false /*IsMedia*/)
@@ -121,6 +126,8 @@ namespace CognitiveVR
 
         private void OnDisable()
         {
+            CognitiveVR.Core.InitEvent -= OnCoreInitialize;
+
             //if quitting, return
             Data.LastPosition = transform.position;
             Data.LastRotation = transform.rotation;
