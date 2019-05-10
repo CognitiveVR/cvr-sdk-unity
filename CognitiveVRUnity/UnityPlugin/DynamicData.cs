@@ -53,7 +53,7 @@ public struct DynamicData
     /// true if any properties have been set. for faster checking than a null check
     /// </summary>
     public bool HasProperties;
-    public List<KeyValuePair<string, string>> Properties;
+    public List<KeyValuePair<string, object>> Properties;
 
     public bool IsController;
     public bool IsRightHand;

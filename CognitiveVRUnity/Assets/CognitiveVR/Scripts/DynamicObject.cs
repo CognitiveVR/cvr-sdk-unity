@@ -30,6 +30,7 @@ namespace CognitiveVR
 
 #if UNITY_EDITOR
         //stores instanceid. used to check if something in editor has changed
+        [System.NonSerialized]
         public int editorInstanceId;
         public bool HasCollider()
         {
@@ -107,6 +108,19 @@ namespace CognitiveVR
         }
 
         /// <summary>
+        /// returns the Id of the Dynamic Object
+        /// </summary>
+        /// <returns></returns>
+        public string GetId()
+        {
+            if (Data.active)
+                return Data.Id;
+            if (!string.IsNullOrEmpty(CustomId))
+                return CustomId;
+            return string.Empty;
+        }
+
+        /// <summary>
         /// manually record position and rotation on this dynamic object
         /// </summary>
         public void RecordSnapshot()
@@ -117,11 +131,24 @@ namespace CognitiveVR
         /// <summary>
         /// manually record position and rotation on this dynamic object
         /// </summary>
-        public void RecordSnapshot(List<KeyValuePair<string, string>> properties)
+        public void RecordSnapshot(List<KeyValuePair<string, object>> properties)
         {
             Data.dirty = true;
             Data.HasProperties = true;
             Data.Properties = properties;
+        }
+
+        public void RecordSnapshot(Dictionary<string,object> properties)
+        {
+            Data.dirty = true;
+            Data.HasProperties = true;
+
+            List<KeyValuePair<string, object>> temp = new List<KeyValuePair<string, object>>(properties.Count);
+            foreach(var prop in properties)
+            {
+                temp.Add(new KeyValuePair<string, object>(prop.Key, prop.Value));
+            }
+            Data.Properties = temp;
         }
 
         private void OnDisable()

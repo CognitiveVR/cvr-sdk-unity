@@ -79,6 +79,36 @@ namespace CognitiveVR
             return this;
         }
 
+
+        public CustomEvent SetProperties(Dictionary<string, object> properties)
+        {
+            if (properties == null) { return this; }
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            foreach (KeyValuePair<string, object> kvp in properties)
+            {
+                int foundIndex = 0;
+                bool foundKey = false;
+                for (int i = 0; i < _properties.Count; i++)
+                {
+                    if (_properties[i].Key == kvp.Key)
+                    {
+                        foundIndex = i;
+                        foundKey = true;
+                        break;
+                    }
+                }
+                if (foundKey)
+                {
+                    _properties[foundIndex] = new KeyValuePair<string, object>(kvp.Key, kvp.Value);
+                }
+                else
+                {
+                    _properties.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
+            }
+            return this;
+        }
+
         /// <summary>
         /// Report a single piece of known state about the transaction
         /// </summary>

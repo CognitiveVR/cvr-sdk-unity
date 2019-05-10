@@ -52,16 +52,27 @@ namespace CognitiveVR
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
 
-            foreach (var t in serializedObject.targetObjects)
+            foreach (var t in serializedObject.targetObjects) //makes sure a custom id is valid
             {
                 var dynamic = t as DynamicObject;
-                if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic
+                if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
                     if (dynamic.UseCustomId)
                     {
-                        dynamic.editorInstanceId = dynamic.GetInstanceID(); //this will often mark the scene dirty without any apparent or meaningful changes
-                        CheckCustomId(ref dynamic.CustomId);
-                        //TODO cache while scene active, but don't bother marking scene dirty if only editorInstanceId is dirty
+                        if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
+                        {
+                            dynamic.editorInstanceId = dynamic.GetInstanceID();
+                            CheckCustomId(ref dynamic.CustomId);
+                        }
+                        else //project asset
+                        {
+                            dynamic.editorInstanceId = dynamic.GetInstanceID();
+                            if (string.IsNullOrEmpty(dynamic.CustomId))
+                            {
+                                string s = System.Guid.NewGuid().ToString();
+                                dynamic.CustomId = "editor_" + s;
+                            }
+                        }
                     }
                 }
             }
@@ -111,10 +122,10 @@ namespace CognitiveVR
             if (Selection.activeGameObject)
             {
                 string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-                if (!string.IsNullOrEmpty(path))
+                if (!string.IsNullOrEmpty(path) && useCustomId.boolValue)
                 {
                     //display small warning icon when prefab has custom id set
-                    EditorGUILayout.LabelField(new GUIContent(EditorCore.Alert,"Prefabs should not have CustomId set, unless there will be only 1 instance spawned during runtime"), GUILayout.Width(20));
+                    EditorGUILayout.LabelField(new GUIContent(EditorCore.Alert,"Project assets should not have CustomId set, unless there will be only 1 instance spawned during runtime"), GUILayout.Width(20));
                 }
             }
 

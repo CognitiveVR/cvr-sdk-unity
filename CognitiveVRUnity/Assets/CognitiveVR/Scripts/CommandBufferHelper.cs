@@ -218,7 +218,7 @@ namespace CognitiveVR
 
             depthR *= GameplayReferences.HMDCameraComponent.farClipPlane;
 
-            Debug.DrawRay(GameplayReferences.HMDC.position, ViewportRay.direction * actualDistance, Color.magenta, 100.1f); //with adjustment
+            Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * actualDistance, Color.magenta, 100.1f); //with adjustment
 
             //SEEMS MORE CORRECT WHEN LOOKING IN CENTER
             Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * depthR, new Color(1, 1, 1, 0.5f), 100.1f); //depth without accounting for difference from farclip and angle
