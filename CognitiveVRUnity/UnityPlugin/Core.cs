@@ -278,6 +278,16 @@ namespace CognitiveVR
                 SetSessionProperty(kvpList[i].Key, kvpList[i].Value);
             }
         }
+
+        public static void SetSessionProperties(Dictionary<string, object> properties)
+        {
+            if (properties == null) { return; }
+
+            foreach(var prop in properties)
+            {
+                SetSessionProperty(prop.Key, prop.Value);
+            }
+        }
         public static void SetSessionProperty(string key, object value)
         {
             int foundIndex = 0;
