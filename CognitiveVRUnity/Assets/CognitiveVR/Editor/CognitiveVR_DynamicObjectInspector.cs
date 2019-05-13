@@ -151,7 +151,7 @@ namespace CognitiveVR
             if (!useCustomId.boolValue) //display custom id field
             {
                 EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.LabelField("auto-generated at runtime");
+                EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime","This object will not be included in aggregation metrics on the dashboard"));
                 EditorGUI.EndDisabledGroup();
             }
             else
@@ -171,7 +171,6 @@ namespace CognitiveVR
 
 
 
-            GUILayout.Space(10);
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
@@ -231,10 +230,12 @@ namespace CognitiveVR
 
 
                     //GUILayout.EndHorizontal();
+                    GUILayout.Space(5);
                 }
 
-                //Object ID
-                GUILayout.Space(5);
+                //Snapshot Threshold
+                
+                GUILayout.Label("Snapshot", EditorStyles.boldLabel);
 
                 //controller stuff
                 GUILayout.BeginHorizontal();
@@ -243,7 +244,7 @@ namespace CognitiveVR
 
                 if (targets.Length == 1)
                 {
-                    
+
                     var dyn = targets[0] as DynamicObject;
 
                     if (dyn.IsController)
@@ -257,20 +258,17 @@ namespace CognitiveVR
                         selected = EditorGUILayout.Popup(selected, controllernames);
                         dyn.ControllerType = controllernames[selected];
                     }
-                    
+
                     if (dyn.IsController)
                     {
-                        EditorGUILayout.LabelField("Is Right",GUILayout.Width(60));
-                        dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight,GUILayout.Width(20));
+                        EditorGUILayout.LabelField("Is Right", GUILayout.Width(60));
+                        dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight, GUILayout.Width(20));
                     }
                 }
 
                 GUILayout.EndHorizontal();
-                
 
-                //Snapshot Threshold
-                GUILayout.Space(5);
-                GUILayout.Label("Snapshot", EditorStyles.boldLabel);
+
 
                 EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This is the Snapshot interval in the Tracker Options Window"), GUILayout.MinWidth(50));
 

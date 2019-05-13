@@ -23,7 +23,7 @@ namespace CognitiveVR
 
         private static int tempsnapshots = 0;
 
-        public static void Initialize()
+        internal static void Initialize()
         {
             CognitiveVR.Core.CheckSessionId();
             NetworkManager.Sender.StartCoroutine(WriteJson());
@@ -63,7 +63,7 @@ namespace CognitiveVR
             FrameCount = Time.frameCount;
         }
 
-        public static void RegisterController(DynamicData data)
+        internal static void WriteControllerManifestEntry(DynamicData data)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
@@ -88,7 +88,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RegisterMedia(DynamicData data, string videourl)
+        internal static void WriteDynamicMediaManifestEntry(DynamicData data, string videourl)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
             dome.videoURL = videourl;
@@ -102,7 +102,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RegisterDynamic(DynamicData data, string formattedProperties)
+        internal static void WriteDynamicManifestEntry(DynamicData data, string formattedProperties)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
@@ -122,7 +122,7 @@ namespace CognitiveVR
         /// put data into dynamic manifest
         /// </summary>
         /// <param name="data"></param>
-        public static void RegisterDynamic(DynamicData data)
+        internal static void WriteDynamicManifestEntry(DynamicData data)
         {
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
@@ -135,7 +135,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RecordDynamic(DynamicData data, string props, bool writeScale)
+        internal static void WriteDynamic(DynamicData data, string props, bool writeScale)
         {
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
@@ -167,7 +167,7 @@ namespace CognitiveVR
         }
 
         //button properties are formated as   ,"buttons":{"input":value,"input":value}
-        public static void RecordDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates)
+        internal static void WriteDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates)
         {
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;

@@ -5,26 +5,29 @@ using UnityEngine;
 //a reference to an ID that can be shared between similar objects
 //only used by spawned dynamic objects or objects without a customid
 
-public struct DynamicObjectId
+namespace CognitiveVR
 {
-    public string Id;
-    public bool Used;
-    public string MeshName;
-    public bool MeshSet;
-
-    public DynamicObjectId(string id)
+    internal struct DynamicObjectId
     {
-        Id = id;
-        MeshName = string.Empty;
-        MeshSet = false;
-        Used = false;
-    }
+        public string Id;
+        public bool Used;
+        public string MeshName;
+        public bool MeshSet;
 
-    public DynamicObjectId(string id, string meshName)
-    {
-        Id = id;
-        MeshName = meshName;
-        MeshSet = true;
-        Used = false;
+        public DynamicObjectId(string id)
+        {
+            Id = id;
+            MeshName = string.Empty;
+            MeshSet = false;
+            Used = false;
+        }
+
+        public DynamicObjectId(string id, string meshName)
+        {
+            Id = id;
+            MeshName = meshName;
+            MeshSet = true;
+            Used = false;
+        }
     }
 }

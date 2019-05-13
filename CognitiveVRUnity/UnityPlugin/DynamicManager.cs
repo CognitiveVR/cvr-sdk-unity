@@ -6,9 +6,9 @@ using UnityEngine.SceneManagement;
 using CognitiveVR;
 
 
-//what is the split between dynamicCORE and dynamicMANAGER
-//CORE writes json from queues
+//what is the split between dynamicCORE and dynamicMANAGER?
 //MANAGER holds array of data and puts contents into CORE queues
+//CORE writes json from queues
 
 //add/remove dynamics to list. passed into core for writing to json
 //run through list to check if the dynamic has moved recently
@@ -18,18 +18,15 @@ namespace CognitiveVR
     public static class DynamicManager
     {
         //this can track up to 1024 dynamic objects in a single scene AT THE SAME TIME before it needs to expand
-        public static DynamicData[] ActiveDynamicObjectsArray = new DynamicData[1024];
+        internal static DynamicData[] ActiveDynamicObjectsArray = new DynamicData[1024];
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
-        public static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
+        internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
         public static void Initialize()
         {
             CognitiveVR.Core.OnSendData += SendData;
             CognitiveVR.Core.UpdateEvent += OnUpdate;
             CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
-
-            //CognitiveVR.CognitiveManager.Instance.OnUpdate += OnUpdate;
-            //CognitiveVR.CognitiveManager.Instance.OnSceneLoaded += CognitiveManager_OnSceneLoaded;
         }
 
         public static void RegisterDynamicObject(DynamicData data)
@@ -41,11 +38,6 @@ namespace CognitiveVR
                     return;
                 }
             }
-
-            //TODO if data customid matches somethign already in list
-            //get a new, unique id
-            //set the data to use that value
-            //return the value back to the dynamic object
 
             bool foundSpot = false;
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
@@ -59,7 +51,7 @@ namespace CognitiveVR
             }
             if (!foundSpot)
             {
-                Debug.LogWarning("Dynamic Object Array expanded!");
+                Util.logWarning("Dynamic Object Array expanded!");
 
                 int nextFreeIndex = ActiveDynamicObjectsArray.Length;
                 Array.Resize<DynamicData>(ref ActiveDynamicObjectsArray, ActiveDynamicObjectsArray.Length * 2);
@@ -67,7 +59,7 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.RegisterDynamic(data);
+            CognitiveVR.DynamicObjectCore.WriteDynamicManifestEntry(data);
         }
 
         public static void RegisterController(DynamicData data)
@@ -94,7 +86,7 @@ namespace CognitiveVR
             }
             if (!foundSpot)
             {
-                Debug.LogWarning("Dynamic Object Array expanded!");
+                Util.logWarning("Dynamic Object Array expanded!");
 
                 int nextFreeIndex = ActiveDynamicObjectsArray.Length;
                 Array.Resize<DynamicData>(ref ActiveDynamicObjectsArray, ActiveDynamicObjectsArray.Length * 2);
@@ -102,7 +94,7 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.RegisterController(data);
+            CognitiveVR.DynamicObjectCore.WriteControllerManifestEntry(data);
         }
 
         //public static void RegisterMedia(DynamicData data, string videoUrl)
@@ -144,8 +136,6 @@ namespace CognitiveVR
                     ActiveDynamicObjectsArray[i].dirty = true;
                     ActiveDynamicObjectsArray[i].remove = true;
 
-                    //TODO TEST what happens if dynamic removed and spawned in the same frame (ie new object reuses custom id immediately?)
-                    //MAYBE set dynamicobjectidarray[j].used = false during update loop?
                     if (!ActiveDynamicObjectsArray[i].UseCustomId)
                     {
                         for (int j = 0; j < DynamicObjectIdArray.Length; j++)
@@ -163,6 +153,13 @@ namespace CognitiveVR
 
         static Dictionary<string, CustomEvent> Engagements = new Dictionary<string, CustomEvent>();
 
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// <param name="properties"></param>
         public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (uniqueEngagementId == null)
@@ -220,7 +217,7 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// takes a dictionary of inputs changed this frame. writes a snapshot outside of normal tick
+        /// takes a list of inputs changed this frame. writes a snapshot outside of normal tick
         /// </summary>
         /// <param name="data"></param>
         /// <param name="changedInputs"></param>
@@ -315,7 +312,7 @@ namespace CognitiveVR
                     }
                 }
 
-                CognitiveVR.DynamicObjectCore.RecordDynamicController(data, props, writeScale, builder.ToString());
+                CognitiveVR.DynamicObjectCore.WriteDynamicController(data, props, writeScale, builder.ToString());
             }
         }
 
@@ -450,7 +447,7 @@ namespace CognitiveVR
                         }
                     }
 
-                    CognitiveVR.DynamicObjectCore.RecordDynamic(ActiveDynamicObjectsArray[i], props, writeScale);
+                    CognitiveVR.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[i], props, writeScale);
                 }
 
 
@@ -506,9 +503,9 @@ namespace CognitiveVR
                         if (ActiveDynamicObjectsArray[i].active)
                         {
                             if (ActiveDynamicObjectsArray[i].IsController)
-                                DynamicObjectCore.RegisterController(ActiveDynamicObjectsArray[i]);
+                                DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
                             else
-                                DynamicObjectCore.RegisterDynamic(ActiveDynamicObjectsArray[i]);
+                                DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
                         }
                     }
                 }

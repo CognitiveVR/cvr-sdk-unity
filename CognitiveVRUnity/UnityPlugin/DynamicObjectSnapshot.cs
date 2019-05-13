@@ -9,29 +9,29 @@ namespace CognitiveVR
 {
     internal class DynamicObjectSnapshot
     {
-        public static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
+        internal static Queue<DynamicObjectSnapshot> SnapshotPool = new Queue<DynamicObjectSnapshot>();
 
-        public string Id;
+        internal string Id;
         /// <summary>
         /// \"propname1\":\"propvalue1\",\"propname2\":\"propvalue2\"
         /// </summary>
-        public string Properties;
-        
+        internal string Properties;
+
         //"rift_abtn": {"buttonPercent": 100.0},"rift_bbtn": {"buttonPercent": 100.0},"rift_joystick": {"buttonPercent": 100.0,"x": 1.0,"y": 1.0}
-        public string Buttons;
+        internal string Buttons;
 
-        public float posX, posY, posZ;
-        public float rotX, rotY, rotZ, rotW;
-        public bool DirtyScale = false;
-        public float scaleX, scaleY, scaleZ;
-        public double Timestamp;
+        internal float posX, posY, posZ;
+        internal float rotX, rotY, rotZ, rotW;
+        internal bool DirtyScale = false;
+        internal float scaleX, scaleY, scaleZ;
+        internal double Timestamp;
 
-        public DynamicObjectSnapshot()
+        internal DynamicObjectSnapshot()
         {
             //empty. only used to fill the pool
         }
 
-        private DynamicObjectSnapshot(string dynamicObjectId, Vector3 pos, Quaternion rot, string props)
+        internal DynamicObjectSnapshot(string dynamicObjectId, Vector3 pos, Quaternion rot, string props)
         {
             Id = dynamicObjectId;
             Properties = props;
@@ -48,7 +48,7 @@ namespace CognitiveVR
             Timestamp = Util.Timestamp(Time.frameCount);
         }
 
-        private DynamicObjectSnapshot(string dynamicObjectId, float[] pos, float[] rot, string props)
+        internal DynamicObjectSnapshot(string dynamicObjectId, float[] pos, float[] rot, string props)
         {
             Id = dynamicObjectId;
             Properties = props;
@@ -63,7 +63,7 @@ namespace CognitiveVR
             Timestamp = Util.Timestamp(Time.frameCount);
         }
 
-        public DynamicObjectSnapshot Copy()
+        internal DynamicObjectSnapshot Copy()
         {
             var dyn = GetSnapshot();
             dyn.Timestamp = Timestamp;
@@ -85,7 +85,7 @@ namespace CognitiveVR
             return dyn;
         }
 
-        public void ReturnToPool()
+        internal void ReturnToPool()
         {
             Properties = null;
             Buttons = null;
@@ -103,7 +103,7 @@ namespace CognitiveVR
             SnapshotPool.Enqueue(this);
         }
 
-        public static DynamicObjectSnapshot GetSnapshot()
+        internal static DynamicObjectSnapshot GetSnapshot()
         {
             if (SnapshotPool.Count > 0)
             {

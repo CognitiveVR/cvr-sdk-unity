@@ -50,6 +50,7 @@ namespace CognitiveVR
         public DynamicData Data;
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
+
         public string CustomId;
         public float UpdateRate = 0.1f;
 
@@ -151,11 +152,20 @@ namespace CognitiveVR
             Data.Properties = temp;
         }
 
+        public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string,object>> properties = null)
+        {
+            DynamicManager.BeginEngagement(GetId(), engagementName, uniqueEngagementId, properties);
+        }
+
+        public void EndEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        {
+            DynamicManager.EndEngagement(GetId(), engagementName, uniqueEngagementId, properties);
+        }
+
         private void OnDisable()
         {
             CognitiveVR.Core.InitEvent -= OnCoreInitialize;
 
-            //if quitting, return
             Data.LastPosition = transform.position;
             Data.LastRotation = transform.rotation;
 
