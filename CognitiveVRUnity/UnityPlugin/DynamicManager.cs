@@ -33,7 +33,7 @@ namespace CognitiveVR
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
-                if (!ActiveDynamicObjectsArray[i].active)
+                if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
                 {
                     return;
                 }
@@ -67,7 +67,7 @@ namespace CognitiveVR
             //check for duplicate ids in all data
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
-                if (!ActiveDynamicObjectsArray[i].active)
+                if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
                 {
                     return;
                 }
@@ -265,6 +265,8 @@ namespace CognitiveVR
 
             if (data.dirty || data.HasProperties || !data.hasEnabled || data.remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
             {
+                data.UpdateInterval = 0;
+
                 data.dirty = false;
                 data.LastPosition = pos;
                 data.LastRotation = rot;
@@ -398,7 +400,7 @@ namespace CognitiveVR
                     ActiveDynamicObjectsArray[i].dirty = true;
                 }
 
-                if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove)
+                if (writeData || ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove)
                 {
                     ActiveDynamicObjectsArray[i].dirty = false;
                     ActiveDynamicObjectsArray[i].LastPosition = pos;
@@ -535,7 +537,7 @@ namespace CognitiveVR
                 }
             }
 
-            Debug.LogWarning("Dynamic Object ID Array expanded!");
+
             int nextFreeIndex = DynamicObjectIdArray.Length;
             Array.Resize<DynamicObjectId>(ref DynamicObjectIdArray, DynamicObjectIdArray.Length * 2);
 

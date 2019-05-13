@@ -25,8 +25,6 @@ namespace CognitiveVR
 #endif
 public class ControllerInputTracker : MonoBehaviour
 {
-    public bool RecordInputsAsEvents = false;
-    public bool RecordInputsAsDynamicSnapshots = true;
     [CognitiveVR.Components.ClampSetting(0.1f)]
     public float UpdateRate = 0.1f;
     float nextUpdateTime;
@@ -64,15 +62,14 @@ public class ControllerInputTracker : MonoBehaviour
     //updates for interaction hand implementation
     private void Update()
     {
+        if (ControllerDevice == null)
+        {
+            return;
+        }
         if (Time.time > nextUpdateTime)
         {
             RecordAnalogInputs(); //should this go at the end? double inputs on triggers
             nextUpdateTime = Time.time + UpdateRate;
-        }
-
-        if (ControllerDevice == null)
-        {
-            return;
         }
 
         //menu
@@ -157,15 +154,31 @@ public class ControllerInputTracker : MonoBehaviour
                 var triggeramount = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 int currentTrigger = (int)(triggeramount * 100);
                 LastTrigger = currentTrigger;
-                OnButtonChanged(dynamic, isRight, "vive_trigger", true, CurrentButtonStates);
+                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_trigger"; });
+                if (buttonstate != null)
+                {
+                    buttonstate.ButtonPercent = currentTrigger;
+                }
+                else
+                {
+                    OnButtonChanged(dynamic, isRight, "vive_trigger", true, CurrentButtonStates);
+                }
             }
         }
         if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
         {
             if (LastTrigger != 0)
             {
-                OnButtonChanged(dynamic, isRight, "vive_trigger", false, CurrentButtonStates);
                 LastTrigger = 0;
+                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_trigger"; });
+                if (buttonstate != null)
+                {
+                    buttonstate.ButtonPercent = 0;
+                }
+                else
+                {
+                    OnButtonChanged(dynamic, isRight, "vive_trigger", false, CurrentButtonStates);
+                }
             }
         }
 
@@ -197,8 +210,6 @@ public class ControllerInputTracker : MonoBehaviour
     //check for (float)triggers, (vector2)touchpads, etc
     public void RecordAnalogInputs()
     {
-        if (ControllerDevice == null) { return; }
-
         var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
         var x = touchpadaxis.x;
         var y = touchpadaxis.y;
@@ -373,12 +384,9 @@ public class ControllerInputTracker : MonoBehaviour
             List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
             for(int i = 0; i< CurrentRightButtonStates.Count;i++)
             {
-                    copy[i].Copy(CurrentRightButtonStates[i]);
+                copy.Add(CurrentRightButtonStates[i]);
             }
-
-            //for each ButtonState in current that doesn't match previous, add to list
-            
-                CurrentRightButtonStates.Clear();
+            CurrentRightButtonStates.Clear();
 
             DynamicManager.RecordControllerEvent(RightHand.Data, copy);
         }
@@ -387,10 +395,8 @@ public class ControllerInputTracker : MonoBehaviour
             List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
             for(int i = 0; i< CurrentLeftButtonStates.Count;i++)
             {
-                    copy[i].Copy(CurrentLeftButtonStates[i]);
+                copy.Add(CurrentLeftButtonStates[i]);
             }
-            //for each ButtonState in current that doesn't match previous, add to list
-            
             CurrentLeftButtonStates.Clear();
 
             DynamicManager.RecordControllerEvent(LeftHand.Data, copy);

@@ -28,7 +28,6 @@ namespace CognitiveVR
                     S_SnapshotInterval = instance.SnapshotInterval;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
-                    S_DynamicSnapshotMinTimer = instance.DynamicSnapshotMinTimer;
                     S_DynamicSnapshotMaxTimer = instance.DynamicSnapshotMaxTimer;
                     S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
@@ -42,7 +41,6 @@ namespace CognitiveVR
         public static float S_SnapshotInterval;
         public static int S_GazeSnapshotCount;
         public static int S_DynamicSnapshotCount;
-        public static int S_DynamicSnapshotMinTimer;
         public static int S_DynamicExtremeSnapshotCount;
         public static int S_DynamicSnapshotMaxTimer;
 
@@ -112,7 +110,7 @@ namespace CognitiveVR
         //min timer
         //public int GazeSnapshotMinTimer = 6;
         public int SensorSnapshotMinTimer = 6;
-        public int DynamicSnapshotMinTimer = 2;
+        //public int DynamicSnapshotMinTimer = 2;
         public int TransactionSnapshotMinTimer = 2;
         public int FixationSnapshotMinTimer = 2;
 
