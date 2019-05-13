@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Teleport Event")]
     public class TeleportEvent : CognitiveVRAnalyticsComponent
     {
         Transform _root;
@@ -15,8 +16,8 @@ namespace CognitiveVR.Components
             get
             {
                 if (_root == null)
-                    if (CognitiveVR_Manager.HMD == null) _root = transform;
-                    else { _root = CognitiveVR_Manager.HMD.root; }
+                    if (GameplayReferences.HMD == null) _root = transform;
+                    else { _root = GameplayReferences.HMD.root; }
                 return _root;
             }
         }
@@ -25,13 +26,13 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
 
-        void CognitiveVR_Manager_OnUpdate()
+        void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
             if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
             {
@@ -44,14 +45,14 @@ namespace CognitiveVR.Components
             }
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
             return "Sends a transaction when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
         }
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

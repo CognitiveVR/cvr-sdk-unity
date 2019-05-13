@@ -9,11 +9,12 @@ using CognitiveVR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/GPS Location")]
     public class GPSLocation: CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
             if (!Input.location.isEnabledByUser)
@@ -56,12 +57,12 @@ namespace CognitiveVR.Components
             }
         }
         
-        public static string GetDescription()
+        public override string GetDescription()
         {
             return "Adds the starting GPS location to session properties";
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if UNITY_ANDROID || CVR_ARKIT || CVR_ARCORE || UNITY_IOS
             return true;

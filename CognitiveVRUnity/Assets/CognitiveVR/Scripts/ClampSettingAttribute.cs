@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 
 //used to identify which fields/methods should be displayed in the component window
@@ -6,7 +7,7 @@ namespace CognitiveVR.Components
 {
     //add max and min values to this
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public class DisplaySettingAttribute : Attribute
+    public class ClampSettingAttribute : PropertyAttribute
     {
         private bool UseFloatLimits;
         private float fmin;
@@ -16,27 +17,27 @@ namespace CognitiveVR.Components
         private int imin;
         private int imax;
 
-        public DisplaySettingAttribute(){}
+        public ClampSettingAttribute(){}
 
-        public DisplaySettingAttribute(float min)
+        public ClampSettingAttribute(float min)
         {
             fmin = min;
             UseFloatLimits = true;
         }
 
-        public DisplaySettingAttribute(float min, float max)
+        public ClampSettingAttribute(float min, float max)
         {
             fmin = min;
             fmax = max;
             UseFloatLimits = true;
         }
 
-        public DisplaySettingAttribute(int min)
+        public ClampSettingAttribute(int min)
         {
             imin = min;
             UseIntLimits = true;
         }
-        public DisplaySettingAttribute(int min, int max)
+        public ClampSettingAttribute(int min, int max)
         {
             imin = min;
             imax = max;

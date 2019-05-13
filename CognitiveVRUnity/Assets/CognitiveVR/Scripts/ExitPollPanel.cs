@@ -8,6 +8,7 @@ using CognitiveVR.Json;
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Exit Poll Panel")]
     public class ExitPollPanel : MonoBehaviour
     {
         [Header("Components")]
@@ -91,8 +92,8 @@ namespace CognitiveVR
             get
             {
                 if (_root == null)
-                    if (CognitiveVR_Manager.HMD == null) _root = transform;
-                    else { _root = CognitiveVR_Manager.HMD.root; }
+                    if (GameplayReferences.HMD == null) _root = transform;
+                    else { _root = GameplayReferences.HMD.root; }
                 return _root;
             }
         }
@@ -274,8 +275,8 @@ namespace CognitiveVR
                 if (QuestionSet.DisplayReticle)
                 {
                     _reticule = Instantiate(ExitPoll.ExitPollReticle);
-                    _reticule.transform.SetParent(CognitiveVR_Manager.HMD);
-                    _reticule.transform.localPosition = Vector3.forward * (Vector3.Distance(_transform.position, CognitiveVR_Manager.HMD.position) - 0.5f);
+                    _reticule.transform.SetParent(GameplayReferences.HMD);
+                    _reticule.transform.localPosition = Vector3.forward * (Vector3.Distance(_transform.position, GameplayReferences.HMD.position) - 0.5f);
                     _reticule.transform.localRotation = Quaternion.identity;
                 }
                 while (normalizedTime < 1)
@@ -339,7 +340,7 @@ namespace CognitiveVR
         {
             //don't activate anything if the question has already started closing
             if (_isclosing) { return; }
-            if (CognitiveVR_Manager.HMD == null)
+            if (GameplayReferences.HMD == null)
             {
                 ExitPoll.CurrentExitPollSet.OnPanelError();
                 Close();
@@ -378,11 +379,11 @@ namespace CognitiveVR
 
                 if (QuestionSet.LockYPosition)
                 {
-                    Vector3 camforward = CognitiveVR_Manager.HMD.forward;
+                    Vector3 camforward = GameplayReferences.HMD.forward;
                     camforward.y = 0;
                     camforward.Normalize();
 
-                    Vector3 toCube = _transform.position - CognitiveVR_Manager.HMD.position;
+                    Vector3 toCube = _transform.position - GameplayReferences.HMD.position;
                     toCube.y = 0;
                     toCube.Normalize();
 
@@ -392,7 +393,7 @@ namespace CognitiveVR
                     {
                         Vector3 rotateAxis = Vector3.down;
 
-                        Vector3 camRightYlock = CognitiveVR_Manager.HMD.right;
+                        Vector3 camRightYlock = GameplayReferences.HMD.right;
                         camRightYlock.y = 0;
                         camRightYlock.Normalize();
 
@@ -401,34 +402,34 @@ namespace CognitiveVR
                         if (directionDot < 0)
                             rotateSpeed *= -1;
 
-                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                        _transform.RotateAround(GameplayReferences.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                     }
                 }
                 else
                 {
-                    Vector3 toCube = (_transform.position - CognitiveVR_Manager.HMD.position).normalized;
-                    float dot = Vector3.Dot(CognitiveVR_Manager.HMD.forward, toCube);
+                    Vector3 toCube = (_transform.position - GameplayReferences.HMD.position).normalized;
+                    float dot = Vector3.Dot(GameplayReferences.HMD.forward, toCube);
                     if (dot < maxDot)
                     {
-                        Vector3 rotateAxis = Vector3.Cross(toCube, CognitiveVR_Manager.HMD.forward);
+                        Vector3 rotateAxis = Vector3.Cross(toCube, GameplayReferences.HMD.forward);
                         float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
 
-                        _transform.RotateAround(CognitiveVR_Manager.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
+                        _transform.RotateAround(GameplayReferences.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
                         _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, Vector3.up), 0.1f);
                     }
                 }
 
                 //clamp distance
-                float dist = Vector3.Distance(_transform.position, CognitiveVR_Manager.HMD.position);
+                float dist = Vector3.Distance(_transform.position, GameplayReferences.HMD.position);
                 if (dist > QuestionSet.DisplayDistance)
                 {
-                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.DisplayDistance;
-                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
+                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.DisplayDistance;
+                    _transform.position = vector + GameplayReferences.HMD.position;
                 }
                 else if (dist < QuestionSet.MinimumDisplayDistance)
                 {
-                    Vector3 vector = (_transform.position - CognitiveVR_Manager.HMD.position).normalized * QuestionSet.MinimumDisplayDistance;
-                    _transform.position = vector + CognitiveVR_Manager.HMD.position;
+                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.MinimumDisplayDistance;
+                    _transform.position = vector + GameplayReferences.HMD.position;
                 }
             }
         }

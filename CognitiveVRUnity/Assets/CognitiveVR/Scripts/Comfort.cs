@@ -12,40 +12,40 @@ namespace CognitiveVR.Components
     /// GPU performance level (int 0-2). Lower performance levels save more power.
     /// PowerSaving? The CPU and GPU are currently throttled to save power and/or reduce the temperature.
 
+    [AddComponentMenu("Cognitive3D/Components/Comfort")]
     public class Comfort : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(5f,60f)]
+        [ClampSetting(5f,60f)]
         [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]
         public float ComfortTrackingInterval = 6;
 
-        [DisplaySetting]
         [Tooltip("Ignore sending Comfort at set intervals. Only send FPS events below the threshold")]
         public bool OnlySendComfortOnLowFPS = true;
 
-        [DisplaySetting(10,240)]
+        [ClampSetting(10,240)]
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
-            if (CognitiveVR_Manager.HMD != null)
-                lastRotation = CognitiveVR_Manager.HMD.rotation;
+            if (GameplayReferences.HMD != null)
+                lastRotation = GameplayReferences.HMD.rotation;
         }
 
-        private void CognitiveVR_Manager_OnUpdate()
+        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             UpdateFramerate();
             if (OnlySendComfortOnLowFPS == false)
             {
                 UpdateHMDRotation();
             }
 
-            timeleft -= Time.deltaTime;
+            timeleft -= deltaTime;
             if (timeleft <= 0.0f)
             {
                 IntervalEnd();
@@ -70,8 +70,8 @@ namespace CognitiveVR.Components
         float lastRps;
         void UpdateHMDRotation()
         {
-            accumRotation += Quaternion.Angle(CognitiveVR_Manager.HMD.rotation, lastRotation) / Time.deltaTime;
-            lastRotation = CognitiveVR_Manager.HMD.rotation;
+            accumRotation += Quaternion.Angle(GameplayReferences.HMD.rotation, lastRotation) / Time.deltaTime;
+            lastRotation = GameplayReferences.HMD.rotation;
             ++rotFrames;
         }
 
@@ -112,14 +112,18 @@ namespace CognitiveVR.Components
             Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)\nWith Oculus Utilities, includes cpu and gpu levels and device power saving mode";
+#if CVR_OCULUS
+            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
+#else
+            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
+#endif
         }
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

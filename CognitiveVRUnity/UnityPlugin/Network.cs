@@ -11,6 +11,7 @@ using UnityEngine.Networking;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("")]
     public class NetworkManager : MonoBehaviour
     {
         static NetworkManager _sender;
@@ -286,7 +287,7 @@ namespace CognitiveVR
                     request.method = "POST";
                     request.SetRequestHeader("Content-Type", "application/json");
                     request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                    request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+                    request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
                     yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
 
                     //check internet access
@@ -363,15 +364,40 @@ namespace CognitiveVR
             }
         }
 
-        public static void GetExitPollQuestions(string url, string hookname, Response callback, float timeout = 3)
+        /// <summary>
+        /// uses the Response 'callback' when the question set is recieved from the dashboard. if offline, tries to get question set from local cache
+        /// </summary>
+        /// <param name="hookname"></param>
+        /// <param name="callback"></param>
+        /// <param name="timeout"></param>
+        public static void GetExitPollQuestions(string hookname, Response callback, float timeout = 3)
         {
+            string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(hookname);
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
+        }
+
+        public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
+        {
+            string url = CognitiveStatics.POSTEXITPOLLRESPONSES(questionSetName, questionSetVersion);
+
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var request = UnityWebRequest.Put(url, bytes);
+            request.method = "POST";
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+            request.Send();
+
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse, true));
+
+            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment(url + " " + stringcontent);
         }
 
         public static void Post(string url, string stringcontent)
@@ -381,7 +407,7 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
@@ -398,7 +424,7 @@ namespace CognitiveVR
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", Constants.ApplicationKey);
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
             Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));

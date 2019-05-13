@@ -118,7 +118,7 @@ namespace CognitiveVR
 
             Fixations.Clear();
 
-            string url = Constants.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             NetworkManager.Post(url, sb.ToString());
         }
     }

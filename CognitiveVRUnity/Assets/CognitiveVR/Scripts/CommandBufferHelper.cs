@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Command Buffer Helper")]
     public class CommandBufferHelper : MonoBehaviour
     {
         RenderTexture temp;
@@ -199,28 +200,28 @@ namespace CognitiveVR
             }
 
             var wg = gaze.GetWorldGazeDirection();
-            float actualDepth = GetAdjustedDistance(cam.farClipPlane, wg, cam.transform.forward);
+            float actualDepth = GetAdjustedDistance(GameplayReferences.HMDCameraComponent.farClipPlane, wg, GameplayReferences.HMD.forward);
 
-            float actualDistance = Mathf.Lerp(cam.nearClipPlane, actualDepth, depthR);
+            float actualDistance = Mathf.Lerp(GameplayReferences.HMDCameraComponent.nearClipPlane, actualDepth, depthR);
 
-            if (actualDistance > cam.farClipPlane * 2)
+            if (actualDistance > GameplayReferences.HMDCameraComponent.farClipPlane * 2)
             {
-                Debug.DrawRay(cam.transform.position, ViewportRay.direction * 100, Color.blue, 100.1f); //with adjustment
+                Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * 100, Color.blue, 100.1f); //with adjustment
                 return;
             }
 
-            if (actualDistance > cam.farClipPlane * 0.99f)
+            if (actualDistance > GameplayReferences.HMDCameraComponent.farClipPlane * 0.99f)
             {
-                Debug.DrawRay(cam.transform.position, ViewportRay.direction * 100, Color.cyan, 100.1f); //with adjustment
+                Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * 100, Color.cyan, 100.1f); //with adjustment
                 return;
             }
 
-            depthR *= cam.farClipPlane;
+            depthR *= GameplayReferences.HMDCameraComponent.farClipPlane;
 
-            Debug.DrawRay(cam.transform.position, ViewportRay.direction * actualDistance, Color.magenta, 100.1f); //with adjustment
+            Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * actualDistance, Color.magenta, 100.1f); //with adjustment
 
             //SEEMS MORE CORRECT WHEN LOOKING IN CENTER
-            Debug.DrawRay(cam.transform.position, ViewportRay.direction * depthR, new Color(1, 1, 1, 0.5f), 100.1f); //depth without accounting for difference from farclip and angle
+            Debug.DrawRay(GameplayReferences.HMD.position, ViewportRay.direction * depthR, new Color(1, 1, 1, 0.5f), 100.1f); //depth without accounting for difference from farclip and angle
 
             //TODO when using eye tracking, use 'actualDistance'
 

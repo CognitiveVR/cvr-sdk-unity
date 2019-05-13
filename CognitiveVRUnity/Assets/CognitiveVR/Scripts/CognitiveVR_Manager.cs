@@ -20,10 +20,11 @@ using System.Runtime.InteropServices;
 //level change events
 //get hmd + controllers
 //quit and destroy events
-//otherwise use core
 
 namespace CognitiveVR
 {
+    [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
+    [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
     public class CognitiveVR_Manager : MonoBehaviour
     {
 
@@ -32,131 +33,8 @@ namespace CognitiveVR
         internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
 #endif
 
-        #region Events
-        public delegate void CoreInitHandler(Error initError);
-        /// <summary>
-        /// CognitiveVR Core.Init callback
-        /// </summary>
-        public static event CoreInitHandler InitEvent;
-        public void OnInit(Error initError)
-        {
-            if (CognitiveVR_Preferences.Instance.EnableLogging)
-                Util.logDebug("CognitiveVR OnInit recieved response " + initError.ToString());
-            if (initError == Error.AlreadyInitialized)
-            {
-                return;
-            }
-            initResponse = initError;
+#region Events
 
-            OutstandingInitRequest = false;
-
-            if (initError == Error.Success)
-            {
-                new CustomEvent("c3d.sessionStart").Send();
-                if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
-                {
-                    Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
-                    Input.compass.enabled = true;
-                    if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
-                    {
-                        //just get gaze snapshot to grab this
-                    }
-                    else
-                    {
-                        StartCoroutine(GPSTick());
-                    }
-                }
-            }
-            else //some failure
-            {
-                StopAllCoroutines();
-            }
-
-            InitializeControllers();
-
-            var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
-            for (int i = 0; i < components.Length; i++)
-            {
-                components[i].CognitiveVR_Init(initError);
-            }
-
-            //PlayerRecorderInit(initError);
-
-            switch (CognitiveVR_Preferences.Instance.GazeType)
-            {
-                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
-                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
-                case GazeType.Depth: gameObject.AddComponent<DepthGaze>().Initialize(); break;
-                //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
-            }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
-            //fixation requires some kind of eye tracking hardware
-            FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
-            if (fixationRecorder == null)
-                fixationRecorder = gameObject.AddComponent<FixationRecorder>();
-            fixationRecorder.Initialize();
-#endif
-
-            if (InitEvent != null) { InitEvent(initError); }
-
-            //required for when restarting cognitiveVR manager
-            /*foreach (var d in InitEvent.GetInvocationList())
-            {
-                InitEvent -= (CoreInitHandler)d;
-            }*/
-
-#if CVR_META
-            string serialnumber;
-            string xml;
-            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
-            }
-#elif CVR_STEAMVR
-
-            string serialnumber = null;
-
-            var error = ETrackedPropertyError.TrackedProp_Success;
-            var result = new System.Text.StringBuilder();
-
-            var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
-            if (capacity > 0)
-                serialnumber = result.ToString();
-
-            if (!string.IsNullOrEmpty(serialnumber))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
-            }
-#endif
-        }
-
-        public delegate void UpdateHandler();
-        /// <summary>
-        /// Update. Called through Manager's update function for easy enabling/disabling
-        /// </summary>
-        public static event UpdateHandler UpdateEvent;
-        public void OnUpdate() { if (UpdateEvent != null) { UpdateEvent(); } }
-
-        public delegate void TickHandler();
-        /// <summary>
-        /// repeatedly called. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval. Only if the sceneid is valid
-        /// </summary>
-        public static event TickHandler TickEvent;
-        public void OnTick() { if (TickEvent != null) { TickEvent(); } }
-
-        public delegate void QuitHandler(); //quit
-        /// <summary>
-        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
-        /// </summary>
-        public static event QuitHandler QuitEvent;
-        public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
-
-        public delegate void LevelLoadedHandler(); //level
-        /// <summary>
-        /// called from Unity's SceneManager.SceneLoaded(scene scene)
-        /// </summary>
-        public static event LevelLoadedHandler LevelLoadedEvent;
-        public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
 
 #if CVR_STEAMVR
         //1.1
@@ -203,311 +81,6 @@ namespace CognitiveVR
 #endif
 #endregion
 
-#region HMD and Controllers
-
-
-#if CVR_OCULUS
-        static OVRCameraRig _cameraRig;
-        static OVRCameraRig CameraRig
-        {
-            get
-            {
-                if (_cameraRig == null)
-                {
-                    _cameraRig = FindObjectOfType<OVRCameraRig>();
-                }
-                return _cameraRig;
-            }
-        }
-#endif
-
-        private static Transform _hmd;
-        /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
-        public static Transform HMD
-        {
-            get
-            {
-                if (_hmd == null)
-                {
-#if CVR_STEAMVR
-                    SteamVR_Camera cam = FindObjectOfType<SteamVR_Camera>();
-                    if (cam != null){ _hmd = cam.transform; }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main == null)
-                            _hmd = FindObjectOfType<Camera>().transform;
-                        else
-                            _hmd = Camera.main.transform;
-                    }
-#elif CVR_OCULUS
-                    OVRCameraRig rig = FindObjectOfType<OVRCameraRig>();
-                    if (rig != null)
-                    {
-                        Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
-                        _hmd = cam.transform;
-                    }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main == null)
-                            _hmd = FindObjectOfType<Camera>().transform;
-                        else
-                            _hmd = Camera.main.transform;
-                    }
-#elif CVR_FOVE
-                    /*FoveEyeCamera eyecam = FindObjectOfType<FoveEyeCamera>();
-                    if (eyecam != null)
-                    {
-                        Camera cam = eyecam.GetComponentInChildren<Camera>();
-                        _hmd = cam.transform;
-                    }*/
-                    if (_hmd == null)
-                    {
-                        if (Camera.main == null)
-                            _hmd = FindObjectOfType<Camera>().transform;
-                        else
-                            _hmd = Camera.main.transform;
-                    }
-#elif CVR_SNAPDRAGON
-                    _hmd = FindObjectOfType<Camera>().transform;
-#else
-                    if (Camera.main == null)
-                        _hmd = FindObjectOfType<Camera>().transform;
-                    else
-                        _hmd = Camera.main.transform;
-
-#endif
-                }
-                return _hmd;
-            }
-        }
-
-#if CVR_OCULUS
-        //records controller transforms from either interaction player or behaviour poses
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-            }
-
-            if (controllers[0] == null)
-            {
-                controllers[0] = new ControllerInfo() { transform = CameraRig.leftHandAnchor, isRight = false, id = 1 };
-                controllers[0].connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-                controllers[0].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
-                
-            }
-            
-            if (controllers[1] == null)
-            {
-                controllers[1] = new ControllerInfo() { transform = CameraRig.rightHandAnchor, isRight = true, id = 2 };
-                controllers[1].connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-                controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
-            }
-        }
-#elif CVR_STEAMVR2
-
-        static Valve.VR.SteamVR_Behaviour_Pose[] poses;
-
-        //records controller transforms from either interaction player or behaviour poses
-        static void InitializeControllers()
-        {
-            if (controllers == null || controllers[0].transform == null || controllers[1].transform == null)
-            {
-                if (controllers == null)
-                {
-                    controllers = new ControllerInfo[2];
-                    controllers[0] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
-                    controllers[1] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
-                }
-
-                if (poses == null)
-                {
-                    poses = FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
-                }
-                if (poses != null && poses.Length > 1)
-                {
-                    controllers[0].transform = poses[0].transform;
-                    controllers[1].transform = poses[1].transform;
-                    controllers[0].isRight = poses[0].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
-                    controllers[1].isRight = poses[1].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
-                    controllers[0].id = poses[0].GetDeviceIndex();
-                    controllers[1].id = poses[1].GetDeviceIndex();
-                }
-            }
-        }
-
-#elif CVR_STEAMVR
-
-        static SteamVR_ControllerManager cm;
-        static Valve.VR.InteractionSystem.Player player;
-
-        static void InitializeControllers()
-        {
-            if (controllers != null && controllers[0].transform != null && controllers[1].transform != null && controllers[0].id >0 && controllers[1].id > 0) {return;}
-
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-            //try to initialize with controllermanager
-            //otherwise try to initialize with player.hands
-
-            if (cm == null)
-            {
-                cm = FindObjectOfType<SteamVR_ControllerManager>();
-            }
-            if (cm != null)
-            {
-                var left = cm.left.GetComponent<SteamVR_TrackedObject>();
-                controllers[0].transform = left.transform;
-                controllers[0].id = (int)left.index;
-                controllers[0].isRight = false;
-                if (left.index != SteamVR_TrackedObject.EIndex.None)
-                {
-                    controllers[0].connected = SteamVR_Controller.Input((int)left.index).connected;
-                    controllers[0].visible = SteamVR_Controller.Input((int)left.index).valid;
-                }
-                else
-                {
-                    controllers[0].connected = false;
-                    controllers[0].visible = false;
-                }
-
-                var right = cm.right.GetComponent<SteamVR_TrackedObject>();
-                controllers[1].transform = right.transform;
-                controllers[1].id = (int)right.index;
-                controllers[1].isRight = true;
-                if (right.index != SteamVR_TrackedObject.EIndex.None)
-                {
-                    controllers[1].connected = SteamVR_Controller.Input((int)right.index).connected;
-                    controllers[1].visible = SteamVR_Controller.Input((int)right.index).valid;
-                }
-                else
-                {
-                    controllers[1].connected = false;
-                    controllers[1].visible = false;
-                }
-            }
-            else
-            {
-                if (player == null)
-                {
-                    player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
-                }
-                if (player != null)
-                {
-                    var left = player.leftHand;
-                    if (left != null && left.controller != null)
-                    {
-                        controllers[0].transform = player.leftHand.transform;
-                        controllers[0].id = (int)player.leftHand.controller.index;
-                        controllers[0].isRight = false;
-                        controllers[0].connected = left.controller.connected;
-                        controllers[0].visible = left.controller.valid;
-                    }
-
-                    var right = player.rightHand;
-                    if (right != null && right.controller != null)
-                    {
-                        controllers[1].transform = player.rightHand.transform;
-                        controllers[1].id = (int)player.rightHand.controller.index;
-                        controllers[1].isRight = true;
-                        controllers[1].connected = right.controller.connected;
-                        controllers[1].visible = right.controller.valid;
-                    }
-                }
-            }
-
-        }
-#else
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-            }
-        }
-#endif
-
-
-
-
-        public class ControllerInfo
-        {
-            public Transform transform;
-            public bool isRight;
-            public int id = -1;
-
-            public bool connected;
-            public bool visible;
-        }
-
-        static ControllerInfo[] controllers;
-
-        public static ControllerInfo GetControllerInfo(int deviceID)
-        {
-            InitializeControllers();
-            if (controllers[0].id == deviceID) { return controllers[0]; }
-            if (controllers[1].id == deviceID) { return controllers[1]; }
-            return null;
-        }
-
-        public static ControllerInfo GetControllerInfo(bool right)
-        {
-            InitializeControllers();
-            if (controllers[0].isRight == right && controllers[0].id > 0) { return controllers[0]; }
-            if (controllers[1].isRight == right && controllers[1].id > 0) { return controllers[1]; }
-            return null;
-        }
-
-
-        /// <summary>
-        /// steamvr ID is tracked device id
-        /// oculus ID 0 is right, 1 is left controller
-        /// </summary>
-        public static Transform GetController(int deviceid)
-        {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
-            InitializeControllers();
-            if (controllers[0].id == deviceid) { return controllers[0].transform; }
-            if (controllers[1].id == deviceid) { return controllers[1].transform; }
-            return null;
-#else
-            return null;
-#endif
-        }
-
-        public static Transform GetController(bool right)
-        {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
-            InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].id > 0) { return controllers[0].transform; }
-            if (right == controllers[1].isRight && controllers[1].id > 0) { return controllers[1].transform; }
-            return null;
-#else
-            return null;
-#endif
-        }
-
-        /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
-        public static Vector3 GetControllerPosition(bool right)
-        {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
-
-            InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { return controllers[0].transform.position; }
-            if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { return controllers[1].transform.position; }
-            return Vector3.zero;
-#else
-            return Vector3.zero;
-#endif
-        }
-
-#endregion
-
         private static CognitiveVR_Manager instance;
         public static CognitiveVR_Manager Instance
         {
@@ -516,6 +89,11 @@ namespace CognitiveVR
                 if (instance == null)
                 {
                     instance = FindObjectOfType<CognitiveVR_Manager>();
+                    if (instance == null)
+                    {
+                        Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
+                        instance = new GameObject("CognitiveVR_Manager").AddComponent<CognitiveVR_Manager>();
+                    }
                 }
                 return instance;
             }
@@ -523,19 +101,23 @@ namespace CognitiveVR
         YieldInstruction playerSnapshotInverval;
         YieldInstruction GPSUpdateInverval;
 
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
-        public bool InitializeOnStart = true;
+        //cached Time.frameCount to quickly get Util.Timestamp
+        public static int FrameCount { get; private set; }
 
-        [HideInInspector] //complete this option later
-        [Tooltip("Save ExitPoll questions and answers to disk if internet connection is unavailable")]
-        public bool SaveExitPollOnDevice = false;
+        public static bool IsQuitting = false;
 
         static Error initResponse = Error.NotInitialized;
         public static Error InitResponse { get { return initResponse; } }
-        bool OutstandingInitRequest = false;
 
+        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
+        public bool InitializeOnStart = true;
+
+        [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 2;
 
+        /// <summary>
+        /// sets instance of CognitiveVR_Manager
+        /// </summary>
         private void OnEnable()
         {
             if (instance != null && instance != this)
@@ -558,14 +140,13 @@ namespace CognitiveVR
                 Initialize("");
         }
 
-        private void OnValidate()
-        {
-            if (StartupDelayTime < 0) { StartupDelayTime = 0;}
-        }
 
-        public static bool IsQuitting = false;
-
-        public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
+        /// <summary>
+        /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="userProperties"></param>
+        public void Initialize(string userName="", List<KeyValuePair<string,object>> userProperties = null)
         {
             if (instance != null && instance != this)
             {
@@ -573,29 +154,17 @@ namespace CognitiveVR
                 Destroy(gameObject);
                 return;
             } //destroy if there's already another manager
-            if (instance == this && Core.Initialized)
+            if (Core.IsInitialized)
             {
-                Util.logDebug("CognitiveVR_Manager Initialize instance is this! <color=yellow>Skip Initialize</color>");
+                Util.logWarning("CognitiveVR_Manager Initialize - Already Initialized!");
                 return;
-            } //skip if this manage has already been initialized
+            } //skip if a session has already been initialized
 
             if (!CognitiveVR_Preferences.Instance.IsApplicationKeyValid)
             {
                 Util.logDebug("CognitiveVR_Manager Initialize does not have valid apikey");
                 return;
             }
-            if (OutstandingInitRequest)
-            {
-                Util.logDebug("CognitiveVR_Manager Initialize already called. Waiting for response");
-                return;
-            }
-            Util.logDebug("CognitiveVR_Manager Initialize");
-
-            OutstandingInitRequest = true;
-
-            playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
-            GPSUpdateInverval = new WaitForSeconds(CognitiveVR_Preferences.Instance.GPSInterval);
-            StartCoroutine(Tick());
 
 #if CVR_STEAMVR
             SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
@@ -612,9 +181,10 @@ namespace CognitiveVR
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
+            UnityEngine.SceneManagement.Scene scene = new UnityEngine.SceneManagement.Scene();
             for(int i = 0; i<count;i++)
             {
-                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
                 var cogscene = CognitiveVR_Preferences.FindSceneByPath(scene.path);
                 if (cogscene != null)
                 {
@@ -623,12 +193,106 @@ namespace CognitiveVR
                 }
             }
 
-            OnLevelLoaded();
-
             Core.UserId = userName;
             Core.SetSessionProperty("c3d.username", userName);
 
-            CognitiveVR.Core.init(OnInit); //TODO return errors from init method, not callback since there isn't a delay on startup
+            //sets session properties for system hardware
+            Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
+
+            Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
+
+            //on init stuff here
+            initResponse = initError;
+
+            if (initError == Error.None)
+            {
+                new CustomEvent("c3d.sessionStart").Send();
+                if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+                {
+                    Input.location.Start(CognitiveVR_Preferences.Instance.GPSAccuracy, CognitiveVR_Preferences.Instance.GPSAccuracy);
+                    Input.compass.enabled = true;
+                    if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
+                    {
+                        //just get gaze snapshot to grab this
+                    }
+                    else
+                    {
+                        StartCoroutine(GPSTick());
+                    }
+                }
+                playerSnapshotInverval = new WaitForSeconds(CognitiveVR.CognitiveVR_Preferences.S_SnapshotInterval);
+                GPSUpdateInverval = new WaitForSeconds(CognitiveVR_Preferences.Instance.GPSInterval);
+                StartCoroutine(Tick());
+                Util.logDebug("CognitiveVR Initialized");
+            }
+            else //some failure
+            {
+                StopAllCoroutines();
+                Util.logDebug("CognitiveVR Error" + initError.ToString());
+            }
+
+            var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                components[i].CognitiveVR_Init(initError);
+            }
+
+            switch (CognitiveVR_Preferences.Instance.GazeType)
+            {
+                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
+                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
+                    //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
+            }
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL
+            //fixation requires some kind of eye tracking hardware
+            FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+            if (fixationRecorder == null)
+                fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+            fixationRecorder.Initialize();
+#endif
+
+            //if (InitEvent != null) { InitEvent(initError); }
+            Core.InvokeInitEvent(initError);
+
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
+
+            SetSessionProperties();
+
+            if (userProperties != null)
+                Core.SetSessionProperties(userProperties);
+        }
+
+        /// <summary>
+        /// sets automatic session properties from scripting define symbols, device ids, etc
+        /// </summary>
+        private void SetSessionProperties()
+        {
+#if CVR_META
+            string serialnumber;
+            string xml;
+            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
+            {
+                Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
+            }
+#elif CVR_STEAMVR
+
+            string serialnumber = null;
+
+            var error = ETrackedPropertyError.TrackedProp_Success;
+            var result = new System.Text.StringBuilder();
+
+            if (OpenVR.System != null)
+            {
+                var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
+                if (capacity > 0)
+                    serialnumber = result.ToString();
+
+                if (!string.IsNullOrEmpty(serialnumber))
+                {
+                    Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
+                }
+            }
+#endif
 
 #if UNITY_EDITOR
             Core.SetSessionProperty("c3d.app.inEditor", true);
@@ -728,28 +392,8 @@ namespace CognitiveVR
             Core.SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
 
             Core.SetSessionProperty("c3d.app.engine", "Unity");
-
-            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
 
-#if CVR_STEAMVR || CVR_STEAMVR2
-        private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
-        {
-            InitializeControllers();
-
-            for (int i = 0; i<args.Length;i++)
-            {
-                for (int j = 0; j<controllers.Length;j++)
-                {
-                    if (controllers[j].id == i)
-                    {
-                        controllers[j].connected = args[i].bDeviceIsConnected;
-                        controllers[j].visible = args[i].bPoseIsValid;
-                    }
-                }
-            }
-        }
-#endif
 
         /// <summary>
         /// sets a user friendly label for the session on the dashboard. automatically generated if not supplied
@@ -760,21 +404,23 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.sessionname", name);
         }
 
+        /// <summary>
+        /// sets a constant lobby id shared between multiple sessions. this is for associating sessions together for multiplayer
+        /// </summary>
         public static void SetLobbyId(string lobbyId)
         {
-            CognitiveVR_Preferences.SetLobbyId(lobbyId);
+            Core.SetLobbyId(lobbyId);
         }
 
+        /// <summary>
+        /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="mode"></param>
         private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
-
-            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
-            {
-                Core.SendDataEvent();
-            }
-
 
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
             {
@@ -786,7 +432,17 @@ namespace CognitiveVR
             }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
             {
-                DynamicObject.ClearObjectIds();
+                //DynamicObject.ClearObjectIds();
+                replacingSceneId = true;
+            }
+            
+            if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                Core.InvokeSendDataEvent();
+            }
+
+            if (replacingSceneId)
+            {
                 Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
@@ -796,62 +452,56 @@ namespace CognitiveVR
                     }
                 }
             }
-            OnLevelLoaded();
+
+            Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-        public static int frameCount;
+        #region Updates and Loops
 
-        //start after successful init callback
+        GameplayReferences.ControllerInfo tempControllerInfo = null;
+
+#if CVR_STEAMVR || CVR_STEAMVR2
+        private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
+        {
+            for (int i = 0; i<args.Length;i++)
+            {
+                for (int j = 0; j<2;j++)
+                {
+                    if (GameplayReferences.GetControllerInfo(j,out tempControllerInfo))
+                    {
+                        if (tempControllerInfo.id == i)
+                        {
+                            tempControllerInfo.connected = args[i].bDeviceIsConnected;
+                            tempControllerInfo.visible = args[i].bPoseIsValid;
+                        }
+
+                    }
+                }
+            }
+        }
+#endif
+
+        /// <summary>
+        /// start after successful session initialization
+        /// </summary>
         IEnumerator Tick()
-        {
-            while (Application.isPlaying) //cognitive manager is destroyed on end session, which will stop this
-            {
-                yield return playerSnapshotInverval;
-                frameCount = Time.frameCount;
-                OnTick();
-            }
-        }
-
-        public void GetGPSLocation(ref Vector3 loc, ref float bearing)
-        {
-            if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
-            {
-                loc.x = Input.location.lastData.latitude;
-                loc.y = Input.location.lastData.longitude;
-                loc.z = Input.location.lastData.altitude;
-                bearing = 360-Input.compass.magneticHeading;
-            }
-            else
-            {
-                loc = GPSLocation;
-                bearing = CompassOrientation;
-            }
-        }
-
-        Vector3 GPSLocation;
-        float CompassOrientation;
-        IEnumerator GPSTick()
         {
             while (Application.isPlaying)
             {
-                yield return GPSUpdateInverval;
-                GPSLocation.x = Input.location.lastData.latitude;
-                GPSLocation.y = Input.location.lastData.longitude;
-                GPSLocation.z = Input.location.lastData.altitude;
-                CompassOrientation = 360 - Input.compass.magneticHeading;                
+                yield return playerSnapshotInverval;
+                FrameCount = Time.frameCount;
+                Core.InvokeTickEvent();
             }
         }
 
         void Update()
         {
-            if (initResponse != Error.Success)
+            if (initResponse != Error.None)
             {
                 return;
             }
 
-            //doPostRender = false;
-
-            OnUpdate();
+            Core.InvokeUpdateEvent(Time.deltaTime);
             UpdateSendHotkeyCheck();
 
 #if CVR_STEAMVR || CVR_STEAMVR2
@@ -870,11 +520,18 @@ namespace CognitiveVR
 #endif
 
 #if CVR_OCULUS
-            controllers[0].connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-            controllers[0].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
 
-            controllers[1].connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-            controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
+            if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
+            {
+                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
+                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
+            }
+
+            if (GameplayReferences.GetControllerInfo(true, out tempControllerInfo))
+            {
+                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
+                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
+            }
 #endif
         }
 
@@ -889,10 +546,45 @@ namespace CognitiveVR
                 if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
                 if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
 
-                Core.SendDataEvent();
+                Core.InvokeSendDataEvent();
             }
         }
 
+        #endregion
+
+        #region GPS
+        public void GetGPSLocation(ref Vector3 loc, ref float bearing)
+        {
+            if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)
+            {
+                loc.x = Input.location.lastData.latitude;
+                loc.y = Input.location.lastData.longitude;
+                loc.z = Input.location.lastData.altitude;
+                bearing = 360 - Input.compass.magneticHeading;
+            }
+            else
+            {
+                loc = GPSLocation;
+                bearing = CompassOrientation;
+            }
+        }
+
+        Vector3 GPSLocation;
+        float CompassOrientation;
+        IEnumerator GPSTick()
+        {
+            while (Application.isPlaying)
+            {
+                yield return GPSUpdateInverval;
+                GPSLocation.x = Input.location.lastData.latitude;
+                GPSLocation.y = Input.location.lastData.longitude;
+                GPSLocation.z = Input.location.lastData.altitude;
+                CompassOrientation = 360 - Input.compass.magneticHeading;
+            }
+        }
+#endregion
+
+#region Application Quit, Session End and OnDestroy
         /// <summary>
         /// End the cognitivevr session. sends any outstanding data to dashboard and sceneexplorer
         /// requires calling Initialize to create a new session id and begin recording analytics again
@@ -902,16 +594,12 @@ namespace CognitiveVR
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
-            Core.SendDataEvent();
-
-            //clear properties from last session
-            //newSessionProperties.Clear();
-            //knownSessionProperties.Clear();
-
-            CleanupEvents();
-            Core.reset();
+            Core.InvokeSendDataEvent();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
-            DynamicObject.ClearObjectIds();
+            Core.Reset();
+            initResponse = Error.NotInitialized;
+            //DynamicObject.ClearObjectIds();
         }
 
         void OnDestroy()
@@ -919,52 +607,40 @@ namespace CognitiveVR
             if (instance != this) { return; }
             if (!Application.isPlaying) { return; }
 
-            OnQuit();
-            //OnSendData();
+            Core.InvokeQuitEvent();
 
-            if (Core.Initialized)
+            if (Core.IsInitialized)
             {
-                Core.reset();
+                Core.Reset();
             }
 
-            CleanupEvents();
-        }
-
-        void CleanupEvents()
-        {
-            //CleanupPlayerRecorderEvents();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
         }
 
-#region Application Quit
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
             IsQuitting = true;
             if (hasCanceled) { return; }
-
-            if (InitResponse != Error.Success) { return; }
+            if (InitResponse != Error.None) { return; }
 
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
-            if (QuitEvent == null)
+            CognitiveVR.Util.logDebug("session length " + playtime);
+            if (Core.IsQuitEventBound())
             {
-				CognitiveVR.Util.logDebug("session length " + playtime);
                 new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();
                 return;
             }
-
-			CognitiveVR.Util.logDebug("session length " + playtime);
             new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
+            Core.InvokeQuitEvent();
+            Core.QuitEventClear();
+            
 
-            Core.SendDataEvent();
-            Core.reset();
-
-
-            //Camera.onPostRender -= MyPostRender;
-            //OnQuit();
+            Core.InvokeSendDataEvent();
+            Core.Reset();
             StartCoroutine(SlowQuit());
         }
 

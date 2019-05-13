@@ -40,14 +40,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ButtonState.cs" />
     <Compile Include="CognitiveVR_Preferences.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="CognitiveStatics.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="CustomEvent.cs" />
+    <Compile Include="DynamicData.cs" />
+    <Compile Include="DynamicManager.cs" />
     <Compile Include="DynamicObjectCore.cs" />
+    <Compile Include="DynamicObjectId.cs" />
+    <Compile Include="DynamicObjectManifestEntry.cs" />
+    <Compile Include="DynamicObjectSnapshot.cs" />
     <Compile Include="Error.cs" />
-    <Compile Include="External\StringBuilderExtensions.cs" />
-    <Compile Include="External\MiniJSON.cs" />
     <Compile Include="EyeCapture.cs" />
     <Compile Include="Fixation.cs" />
     <Compile Include="FixationCore.cs" />
@@ -56,6 +60,7 @@
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SensorRecorder.cs" />
+    <Compile Include="StringBuilderExtensions.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

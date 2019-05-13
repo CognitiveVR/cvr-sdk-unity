@@ -1,11 +1,8 @@
 ﻿using UnityEngine;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
 namespace CognitiveVR 
 {
-    public delegate void Callback(Error error);
-
     /// <summary>
     /// The most central pieces of the CognitiveVR Framework.
     /// </summary>
@@ -13,14 +10,70 @@ namespace CognitiveVR
     {
         public delegate void onSendData(); //send data
         /// <summary>
-        /// called when CognitiveVR_Manager.SendData is called. this is called when the data is actually sent to the server
+        /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
-        public static void SendDataEvent() { if (OnSendData != null) { OnSendData(); } }
+        public static void InvokeSendDataEvent() { if (OnSendData != null) { OnSendData(); } }
 
+        public delegate void CoreInitHandler(Error initError);
+        /// <summary>
+        /// CognitiveVR Core.Init callback
+        /// </summary>
+        public static event CoreInitHandler InitEvent;
+        public static void InvokeInitEvent(Error initError) { if (InitEvent != null) { InitEvent.Invoke(initError); } }
+
+        public delegate void UpdateHandler(float deltaTime);
+        /// <summary>
+        /// Update. Called through Manager's update function
+        /// </summary>
+        public static event UpdateHandler UpdateEvent;
+        public static void InvokeUpdateEvent(float deltaTime) { if (UpdateEvent != null) { UpdateEvent(deltaTime); } }
+
+        public delegate void TickHandler();
+        /// <summary>
+        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// </summary>
+        public static event TickHandler TickEvent;
+        public static void InvokeTickEvent() { if (TickEvent != null) { TickEvent(); } }
+
+        public delegate void QuitHandler();
+        /// <summary>
+        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
+        /// </summary>
+        public static event QuitHandler QuitEvent;
+        public static void InvokeQuitEvent() { if (QuitEvent != null) { QuitEvent(); } }
+        public static bool IsQuitEventBound() { return QuitEvent != null; }
+        public static void QuitEventClear() { QuitEvent = null; }
+
+        public delegate void LevelLoadedHandler(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
+        /// <summary>
+        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
+        /// </summary>
+        public static event LevelLoadedHandler LevelLoadedEvent;
+        public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (LevelLoadedEvent != null) { LevelLoadedEvent(scene, mode, newSceneId); } }
+
+        private static Transform _hmd;
+        internal static Transform HMD
+        {
+            get
+            {
+                if (_hmd == null)
+                {
+                    if (Camera.main == null)
+                    {
+                        Camera c = UnityEngine.Object.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
+                    else
+                        _hmd = Camera.main.transform;
+                }
+                return _hmd;
+            }
+        }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.10.0";
+        public const string SDK_VERSION = "0.11.0";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -92,12 +145,19 @@ namespace CognitiveVR
 
         public static CognitiveVR_Preferences.SceneSettings TrackingScene {get; private set;}
 
+        /// <summary>
+        /// Set the SceneId for recorded data by string
+        /// </summary>
         public static void SetTrackingScene(string sceneName)
         {
             var scene = CognitiveVR_Preferences.FindScene(sceneName);
             SetTrackingScene(scene);
         }
 
+        /// <summary>
+        /// Set the SceneId for recorded data by reference
+        /// </summary>
+        /// <param name="scene"></param>
         public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
         {
             TrackingSceneId = "";
@@ -113,17 +173,28 @@ namespace CognitiveVR
             }
         }
 
-        public static bool Initialized { get; private set; }
-
-        public static void reset()
+        public static string LobbyId { get; private set; }
+        public static void SetLobbyId(string lobbyId)
         {
-            // Reset all of the static vars to their default values
+            LobbyId = lobbyId;
+        }
+
+        /// <summary>
+        /// has the CognitiveVR session started?
+        /// </summary>
+        public static bool IsInitialized { get; private set; }
+
+        /// <summary>
+        /// Reset all of the static vars to their default values. Used when a session ends
+        /// </summary>
+        public static void Reset()
+        {
             UserId = null;
             _sessionId = null;
             _timestamp = 0;
             _uniqueId = null;
             DeviceId = null;
-            Initialized = false;
+            IsInitialized = false;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
@@ -131,80 +202,58 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// Initializes CognitiveVR Framework for use, including instrumentation and tuning.
+        /// Starts a CognitiveVR session. Records hardware info, creates network manager
         /// </summary>
-        /// <param name="initParams">Initialization parameters</param>
-        /// <param name="cb">Application defined callback which will occur on completion</param>
-        public static void init(Callback cb)
+        public static Error Init(Transform HMDCamera)
         {
-            Constants.Initialize();
-            Error error = Error.Success;
+            _hmd = HMDCamera;
+            CognitiveStatics.Initialize();
 
-            if (null == cb)
+            Error error = Error.None;
+            // Have we already initialized CognitiveVR?
+            if (IsInitialized)
             {
-                Util.logError("Please provide a valid CognitiveVR.Callback");
-                error = Error.InvalidArgs;
+                Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
+                error = Error.AlreadyInitialized;
             }
 
-            if (Error.Success == error)
+            if (error == Error.None)
             {
-                Error ret = Error.Success;
+                SetSessionProperty("c3d.app.name", Application.productName);
+                SetSessionProperty("c3d.app.version", Application.version);
+                SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+                SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+                SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+                SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+                SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+                
+                DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
+                SetSessionProperty("c3d.deviceid", DeviceId);
 
-                // Have we already initialized CognitiveVR?
-                if (Initialized)
-                {
-                    Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
-                    ret = Error.AlreadyInitialized;
-                }
-                else if (null == cb)
-                {
-                    Util.logError("Please provide a valid callback");
-                    ret = Error.InvalidArgs;
-                }
+                //initialize Network Manager early, before gameplay actually starts
+                var temp = NetworkManager.Sender;
 
-                if (Error.Success == ret)
-                {
-                    SetSessionProperty("c3d.app.name", Application.productName);
-                    SetSessionProperty("c3d.app.version", Application.version);
-                    SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
-                    SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
-                    SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
-                    SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
-                    SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
-                    SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
-                    SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+                DynamicManager.Initialize();
+                DynamicObjectCore.Initialize();
 
-                    //Util.cacheDeviceAndAppInfo();
-                    DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
-                    SetSessionProperty("c3d.deviceid", DeviceId);
+                //set session timestamp
+                CheckSessionId();
 
-                    //initialize Network Manager early, before gameplay actually starts
-                    var temp = NetworkManager.Sender;
-
-                    //set session timestamp
-                    CheckSessionId();
-                    Util.logDebug("Begin session " + SessionID);
-
-                    Initialized = true;
-
-                    //TODO check that app can reach dashboard
-                    cb.Invoke(Error.Success);
-                }
+                IsInitialized = true;
             }
-            else
-            {
-                // Some argument error, just call the callback immediately
-                cb(error);
-            }
+
+            return error;
         }
 
-        public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
+        public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
         {
             if (clearNewProperties)
             {
                 if (newSessionProperties.Count > 0)
                 {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newSessionProperties);
+                    List<KeyValuePair<string, object>> returndict = new List<KeyValuePair<string, object>>(newSessionProperties);
                     newSessionProperties.Clear();
                     return returndict;
                 }
@@ -215,61 +264,79 @@ namespace CognitiveVR
             }
             return newSessionProperties;
         }
-        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>(32);
-        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>(32);
 
-        [System.Obsolete("use SetSessionProperties")]
-        public static void UpdateSessionState(Dictionary<string, object> dictionary)
+        static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
+        static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
+        
+        public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
         {
-            SetSessionProperties(dictionary);
-        }
-        public static void SetSessionProperties(Dictionary<string, object> dictionary)
-        {
-            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
-            foreach (var kvp in dictionary)
+
+            if (kvpList == null) { return; }
+
+            for(int i = 0; i<kvpList.Count;i++)
             {
-                if (knownSessionProperties.ContainsKey(kvp.Key) && knownSessionProperties[kvp.Key] != kvp.Value) //update value
-                {
-                    if (newSessionProperties.ContainsKey(kvp.Key))
-                    {
-                        newSessionProperties[kvp.Key] = kvp.Value;
-                    }
-                    else
-                    {
-                        newSessionProperties.Add(kvp.Key, kvp.Value);
-                    }
-                    knownSessionProperties[kvp.Key] = kvp.Value;
-                }
-                else if (!knownSessionProperties.ContainsKey(kvp.Key)) //add value
-                {
-                    knownSessionProperties.Add(kvp.Key, kvp.Value);
-                    newSessionProperties.Add(kvp.Key, kvp.Value);
-                }
+                SetSessionProperty(kvpList[i].Key, kvpList[i].Value);
             }
         }
-        [System.Obsolete("use SetSessionProperty")]
-        public static void UpdateSessionState(string key, object value)
+
+        public static void SetSessionProperties(Dictionary<string, object> properties)
         {
-            SetSessionProperty(key, value);
+            if (properties == null) { return; }
+
+            foreach(var prop in properties)
+            {
+                SetSessionProperty(prop.Key, prop.Value);
+            }
         }
         public static void SetSessionProperty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            int foundIndex = 0;
+            bool foundKey = false;
+            for(int i = 0; i< knownSessionProperties.Count;i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    foundKey = true;
+                    foundIndex = i;
+                    break;
+                }
+            }
+
+            if (foundKey) //update value
+            {
+                if (knownSessionProperties[foundIndex].Value != value) //skip setting property if it hasn't actually changed
+                {
+                    return;
                 }
                 else
                 {
-                    newSessionProperties.Add(key, value);
+                    knownSessionProperties[foundIndex] = new KeyValuePair<string, object>(key, value);
+
+                    bool foundNewSessionPropKey = false;
+                    int foundNewSessionPropIndex = 0;
+                    for (int i = 0; i < newSessionProperties.Count; i++) //add/replace in 'newSessionProperty' (ie dirty value that will be sent with gaze)
+                    {
+                        if (newSessionProperties[i].Key == key)
+                        {
+                            foundNewSessionPropKey = true;
+                            foundNewSessionPropIndex = i;
+                            break;
+                        }
+                    }
+                    if (foundNewSessionPropKey)
+                    {
+                        newSessionProperties[foundNewSessionPropIndex] = new KeyValuePair<string, object>(key, value);
+                    }
+                    else
+                    {
+                        newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                    }
                 }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
+            else
             {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
+                knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             }
         }
 
@@ -279,31 +346,18 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        [System.Obsolete("use SetSessionPropertyIfEmpty")]
-        public static void UpdateSessionStateIfEmpty(string key, object value)
-        {
-            SetSessionPropertyIfEmpty(key, value);
-        }
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key)) { return; }
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            for (int i = 0; i < knownSessionProperties.Count; i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    return;
                 }
-                else
-                {
-                    newSessionProperties.Add(key, value);
-                }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
-            {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
-            }
+
+            knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+            newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
         }
     }
 }

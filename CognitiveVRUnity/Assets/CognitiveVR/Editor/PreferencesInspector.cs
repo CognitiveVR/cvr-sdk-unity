@@ -124,8 +124,8 @@ namespace CognitiveVR
             EditorGUI.indentLevel--;
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Snapshot Batch Size", "The number of Dynamic snapshots and manifest entries to record before automatically sending a web request to the dashboard"), p.DynamicSnapshotCount), 16, 1500);
             p.DynamicExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Extreme Batch Size", "Threshold for ignoring the Dynamic Minimum Timer. If this many Dynamic snapshots have been recorded, immediately send"), p.DynamicExtremeSnapshotCount), p.DynamicSnapshotCount, 1500);
-            p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
-            p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
+            //p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
+            p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, 1, 600));
 
             //sensors
             EditorGUI.indentLevel++;
@@ -134,7 +134,7 @@ namespace CognitiveVR
             p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Sensor Snapshot Batch Size", "The number of Sensor datapoints to record before automatically sending a web request to the dashboard"), p.SensorSnapshotCount), 64, 1500);
             p.SensorExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Sensor Extreme Batch Size", "Threshold for ignoring the Sensor Minimum Timer. If this many Sensor datapoints have been recorded, immediately send"), p.SensorExtremeSnapshotCount), p.SensorSnapshotCount, 1500);
             p.SensorSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Sensor Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Sensor data. Ignored if the batch size reaches Sensor Extreme Limit"), Mathf.Clamp(p.SensorSnapshotMinTimer, 1, 60));
-            p.SensorSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Sensor Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Sensor data"), Mathf.Clamp(p.SensorSnapshotMaxTimer, p.DynamicSnapshotMinTimer, 600));
+            p.SensorSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Sensor Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Sensor data"), Mathf.Clamp(p.SensorSnapshotMaxTimer, p.SensorSnapshotMinTimer, 600));
 
             //fixations
             EditorGUI.indentLevel++;
@@ -233,20 +233,6 @@ namespace CognitiveVR
             }
             EditorGUILayout.Space();
 
-            //GUILayout.BeginHorizontal();
-            //EditorCore.BlenderPath = EditorGUILayout.TextField("Blender Path", EditorCore.BlenderPath);
-            //if (GUILayout.Button("...",GUILayout.Width(40)))
-            //{
-            //    EditorCore.BlenderPath = EditorUtility.OpenFilePanel("Select Blender", string.IsNullOrEmpty(EditorCore.BlenderPath) ? "c:\\" : EditorCore.BlenderPath, "");
-            //}
-            //GUILayout.EndHorizontal();
-            //
-            //EditorCore.ExportSettings.ExportStaticOnly = EditorGUILayout.Toggle(new GUIContent("Export Static Meshes Only", "Only export meshes marked as static. Dynamic objects (such as vehicles, doors, etc) will not be exported"), EditorCore.ExportSettings.ExportStaticOnly);
-            //EditorCore.ExportSettings.MinExportGeoSize = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("Minimum Export size", "Ignore exporting meshes that are below this size(pebbles, grass,etc)"), EditorCore.ExportSettings.MinExportGeoSize),0,100);
-            //EditorCore.ExportSettings.ExplorerMinimumFaceCount = Mathf.Max(EditorGUILayout.IntField(new GUIContent("Minimum Face Count", "Ignore decimating objects with fewer faces than this value"), EditorCore.ExportSettings.ExplorerMinimumFaceCount),0);
-            //EditorCore.ExportSettings.ExplorerMaximumFaceCount = Mathf.Max(EditorGUILayout.IntField(new GUIContent("Maximum Face Count", "Objects with this many faces will be decimated to 10% of their original face count"), EditorCore.ExportSettings.ExplorerMaximumFaceCount), EditorCore.ExportSettings.ExplorerMinimumFaceCount);
-            //EditorCore.ExportSettings.DiffuseTextureName = EditorGUILayout.TextField(new GUIContent("Diffuse Texture Name", "The name of the main diffuse texture to export. Generally _MainTex, but possibly something else if you are using a custom shader"), EditorCore.ExportSettings.DiffuseTextureName);
-            //
             GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") };
             int[] textureQualities = new int[] { 1, 2, 4, 8, 16, 32, 64 };
             p.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), p.TextureResize, textureQualityNames, textureQualities);

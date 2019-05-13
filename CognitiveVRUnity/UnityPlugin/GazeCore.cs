@@ -18,11 +18,9 @@ namespace CognitiveVR
     public static class GazeCore
     {
         private static int jsonPart = 1;
-        //private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static StringBuilder gazebuilder;
         private static int gazeCount = 0;
         private static string HMDName;
-        //private static int currentSensorSnapshots = 0;
 
         static GazeCore()
         {
@@ -151,7 +149,8 @@ namespace CognitiveVR
         }
 
         //looking at a media dynamic object
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatime, Vector2 uvs, Vector3 floorPos)
+        //mediatime is milliseconds since the start of the video
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatimeMs, Vector2 uvs, Vector3 floorPos)
         {
             gazebuilder.Append("{");
 
@@ -167,7 +166,7 @@ namespace CognitiveVR
             gazebuilder.Append(",");
             JsonUtil.SetString("mediaId", mediasource, gazebuilder);
             gazebuilder.Append(",");
-            JsonUtil.SetInt("mediatime", mediatime, gazebuilder);
+            JsonUtil.SetInt("mediatime", mediatimeMs, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector2("uvs", uvs, gazebuilder);
 
@@ -220,9 +219,9 @@ namespace CognitiveVR
             JsonUtil.SetString("userid", Core.UniqueID, gazebuilder);
             gazebuilder.Append(",");
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, gazebuilder);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, gazebuilder);
                 gazebuilder.Append(",");
             }
 
@@ -264,7 +263,7 @@ namespace CognitiveVR
             gazebuilder.Append("}");
 
             var sceneSettings = Core.TrackingScene;
-            string url = Constants.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string url = CognitiveStatics.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
 

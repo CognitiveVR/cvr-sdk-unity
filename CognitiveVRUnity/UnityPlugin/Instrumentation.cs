@@ -33,7 +33,7 @@ namespace CognitiveVR
         
         static int cachedEvents = 0;
 
-        private static System.Text.StringBuilder TransactionBuilder = new System.Text.StringBuilder(512);
+        private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
         static float autoTimer_nextSendTime = 0;
@@ -82,7 +82,7 @@ namespace CognitiveVR
             {
                 Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
                 cachedEvents = 0;
-                TransactionBuilder.Length = 0;
+                eventBuilder.Length = 0;
                 return;
             }
 
@@ -105,9 +105,9 @@ namespace CognitiveVR
             JsonUtil.SetString("userid", Core.UniqueID, builder);
             builder.Append(",");
 
-            if (!string.IsNullOrEmpty(CognitiveVR_Preferences.LobbyId))
+            if (!string.IsNullOrEmpty(Core.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", CognitiveVR_Preferences.LobbyId, builder);
+                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
                 builder.Append(",");
             }
 
@@ -125,46 +125,41 @@ namespace CognitiveVR
             //events
             builder.Append("\"data\":[");
 
-            builder.Append(TransactionBuilder.ToString());
+            builder.Append(eventBuilder.ToString());
 
-            if (TransactionBuilder.Length > 0)
+            if (eventBuilder.Length > 0)
                 builder.Remove(builder.Length - 1, 1); //remove the last comma
             builder.Append("]");
 
             builder.Append("}");
 
-            TransactionBuilder.Length = 0;
+            eventBuilder.Length = 0;
 
             //send transaction contents to scene explorer
 
             string packagedEvents = builder.ToString();
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = Constants.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
-            //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
-
-            //var headers = new Dictionary<string, string>();
-            //headers.Add("Content-Type", "application/json");
-            //headers.Add("X-HTTP-Method-Override", "POST");
+            string url = CognitiveStatics.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
 
             NetworkManager.Post(url, packagedEvents);
         }
 
         public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
         {
-            TransactionBuilder.Append("{");
-            JsonUtil.SetString("name", category, TransactionBuilder);
-            TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            eventBuilder.Append("{");
+            JsonUtil.SetString("name", category, eventBuilder);
+            eventBuilder.Append(",");
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
             if (!string.IsNullOrEmpty(dynamicObjectId))
             {
-                TransactionBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+                eventBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
             }
-            TransactionBuilder.Append(",");
-            JsonUtil.SetVector("point", position, TransactionBuilder);
-            TransactionBuilder.Append("}"); //close transaction object
-            TransactionBuilder.Append(",");
+            eventBuilder.Append(",");
+            JsonUtil.SetVector("point", position, eventBuilder);
+            eventBuilder.Append("}"); //close transaction object
+            eventBuilder.Append(",");
 
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
@@ -175,20 +170,20 @@ namespace CognitiveVR
 
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
-            TransactionBuilder.Append("{");
-            JsonUtil.SetString("name", category, TransactionBuilder);
-            TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            eventBuilder.Append("{");
+            JsonUtil.SetString("name", category, eventBuilder);
+            eventBuilder.Append(",");
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
             if (!string.IsNullOrEmpty(dynamicObjectId))
             {
-                TransactionBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+                eventBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
             }
-            TransactionBuilder.Append(",");
-            JsonUtil.SetVector("point", position, TransactionBuilder);
+            eventBuilder.Append(",");
+            JsonUtil.SetVector("point", position, eventBuilder);
 
-            TransactionBuilder.Append("}"); //close transaction object
-            TransactionBuilder.Append(",");
+            eventBuilder.Append("}"); //close transaction object
+            eventBuilder.Append(",");
 
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
@@ -198,47 +193,46 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position, string dynamicObjectId = "")
+        public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
             SendCustomEvent(category, properties, new float[3]{ position.x,position.y,position.z},dynamicObjectId);
         }
 
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position, string dynamicObjectId = "")
+        public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
-            TransactionBuilder.Append("{");
-            JsonUtil.SetString("name", category, TransactionBuilder);
-            TransactionBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), TransactionBuilder);
+            eventBuilder.Append("{");
+            JsonUtil.SetString("name", category, eventBuilder);
+            eventBuilder.Append(",");
+            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
             if (!string.IsNullOrEmpty(dynamicObjectId))
             {
-                TransactionBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, TransactionBuilder);
+                eventBuilder.Append(',');
+                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
             }
-            TransactionBuilder.Append(",");
-            JsonUtil.SetVector("point", position, TransactionBuilder);
+            eventBuilder.Append(",");
+            JsonUtil.SetVector("point", position, eventBuilder);
 
-            if (properties != null && properties.Keys.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
-                TransactionBuilder.Append(",");
-                TransactionBuilder.Append("\"properties\":{");
-                foreach (var v in properties)
+                eventBuilder.Append(",");
+                eventBuilder.Append("\"properties\":{");
+                for(int i = 0; i<properties.Count;i++)
                 {
-                    if (v.Value.GetType() == typeof(string))
+                    if (i != 0) { eventBuilder.Append(","); }
+                    if (properties[i].Value.GetType() == typeof(string))
                     {
-                        JsonUtil.SetString(v.Key, (string)v.Value, TransactionBuilder);
+                        JsonUtil.SetString(properties[i].Key, (string)properties[i].Value, eventBuilder);
                     }
                     else
                     {
-                        JsonUtil.SetObject(v.Key, v.Value, TransactionBuilder);
+                        JsonUtil.SetObject(properties[i].Key, properties[i].Value, eventBuilder);
                     }
-                    TransactionBuilder.Append(",");
                 }
-                TransactionBuilder.Remove(TransactionBuilder.Length - 1, 1); //remove last comma
-                TransactionBuilder.Append("}"); //close properties object
+                eventBuilder.Append("}"); //close properties object
             }
 
-            TransactionBuilder.Append("}"); //close transaction object
-            TransactionBuilder.Append(",");
+            eventBuilder.Append("}"); //close transaction object
+            eventBuilder.Append(",");
 
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)

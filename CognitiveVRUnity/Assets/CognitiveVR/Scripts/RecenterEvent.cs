@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Recenter Event")]
     public class RecenterEvent : CognitiveVRAnalyticsComponent
     {
 #if CVR_OCULUS
@@ -23,7 +24,7 @@ namespace CognitiveVR.Components
         }
 #endif
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if CVR_OCULUS
             return false;
@@ -32,9 +33,14 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transaction when the HMD recenters\nRequires Oculus Utilities";
+#if CVR_OCULUS
+            return "Sends transaction when the HMD recenters";
+#else
+            return "Current platform does not support this component\nRequires Oculus Utilities";
+#endif
+
         }
 
         void OnDestroy()

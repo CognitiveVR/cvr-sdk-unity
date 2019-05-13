@@ -195,38 +195,6 @@ public class EditorCore
         }
     }
 
-    private static string _blenderPath;
-    public static string BlenderPath
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(_blenderPath))
-            {
-                _blenderPath = FindBlender();
-            }
-            return _blenderPath;
-        }
-        set
-        {
-            _blenderPath = value;
-        }
-    }
-
-    public static bool IsBlenderPathValid
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(BlenderPath)) { Debug.Log("EditorCore BlenderPath is null or empty"); return false; }
-#if UNITY_EDITOR_WIN
-            return BlenderPath.ToLower().EndsWith("blender.exe");
-#elif UNITY_EDITOR_OSX
-            return BlenderPath.ToLower().EndsWith("blender.app");
-#else
-            return false;
-#endif
-        }
-    }
-
     public static bool IsDeveloperKeyValid
     {
         get
@@ -434,7 +402,7 @@ public class EditorCore
 
         if (EditorUtility.DisplayDialog("Upload Screenshot","Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber+"?","Upload","Cancel"))
         {
-            string url = Constants.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
+            string url = CognitiveStatics.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
 
             var bytes = File.ReadAllBytes(path);
 
@@ -627,7 +595,7 @@ public class EditorCore
             }
 
             RefreshSceneVersionComplete = refreshSceneVersionComplete;
-            string url = Constants.GETSCENEVERSIONS(currentSettings.SceneId);
+            string url = CognitiveStatics.GETSCENEVERSIONS(currentSettings.SceneId);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             if (EditorCore.IsDeveloperKeyValid)
@@ -694,7 +662,7 @@ public class EditorCore
                 Debug.Log("SendSceneVersionRequest no scene settings!");
                 return;
             }
-            string url = Constants.GETMEDIASOURCELIST();
+            string url = CognitiveStatics.GETMEDIASOURCELIST();
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             if (EditorCore.IsDeveloperKeyValid)
@@ -913,38 +881,6 @@ public class EditorCore
         ExportedDynamicObjects = ObjectNames;
         return ObjectNames;
     }
-
-    static string FindBlender()
-    {
-#if UNITY_EDITOR_WIN
-        if (Directory.Exists(@"C:/Program Files/"))
-        {
-            if (Directory.Exists(@"C:/Program Files/Blender Foundation/"))
-            {
-                if (Directory.Exists(@"C:/Program Files/Blender Foundation/Blender"))
-                {
-                    if (File.Exists(@"C:/Program Files/Blender Foundation/Blender/blender.exe"))
-                    {
-                        return @"C:/Program Files/Blender Foundation/Blender/blender.exe";
-                    }
-                }
-            }
-        }
-#elif UNITY_EDITOR_OSX
-            //check /Applications/Blender/blender.app
-            if (Directory.Exists(@"/Applications/"))
-            {
-                if (Directory.Exists(@"/Applications/Blender/"))
-                {
-                    if (File.Exists(@"/Applications/Blender/blender.app"))
-                    {
-                        return @"/Applications/Blender/blender.app";
-                    }
-                }
-            }
-#endif
-        return "";
-    }
     
     public static void GetAllScenes(List<string>names, List<string>paths)
     {
@@ -1019,7 +955,7 @@ public class EditorCore
         EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
         SaveEditorVersion();
         
-        checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+        checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
         checkForUpdatesRequest.Send();
         EditorApplication.update += UpdateCheckForUpdates;
     }
@@ -1036,7 +972,7 @@ public class EditorCore
                 EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
                 SaveEditorVersion();
                 
-                checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(Constants.GITHUB_SDKVERSION);
+                checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
                 checkForUpdatesRequest.Send();
                 EditorApplication.update += UpdateCheckForUpdates;
             }

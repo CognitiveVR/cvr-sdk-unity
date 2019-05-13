@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Occlusion Event")]
     public class OcclusionEvent : CognitiveVRAnalyticsComponent
     {
 
@@ -15,7 +16,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
@@ -72,7 +73,7 @@ namespace CognitiveVR.Components
 #if CVR_STEAMVR2 || CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             
             CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
@@ -91,44 +92,43 @@ namespace CognitiveVR.Components
         bool rightWasVisible;
         bool rightWasConnected;
 
+
+        GameplayReferences.ControllerInfo tempInfo;
         void OcclusionChanged()
         {
-            var left = CognitiveVR_Manager.GetControllerInfo(false);
-            if (left != null && left.transform != null)
+            if (GameplayReferences.GetControllerInfo(false,out tempInfo))
             {
-                if (left.connected != leftWasConnected)
+                if (tempInfo.connected != leftWasConnected)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", left.connected).Send();
-                    leftWasConnected = left.connected;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", tempInfo.connected).Send();
+                    leftWasConnected = tempInfo.connected;
                 }
-                if (left.visible != leftWasVisible)
+                if (tempInfo.visible != leftWasVisible)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", left.visible).Send();
-                    leftWasVisible = left.visible;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", tempInfo.visible).Send();
+                    leftWasVisible = tempInfo.visible;
                 }
             }
-
-            var right = CognitiveVR_Manager.GetControllerInfo(true);
-            if (right != null && right.transform != null)
+            if (GameplayReferences.GetControllerInfo(true, out tempInfo))
             {
-                if (right.connected != rightWasConnected)
+                if (tempInfo.connected != rightWasConnected)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", right.connected).Send();
-                    rightWasConnected = right.connected;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", tempInfo.connected).Send();
+                    rightWasConnected = tempInfo.connected;
                 }
-                if (right.visible != rightWasVisible)
+                if (tempInfo.visible != rightWasVisible)
                 {
                     //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", right.visible).Send();
-                    rightWasVisible = right.visible;
+                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", tempInfo.visible).Send();
+                    rightWasVisible = tempInfo.visible;
                 }
             }
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;
@@ -137,7 +137,7 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
             return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
         }

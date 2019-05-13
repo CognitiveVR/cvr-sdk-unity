@@ -8,26 +8,26 @@ using CognitiveVR;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting(0.1f,10f)]
+        [ClampSetting(0.1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             timeleft = FramerateTrackingInterval;
         }
 
-        private void CognitiveVR_Manager_OnUpdate()
+        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
             UpdateFramerate();
 
-            timeleft -= Time.deltaTime;
+            timeleft -= deltaTime;
             if (timeleft <= 0.0f)
             {
                 IntervalEnd();
@@ -51,14 +51,14 @@ namespace CognitiveVR.Components
             SensorRecorder.RecordDataPoint("FPS", lastFps);
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Display framerate on SceneExplorer over time.";
+            return "Record framerate over time as a sensor";
         }
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

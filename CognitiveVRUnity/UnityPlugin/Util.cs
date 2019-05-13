@@ -8,14 +8,7 @@ namespace CognitiveVR
 {
 	public static class Util
 	{
-        public static Vector3 vector_zero = new Vector3(0, 0, 0);
-        public static Vector3 vector_forward = new Vector3(0, 0, 1);
-
-
         private const string LOG_TAG = "[COGNITIVE3D] ";
-		
-		static Dictionary<string, object> sDeviceAndAppInfo = new Dictionary<string, object>();
-        public static Dictionary<string, object> GetDeviceProperties() { return sDeviceAndAppInfo; }
 
         public static void logWarning(string msg, UnityEngine.Object context = null)
         {
@@ -110,35 +103,6 @@ namespace CognitiveVR
 			TimeSpan span = DateTime.UtcNow - epoch;
 			return span.TotalSeconds;
 		}
-
-        internal static bool TryGetPrefValue(string key, out string value)
-        {
-            bool keyFound = false;
-            value = default(string);
-            if (PlayerPrefs.HasKey(key))
-            {
-                keyFound = true;
-                value = PlayerPrefs.GetString(key);
-            }
-
-            return keyFound;
-        }
-
-        public static int GetResponseCode(Dictionary<string, string> headers)
-        {
-            if (headers == null) { return 0; }
-            //HTTP/1.1 200 OK
-            int returnCode = -1;
-            string statusvalue = null;
-            if (headers.TryGetValue("STATUS",out statusvalue))
-            {
-                if (int.TryParse(statusvalue.Substring(9, 3),out returnCode))
-                {
-                    return returnCode;
-                }
-            }
-            return returnCode;
-        }
     }
 
     public static class JsonUtil
@@ -295,6 +259,23 @@ namespace CognitiveVR
         }
 
         /// <returns>"name":[0.1,0.2,0.3]</returns>
+        public static StringBuilder SetVectorRaw(string name, float posx, float posy, float posz, StringBuilder builder, bool centimeterLimit = false)
+        {
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            builder.Concat(posx);
+            builder.Append(',');
+            builder.Concat(posy);
+            builder.Append(',');
+            builder.Concat(posz);
+
+            builder.Append(']');
+            return builder;
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3]</returns>
         public static StringBuilder SetVector(string name, Vector3 pos, StringBuilder builder, bool centimeterLimit = false)
         {
             builder.Append("\"");
@@ -377,6 +358,25 @@ namespace CognitiveVR
             builder.Concat(quat[3]);
 
             builder.Append("]");
+            return builder;
+        }
+
+        /// <returns>"name":[0.1,0.2,0.3,0.4]</returns>
+        public static StringBuilder SetQuatRaw(string name, float quatx, float quaty, float quatz, float quatw, StringBuilder builder)
+        {
+            builder.Append("\"");
+            builder.Append(name);
+            builder.Append("\":[");
+
+            builder.Concat(quatx);
+            builder.Append(',');
+            builder.Concat(quaty);
+            builder.Append(',');
+            builder.Concat(quatz);
+            builder.Append(',');
+            builder.Concat(quatw);
+
+            builder.Append(']');
             return builder;
         }
     }

@@ -14,6 +14,11 @@ namespace CognitiveVR
 
             CognitiveVR_Manager m = (CognitiveVR_Manager)target;
 
+            if (m.StartupDelayTime < 0)
+            {
+                m.StartupDelayTime = 0;
+            }
+
             EditorGUILayout.HelpBox("Persists between scenes\nInitializes cognitiveVR Analytics\nGathers basic device info", MessageType.Info);
         }
     }

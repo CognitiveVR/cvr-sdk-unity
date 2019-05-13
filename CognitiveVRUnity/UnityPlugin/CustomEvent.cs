@@ -8,9 +8,9 @@ namespace CognitiveVR
     /// </summary>
     public class CustomEvent
     {
-        public string category { get; private set; }
-        public string dynamicObjectId { get; private set; }
-        private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
+        private string category;
+        private string dynamicObjectId;
+        private List<KeyValuePair<string, object>> _properties;
 
         static int lastFrameCount = 0;
         static int consecutiveEvents = 0;
@@ -45,41 +45,66 @@ namespace CognitiveVR
 
         private float startTime;
 
-        private static Transform _hmd;
-        private static Transform HMD
-        {
-            get
-            {
-                if (_hmd == null)
-                {
-                    if (Camera.main == null)
-                    {
-                        Camera c = Object.FindObjectOfType<Camera>();
-                        if (c != null)
-                            _hmd = c.transform;
-                    }
-                    else
-                        _hmd = Camera.main.transform;
-                }
-                return _hmd;
-            }
-        }
-
         /// <summary>
         /// Report any known state about the transaction in key-value pairs
         /// </summary>
         /// <returns>The transaction itself (to support a builder-style implementation)</returns>
         /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
+        public CustomEvent SetProperties(List<KeyValuePair<string, object>> properties)
+        {
+            if (properties == null) { return this; }
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            foreach (KeyValuePair<string, object> kvp in properties)
+            {
+                int foundIndex = 0;
+                bool foundKey = false;
+                for(int i = 0; i<_properties.Count;i++)
+                {
+                    if (_properties[i].Key == kvp.Key)
+                    {
+                        foundIndex = i;
+                        foundKey = true;
+                        break;
+                    }
+                }
+                if (foundKey)
+                {
+                    _properties[foundIndex] = new KeyValuePair<string, object>(kvp.Key, kvp.Value);
+                }
+                else
+                {
+                    _properties.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
+            }
+            return this;
+        }
+
+
         public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
             if (properties == null) { return this; }
-            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
             foreach (KeyValuePair<string, object> kvp in properties)
             {
-                if (_properties.ContainsKey(kvp.Key))
-                    _properties[kvp.Key] = kvp.Value;
+                int foundIndex = 0;
+                bool foundKey = false;
+                for (int i = 0; i < _properties.Count; i++)
+                {
+                    if (_properties[i].Key == kvp.Key)
+                    {
+                        foundIndex = i;
+                        foundKey = true;
+                        break;
+                    }
+                }
+                if (foundKey)
+                {
+                    _properties[foundIndex] = new KeyValuePair<string, object>(kvp.Key, kvp.Value);
+                }
                 else
-                    _properties.Add(kvp.Key, kvp.Value);
+                {
+                    _properties.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
             }
             return this;
         }
@@ -92,11 +117,26 @@ namespace CognitiveVR
         /// <param name="value">Value for transaction state property</param>
         public CustomEvent SetProperty(string key, object value)
         {
-            if (_properties == null) { _properties = new Dictionary<string, object>(); }
-            if (_properties.ContainsKey(key))
-                _properties[key] = value;
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            int foundIndex = 0;
+            bool foundKey = false;
+            for (int i = 0; i < _properties.Count; i++)
+            {
+                if (_properties[i].Key == key)
+                {
+                    foundIndex = i;
+                    foundKey = true;
+                    break;
+                }
+            }
+            if (foundKey)
+            {
+                _properties[foundIndex] = new KeyValuePair<string, object>(key, value);
+            }
             else
-                _properties.Add(key, value);
+            {
+                _properties.Add(new KeyValuePair<string, object>(key, value));
+            }
             return this;
         }
 
@@ -107,6 +147,89 @@ namespace CognitiveVR
         public CustomEvent SetDynamicObject(string sourceObjectId)
         {
             dynamicObjectId = sourceObjectId;
+            return this;
+        }
+		
+		/// <summary>
+        /// Appends the latest value of each sensor to this event
+        /// </summary>
+        /// <returns></returns>
+        public CustomEvent AppendSensors()
+        {
+            if (SensorRecorder.LastSensorValues.Count == 0) { CognitiveVR.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
+            if (_properties == null)
+            {
+                _properties = new List<KeyValuePair<string, object>>();
+
+                //don't check for name collisions, since there are no previous properties
+                foreach (var sensor in SensorRecorder.LastSensorValues)
+                {
+                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor."+sensor.Key, sensor.Value));
+                }
+                return this;
+            }
+            int propertyCount = _properties.Count;
+
+            foreach(var sensor in SensorRecorder.LastSensorValues)
+            {
+                string key = "c3d.sensor." + sensor.Key;
+                bool foundExistingKey = false;
+                for (int i = 0; i < propertyCount; i++)
+                {
+                    if (_properties[i].Key == key)
+                    {
+                        //replace
+                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value);
+                        foundExistingKey = true;
+                        break;
+                    }
+                }
+                if (!foundExistingKey)
+                {
+                    //add
+                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value));
+                }
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Appends the latest value of each specified sensor to this event
+        /// </summary>
+        /// <param name="sensorNames">all the sensors to append</param>
+        /// <returns></returns>
+        public CustomEvent AppendSensors(params string[] sensorNames)
+        {
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            int propertyCount = _properties.Count;
+
+            foreach (var sensorName in sensorNames)
+            {
+                string name = "c3d.sensor." + sensorName;
+
+                float sensorValue = 0;
+                if (SensorRecorder.LastSensorValues.TryGetValue(name, out sensorValue))
+                {
+                    bool foundExistingKey = false;
+                    for (int i = 0; i < propertyCount; i++)
+                    {
+                        if (_properties[i].Key == name)
+                        {
+                            //replace
+                            _properties[i] = new KeyValuePair<string, object>(name, sensorValue);
+                            foundExistingKey = true;
+                            break;
+                        }
+                    }
+                    if (!foundExistingKey)
+                    {
+                        //add
+                        _properties.Add(new KeyValuePair<string, object>(name, sensorValue));
+                    }
+                }
+                //else - sensor with this name doesn't exist
+            }
+
             return this;
         }
 
@@ -126,11 +249,7 @@ namespace CognitiveVR
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
-                if (_properties == null) { _properties = new Dictionary<string, object>(); }
-                if (_properties.ContainsKey("duration"))
-                    _properties["duration"] = duration;
-                else
-                    _properties.Add("duration", duration);
+                SetProperty("duration", duration);
             }
 
             Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
@@ -145,21 +264,17 @@ namespace CognitiveVR
         {
             float[] pos = new float[3] { 0, 0, 0 };
 
-            if (HMD != null)
+            if (Core.HMD != null)
             {
-                pos[0] = HMD.position.x;
-                pos[1] = HMD.position.y;
-                pos[2] = HMD.position.z;
+                pos[0] = Core.HMD.position.x;
+                pos[1] = Core.HMD.position.y;
+                pos[2] = Core.HMD.position.z;
             }
 
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
-                if (_properties == null) { _properties = new Dictionary<string, object>(); }
-                if (_properties.ContainsKey("duration"))
-                    _properties["duration"] = duration;
-                else
-                    _properties.Add("duration", duration);
+                SetProperty("duration", duration);
             }
 
             Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);

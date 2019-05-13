@@ -8,24 +8,24 @@ using System.Collections;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/HMD Collision Event")]
     public class HMDCollisionEvent : CognitiveVRAnalyticsComponent
     {
-        [DisplaySetting]
         public LayerMask CollisionLayerMask = 1;
 
         bool HMDColliding;
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_OnTick;
+            Core.TickEvent += CognitiveVR_Manager_OnTick;
         }
 
         private void CognitiveVR_Manager_OnTick()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
 
-            bool hit = Physics.CheckSphere(CognitiveVR_Manager.HMD.position, 0.25f, CollisionLayerMask);
+            bool hit = Physics.CheckSphere(GameplayReferences.HMD.position, 0.25f, CollisionLayerMask);
             if (hit && !HMDColliding)
             {
                 Util.logDebug("hmd collision");
@@ -38,12 +38,16 @@ namespace CognitiveVR.Components
                 HMDColliding = false;
             }
         }
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Sends transactions if the HMD collides with something in the game world\nCollision layers are set in CognitiveVR_Preferences";
+#if (CVR_OCULUS && !UNITY_ANDROID) || CVR_STEAMVR || CVR_STEAMVR2
+            return "Sends transactions if the HMD collides with something in the game world";
+#else
+            return "Current platform does not support this component";
+#endif
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
             return true;
@@ -54,7 +58,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_OnTick;
+            Core.TickEvent -= CognitiveVR_Manager_OnTick;
         }
     }
 }

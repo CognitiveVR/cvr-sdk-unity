@@ -8,11 +8,12 @@ using System.Collections.Generic;
 
 namespace CognitiveVR.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Headphone State")]
     public class HeadphoneState : CognitiveVRAnalyticsComponent
     {
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
 
 #if CVR_OCULUS
@@ -24,7 +25,7 @@ namespace CognitiveVR.Components
 
         }
 
-        public static bool GetWarning()
+        public override bool GetWarning()
         {
 #if CVR_OCULUS && UNITY_ANDROID
             return false;
@@ -33,9 +34,13 @@ namespace CognitiveVR.Components
 #endif
         }
 
-        public static string GetDescription()
+        public override string GetDescription()
         {
-            return "Check if the user has headphones connected.\nCurrently only works with Oculus Utilities on Android";
+#if CVR_OCULUS && UNITY_ANDROID
+            return "Check if the user has headphones connected";
+#else
+            return "Currently only works with Oculus Utilities on Android";
+#endif
         }
     }
 }

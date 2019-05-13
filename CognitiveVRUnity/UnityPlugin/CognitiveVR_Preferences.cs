@@ -28,6 +28,8 @@ namespace CognitiveVR
                     S_SnapshotInterval = instance.SnapshotInterval;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
+                    S_DynamicSnapshotMaxTimer = instance.DynamicSnapshotMaxTimer;
+                    S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
@@ -39,16 +41,12 @@ namespace CognitiveVR
         public static float S_SnapshotInterval;
         public static int S_GazeSnapshotCount;
         public static int S_DynamicSnapshotCount;
+        public static int S_DynamicExtremeSnapshotCount;
+        public static int S_DynamicSnapshotMaxTimer;
+
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
-
         public static bool S_DynamicObjectSearchInParent;
-
-        public static void SetLobbyId(string lobbyId)
-        {
-            LobbyId = lobbyId;
-        }
-        public static string LobbyId { get; private set; }
 
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
@@ -112,7 +110,7 @@ namespace CognitiveVR
         //min timer
         //public int GazeSnapshotMinTimer = 6;
         public int SensorSnapshotMinTimer = 6;
-        public int DynamicSnapshotMinTimer = 2;
+        //public int DynamicSnapshotMinTimer = 2;
         public int TransactionSnapshotMinTimer = 2;
         public int FixationSnapshotMinTimer = 2;
 

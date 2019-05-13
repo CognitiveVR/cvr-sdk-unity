@@ -13,6 +13,7 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    [AddComponentMenu("Cognitive3D/Internal/Microphone Button")]
     public class MicrophoneButton : MonoBehaviour
     {
         [Header("Gaze Settings")]
@@ -41,32 +42,6 @@ namespace CognitiveVR
         public Image MicrophoneImage;
         public Text TipText;
 
-        Camera _cam;
-        Camera Cam
-        {
-            get
-            {
-                if (_cam == null)
-                {
-                    _cam = Camera.main;
-                }
-                return _cam;
-            }
-        }
-
-        Transform _t;
-        Transform _transform
-        {
-            get
-            {
-                if (_t == null)
-                {
-                    _t = transform;
-                }
-                return _t;
-            }
-        }
-
 #if CVR_FOVE
         static FoveInterfaceBase _foveInstance;
         public static FoveInterfaceBase FoveInstance
@@ -85,10 +60,10 @@ namespace CognitiveVR
         void OnEnable()
         {
             if (!Application.isPlaying) { return; }
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             _currentLookTime = 0;
             UpdateFillAmount();
-            _distanceToTarget = Vector3.Distance(CognitiveVR_Manager.HMD.position, _transform.position);
+            _distanceToTarget = Vector3.Distance(GameplayReferences.HMD.position, transform.position);
             _angle = Mathf.Atan(Radius / _distanceToTarget);
             _theta = Mathf.Cos(_angle);
             pointer = FindObjectOfType<ExitPollPointer>();
@@ -98,7 +73,7 @@ namespace CognitiveVR
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
         void Update()
         {
-            if (CognitiveVR_Manager.HMD == null) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (_finishedRecording) { return; }
             if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
@@ -126,9 +101,9 @@ namespace CognitiveVR
                 if (pointer == null)
                 {
                     //use hmd
-                    if (CognitiveVR_Manager.HMD == null) { return; }
+                    if (GameplayReferences.HMD == null) { return; }
 
-                    if (Vector3.Dot(GetHMDForward(), (_transform.position - CognitiveVR_Manager.HMD.position).normalized) > _theta)
+                    if (Vector3.Dot(GetHMDForward(), (transform.position - GameplayReferences.HMD.position).normalized) > _theta)
                     {
                         _currentLookTime += Time.deltaTime;
                         UpdateFillAmount();
@@ -148,7 +123,7 @@ namespace CognitiveVR
                 }
                 else //use pointer
                 {
-                    var tt = Vector3.Dot(pointer.transform.forward, (_transform.position - pointer.transform.position).normalized);
+                    var tt = Vector3.Dot(pointer.transform.forward, (transform.position - pointer.transform.position).normalized);
                     if (tt > _theta) //pointing at the button
                     {
                         pointer.Target = transform;
@@ -227,7 +202,7 @@ namespace CognitiveVR
 
         public Vector3 GetHMDForward()
         {
-            Vector3 gazeDirection = CognitiveVR_Manager.HMD.forward;
+            Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
             var eyeRays = FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
@@ -240,7 +215,7 @@ namespace CognitiveVR
             //if it doesn't find the eyes, skip this snapshot
             //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
             {
-                var ray = Cam.ViewportPointToRay(v2);
+                var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
                 gazeDirection = ray.direction.normalized;
             } //else uses HMD forward
 #elif CVR_TOBIIVR
