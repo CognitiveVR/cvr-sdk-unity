@@ -40,11 +40,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ButtonState.cs" />
     <Compile Include="CognitiveVR_Preferences.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="CognitiveStatics.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="CustomEvent.cs" />
+    <Compile Include="DynamicData.cs" />
+    <Compile Include="DynamicManager.cs" />
     <Compile Include="DynamicObjectCore.cs" />
+    <Compile Include="DynamicObjectId.cs" />
+    <Compile Include="DynamicObjectManifestEntry.cs" />
+    <Compile Include="DynamicObjectSnapshot.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="EyeCapture.cs" />
     <Compile Include="Fixation.cs" />
