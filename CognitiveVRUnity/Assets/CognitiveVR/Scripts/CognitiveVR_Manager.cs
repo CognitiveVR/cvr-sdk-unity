@@ -34,39 +34,7 @@ namespace CognitiveVR
 #endif
 
 #region Events
-        public delegate void CoreInitHandler(Error initError);
-        /// <summary>
-        /// CognitiveVR Core.Init callback
-        /// </summary>
-        public static event CoreInitHandler InitEvent;
 
-        public delegate void UpdateHandler();
-        /// <summary>
-        /// Update. Called through Manager's update function
-        /// </summary>
-        public static event UpdateHandler UpdateEvent;
-        public void OnUpdate() { if (UpdateEvent != null) { UpdateEvent(); } }
-
-        public delegate void TickHandler();
-        /// <summary>
-        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
-        /// </summary>
-        public static event TickHandler TickEvent;
-        public void OnTick() { if (TickEvent != null) { TickEvent(); } }
-
-        public delegate void QuitHandler();
-        /// <summary>
-        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
-        /// </summary>
-        public static event QuitHandler QuitEvent;
-        public void OnQuit() { if (QuitEvent != null) { QuitEvent(); } }
-
-        public delegate void LevelLoadedHandler();
-        /// <summary>
-        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
-        /// </summary>
-        public static event LevelLoadedHandler LevelLoadedEvent;
-        public void OnLevelLoaded() { if (LevelLoadedEvent != null) { LevelLoadedEvent(); } }
 
 #if CVR_STEAMVR
         //1.1
@@ -178,7 +146,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="userProperties"></param>
-        public void Initialize(string userName="", Dictionary<string,object> userProperties = null)
+        public void Initialize(string userName="", List<KeyValuePair<string,object>> userProperties = null)
         {
             if (instance != null && instance != this)
             {
@@ -213,9 +181,10 @@ namespace CognitiveVR
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
+            UnityEngine.SceneManagement.Scene scene = new UnityEngine.SceneManagement.Scene();
             for(int i = 0; i<count;i++)
             {
-                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
                 var cogscene = CognitiveVR_Preferences.FindSceneByPath(scene.path);
                 if (cogscene != null)
                 {
@@ -230,7 +199,7 @@ namespace CognitiveVR
             //sets session properties for system hardware
             Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
 
-            OnLevelLoaded();
+            Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             //on init stuff here
             initResponse = initError;
@@ -282,11 +251,15 @@ namespace CognitiveVR
             fixationRecorder.Initialize();
 #endif
 
-            if (InitEvent != null) { InitEvent(initError); }
+            //if (InitEvent != null) { InitEvent(initError); }
+            Core.InvokeInitEvent(initError);
 
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
 
             SetSessionProperties();
+
+            if (userProperties != null)
+                Core.SetSessionProperties(userProperties);
         }
 
         /// <summary>
@@ -449,13 +422,6 @@ namespace CognitiveVR
             var loadingScene = CognitiveVR_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
 
-            //TODO only call Core.SendDataEvent if replacing scene id
-            if (CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
-            {
-                Core.SendDataEvent();
-            }
-
-
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
             {
                 //if scene loaded has new scene id
@@ -466,7 +432,17 @@ namespace CognitiveVR
             }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
             {
-                DynamicObject.ClearObjectIds();
+                //DynamicObject.ClearObjectIds();
+                replacingSceneId = true;
+            }
+            
+            if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
+            {
+                Core.InvokeSendDataEvent();
+            }
+
+            if (replacingSceneId)
+            {
                 Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
@@ -476,7 +452,8 @@ namespace CognitiveVR
                     }
                 }
             }
-            OnLevelLoaded();
+
+            Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
         #region Updates and Loops
@@ -513,7 +490,7 @@ namespace CognitiveVR
             {
                 yield return playerSnapshotInverval;
                 FrameCount = Time.frameCount;
-                OnTick();
+                Core.InvokeTickEvent();
             }
         }
 
@@ -524,8 +501,7 @@ namespace CognitiveVR
                 return;
             }
 
-            OnUpdate();
-            Core.Core_Update();
+            Core.InvokeUpdateEvent(Time.deltaTime);
             UpdateSendHotkeyCheck();
 
 #if CVR_STEAMVR || CVR_STEAMVR2
@@ -570,7 +546,7 @@ namespace CognitiveVR
                 if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
                 if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
 
-                Core.SendDataEvent();
+                Core.InvokeSendDataEvent();
             }
         }
 
@@ -618,12 +594,12 @@ namespace CognitiveVR
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
-            Core.SendDataEvent();
+            Core.InvokeSendDataEvent();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
             Core.Reset();
             initResponse = Error.NotInitialized;
-            DynamicObject.ClearObjectIds();
+            //DynamicObject.ClearObjectIds();
         }
 
         void OnDestroy()
@@ -631,8 +607,7 @@ namespace CognitiveVR
             if (instance != this) { return; }
             if (!Application.isPlaying) { return; }
 
-            OnQuit();
-            QuitEvent = null;
+            Core.InvokeQuitEvent();
 
             if (Core.IsInitialized)
             {
@@ -652,7 +627,7 @@ namespace CognitiveVR
 
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
             CognitiveVR.Util.logDebug("session length " + playtime);
-            if (QuitEvent == null)
+            if (Core.IsQuitEventBound() == null)
             {
                 new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();
                 return;
@@ -660,10 +635,11 @@ namespace CognitiveVR
             new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
             Application.CancelQuit();
 
-            OnQuit();
-            QuitEvent = null;
+            Core.InvokeQuitEvent();
+            Core.QuitEventClear();
+            
 
-            Core.SendDataEvent();
+            Core.InvokeSendDataEvent();
             Core.Reset();
             StartCoroutine(SlowQuit());
         }

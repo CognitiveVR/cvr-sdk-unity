@@ -10,7 +10,7 @@ namespace CognitiveVR
     {
         private string category;
         private string dynamicObjectId;
-        private Dictionary<string, object> _properties;// = new Dictionary<string, object>(); //TODO should use a list of key/value structs. only initialize if something is added
+        private List<KeyValuePair<string, object>> _properties;
 
         static int lastFrameCount = 0;
         static int consecutiveEvents = 0;
@@ -50,16 +50,61 @@ namespace CognitiveVR
         /// </summary>
         /// <returns>The transaction itself (to support a builder-style implementation)</returns>
         /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
+        public CustomEvent SetProperties(List<KeyValuePair<string, object>> properties)
+        {
+            if (properties == null) { return this; }
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            foreach (KeyValuePair<string, object> kvp in properties)
+            {
+                int foundIndex = 0;
+                bool foundKey = false;
+                for(int i = 0; i<_properties.Count;i++)
+                {
+                    if (_properties[i].Key == kvp.Key)
+                    {
+                        foundIndex = i;
+                        foundKey = true;
+                        break;
+                    }
+                }
+                if (foundKey)
+                {
+                    _properties[foundIndex] = new KeyValuePair<string, object>(kvp.Key, kvp.Value);
+                }
+                else
+                {
+                    _properties.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
+            }
+            return this;
+        }
+
+
         public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
             if (properties == null) { return this; }
-            if (_properties == null) { _properties = new Dictionary<string, object>(); }
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
             foreach (KeyValuePair<string, object> kvp in properties)
             {
-                if (_properties.ContainsKey(kvp.Key))
-                    _properties[kvp.Key] = kvp.Value;
+                int foundIndex = 0;
+                bool foundKey = false;
+                for (int i = 0; i < _properties.Count; i++)
+                {
+                    if (_properties[i].Key == kvp.Key)
+                    {
+                        foundIndex = i;
+                        foundKey = true;
+                        break;
+                    }
+                }
+                if (foundKey)
+                {
+                    _properties[foundIndex] = new KeyValuePair<string, object>(kvp.Key, kvp.Value);
+                }
                 else
-                    _properties.Add(kvp.Key, kvp.Value);
+                {
+                    _properties.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
             }
             return this;
         }
@@ -72,11 +117,26 @@ namespace CognitiveVR
         /// <param name="value">Value for transaction state property</param>
         public CustomEvent SetProperty(string key, object value)
         {
-            if (_properties == null) { _properties = new Dictionary<string, object>(); }
-            if (_properties.ContainsKey(key))
-                _properties[key] = value;
+            if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
+            int foundIndex = 0;
+            bool foundKey = false;
+            for (int i = 0; i < _properties.Count; i++)
+            {
+                if (_properties[i].Key == key)
+                {
+                    foundIndex = i;
+                    foundKey = true;
+                    break;
+                }
+            }
+            if (foundKey)
+            {
+                _properties[foundIndex] = new KeyValuePair<string, object>(key, value);
+            }
             else
-                _properties.Add(key, value);
+            {
+                _properties.Add(new KeyValuePair<string, object>(key, value));
+            }
             return this;
         }
 
@@ -189,11 +249,7 @@ namespace CognitiveVR
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
-                if (_properties == null) { _properties = new Dictionary<string, object>(); }
-                if (_properties.ContainsKey("duration"))
-                    _properties["duration"] = duration;
-                else
-                    _properties.Add("duration", duration);
+                SetProperty("duration", duration);
             }
 
             Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);
@@ -218,11 +274,7 @@ namespace CognitiveVR
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
-                if (_properties == null) { _properties = new Dictionary<string, object>(); }
-                if (_properties.ContainsKey("duration"))
-                    _properties["duration"] = duration;
-                else
-                    _properties.Add("duration", duration);
+                SetProperty("duration", duration);
             }
 
             Instrumentation.SendCustomEvent(category, _properties, pos, dynamicObjectId);

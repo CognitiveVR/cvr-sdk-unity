@@ -23,7 +23,7 @@ namespace CognitiveVR.Components
             if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
             SendBatteryLevel();
-            CognitiveVR_Manager.QuitEvent += CognitiveVR_Manager_OnQuit;
+            Core.QuitEvent += CognitiveVR_Manager_OnQuit;
         }
 
         void CognitiveVR_Manager_OnQuit()
@@ -120,7 +120,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.QuitEvent -= CognitiveVR_Manager_OnQuit;
+            Core.QuitEvent -= CognitiveVR_Manager_OnQuit;
         }
     }
 }

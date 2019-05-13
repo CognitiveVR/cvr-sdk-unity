@@ -28,11 +28,11 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
 
-        void CognitiveVR_Manager_OnUpdate()
+        void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
             if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
             {
@@ -52,7 +52,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
         }
     }
 }

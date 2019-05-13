@@ -193,12 +193,12 @@ namespace CognitiveVR
         }
 
         //writes json to display the transaction in sceneexplorer
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, Vector3 position, string dynamicObjectId = "")
+        public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
             SendCustomEvent(category, properties, new float[3]{ position.x,position.y,position.z},dynamicObjectId);
         }
 
-        public static void SendCustomEvent(string category, Dictionary<string, object> properties, float[] position, string dynamicObjectId = "")
+        public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -212,23 +212,22 @@ namespace CognitiveVR
             eventBuilder.Append(",");
             JsonUtil.SetVector("point", position, eventBuilder);
 
-            if (properties != null && properties.Keys.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 eventBuilder.Append(",");
                 eventBuilder.Append("\"properties\":{");
-                foreach (var v in properties)
+                for(int i = 0; i<properties.Count;i++)
                 {
-                    if (v.Value.GetType() == typeof(string))
+                    if (i != 0) { eventBuilder.Append(","); }
+                    if (properties[i].Value.GetType() == typeof(string))
                     {
-                        JsonUtil.SetString(v.Key, (string)v.Value, eventBuilder);
+                        JsonUtil.SetString(properties[i].Key, (string)properties[i].Value, eventBuilder);
                     }
                     else
                     {
-                        JsonUtil.SetObject(v.Key, v.Value, eventBuilder);
+                        JsonUtil.SetObject(properties[i].Key, properties[i].Value, eventBuilder);
                     }
-                    eventBuilder.Append(",");
                 }
-                eventBuilder.Remove(eventBuilder.Length - 1, 1); //remove last comma
                 eventBuilder.Append("}"); //close properties object
             }
 

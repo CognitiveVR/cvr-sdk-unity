@@ -40,11 +40,11 @@ namespace CognitiveVR.Components
         {
             base.CognitiveVR_Init(initError);
 
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
+            Core.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
         }
 
         bool anyControllerTracking = false;
-        private void CognitiveVR_Manager_UpdateEvent()
+        private void CognitiveVR_Manager_UpdateEvent(float deltaTime)
         {
 
             //get left controller device
@@ -92,7 +92,7 @@ namespace CognitiveVR.Components
             //if both controllers are actively tracking distance, stop this callback to check for controllers that become active
             if (leftControllerTracking && rightControllerTracking)
             {
-                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
+                Core.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
             }
         }
 #endif
@@ -110,15 +110,15 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-            CognitiveVR_Manager.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
-        private void CognitiveVR_Manager_OnUpdate()
+        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
         {
             if (OVRInput.GetDown(OVRInput.Button.Any))
             {
                 StartCoroutine(Tick());
-                CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+                Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
             }
         }
 #endif
@@ -187,7 +187,7 @@ namespace CognitiveVR.Components
         void OnDestroy()
         {
 #if CVR_OCULUS
-            CognitiveVR_Manager.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
 #endif
         }
 

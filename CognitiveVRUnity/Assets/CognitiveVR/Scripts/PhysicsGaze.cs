@@ -14,14 +14,14 @@ namespace CognitiveVR
     public override void Initialize()
     {
         base.Initialize();
-        CognitiveVR_Manager.InitEvent += CognitiveVR_Manager_InitEvent;
+        Core.InitEvent += CognitiveVR_Manager_InitEvent;
     }
 
     private void CognitiveVR_Manager_InitEvent(Error initError)
     {
         if (initError == Error.None)
         {
-            CognitiveVR_Manager.TickEvent += CognitiveVR_Manager_TickEvent;
+            Core.TickEvent += CognitiveVR_Manager_TickEvent;
         }
     }
 
@@ -43,7 +43,7 @@ namespace CognitiveVR
         Vector2 hitcoord;
         if (DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
-            string ObjectId = hitDynamic.Id;
+            string ObjectId = hitDynamic.Data.Id;
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
             if (mediacomponent != null)
             {
@@ -86,8 +86,8 @@ namespace CognitiveVR
 
     private void OnDestroy()
     {
-        CognitiveVR_Manager.InitEvent -= CognitiveVR_Manager_InitEvent;
-        CognitiveVR_Manager.TickEvent -= CognitiveVR_Manager_TickEvent;
+        Core.InitEvent -= CognitiveVR_Manager_InitEvent;
+        Core.TickEvent -= CognitiveVR_Manager_TickEvent;
     }
 }
 }

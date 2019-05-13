@@ -18,11 +18,9 @@ namespace CognitiveVR
     public static class GazeCore
     {
         private static int jsonPart = 1;
-        //private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static StringBuilder gazebuilder;
         private static int gazeCount = 0;
         private static string HMDName;
-        //private static int currentSensorSnapshots = 0;
 
         static GazeCore()
         {

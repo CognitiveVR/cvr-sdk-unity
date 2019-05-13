@@ -13,8 +13,45 @@ namespace CognitiveVR
         /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
-        public static void SendDataEvent() { if (OnSendData != null) { OnSendData(); } }
-        
+        public static void InvokeSendDataEvent() { if (OnSendData != null) { OnSendData(); } }
+
+        public delegate void CoreInitHandler(Error initError);
+        /// <summary>
+        /// CognitiveVR Core.Init callback
+        /// </summary>
+        public static event CoreInitHandler InitEvent;
+        public static void InvokeInitEvent(Error initError) { if (InitEvent != null) { InitEvent.Invoke(initError); } }
+
+        public delegate void UpdateHandler(float deltaTime);
+        /// <summary>
+        /// Update. Called through Manager's update function
+        /// </summary>
+        public static event UpdateHandler UpdateEvent;
+        public static void InvokeUpdateEvent(float deltaTime) { if (UpdateEvent != null) { UpdateEvent(deltaTime); } }
+
+        public delegate void TickHandler();
+        /// <summary>
+        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// </summary>
+        public static event TickHandler TickEvent;
+        public static void InvokeTickEvent() { if (TickEvent != null) { TickEvent(); } }
+
+        public delegate void QuitHandler();
+        /// <summary>
+        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
+        /// </summary>
+        public static event QuitHandler QuitEvent;
+        public static void InvokeQuitEvent() { if (QuitEvent != null) { QuitEvent(); } }
+        public static bool IsQuitEventBound() { return QuitEvent != null; }
+        public static void QuitEventClear() { QuitEvent = null; }
+
+        public delegate void LevelLoadedHandler(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
+        /// <summary>
+        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
+        /// </summary>
+        public static event LevelLoadedHandler LevelLoadedEvent;
+        public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (LevelLoadedEvent != null) { LevelLoadedEvent(scene, mode, newSceneId); } }
+
         private static Transform _hmd;
         internal static Transform HMD
         {
@@ -36,7 +73,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.10.0";
+        public const string SDK_VERSION = "0.11.0";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -198,6 +235,9 @@ namespace CognitiveVR
                 //initialize Network Manager early, before gameplay actually starts
                 var temp = NetworkManager.Sender;
 
+                DynamicManager.Initialize();
+                DynamicObjectCore.Initialize();
+
                 //set session timestamp
                 CheckSessionId();
 
@@ -207,21 +247,13 @@ namespace CognitiveVR
             return error;
         }
 
-        /// <summary>
-        /// called from CognitiveVR_Manager. TODO register delegate somewhere
-        /// </summary>
-        public static void Core_Update()
-        {
-            DynamicObjectCore.CognitiveVR_Manager_Update();
-        }
-
-        public static Dictionary<string, object> GetNewSessionProperties(bool clearNewProperties)
+        public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
         {
             if (clearNewProperties)
             {
                 if (newSessionProperties.Count > 0)
                 {
-                    Dictionary<string, object> returndict = new Dictionary<string, object>(newSessionProperties);
+                    List<KeyValuePair<string, object>> returndict = new List<KeyValuePair<string, object>>(newSessionProperties);
                     newSessionProperties.Clear();
                     return returndict;
                 }
@@ -232,51 +264,79 @@ namespace CognitiveVR
             }
             return newSessionProperties;
         }
-        static Dictionary<string, object> newSessionProperties = new Dictionary<string, object>(32);
-        static Dictionary<string, object> knownSessionProperties = new Dictionary<string, object>(32);
+
+        static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
+        static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
         
-        public static void SetSessionProperties(Dictionary<string, object> dictionary)
+        public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
         {
-            if (dictionary == null) { dictionary = new Dictionary<string, object>(); }
-            foreach (var kvp in dictionary)
+
+            if (kvpList == null) { return; }
+
+            for(int i = 0; i<kvpList.Count;i++)
             {
-                if (knownSessionProperties.ContainsKey(kvp.Key) && knownSessionProperties[kvp.Key] != kvp.Value) //update value
-                {
-                    if (newSessionProperties.ContainsKey(kvp.Key))
-                    {
-                        newSessionProperties[kvp.Key] = kvp.Value;
-                    }
-                    else
-                    {
-                        newSessionProperties.Add(kvp.Key, kvp.Value);
-                    }
-                    knownSessionProperties[kvp.Key] = kvp.Value;
-                }
-                else if (!knownSessionProperties.ContainsKey(kvp.Key)) //add value
-                {
-                    knownSessionProperties.Add(kvp.Key, kvp.Value);
-                    newSessionProperties.Add(kvp.Key, kvp.Value);
-                }
+                SetSessionProperty(kvpList[i].Key, kvpList[i].Value);
+            }
+        }
+
+        public static void SetSessionProperties(Dictionary<string, object> properties)
+        {
+            if (properties == null) { return; }
+
+            foreach(var prop in properties)
+            {
+                SetSessionProperty(prop.Key, prop.Value);
             }
         }
         public static void SetSessionProperty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            int foundIndex = 0;
+            bool foundKey = false;
+            for(int i = 0; i< knownSessionProperties.Count;i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    foundKey = true;
+                    foundIndex = i;
+                    break;
+                }
+            }
+
+            if (foundKey) //update value
+            {
+                if (knownSessionProperties[foundIndex].Value != value) //skip setting property if it hasn't actually changed
+                {
+                    return;
                 }
                 else
                 {
-                    newSessionProperties.Add(key, value);
+                    knownSessionProperties[foundIndex] = new KeyValuePair<string, object>(key, value);
+
+                    bool foundNewSessionPropKey = false;
+                    int foundNewSessionPropIndex = 0;
+                    for (int i = 0; i < newSessionProperties.Count; i++) //add/replace in 'newSessionProperty' (ie dirty value that will be sent with gaze)
+                    {
+                        if (newSessionProperties[i].Key == key)
+                        {
+                            foundNewSessionPropKey = true;
+                            foundNewSessionPropIndex = i;
+                            break;
+                        }
+                    }
+                    if (foundNewSessionPropKey)
+                    {
+                        newSessionProperties[foundNewSessionPropIndex] = new KeyValuePair<string, object>(key, value);
+                    }
+                    else
+                    {
+                        newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                    }
                 }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
+            else
             {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
+                knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+                newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             }
         }
 
@@ -288,24 +348,16 @@ namespace CognitiveVR
         /// <param name="value"></param>
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
-            if (knownSessionProperties.ContainsKey(key)) { return; }
-            if (knownSessionProperties.ContainsKey(key) && knownSessionProperties[key] != value) //update value
+            for (int i = 0; i < knownSessionProperties.Count; i++)
             {
-                if (newSessionProperties.ContainsKey(key))
+                if (knownSessionProperties[i].Key == key)
                 {
-                    newSessionProperties[key] = value;
+                    return;
                 }
-                else
-                {
-                    newSessionProperties.Add(key, value);
-                }
-                knownSessionProperties[key] = value;
             }
-            else if (!knownSessionProperties.ContainsKey(key)) //add value
-            {
-                knownSessionProperties.Add(key, value);
-                newSessionProperties.Add(key, value);
-            }
+
+            knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+            newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
         }
     }
 }

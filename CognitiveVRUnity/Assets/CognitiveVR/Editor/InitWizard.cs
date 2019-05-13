@@ -540,7 +540,6 @@ public class InitWizard : EditorWindow
                 var dyn = left.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.TrackGaze = false;
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.ControllerType = "vivecontroller";
@@ -550,7 +549,6 @@ public class InitWizard : EditorWindow
                 var dyn = right.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.TrackGaze = false;
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.ControllerType = "vivecontroller";
@@ -561,7 +559,6 @@ public class InitWizard : EditorWindow
                 var dyn = left.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchLeft;
-                dyn.TrackGaze = false;
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.ControllerType = "oculustouchleft";
@@ -571,7 +568,6 @@ public class InitWizard : EditorWindow
                 var dyn = right.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusTouchRight;
-                dyn.TrackGaze = false;
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.ControllerType = "oculustouchright";
