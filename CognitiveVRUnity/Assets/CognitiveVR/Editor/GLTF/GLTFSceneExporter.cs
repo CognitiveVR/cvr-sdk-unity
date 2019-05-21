@@ -411,8 +411,8 @@ namespace UnityGLTF
 			}
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
-			return Path.ChangeExtension(filenamePath, ".png");
-		}
+            return filenamePath + ".png";
+        }
 
 		private SceneId ExportScene(string name, Transform[] rootObjTransforms)
 		{
@@ -1315,16 +1315,49 @@ namespace UnityGLTF
 			var imagePath = _retrieveTexturePathDelegate(texture);
             if (string.IsNullOrEmpty(imagePath))
             {
-                image.Uri = Uri.EscapeUriString(texture.name+".png");
+                image.Uri = Uri.EscapeUriString(texture.name+".png")
+                    .Replace("!", "%21")
+                    .Replace("#", "%23")
+                    .Replace("$", "%24")
+                    .Replace("&", "%26")
+                    .Replace("'", "%27")
+                    .Replace("(", "%28")
+                    .Replace(")", "%29")
+                    .Replace("*", "%2A")
+                    .Replace("+", "%2B")
+                    .Replace(",", "%2C")
+                    .Replace("/", "%2F")
+                    .Replace(":", "%3A")
+                    .Replace(";", "%3B")
+                    .Replace("=", "%3D")
+                    .Replace("?", "%3F")
+                    .Replace("@", "%40");
             }
             else
             {
                 var filenamePath = Path.ChangeExtension(imagePath, ".png");
+
                 if (!ExportFullPath)
                 {
-                    filenamePath = Path.ChangeExtension(texture.name, ".png");
+                    filenamePath = texture.name + ".png";
                 }
-                image.Uri = Uri.EscapeUriString(filenamePath);
+                image.Uri = Uri.EscapeUriString(filenamePath)
+                    .Replace("!", "%21")
+                    .Replace("#", "%23")
+                    .Replace("$", "%24")
+                    .Replace("&", "%26")
+                    .Replace("'", "%27")
+                    .Replace("(", "%28")
+                    .Replace(")", "%29")
+                    .Replace("*", "%2A")
+                    .Replace("+", "%2B")
+                    .Replace(",", "%2C")
+                    .Replace("/", "%2F")
+                    .Replace(":", "%3A")
+                    .Replace(";", "%3B")
+                    .Replace("=", "%3D")
+                    .Replace("?", "%3F")
+                    .Replace("@", "%40");
             }
 
 			id = new ImageId

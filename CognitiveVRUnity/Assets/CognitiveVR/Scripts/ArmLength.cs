@@ -101,7 +101,7 @@ namespace CognitiveVR.Components
 
         public override void CognitiveVR_Init(Error initError)
         {
-            if (initError != Error.Success) { return; }
+            if (initError != Error.None) { return; }
             StartCoroutine(Tick());
         }
 #endif

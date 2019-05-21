@@ -596,51 +596,8 @@ public class ControllerInputTracker : MonoBehaviour
 
     void Init()
     {
-        foreach (var v in (Valve.VR.SteamVR_Action_In[])Valve.VR.SteamVR_Input_References.instance.actionObjects)
-        {
-            if (v.GetType() == typeof(Valve.VR.SteamVR_Action_Boolean))
-            {
-                v.AddOnChangeListener(OnActionInputChangeBoolLeft, Valve.VR.SteamVR_Input_Sources.LeftHand);
-                v.AddOnChangeListener(OnActionInputChangeBoolRight, Valve.VR.SteamVR_Input_Sources.RightHand);
-            }
-            if (v.GetType() == typeof(Valve.VR.SteamVR_Action_Single))
-            {
-                v.AddOnChangeListener(OnActionInputChangeSingleLeft, Valve.VR.SteamVR_Input_Sources.LeftHand);
-                v.AddOnChangeListener(OnActionInputChangeSingleRight, Valve.VR.SteamVR_Input_Sources.RightHand);
-            }
-            if (v.GetType() == typeof(Valve.VR.SteamVR_Action_Vector2))
-            {
-                v.AddOnChangeListener(OnActionInputChangeVector2Left, Valve.VR.SteamVR_Input_Sources.LeftHand);
-                v.AddOnChangeListener(OnActionInputChangeVector2Right, Valve.VR.SteamVR_Input_Sources.RightHand);
-            }
-        }
     }
 
-    void OnActionInputChangeBoolRight(Valve.VR.SteamVR_Action_In actionIn)
-    {
-
-    }
-    void OnActionInputChangeBoolLeft(Valve.VR.SteamVR_Action_In actionIn)
-    {
-        
-    }
-
-    void OnActionInputChangeSingleLeft(Valve.VR.SteamVR_Action_In actionIn)
-    {
-
-    }
-    void OnActionInputChangeSingleRight(Valve.VR.SteamVR_Action_In actionIn)
-    {
-
-    }
-    void OnActionInputChangeVector2Left(Valve.VR.SteamVR_Action_In actionIn)
-    {
-
-    }
-    void OnActionInputChangeVector2Right(Valve.VR.SteamVR_Action_In actionIn)
-    {
-
-    }
     void RecordAnalogInputs(){}
 #else //NO SDKS that deal with input
         void Init()

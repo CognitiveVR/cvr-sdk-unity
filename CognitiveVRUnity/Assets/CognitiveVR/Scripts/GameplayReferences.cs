@@ -143,7 +143,7 @@ namespace CognitiveVR
 
                 if (poses == null)
                 {
-                    poses = FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
+                    poses = GameObject.FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
                 }
                 if (poses != null && poses.Length > 1)
                 {
