@@ -16,15 +16,23 @@ namespace CognitiveVR
     [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
+        private enum GazeRaycastResult
+        {
+            Invalid,
+            HitNothing,
+            HitWorld
+        }
+
         #region EyeTracker
 
 #if CVR_FOVE
         const int CachedEyeCaptures = 70; //FOVE
         FoveInterfaceBase fovebase;
-        public Ray CombinedWorldGazeRay()
+        public bool CombinedWorldGazeRay(out Ray ray)
         {
             var r = fovebase.GetGazeRays();
-            return new Ray((r.left.origin + r.right.origin) / 2, (r.left.direction + r.right.direction) / 2);
+            ray = new Ray((r.left.origin + r.right.origin) / 2, (r.left.direction + r.right.direction) / 2);
+            return true;
         }
 
         public bool LeftEyeOpen() { return fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Left && fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Both; }
@@ -50,7 +58,11 @@ namespace CognitiveVR
         const int CachedEyeCaptures = 120; //TOBII
         Tobii.Research.Unity.VREyeTracker EyeTracker;
         Tobii.Research.Unity.IVRGazeData currentData;
-        public Ray CombinedWorldGazeRay() { return currentData.CombinedGazeRayWorld; }
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = currentData.CombinedGazeRayWorld;
+            return currentData.CombinedGazeRayWorldValid;
+        }
 
         public bool LeftEyeOpen() { return currentData.Left.PupilDiameterValid && currentData.Left.PupilPosiitionInTrackingAreaValid; }
         public bool RightEyeOpen() { return currentData.Right.PupilDiameterValid && currentData.Right.PupilPosiitionInTrackingAreaValid; }
@@ -99,9 +111,69 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_VIVEPROEYE
+        const int CachedEyeCaptures = 100; //VIVEPROEYE
+        
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE,out ray))
+            {
+                ray.direction = GameplayReferences.HMD.TransformDirection(ray.direction);
+                ray.origin = GameplayReferences.HMD.position;
+                return true;
+            }
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            float openness = 0;
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetEyeOpenness(ViveSR.anipal.Eye.EyeIndex.LEFT, out openness))
+            {
+                return openness > 0.5f;
+            }
+            return false;
+        }
+        public bool RightEyeOpen()
+        {
+            float openness = 0;
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetEyeOpenness(ViveSR.anipal.Eye.EyeIndex.RIGHT, out openness))
+            {
+                return openness > 0.5f;
+            }
+            return false;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            var eyedata = new ViveSR.anipal.Eye.EyeData();
+            ViveSR.anipal.Eye.SRanipal_Eye.GetEyeData(ref eyedata);
+            long t = eyedata.timestamp;
+            t *= 1000;
+            return t;
+
+            //return (long)(Time.realtimeSinceStartup * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #elif CVR_NEURABLE
         const int CachedEyeCaptures = 120;
-        public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
+        //public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay();
+            return true;
+        }
 
         //TODO neurable check eye state
         public bool LeftEyeOpen() { return true; }
@@ -130,11 +202,12 @@ namespace CognitiveVR
         const int CachedEyeCaptures = 120; //ADHAWK
         private static Calibrator ah_calibrator;
         AdhawkApi.EyeTracker eyetracker;
-        public Ray CombinedWorldGazeRay()
+        public bool CombinedWorldGazeRay(out Ray ray)
         {
             Vector3 r = ah_calibrator.GetGazeVector(filterType: AdhawkApi.Numerics.Filters.FilterType.ExponentialMovingAverage);
             Vector3 x = ah_calibrator.GetGazeOrigin();
-            return new Ray(x, r);
+            ray = new Ray(x, r);
+            return true;
         }
 
         public bool LeftEyeOpen() { return eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingLeft || eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingBoth; }
@@ -158,7 +231,8 @@ namespace CognitiveVR
         }
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
-        public Ray CombinedWorldGazeRay() { return new Ray(); }
+        //public Ray CombinedWorldGazeRay() { return new Ray(); }
+        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(); return false;}
 
         public bool LeftEyeOpen() { return false; }
         public bool RightEyeOpen() { return false; }
@@ -234,8 +308,6 @@ namespace CognitiveVR
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
 
-        Camera HMDCam;
-
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 
         [Header("Debug (Editor Only)")]
@@ -282,7 +354,6 @@ namespace CognitiveVR
 
             ActiveFixation = new Fixation();
 
-            HMDCam = Camera.main;
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
@@ -300,6 +371,8 @@ namespace CognitiveVR
 
         private void Update()
         {
+            if (!Core.IsInitialized) { return; }
+
             PostGazeCallback();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (lastEyeTrackingPointer == null) { return; }
@@ -397,14 +470,16 @@ namespace CognitiveVR
 
             //set new current values
             EyeCaptures[index].EyesClosed = areEyesClosed;
-            EyeCaptures[index].HmdPosition = HMDCam.transform.position;
+            EyeCaptures[index].HmdPosition = GameplayReferences.HMD.position;
             EyeCaptures[index].Time = EyeCaptureTimestamp();
 
             Vector3 world;
 
             DynamicObject hitDynamic = null;
 
-            if (GazeRaycast(out world, out hitDynamic))
+            var hitresult = GazeRaycast(out world, out hitDynamic);
+
+            if (hitresult == GazeRaycastResult.HitWorld)
             {
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
@@ -417,12 +492,18 @@ namespace CognitiveVR
                 else
                     EyeCaptures[index].HitDynamicTransform = null;
             }
-            else
+            else if (hitresult == GazeRaycastResult.HitNothing)
             {
                 //eye capture world point could be used for getting the direction, but position is invalid (on skybox)
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].WorldPosition = world;
+            }
+            else if (hitresult == GazeRaycastResult.Invalid)
+            {
+                EyeCaptures[index].SkipPositionForFixationAverage = true;
+                EyeCaptures[index].HitDynamicTransform = null;
+                EyeCaptures[index].Discard = true;
             }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
@@ -433,13 +514,16 @@ namespace CognitiveVR
             index = (index + 1) % CachedEyeCaptures;
         }
 
-        //the position in the world/local hit. returns true if valid
-        bool GazeRaycast(out Vector3 world, out CognitiveVR.DynamicObject hitDynamic)
+        //the position in the world/local hit. returns true if hit something
+        GazeRaycastResult GazeRaycast(out Vector3 world, out CognitiveVR.DynamicObject hitDynamic)
         {
             world = Vector3.zero;
             hitDynamic = null;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(CombinedWorldGazeRay(), out hit, CognitiveVR_Preferences.Instance.GazeLayerMask))
+            Ray combinedWorldGaze;
+            bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
+            if (!validRay) { return GazeRaycastResult.Invalid; }
+            if (Physics.Raycast(combinedWorldGaze, out hit, CognitiveVR_Preferences.Instance.GazeLayerMask))
             {
                 world = hit.point;
 
@@ -451,12 +535,12 @@ namespace CognitiveVR
                 {
                     hitDynamic = hit.collider.GetComponent<DynamicObject>();
                 }
-                return true;
+                return GazeRaycastResult.HitWorld;
             }
             else
             {
-                world = CombinedWorldGazeRay().GetPoint(Mathf.Min(100, HMDCam.farClipPlane));
-                return false;
+                world = combinedWorldGaze.GetPoint(Mathf.Min(100, GameplayReferences.HMDCameraComponent.farClipPlane));
+                return GazeRaycastResult.HitNothing;
             }
         }
 
@@ -540,7 +624,7 @@ namespace CognitiveVR
                     
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
                     var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
-                    var _eyeCaptureScreenPos = HMDCam.WorldToViewportPoint(_eyeCaptureWorldPos);
+                    var _eyeCaptureScreenPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeCaptureWorldPos);
 
                     var _screendist = Vector2.Distance(_eyeCaptureScreenPos, Vector3.one * 0.5f);
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
@@ -567,7 +651,7 @@ namespace CognitiveVR
 
                     var _eyeCaptureWorldPos = ActiveFixation.LocalTransform.TransformPoint(capture.LocalPosition);
                     var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
-                    var _eyeCaptureScreenPos = HMDCam.WorldToViewportPoint(_eyeCaptureWorldPos);
+                    var _eyeCaptureScreenPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeCaptureWorldPos);
 
                     var _screendist = Vector2.Distance(_eyeCaptureScreenPos, Vector3.one * 0.5f);
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
@@ -589,7 +673,7 @@ namespace CognitiveVR
             }
             else
             {
-                var screenpos = HMDCam.WorldToViewportPoint(capture.WorldPosition);
+                var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(capture.WorldPosition);
                 var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
                 var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
@@ -762,7 +846,7 @@ namespace CognitiveVR
 
             averageLocalPosition /= samples;
 
-            var screenpos = HMDCam.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
+            var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
             var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
             var rescale = FocusSizeFromCenter.Evaluate(screendist);
             var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
@@ -840,7 +924,7 @@ namespace CognitiveVR
             bool withinRadius = true;
 
             //get starting screen position to compare other eye capture points against
-            var screenpos = HMDCam.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
+            var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
             var screendist = Vector2.Distance(screenpos, Vector3.one * 0.5f);
             var rescale = FocusSizeFromCenter.Evaluate(screendist);
             var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
