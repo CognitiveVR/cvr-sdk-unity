@@ -514,7 +514,7 @@ public class InitWizard : EditorWindow
             if (new Rect(30, 285, 440, 30).Contains(Event.current.mousePosition))
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.dragPerform)
+                if (Event.current.type == EventType.DragPerform)
                 {
                     rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
@@ -522,7 +522,7 @@ public class InitWizard : EditorWindow
             else if (new Rect(30, 245, 440, 30).Contains(Event.current.mousePosition))
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.dragPerform)
+                if (Event.current.type == EventType.DragPerform)
                 {
                     leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
@@ -805,7 +805,7 @@ public class InitWizard : EditorWindow
     void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground)
     {
         Event e = Event.current;
-        if (e.isMouse && e.type == EventType.mouseDown)
+        if (e.isMouse && e.type == EventType.MouseDown)
         {
             if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
             {

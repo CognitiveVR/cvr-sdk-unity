@@ -300,11 +300,14 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.app.inEditor", false);
 #endif
             Core.SetSessionProperty("c3d.version", Core.SDK_VERSION);
-            //TODO support multiple hmds (tobii + pupil + vive)
-            //addon sdks - tobii, ah, pupil
+
+#if UNITY_2017_2_OR_NEWER
+            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
+#else
+            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+#endif
 
 #if CVR_STEAMVR2 || CVR_STEAMVR
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
@@ -316,7 +319,6 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","Fove");
             Core.SetSessionProperty("c3d.app.sdktype", "Fove");
 #elif CVR_SNAPDRAGON
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Qualcomm");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Snapdragon");
@@ -328,37 +330,31 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type", "None");
             Core.SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif CVR_NEURABLE
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Neurable");
             Core.SetSessionProperty("c3d.app.sdktype", "Neurable");
 #elif CVR_ARKIT
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Apple");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARKit");
 #elif CVR_ARCORE
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARCore");
 #elif CVR_GOOGLEVR
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Google VR");
 #elif CVR_HOLOLENS
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Microsoft");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Hololens");
 #elif CVR_META
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Meta");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
@@ -367,25 +363,26 @@ namespace CognitiveVR
 
             //eye tracker addons
 #if CVR_TOBIIVR
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer","HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Tobii");
 #elif CVR_PUPIL
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Pupil");
             Core.SetSessionProperty("c3d.app.sdktype", "Pupil");
 #elif CVR_AH
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Google");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             Core.SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #endif
+#if UNITY_2017_2_OR_NEWER
+            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
+#else
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+#endif
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
