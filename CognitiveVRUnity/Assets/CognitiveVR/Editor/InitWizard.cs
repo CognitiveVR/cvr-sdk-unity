@@ -4,6 +4,12 @@ using UnityEngine;
 using UnityEditor;
 using CognitiveVR;
 
+#if CVR_STEAMVR2
+using Valve.VR;
+using System.IO;
+using Valve.Newtonsoft.Json;
+#endif
+
 namespace CognitiveVR
 {
 public class InitWizard : EditorWindow
@@ -76,7 +82,7 @@ public class InitWizard : EditorWindow
         }
     }
 
-    #region Auth Keys
+#region Auth Keys
 
     string apikey ="";
     string developerkey = "";
@@ -151,7 +157,7 @@ public class InitWizard : EditorWindow
         }
     }
 
-        #endregion
+#endregion
 
         void GetSelectedSDKs()
         {
@@ -211,7 +217,7 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -245,7 +251,7 @@ public class InitWizard : EditorWindow
         GUI.EndScrollView();
     }
 
-    #region Terminology
+#region Terminology
 
     void DynamicExplainUpdate()
     {
@@ -286,9 +292,9 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
     }
 
-        #endregion
+#endregion
 
-        #region Controllers
+#region Controllers
 
         GameObject cameraBase;
         GameObject leftcontroller;
@@ -323,6 +329,38 @@ public class InitWizard : EditorWindow
                         leftcontroller = player.hands[0].gameObject;
                         rightcontroller = player.hands[1].gameObject;
                     }
+                }
+            }
+
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
+                {
+                    leftSetupComplete = true;
+                }
+            }
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null && dyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && dyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
+                {
+                    rightSetupComplete = true;
+                }
+            }
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                setupComplete = true;
+            }
+#elif CVR_STEAMVR2
+            if (cameraBase == null)
+            {
+                //interaction system setup
+                var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                if (player)
+                {
+                    leftcontroller = player.hands[0].gameObject;
+                    rightcontroller = player.hands[1].gameObject;
                 }
             }
 
@@ -509,6 +547,16 @@ public class InitWizard : EditorWindow
             {
                 GUI.Label(new Rect(360, 400, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
+
+#if CVR_STEAMVR2
+            if (GUI.Button(new Rect(125, 360, 250, 30), "Append Cognitive Action Set"))
+            {
+                AppendSteamVRActionSet();
+                //SetupControllers(leftcontroller, rightcontroller);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                Event.current.Use();
+            }
+#endif
         }
 
         void SetupControllers(GameObject left, GameObject right)
@@ -533,6 +581,39 @@ public class InitWizard : EditorWindow
             if (right != null && right.GetComponent<ControllerInputTracker>() == null)
             {
                 right.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivecontroller";
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivecontroller";
+            }
+#elif CVR_STEAMVR2
+            
+            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
+            {
+                var listener = left.AddComponent<ControllerInputTracker>();
+                listener.Hand_InputSource = Valve.VR.SteamVR_Input_Sources.LeftHand;
+                listener.dynamic = listener.GetComponent<DynamicObject>();
+            }
+            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
+            {
+                var listener = right.AddComponent<ControllerInputTracker>();
+                listener.Hand_InputSource = Valve.VR.SteamVR_Input_Sources.RightHand;
+                listener.dynamic = listener.GetComponent<DynamicObject>();
             }
 
             if (left != null)
@@ -776,7 +857,7 @@ public class InitWizard : EditorWindow
         
     }
 
-        #endregion
+#endregion
 
     //int textureResolutionSettings = 1; //1 full resolution, 2 is half resolution, 4 is quarter res
     //int qualityindex = 2; //0 low, 1 normal, 2 maximum
@@ -1328,5 +1409,69 @@ public class InitWizard : EditorWindow
             }
         }
     }
-}
+
+#if CVR_STEAMVR2
+        void AppendSteamVRActionSet()
+        {
+            SteamVR_Input_ActionFile actionfile;
+            if (LoadActionFile(out actionfile))
+            {
+                Debug.Log("load action.json successful");
+
+                var cognitiveActionSet = new SteamVR_Input_ActionFile_ActionSet() { name = "/actions/CVR_Input", usage = "single" };
+
+                //if actions.json already contains cognitive action set
+                if (actionfile.action_sets.Contains(cognitiveActionSet))
+                {
+                    Debug.LogWarning("SteamVR action set already contains Cognitive Action Set. Skip adding action set to actions.json");
+                    return;
+                }
+
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Grip", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Trigger", type = "vector1" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad", type = "vector2" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad_Press", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad_Touch", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Menu", type = "boolean" });
+                actionfile.action_sets.Add(cognitiveActionSet);
+
+                SaveActionFile(actionfile);
+            }
+        }
+
+        static bool LoadActionFile(out SteamVR_Input_ActionFile actionFile)
+        {
+            string projectPath = Application.dataPath;
+            int lastIndex = projectPath.LastIndexOf("/");
+            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
+            string actionsFilePath = Path.Combine(projectPath, SteamVR_Settings.instance.actionsFilePath);
+
+            if (!File.Exists(actionsFilePath))
+            {
+                Debug.LogErrorFormat("<b>[SteamVR]</b> Actions file doesn't exist: {0}", actionsFilePath);
+                actionFile = new SteamVR_Input_ActionFile();
+                return false;
+            }
+
+            actionFile = JsonConvert.DeserializeObject<SteamVR_Input_ActionFile>(File.ReadAllText(actionsFilePath));
+
+            return true;
+        }
+
+        static bool SaveActionFile(SteamVR_Input_ActionFile actionFile)
+        {
+            string projectPath = Application.dataPath;
+            int lastIndex = projectPath.LastIndexOf("/");
+            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
+            string actionsFilePath = Path.Combine(projectPath, SteamVR_Settings.instance.actionsFilePath);
+
+            string newJSON = JsonConvert.SerializeObject(actionFile, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+            File.WriteAllText(actionsFilePath, newJSON);
+
+            return true;
+        }
+
+#endif
+    }
 }

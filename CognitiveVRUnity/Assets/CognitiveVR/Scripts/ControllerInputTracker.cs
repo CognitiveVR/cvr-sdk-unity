@@ -594,11 +594,166 @@ public class ControllerInputTracker : MonoBehaviour
 
 #elif CVR_STEAMVR2
 
-    void Init()
-    {
-    }
+        List<ButtonState> CurrentButtonStates = new List<ButtonState>();
+        
+        public DynamicObject dynamic;
 
-    void RecordAnalogInputs(){}
+        public SteamVR_Input_Sources Hand_InputSource;
+
+        public SteamVR_Action_Boolean gripAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "grip");
+        public SteamVR_Action_Single triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Single>("cvr_input", "trigger");
+        public SteamVR_Action_Boolean menuAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "menu");
+        public SteamVR_Action_Vector2 touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("cvr_input", "touchpad");
+        public SteamVR_Action_Boolean touchAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_touch");
+        public SteamVR_Action_Boolean pressAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_press");
+        public SteamVR_ActionSet CVR_ActionSet = SteamVR_Input.GetActionSet("cvr_input");
+
+        int Trigger;
+        int TouchForce;
+        Vector2 lastAxis;
+        float sqrMag = 0.05f;
+
+        void OnEnable()
+        {
+            //register actions
+            if (gripAction != null)
+                gripAction.AddOnChangeListener(OnGripActionChange, Hand_InputSource);
+            if (touchAction != null)
+                touchAction.AddOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            if (pressAction != null)
+                pressAction.AddOnChangeListener(OnPressActionChange, Hand_InputSource);
+            if (menuAction != null)
+                menuAction.AddOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            
+        }
+
+        private void OnGripActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_grip", newState, CurrentButtonStates);
+        }
+
+        private void OnTouchActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            if (buttonstate != null)
+            {
+                if (newState)
+                    TouchForce = 50;
+                else if (pressAction.state)
+                    TouchForce = 100;
+                else
+                    TouchForce = 0;
+                buttonstate.ButtonPercent = TouchForce;
+                lastAxis.x = buttonstate.X;
+                lastAxis.y = buttonstate.Y;
+            }
+            else
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                if (newState)
+                    TouchForce = 50;
+                else if (pressAction.state)
+                    TouchForce = 100;
+                else
+                    TouchForce = 0;
+                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                lastAxis = axis;
+            }
+        }
+
+        private void OnPressActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            if (buttonstate != null)
+            {
+                if (newState)
+                    TouchForce = 100;
+                else if (touchAction.state)
+                    TouchForce = 50;
+                else
+                    TouchForce = 0;
+                buttonstate.ButtonPercent = TouchForce;
+                lastAxis.x = buttonstate.X;
+                lastAxis.y = buttonstate.Y;
+            }
+            else
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                if (newState)
+                    TouchForce = 100;
+                else if (touchAction.state)
+                    TouchForce = 50;
+                else
+                    TouchForce = 0;
+                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                lastAxis = axis;
+            }
+        }
+
+        private void OnMenuActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_menubtn", newState, CurrentButtonStates);
+        }
+
+        void OnDisable()
+        {
+            //remove actions
+            if (gripAction != null)
+                gripAction.RemoveOnChangeListener(OnGripActionChange, Hand_InputSource);
+            if (touchAction != null)
+                touchAction.RemoveOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            if (pressAction != null)
+                pressAction.RemoveOnChangeListener(OnPressActionChange, Hand_InputSource);
+            if (menuAction != null)
+                menuAction.RemoveOnChangeListener(OnMenuActionChange, Hand_InputSource);
+        }
+
+        void Init()
+        {
+            CVR_ActionSet.Activate(Hand_InputSource,1000,false);
+        }
+
+        private void Update()
+        {
+            if (Time.time > nextUpdateTime)
+            {
+                RecordAnalogInputs();
+                nextUpdateTime = Time.time + UpdateRate;
+            }
+
+            if (CurrentButtonStates.Count > 0)
+            {
+            	List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
+            	for(int i = 0; i< CurrentButtonStates.Count;i++)
+            	{
+            		copy.Add(CurrentButtonStates[i]);
+            	}
+                CurrentButtonStates.Clear();
+            	DynamicManager.RecordControllerEvent(dynamic.Data, copy);
+            }
+        }
+
+        void RecordAnalogInputs()
+        {
+            float trigger = triggerAction.GetAxis(Hand_InputSource);
+            int tempTrigger = (int)(trigger * 100);
+            if (Trigger != tempTrigger)
+            {
+                Trigger = tempTrigger;
+                OnSingleChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_trigger", Trigger, CurrentButtonStates);
+            }
+
+            if (TouchForce != 0)
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+
+                if (Vector3.SqrMagnitude(axis - lastAxis) > sqrMag)
+                {
+                    lastAxis = axis;
+                    OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                }
+            }
+        }
 #else //NO SDKS that deal with input
         void Init()
     {
