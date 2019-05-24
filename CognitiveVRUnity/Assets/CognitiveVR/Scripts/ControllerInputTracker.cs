@@ -624,7 +624,8 @@ public class ControllerInputTracker : MonoBehaviour
                 pressAction.AddOnChangeListener(OnPressActionChange, Hand_InputSource);
             if (menuAction != null)
                 menuAction.AddOnChangeListener(OnMenuActionChange, Hand_InputSource);
-            
+            if (CVR_ActionSet != null)
+                CVR_ActionSet.Activate(Hand_InputSource);
         }
 
         private void OnGripActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
@@ -706,11 +707,13 @@ public class ControllerInputTracker : MonoBehaviour
                 pressAction.RemoveOnChangeListener(OnPressActionChange, Hand_InputSource);
             if (menuAction != null)
                 menuAction.RemoveOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            if (CVR_ActionSet != null)
+                CVR_ActionSet.Deactivate(Hand_InputSource);
         }
 
         void Init()
         {
-            CVR_ActionSet.Activate(Hand_InputSource,1000,false);
+            
         }
 
         private void Update()
