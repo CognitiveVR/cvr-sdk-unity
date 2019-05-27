@@ -189,6 +189,9 @@ public class InitWizard : EditorWindow
 #if CVR_AH
         selectedsdks.Add("CVR_AH");
 #endif
+#if CVR_VIVEPROEYE
+        selectedsdks.Add("CVR_VIVEPROEYE");
+#endif
 #if CVR_ARKIT //apple
             selectedsdks.Add("CVR_ARKIT");
 #endif
@@ -217,8 +220,9 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -1207,7 +1211,7 @@ public class InitWizard : EditorWindow
                     onclick += () =>
                     {
                         EditorCore.SetPlayerDefine(selectedsdks);
-                        if (selectedsdks.Contains("CVR_TOBIIVR") || selectedsdks.Contains("CVR_NEURABLE") || selectedsdks.Contains("CVR_FOVE") || selectedsdks.Contains("CVR_PUPIL") || selectedsdks.Contains("CVR_AH") || selectedsdks.Contains("CVR_SNAPDRAGON"))
+                        if (selectedsdks.Contains("CVR_TOBIIVR") || selectedsdks.Contains("CVR_NEURABLE") || selectedsdks.Contains("CVR_FOVE") || selectedsdks.Contains("CVR_PUPIL") || selectedsdks.Contains("CVR_AH") || selectedsdks.Contains("CVR_SNAPDRAGON") || selectedsdks.Contains("CVR_VIVEPROEYE"))
                         {
                             //eye tracking
                             CognitiveVR_Preferences.Instance.GazeType = GazeType.Physics;

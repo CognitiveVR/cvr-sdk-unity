@@ -21,7 +21,7 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
-    [AddComponentMenu("Cognitive3D/Internal/Gaze Base")]
+    [AddComponentMenu("")]
     public class GazeBase : MonoBehaviour
     {
 #if CVR_TOBIIVR
@@ -277,6 +277,12 @@ namespace CognitiveVR
             } //else uses HMD forward
 #elif CVR_TOBIIVR
             gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+#elif CVR_VIVEPROEYE
+            var ray = new Ray();
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+            {
+                gazeDirection = ray.direction;
+            }
 #elif CVR_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH
@@ -310,6 +316,19 @@ namespace CognitiveVR
             screenGazePoint = PupilData._2D.GetEyeGaze("0");
 #elif CVR_TOBIIVR
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+#elif CVR_VIVEPROEYE
+            var leftv2 = Vector2.zero;
+            var rightv2 = Vector2.zero;
+
+            bool leftSet = ViveSR.anipal.Eye.SRanipal_Eye.GetPupilPosition(ViveSR.anipal.Eye.EyeIndex.LEFT, out leftv2);
+            bool rightSet = ViveSR.anipal.Eye.SRanipal_Eye.GetPupilPosition(ViveSR.anipal.Eye.EyeIndex.RIGHT, out rightv2);
+            if (leftSet && !rightSet)
+                screenGazePoint = leftv2;
+            else if (!leftSet && rightSet)
+                screenGazePoint = rightv2;
+            else if (leftSet && rightSet)
+                screenGazePoint = (leftv2 + rightv2) / 2;
+
 #elif CVR_NEURABLE
             screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
 #elif CVR_AH
