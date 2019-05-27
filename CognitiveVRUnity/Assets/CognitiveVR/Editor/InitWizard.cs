@@ -581,6 +581,11 @@ public class InitWizard : EditorWindow
             {
                 GUI.Label(new Rect(360, 450, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
+
+            if (steamvr2bindings && steamvr2actionset && leftSetupComplete && rightSetupComplete && setupComplete)
+            {
+                GUI.Label(new Rect(105, 480, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
+            }
 #endif
         }
 
@@ -1521,7 +1526,7 @@ public class InitWizard : EditorWindow
                 //left touchpad
                 SteamVR_Input_BindingFile_Source bindingSource_left_pad = new SteamVR_Input_BindingFile_Source();
                 bindingSource_left_pad.mode = "trackpad";
-                bindingSource_left_pad.path = "/users/hand/left/input/trackpad";
+                bindingSource_left_pad.path = "/user/hand/left/input/trackpad";
                 {
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
                     stringDictionary_press.Add("output", "/actions/cvr_input/in/touchpad_press");
@@ -1537,10 +1542,10 @@ public class InitWizard : EditorWindow
                 }
                 actionlist.sources.Add(bindingSource_left_pad);
 
-                //left touchpad
+                //right touchpad
                 SteamVR_Input_BindingFile_Source bindingSource_right_pad = new SteamVR_Input_BindingFile_Source();
                 bindingSource_right_pad.mode = "trackpad";
-                bindingSource_right_pad.path = "/users/hand/right/input/trackpad";
+                bindingSource_right_pad.path = "/user/hand/right/input/trackpad";
                 {
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
                     stringDictionary_press.Add("output", "/actions/cvr_input/in/touchpad_press");

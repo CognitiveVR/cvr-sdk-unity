@@ -221,7 +221,7 @@ namespace CognitiveVR
         /// </summary>
         /// <param name="data"></param>
         /// <param name="changedInputs"></param>
-        public static void RecordControllerEvent(DynamicData data, List<ButtonState> changedInputs)
+        public static void RecordControllerEvent(ref DynamicData data, List<ButtonState> changedInputs)
         {
             if (!Core.IsInitialized) { return; }
             Vector3 pos = data.Transform.position;
@@ -314,6 +314,7 @@ namespace CognitiveVR
                     }
                 }
 
+                data.HasProperties = false;
                 CognitiveVR.DynamicObjectCore.WriteDynamicController(data, props, writeScale, builder.ToString());
             }
         }
