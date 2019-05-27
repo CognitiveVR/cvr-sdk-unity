@@ -50,10 +50,27 @@ public class ControllerInputTracker : MonoBehaviour
             isRight = true;
         else
             isRight = false;
-        SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
-        if (o != null)
+        StartCoroutine(SlowInit());
+    }
+
+    IEnumerator SlowInit()
+    {
+        while(ControllerDevice == null)
         {
-            ControllerDevice = SteamVR_Controller.Input((int)o.index);
+            yield return new WaitForSeconds(1);
+            SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
+            if (o != null)
+            {
+                ControllerDevice = SteamVR_Controller.Input((int)o.index);
+            }
+            else
+            {
+                var hand = GetComponent<Valve.VR.InteractionSystem.Hand>();
+                if (hand != null)
+                {
+                    ControllerDevice = hand.controller;
+                }
+            }
         }
     }
 
@@ -518,7 +535,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             else
             {
-                OnSingleChanged(LeftHand, false, "rift_trigger", currentTrigger, CurrentLeftButtonStates);
+                OnSingleChanged(LeftHand, false, "rift_grip", currentTrigger, CurrentLeftButtonStates);
             }
             LeftGrip = currentTrigger;
         }
@@ -532,7 +549,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             else
             {
-                OnSingleChanged(RightHand, true, "rift_trigger", currentTrigger, CurrentRightButtonStates);
+                OnSingleChanged(RightHand, true, "rift_grip", currentTrigger, CurrentRightButtonStates);
             }
             RightGrip = currentTrigger;
         }

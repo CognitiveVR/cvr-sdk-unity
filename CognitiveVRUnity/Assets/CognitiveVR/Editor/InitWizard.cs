@@ -577,6 +577,11 @@ public class InitWizard : EditorWindow
             {
                 GUI.Label(new Rect(360, 450, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
+
+            if (steamvr2bindings && steamvr2actionset && leftSetupComplete && rightSetupComplete && setupComplete)
+            {
+                GUI.Label(new Rect(105, 480, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
+            }
 #endif
         }
 
