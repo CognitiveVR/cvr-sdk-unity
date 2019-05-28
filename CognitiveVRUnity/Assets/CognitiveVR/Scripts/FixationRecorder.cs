@@ -149,10 +149,7 @@ namespace CognitiveVR
             var eyedata = new ViveSR.anipal.Eye.EyeData();
             ViveSR.anipal.Eye.SRanipal_Eye.GetEyeData(ref eyedata);
             long t = eyedata.timestamp;
-            t *= 1000;
             return t;
-
-            //return (long)(Time.realtimeSinceStartup * 1000);
         }
 
         int lastProcessedFrame;
@@ -517,13 +514,11 @@ namespace CognitiveVR
         //the position in the world/local hit. returns true if hit something
         GazeRaycastResult GazeRaycast(out Vector3 world, out CognitiveVR.DynamicObject hitDynamic)
         {
-            world = Vector3.zero;
-            hitDynamic = null;
             RaycastHit hit = new RaycastHit();
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
-            if (!validRay) { return GazeRaycastResult.Invalid; }
-            if (Physics.Raycast(combinedWorldGaze, out hit, CognitiveVR_Preferences.Instance.GazeLayerMask))
+            if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
+            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask))
             {
                 world = hit.point;
 
@@ -540,6 +535,7 @@ namespace CognitiveVR
             else
             {
                 world = combinedWorldGaze.GetPoint(Mathf.Min(100, GameplayReferences.HMDCameraComponent.farClipPlane));
+                hitDynamic = null;
                 return GazeRaycastResult.HitNothing;
             }
         }
