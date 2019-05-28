@@ -215,7 +215,7 @@ public class ManageDynamicObjects : EditorWindow
     void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground)
     {
         Event e = Event.current;
-        if (e.isMouse && e.type == EventType.mouseDown)
+        if (e.isMouse && e.type == EventType.MouseDown)
         {
             if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x+rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y+rect.height)
             {

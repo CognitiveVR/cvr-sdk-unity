@@ -186,6 +186,8 @@ namespace CognitiveVR
                 s.scaleZ = data.LastScale.z;
             }
             s.Properties = props;
+            data.HasProperties = false;
+            props = null;
             s.Buttons = jbuttonstates;
 
             s.Timestamp = Util.Timestamp(FrameCount);

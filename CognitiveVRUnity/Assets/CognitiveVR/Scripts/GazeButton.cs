@@ -171,6 +171,12 @@ namespace CognitiveVR
             } //else uses HMD forward
 #elif CVR_TOBIIVR
             gazeDirection = Tobii.Research.Unity.VREyeTracker.Instance.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+#elif CVR_VIVEPROEYE
+            var ray = new Ray();
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+            {
+                gazeDirection = ray.direction;
+            }
 #elif CVR_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH

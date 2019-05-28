@@ -175,6 +175,31 @@ namespace CognitiveVR
         {
             return SvrManager.Instance.EyeDirection;
         }
+#elif CVR_VIVEPROEYE
+        void Start()
+        {
+            t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+            if (GameplayReferences.HMD == null) { return; }
+        }
+
+        void Update()
+        {
+            if (GameplayReferences.HMD == null) { return; }
+
+            t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+            t.LookAt(GameplayReferences.HMD.position);
+        }
+
+        Vector3 lastDir = Vector3.forward;
+        Vector3 GetLookDirection()
+        {
+            var ray = new Ray();
+            if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+            {
+                lastDir = GameplayReferences.HMD.TransformDirection(ray.direction);
+            }
+            return lastDir;
+        }
 #endif
     }
 }

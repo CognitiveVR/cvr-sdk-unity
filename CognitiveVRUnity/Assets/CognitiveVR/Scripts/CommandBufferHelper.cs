@@ -52,7 +52,7 @@ namespace CognitiveVR
 #elif CVR_DEFAULT || CVR_STEAMVR || CVR_STEAMVR2 //eye tracking should use physics gaze!
                 //steam renders this side by side with mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
-#else //adhawk, tobii, fove, pupil, neurable
+#else //adhawk, tobii, fove, pupil, neurable, vive pro eye
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
 #endif
             }

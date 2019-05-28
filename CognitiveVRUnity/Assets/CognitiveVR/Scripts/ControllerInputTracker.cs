@@ -32,7 +32,6 @@ public class ControllerInputTracker : MonoBehaviour
 
     void Start ()
     {
-        wait = new WaitForSeconds(UpdateRate);
         Init();
     }
 
@@ -51,11 +50,27 @@ public class ControllerInputTracker : MonoBehaviour
             isRight = true;
         else
             isRight = false;
-        SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
-        if (o != null)
+        StartCoroutine(SlowInit());
+    }
+
+    IEnumerator SlowInit()
+    {
+        while(ControllerDevice == null)
         {
-            ControllerDevice = SteamVR_Controller.Input((int)o.index);
-            StartCoroutine(UpdateTick());
+            yield return new WaitForSeconds(1);
+            SteamVR_TrackedObject o = GetComponent<SteamVR_TrackedObject>();
+            if (o != null)
+            {
+                ControllerDevice = SteamVR_Controller.Input((int)o.index);
+            }
+            else
+            {
+                var hand = GetComponent<Valve.VR.InteractionSystem.Hand>();
+                if (hand != null)
+                {
+                    ControllerDevice = hand.controller;
+                }
+            }
         }
     }
 
@@ -65,11 +80,6 @@ public class ControllerInputTracker : MonoBehaviour
         if (ControllerDevice == null)
         {
             return;
-        }
-        if (Time.time > nextUpdateTime)
-        {
-            RecordAnalogInputs(); //should this go at the end? double inputs on triggers
-            nextUpdateTime = Time.time + UpdateRate;
         }
 
         //menu
@@ -100,17 +110,6 @@ public class ControllerInputTracker : MonoBehaviour
 
         {
             //touchpad touched/pressed
-            if (ControllerDevice.GetTouchDown(EVRButtonId.k_EButton_SteamVR_Touchpad))
-            {
-                CurrentTouchpadState = TouchpadState.Touch;
-                var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = 50;
-                Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
-                LastTouchpadVector = currentVector;
-            }
             if (ControllerDevice.GetPressDown(EVRButtonId.k_EButton_SteamVR_Touchpad))
             {
                 CurrentTouchpadState = TouchpadState.Press;
@@ -122,7 +121,7 @@ public class ControllerInputTracker : MonoBehaviour
                 OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
                 LastTouchpadVector = currentVector;
             }
-            if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
+            else if (ControllerDevice.GetTouchDown(EVRButtonId.k_EButton_SteamVR_Touchpad))
             {
                 CurrentTouchpadState = TouchpadState.Touch;
                 var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
@@ -133,7 +132,21 @@ public class ControllerInputTracker : MonoBehaviour
                 OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
                 LastTouchpadVector = currentVector;
             }
-            if (ControllerDevice.GetTouchUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
+            else if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
+            {
+                CurrentTouchpadState = TouchpadState.Touch;
+                var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
+                var x = touchpadaxis.x;
+                var y = touchpadaxis.y;
+
+                int force = 0;
+                if (ControllerDevice.GetTouch(Valve.VR.EVRButtonId.k_EButton_Axis0))
+                    force = 50;                
+                Vector3 currentVector = new Vector3(x, y, force);
+                OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
+                LastTouchpadVector = currentVector;
+            }
+            else if (ControllerDevice.GetTouchUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
             {
                 CurrentTouchpadState = TouchpadState.None;
                 var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
@@ -154,32 +167,22 @@ public class ControllerInputTracker : MonoBehaviour
                 var triggeramount = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 int currentTrigger = (int)(triggeramount * 100);
                 LastTrigger = currentTrigger;
-                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_trigger"; });
-                if (buttonstate != null)
-                {
-                    buttonstate.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnButtonChanged(dynamic, isRight, "vive_trigger", true, CurrentButtonStates);
-                }
+                OnButtonChanged(dynamic, isRight, "vive_trigger", true, CurrentButtonStates);
             }
         }
-        if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
+        else if (ControllerDevice.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
         {
             if (LastTrigger != 0)
             {
                 LastTrigger = 0;
-                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_trigger"; });
-                if (buttonstate != null)
-                {
-                    buttonstate.ButtonPercent = 0;
-                }
-                else
-                {
-                    OnButtonChanged(dynamic, isRight, "vive_trigger", false, CurrentButtonStates);
-                }
+                OnButtonChanged(dynamic, isRight, "vive_trigger", false, CurrentButtonStates);
             }
+        }
+
+        if (Time.time > nextUpdateTime)
+        {
+            RecordAnalogInputs(); //should this go at the end? double inputs on triggers
+            nextUpdateTime = Time.time + UpdateRate;
         }
 
         if (CurrentButtonStates.Count > 0)
@@ -191,7 +194,7 @@ public class ControllerInputTracker : MonoBehaviour
                 copy.Add(CurrentButtonStates[i]); //move the reference over to the copy
             }
             CurrentButtonStates.Clear();
-            DynamicManager.RecordControllerEvent(dynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(ref dynamic.Data, copy);
         }
     }
 
@@ -210,23 +213,51 @@ public class ControllerInputTracker : MonoBehaviour
     //check for (float)triggers, (vector2)touchpads, etc
     public void RecordAnalogInputs()
     {
-        var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
-        var x = touchpadaxis.x;
-        var y = touchpadaxis.y;
-        int force = CurrentTouchpadState == TouchpadState.None ? 0 : CurrentTouchpadState == TouchpadState.Touch ? 50 : 100;
-        Vector3 currentVector = new Vector3(x, y, force);
-        if (Vector3.Magnitude(LastTouchpadVector-currentVector)>minMagnitude)
+        if (CurrentTouchpadState != TouchpadState.None)
         {
-            OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
-            LastTouchpadVector = currentVector;
+            var touchpadaxis = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0);
+            var x = touchpadaxis.x;
+            var y = touchpadaxis.y;
+            int force = CurrentTouchpadState == TouchpadState.None ? 0 : CurrentTouchpadState == TouchpadState.Touch ? 50 : 100;
+            Vector3 currentVector = new Vector3(x, y, force);
+            if (Vector3.Magnitude(LastTouchpadVector-currentVector)>minMagnitude)
+            {
+                var touchpadstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                if (touchpadstate != null)
+                {
+                    touchpadstate.X = x;
+                    touchpadstate.Y = y;
+                }
+                else
+                {
+                    OnVectorChanged(dynamic, isRight, "vive_touchpad", force, touchpadaxis, CurrentButtonStates);
+                }    
+                
+                LastTouchpadVector = currentVector;
+            }
         }
 
-        var triggeramount = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-        int currentTrigger = (int)(triggeramount * 100);
-        if (LastTrigger != currentTrigger)
+
+        var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_trigger"; });
+        if (buttonstate != null)
         {
-            OnSingleChanged(dynamic, isRight, "vive_trigger", currentTrigger, CurrentButtonStates);
-            LastTrigger = currentTrigger;
+            var triggeramount = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+            int currentTrigger = (int)(triggeramount * 100);
+            if (LastTrigger != currentTrigger)
+            {
+                buttonstate.ButtonPercent = currentTrigger;
+                LastTrigger = currentTrigger;
+            }
+        }
+        else
+        {
+            var triggeramount = ControllerDevice.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+            int currentTrigger = (int)(triggeramount * 100);
+            if (LastTrigger != currentTrigger)
+            {
+                OnSingleChanged(dynamic, isRight, "vive_trigger", currentTrigger, CurrentButtonStates);
+                LastTrigger = currentTrigger;
+            }
         }
     }
 
@@ -249,12 +280,6 @@ public class ControllerInputTracker : MonoBehaviour
     //have to do polling every frame to capture inputs
     private void Update()
     {
-        if (Time.time > nextUpdateTime)
-        {
-            RecordAnalogInputs();
-            nextUpdateTime = Time.time + UpdateRate;
-        }
-
             //right hand a
             if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.RTouch))
             {
@@ -379,6 +404,13 @@ public class ControllerInputTracker : MonoBehaviour
             {
                 OnButtonChanged(RightHand, true, "rift_joystick", false, CurrentRightButtonStates);
             }
+
+        if (Time.time > nextUpdateTime)
+        {
+            RecordAnalogInputs();
+            nextUpdateTime = Time.time + UpdateRate;
+        }
+
         if (CurrentRightButtonStates.Count > 0)
         {
             List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
@@ -388,7 +420,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentRightButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(RightHand.Data, copy);
+            DynamicManager.RecordControllerEvent(ref RightHand.Data, copy);
         }
         if (CurrentLeftButtonStates.Count > 0)
         {
@@ -399,7 +431,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentLeftButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(LeftHand.Data, copy);
+            DynamicManager.RecordControllerEvent(ref LeftHand.Data, copy);
         }
     }
 
@@ -425,7 +457,17 @@ public class ControllerInputTracker : MonoBehaviour
             Vector3 currentVector = new Vector3(x, y, force);
             if (Vector3.Magnitude(LeftHandVector - currentVector) > minMagnitude)
             {
-                OnVectorChanged(LeftHand, false, "rift_joystick", force, touchpadaxis, CurrentLeftButtonStates);
+                var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_joystick"; });
+                if (joystick != null)
+                {
+                    joystick.X = x;
+                    joystick.Y = y;
+                }
+                else
+                {
+                    OnVectorChanged(LeftHand, false, "rift_joystick", force, touchpadaxis, CurrentLeftButtonStates);
+                }
+                
                 LeftHandVector = currentVector;
             }
         }
@@ -438,7 +480,16 @@ public class ControllerInputTracker : MonoBehaviour
             Vector3 currentVector = new Vector3(x, y, force);
             if (Vector3.Magnitude(RightHandVector - currentVector) > minMagnitude)
             {
-                OnVectorChanged(RightHand, true, "rift_joystick", force, touchpadaxis, CurrentRightButtonStates);
+                var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_joystick"; });
+                if (joystick != null)
+                {
+                    joystick.X = x;
+                    joystick.Y = y;
+                }
+                else
+                {
+                    OnVectorChanged(RightHand, true, "rift_joystick", force, touchpadaxis, CurrentRightButtonStates);
+                }
                 RightHandVector = currentVector;
             }
         }
@@ -447,13 +498,29 @@ public class ControllerInputTracker : MonoBehaviour
         int currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) * 100);
         if (LeftTrigger != currentTrigger)
         {
-            OnSingleChanged(LeftHand, false, "rift_trigger", currentTrigger, CurrentLeftButtonStates);
+            var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_trigger"; });
+            if (trigger != null)
+            {
+                trigger.ButtonPercent = currentTrigger;
+            }
+            else
+            {
+                OnSingleChanged(LeftHand, false, "rift_trigger", currentTrigger, CurrentLeftButtonStates);
+            }
             LeftTrigger = currentTrigger;
         }
         currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) * 100);
         if (RightTrigger != currentTrigger)
         {
-            OnSingleChanged(RightHand, true, "rift_trigger", currentTrigger, CurrentRightButtonStates);
+            var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_trigger"; });
+            if (trigger != null)
+            {
+                trigger.ButtonPercent = currentTrigger;
+            }
+            else
+            {
+                OnSingleChanged(RightHand, true, "rift_trigger", currentTrigger, CurrentRightButtonStates);
+            }
             RightTrigger = currentTrigger;
         }
 
@@ -461,13 +528,29 @@ public class ControllerInputTracker : MonoBehaviour
         currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.LTouch) * 100);
         if (LeftGrip != currentTrigger)
         {
-            OnSingleChanged(LeftHand, false, "rift_grip", currentTrigger, CurrentLeftButtonStates);
+            var grip = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_grip"; });
+            if (grip != null)
+            {
+                grip.ButtonPercent = currentTrigger;
+            }
+            else
+            {
+                OnSingleChanged(LeftHand, false, "rift_grip", currentTrigger, CurrentLeftButtonStates);
+            }
             LeftGrip = currentTrigger;
         }
         currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.RTouch) * 100);
         if (RightGrip != currentTrigger)
         {
-            OnSingleChanged(RightHand, true, "rift_grip", currentTrigger, CurrentRightButtonStates);
+            var grip = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_grip"; });
+            if (grip != null)
+            {
+                grip.ButtonPercent = currentTrigger;
+            }
+            else
+            {
+                OnSingleChanged(RightHand, true, "rift_grip", currentTrigger, CurrentRightButtonStates);
+            }
             RightGrip = currentTrigger;
         }
     }
@@ -571,7 +654,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(controllerDynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(ref controllerDynamic.Data, copy);
         }
     }
     
@@ -594,11 +677,189 @@ public class ControllerInputTracker : MonoBehaviour
 
 #elif CVR_STEAMVR2
 
-    void Init()
-    {
-    }
+        List<ButtonState> CurrentButtonStates = new List<ButtonState>();
+        
+        public DynamicObject dynamic;
 
-    void RecordAnalogInputs(){}
+        public SteamVR_Input_Sources Hand_InputSource;
+
+        public SteamVR_Action_Boolean gripAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "grip");
+        public SteamVR_Action_Single triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Single>("cvr_input", "trigger");
+        public SteamVR_Action_Boolean menuAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "menu");
+        public SteamVR_Action_Vector2 touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("cvr_input", "touchpad");
+        public SteamVR_Action_Boolean touchAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_touch");
+        public SteamVR_Action_Boolean pressAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_press");
+        public SteamVR_ActionSet CVR_ActionSet = SteamVR_Input.GetActionSet("cvr_input");
+
+        int Trigger;
+        int TouchForce;
+        Vector2 lastAxis;
+        float sqrMag = 0.05f;
+
+        void OnEnable()
+        {
+            //register actions
+            if (gripAction != null)
+                gripAction.AddOnChangeListener(OnGripActionChange, Hand_InputSource);
+            if (touchAction != null)
+                touchAction.AddOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            if (pressAction != null)
+                pressAction.AddOnChangeListener(OnPressActionChange, Hand_InputSource);
+            if (menuAction != null)
+                menuAction.AddOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            if (CVR_ActionSet != null)
+                CVR_ActionSet.Activate(Hand_InputSource);
+        }
+
+        private void OnGripActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_grip", newState, CurrentButtonStates);
+        }
+
+        private void OnTouchActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            if (buttonstate != null)
+            {
+                if (newState)
+                    TouchForce = 50;
+                else if (pressAction.state)
+                    TouchForce = 100;
+                else
+                    TouchForce = 0;
+                buttonstate.ButtonPercent = TouchForce;
+                lastAxis.x = buttonstate.X;
+                lastAxis.y = buttonstate.Y;
+            }
+            else
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                if (newState)
+                    TouchForce = 50;
+                else if (pressAction.state)
+                    TouchForce = 100;
+                else
+                    TouchForce = 0;
+                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                lastAxis = axis;
+            }
+        }
+
+        private void OnPressActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            if (buttonstate != null)
+            {
+                if (newState)
+                    TouchForce = 100;
+                else if (touchAction.state)
+                    TouchForce = 50;
+                else
+                    TouchForce = 0;
+                buttonstate.ButtonPercent = TouchForce;
+                lastAxis.x = buttonstate.X;
+                lastAxis.y = buttonstate.Y;
+            }
+            else
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                if (newState)
+                    TouchForce = 100;
+                else if (touchAction.state)
+                    TouchForce = 50;
+                else
+                    TouchForce = 0;
+                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                lastAxis = axis;
+            }
+        }
+
+        private void OnMenuActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+        {
+            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_menubtn", newState, CurrentButtonStates);
+        }
+
+        void OnDisable()
+        {
+            //remove actions
+            if (gripAction != null)
+                gripAction.RemoveOnChangeListener(OnGripActionChange, Hand_InputSource);
+            if (touchAction != null)
+                touchAction.RemoveOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            if (pressAction != null)
+                pressAction.RemoveOnChangeListener(OnPressActionChange, Hand_InputSource);
+            if (menuAction != null)
+                menuAction.RemoveOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            if (CVR_ActionSet != null)
+                CVR_ActionSet.Deactivate(Hand_InputSource);
+        }
+
+        void Init()
+        {
+            
+        }
+
+        private void LateUpdate()
+        {
+            //assuming controller updates happen before/in update loop?
+
+            if (Time.time > nextUpdateTime)
+            {
+                RecordAnalogInputs();
+                nextUpdateTime = Time.time + UpdateRate;
+            }
+
+            if (CurrentButtonStates.Count > 0)
+            {
+            	List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
+            	for(int i = 0; i< CurrentButtonStates.Count;i++)
+            	{
+            		copy.Add(CurrentButtonStates[i]);
+            	}
+                CurrentButtonStates.Clear();
+            	DynamicManager.RecordControllerEvent(ref dynamic.Data, copy);
+            }
+        }
+
+        void RecordAnalogInputs()
+        {
+            float trigger = triggerAction.GetAxis(Hand_InputSource);
+            int tempTrigger = (int)(trigger * 100);
+            if (Trigger != tempTrigger)
+            {
+                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                if (buttonstate != null)
+                {
+                    buttonstate.ButtonPercent = tempTrigger;
+                }
+                else
+                {
+                    OnSingleChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_trigger", tempTrigger, CurrentButtonStates);
+                }
+                Trigger = tempTrigger;
+            }
+
+            if (TouchForce != 0)
+            {
+                var axis = touchpadAction.GetAxis(Hand_InputSource);
+
+                if (Vector3.SqrMagnitude(axis - lastAxis) > sqrMag)
+                {
+                    var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                    if (buttonstate != null)
+                    {
+                        buttonstate.X = axis.x;
+                        buttonstate.Y = axis.y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                    }
+
+                    lastAxis = axis;
+                }
+            }
+        }
 #else //NO SDKS that deal with input
         void Init()
     {
@@ -608,16 +869,6 @@ public class ControllerInputTracker : MonoBehaviour
     {
     }
 #endif
-
-        YieldInstruction wait;
-    IEnumerator UpdateTick()
-    {
-        while (true)
-        {
-            yield return wait;
-            RecordAnalogInputs();
-        }
-    }
 
     void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
     {
