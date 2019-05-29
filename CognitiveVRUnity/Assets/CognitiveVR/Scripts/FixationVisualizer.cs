@@ -74,7 +74,9 @@ namespace CognitiveVR
                     if (dyn != null)
                     {
                         scale = Vector3.one * v.DebugScale;
-                        m = Matrix4x4.TRS(dyn.transform.position + v.LocalPosition, Quaternion.identity, scale);
+                        var worldPos = dyn.transform.TransformPoint(v.LocalPosition);
+
+                        m = Matrix4x4.TRS(worldPos, Quaternion.identity, scale);
                         mat = FixationMaterialDynamic;
                     }
                 }

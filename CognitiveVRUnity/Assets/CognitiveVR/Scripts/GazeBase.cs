@@ -281,7 +281,7 @@ namespace CognitiveVR
             var ray = new Ray();
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
             {
-                gazeDirection = ray.direction;
+                gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);
             }
 #elif CVR_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
