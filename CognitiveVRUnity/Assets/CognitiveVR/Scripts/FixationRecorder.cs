@@ -40,7 +40,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            return (long)(Time.realtimeSinceStartup * 1000);
+            return (long)(Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
@@ -146,10 +146,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            var eyedata = new ViveSR.anipal.Eye.EyeData();
-            ViveSR.anipal.Eye.SRanipal_Eye.GetEyeData(ref eyedata);
-            long t = eyedata.timestamp;
-            return t;
+            return (long)(Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
@@ -212,7 +209,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            return (long)(Time.realtimeSinceStartup * 1000);
+            return (long)(Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
@@ -234,12 +231,9 @@ namespace CognitiveVR
         public bool LeftEyeOpen() { return false; }
         public bool RightEyeOpen() { return false; }
 
-        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-
         public long EyeCaptureTimestamp()
         {
-            System.TimeSpan span = System.DateTime.UtcNow - epoch;
-            return (long)(span.TotalSeconds * 1000);
+            return (long)(Util.Timestamp() * 1000);
         }
 
         //returns true if there is another data point to work on
