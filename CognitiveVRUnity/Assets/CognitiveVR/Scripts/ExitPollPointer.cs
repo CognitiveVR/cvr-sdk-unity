@@ -6,52 +6,43 @@ using UnityEngine;
 //sample points along line
 //set line renderer
 
-//the actual functionality is on gaze buttons and microphone buttons
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Internal/Exit Poll Pointer")]
     public class ExitPollPointer : MonoBehaviour
     {
-        public Transform Target { get; set; }
+        //public Transform Target { get; set; }
+
+
+        static Material DefaultPointerMat;
+        public Material PointerMaterialOverride;
+        [Tooltip("If no LineRenderer is set, a default one will be created as a child")]
+        public LineRenderer LineRendererOverride;
+
 
         [Tooltip("Controls how fast the curve bends to the target")]
-        public float ForwardPower = 2;
+        float ForwardPower = 2;
 
         [Tooltip("Higher requires more accurate pointing.\nLower allows more flexibility after initial point")]
         [Range(0.1f, 1f)]
-        public float Stiffness = 0.95f;
+        float Stiffness = 0.95f;
 
         Transform _t;
         Vector3[] sampledPoints;
         Vector3[] curve = new Vector3[4] { Vector3.zero, Vector3.forward * 1, Vector3.forward * 2, Vector3.forward * 3 };
 
-        [Tooltip("If no LineRenderer is set, a default one will be created as a child")]
-        public LineRenderer LineRenderer;
-
         [Tooltip("How many points along the curve to sample. Can lead to a smoother line renderer")]
         public int SampleResolution = 10;
 
-        private bool visible = false;
         private void Start()
         {
             if (_t != null) return;
             sampledPoints = new Vector3[SampleResolution + 1];
             _t = transform;
-            if (LineRenderer == null)
-                LineRenderer = ConstructDefaultLineRenderer();
-            LineRenderer.positionCount = SampleResolution;
-            SetVisible(false);
+            if (LineRendererOverride == null)
+                LineRendererOverride = ConstructDefaultLineRenderer();
+            LineRendererOverride.positionCount = SampleResolution;
         }
-
-        //controls visibility. set when exitpoll begins and completes
-        public void SetVisible(bool visible)
-        {
-            if (_t == null) Start();
-            this.visible = visible;
-            LineRenderer.enabled = visible;
-        }
-
-        static Material PointerMat;
 
         private LineRenderer ConstructDefaultLineRenderer()
         {
@@ -60,25 +51,43 @@ namespace CognitiveVR
             var lr = go.AddComponent<LineRenderer>();
             lr.widthMultiplier = 0.05f;
             lr.useWorldSpace = true;
-            if (PointerMat == null)
+            if (DefaultPointerMat == null)
             {
-                PointerMat = Resources.Load<Material>("ExitPollPointerLine");
+                DefaultPointerMat = Resources.Load<Material>("ExitPollPointerLine");
             }
-            if (PointerMat != null)
-                lr.material = PointerMat;
+            if (PointerMaterialOverride == null)
+            {
+                lr.material = DefaultPointerMat;
+                lr.textureMode = LineTextureMode.Tile;
+            }
             else
-                lr.material = new Material(Shader.Find("Standard"));
-            lr.textureMode = LineTextureMode.Tile;
+            {
+                lr.material = PointerMaterialOverride;
+            }
             return lr;
         }
 
         //sets the curve to the target
         void Update()
         {
-            if (!visible) { return; }
             Vector3 pos = _t.position;
             Vector3 forward = _t.forward;
-            if (Target == null) //TODO straighten over time
+
+            Transform target = null;
+
+            RaycastHit hit = new RaycastHit();
+            if (Physics.Raycast(pos,forward, out hit, 10, LayerMask.GetMask("UI")))
+            {
+                var button = hit.collider.GetComponent<GazeButton>();
+                if (button != null)
+                {
+                    //bend the line renderer over to here
+                    target = button.transform;
+                    button.SetFocus();
+                }
+            }
+
+            if (target == null) //TODO straighten over time
             {
                 curve[0] = pos;
                 curve[1] = pos + forward * ForwardPower;
@@ -89,11 +98,11 @@ namespace CognitiveVR
             {
                 curve[0] = pos;
                 curve[1] = pos + forward * ForwardPower;
-                curve[2] = Target.position;
-                curve[3] = Target.position;
+                curve[2] = target.position;
+                curve[3] = target.position;
             }
 
-            LineRenderer.SetPositions(EvaluatePoints(SampleResolution));
+            LineRendererOverride.SetPositions(EvaluatePoints(SampleResolution));
         }
 
         //sample points along the curve
@@ -132,7 +141,11 @@ namespace CognitiveVR
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.blue;
-            Gizmos.DrawRay(transform.position, transform.forward * 100);
+            Gizmos.DrawRay(transform.position, transform.forward * 5);
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, transform.right * 0.3f);
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(transform.position, transform.up * 0.3f);
 
             if (sampledPoints == null) { return; }
             for (int j = 0; j < sampledPoints.Length - 1; j++)
