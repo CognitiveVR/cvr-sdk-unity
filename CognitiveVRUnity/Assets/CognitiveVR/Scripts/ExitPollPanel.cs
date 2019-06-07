@@ -22,7 +22,7 @@ namespace CognitiveVR
         float PopupTime = 0.2f;
 
         [Header("Multiple Choice Settings")]
-        public GameObject AnswerButton;
+        public GameObject[] AnswerButtons;
         public Transform ContentRoot;
 
         [Header("Scale Settings")]
@@ -127,19 +127,15 @@ namespace CognitiveVR
             if (properties["type"] == "MULTIPLE")
             {
                 string[] split = properties["csvanswers"].Split('|');
-                List<GameObject> AnswerButtons = new List<GameObject>();
-                AnswerButtons.Add(AnswerButton);
-                for (int i = 1; i<split.Length; i++)
+                for (int i = 0; i < split.Length; i++)
                 {
-                    AnswerButtons.Add((GameObject)Instantiate(AnswerButton, ContentRoot));
+                    AnswerButtons[i].GetComponentInChildren<Text>().text = split[i] + " " + i;
                 }
-                for (int i = 0; i<split.Length; i++)
+                for (int i = split.Length; i<AnswerButtons.Length; i++)
                 {
-                    SetMutltipleChoiceButton(split[i],i,AnswerButtons[i]);
+                    if (AnswerButtons[i] == null) { continue; }
+                    AnswerButtons[i].SetActive(false);
                 }
-                var c = GetComponent<BoxCollider>();
-                if (c != null)
-                    c.size = new Vector3(2, 0.75f + split.Length * 0.3f, 0.1f);
             }
             else if (properties["type"] == "SCALE")
             {
@@ -199,15 +195,6 @@ namespace CognitiveVR
             _allowTimeout = true;
 
             StartCoroutine(_SetVisible(true));
-        }
-
-        //TODO want to separate gaze button from exit poll panel
-        void SetMutltipleChoiceButton(string text, int id, GameObject button)
-        {
-            var gb = button.GetComponentInChildren<GazeButton>();
-            UnityEngine.Events.UnityAction buttonclicked = () => { this.AnswerInt(id); };
-            gb.OnLook.AddListener(buttonclicked);
-            button.GetComponentInChildren<Text>().text = text;
         }
 
         void SetIntegerCount(int minValue, int maxValue)

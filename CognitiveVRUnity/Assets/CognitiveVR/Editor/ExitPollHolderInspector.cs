@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace CognitiveVR
 {
-    [CustomEditor(typeof(ExitpollHolder))]
+    [CustomEditor(typeof(ExitPollHolder))]
     public class ExitPollHolderInspector : Editor
     {
         Camera _camera;
@@ -29,7 +29,7 @@ namespace CognitiveVR
 
         void OnSceneGUI()
         {
-            ExitpollHolder t = (ExitpollHolder)target;
+            ExitPollHolder t = (ExitPollHolder)target;
             ExitPollParameters p = t.Parameters;
 
             Vector3 panelScale = new Vector3(2, 1.2f, 0.1f);
@@ -53,7 +53,7 @@ namespace CognitiveVR
                     panelScale = collider.size;
             }
 
-            if (p.ExitpollSpawnType == SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 if (p.UseAttachTransform && p.AttachTransform != null)
                     Handles.DrawDottedLine(t.transform.position, p.AttachTransform.position,5);
@@ -88,7 +88,7 @@ namespace CognitiveVR
         {
             //TODO editor properties - allow multiple selection
 
-            ExitpollHolder t = (ExitpollHolder)target;
+            ExitPollHolder t = (ExitPollHolder)target;
             ExitPollParameters p = t.Parameters;
 
             GameObject lastBoolPrefab = boolPanelPrefab;
@@ -99,22 +99,34 @@ namespace CognitiveVR
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
-            p.Hook = EditorGUILayout.TextField("Hook", p.Hook);
+            if (string.IsNullOrEmpty(p.Hook))
+            {
+                EditorGUI.indentLevel++;
+                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
+                var rect = GUILayoutUtility.GetLastRect();
+                rect.width = 20;
+                GUI.Label(rect, new GUIContent(EditorCore.Alert, "Hook should not be empty!"));
+                EditorGUI.indentLevel--;
+            }
+            else
+            {
+                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
+            }
 
             t.ActivateOnEnable = EditorGUILayout.Toggle("Activate on Enable", t.ActivateOnEnable);
 
-            EditorGUILayout.HelpBox("Customize ExitPoll parameters\nCall public 'Activate' function to create exitpoll", MessageType.Info);
+            //EditorGUILayout.HelpBox("Customize ExitPoll parameters\nCall public 'Activate' function to create exitpoll", MessageType.Info);
 
             GUILayout.Space(10);
             EditorGUILayout.LabelField("Controller Tracking", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.PointerType = (PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-            if (p.PointerType == PointerType.CustomPointer)
+            p.PointerType = (ExitPoll.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
+            if (p.PointerType == ExitPoll.PointerType.CustomPointer)
             {
                 p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Pointer Prefab Override", p.PointerOverride, typeof(GameObject), true);
             }
-            else if (p.PointerType == PointerType.SceneObject)
+            else if (p.PointerType == ExitPoll.PointerType.SceneObject)
             {
                 p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Pointer Instance", p.PointerOverride, typeof(GameObject), true);
 
@@ -136,8 +148,8 @@ namespace CognitiveVR
                 }
             }
 
-            p.PointerParent = (ExitPollPointerSource)EditorGUILayout.EnumPopup("Exit Poll Pointer Parent", p.PointerParent);
-            if (p.PointerParent == ExitPollPointerSource.Other)
+            p.PointerParent = (ExitPoll.PointerSource)EditorGUILayout.EnumPopup("Exit Poll Pointer Parent", p.PointerParent);
+            if (p.PointerParent == ExitPoll.PointerSource.Other)
             {
                 p.PointerParentOverride = (Transform)EditorGUILayout.ObjectField("Exit Poll Pointer Parent Override", p.PointerParentOverride, typeof(Transform), true);
             }
@@ -149,8 +161,8 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("Tracking Space", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.ExitpollSpawnType = (SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
-            if (p.ExitpollSpawnType == SpawnType.World)
+            p.ExitpollSpawnType = (ExitPoll.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
+            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 GUILayout.BeginHorizontal();
                 p.UseAttachTransform = EditorGUILayout.Toggle(new GUIContent("Use Attach Transform","Attach ExitPoll Panels to this transform in your scene"), p.UseAttachTransform);
@@ -172,7 +184,7 @@ namespace CognitiveVR
 
                 LayerMask gazeMask = new LayerMask();
                 gazeMask.value = p.PanelLayerMask;
-                gazeMask = EditorGUILayout.MaskField("Collision Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
+                gazeMask = EditorGUILayout.MaskField(new GUIContent("Collision Layer Mask","Sets layers to collide with when trying to find a good spawn position"), UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
                 p.PanelLayerMask = gazeMask.value;
 
                 p.StickWindow = EditorGUILayout.Toggle(new GUIContent("Sticky Window","Retain the offset relative to the player if they teleport"), p.StickWindow);
@@ -205,14 +217,20 @@ namespace CognitiveVR
             GUILayout.Space(10);
             var onbegin = serializedObject.FindProperty("Parameters").FindPropertyRelative("OnBegin");
             EditorGUILayout.PropertyField(onbegin);
-            EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), new GUIContent("", "Invoked if the ExitPoll recieves a valid question set and opens a panel"));
+            var eventRect = GUILayoutUtility.GetLastRect();
+            eventRect.height = 15;
+            EditorGUI.LabelField(eventRect, new GUIContent("", "Invoked if the ExitPoll recieves a valid question set and displays a panel"));
 
             var onComplete = serializedObject.FindProperty("Parameters").FindPropertyRelative("OnComplete");
             var onClose = serializedObject.FindProperty("Parameters").FindPropertyRelative("OnClose");
             EditorGUILayout.PropertyField(onComplete);
-            EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), new GUIContent("", "Invoked when the Exitpoll completes successfully"));
+            eventRect = GUILayoutUtility.GetLastRect();
+            eventRect.height = 15;
+            EditorGUI.LabelField(eventRect, new GUIContent("", "Invoked when the Exitpoll completes successfully"));
             EditorGUILayout.PropertyField(onClose);
-            EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), new GUIContent("", "Always invoked when the Exitpoll closes either successfully or from some failure"));
+            eventRect = GUILayoutUtility.GetLastRect();
+            eventRect.height = 15;
+            EditorGUI.LabelField(eventRect, new GUIContent("", "Always invoked when the Exitpoll closes either successfully or from some failure"));
 
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
@@ -226,22 +244,22 @@ namespace CognitiveVR
         private string GetPointerDescription(ExitPollParameters parameters)
         {
             string thingToSpawn = "";
-            if (parameters.PointerType == PointerType.ControllerPointer)
+            if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
             {
                 thingToSpawn = "Spawn ExitPollControllerPointer";
             }
-            else if(parameters.PointerType == PointerType.HMDPointer)
+            else if(parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 thingToSpawn = "Spawn ExitPollHMDPointer";
             }
-            else if (parameters.PointerType == PointerType.CustomPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
             {
                 if (parameters.PointerOverride != null)
                     thingToSpawn = "Spawn " + parameters.PointerOverride.name;
                 else
                     thingToSpawn = "Spawn Nothing";
             }
-            else if (parameters.PointerType == PointerType.SceneObject)
+            else if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
             {
                 if (parameters.PointerOverride != null)
                     thingToSpawn = "Select " + parameters.PointerOverride.name + " from scene";
@@ -250,19 +268,19 @@ namespace CognitiveVR
             }
 
             string howToAttach = "";
-            if (parameters.PointerParent == ExitPollPointerSource.HMD)
+            if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
             {
                 howToAttach = " and attach to HMD";
             }
-            if (parameters.PointerParent == ExitPollPointerSource.LeftHand)
+            if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
             {
                 howToAttach = " and attach to Left Controller";
             }
-            if (parameters.PointerParent == ExitPollPointerSource.RightHand)
+            if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
             {
                 howToAttach = " and attach to Right Controller";
             }
-            if (parameters.PointerParent == ExitPollPointerSource.Other)
+            if (parameters.PointerParent == ExitPoll.PointerSource.Other)
             {
                 if (parameters.PointerParentOverride != null)
                     howToAttach = " and Attach to " + parameters.PointerParentOverride.name + " in scene";
@@ -271,9 +289,9 @@ namespace CognitiveVR
             }
 
             string result = "";
-            if (parameters.PointerType == PointerType.SceneObject)
+            if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
             {
-                if (parameters.PointerParent == ExitPollPointerSource.Other && parameters.PointerParentOverride == null)
+                if (parameters.PointerParent == ExitPoll.PointerSource.Other && parameters.PointerParentOverride == null)
                 {
                     result = "\nPointer parenting will not change after ExitPoll closes";
                 }

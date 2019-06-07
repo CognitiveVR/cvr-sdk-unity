@@ -7,7 +7,7 @@ using CognitiveVR;
 //easier to visualize all the valid options, easier to override stuff
 namespace CognitiveVR
 {
-    public class ExitpollHolder : MonoBehaviour
+    public class ExitPollHolder : MonoBehaviour
     {
         public ExitPollParameters Parameters = new ExitPollParameters();
         public bool ActivateOnEnable;
@@ -36,13 +36,15 @@ namespace CognitiveVR
                 OnEnable();
             }
         }
-
-        [ContextMenu("Debug Activate")]
+        
+        /// <summary>
+        /// Display an ExitPoll using the QuestionSetHook and parameters configured on the component
+        /// </summary>
         public void Activate()
         {
             var poll = ExitPoll.NewExitPoll(Parameters.Hook, Parameters);
 
-            if (poll.ExitpollSpawnType == SpawnType.World)
+            if (poll.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 poll.UseOverridePosition = true;
                 poll.OverridePosition = transform.position;

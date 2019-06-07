@@ -101,6 +101,11 @@ namespace CognitiveVR
                 {
                     callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
+                if (enabledLocalStorage)
+                {
+                    //write content to exitpoll local storage
+                    File.WriteAllText(localExitPollPath + hookname, www.downloadHandler.text);
+                }
             }
             www.Dispose();
         }

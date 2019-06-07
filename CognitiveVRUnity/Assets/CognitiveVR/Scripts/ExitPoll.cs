@@ -54,6 +54,26 @@ namespace CognitiveVR
     //static class for requesting exitpoll question sets with multiple panels
     public static class ExitPoll
     {
+        public enum PointerSource
+        {
+            HMD,
+            RightHand,
+            LeftHand,
+            Other
+        }
+        public enum SpawnType
+        {
+            World,
+            PlayerRelative
+        }
+        public enum PointerType
+        {
+            HMDPointer,
+            ControllerPointer,
+            CustomPointer,
+            SceneObject
+        }
+
         private static GameObject _exitPollHappySad;
         public static GameObject ExitPollHappySad
         {
@@ -154,20 +174,20 @@ namespace CognitiveVR
             myparameters = parameters;
 
             //spawn pointers if override isn't set
-            if (parameters.PointerType == PointerType.SceneObject)
+            if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
             {
                 //spawn nothing. something in the scene is already set   
                 pointerInstance = parameters.PointerOverride;
             }
-            else if (parameters.PointerType == PointerType.HMDPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollHMDPointer"));
             }
-            else if (parameters.PointerType == PointerType.ControllerPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
             {
                 pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollControllerPointer"));
             }
-            else if (parameters.PointerType == PointerType.CustomPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
             {
                 pointerInstance = GameObject.Instantiate(parameters.PointerOverride);
             }
@@ -177,14 +197,14 @@ namespace CognitiveVR
             if (pointerInstance != null)
             {
 
-                if (parameters.PointerParent == ExitPollPointerSource.HMD)
+                if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
                 {
                     //parent to hmd and zero position
                     pointerInstance.transform.SetParent(GameplayReferences.HMD);
                     pointerInstance.transform.localPosition = Vector3.zero;
                     pointerInstance.transform.localRotation = Quaternion.identity;
                 }
-                else if (parameters.PointerParent == ExitPollPointerSource.RightHand)
+                else if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
                 {
                     Transform t = null;
                     if (GameplayReferences.GetController(true, out t))
@@ -194,7 +214,7 @@ namespace CognitiveVR
                         pointerInstance.transform.localRotation = Quaternion.identity;
                     }
                 }
-                else if (parameters.PointerParent == ExitPollPointerSource.LeftHand)
+                else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
                 {
                     Transform t = null;
                     if (GameplayReferences.GetController(false, out t))
@@ -204,7 +224,7 @@ namespace CognitiveVR
                         pointerInstance.transform.localRotation = Quaternion.identity;
                     }
                 }
-                else if (parameters.PointerParent == ExitPollPointerSource.Other)
+                else if (parameters.PointerParent == ExitPoll.PointerSource.Other)
                 {
                     if (parameters.PointerParentOverride != null)
                     {
@@ -441,9 +461,9 @@ namespace CognitiveVR
                 if (currentPanelIndex == 0)
                 {
                     //figure out world spawn position
-                    if (myparameters.UseOverridePosition || myparameters.ExitpollSpawnType == SpawnType.World)
+                    if (myparameters.UseOverridePosition || myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World)
                         spawnPosition = myparameters.OverridePosition;
-                    if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == SpawnType.World)
+                    if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World)
                         spawnRotation = myparameters.OverrideRotation;
                 }
                 var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
@@ -459,7 +479,7 @@ namespace CognitiveVR
                 }
                 CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this);
 
-                if (myparameters.ExitpollSpawnType == SpawnType.World && myparameters.UseAttachTransform)
+                if (myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World && myparameters.UseAttachTransform)
                 {
                     if (myparameters.AttachTransform != null)
                     {
@@ -707,13 +727,13 @@ namespace CognitiveVR
         {
             if (pointerInstance != null)
             {
-                if (myparameters.PointerType != PointerType.SceneObject)
+                if (myparameters.PointerType != ExitPoll.PointerType.SceneObject)
                 {
                     GameObject.Destroy(pointerInstance);
                 }
                 else //if pointertype == SceneObject
                 {
-                    if (myparameters.PointerParent != ExitPollPointerSource.Other)
+                    if (myparameters.PointerParent != ExitPoll.PointerSource.Other)
                     {
                         //unparent
                         pointerInstance.transform.SetParent(null);

@@ -25,7 +25,7 @@ namespace CognitiveVR
 
         [Tooltip("Higher requires more accurate pointing.\nLower allows more flexibility after initial point")]
         [Range(0.1f, 1f)]
-        float Stiffness = 0.95f;
+        float Stiffness = 0.98f;
 
         Transform _t;
         Vector3[] sampledPoints;
@@ -67,39 +67,76 @@ namespace CognitiveVR
             return lr;
         }
 
+        Transform lastTarget = null;
+        GazeButton lastButton = null;
+        float lastHasButtonTime = 10;
+
         //sets the curve to the target
         void Update()
         {
             Vector3 pos = _t.position;
             Vector3 forward = _t.forward;
-
-            Transform target = null;
+            
+            bool hitButton = false;
+            bool hasAnyButton = false;
 
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(pos,forward, out hit, 10, LayerMask.GetMask("UI")))
+            if (Physics.Raycast(pos,forward, out hit, 10, LayerMask.GetMask("UI"))) //hit a button
             {
                 var button = hit.collider.GetComponent<GazeButton>();
                 if (button != null)
                 {
+                    hitButton = true;
+                    hasAnyButton = true;
                     //bend the line renderer over to here
-                    target = button.transform;
+                    lastTarget = button.transform;
+                    lastButton = button;
+                    curve[0] = pos;
+                    curve[1] = pos + forward * ForwardPower;
+                    curve[2] = lastTarget.position;
+                    curve[3] = lastTarget.position;
                     button.SetFocus();
                 }
             }
 
-            if (target == null) //TODO straighten over time
+            if (hitButton)
             {
-                curve[0] = pos;
-                curve[1] = pos + forward * ForwardPower;
-                curve[2] = pos + forward * ForwardPower;
-                curve[3] = pos + forward * ForwardPower * 2;
+                //everything is set above
             }
-            else
+            else if (lastTarget != null && lastButton != null) //direction roughly towards a previous button
             {
+                if (Vector3.Dot(forward,(lastTarget.position - pos).normalized)>Stiffness)
+                {
+                    hasAnyButton = true;
+                    //still in direction
+                    curve[0] = pos;
+                    curve[1] = pos + forward * ForwardPower;
+                    curve[2] = lastTarget.position;
+                    curve[3] = lastTarget.position;
+                    lastButton.SetFocus();
+                }
+                else
+                {
+                    lastTarget = null;
+                    lastButton = null;
+                    lastHasButtonTime = 0;
+                }
+            }
+            
+            if (!hasAnyButton)
+            {
+                lastHasButtonTime += Time.deltaTime * 2;
+
                 curve[0] = pos;
                 curve[1] = pos + forward * ForwardPower;
-                curve[2] = target.position;
-                curve[3] = target.position;
+
+                //lerp
+                curve[2] = Vector3.Lerp(curve[2], pos + forward * ForwardPower, lastHasButtonTime * 2);
+                curve[3] = Vector3.Lerp(curve[3], pos + forward * ForwardPower * 2, lastHasButtonTime);
+
+                //snap
+                //curve[2] = pos + forward * ForwardPower;
+                //curve[3] = pos + forward * ForwardPower * 2;
             }
 
             LineRendererOverride.SetPositions(EvaluatePoints(SampleResolution));
@@ -128,12 +165,6 @@ namespace CognitiveVR
                     curve[1].z * (3f * omNormalDistSqr * normalDist) +
                     curve[2].z * (3f * omNormalDist * normalDistSqr) +
                     curve[3].z * (normalDistSqr * normalDist));
-
-                //sampledPoints[i] = 
-                //curve[0] * (omNormalDistSqr * omNormalDist) +
-                //curve[1] * (3f * omNormalDistSqr * normalDist) +
-                //curve[2] * (3f * omNormalDist * normalDistSqr) +
-                //curve[3] * (normalDistSqr * normalDist);
             }
             return sampledPoints;
         }

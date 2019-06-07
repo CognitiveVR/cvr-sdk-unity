@@ -4,40 +4,21 @@ using UnityEngine;
 
 namespace CognitiveVR
 {
-    public enum ExitPollPointerSource
-    {
-        HMD,
-        RightHand,
-        LeftHand,
-        Other
-    }
-    public enum SpawnType
-    {
-        World,
-        PlayerRelative
-    }
-    public enum PointerType
-    {
-        HMDPointer,
-        ControllerPointer,
-        CustomPointer,
-        SceneObject
-    }
-
     //temporary object for holding overrides and settings for exitpoll question set
     [System.Serializable]
     public class ExitPollParameters
     {
         public string Hook;
 
-        public SpawnType ExitpollSpawnType; //hides/shows relevant options (override position, rotate to stay on screen,etc)
+        //hides irrelevent options in inspector
+        public ExitPoll.SpawnType ExitpollSpawnType = ExitPoll.SpawnType.PlayerRelative;
 
         //parenting pointer
-        public ExitPollPointerSource PointerParent;
+        public ExitPoll.PointerSource PointerParent;
         public Transform PointerParentOverride;
 
         //spawning or setting pointer
-        public PointerType PointerType;
+        public ExitPoll.PointerType PointerType;
         public GameObject PointerOverride;
 
         public GameObject BoolPanelOverride;
@@ -137,7 +118,7 @@ namespace CognitiveVR
         /// <returns></returns>
         public ExitPollParameters SetControllerPointer(GameObject controller)
         {
-            PointerParent = ExitPollPointerSource.RightHand;
+            PointerParent = ExitPoll.PointerSource.RightHand;
             PointerOverride = controller;
             return this;
         }
@@ -189,10 +170,11 @@ namespace CognitiveVR
 
         #endregion
 
-        public void Begin()
+        public ExitPollSet Begin()
         {
             var exitpollset = new ExitPollSet();
             exitpollset.BeginExitPoll(this);
+            return exitpollset;
         }
     }
 }
