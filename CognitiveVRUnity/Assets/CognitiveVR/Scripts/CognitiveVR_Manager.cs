@@ -25,6 +25,7 @@ namespace CognitiveVR
 {
     [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
+    [DefaultExecutionOrder(-1)]
     public class CognitiveVR_Manager : MonoBehaviour
     {
 
@@ -125,8 +126,13 @@ namespace CognitiveVR
                 Destroy(gameObject);
                 return;
             }
-
+            if (instance == this) { return; }
             instance = this;
+            if (InitializeOnStart && StartupDelayTime == 0)
+            {
+                GameObject.DontDestroyOnLoad(gameObject);
+                Initialize("");
+            }
         }
 
         IEnumerator Start()

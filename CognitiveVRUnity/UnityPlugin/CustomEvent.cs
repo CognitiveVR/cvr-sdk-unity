@@ -152,6 +152,8 @@ namespace CognitiveVR
 		
 		/// <summary>
         /// Appends the latest value of each sensor to this event
+        /// At the time this function is called
+        /// This will replace existing sensors of the same name
         /// </summary>
         /// <returns></returns>
         public CustomEvent AppendSensors()

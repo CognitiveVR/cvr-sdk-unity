@@ -337,10 +337,13 @@ namespace CognitiveVR
             if (saccade != null)
                 saccade.SetTarget(this);
             //gameObject.AddComponent<FixationVisualizer>().SetTarget(this);
-            lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
-            lastEyeTrackingPointer.GetComponent<MeshRenderer>().material = DebugMaterial;
-            Destroy(lastEyeTrackingPointer.GetComponent<SphereCollider>());
+            if (DebugMaterial != null)
+            {
+                lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
+                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material = DebugMaterial;
+                Destroy(lastEyeTrackingPointer.GetComponent<SphereCollider>());
+            }
 #endif
 
             ActiveFixation = new Fixation();
@@ -363,6 +366,7 @@ namespace CognitiveVR
         private void Update()
         {
             if (!Core.IsInitialized) { return; }
+            if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Fixation will not function"); return; }
 
             PostGazeCallback();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -498,7 +502,7 @@ namespace CognitiveVR
             }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
-            else{ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
+            else if (lastEyeTrackingPointer != null){ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 
             VISGazepoints.Add(EyeCaptures[index].WorldPosition);
 #endif

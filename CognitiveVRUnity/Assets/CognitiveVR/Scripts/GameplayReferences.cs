@@ -55,7 +55,11 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            _hmd = GameObject.FindObjectOfType<Camera>().transform;
+                        {
+                            var c = GameObject.FindObjectOfType<Camera>();
+                            if (c != null)
+                                _hmd = c.transform;
+                        }
                         else
                             _hmd = Camera.main.transform;
                     }
@@ -69,29 +73,42 @@ namespace CognitiveVR
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            _hmd = GameObject.FindObjectOfType<Camera>().transform;
+                        {
+                            var c = GameObject.FindObjectOfType<Camera>();
+                            if (c != null)
+                                _hmd = c.transform;
+                        }
                         else
                             _hmd = Camera.main.transform;
                     }
 #elif CVR_FOVE
-                    /*FoveEyeCamera eyecam = GameObject.FindObjectOfType<FoveEyeCamera>();
-                    if (eyecam != null)
-                    {
-                        Camera cam = eyecam.GetComponentInChildren<Camera>();
-                        _hmd = cam.transform;
-                    }*/
                     if (_hmd == null)
                     {
                         if (Camera.main == null)
-                            _hmd = GameObject.FindObjectOfType<Camera>().transform;
+                        {
+                            var c = GameObject.FindObjectOfType<Camera>();
+                            if (c != null)
+                                _hmd = c.transform;
+                        }
                         else
                             _hmd = Camera.main.transform;
                     }
 #elif CVR_SNAPDRAGON
-                    _hmd = GameObject.FindObjectOfType<Camera>().transform;
+                    if (Camera.main == null)
+                    {
+                        var c = GameObject.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
+                    else
+                        _hmd = Camera.main.transform;
 #else
                     if (Camera.main == null)
-                        _hmd = GameObject.FindObjectOfType<Camera>().transform;
+                    {
+                        var c = GameObject.FindObjectOfType<Camera>();
+                        if (c != null)
+                            _hmd = c.transform;
+                    }
                     else
                         _hmd = Camera.main.transform;
 
