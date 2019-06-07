@@ -32,6 +32,9 @@ namespace CognitiveVR
             {
                 var buf = new CommandBuffer();
                 buf.name = "cognitive depth";
+
+                if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Command Gaze will not function"); return; }
+
                 GameplayReferences.HMDCameraComponent.depthTextureMode = DepthTextureMode.Depth;
                 GameplayReferences.HMDCameraComponent.AddCommandBuffer(camevent, buf);
                 var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));

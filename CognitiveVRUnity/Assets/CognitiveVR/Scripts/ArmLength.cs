@@ -46,7 +46,7 @@ namespace CognitiveVR.Components
         bool anyControllerTracking = false;
         private void CognitiveVR_Manager_UpdateEvent(float deltaTime)
         {
-
+            if (GameplayReferences.HMD == null) { Core.UpdateEvent -= CognitiveVR_Manager_UpdateEvent; return; }
             //get left controller device
             if (leftController == null && GameplayReferences.GetControllerInfo(false, out tempInfo))
             {
@@ -102,6 +102,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.None) { return; }
+            if (GameplayReferences.HMD == null) { return; }
             StartCoroutine(Tick());
         }
 #endif
@@ -117,8 +118,9 @@ namespace CognitiveVR.Components
         {
             if (OVRInput.GetDown(OVRInput.Button.Any))
             {
-                StartCoroutine(Tick());
                 Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+                if (GameplayReferences.HMD == null) { return; }
+                StartCoroutine(Tick());
             }
         }
 #endif
