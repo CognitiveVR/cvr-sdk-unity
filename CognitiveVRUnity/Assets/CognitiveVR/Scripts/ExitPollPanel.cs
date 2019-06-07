@@ -22,7 +22,7 @@ namespace CognitiveVR
         float PopupTime = 0.2f;
 
         [Header("Multiple Choice Settings")]
-        public GameObject AnswerButton;
+        public GameObject[] AnswerButtons;
         public Transform ContentRoot;
 
         [Header("Scale Settings")]
@@ -36,25 +36,13 @@ namespace CognitiveVR
         public float MinimumSpacing = 0.01f;
         public float MaximumSpacing = 0.4f;
 
-        //when the user finishes answering the question or finishes closing the window
-        //bool _completed = false;
-
         //delays input so player can understand the popup interface before answering
         float ResponseDelayTime = 0.1f;
         float NextResponseTime;
-        public bool NextResponseTimeValid
-        {
-            get
-            {
-                return NextResponseTime < Time.time;
-            }
-        }
 
         ExitPollSet QuestionSet;
 
-        GameObject _reticule;
         float _remainingTime; //before timeout
-        public bool IsClosing { get { return _isclosing; } }
         bool _isclosing; //has timed out/answered/skipped but still animating?
         bool _allowTimeout; //used by microphone to disable timeout
 
@@ -97,6 +85,8 @@ namespace CognitiveVR
                 return _root;
             }
         }
+        
+        //used for sticky window (player teleportation)
         Vector3 _lastRootPosition;
         int PanelId;
 
@@ -112,9 +102,9 @@ namespace CognitiveVR
             PanelId = panelId;
             NextResponseTime = ResponseDelayTime + Time.time;
 
-            if (questionset.UseTimeout)
+            if (questionset.myparameters.UseTimeout)
             {
-                _remainingTime = questionset.Timeout;
+                _remainingTime = questionset.myparameters.Timeout;
                 UpdateTimeoutBar();
             }
 
@@ -137,19 +127,15 @@ namespace CognitiveVR
             if (properties["type"] == "MULTIPLE")
             {
                 string[] split = properties["csvanswers"].Split('|');
-                List<GameObject> AnswerButtons = new List<GameObject>();
-                AnswerButtons.Add(AnswerButton);
-                for (int i = 1; i<split.Length; i++)
+                for (int i = 0; i < split.Length; i++)
                 {
-                    AnswerButtons.Add((GameObject)Instantiate(AnswerButton, ContentRoot));
+                    AnswerButtons[i].GetComponentInChildren<Text>().text = split[i] + " " + i;
                 }
-                for (int i = 0; i<split.Length; i++)
+                for (int i = split.Length; i<AnswerButtons.Length; i++)
                 {
-                    SetMutltipleChoiceButton(split[i],i,AnswerButtons[i]);
+                    if (AnswerButtons[i] == null) { continue; }
+                    AnswerButtons[i].SetActive(false);
                 }
-                var c = GetComponent<BoxCollider>();
-                if (c != null)
-                    c.size = new Vector3(2, 0.75f + split.Length * 0.3f, 0.1f);
             }
             else if (properties["type"] == "SCALE")
             {
@@ -200,22 +186,15 @@ namespace CognitiveVR
                 int result = 0;
                 int.TryParse(properties["maxResponseLength"], out result);
 
-                GetComponentInChildren<MicrophoneButton>().RecordTime = result;
-                
+                var mic = GetComponentInChildren<MicrophoneButton>();
+                mic.RecordTime = result;
+                mic.SetExitPollQuestionSet(questionset);
             }
 
             _isclosing = false;
             _allowTimeout = true;
 
             StartCoroutine(_SetVisible(true));
-        }
-
-        void SetMutltipleChoiceButton(string text, int id, GameObject button)
-        {
-            var gb = button.GetComponentInChildren<GazeButton>();
-            UnityEngine.Events.UnityAction buttonclicked = () => { this.AnswerInt(id); };
-            gb.OnLook.AddListener(buttonclicked);
-            button.GetComponentInChildren<Text>().text = text;
         }
 
         void SetIntegerCount(int minValue, int maxValue)
@@ -272,13 +251,6 @@ namespace CognitiveVR
             float normalizedTime = 0;
             if (visible)
             {
-                if (QuestionSet.DisplayReticle)
-                {
-                    _reticule = Instantiate(ExitPoll.ExitPollReticle);
-                    _reticule.transform.SetParent(GameplayReferences.HMD);
-                    _reticule.transform.localPosition = Vector3.forward * (Vector3.Distance(_transform.position, GameplayReferences.HMD.position) - 0.5f);
-                    _reticule.transform.localRotation = Quaternion.identity;
-                }
                 while (normalizedTime < 1)
                 {
                     normalizedTime += Time.deltaTime / PopupTime;
@@ -320,10 +292,6 @@ namespace CognitiveVR
                 }
                 _panel.localScale = Vector3.zero;
                 gameObject.SetActive(false);
-                if (_reticule)
-                {
-                    Destroy(_reticule);
-                }
                 Destroy(gameObject);
             }
         }
@@ -332,7 +300,7 @@ namespace CognitiveVR
         public void DisableTimeout()
         {
             _allowTimeout = false;
-            _remainingTime = QuestionSet.Timeout;
+            _remainingTime = QuestionSet.myparameters.Timeout;
             UpdateTimeoutBar();
         }
 
@@ -342,11 +310,10 @@ namespace CognitiveVR
             if (_isclosing) { return; }
             if (GameplayReferences.HMD == null)
             {
-                ExitPoll.CurrentExitPollSet.OnPanelError();
                 Close();
                 return;
             }
-            if (QuestionSet.UseTimeout && _allowTimeout)
+            if (QuestionSet.myparameters.UseTimeout && _allowTimeout)
             {
                 if (_remainingTime > 0)
                 {
@@ -362,7 +329,7 @@ namespace CognitiveVR
                     return;
                 }
             }
-            if (QuestionSet.StickWindow)
+            if (QuestionSet.myparameters.StickWindow)
             {
                 if (Vector3.SqrMagnitude(_lastRootPosition - root.position) > 0.1f)
                 {
@@ -372,12 +339,20 @@ namespace CognitiveVR
                     _lastRootPosition = root.position;
                 }
             }
-            if (QuestionSet.RotateToStayOnScreen)
+
+            if (QuestionSet.myparameters.LockYPosition)
+            {
+                Vector3 pos = transform.position;
+                pos.y = GameplayReferences.HMD.position.y;
+                transform.position = pos;
+            }
+
+            if (QuestionSet.myparameters.RotateToStayOnScreen)
             {
                 float maxDot = 0.9f;
                 float maxRotSpeed = 360;
 
-                if (QuestionSet.LockYPosition)
+                if (QuestionSet.myparameters.LockYPosition)
                 {
                     Vector3 camforward = GameplayReferences.HMD.forward;
                     camforward.y = 0;
@@ -415,29 +390,30 @@ namespace CognitiveVR
                         float rotateSpeed = Mathf.Lerp(maxRotSpeed, 0, dot);
 
                         _transform.RotateAround(GameplayReferences.HMD.position, rotateAxis, rotateSpeed * Time.deltaTime); //lerp this based on how far off forward is
-                        _panel.rotation = Quaternion.Lerp(_panel.rotation, Quaternion.LookRotation(toCube, Vector3.up), 0.1f);
                     }
                 }
 
                 //clamp distance
                 float dist = Vector3.Distance(_transform.position, GameplayReferences.HMD.position);
-                if (dist > QuestionSet.DisplayDistance)
+                if (dist > QuestionSet.myparameters.DisplayDistance)
                 {
-                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.DisplayDistance;
+                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.myparameters.DisplayDistance;
                     _transform.position = vector + GameplayReferences.HMD.position;
                 }
-                else if (dist < QuestionSet.MinimumDisplayDistance)
+                else if (dist < QuestionSet.myparameters.MinimumDisplayDistance)
                 {
-                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.MinimumDisplayDistance;
+                    Vector3 vector = (_transform.position - GameplayReferences.HMD.position).normalized * QuestionSet.myparameters.MinimumDisplayDistance;
                     _transform.position = vector + GameplayReferences.HMD.position;
                 }
+
+                _transform.LookAt(_transform.position*2 - GameplayReferences.HMD.position); //look in the direction of the panel (inverse of looking at hmd)
             }
         }
 
         void UpdateTimeoutBar()
         {
             if (TimeoutBar)
-                TimeoutBar.fillAmount = _remainingTime / QuestionSet.Timeout;
+                TimeoutBar.fillAmount = _remainingTime / QuestionSet.myparameters.Timeout;
         }
 
         //from buttons
@@ -456,17 +432,6 @@ namespace CognitiveVR
         {
             if (_isclosing) { return; }
             QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
-            Close();
-        }
-
-        //from buttons
-        [System.Obsolete]
-        public void AnswerString(string answer)
-        {
-            CognitiveVR.Util.logError("Exit Poll Panel AnswerString should not be used!");
-            if (_isclosing) { return; }
-
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, 0);
             Close();
         }
 

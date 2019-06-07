@@ -54,6 +54,26 @@ namespace CognitiveVR
     //static class for requesting exitpoll question sets with multiple panels
     public static class ExitPoll
     {
+        public enum PointerSource
+        {
+            HMD,
+            RightHand,
+            LeftHand,
+            Other
+        }
+        public enum SpawnType
+        {
+            World,
+            PlayerRelative
+        }
+        public enum PointerType
+        {
+            HMDPointer,
+            ControllerPointer,
+            CustomPointer,
+            SceneObject
+        }
+
         private static GameObject _exitPollHappySad;
         public static GameObject ExitPollHappySad
         {
@@ -128,16 +148,15 @@ namespace CognitiveVR
             }
         }
 
-        public static ExitPollSet CurrentExitPollSet;
-        public static ExitPollSet NewExitPoll(string hookName)
+        public static ExitPollParameters NewExitPoll(string hookName)
         {
-            if (CurrentExitPollSet != null)
-            {
-                CurrentExitPollSet.EndQuestionSet();
-            }
-            CurrentExitPollSet = new ExitPollSet();
-            CurrentExitPollSet.RequestQuestionHookName = hookName;
-            return CurrentExitPollSet;
+            var CurrentExitPollParams = new ExitPollParameters();
+            CurrentExitPollParams.Hook = hookName;
+            return CurrentExitPollParams;
+        }
+        public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
+        {
+            return parameters;
         }
     }
 
@@ -146,59 +165,94 @@ namespace CognitiveVR
     {
         public ExitPollPanel CurrentExitPollPanel;
 
-        System.Action EndAction;
-        public ExitPollSet SetEndAction(System.Action endAction)
-        {
-            EndAction = endAction;
-            return this;
-        }
+        public ExitPollParameters myparameters;
 
-        public ExitPollSet AddEndAction(System.Action endAction)
-        {
-            if (EndAction == null)
-            {
-                EndAction = endAction;
-            }
-            else
-            {
-                EndAction += endAction;
-            }
-            return this;
-        }
+        GameObject pointerInstance = null;
 
-        public string RequestQuestionHookName = "";
-        public void Begin()
+        public void BeginExitPoll(ExitPollParameters parameters)
         {
-            currentPanelIndex = 0;
-            if (string.IsNullOrEmpty(RequestQuestionHookName))
+            myparameters = parameters;
+
+            //spawn pointers if override isn't set
+            if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
             {
-                if (EndAction != null)
+                //spawn nothing. something in the scene is already set   
+                pointerInstance = parameters.PointerOverride;
+            }
+            else if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            {
+                pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollHMDPointer"));
+            }
+            else if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
+            {
+                pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollControllerPointer"));
+            }
+            else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
+            {
+                pointerInstance = GameObject.Instantiate(parameters.PointerOverride);
+            }
+
+            //TODO check and do something if pointer instance == null
+
+            if (pointerInstance != null)
+            {
+
+                if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
                 {
-                    EndAction.Invoke();
+                    //parent to hmd and zero position
+                    pointerInstance.transform.SetParent(GameplayReferences.HMD);
+                    pointerInstance.transform.localPosition = Vector3.zero;
+                    pointerInstance.transform.localRotation = Quaternion.identity;
                 }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                else if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
+                {
+                    Transform t = null;
+                    if (GameplayReferences.GetController(true, out t))
+                    {
+                        pointerInstance.transform.SetParent(t);
+                        pointerInstance.transform.localPosition = Vector3.zero;
+                        pointerInstance.transform.localRotation = Quaternion.identity;
+                    }
+                }
+                else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
+                {
+                    Transform t = null;
+                    if (GameplayReferences.GetController(false, out t))
+                    {
+                        pointerInstance.transform.SetParent(t);
+                        pointerInstance.transform.localPosition = Vector3.zero;
+                        pointerInstance.transform.localRotation = Quaternion.identity;
+                    }
+                }
+                else if (parameters.PointerParent == ExitPoll.PointerSource.Other)
+                {
+                    if (parameters.PointerParentOverride != null)
+                    {
+                        pointerInstance.transform.SetParent(parameters.PointerParentOverride);
+                        pointerInstance.transform.localPosition = Vector3.zero;
+                        pointerInstance.transform.localRotation = Quaternion.identity;
+                    }
+                }
+            }
+
+            //this should take all previously set variables (from functions) and create an exitpoll parameters object
+
+            currentPanelIndex = 0;
+            if (string.IsNullOrEmpty(myparameters.Hook))
+            {
+                Cleanup(false);
                 Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
                 return;
             }
 
             if (CognitiveVR_Manager.Instance != null)
             {
-                CognitiveVR.NetworkManager.GetExitPollQuestions(RequestQuestionHookName, QuestionSetResponse, 3);
+                CognitiveVR.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
             }
             else
             {
                 Util.logDebug("Cannot display exitpoll. cognitiveVRManager not present in scene");
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                Cleanup(false);
             }
         }
 
@@ -216,8 +270,6 @@ namespace CognitiveVR
             OnPanelError();
         }
 
-        ExitPollPointer _pointer;
-
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
 
@@ -233,14 +285,7 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(text))
             {
                 //question timeout or not found
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                Cleanup(false);
                 return;
             }
 
@@ -254,45 +299,20 @@ namespace CognitiveVR
             catch
             {
                 CognitiveVR.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                Cleanup(false);
                 return;
             }
 
             if (json.questions == null || json.questions.Length == 0)
             {
                 CognitiveVR.Util.logDebug("Exit poll Question response empty! invoke end action");
-
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                Cleanup(false);
                 return;
             }
 
             QuestionSetId = json.id;
             QuestionSetName = json.name;
             questionSetVersion = json.version;
-
-            if (ControllerPointer != null)
-            {
-                _pointer = ControllerPointer.GetComponentInChildren<ExitPollPointer>();
-                if (_pointer == null)
-                {
-                    _pointer = ControllerPointer.AddComponent<ExitPollPointer>();
-                }
-                _pointer.SetVisible(true);
-            }
 
             //foreach (var question in json.questions)
             for (int i = 0; i < json.questions.Length; i++)
@@ -336,6 +356,9 @@ namespace CognitiveVR
                 }
                 panelProperties.Add(questionVariables);
             }
+
+            if (myparameters.OnBegin != null)
+                myparameters.OnBegin.Invoke();
 
             IterateToNextQuestion();
             
@@ -383,14 +406,7 @@ namespace CognitiveVR
             //var responses = FormatResponses();
             //SendQuestionResponses(responses); //for exitpoll microservice
             CurrentExitPollPanel = null;
-            if (EndAction != null)
-            {
-                EndAction.Invoke();
-            }
-            OverridePosition = null;
-            OverrideRotation = null;
-            if (_pointer) _pointer.SetVisible(false);
-            ExitPoll.CurrentExitPollSet = null;
+            Cleanup(false);
             CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
@@ -398,13 +414,21 @@ namespace CognitiveVR
         int panelCount = 0;
         void IterateToNextQuestion()
         {
+            if (GameplayReferences.HMD == null)
+            {
+                Cleanup(false);
+                return;
+            }
+
             bool useLastPanelPosition = false;
             Vector3 lastPanelPosition = Vector3.zero;
+            Quaternion lastPanelRotation = Quaternion.identity;
 
             //close current panel
             if (CurrentExitPollPanel != null)
             {
                 lastPanelPosition = CurrentExitPollPanel.transform.position;
+                lastPanelRotation = CurrentExitPollPanel.transform.rotation;
                 useLastPanelPosition = true;
                 //CurrentExitPollPanel = null;
             }
@@ -414,14 +438,7 @@ namespace CognitiveVR
                 if (!GetSpawnPosition(out lastPanelPosition))
                 {
                     CognitiveVR.Util.logDebug("no last position set. invoke endaction");
-                    if (EndAction != null)
-                    {
-                        EndAction.Invoke();
-                    }
-                    OverridePosition = null;
-                    OverrideRotation = null;
-                    if (_pointer) _pointer.SetVisible(false);
-                    ExitPoll.CurrentExitPollSet = null;
+                    Cleanup(false);
                     return;
                 }
             }
@@ -429,8 +446,46 @@ namespace CognitiveVR
             //if next question, display that
             if (panelProperties.Count > 0 && currentPanelIndex < panelProperties.Count)
             {
-                DisplayPanel(panelProperties[currentPanelIndex], panelCount, lastPanelPosition);
-                //panelProperties.RemoveAt(0);
+                //DisplayPanel(panelProperties[currentPanelIndex], panelCount, lastPanelPosition);
+                var prefab = GetPrefab(panelProperties[currentPanelIndex]);
+                if (prefab == null)
+                {
+                    Util.logError("couldn't find prefab " + panelProperties[currentPanelIndex]);
+                    Cleanup(false);
+                    return;
+                }
+
+                Vector3 spawnPosition = lastPanelPosition;
+                Quaternion spawnRotation = lastPanelRotation;
+
+                if (currentPanelIndex == 0)
+                {
+                    //figure out world spawn position
+                    if (myparameters.UseOverridePosition || myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World)
+                        spawnPosition = myparameters.OverridePosition;
+                    if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World)
+                        spawnRotation = myparameters.OverrideRotation;
+                }
+                var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
+
+                CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
+
+                if (CurrentExitPollPanel == null)
+                {
+                    Debug.LogError(newPanelGo.gameObject.name + " does not have ExitPollPanel component!");
+                    GameObject.Destroy(newPanelGo);
+                    Cleanup(false);
+                    return;
+                }
+                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this);
+
+                if (myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World && myparameters.UseAttachTransform)
+                {
+                    if (myparameters.AttachTransform != null)
+                    {
+                        newPanelGo.transform.SetParent(myparameters.AttachTransform);
+                    }
+                }
             }
             else //finished everything format and send
             {
@@ -438,14 +493,7 @@ namespace CognitiveVR
                 var responses = FormatResponses();
                 NetworkManager.PostExitpollAnswers(responses, QuestionSetName, questionSetVersion); //for exitpoll microservice
                 CurrentExitPollPanel = null;
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
+                Cleanup(true);
             }
             panelCount++;
         }
@@ -455,7 +503,7 @@ namespace CognitiveVR
             var exitpoll = new CustomEvent("cvr.exitpoll");
             exitpoll.SetProperty("userId", CognitiveVR.Core.UniqueID);
             exitpoll.SetProperty("questionSetId", QuestionSetId);
-            exitpoll.SetProperty("hook", RequestQuestionHookName);
+            exitpoll.SetProperty("hook", myparameters.Hook);
 
             var scenesettings = Core.TrackingScene;
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
@@ -487,7 +535,7 @@ namespace CognitiveVR
             builder.Append(",");
             JsonUtil.SetString("sessionId", Core.SessionID, builder);
             builder.Append(",");
-            JsonUtil.SetString("hook", RequestQuestionHookName, builder);
+            JsonUtil.SetString("hook", myparameters.Hook, builder);
             builder.Append(",");
 
             var scenesettings = Core.TrackingScene;
@@ -545,199 +593,73 @@ namespace CognitiveVR
             return builder.ToString();
         }
 
-        public bool UseTimeout { get; private set; }
-        public float Timeout { get; private set; }
-        /// <summary>
-        /// set a maximum time that a question will be displayed. if this is passed, the question closes automatically
-        /// </summary>
-        /// <param name="allowTimeout"></param>
-        /// <param name="secondsUntilTimeout"></param>
-        /// <returns></returns>
-        public ExitPollSet SetTimeout(bool allowTimeout, float secondsUntilTimeout)
-        {
-            UseTimeout = allowTimeout;
-            Timeout = secondsUntilTimeout;
-            return this;
-        }
-
-        private LayerMask _panelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
-        public LayerMask PanelLayerMask
-        {
-            get
-            {
-                return _panelLayerMask;
-            }
-        }
-
-        //the prefered distance to display an exit poll
-        private float _defaultDisplayDistance = 3;
-        public float DisplayDistance
-        {
-            get
-            {
-                return _defaultDisplayDistance;
-            }
-        }
-
-        //the minimum distance to display an exit poll. below this value will cancel the exit poll and continue with gameplay
-        private float _defaultMinimumDisplayDistance = 1;
-        public float MinimumDisplayDistance
-        {
-            get
-            {
-                return _defaultMinimumDisplayDistance;
-            }
-        }
-
-        public ExitPollSet SetDisplayDistance(float preferedDistance, float minimumDistance)
-        {
-            _defaultMinimumDisplayDistance = Mathf.Max(minimumDistance, 0);
-            _defaultDisplayDistance = Mathf.Max(minimumDistance, preferedDistance);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Set the layers the Exit Poll panel will avoid
-        /// </summary>
-        /// <param name="layers"></param>
-        /// <returns></returns>
-        public ExitPollSet SetPanelLayerMask(params string[] layers)
-        {
-            _panelLayerMask = LayerMask.GetMask(layers);
-            return this;
-        }
-
-        private bool displayReticule = true;
-        public bool DisplayReticle { get { return displayReticule; } private set { displayReticule = value; } }
-        /// <summary>
-        /// Create a simple reticle while the ExitPoll Panel is visible
-        /// </summary>
-        /// <param name="useReticle"></param>
-        /// <returns></returns>
-        public ExitPollSet SetDisplayReticle(bool useReticle)
-        {
-            DisplayReticle = useReticle;
-            return this;
-        }
-
-        public GameObject ControllerPointer { get; private set; }
-        /// <summary>
-        /// Find a pointer object and enable that
-        /// </summary>
-        /// <param name="visible"></param>
-        /// <returns></returns>
-        public ExitPollSet SetControllerPointer(GameObject controller)
-        {
-            ControllerPointer = controller;
-            return this;
-        }
-
-        public bool LockYPosition { get; private set; }
-        /// <summary>
-        /// Use to HMD Y position instead of spawning the poll directly ahead of the player
-        /// </summary>
-        /// <param name="useLockYPosition"></param>
-        /// <returns></returns>
-        public ExitPollSet SetLockYPosition(bool useLockYPosition)
-        {
-            LockYPosition = useLockYPosition;
-            return this;
-        }
-
-        public bool RotateToStayOnScreen { get; private set; }
-        /// <summary>
-        /// If this window is not in the player's line of sight, rotate around the player toward their facing
-        /// </summary>
-        /// <param name="useRotateToOnscreen"></param>
-        /// <returns></returns>
-        public ExitPollSet SetRotateToStayOnScreen(bool useRotateToOnscreen)
-        {
-            RotateToStayOnScreen = useRotateToOnscreen;
-            return this;
-        }
-
-        public Vector3? OverridePosition { get; private set; }
-        public ExitPollSet SetPosition(Vector3 overridePosition)
-        {
-            OverridePosition = overridePosition;
-            return this;
-        }
-
-        public Quaternion? OverrideRotation { get; private set; }
-        public ExitPollSet SetRotation(Quaternion overrideRotation)
-        {
-            OverrideRotation = overrideRotation;
-            return this;
-        }
-
-        public bool StickWindow { get; private set; }
-        /// <summary>
-        /// Update the position of the Exit Poll prefab if the player teleports
-        /// </summary>
-        /// <param name="useStickyWindow"></param>
-        /// <returns></returns>
-        public ExitPollSet SetStickyWindow(bool useStickyWindow)
-        {
-            StickWindow = useStickyWindow;
-            return this;
-        }
-
-        void DisplayPanel(Dictionary<string, string> properties, int panelId, Vector3 spawnPoint)
+        GameObject GetPrefab(Dictionary<string, string> properties)
         {
             GameObject prefab = null;
             switch (properties["type"])
             {
                 case "HAPPYSAD":
-                    prefab = ExitPoll.ExitPollHappySad;
+                    if (myparameters.HappyPanelOverride != null)
+                    {
+                        prefab = myparameters.HappyPanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollHappySad;
+                    }
                     break;
                 case "SCALE":
-                    prefab = ExitPoll.ExitPollScale;
+                    if (myparameters.ScalePanelOverride != null)
+                    {
+                        prefab = myparameters.ScalePanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollScale;
+                    }
                     break;
                 case "MULTIPLE":
-                    prefab = ExitPoll.ExitPollMultiple;
+                    if (myparameters.MultiplePanelOverride != null)
+                    {
+                        prefab = myparameters.MultiplePanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollMultiple;
+                    }
                     break;
                 case "VOICE":
-                    prefab = ExitPoll.ExitPollVoice;
+                    if (myparameters.VoicePanelOverride != null)
+                    {
+                        prefab = myparameters.VoicePanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollVoice;
+                    }
                     break;
                 case "THUMBS":
-                    prefab = ExitPoll.ExitPollThumbs;
+                    if (myparameters.ThumbsPanelOverride != null)
+                    {
+                        prefab = myparameters.ThumbsPanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollThumbs;
+                    }
                     break;
                 case "BOOLEAN":
-                    prefab = ExitPoll.ExitPollTrueFalse;
+                    if (myparameters.BoolPanelOverride != null)
+                    {
+                        prefab = myparameters.BoolPanelOverride;
+                    }
+                    else
+                    {
+                        prefab = ExitPoll.ExitPollTrueFalse;
+                    }
                     break;
             }
-            if (prefab == null)
-            {
-                Util.logError("couldn't find prefab " + properties["type"]);
-                if (EndAction != null)
-                {
-                    EndAction.Invoke();
-                }
-                OverridePosition = null;
-                OverrideRotation = null;
-                if (_pointer) _pointer.SetVisible(false);
-                ExitPoll.CurrentExitPollSet = null;
-                return;
-            }
-
-            var newPanelGo = GameObject.Instantiate<GameObject>(prefab);
-            
-            //set position
-            if (OverridePosition.HasValue)
-                newPanelGo.transform.position = OverridePosition.Value;
-            else
-                newPanelGo.transform.position = spawnPoint;
-
-            //set rotation
-            if (OverrideRotation.HasValue)
-                newPanelGo.transform.rotation = OverrideRotation.Value;
-            else
-                newPanelGo.transform.rotation = Quaternion.LookRotation(newPanelGo.transform.position - GameplayReferences.HMD.position, Vector3.up);
-
-            CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
-
-            CurrentExitPollPanel.Initialize(properties, panelId, this);
+            return prefab;
         }
 
         /// <summary>
@@ -754,45 +676,92 @@ namespace CognitiveVR
             }
 
             //set position and rotation
-            Vector3 spawnPosition = GameplayReferences.HMD.position + GameplayReferences.HMD.forward * DisplayDistance;
+            Vector3 spawnPosition = GameplayReferences.HMD.position + GameplayReferences.HMD.forward * myparameters.DisplayDistance;
 
-            if (LockYPosition)
+            if (myparameters.LockYPosition)
             {
                 Vector3 modifiedForward = GameplayReferences.HMD.forward;
                 modifiedForward.y = 0;
                 modifiedForward.Normalize();
 
-                spawnPosition = GameplayReferences.HMD.position + modifiedForward * DisplayDistance;
+                spawnPosition = GameplayReferences.HMD.position + modifiedForward * myparameters.DisplayDistance;
             }
 
             RaycastHit hit = new RaycastHit();
 
-            //test slightly in front of the player's hmd
-            Collider[] colliderHits = Physics.OverlapSphere(GameplayReferences.HMD.position + Vector3.forward * 0.5f, 0.5f, PanelLayerMask);
-            if (colliderHits.Length > 0)
+            if (myparameters.PanelLayerMask.value != 0)
             {
-                Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
-                //too close! just fail the popup and keep playing the game
-                return false;
-            }
-
-            //ray from player's hmd position
-            if (Physics.SphereCast(GameplayReferences.HMD.position, 0.5f, spawnPosition - GameplayReferences.HMD.position, out hit, DisplayDistance, PanelLayerMask))
-            {
-                if (hit.distance < MinimumDisplayDistance)
+                //test slightly in front of the player's hmd
+                Collider[] colliderHits = Physics.OverlapSphere(GameplayReferences.HMD.position + Vector3.forward * 0.5f, 0.5f, myparameters.PanelLayerMask);
+                if (colliderHits.Length > 0)
                 {
-                    Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
+                    Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
                     //too close! just fail the popup and keep playing the game
                     return false;
                 }
-                else
+
+                //ray from player's hmd position
+                if (Physics.SphereCast(GameplayReferences.HMD.position, 0.5f, spawnPosition - GameplayReferences.HMD.position, out hit, myparameters.DisplayDistance, myparameters.PanelLayerMask))
                 {
-                    spawnPosition = GameplayReferences.HMD.position + (spawnPosition - GameplayReferences.HMD.position).normalized * (hit.distance);
+                    if (hit.distance < myparameters.MinimumDisplayDistance)
+                    {
+                        Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
+                        //too close! just fail the popup and keep playing the game
+                        return false;
+                    }
+                    else
+                    {
+                        spawnPosition = GameplayReferences.HMD.position + (spawnPosition - GameplayReferences.HMD.position).normalized * (hit.distance);
+                    }
                 }
             }
 
             pos = spawnPosition;
             return true;
+        }
+
+        //calls end actions
+        //calls parameter end events
+        //destroys spawned pointers
+        void Cleanup(bool completedSuccessfully)
+        {
+            if (pointerInstance != null)
+            {
+                if (myparameters.PointerType != ExitPoll.PointerType.SceneObject)
+                {
+                    GameObject.Destroy(pointerInstance);
+                }
+                else //if pointertype == SceneObject
+                {
+                    if (myparameters.PointerParent != ExitPoll.PointerSource.Other)
+                    {
+                        //unparent
+                        pointerInstance.transform.SetParent(null);
+                    }
+                    else
+                    {
+                        if (myparameters.PointerParentOverride == null)
+                        {
+                            //not parented at startup. don't unparent
+                        }
+                        else
+                        {
+                            pointerInstance.transform.SetParent(null);
+                        }
+                    }
+                }
+            }
+
+            if (myparameters.OnComplete != null && completedSuccessfully == true)
+                myparameters.OnComplete.Invoke();
+
+            if (myparameters.OnClose != null)
+                myparameters.OnClose.Invoke();
+
+            if (myparameters.EndAction != null)
+            {
+                myparameters.EndAction.Invoke(completedSuccessfully);
+            }
         }
     }
 }
