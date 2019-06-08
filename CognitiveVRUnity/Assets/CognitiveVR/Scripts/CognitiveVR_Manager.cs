@@ -414,6 +414,16 @@ namespace CognitiveVR
         }
 
         /// <summary>
+        /// sets the user's name property
+        /// </summary>
+        /// <param name="name"></param>
+        public static void SetUserName(string name)
+        {
+            Core.UserId = name;
+            Core.SetSessionProperty("c3d.username", name);
+        }
+
+        /// <summary>
         /// sets a constant lobby id shared between multiple sessions. this is for associating sessions together for multiplayer
         /// </summary>
         public static void SetLobbyId(string lobbyId)
