@@ -194,7 +194,7 @@ public class ControllerInputTracker : MonoBehaviour
                 copy.Add(CurrentButtonStates[i]); //move the reference over to the copy
             }
             CurrentButtonStates.Clear();
-            DynamicManager.RecordControllerEvent(ref dynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(dynamic.DataId, copy);
         }
     }
 

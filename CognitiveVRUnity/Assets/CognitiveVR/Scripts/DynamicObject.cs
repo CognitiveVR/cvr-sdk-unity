@@ -46,8 +46,9 @@ namespace CognitiveVR
             return true;
         }
 #endif
-
-        public DynamicData Data;
+        
+        [System.NonSerialized]
+        public string DataId;
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
 
@@ -72,16 +73,26 @@ namespace CognitiveVR
         [System.NonSerialized]
         public Vector3 StartingScale;
 
+        //make this dynamic object record position on the same frame as physics gaze
+        public bool UpdateWithPlayerGazeTick;
+
         private void OnEnable()
         {
             StartingScale = transform.lossyScale;
             if (CognitiveVR.Core.IsInitialized)
             {
-                if (Data.active == true && Data.remove == false) { return; }
+                if (DynamicManager.IsDataActive(DataId)) { return; }
                 
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
-                Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController, ControllerType,IsRight);
+                if (UpdateWithPlayerGazeTick)
+                {
+                    UpdateRate = 64;
+                }
+
+                var Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController, ControllerType,IsRight);
+
+                DataId = Data.Id;
 
                 if (false /*IsMedia*/)
                 {
@@ -100,6 +111,16 @@ namespace CognitiveVR
             {
                 CognitiveVR.Core.InitEvent += OnCoreInitialize;
             }
+
+            if (UpdateWithPlayerGazeTick)
+            {
+                CognitiveVR.Core.TickEvent += Core_TickEvent;
+            }
+        }
+
+        private void Core_TickEvent()
+        {
+            CognitiveVR.DynamicManager.RecordDynamic(DataId);
         }
 
         private void OnCoreInitialize(CognitiveVR.Error error)
@@ -114,8 +135,8 @@ namespace CognitiveVR
         /// <returns></returns>
         public string GetId()
         {
-            if (Data.active)
-                return Data.Id;
+            if (DynamicManager.IsDataActive(DataId))
+                return DataId;
             if (!string.IsNullOrEmpty(CustomId))
                 return CustomId;
             return string.Empty;
@@ -126,30 +147,25 @@ namespace CognitiveVR
         /// </summary>
         public void RecordSnapshot()
         {
-            Data.dirty = true;
+            DynamicManager.SetDirty(DataId);
         }
 
         /// <summary>
-        /// manually record position and rotation on this dynamic object
+        /// manually record position and rotation and properties on this dynamic object
         /// </summary>
         public void RecordSnapshot(List<KeyValuePair<string, object>> properties)
         {
-            Data.dirty = true;
-            Data.HasProperties = true;
-            Data.Properties = properties;
+            DynamicManager.SetProperties(DataId,properties);
         }
 
         public void RecordSnapshot(Dictionary<string,object> properties)
         {
-            Data.dirty = true;
-            Data.HasProperties = true;
-
             List<KeyValuePair<string, object>> temp = new List<KeyValuePair<string, object>>(properties.Count);
             foreach(var prop in properties)
             {
                 temp.Add(new KeyValuePair<string, object>(prop.Key, prop.Value));
             }
-            Data.Properties = temp;
+            DynamicManager.SetProperties(DataId, temp);
         }
 
         public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string,object>> properties = null)
@@ -166,10 +182,9 @@ namespace CognitiveVR
         {
             CognitiveVR.Core.InitEvent -= OnCoreInitialize;
 
-            Data.LastPosition = transform.position;
-            Data.LastRotation = transform.rotation;
+            DynamicManager.SetTransform(DataId, transform);
 
-            CognitiveVR.DynamicManager.RemoveDynamicObject(Data);
+            CognitiveVR.DynamicManager.RemoveDynamicObject(DataId);
         }
 
 

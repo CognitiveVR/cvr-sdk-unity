@@ -462,13 +462,20 @@ namespace CognitiveVR
 
             if (replacingSceneId)
             {
-                Core.SetTrackingScene("");
                 if (loadingScene != null)
                 {
                     if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
                         Core.SetTrackingScene(scene.name);
                     }
+                    else
+                    {
+                        Core.SetTrackingScene("");
+                    }
+                }
+                else
+                {
+                    Core.SetTrackingScene("");
                 }
             }
 

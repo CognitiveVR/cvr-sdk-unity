@@ -93,7 +93,7 @@ namespace CognitiveVR
 
             if (DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
             {
-                ObjectId = hitDynamic.Data.Id;
+                ObjectId = hitDynamic.DataId;
             }
 
             float depthDistance = Vector3.Distance(GameplayReferences.HMD.position, worldpos);
