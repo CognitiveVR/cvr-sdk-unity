@@ -61,6 +61,8 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_TickEvent()
         {
+            if (GameplayReferences.HMD == null) { return; }
+
             if (helper == null) //if there's a scene change and camera is destroyed, replace helper
             {
                 helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();

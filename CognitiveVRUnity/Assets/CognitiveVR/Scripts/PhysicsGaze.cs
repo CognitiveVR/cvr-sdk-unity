@@ -28,6 +28,8 @@ namespace CognitiveVR
 
     private void CognitiveVR_Manager_TickEvent()
     {
+        if (GameplayReferences.HMD == null) { return; }
+
         RaycastHit hit = new RaycastHit();
         Ray ray = new Ray(GameplayReferences.HMD.position, GetWorldGazeDirection());
 
