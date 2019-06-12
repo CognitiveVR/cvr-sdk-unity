@@ -68,13 +68,13 @@ namespace CognitiveVR
             {
                 LayerMask gazeMask = new LayerMask();
                 gazeMask.value = p.GazeLayerMask;
-                gazeMask = EditorGUILayout.MaskField("Gaze Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(gazeMask), (UnityEditorInternal.InternalEditorUtility.layers));
+                gazeMask = EditorGUILayout.MaskField("Gaze Layer Mask", gazeMask, (UnityEditorInternal.InternalEditorUtility.layers));
                 p.GazeLayerMask = gazeMask.value;
             }
 
             LayerMask dynamicMask = new LayerMask();
             dynamicMask.value = p.DynamicLayerMask;
-            dynamicMask = EditorGUILayout.MaskField("Dynamic Object Layer Mask", UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(dynamicMask), (UnityEditorInternal.InternalEditorUtility.layers));
+            dynamicMask = EditorGUILayout.MaskField("Dynamic Object Layer Mask", dynamicMask, (UnityEditorInternal.InternalEditorUtility.layers));
             p.DynamicLayerMask = dynamicMask.value;
 
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
