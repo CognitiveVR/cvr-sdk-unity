@@ -78,6 +78,8 @@ namespace CognitiveVR
 
         void OnHelperPostRender(Ray ray, Vector3 gazeVector, Vector3 worldpos)
         {
+            if (GameplayReferences.HMD == null) { return; }
+
             Vector3 gpsloc = new Vector3();
             float compass = 0;
             Vector3 floorPos = new Vector3();

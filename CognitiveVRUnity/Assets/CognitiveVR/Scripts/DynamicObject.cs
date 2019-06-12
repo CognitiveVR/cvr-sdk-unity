@@ -74,7 +74,7 @@ namespace CognitiveVR
         public Vector3 StartingScale;
 
         //make this dynamic object record position on the same frame as physics gaze
-        public bool UpdateWithPlayerGazeTick;
+        public bool SyncWithPlayerGazeTick;
 
         private void OnEnable()
         {
@@ -85,7 +85,7 @@ namespace CognitiveVR
                 
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
-                if (UpdateWithPlayerGazeTick)
+                if (SyncWithPlayerGazeTick)
                 {
                     UpdateRate = 64;
                 }
@@ -112,7 +112,7 @@ namespace CognitiveVR
                 CognitiveVR.Core.InitEvent += OnCoreInitialize;
             }
 
-            if (UpdateWithPlayerGazeTick)
+            if (SyncWithPlayerGazeTick)
             {
                 CognitiveVR.Core.TickEvent += Core_TickEvent;
             }

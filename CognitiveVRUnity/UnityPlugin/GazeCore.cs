@@ -10,9 +10,7 @@ namespace CognitiveVR
     public enum GazeType
     {
         Physics, //raycast
-        Command, //command buffer
-        Depth, //classic depth rendering
-        //Sphere, //inverted sphere media
+        Command //command buffer
     }
 
     public static class GazeCore
