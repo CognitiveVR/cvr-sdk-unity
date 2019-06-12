@@ -110,9 +110,9 @@ namespace CognitiveVR.Components
         public override string GetDescription()
         {
 #if UNITY_ANDROID && CVR_OCULUS
-            return "Send the battery level of Android device after initialization and on quit\nAlso includes battery temperature and status");
+            return "Send the battery level of Android device after initialization and on quit\nAlso includes battery temperature and status";
 #elif UNITY_ANDROID
-            return "Send the battery level of Android device after initialization and on quit");
+            return "Send the battery level of Android device after initialization and on quit";
 #else
             return "Current platform does not support this component. Must be set to Android";
 #endif

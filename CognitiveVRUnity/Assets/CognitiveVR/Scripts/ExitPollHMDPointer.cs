@@ -77,6 +77,7 @@ namespace CognitiveVR
                 var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
                 return ray.direction;
             }
+            return GameplayReferences.HMD.forward;
 #elif CVR_FOVE
             if (FoveInstance == null)
             {
@@ -84,6 +85,7 @@ namespace CognitiveVR
             }
             var eyeRays = FoveInstance.GetGazeRays();
             Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
+            return v;
 #elif CVR_TOBIIVR
             if (_eyeTracker == null)
             {
@@ -93,7 +95,7 @@ namespace CognitiveVR
 #elif CVR_NEURABLE
             return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH
-            return Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
+            return AdhawkApi.Calibrator.Instance.GetGazeVector(filterType: AdhawkApi.Numerics.Filters.FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
             return SvrManager.Instance.EyeDirection;
 #elif CVR_VIVEPROEYE

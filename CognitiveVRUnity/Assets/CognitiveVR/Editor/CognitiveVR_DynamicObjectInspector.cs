@@ -51,6 +51,7 @@ namespace CognitiveVR
             var meshname = serializedObject.FindProperty("MeshName");
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
+            var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
 
             foreach (var t in serializedObject.targetObjects) //makes sure a custom id is valid
             {
@@ -269,11 +270,11 @@ namespace CognitiveVR
                 GUILayout.EndHorizontal();
 
 
-
+                EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the dynamic object on the same frame as gaze. This may smooth movement of this object in SceneExplorer relative to the player's position"));
+                EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);
                 EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This is the Snapshot interval in the Tracker Options Window"), GUILayout.MinWidth(50));
-
                 updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
-
+                EditorGUI.EndDisabledGroup();
 
                 EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot. Checked each 'Tick'"));
                 positionThreshold.floatValue = Mathf.Max(0, positionThreshold.floatValue);

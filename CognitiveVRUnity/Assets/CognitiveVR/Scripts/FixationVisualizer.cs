@@ -63,8 +63,8 @@ namespace CognitiveVR
                         var all = FindObjectsOfType<DynamicObject>();
                         foreach(var d in all)
                         {
-                            if (dynamicObjects.ContainsKey(d.Data.Id)) { continue; }
-                            else dynamicObjects.Add(d.Data.Id, d);
+                            if (dynamicObjects.ContainsKey(d.DataId)) { continue; }
+                            else dynamicObjects.Add(d.DataId, d);
                         }
                         if (dynamicObjects.TryGetValue(v.DynamicObjectId, out dyn))
                         {

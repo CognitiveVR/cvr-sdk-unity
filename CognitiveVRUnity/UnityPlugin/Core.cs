@@ -73,7 +73,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.13.0";
+        public const string SDK_VERSION = "0.13.1";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -154,12 +154,32 @@ namespace CognitiveVR
             SetTrackingScene(scene);
         }
 
+        private static float SceneStartTime;
+
         /// <summary>
         /// Set the SceneId for recorded data by reference
         /// </summary>
         /// <param name="scene"></param>
         public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
         {
+            if (scene == null)
+            {
+                //what scene is being loaded
+                float duration = Time.time - SceneStartTime;
+                SceneStartTime = Time.time;
+                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
+            }
+            else
+            {
+                //what scene is being loaded
+                float duration = Time.time - SceneStartTime;
+                SceneStartTime = Time.time;
+                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+            }
+
+            //just to send this scene change event
+            Core.InvokeSendDataEvent();
+
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";

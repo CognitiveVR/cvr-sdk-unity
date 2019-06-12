@@ -28,6 +28,8 @@ namespace CognitiveVR
 
     private void CognitiveVR_Manager_TickEvent()
     {
+        if (GameplayReferences.HMD == null) { return; }
+
         RaycastHit hit = new RaycastHit();
         Ray ray = new Ray(GameplayReferences.HMD.position, GetWorldGazeDirection());
 
@@ -44,7 +46,7 @@ namespace CognitiveVR
         Vector2 hitcoord;
         if (DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
-            string ObjectId = hitDynamic.Data.Id;
+            string ObjectId = hitDynamic.DataId;
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
             if (mediacomponent != null)
             {
@@ -58,7 +60,9 @@ namespace CognitiveVR
             }
 
             Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1,0,1,0.5f), CognitiveVR_Preferences.Instance.SnapshotInterval);
-
+            Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
+            Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
+            Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
             return;
         }
 

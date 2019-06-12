@@ -10,9 +10,7 @@ namespace CognitiveVR
     public enum GazeType
     {
         Physics, //raycast
-        Command, //command buffer
-        Depth, //classic depth rendering
-        //Sphere, //inverted sphere media
+        Command //command buffer
     }
 
     public static class GazeCore
@@ -197,6 +195,8 @@ namespace CognitiveVR
 
         private static void SendGazeData()
         {
+            if (gazeCount == 0) { return; }
+
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 Util.logDebug("Cognitive GazeCore.SendData could not find scene settings for scene! do not upload gaze to sceneexplorer");

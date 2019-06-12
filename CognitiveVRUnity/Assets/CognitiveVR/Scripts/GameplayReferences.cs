@@ -113,6 +113,8 @@ namespace CognitiveVR
                         _hmd = Camera.main.transform;
 
 #endif
+                    if (CognitiveVR_Preferences.Instance.EnableLogging)
+                        Util.logWarning("HMD set to " + _hmd);
                 }
                 return _hmd;
             }
