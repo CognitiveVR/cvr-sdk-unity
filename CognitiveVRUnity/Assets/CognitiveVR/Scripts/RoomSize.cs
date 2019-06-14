@@ -32,6 +32,22 @@ namespace CognitiveVR.Components
                 Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", roomX*100, roomY*100));
                 Core.SetSessionProperty("c3d.roomscale", !seated);
             }
+#elif CVR_VARJO
+            float roomX = 0;
+            float roomY = 0;
+            if (Varjo.Valve.VR.OpenVR.Chaperone == null || !Varjo.Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+            {
+                //Core.SetSessionProperty("c3d.roomsize", 0);
+                //Core.SetSessionProperty("c3d.roomsizeDescription", "0 x 0");
+                //Core.SetSessionProperty("c3d.roomscale", false);
+            }
+            else
+            {
+                bool seated = Mathf.Approximately(roomX, 1f) && Mathf.Approximately(roomY, 1f);
+                Core.SetSessionProperty("c3d.roomsize", roomX * roomY * 100);
+                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", roomX * 100, roomY * 100));
+                Core.SetSessionProperty("c3d.roomscale", !seated);
+            }
 #elif CVR_OCULUS
 
             //(x = width, y = height, z = depth)

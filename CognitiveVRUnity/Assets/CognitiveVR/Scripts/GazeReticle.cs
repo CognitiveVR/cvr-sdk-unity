@@ -200,6 +200,36 @@ namespace CognitiveVR
             }
             return lastDir;
         }
+#elif CVR_VARJO
+        void Start()
+        {
+            t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+            if (GameplayReferences.HMD == null) { return; }
+        }
+
+        void Update()
+        {
+            if (GameplayReferences.HMD == null) { return; }
+
+            t.position = Vector3.Lerp(t.position, GameplayReferences.HMD.position + GetLookDirection() * Distance, Speed);
+            t.LookAt(GameplayReferences.HMD.position);
+        }
+
+        Vector3 lastDir = Vector3.forward;
+        Vector3 GetLookDirection()
+        {
+            if (Varjo.VarjoPlugin.InitGaze())
+            {
+                var data = Varjo.VarjoPlugin.GetGaze();
+                if (data.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                {
+                    var ray = data.gaze;
+                    lastDir = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
+                    return lastDir;
+                }
+            }
+            return lastDir;
+        }
 #endif
     }
 }

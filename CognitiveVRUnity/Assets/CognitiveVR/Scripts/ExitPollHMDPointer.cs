@@ -46,6 +46,9 @@ namespace CognitiveVR
         PupilTools.SubscribeTo("gaze");
     }
 #endif
+#if CVR_VARJO
+        Vector3 lastDir = Vector3.forward;
+#endif
 #if CVR_VIVEPROEYE
         Vector3 lastDir = Vector3.forward; //vive pro
 #endif
@@ -103,6 +106,18 @@ namespace CognitiveVR
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
             {
                 lastDir = GameplayReferences.HMD.TransformDirection(ray.direction);
+            }
+            return lastDir;
+#elif CVR_VARJO
+            if (Varjo.VarjoPlugin.InitGaze())
+            {
+                var data = Varjo.VarjoPlugin.GetGaze();
+                if (data.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                {
+                    var ray = data.gaze;
+                    lastDir = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
+                    return lastDir;
+                }
             }
             return lastDir;
 #else

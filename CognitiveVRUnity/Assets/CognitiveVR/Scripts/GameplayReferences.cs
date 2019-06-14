@@ -102,6 +102,20 @@ namespace CognitiveVR
                     }
                     else
                         _hmd = Camera.main.transform;
+#elif CVR_VARJO
+                    Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
+                    if (manager != null){ _hmd = manager.varjoCamera.transform; }
+                    if (_hmd == null)
+                    {
+                        if (Camera.main == null)
+                        {
+                            var c = GameObject.FindObjectOfType<Camera>();
+                            if (c != null)
+                                _hmd = c.transform;
+                        }
+                        else
+                            _hmd = Camera.main.transform;
+                    }
 #else
                     if (Camera.main == null)
                     {
@@ -259,6 +273,59 @@ namespace CognitiveVR
                 }
             }
 
+        }
+#elif CVR_VARJO
+
+        static Varjo.Varjo_SteamVR_ControllerManager cm;
+
+        static void InitializeControllers()
+        {
+            if (controllers != null && controllers[0].transform != null && controllers[1].transform != null && controllers[0].id >0 && controllers[1].id > 0) {return;}
+
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+                controllers[0] = new ControllerInfo();
+                controllers[1] = new ControllerInfo();
+            }
+            //try to initialize with controllermanager
+            //otherwise try to initialize with player.hands
+            if (cm == null)
+            {
+                cm = GameObject.FindObjectOfType<Varjo.Varjo_SteamVR_ControllerManager>();
+            }
+            if (cm != null)
+            {
+                var left = cm.left.GetComponent<Varjo.Varjo_SteamVR_TrackedObject>();
+                controllers[0].transform = left.transform;
+                controllers[0].id = (int)left.index;
+                controllers[0].isRight = false;
+                if (left.index != Varjo.Varjo_SteamVR_TrackedObject.EIndex.None)
+                {
+                    controllers[0].connected = Varjo.Varjo_SteamVR_Controller.Input((int)left.index).connected;
+                    controllers[0].visible = Varjo.Varjo_SteamVR_Controller.Input((int)left.index).valid;
+                }
+                else
+                {
+                    controllers[0].connected = false;
+                    controllers[0].visible = false;
+                }
+
+                var right = cm.right.GetComponent<Varjo.Varjo_SteamVR_TrackedObject>();
+                controllers[1].transform = right.transform;
+                controllers[1].id = (int)right.index;
+                controllers[1].isRight = true;
+                if (right.index != Varjo.Varjo_SteamVR_TrackedObject.EIndex.None)
+                {
+                    controllers[1].connected = Varjo.Varjo_SteamVR_Controller.Input((int)right.index).connected;
+                    controllers[1].visible = Varjo.Varjo_SteamVR_Controller.Input((int)right.index).valid;
+                }
+                else
+                {
+                    controllers[1].connected = false;
+                    controllers[1].visible = false;
+                }
+            }
         }
 #else
         static void InitializeControllers()
