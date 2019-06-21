@@ -283,6 +283,16 @@ namespace CognitiveVR
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);
             }
+#elif CVR_VARJO
+            if (Varjo.VarjoPlugin.InitGaze())
+            {
+                var data = Varjo.VarjoPlugin.GetGaze();
+                if (data.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                {
+                    var ray = data.gaze;
+                    gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
+                }
+            }
 #elif CVR_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH

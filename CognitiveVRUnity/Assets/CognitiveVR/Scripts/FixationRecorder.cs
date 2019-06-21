@@ -160,6 +160,87 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_VARJO
+        const int CachedEyeCaptures = 100; //VARJO
+
+        Varjo.VarjoPlugin.GazeData currentData;
+        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+
+        //raw time since computer restarted. in nanoseconds
+        long startTimestamp;
+
+        //start time since epoch. in seconds
+        double epochStart;
+
+        IEnumerator Start()
+        {
+            while (true)
+            {
+                if (Varjo.VarjoPlugin.InitGaze())
+                {
+                    startTimestamp = Varjo.VarjoPlugin.GetGaze().captureTime;
+                    if (startTimestamp > 0)
+                    {
+                        System.TimeSpan span = System.DateTime.UtcNow - epoch;
+                        epochStart = span.TotalSeconds;
+                        break;
+                    }
+                }
+                yield return null;
+            }
+        }
+
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+            if (Varjo.VarjoPlugin.InitGaze())
+            {
+                // Check if gaze data is valid and calibrated
+                if (currentData.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                {
+                    ray.direction = GameplayReferences.HMD.TransformDirection(new Vector3((float)currentData.gaze.forward[0], (float)currentData.gaze.forward[1], (float)currentData.gaze.forward[2]));
+                    ray.origin = GameplayReferences.HMD.TransformPoint(new Vector3((float)currentData.gaze.position[0], (float)currentData.gaze.position[1], (float)currentData.gaze.position[2]));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            if (Varjo.VarjoPlugin.InitGaze())
+                return currentData.leftStatus != Varjo.VarjoPlugin.GazeEyeStatus.EYE_INVALID;
+            return false;
+        }
+        public bool RightEyeOpen()
+        {
+            if (Varjo.VarjoPlugin.InitGaze())
+                return currentData.rightStatus != Varjo.VarjoPlugin.GazeEyeStatus.EYE_INVALID;
+            return false;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            //currentData.captureTime //nanoseconds. steady clock
+            long sinceStart = currentData.captureTime - startTimestamp;
+            sinceStart = (sinceStart / 1000000); //remove NANOSECONDS
+            var final = epochStart * 1000 + sinceStart;
+            return (long)final;
+        }
+        
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (Varjo.VarjoPlugin.InitGaze())
+            {
+                if (Varjo.VarjoPlugin.GetOldestGazeIfAvailable(ref currentData))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 #elif CVR_NEURABLE
         const int CachedEyeCaptures = 120;
         //public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
