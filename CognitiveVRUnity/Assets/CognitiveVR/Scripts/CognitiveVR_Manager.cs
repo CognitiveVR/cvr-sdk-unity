@@ -249,7 +249,7 @@ namespace CognitiveVR
                 case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO
             //fixation requires some kind of eye tracking hardware
             FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
             if (fixationRecorder == null)
@@ -365,6 +365,11 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Meta");
+#elif CVR_VARJO
+            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Varjo");
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
+            Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
 #endif
 
             //eye tracker addons
