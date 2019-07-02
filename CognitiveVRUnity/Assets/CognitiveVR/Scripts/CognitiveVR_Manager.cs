@@ -366,6 +366,7 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Meta");
 #elif CVR_VARJO
+            Core.SetSessionProperty("c3d.device.hmd.type", "Varjo VR-1");
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Varjo");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");

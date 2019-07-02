@@ -597,7 +597,7 @@ namespace CognitiveVR
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
             if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
-            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask))
+            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, QueryTriggerInteraction.Ignore))
             {
                 world = hit.point;
 

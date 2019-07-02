@@ -410,7 +410,8 @@ namespace CognitiveVR
         /// manually record a dynamic object. shouldn't be called except when you need a _precise_ time
         /// </summary>
         /// <param name="id"></param>
-        public static void RecordDynamic(string id)
+        /// <param name="forceWrite">writes snapshot even if dynamic hasn't moved beyond threshold</param>
+        public static void RecordDynamic(string id, bool forceWrite)
         {
             if (!Core.IsInitialized) { return; }
 
@@ -432,70 +433,101 @@ namespace CognitiveVR
             Vector3 scale = ActiveDynamicObjectsArray[i].Transform.lossyScale;
             Quaternion rot = ActiveDynamicObjectsArray[i].Transform.rotation;
 
+            //check distance
+            if (!forceWrite)
+            {
+                //IMPROVEMENT INLINE SQRMAGNITUDE
+                if (Vector3.SqrMagnitude(pos - ActiveDynamicObjectsArray[i].LastPosition) > ActiveDynamicObjectsArray[i].PositionThreshold * ActiveDynamicObjectsArray[i].PositionThreshold)
+                {
+                    ActiveDynamicObjectsArray[i].dirty = true;
+                    forceWrite = true;
+                }
+            }
+
+            //check rotation
+            if (!forceWrite)
+            {
+                //IMPROVEMENT INLINE DOT
+                float f = Quaternion.Dot(ActiveDynamicObjectsArray[i].LastRotation, rot);
+
+                float fabs = f < 0 ? f * -1 : f;
+                float min = fabs < 1 ? fabs : 1;
+
+                if (System.Math.Acos(min) * 114.59156f > ActiveDynamicObjectsArray[i].RotationThreshold)
+                {
+                    ActiveDynamicObjectsArray[i].dirty = true;
+                    forceWrite = true;
+                }
+            }
+            //check scale
             bool writeScale = false;
             if (Vector3.SqrMagnitude(ActiveDynamicObjectsArray[i].LastScale - scale) > ActiveDynamicObjectsArray[i].ScaleThreshold * ActiveDynamicObjectsArray[i].ScaleThreshold)
             {
                 //IMPROVEMENT INLINE SQRMAGNITUDE
                 //TEST scale threshold
                 writeScale = true;
+                forceWrite = true;
                 ActiveDynamicObjectsArray[i].dirty = true;
             }
 
-            System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
-
-            if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
+            if (forceWrite)
             {
-                ActiveDynamicObjectsArray[i].UpdateInterval = 0;
+                System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
 
-                ActiveDynamicObjectsArray[i].dirty = false;
-                ActiveDynamicObjectsArray[i].LastPosition = pos;
-                ActiveDynamicObjectsArray[i].LastRotation = rot;
-                if (writeScale)
+                if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
                 {
-                    ActiveDynamicObjectsArray[i].LastScale = scale;
-                }
-                string props = null;
-                if (ActiveDynamicObjectsArray[i].HasProperties)
-                {
-                    System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
-                    for (int j = 0; j < ActiveDynamicObjectsArray[i].Properties.Count; j++)
+                    ActiveDynamicObjectsArray[i].UpdateInterval = 0;
+
+                    ActiveDynamicObjectsArray[i].dirty = false;
+                    ActiveDynamicObjectsArray[i].LastPosition = pos;
+                    ActiveDynamicObjectsArray[i].LastRotation = rot;
+                    if (writeScale)
                     {
-                        if (j != 0)
-                            sb.Append(",");
-                        sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
-                        sb.Append(":");
-                        sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                        ActiveDynamicObjectsArray[i].LastScale = scale;
                     }
-                    props = sb.ToString();
-                }
-
-                if (!ActiveDynamicObjectsArray[i].hasEnabled)
-                {
-                    ActiveDynamicObjectsArray[i].hasEnabled = true;
+                    string props = null;
                     if (ActiveDynamicObjectsArray[i].HasProperties)
                     {
-                        props += ",\"enabled\":true";
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
+                        for (int j = 0; j < ActiveDynamicObjectsArray[i].Properties.Count; j++)
+                        {
+                            if (j != 0)
+                                sb.Append(",");
+                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
+                            sb.Append(":");
+                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                        }
+                        props = sb.ToString();
                     }
-                    else
-                    {
-                        props += "\"enabled\":true";
-                    }
-                }
 
-                if (ActiveDynamicObjectsArray[i].remove)
-                {
-                    if (ActiveDynamicObjectsArray[i].HasProperties)
+                    if (!ActiveDynamicObjectsArray[i].hasEnabled)
                     {
-                        props += ",\"enabled\":false";
+                        ActiveDynamicObjectsArray[i].hasEnabled = true;
+                        if (ActiveDynamicObjectsArray[i].HasProperties)
+                        {
+                            props += ",\"enabled\":true";
+                        }
+                        else
+                        {
+                            props += "\"enabled\":true";
+                        }
                     }
-                    else
-                    {
-                        props += "\"enabled\":false";
-                    }
-                }
 
-                ActiveDynamicObjectsArray[i].HasProperties = false;
-                CognitiveVR.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    if (ActiveDynamicObjectsArray[i].remove)
+                    {
+                        if (ActiveDynamicObjectsArray[i].HasProperties)
+                        {
+                            props += ",\"enabled\":false";
+                        }
+                        else
+                        {
+                            props += "\"enabled\":false";
+                        }
+                    }
+
+                    ActiveDynamicObjectsArray[i].HasProperties = false;
+                    CognitiveVR.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                }
             }
         }
 
