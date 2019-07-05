@@ -105,15 +105,14 @@ namespace CognitiveVR
                 {
                     CognitiveVR.DynamicManager.RegisterDynamicObject(Data);
                 }
+                if (SyncWithPlayerGazeTick)
+                {
+                    CognitiveVR.Core.TickEvent += Core_TickEvent;
+                }
             }
             else
             {
                 CognitiveVR.Core.InitEvent += OnCoreInitialize;
-            }
-
-            if (SyncWithPlayerGazeTick)
-            {
-                CognitiveVR.Core.TickEvent += Core_TickEvent;
             }
         }
 

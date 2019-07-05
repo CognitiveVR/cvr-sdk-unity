@@ -4,7 +4,7 @@ using UnityEngine;
 
 //displays completed fixation points using particles
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+//#if UNITY_EDITOR || DEVELOPMENT_BUILD
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Testing/Fixation Visualizer")]
@@ -98,4 +98,4 @@ namespace CognitiveVR
         }
     }
 }
-#endif
+//#endif

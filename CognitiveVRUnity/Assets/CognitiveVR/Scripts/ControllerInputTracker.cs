@@ -420,7 +420,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentRightButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(ref RightHand.Data, copy);
+            DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
         }
         if (CurrentLeftButtonStates.Count > 0)
         {
@@ -431,7 +431,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentLeftButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(ref LeftHand.Data, copy);
+            DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
         }
     }
 
@@ -654,7 +654,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
             CurrentButtonStates.Clear();
 
-            DynamicManager.RecordControllerEvent(ref controllerDynamic.Data, copy);
+            DynamicManager.RecordControllerEvent(controllerDynamic.DataId, copy);
         }
     }
     
@@ -817,7 +817,7 @@ public class ControllerInputTracker : MonoBehaviour
             		copy.Add(CurrentButtonStates[i]);
             	}
                 CurrentButtonStates.Clear();
-            	DynamicManager.RecordControllerEvent(ref dynamic.Data, copy);
+            	DynamicManager.RecordControllerEvent(dynamic.DataId, copy);
             }
         }
 
