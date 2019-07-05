@@ -181,6 +181,7 @@ namespace CognitiveVR
 
             if (writeScale)
             {
+                s.DirtyScale = true;
                 s.scaleX = data.LastScale.x;
                 s.scaleY = data.LastScale.y;
                 s.scaleZ = data.LastScale.z;

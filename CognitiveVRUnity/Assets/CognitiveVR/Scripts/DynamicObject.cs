@@ -61,7 +61,7 @@ namespace CognitiveVR
         public CommonDynamicMesh CommonMesh;
 
 
-        public float PositionThreshold = 0.001f;
+        public float PositionThreshold = 0.01f;
         public float RotationThreshold = 0.1f;
         public float ScaleThreshold = 0.1f;
 
@@ -80,9 +80,7 @@ namespace CognitiveVR
         {
             StartingScale = transform.lossyScale;
             if (CognitiveVR.Core.IsInitialized)
-            {
-                if (DynamicManager.IsDataActive(DataId)) { return; }
-                
+            {                
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
                 if (SyncWithPlayerGazeTick)
@@ -90,7 +88,8 @@ namespace CognitiveVR
                     UpdateRate = 64;
                 }
 
-                var Data = new DynamicData(gameObject.name, CustomId, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, 0.01f, 1f, 0.1f, UpdateRate, IsController, ControllerType,IsRight);
+                string registerid = UseCustomId ? CustomId : "";
+                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType,IsRight);
 
                 DataId = Data.Id;
 
@@ -106,21 +105,20 @@ namespace CognitiveVR
                 {
                     CognitiveVR.DynamicManager.RegisterDynamicObject(Data);
                 }
+                if (SyncWithPlayerGazeTick)
+                {
+                    CognitiveVR.Core.TickEvent += Core_TickEvent;
+                }
             }
             else
             {
                 CognitiveVR.Core.InitEvent += OnCoreInitialize;
             }
-
-            if (SyncWithPlayerGazeTick)
-            {
-                CognitiveVR.Core.TickEvent += Core_TickEvent;
-            }
         }
 
         private void Core_TickEvent()
         {
-            CognitiveVR.DynamicManager.RecordDynamic(DataId);
+            CognitiveVR.DynamicManager.RecordDynamic(DataId,false);
         }
 
         private void OnCoreInitialize(CognitiveVR.Error error)
@@ -181,6 +179,7 @@ namespace CognitiveVR
         private void OnDisable()
         {
             CognitiveVR.Core.InitEvent -= OnCoreInitialize;
+            CognitiveVR.Core.TickEvent -= Core_TickEvent;
 
             DynamicManager.SetTransform(DataId, transform);
 
