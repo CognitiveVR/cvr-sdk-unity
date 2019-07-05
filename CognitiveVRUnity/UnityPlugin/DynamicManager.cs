@@ -35,6 +35,7 @@ namespace CognitiveVR
             {
                 if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
                 {
+                    Util.logError("DynamicManager::RegisterDynamicObject found existing ID " + data.Id);
                     //id is already used. don't add to list again
                     return;
                 }
