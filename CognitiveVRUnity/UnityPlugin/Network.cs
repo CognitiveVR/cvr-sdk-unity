@@ -247,6 +247,53 @@ namespace CognitiveVR
             Sender.StartCoroutine(Sender.ForceUploadLocalStorage(completedCallback,failedCallback));
         }
 
+        static FileInfo localDataInfo;
+
+        /// <summary>
+        /// return 0-1 for how full the local cache is
+        /// if not muted, will print a message with the current cache size
+        /// </summary>
+        /// <param name="mute"></param>
+        /// <returns></returns>
+        public static float GetLocalStorage(bool mute = false)
+        {
+            float percent = 0;
+            try
+            {
+                if (localDataInfo == null)
+                {
+                    localDataInfo = new FileInfo(localDataPath);
+                }
+                int length = (int)localDataInfo.Length;
+                percent = length / (float)CognitiveVR_Preferences.Instance.LocalDataCacheSize;
+
+                if (!mute)
+                {
+                    string mbsizeformat = string.Format("{0:0.000}", (length / 1048576f));
+                    string percentformat = string.Format("{0:0.000}", percent * 100);
+
+                    if (percent > 0.5f)
+                    {
+                        Debug.LogWarning("Cognitive3D local cache is " + mbsizeformat + "MB, " + percentformat + "% full");
+                    }
+                    else
+                    {
+                        Debug.Log("Cognitive3D local cache is " + mbsizeformat + "MB, " + percentformat + "% full");
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+            return percent;
+        }
+
+        public static void OpenLocalStorageDirectory()
+        {
+            Application.OpenURL(Application.persistentDataPath + "/c3dlocal/");
+        }
+
         System.Collections.IEnumerator ForceUploadLocalStorage(System.Action completed, System.Action failed)
         {
             bool hasFailed = false;
@@ -422,7 +469,7 @@ namespace CognitiveVR
         }
 
         //used internally so uploading a file from cache doesn't trigger more files
-        public static void LocalCachePost(string url, string stringcontent)
+        private static void LocalCachePost(string url, string stringcontent)
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);

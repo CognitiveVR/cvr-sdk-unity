@@ -79,16 +79,16 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if !CVR_OCULUS && !CVR_STEAMVR
-            return true;
-#else
+#if CVR_OCULUS || CVR_STEAMVR
             return false;
+#else
+            return true;
 #endif
         }
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if CVR_STEAMVR
             return "Sends transactions when a player removes or wears HMD. SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
 #else
             return "Sends transactions when a player removes or wears HMD";

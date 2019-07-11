@@ -40,7 +40,7 @@ namespace CognitiveVR.Components
         }
         public override string GetDescription()
         {
-#if (CVR_OCULUS && !UNITY_ANDROID) || CVR_STEAMVR || CVR_STEAMVR2
+#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_FOVE
             return "Sends transactions if the HMD collides with something in the game world";
 #else
             return "Current platform does not support this component";
@@ -49,10 +49,10 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
-            return true;
-#else
+#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_FOVE
             return false;
+#else
+            return true;
 #endif
         }
 

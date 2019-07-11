@@ -1403,7 +1403,7 @@ namespace CognitiveVR
 
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
             {
-                Debug.LogError(dynamicUploadWWW.error);
+                Debug.LogError(dynamicUploadWWW.responseCode + " " + dynamicUploadWWW.error);
             }
             else
             {
