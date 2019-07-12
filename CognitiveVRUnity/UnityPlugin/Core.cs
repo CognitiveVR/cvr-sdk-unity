@@ -22,6 +22,13 @@ namespace CognitiveVR
         public static event CoreInitHandler InitEvent;
         public static void InvokeInitEvent(Error initError) { if (InitEvent != null) { InitEvent.Invoke(initError); } }
 
+        public delegate void CoreEndSessionHandler();
+        /// <summary>
+        /// CognitiveVR Core.Init callback
+        /// </summary>
+        public static event CoreEndSessionHandler EndSessionEvent;
+        public static void InvokeEndSessionEvent() { if (EndSessionEvent != null) { EndSessionEvent.Invoke(); } }
+
         public delegate void UpdateHandler(float deltaTime);
         /// <summary>
         /// Update. Called through Manager's update function
@@ -209,6 +216,8 @@ namespace CognitiveVR
         /// </summary>
         public static void Reset()
         {
+            InvokeEndSessionEvent();
+            NetworkManager.Sender.EndSession();
             UserId = null;
             _sessionId = null;
             _timestamp = 0;
@@ -219,6 +228,7 @@ namespace CognitiveVR
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
             TrackingScene = null;
+            GameObject.Destroy(NetworkManager.Sender.gameObject);
         }
 
         /// <summary>

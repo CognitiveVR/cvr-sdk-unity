@@ -43,11 +43,35 @@ namespace CognitiveVR
         static Stack<int> linesizes = new Stack<int>();
         static int totalBytes = 0;
 
+        //requests that are not from the cache and should write to the cache if session ends and requests are aborted
+        static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
+
         private void OnDestroy()
         {
+            if (activeRequests.Count > 0)
+            {
+                EndSession();
+            }
+            Debug.Log("network on destroy");
             if (sr != null) sr.Close();
-            if (sw != null) { sw.Flush(); sw.Close(); }
-            if (fs != null) fs.Close();
+            if (sw != null) { sw.Close(); }
+            if (fs != null) { fs.Close(); fs = null; }
+        }
+
+        //called from core.reset
+        internal void EndSession()
+        {
+            Debug.Log("network end session");
+            foreach (var v in activeRequests)
+            {
+                v.Abort();
+                string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
+                if (content.Length > 0)
+                {
+                    WriteRequestToFile(v.url, content);
+                }
+            }
+            activeRequests.Clear();
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -108,9 +132,10 @@ namespace CognitiveVR
                 }
             }
             www.Dispose();
+            activeRequests.Remove(www);
         }
 
-        System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload)
+        System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload, bool autoDispose)
         {
             yield return new WaitUntil(() => www.isDone);
 
@@ -133,7 +158,9 @@ namespace CognitiveVR
                 }
                 callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text, allowLocalUpload);
             }
-            www.Dispose();
+            if (autoDispose)
+                www.Dispose();
+            activeRequests.Remove(www);
         }
 
         void GenericPostFullResponse(string url, string content, int responsecode, string error, string text, bool allowLocalUpload)
@@ -150,7 +177,10 @@ namespace CognitiveVR
                 if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; } //ignore if invalid auth api key
                 if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; } //ignore. couldn't parse response code, likely malformed url
                 //write to file
-                WriteRequestToFile(url, content);
+                if (allowLocalUpload)
+                {
+                    WriteRequestToFile(url, content);
+                }
             }
         }
 
@@ -196,6 +226,13 @@ namespace CognitiveVR
         void WriteRequestToFile(string url, string contents)
         {
             if (!enabledLocalStorage) { return; }
+
+            if (sw == null)
+            {
+                Debug.LogError("attempting to write request after streamwriter closed");
+                return;
+            }
+
             
             contents = contents.Replace('\n', ' ');
 
@@ -236,6 +273,9 @@ namespace CognitiveVR
         /// <param name="failedCallback"></param>
         public static void UploadAllLocalData(System.Action completedCallback, System.Action failedCallback)
         {
+            if (string.IsNullOrEmpty(CognitiveStatics.ApplicationKey))
+                CognitiveStatics.Initialize();
+
             //upload from local storage
             if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } return; }
 
@@ -244,6 +284,7 @@ namespace CognitiveVR
                 InitLocalStorage(System.Environment.NewLine);
             }
 
+            Debug.Log("start local upload");
             Sender.StartCoroutine(Sender.ForceUploadLocalStorage(completedCallback,failedCallback));
         }
 
@@ -260,10 +301,8 @@ namespace CognitiveVR
             float percent = 0;
             try
             {
-                if (localDataInfo == null)
-                {
-                    localDataInfo = new FileInfo(localDataPath);
-                }
+                localDataInfo = new FileInfo(localDataPath);
+                if (!localDataInfo.Exists) { return 0; }
                 int length = (int)localDataInfo.Length;
                 percent = length / (float)CognitiveVR_Preferences.Instance.LocalDataCacheSize;
 
@@ -294,14 +333,22 @@ namespace CognitiveVR
             Application.OpenURL(Application.persistentDataPath + "/c3dlocal/");
         }
 
+        bool isuploadingfromcache = false;
         System.Collections.IEnumerator ForceUploadLocalStorage(System.Action completed, System.Action failed)
         {
-            bool hasFailed = false;
+            if (isuploadingfromcache) { yield break; }
+
             while (linesizes.Count > 1)
             {
+                isuploadingfromcache = true;
                 //get contents from file
+
+                //changed to read lines from file and write request before popping data from cache
+                //could do it this way when writing requests - write locally immediately, send to server, pop from local if successful. overhead, but safe
                 int contentsize = linesizes.Pop();
                 int urlsize = linesizes.Pop();
+                linesizes.Push(urlsize);
+                linesizes.Push(contentsize);
 
                 int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
 
@@ -330,47 +377,49 @@ namespace CognitiveVR
                         sr.Read();
                 }
 
-                fs.SetLength(originallength - lastrequestsize);
-
                 //wait for post response
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
-                using (UnityWebRequest request = UnityWebRequest.Put(tempurl, bytes))
-                {
-                    request.method = "POST";
-                    request.SetRequestHeader("Content-Type", "application/json");
-                    request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                    request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                    yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
+                var request = UnityWebRequest.Put(tempurl, bytes);
+                request.method = "POST";
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+                request.Send();
+                yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false, false));
 
-                    //check internet access
-                    var headers = request.GetResponseHeaders();
-                    int responsecode = (int)request.responseCode;
-                    if (responsecode == 200)
+                //check internet access
+                var headers = request.GetResponseHeaders();
+                int responsecode = (int)request.responseCode;
+                if (responsecode == 200)
+                {
+                    //check cvr header to make sure not blocked by capture portal
+                    if (!headers.ContainsKey("cvr-request-time"))
                     {
-                        //check cvr header to make sure not blocked by capture portal
-                        if (!headers.ContainsKey("cvr-request-time"))
-                        {
-                            hasFailed = true;
-                            if (failed != null)
-                                failed.Invoke();
-                            yield break;
-                        }
-                    }
-                    else
-                    {
-                        hasFailed = true;
                         if (failed != null)
                             failed.Invoke();
+                        isuploadingfromcache = false;
+                        request.Dispose();
                         yield break;
                     }
                 }
+                else
+                {
+                    if (failed != null)
+                        failed.Invoke();
+                    isuploadingfromcache = false;
+                    request.Dispose();
+                    yield break;
+                }
+                //ie, if successful, pop last request from data cache
+                linesizes.Pop();
+                linesizes.Pop();
+                fs.SetLength(originallength - lastrequestsize);
+                request.Dispose();
             }
 
-            if (!hasFailed)
-            {
-                if (completed != null)
-                    completed.Invoke();
-            }
+            if (completed != null)
+                completed.Invoke();
+            isuploadingfromcache = false;
         }
 
         //uploads a single request from the file (1 line url, 1 line content). only called when a 200 is returned from a post request
@@ -446,7 +495,8 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse, true));
+            activeRequests.Add(request);
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse, true, true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
@@ -462,7 +512,8 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
+            activeRequests.Add(request);
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true, true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
@@ -479,7 +530,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false, false));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
