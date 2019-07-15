@@ -52,9 +52,8 @@ namespace CognitiveVR
             {
                 EndSession();
             }
-            Debug.Log("network on destroy");
-            if (sr != null) sr.Close();
-            if (sw != null) { sw.Close(); }
+            if (sr != null) { sr.Close(); sr = null; }
+            if (sw != null) { sw.Close(); sw = null; }
             if (fs != null) { fs.Close(); fs = null; }
         }
 
@@ -62,13 +61,28 @@ namespace CognitiveVR
         internal void EndSession()
         {
             Debug.Log("network end session");
-            foreach (var v in activeRequests)
+
+            if (enabledLocalStorage)
             {
-                v.Abort();
-                string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
-                if (content.Length > 0)
+                foreach (var v in activeRequests)
                 {
-                    WriteRequestToFile(v.url, content);
+                    int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(v.url);
+                    int contentByteCount = (int)v.uploadedBytes;
+
+                    if (urlByteCount + contentByteCount + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
+                    {
+                        //too large to write into cache. let web request continue
+                        break;
+                    }
+                    else
+                    {
+                        v.Abort();
+                        string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
+                        if (content.Length > 0)
+                        {
+                            WriteRequestToFile(v.url, content);
+                        }
+                    }
                 }
             }
             activeRequests.Clear();
@@ -194,6 +208,10 @@ namespace CognitiveVR
         //called on init to find all files not uploaded
         public static void InitLocalStorage(string environmentEOL)
         {
+            if (sr != null) { sr.Close(); sr = null; }
+            if (sw != null) { sw.Close(); sw = null; }
+            if (fs != null) { fs.Close(); fs = null; }
+
             ReadLocalCacheCount = CognitiveVR_Preferences.Instance.ReadLocalCacheCount;
             EnvironmentEOL = environmentEOL;
             EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(environmentEOL);
@@ -385,6 +403,10 @@ namespace CognitiveVR
                 request.SetRequestHeader("X-HTTP-Method-Override", "POST");
                 request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
                 request.Send();
+
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("LOCAL CACHE UPLOAD "+tempurl + " " + tempcontent);
+
                 yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false, false));
 
                 //check internet access
