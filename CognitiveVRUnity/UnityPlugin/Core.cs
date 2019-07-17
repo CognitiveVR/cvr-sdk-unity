@@ -334,7 +334,7 @@ namespace CognitiveVR
 
             if (foundKey) //update value
             {
-                if (knownSessionProperties[foundIndex].Value != value) //skip setting property if it hasn't actually changed
+                if (knownSessionProperties[foundIndex].Value == value) //skip setting property if it hasn't actually changed
                 {
                     return;
                 }
