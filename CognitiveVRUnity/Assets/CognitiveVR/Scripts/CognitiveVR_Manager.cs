@@ -133,6 +133,7 @@ namespace CognitiveVR
                 GameObject.DontDestroyOnLoad(gameObject);
                 Initialize("");
             }
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
 
         IEnumerator Start()
@@ -259,8 +260,6 @@ namespace CognitiveVR
 
             //if (InitEvent != null) { InitEvent(initError); }
             Core.InvokeInitEvent(initError);
-
-            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
 
             SetSessionProperties();
 
@@ -630,8 +629,6 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
             Core.Reset();
-            initResponse = Error.NotInitialized;
-            //DynamicObject.ClearObjectIds();
         }
 
         void OnDestroy()
