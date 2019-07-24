@@ -250,11 +250,14 @@ namespace CognitiveVR
 
                     if (dyn.IsController)
                     {
-                        string[] controllernames = new string[3] { "vivecontroller", "oculustouchleft", "oculustouchright" };
+                        string[] controllernames = new string[6] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocus", "oculusquestleft", "oculusquestright" };
                         int selected = 0;
                         if (dyn.ControllerType == "vivecontroller") selected = 0;
                         if (dyn.ControllerType == "oculustouchleft") selected = 1;
                         if (dyn.ControllerType == "oculustouchright") selected = 2;
+                        if (dyn.ControllerType == "vivefocus") selected = 3;
+                        if (dyn.ControllerType == "oculusquestleft") selected = 4;
+                        if (dyn.ControllerType == "oculusquestright") selected = 5;
 
                         selected = EditorGUILayout.Popup(selected, controllernames);
                         dyn.ControllerType = controllernames[selected];

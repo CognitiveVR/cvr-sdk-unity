@@ -102,6 +102,21 @@ namespace CognitiveVR
                     }
                     else
                         _hmd = Camera.main.transform;
+#elif CVR_VIVEWAVE
+                    if (Camera.main == null)
+                    {
+                        var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
+                        for (int i = 0; i < cameras.Length; i++)
+                        {
+                            if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
+                            {
+                                _hmd = cameras[i].transform;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                        _hmd = Camera.main.transform;
 #elif CVR_VARJO
                     Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
                     if (manager != null){ _hmd = manager.varjoCamera.transform; }
@@ -327,6 +342,37 @@ namespace CognitiveVR
                 }
             }
         }
+#elif CVR_VIVEWAVE
+
+        //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
+        public static void SetController(GameObject go, bool isRight)
+        {
+            InitializeControllers();
+            if (isRight)
+            {
+                controllers[1].transform = go.transform;
+                controllers[1].isRight = true;
+                controllers[1].id = WaveVR.Instance.controllerRight.index;
+                controllers[1].connected = WaveVR.Instance.controllerRight.connected;
+                controllers[1].visible = WaveVR.Instance.controllerRight.pose.pose.IsValidPose;
+            }
+            else
+            {
+                controllers[0].transform = go.transform;
+                controllers[0].isRight = false;
+                controllers[0].id = WaveVR.Instance.controllerLeft.index;
+                controllers[0].connected = WaveVR.Instance.controllerLeft.connected;
+                controllers[0].visible = WaveVR.Instance.controllerLeft.pose.pose.IsValidPose;
+            }
+        }
+
+        static void InitializeControllers()
+        {
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+            }
+        }
 #else
         static void InitializeControllers()
         {
@@ -406,7 +452,7 @@ namespace CognitiveVR
         /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
         public static bool GetControllerPosition(bool right, out Vector3 position)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE
 
             InitializeControllers();
             if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { position = controllers[0].transform.position; return true; }

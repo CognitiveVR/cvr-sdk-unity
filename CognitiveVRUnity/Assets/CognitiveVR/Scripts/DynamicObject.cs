@@ -25,6 +25,7 @@ namespace CognitiveVR
             VideoSphereLatitude,
             VideoSphereCubemap,
             SnapdragonVRController,
+            ViveFocusController,
         }
 
 
@@ -100,6 +101,9 @@ namespace CognitiveVR
                 else if (IsController)
                 {
                     CognitiveVR.DynamicManager.RegisterController(Data);
+#if CVR_VIVEWAVE
+                    CognitiveVR.GameplayReferences.SetController(gameObject, IsRight);
+#endif
                 }
                 else
                 {

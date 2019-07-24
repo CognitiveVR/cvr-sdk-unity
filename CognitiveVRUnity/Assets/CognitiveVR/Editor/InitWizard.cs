@@ -192,6 +192,9 @@ public class InitWizard : EditorWindow
 #if CVR_VIVEPROEYE
         selectedsdks.Add("CVR_VIVEPROEYE");
 #endif
+#if CVR_VIVEWAVE
+        selectedsdks.Add("CVR_VIVEWAVE");
+#endif
 #if CVR_VARJO
         selectedsdks.Add("CVR_VARJO");
 #endif
@@ -223,8 +226,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)", "Varjo 1.3 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VARJO", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.30", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -726,6 +729,34 @@ public class InitWizard : EditorWindow
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.ControllerType = "vivecontroller";
+            }
+#elif CVR_VIVEWAVE
+            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
+            {
+                left.AddComponent<ControllerInputTracker>();
+            }
+            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
+            {
+                right.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivefocus";
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "vivefocus";
             }
 #elif CVR_OCULUS
             if (left != null)
