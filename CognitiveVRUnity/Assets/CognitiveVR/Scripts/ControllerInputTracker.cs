@@ -1087,12 +1087,13 @@ public class ControllerInputTracker : MonoBehaviour
     bool isRight;
     DynamicObject dynamic;
 
-    WaveVR_Controller ControllerDevice;
-    WaveVR_Controller.EDeviceType devicetype;
+    bool initialized;
+    WaveVR_Controller.EDeviceType devicetype = WaveVR_Controller.EDeviceType.Head;
 
     //called from start
     void Init()
     {
+        initialized = true;
         dynamic = GetComponent<DynamicObject>();
 
         devicetype = GetComponent<WaveVR_ControllerPoseTracker>().Type;
@@ -1100,25 +1101,28 @@ public class ControllerInputTracker : MonoBehaviour
             
         if (WaveVR_Controller.Input(devicetype).DeviceType == t)
         {
+            //this is the left controller
             isRight = false;
         }
         else
         {
             isRight = true;
         }
-
         List<WaveVR_ButtonList.EButtons> _buttons = new List<WaveVR_ButtonList.EButtons>();
+
         foreach (var v in (WaveVR_ButtonList.EButtons[])System.Enum.GetValues(typeof(WaveVR_ButtonList.EButtons)))
         {
             _buttons.Add(v);
         }
+
+        // button list of Dominant hand.
         WaveVR_ButtonList.Instance.SetupButtonList(devicetype, _buttons);
     }
 
     //updates for interaction hand implementation
     private void Update()
     {
-        if (ControllerDevice == null)
+        if (initialized == false)
         {
             return;
         }

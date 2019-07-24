@@ -9,6 +9,9 @@ using UnityEngine.SceneManagement;
 
 namespace CognitiveVR
 {
+#if CVR_VIVEWAVE
+    [DefaultExecutionOrder(+10)] //this must run after PoseTrackerManager on controllers is enabled
+#endif
     public class DynamicObject : MonoBehaviour
     {
         public enum CommonDynamicMesh
@@ -102,7 +105,8 @@ namespace CognitiveVR
                 {
                     CognitiveVR.DynamicManager.RegisterController(Data);
 #if CVR_VIVEWAVE
-                    CognitiveVR.GameplayReferences.SetController(gameObject, IsRight);
+                    var right = GetComponent<WaveVR_PoseTrackerManager>().Type == WaveVR_Controller.EDeviceType.Dominant;
+                    CognitiveVR.GameplayReferences.SetController(gameObject, right);
 #endif
                 }
                 else
