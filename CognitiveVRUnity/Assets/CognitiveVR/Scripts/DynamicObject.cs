@@ -17,8 +17,8 @@ namespace CognitiveVR
         public enum CommonDynamicMesh
         {
             ViveController,
-            OculusTouchLeft,
-            OculusTouchRight,
+            OculusRiftTouchLeft,
+            OculusRiftTouchRight,
             ViveTracker,
             ExitPoll,
             LeapMotionHandLeft,
@@ -28,7 +28,9 @@ namespace CognitiveVR
             VideoSphereLatitude,
             VideoSphereCubemap,
             SnapdragonVRController,
-            ViveFocusController,
+            ViveFocusController, //the 6dof controller
+            OculusQuestTouchLeft,
+            OculusQuestTouchRight
         }
 
 
