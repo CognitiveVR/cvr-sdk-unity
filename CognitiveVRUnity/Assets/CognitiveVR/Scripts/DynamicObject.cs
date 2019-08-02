@@ -82,8 +82,25 @@ namespace CognitiveVR
         //make this dynamic object record position on the same frame as physics gaze
         public bool SyncWithPlayerGazeTick;
 
+#if CVR_VIVEWAVE
+        bool hasCompletedDelay = false;
+        IEnumerator Start()
+        {
+            //vive wave controller loader spawns a prefab (which calls enable) before setting correct values
+            if (!IsController) { yield break; }
+            if (hasCompletedDelay) { yield break; }
+            yield return null;
+            hasCompletedDelay = true;
+            OnEnable();
+        }
+#endif
+
         private void OnEnable()
         {
+#if CVR_VIVEWAVE
+            if (IsController && !hasCompletedDelay)
+                return;
+#endif
             StartingScale = transform.lossyScale;
             if (CognitiveVR.Core.IsInitialized)
             {                
@@ -105,11 +122,19 @@ namespace CognitiveVR
                 }
                 else if (IsController)
                 {
-                    CognitiveVR.DynamicManager.RegisterController(Data);
 #if CVR_VIVEWAVE
-                    var right = GetComponent<WaveVR_PoseTrackerManager>().Type == WaveVR_Controller.EDeviceType.Dominant;
-                    CognitiveVR.GameplayReferences.SetController(gameObject, right);
+                    var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;
+                    if (WaveVR_Controller.Input(devicetype).DeviceType == wvr.WVR_DeviceType.WVR_DeviceType_Controller_Left)
+                    {
+                        Data.IsRightHand = false;
+                    }
+                    else
+                    {
+                        Data.IsRightHand = true;
+                    }
+                    CognitiveVR.GameplayReferences.SetController(gameObject, Data.IsRightHand);
 #endif
+                    CognitiveVR.DynamicManager.RegisterController(Data);
                 }
                 else
                 {
