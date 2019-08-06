@@ -51,7 +51,7 @@ namespace CognitiveVR
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
         public string Dashboard = "app.cognitive3d.com";
-        public string Viewer = "sceneexplorer.com/scene/";
+        public string Viewer = "viewer.cognitive3d.com/scene/";
         public string Documentation = "docs.cognitive3d.com";
 
         public GazeType GazeType = GazeType.Physics;
