@@ -21,6 +21,8 @@ namespace CognitiveVR
         private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
         private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
 
+        static float NextMinSendTime = 0;
+
         private static int tempsnapshots = 0;
 
         internal static void Initialize()
@@ -31,6 +33,8 @@ namespace CognitiveVR
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
             }
+
+            Core.UpdateEvent -= Core_UpdateEvent;
             Core.UpdateEvent += Core_UpdateEvent;
 
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
@@ -83,8 +87,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -97,8 +106,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -113,8 +127,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -130,8 +149,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -161,8 +185,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -196,8 +225,13 @@ namespace CognitiveVR
             tempsnapshots++;
             if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
             {
-                tempsnapshots = 0;
-                ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                {
+                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    //check lastSendTimer and extreme batch size
+                    tempsnapshots = 0;
+                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                }
             }
         }
 
@@ -223,10 +257,12 @@ namespace CognitiveVR
                 if (!ReadyToWriteJson) { yield return null; }
                 else
                 {
-                    var builder = new System.Text.StringBuilder(200 + 128* CognitiveVR_Preferences.S_DynamicSnapshotCount);
-
-                    int manifestCount = Mathf.Min(queuedManifest.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount);
-                    int count = Mathf.Min(queuedSnapshots.Count, CognitiveVR_Preferences.S_DynamicSnapshotCount - manifestCount);
+                    int totalDataToWrite = queuedManifest.Count + queuedSnapshots.Count;
+                    totalDataToWrite = Mathf.Min(totalDataToWrite, CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount);
+                    
+                    var builder = new System.Text.StringBuilder(200 + 128* totalDataToWrite);
+                    int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);
+                    int count = Mathf.Min(queuedSnapshots.Count, totalDataToWrite - manifestCount);
 
                     if (queuedSnapshots.Count - count == 0 && queuedManifest.Count - manifestCount == 0)
                     {
@@ -271,7 +307,6 @@ namespace CognitiveVR
                                     builder.Append(',');
                                 var manifestentry = queuedManifest.Dequeue();
                                 SetManifestEntry(manifestentry, builder);
-                                //manifestentry.ReturnToPool();
                             }
                             threadDone = true;
                         }
@@ -285,7 +320,6 @@ namespace CognitiveVR
                                         builder.Append(',');
                                     var manifestentry = queuedManifest.Dequeue();
                                     SetManifestEntry(manifestentry, builder);
-                                    //manifestentry.ReturnToPool();
                                 }
                                 threadDone = true;
                             }).Start();

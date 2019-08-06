@@ -24,6 +24,10 @@ namespace CognitiveVR
 
         public static void Initialize()
         {
+            CognitiveVR.Core.OnSendData -= SendData;
+            CognitiveVR.Core.UpdateEvent -= OnUpdate;
+            CognitiveVR.Core.LevelLoadedEvent -= OnSceneLoaded;
+
             CognitiveVR.Core.OnSendData += SendData;
             CognitiveVR.Core.UpdateEvent += OnUpdate;
             CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
