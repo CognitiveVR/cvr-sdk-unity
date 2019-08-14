@@ -503,6 +503,10 @@ namespace CognitiveVR
                     //exporting dynamic, found skinned mesh in some other dynamic
                     continue;
                 }
+                if (skinnedMeshRenderer.sharedMesh == null)
+                {
+                    continue;
+                }
 
                 //var pos = skinnedMeshRenderer.transform.localPosition;
                 //skinnedMeshRenderer.transform.localPosition = Vector3.zero;
@@ -513,7 +517,7 @@ namespace CognitiveVR
 
                 bm.tempGo = new GameObject(skinnedMeshRenderer.gameObject.name);
                 bm.tempGo.transform.parent = skinnedMeshRenderer.transform;
-                bm.tempGo.transform.localScale = Vector3.one;
+                //bm.tempGo.transform.localScale = Vector3.one;
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
 
@@ -522,9 +526,9 @@ namespace CognitiveVR
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 var m = new Mesh();
                 m.name = skinnedMeshRenderer.sharedMesh.name;
-                bm.originalScale = skinnedMeshRenderer.transform.localScale;
-                bm.useOriginalscale = true;
-                skinnedMeshRenderer.transform.localScale = Vector3.one;
+                //bm.originalScale = skinnedMeshRenderer.transform.localScale;
+                //bm.useOriginalscale = true;
+                //skinnedMeshRenderer.transform.localScale = Vector3.one;
                 skinnedMeshRenderer.BakeMesh(m);
                 bm.meshFilter.sharedMesh = m;
                 meshes.Add(bm);
