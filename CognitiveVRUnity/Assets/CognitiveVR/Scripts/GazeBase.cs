@@ -89,6 +89,7 @@ namespace CognitiveVR
             cameraRoot = GameplayReferences.HMD.root;
         }
 
+        //TODO support more sdks to send when HMD removed (wave, varjo, steamvr2)
 
 #if CVR_STEAMVR
         void CognitiveVR_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)

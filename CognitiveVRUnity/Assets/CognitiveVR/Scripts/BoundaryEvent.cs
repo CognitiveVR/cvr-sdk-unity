@@ -114,7 +114,7 @@ namespace CognitiveVR.Components
         {
 #if CVR_STEAMVR || CVR_STEAMVR2
             return "Sends transaction when SteamVR Chaperone becomes visible and becomes hidden";
-#elif (CVR_OCULUS && !UNITY_ANDROID)
+#elif CVR_OCULUS
             return "Sends transaction when Oculus Guardian becomes visible and becomes hidden";
 #else
             return "Current platform does not support this component";
@@ -123,10 +123,10 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
-            return true;
-#else
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             return false;
+#else
+            return true;
 #endif
         }
 

@@ -24,6 +24,10 @@ namespace CognitiveVR
 
         public static void Initialize()
         {
+            CognitiveVR.Core.OnSendData -= SendData;
+            CognitiveVR.Core.UpdateEvent -= OnUpdate;
+            CognitiveVR.Core.LevelLoadedEvent -= OnSceneLoaded;
+
             CognitiveVR.Core.OnSendData += SendData;
             CognitiveVR.Core.UpdateEvent += OnUpdate;
             CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
@@ -35,8 +39,17 @@ namespace CognitiveVR
             {
                 if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
                 {
-                    Util.logError("DynamicManager::RegisterDynamicObject found existing ID " + data.Id);
                     //id is already used. don't add to list again
+                    if (data.UseCustomId)
+                    {
+                        Util.logError("DynamicManager::RegisterDynamicObject found existing ID " + data.Id);
+                    }
+                    else
+                    {
+                        Util.logWarning("DynamicManager::RegisterDynamicObject reuse ID " + data.Id);
+                    }
+                    //should set dynamic data in array to match. updates 'remove' bool and any other variables. DOES NOT write to new dynamics manifest
+                    ActiveDynamicObjectsArray[i] = data;
                     return;
                 }
             }
@@ -135,6 +148,7 @@ namespace CognitiveVR
             {
                 if (String.CompareOrdinal(ActiveDynamicObjectsArray[i].Id, id) == 0)
                 {
+                    //set the dynamic data to write 'enabled = false' property next update
                     ActiveDynamicObjectsArray[i].dirty = true;
                     ActiveDynamicObjectsArray[i].remove = true;
 
@@ -144,13 +158,17 @@ namespace CognitiveVR
                         {
                             if (DynamicObjectIdArray[j].Id == id)
                             {
+                                //set the id in the manifest to be reusable
+                                Util.logDebug("remove dynamic object id " + id);
                                 DynamicObjectIdArray[j].Used = false;
                                 break;
                             }
                         }
                     }
+                    return; //there should only be one dynamic data with this id
                 }
             }
+            Util.logError("remove dynamic object id " + id + " not found");
         }
 
         static Dictionary<string, CustomEvent> Engagements = new Dictionary<string, CustomEvent>();

@@ -130,10 +130,10 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
-            return true;
-#else
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
             return false;
+#else
+            return true;
 #endif
         }
 

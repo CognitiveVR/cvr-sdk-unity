@@ -234,7 +234,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
 #elif CVR_OCULUS
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";
@@ -245,10 +245,10 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
-            return true;
-#else
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS
             return false;
+#else
+            return true;
 #endif
         }
 

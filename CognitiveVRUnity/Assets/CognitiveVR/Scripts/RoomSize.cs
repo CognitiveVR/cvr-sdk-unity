@@ -64,18 +64,18 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if (!CVR_OCULUS && !CVR_STEAMVR) || UNITY_ANDROID
-            return true;
-#else
+#if CVR_VARJO || CVR_STEAMVR || CVR_STEAMVR || CVR_OCULUS
             return false;
+#else
+            return true;
 #endif
         }
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
             return "Include Room Size in Device Info from SteamVR Chaperone";
-#elif CVR_OCULUS && !UNITY_ANDROID
+#elif CVR_OCULUS
             return "Include Room Size in Device Info from Oculus Guardian";
 #else
             return "Current platform does not support this component";

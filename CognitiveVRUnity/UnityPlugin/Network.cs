@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine.Networking;
 
 //handles network requests at runtime
@@ -14,6 +13,11 @@ namespace CognitiveVR
     [AddComponentMenu("")]
     public class NetworkManager : MonoBehaviour
     {
+        //used by posting session data - get all details of the web response
+        public delegate void FullResponse(string url, string uploadcontent, int responsecode, string error, string downloadcontent);
+        //used by getting exitpoll question set - only need to know the c
+        public delegate void Response(int responsecode, string error, string text);
+
         static NetworkManager _sender;
         internal static NetworkManager Sender
         {
@@ -29,25 +33,18 @@ namespace CognitiveVR
             }
         }
 
-        static string localDataPath = Application.persistentDataPath + "/c3dlocal/data";
-        static string localExitPollPath = Application.persistentDataPath + "/c3dlocal/exitpoll/";
+        //requests that are not from the cache and should write to the cache if session ends and requests are aborted
+        static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
-        public delegate void FullResponse(string url, string content, int responsecode, string error, string text, bool uploadLocalData);
+        static LocalCache lc;
 
-        public delegate void Response(int responsecode, string error, string text);
-
-        static StreamReader sr;
-        static StreamWriter sw;
-        static FileStream fs;
-        //line sizes of contents, ignoring line breaks. line breaks added automatically from StreamWriter.WriteLine
-        static Stack<int> linesizes = new Stack<int>();
-        static int totalBytes = 0;
-
-        private void OnDestroy()
+        /// <summary>
+        /// called from CognitiveVR_Manager to set environmentEOL character. needed to correctly read local data cache
+        /// </summary>
+        /// <param name="environmentEOL"></param>
+        public static void InitLocalStorage(string environmentEOL)
         {
-            if (sr != null) sr.Close();
-            if (sw != null) { sw.Flush(); sw.Close(); }
-            if (fs != null) fs.Close();
+            lc = new LocalCache(Sender, environmentEOL);
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -77,18 +74,26 @@ namespace CognitiveVR
 
             if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
             {
-                //try to read from file
-                if (enabledLocalStorage && File.Exists(localExitPollPath+hookname))
+                if (LocalCache.LocalStorageActive)
                 {
-                    var text = File.ReadAllText(localExitPollPath + hookname);
-                    if (callback != null)
+                    string text;
+                    if (LocalCache.GetExitpoll(hookname, out text))
                     {
-                        callback.Invoke(responsecode, "", text);
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", text);
+                        }
+                    }
+                    else
+                    {
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", "");
+                        }
                     }
                 }
                 else
                 {
-                    //do callback, even if no files saved
                     if (callback != null)
                     {
                         callback.Invoke(responsecode, "", "");
@@ -101,18 +106,34 @@ namespace CognitiveVR
                 {
                     callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
-                if (enabledLocalStorage)
+                if (LocalCache.LocalStorageActive)
                 {
-                    //write content to exitpoll local storage
-                    File.WriteAllText(localExitPollPath + hookname, www.downloadHandler.text);
+                    LocalCache.WriteExitpoll(hookname, www.downloadHandler.text);
                 }
             }
             www.Dispose();
+            activeRequests.Remove(www);
         }
 
-        System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool allowLocalUpload)
+        System.Collections.IEnumerator WaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool autoDispose)
         {
-            yield return new WaitUntil(() => www.isDone);
+            float time = 0;
+            float timeout = 10;
+            //yield return new WaitUntil(() => www.isDone);
+            while (time < timeout)
+            {
+                yield return null;
+                if (www == null) { break; }
+                if (www.isDone) break;
+                time += Time.deltaTime;
+            }
+
+            if (www == null)
+            {
+                Debug.LogError("WaitForFullResponse request is null!");
+                yield break;
+            }
+
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
@@ -131,101 +152,73 @@ namespace CognitiveVR
                         responsecode = 404;
                     }
                 }
-                callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text, allowLocalUpload);
+                callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text);
             }
-            www.Dispose();
+            if (autoDispose)
+                www.Dispose();
+            activeRequests.Remove(www);
         }
 
-        void GenericPostFullResponse(string url, string content, int responsecode, string error, string text, bool allowLocalUpload)
+        void POSTResponseCallback(string url, string content, int responsecode, string error, string text)
         {
             if (responsecode == 200)
             {
-                if (!allowLocalUpload) { return; }
-                if (!enabledLocalStorage) { return; }
-                //search through files and upload outstanding data + remove that file
-                UploadLocalFile();
+                if (lc.CanReadFromCache())
+                {
+                    UploadAllLocalData(() => Debug.Log("automatic complete"), () => Debug.Log("automatic fail"));
+                }
             }
             else
             {
                 if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; } //ignore if invalid auth api key
                 if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; } //ignore. couldn't parse response code, likely malformed url
-                //write to file
-                WriteRequestToFile(url, content);
-            }
-        }
 
-        static int EOLByteCount = 2;
-        static string EnvironmentEOL;
-        static int ReadLocalCacheCount;
-
-        //set once at the beginning of the session. allowing this to change during runtime would likely bloat error checking for a probably never used feature
-        static bool enabledLocalStorage = false;
-
-        //called on init to find all files not uploaded
-        public static void InitLocalStorage(string environmentEOL)
-        {
-            ReadLocalCacheCount = CognitiveVR_Preferences.Instance.ReadLocalCacheCount;
-            EnvironmentEOL = environmentEOL;
-            EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(environmentEOL);
-            enabledLocalStorage = CognitiveVR_Preferences.Instance.LocalStorage;
-
-            if (!enabledLocalStorage) { return; }
-            try
-            {
-                if (!Directory.Exists(localExitPollPath))
-                    Directory.CreateDirectory(localExitPollPath);
-
-                fs = File.Open(localDataPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                sr = new StreamReader(fs);
-                sw = new StreamWriter(fs);
-                //read all line sizes from data
-                while (sr.Peek() != -1)
+                if (CacheRequest != null)
                 {
-                    int lineLength = System.Text.Encoding.UTF8.GetByteCount(sr.ReadLine());
-                    linesizes.Push(lineLength);
-                    totalBytes += lineLength;
+                    isuploadingfromcache = false;
+                    CacheResponseAction = null;
+                    CacheRequest.Abort();
+                    CacheRequest.Dispose();
+                    CacheRequest = null;
+                }
+
+                if (lc.CanAppend(url, content))
+                {
+                    //try to append to local cache file
+                    lc.Append(url, content);
                 }
             }
-            catch (System.Exception e)
-            {
-                enabledLocalStorage = false;
-                Debug.LogException(e);
-            }
         }
-        
-        void WriteRequestToFile(string url, string contents)
+
+        void CACHEDResponseCallback(string url, string content, int responsecode, string error, string text)
         {
-            if (!enabledLocalStorage) { return; }
-            
-            contents = contents.Replace('\n', ' ');
+            //before this callback is invoked, if headers does not contain cvr-request-time it sets the response code to 404
 
-            int urlByteCount = System.Text.Encoding.UTF8.GetByteCount(url);
-            int contentByteCount = System.Text.Encoding.UTF8.GetByteCount(contents);
 
-            if (urlByteCount + contentByteCount + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
+
+            if (responsecode == 200)
             {
-                //cache size reached! skip writing data
-                return;
+                CacheRequest.Dispose();
+                CacheRequest = null;
+                CacheResponseAction = null;
+                lc.SuccessfulResponse();
+                isuploadingfromcache = false;
+                LoopUploadFromLocalCache();
             }
-            try
+            else
             {
-                sw.Write(url);
-                sw.Write(EnvironmentEOL);
-                linesizes.Push(urlByteCount);
-                totalBytes += urlByteCount;
+                if (cacheFailedAction != null)
+                {
+                    cacheFailedAction.Invoke();
+                }
+                cacheFailedAction = null;
+                cacheCompletedAction = null;
 
-                sw.Write(contents);
-                sw.Write(EnvironmentEOL);
-                linesizes.Push(contentByteCount);
-                totalBytes += contentByteCount;
-
-                sw.Flush();
-            }
-            catch(System.Exception e)
-            {
-                //turn off to avoid other errors
-                enabledLocalStorage = false;
-                Debug.LogException(e);
+                isuploadingfromcache = false;
+                CacheResponseAction = null;
+                CacheRequest.Abort();
+                CacheRequest.Dispose();
+                CacheRequest = null;
             }
         }
 
@@ -236,139 +229,77 @@ namespace CognitiveVR
         /// <param name="failedCallback"></param>
         public static void UploadAllLocalData(System.Action completedCallback, System.Action failedCallback)
         {
-            //upload from local storage
-            if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } return; }
-
-            if (fs == null)
+            if (!isuploadingfromcache)
             {
-                InitLocalStorage(System.Environment.NewLine);
-            }
+                Debug.Log("NETWORK UploadAllLocalData");
+                if (string.IsNullOrEmpty(CognitiveStatics.ApplicationKey))
+                CognitiveStatics.Initialize();
 
-            Sender.StartCoroutine(Sender.ForceUploadLocalStorage(completedCallback,failedCallback));
-        }
+                //upload from local storage
+                if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } return; }
 
-        System.Collections.IEnumerator ForceUploadLocalStorage(System.Action completed, System.Action failed)
-        {
-            bool hasFailed = false;
-            while (linesizes.Count > 1)
-            {
-                //get contents from file
-                int contentsize = linesizes.Pop();
-                int urlsize = linesizes.Pop();
-
-                int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
-
-                fs.Seek(-lastrequestsize, SeekOrigin.End);
-
-                long originallength = fs.Length;
-
-                string tempurl = null;
-                string tempcontent = null;
-                char[] buffer = new char[urlsize];
-                while (sr.Peek() != -1)
+                if (lc == null)
                 {
-                    sr.ReadBlock(buffer, 0, urlsize);
-
-                    tempurl = new string(buffer);
-                    //line return
-                    for (int eolc = 0; eolc < EOLByteCount; eolc++)
-                        sr.Read();
-
-
-                    buffer = new char[contentsize];
-                    sr.ReadBlock(buffer, 0, contentsize);
-                    tempcontent = new string(buffer);
-                    //line return
-                    for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
-                        sr.Read();
+                    lc = new LocalCache(Sender,null);
                 }
 
-                fs.SetLength(originallength - lastrequestsize);
+                cacheCompletedAction = completedCallback;
+                cacheFailedAction = failedCallback;
 
+                Sender.LoopUploadFromLocalCache();
+            }
+            else
+            {
+                Debug.Log("UploadAllLocalData cannot upload all local data - already in upload loop!");
+            }
+        }
+
+        //is there an active web request to upload from the cache
+        internal static bool isuploadingfromcache = false;
+
+
+        UnityWebRequest CacheRequest;
+        FullResponse CacheResponseAction;
+
+        static System.Action cacheCompletedAction;
+        static System.Action cacheFailedAction;
+
+        //either started manually from LocalCache.UploadAllLocalData or from successful 200 response from current session data
+        void LoopUploadFromLocalCache()
+        {
+            if (isuploadingfromcache) { return; }
+
+            if (lc.CanReadFromCache())
+            {
+                isuploadingfromcache = true;
+                string url = "";
+                string content = "";
+                lc.GetCachedDataPoint(out url, out content);
+                
                 //wait for post response
-                var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(tempcontent);
-                using (UnityWebRequest request = UnityWebRequest.Put(tempurl, bytes))
-                {
-                    request.method = "POST";
-                    request.SetRequestHeader("Content-Type", "application/json");
-                    request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                    request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                    yield return Sender.StartCoroutine(Sender.WaitForFullResponse(request, tempcontent, Sender.GenericPostFullResponse, false));
+                var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                CacheRequest = UnityWebRequest.Put(url, bytes);
+                CacheRequest.method = "POST";
+                CacheRequest.SetRequestHeader("Content-Type", "application/json");
+                CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+                CacheRequest.Send();
 
-                    //check internet access
-                    var headers = request.GetResponseHeaders();
-                    int responsecode = (int)request.responseCode;
-                    if (responsecode == 200)
-                    {
-                        //check cvr header to make sure not blocked by capture portal
-                        if (!headers.ContainsKey("cvr-request-time"))
-                        {
-                            hasFailed = true;
-                            if (failed != null)
-                                failed.Invoke();
-                            yield break;
-                        }
-                    }
-                    else
-                    {
-                        hasFailed = true;
-                        if (failed != null)
-                            failed.Invoke();
-                        yield break;
-                    }
-                }
+                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
+
+                CacheResponseAction = Sender.CACHEDResponseCallback;
+
+                Sender.StartCoroutine(Sender.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
             }
-
-            if (!hasFailed)
+            else if (lc.CacheEmpty())
             {
-                if (completed != null)
-                    completed.Invoke();
+                if (cacheCompletedAction != null)
+                    cacheCompletedAction.Invoke();
+                cacheCompletedAction = null;
             }
         }
-
-        //uploads a single request from the file (1 line url, 1 line content). only called when a 200 is returned from a post request
-        void UploadLocalFile()
-        {
-            if (linesizes.Count < 2) { return; }
-
-            for (int i = 0; i < ReadLocalCacheCount; i++)
-            {
-                if (linesizes.Count < 2) { return; }
-                int contentsize = linesizes.Pop();
-                int urlsize = linesizes.Pop();
-
-                int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
-
-                fs.Seek(-lastrequestsize, SeekOrigin.End);
-
-                long originallength = fs.Length;
-
-                string tempurl = null;
-                string tempcontent = null;
-                char[] buffer = new char[urlsize];
-                while (sr.Peek() != -1)
-                {                   
-                    sr.ReadBlock(buffer, 0, urlsize);
-                    
-                    tempurl = new string(buffer);
-                    //line return
-                    for(int eolc = 0; eolc < EOLByteCount; eolc++)
-                        sr.Read();
-                    
-
-                    buffer = new char[contentsize];
-                    sr.ReadBlock(buffer, 0, contentsize);
-                    tempcontent = new string(buffer);
-                    //line return
-                    for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
-                        sr.Read();
-                }
-
-                fs.SetLength(originallength - lastrequestsize);
-                LocalCachePost(tempurl, tempcontent);
-            }
-        }
-
+        
         /// <summary>
         /// uses the Response 'callback' when the question set is recieved from the dashboard. if offline, tries to get question set from local cache
         /// </summary>
@@ -399,7 +330,8 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse, true));
+            activeRequests.Add(request);
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.POSTResponseCallback, true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
@@ -415,27 +347,57 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,true));
+            activeRequests.Add(request);
+            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.POSTResponseCallback,true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        //used internally so uploading a file from cache doesn't trigger more files
-        public static void LocalCachePost(string url, string stringcontent)
+        private void OnDestroy()
         {
-            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
-            var request = UnityWebRequest.Put(url, bytes);
-            request.method = "POST";
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("X-HTTP-Method-Override", "POST");
-            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            if (activeRequests.Count > 0)
+            {
+                EndSession();
+            }
+            lc.OnDestroy();
+            lc = null;
+            isuploadingfromcache = false;
+        }
 
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.GenericPostFullResponse,false));
+        //called from core.reset
+        internal void EndSession()
+        {
+            StopAllCoroutines();
 
-            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment(url + " " + stringcontent);
+            //write all active webrequests to cache
+            if (LocalCache.LocalStorageActive)
+            {
+                foreach (var v in activeRequests)
+                {
+                    if (v.isDone) { continue; }
+                    string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
+
+                    if (isuploadingfromcache && CacheRequest != null)
+                    {
+                        isuploadingfromcache = false;
+                        CacheResponseAction = null;
+                        CacheRequest.Abort();
+                        CacheRequest.Dispose();
+                        CacheRequest = null;
+                    }
+
+                    if (lc.CanAppend(v.url, content))
+                    {
+                        v.Abort();
+                        if (v.uploadHandler.data.Length > 0)
+                        {
+                            lc.Append(v.url, content);
+                        }
+                    }
+                }
+            }
+            activeRequests.Clear();
         }
     }
 }

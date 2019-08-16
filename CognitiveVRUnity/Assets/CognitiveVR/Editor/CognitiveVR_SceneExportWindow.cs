@@ -11,6 +11,7 @@ using UnityEngine.Networking;
 
 namespace CognitiveVR
 {
+    //temporary data about a skinned mesh/canvas/terrain to be baked to mesh and exported in GLTF
     public class BakeableMesh
     {
         public GameObject tempGo;
@@ -369,32 +370,41 @@ namespace CognitiveVR
 
             List<BakeableMesh> temp = new List<BakeableMesh>();
 
-            EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f);
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
-            BakeNonstandardRenderers(null, temp, path);
-            var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
-            exporter.SetNonStandardOverrides(temp);
-            Directory.CreateDirectory(path);
-
-            EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
-            exporter.SaveGLTFandBin(path, "scene");
-
-            EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f);
-            for (int i = 0; i < temp.Count; i++)
+            try
             {
-                if (temp[i].useOriginalscale)
-                {
-                    temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
-                }
-                DestroyImmediate(temp[i].meshFilter);
-                DestroyImmediate(temp[i].meshRenderer);
-                if (temp[i].tempGo != null)
-                    DestroyImmediate(temp[i].tempGo);
-            }
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f);
+                BakeNonstandardRenderers(null, temp, path);
+                var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+                exporter.SetNonStandardOverrides(temp);
+                Directory.CreateDirectory(path);
 
-            ResizeQueue.Enqueue(path);
-            EditorApplication.update -= UpdateResize;
-            EditorApplication.update += UpdateResize;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
+                exporter.SaveGLTFandBin(path, "scene");
+
+                EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f);
+                for (int i = 0; i < temp.Count; i++)
+                {
+                    if (temp[i].useOriginalscale)
+                    {
+                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                    }
+                    DestroyImmediate(temp[i].meshFilter);
+                    DestroyImmediate(temp[i].meshRenderer);
+                    if (temp[i].tempGo != null)
+                        DestroyImmediate(temp[i].tempGo);
+                }
+
+                ResizeQueue.Enqueue(path);
+                EditorApplication.update -= UpdateResize;
+                EditorApplication.update += UpdateResize;
+            }
+            catch (System.Exception e)
+            {
+                EditorUtility.ClearProgressBar();
+                Debug.LogException(e);
+                Debug.LogError("Could not complete GLTF Export");
+            }
         }
 
         //wait for update message from the editor - reading files without this delay has issues reading data
@@ -503,6 +513,10 @@ namespace CognitiveVR
                     //exporting dynamic, found skinned mesh in some other dynamic
                     continue;
                 }
+                if (skinnedMeshRenderer.sharedMesh == null)
+                {
+                    continue;
+                }
 
                 //var pos = skinnedMeshRenderer.transform.localPosition;
                 //skinnedMeshRenderer.transform.localPosition = Vector3.zero;
@@ -513,7 +527,7 @@ namespace CognitiveVR
 
                 bm.tempGo = new GameObject(skinnedMeshRenderer.gameObject.name);
                 bm.tempGo.transform.parent = skinnedMeshRenderer.transform;
-                bm.tempGo.transform.localScale = Vector3.one;
+                //bm.tempGo.transform.localScale = Vector3.one;
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
 
@@ -522,9 +536,9 @@ namespace CognitiveVR
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 var m = new Mesh();
                 m.name = skinnedMeshRenderer.sharedMesh.name;
-                bm.originalScale = skinnedMeshRenderer.transform.localScale;
-                bm.useOriginalscale = true;
-                skinnedMeshRenderer.transform.localScale = Vector3.one;
+                //bm.originalScale = skinnedMeshRenderer.transform.localScale;
+                //bm.useOriginalscale = true;
+                //skinnedMeshRenderer.transform.localScale = Vector3.one;
                 skinnedMeshRenderer.BakeMesh(m);
                 bm.meshFilter.sharedMesh = m;
                 meshes.Add(bm);
@@ -1403,7 +1417,7 @@ namespace CognitiveVR
 
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
             {
-                Debug.LogError(dynamicUploadWWW.error);
+                Debug.LogError(dynamicUploadWWW.responseCode + " " + dynamicUploadWWW.error);
             }
             else
             {

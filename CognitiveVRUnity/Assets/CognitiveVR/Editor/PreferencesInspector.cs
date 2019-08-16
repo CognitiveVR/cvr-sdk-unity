@@ -124,7 +124,7 @@ namespace CognitiveVR
             EditorGUI.indentLevel--;
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Snapshot Batch Size", "The number of Dynamic snapshots and manifest entries to record before automatically sending a web request to the dashboard"), p.DynamicSnapshotCount), 16, 1500);
             p.DynamicExtremeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Extreme Batch Size", "Threshold for ignoring the Dynamic Minimum Timer. If this many Dynamic snapshots have been recorded, immediately send"), p.DynamicExtremeSnapshotCount), p.DynamicSnapshotCount, 1500);
-            //p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
+            p.DynamicSnapshotMinTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Minimum Timer", "Time (in seconds) that must be elapsed before sending a new batch of Dynamic data. Ignored if the batch size reaches Dynamic Extreme Limit"), Mathf.Clamp(p.DynamicSnapshotMinTimer, 1, 60));
             p.DynamicSnapshotMaxTimer = EditorGUILayout.IntField(new GUIContent("Dynamic Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Dynamic snapshots or Manifest entries"), Mathf.Clamp(p.DynamicSnapshotMaxTimer, 1, 600));
 
             //sensors
@@ -167,7 +167,7 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
             CognitiveVR_Preferences.Instance.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), CognitiveVR_Preferences.Instance.Protocol);
             CognitiveVR_Preferences.Instance.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), CognitiveVR_Preferences.Instance.Gateway);
-            CognitiveVR_Preferences.Instance.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "sceneexplorer.com/scene/"), CognitiveVR_Preferences.Instance.Viewer);
+            CognitiveVR_Preferences.Instance.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), CognitiveVR_Preferences.Instance.Viewer);
             CognitiveVR_Preferences.Instance.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), CognitiveVR_Preferences.Instance.Dashboard);
             p.SendDataOnHMDRemove = EditorGUILayout.Toggle("Send Data on HMD Remove", p.SendDataOnHMDRemove);
             p.SendDataOnLevelLoad = EditorGUILayout.Toggle("Send Data on Level Load", p.SendDataOnLevelLoad);

@@ -56,6 +56,7 @@ namespace CognitiveVR
 
                 helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();
                 helper.Initialize(rt, GameplayReferences.HMDCameraComponent, OnHelperPostRender, this);
+                Core.EndSessionEvent += OnEndSessionEvent;
             }
         }
 
@@ -156,9 +157,18 @@ namespace CognitiveVR
 
         private void OnDestroy()
         {
-            Destroy(helper);
+            if (helper != null)
+            {
+                Destroy(helper);
+            }
             Core.InitEvent -= CognitiveVR_Manager_InitEvent;
             Core.TickEvent -= CognitiveVR_Manager_TickEvent;
+        }
+
+        private void OnEndSessionEvent()
+        {
+            Core.EndSessionEvent -= OnEndSessionEvent;
+            Destroy(this);
         }
     }
 }

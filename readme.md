@@ -12,7 +12,7 @@ You can clone this git repo to stay up to date with fixes and changes. You can a
 ## Import SDK
 Follow the standard unity package import process. You can import a custom package from the **Assets->Import Package->Custom Package...** menu option.
 
-![Importing the Custom Package for the Cognitive3D SDK](doc/25_import_custom_package_bubblepop.png)
+![Importing the Custom Package for the Cognitive3D SDK](doc/import-plugin.png)
 
 
 ## Cognitive3D Scene Setup window
@@ -22,6 +22,6 @@ Once everything has imported correctly click **cognitive3D->Scene Setup** from t
 
 
 ## Cognitive3D Documentation
-The documentation explains how to authenticate with the SDK, track your users' experience and how to export your scene to view on SceneExplorer.com
+The documentation explains how to authenticate with the SDK, track your users' experience and how to export your scene to view on Cognitive3D.com
 
 [Go to the Docs](http://docs.cognitive3d.com/unity/get-started/)

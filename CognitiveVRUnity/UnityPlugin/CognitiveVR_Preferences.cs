@@ -29,6 +29,7 @@ namespace CognitiveVR
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicSnapshotMaxTimer = instance.DynamicSnapshotMaxTimer;
+                    S_DynamicSnapshotMinTimer = instance.DynamicSnapshotMinTimer;
                     S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
@@ -43,6 +44,7 @@ namespace CognitiveVR
         public static int S_DynamicSnapshotCount;
         public static int S_DynamicExtremeSnapshotCount;
         public static int S_DynamicSnapshotMaxTimer;
+        public static float S_DynamicSnapshotMinTimer;
 
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
@@ -51,10 +53,10 @@ namespace CognitiveVR
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
         public string Dashboard = "app.cognitive3d.com";
-        public string Viewer = "sceneexplorer.com/scene/";
+        public string Viewer = "viewer.cognitive3d.com/scene/";
         public string Documentation = "docs.cognitive3d.com";
 
-        public GazeType GazeType = GazeType.Command;
+        public GazeType GazeType = GazeType.Physics;
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
         public int RenderPassType;
 
@@ -110,7 +112,7 @@ namespace CognitiveVR
         //min timer
         //public int GazeSnapshotMinTimer = 6;
         public int SensorSnapshotMinTimer = 6;
-        //public int DynamicSnapshotMinTimer = 2;
+        public int DynamicSnapshotMinTimer = 2;
         public int TransactionSnapshotMinTimer = 2;
         public int FixationSnapshotMinTimer = 2;
 

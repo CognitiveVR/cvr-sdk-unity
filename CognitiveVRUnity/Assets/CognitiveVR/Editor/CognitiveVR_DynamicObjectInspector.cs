@@ -180,12 +180,6 @@ namespace CognitiveVR
                 {
                     //Mesh
                     GUILayout.Label("Mesh", EditorStyles.boldLabel);
-
-
-                    //EditorGUI.BeginDisabledGroup(useCustomMesh.boolValue);
-                    //UnityEditor.EditorGUILayout.PropertyField(commonMeshName);
-                    //EditorGUI.EndDisabledGroup();
-
                     if (string.IsNullOrEmpty(meshname.stringValue))
                     {
                         //meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
@@ -194,10 +188,6 @@ namespace CognitiveVR
                     }
 
                     GUILayout.BeginHorizontal();
-                    //UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-
-                    //EditorGUI.BeginDisabledGroup(!useCustomMesh.boolValue);
-                    //UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
                         CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
@@ -221,16 +211,9 @@ namespace CognitiveVR
                     EditorGUI.EndDisabledGroup();
 
                     GUILayout.EndHorizontal();
-
-                    //GUILayout.BeginHorizontal();
-
-
                     GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") };
                     int[] textureQualities = new int[] { 1, 2, 4, 8, 16, 32, 64 };
                     CognitiveVR_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), CognitiveVR_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
-
-
-                    //GUILayout.EndHorizontal();
                     GUILayout.Space(5);
                 }
 
@@ -250,11 +233,14 @@ namespace CognitiveVR
 
                     if (dyn.IsController)
                     {
-                        string[] controllernames = new string[3] { "vivecontroller", "oculustouchleft", "oculustouchright" };
+                        string[] controllernames = new string[6] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocuscontroller", "oculusquesttouchleft", "oculusquesttouchright" };
                         int selected = 0;
                         if (dyn.ControllerType == "vivecontroller") selected = 0;
                         if (dyn.ControllerType == "oculustouchleft") selected = 1;
                         if (dyn.ControllerType == "oculustouchright") selected = 2;
+                        if (dyn.ControllerType == "vivefocuscontroller") selected = 3;
+                        if (dyn.ControllerType == "oculusquesttouchleft") selected = 4;
+                        if (dyn.ControllerType == "oculusquesttouchright") selected = 5;
 
                         selected = EditorGUILayout.Popup(selected, controllernames);
                         dyn.ControllerType = controllernames[selected];
@@ -296,7 +282,7 @@ namespace CognitiveVR
                     var dyn = t as DynamicObject;
                     if (dyn.UseCustomMesh)
                     {
-                        //TODO replace all invalid characters <>|?*"/\: with _
+                        //replace all invalid characters <>|?*"/\: with _
                         dyn.MeshName = dyn.MeshName.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
                     }
                 }

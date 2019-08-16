@@ -13,5 +13,5 @@ ManagerName|Cognitive3D_Manager
 //optional overrides for URL settings in preferences
 GatewayURL|data.cognitive3d.com
 DashboardURL|app.cognitive3d.com
-ViewerURL|sceneexplorer.com/scene/
+ViewerURL|viewer.cognitive3d.com/scene/
 DocumentationURL|docs.cognitive3d.com
