@@ -407,8 +407,17 @@ namespace UnityGLTF
 			var filenamePath = Path.Combine(outputPath, imagePath);
 			if (!ExportFullPath)
 			{
-				filenamePath = outputPath + "/" + texture.name;
-			}
+                if (texture.name != Uri.EscapeUriString(texture.name))
+                {
+                    string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
+                    filenamePath = outputPath + "/" + texturenamehash;
+                }
+                else
+                {
+                    filenamePath = outputPath + "/" + texture.name;
+                }
+            }
+            Debug.Log("export image " + filenamePath);
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
             return filenamePath + ".png";
@@ -1313,25 +1322,44 @@ namespace UnityGLTF
 			});
 
 			var imagePath = _retrieveTexturePathDelegate(texture);
+
+            string texturenamehash = "";
+
+            if (texture.name != Uri.EscapeUriString(texture.name))
+            {
+                texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
+                //filenamePath = outputPath + "/" + texturenamehash;
+            }
+            else
+            {
+                texturenamehash = texture.name;
+                //filenamePath = outputPath + "/" + texture.name;
+            }
+
+
+
             if (string.IsNullOrEmpty(imagePath))
             {
-                image.Uri = Uri.EscapeUriString(texture.name+".png")
-                    .Replace("!", "%21")
-                    .Replace("#", "%23")
-                    .Replace("$", "%24")
-                    .Replace("&", "%26")
-                    .Replace("'", "%27")
-                    .Replace("(", "%28")
-                    .Replace(")", "%29")
-                    .Replace("*", "%2A")
-                    .Replace("+", "%2B")
-                    .Replace(",", "%2C")
-                    .Replace("/", "%2F")
-                    .Replace(":", "%3A")
-                    .Replace(";", "%3B")
-                    .Replace("=", "%3D")
-                    .Replace("?", "%3F")
-                    .Replace("@", "%40");
+                image.Uri = texture.name; //original
+
+                image.Uri = texturenamehash;// texture.name;
+                //image.Uri = Uri.EscapeUriString(texture.name+".png")
+                //    .Replace("!", "%21")
+                //    .Replace("#", "%23")
+                //    .Replace("$", "%24")
+                //    .Replace("&", "%26")
+                //    .Replace("'", "%27")
+                //    .Replace("(", "%28")
+                //    .Replace(")", "%29")
+                //    .Replace("*", "%2A")
+                //    .Replace("+", "%2B")
+                //    .Replace(",", "%2C")
+                //    .Replace("/", "%2F")
+                //    .Replace(":", "%3A")
+                //    .Replace(";", "%3B")
+                //    .Replace("=", "%3D")
+                //    .Replace("?", "%3F")
+                //    .Replace("@", "%40");
             }
             else
             {
@@ -1339,25 +1367,27 @@ namespace UnityGLTF
 
                 if (!ExportFullPath)
                 {
-                    filenamePath = texture.name + ".png";
+                    filenamePath = texture.name + ".png"; //original
+                    filenamePath = texturenamehash + ".png";// texture.name + ".png";
                 }
-                image.Uri = Uri.EscapeUriString(filenamePath)
-                    .Replace("!", "%21")
-                    .Replace("#", "%23")
-                    .Replace("$", "%24")
-                    .Replace("&", "%26")
-                    .Replace("'", "%27")
-                    .Replace("(", "%28")
-                    .Replace(")", "%29")
-                    .Replace("*", "%2A")
-                    .Replace("+", "%2B")
-                    .Replace(",", "%2C")
-                    .Replace("/", "%2F")
-                    .Replace(":", "%3A")
-                    .Replace(";", "%3B")
-                    .Replace("=", "%3D")
-                    .Replace("?", "%3F")
-                    .Replace("@", "%40");
+                image.Uri = filenamePath;
+                //image.Uri = Uri.EscapeUriString(filenamePath)
+                //    .Replace("!", "%21")
+                //    .Replace("#", "%23")
+                //    .Replace("$", "%24")
+                //    .Replace("&", "%26")
+                //    .Replace("'", "%27")
+                //    .Replace("(", "%28")
+                //    .Replace(")", "%29")
+                //    .Replace("*", "%2A")
+                //    .Replace("+", "%2B")
+                //    .Replace(",", "%2C")
+                //    .Replace("/", "%2F")
+                //    .Replace(":", "%3A")
+                //    .Replace(";", "%3B")
+                //    .Replace("=", "%3D")
+                //    .Replace("?", "%3F")
+                //    .Replace("@", "%40");
             }
 
 			id = new ImageId
