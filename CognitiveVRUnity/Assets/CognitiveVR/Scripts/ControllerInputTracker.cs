@@ -1465,6 +1465,331 @@ public class ControllerInputTracker : MonoBehaviour
             }
         }
     }
+#elif CVR_WINDOWSMR
+
+        //one input tracker for both controllers??
+        //yes
+
+        public DynamicObject LeftHand;
+        public DynamicObject RightHand;
+
+        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
+        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
+
+        Vector3 LeftJoystickVector;
+        Vector3 RightJoystickVector;
+        Vector3 LeftTouchpadVector;
+        Vector3 RightTouchpadVector;
+        float minMagnitude = 0.05f;
+        int LeftTrigger;
+        int RightTrigger;
+
+        enum TouchpadState
+        {
+            None,
+            Touch,
+            Press
+        }
+
+        TouchpadState LeftTouchpadState;
+        TouchpadState RightTouchpadState;
+        TouchpadState LeftJoystickState;
+        TouchpadState RightJoystickState;
+
+        void Init()
+        {
+
+        }
+
+        private void Update()
+        {
+            //grip left
+            if (Input.GetKeyDown(KeyCode.JoystickButton4))
+                OnButtonChanged(LeftHand, false, "wmr_grip", true, CurrentLeftButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton4))
+                OnButtonChanged(LeftHand, false, "wmr_grip", false, CurrentLeftButtonStates);
+
+            //grip right
+            if (Input.GetKeyDown(KeyCode.JoystickButton5))
+                OnButtonChanged(RightHand, true, "wmr_grip", true, CurrentRightButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton5))
+                OnButtonChanged(RightHand, true, "wmr_grip", false, CurrentRightButtonStates);
+
+            //menu left
+            if (Input.GetKeyDown(KeyCode.JoystickButton6))
+                OnButtonChanged(LeftHand, false, "wmr_menubtn", true, CurrentLeftButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton6))
+                OnButtonChanged(LeftHand, false, "wmr_menubtn", false, CurrentLeftButtonStates);
+
+            //menu right
+            if (Input.GetKeyDown(KeyCode.JoystickButton7))
+                OnButtonChanged(RightHand, true, "wmr_menubtn", true, CurrentRightButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton7))
+                OnButtonChanged(RightHand, true, "wmr_menubtn", false, CurrentRightButtonStates);
+
+            //left touchpad
+            Vector2 leftTouchVector = new Vector2(Input.GetAxis("LeftTouchpadH"), Input.GetAxis("LeftTouchpadV"));
+            if (Input.GetKeyDown(KeyCode.JoystickButton18))
+            {
+                OnVectorChanged(LeftHand, false, "wmr_touchpad", 50, leftTouchVector, CurrentLeftButtonStates);
+                LeftTouchpadState = TouchpadState.Touch;
+            }
+            if (Input.GetKeyDown(KeyCode.JoystickButton16))
+            {
+                OnVectorChanged(LeftHand, false, "wmr_touchpad", 100, leftTouchVector, CurrentLeftButtonStates);
+                LeftTouchpadState = TouchpadState.Press;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton18))
+            {
+                OnVectorChanged(LeftHand, false, "wmr_touchpad", 0, leftTouchVector, CurrentLeftButtonStates);
+                LeftTouchpadState = TouchpadState.None;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton16))
+            {
+                if (Input.GetKey(KeyCode.JoystickButton18))
+                {
+                    OnVectorChanged(LeftHand, false, "wmr_touchpad", 50, leftTouchVector, CurrentLeftButtonStates);
+                    LeftTouchpadState = TouchpadState.Touch;
+                }
+                else
+                {
+                    OnVectorChanged(LeftHand, false, "wmr_touchpad", 0, leftTouchVector, CurrentLeftButtonStates);
+                    LeftTouchpadState = TouchpadState.None;
+                }
+            }
+
+            //right touchpad
+            Vector2 rightTouchVector = new Vector2(Input.GetAxis("RightTouchpadH"), Input.GetAxis("RightTouchpadV"));
+            if (Input.GetKeyDown(KeyCode.JoystickButton19))
+            {
+                OnVectorChanged(RightHand, true, "wmr_touchpad", 50, rightTouchVector, CurrentRightButtonStates);
+                RightTouchpadState = TouchpadState.Touch;
+            }
+            if (Input.GetKeyDown(KeyCode.JoystickButton17))
+            {
+                OnVectorChanged(RightHand, true, "wmr_touchpad", 100, rightTouchVector, CurrentRightButtonStates);
+                RightTouchpadState = TouchpadState.Press;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton19))
+            {
+                OnVectorChanged(RightHand, true, "wmr_touchpad", 0, rightTouchVector, CurrentRightButtonStates);
+                RightTouchpadState = TouchpadState.None;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton17))
+            {
+                if (Input.GetKey(KeyCode.JoystickButton19))
+                {
+                    OnVectorChanged(RightHand, true, "wmr_touchpad", 50, rightTouchVector, CurrentRightButtonStates);
+                    RightTouchpadState = TouchpadState.Touch;
+                }
+                else
+                {
+                    OnVectorChanged(RightHand, true, "wmr_touchpad", 0, rightTouchVector, CurrentRightButtonStates);
+                    RightTouchpadState = TouchpadState.None;
+                }
+            }
+
+            //left joystick
+            Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
+            if (Input.GetKeyDown(KeyCode.JoystickButton8))
+            {
+                OnVectorChanged(LeftHand, false, "wmr_joystick", 100, leftJoystickVector, CurrentLeftButtonStates);
+                LeftJoystickState = TouchpadState.Press;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton8))
+            {
+                OnVectorChanged(LeftHand, false, "wmr_joystick", 0, leftJoystickVector, CurrentLeftButtonStates);
+                LeftJoystickState = TouchpadState.None;
+            }
+
+            //right joystick
+            Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
+            if (Input.GetKeyDown(KeyCode.JoystickButton9))
+            {
+                OnVectorChanged(RightHand, true, "wmr_joystick", 100, rightJoystickVector, CurrentRightButtonStates);
+                RightJoystickState = TouchpadState.Press;
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton9))
+            {
+                OnVectorChanged(RightHand, true, "wmr_joystick", 0, rightJoystickVector, CurrentRightButtonStates);
+                RightJoystickState = TouchpadState.None;
+            }
+
+            //left trigger
+            if (Input.GetKeyDown(KeyCode.JoystickButton14))
+                OnSingleChanged(LeftHand, false, "wmr_trigger", 100, CurrentLeftButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton14))
+            {
+                float trigger = Input.GetAxis("LeftTrigger");
+                OnSingleChanged(LeftHand, false, "wmr_trigger", (int)(trigger * 100), CurrentLeftButtonStates);
+            }
+
+            //right trigger
+            if (Input.GetKeyDown(KeyCode.JoystickButton15))
+                OnSingleChanged(RightHand, true, "wmr_trigger", 100, CurrentRightButtonStates);
+            if (Input.GetKeyUp(KeyCode.JoystickButton15))
+            {
+                float trigger = Input.GetAxis("RightTrigger");
+                OnSingleChanged(RightHand, true, "wmr_trigger", (int)(trigger * 100), CurrentRightButtonStates);
+            }
+
+            if (Time.time > nextUpdateTime)
+            {
+                RecordAnalogInputs();
+                nextUpdateTime = Time.time + UpdateRate;
+            }
+            if (CurrentRightButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
+                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentRightButtonStates[i]);
+                }
+                CurrentRightButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
+            }
+            if (CurrentLeftButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
+                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentLeftButtonStates[i]);
+                }
+                CurrentLeftButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
+            }
+        }
+
+        void RecordAnalogInputs()
+        {
+            //joysticks
+            {
+                Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
+                var x = leftJoystickVector.x;
+                var y = leftJoystickVector.y;
+                int force = LeftJoystickState == TouchpadState.Press ? 100 : 0;
+
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_joystick"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(LeftHand, false, "wmr_joystick", force, leftJoystickVector, CurrentLeftButtonStates);
+                    }
+                    LeftJoystickVector = currentVector;
+                }
+            }
+
+            {
+                Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
+                var x = rightJoystickVector.x;
+                var y = rightJoystickVector.y;
+                int force = RightJoystickState == TouchpadState.Press ? 100 : 0;
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_joystick"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(RightHand, true, "wmr_joystick", force, rightJoystickVector, CurrentRightButtonStates);
+                    }
+                    RightJoystickVector = currentVector;
+                }
+            }
+
+            //touchpad
+            {
+                Vector2 leftTouchpadVector = new Vector2(Input.GetAxis("LeftTouchpadH"), Input.GetAxis("LeftTouchpadV"));
+                var x = leftTouchpadVector.x;
+                var y = leftTouchpadVector.y;
+                int force = LeftTouchpadState == TouchpadState.Press ? 100 : LeftTouchpadState == TouchpadState.Touch ? 50 : 0;
+
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(LeftTouchpadVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_touchpad"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(LeftHand, false, "wmr_touchpad", force, leftTouchpadVector, CurrentLeftButtonStates);
+                    }
+                    LeftTouchpadVector = currentVector;
+                }
+            }
+            {
+                Vector2 rightTouchpadVector = new Vector2(Input.GetAxis("RightTouchpadH"), Input.GetAxis("RightTouchpadV"));
+                var x = rightTouchpadVector.x;
+                var y = rightTouchpadVector.y;
+                int force = RightTouchpadState == TouchpadState.Press ? 100 : RightTouchpadState == TouchpadState.Touch ? 50 : 0;
+
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(RightTouchpadVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_touchpad"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(RightHand, true, "wmr_touchpad", force, rightTouchpadVector, CurrentRightButtonStates);
+                    }
+                    RightTouchpadVector = currentVector;
+                }
+            }
+
+            //triggers
+            {
+                int currentTrigger = (int)(Input.GetAxis("LeftTrigger") * 100);
+                if (LeftTrigger != currentTrigger)
+                {
+                    var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_trigger"; });
+                    if (trigger != null)
+                    {
+                        trigger.ButtonPercent = currentTrigger;
+                    }
+                    else
+                    {
+                        OnSingleChanged(LeftHand, false, "wmr_trigger", currentTrigger, CurrentLeftButtonStates);
+                    }
+                    LeftTrigger = currentTrigger;
+                }
+            }
+            {
+                int currentTrigger = (int)(Input.GetAxis("RightTrigger") * 100);
+                if (RightTrigger != currentTrigger)
+                {
+                    var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_trigger"; });
+                    if (trigger != null)
+                    {
+                        trigger.ButtonPercent = currentTrigger;
+                    }
+                    else
+                    {
+                        OnSingleChanged(RightHand, true, "wmr_trigger", currentTrigger, CurrentRightButtonStates);
+                    }
+                    RightTrigger = currentTrigger;
+                }
+            }
+        }
 #else //NO SDKS that deal with input
         void Init()
     {
@@ -1475,7 +1800,7 @@ public class ControllerInputTracker : MonoBehaviour
     }
 #endif
 
-        void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
+    void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
     {
         states.Add(new ButtonState(name, down ? 100 : 0));
     }

@@ -23,8 +23,8 @@ namespace CognitiveVR
             ExitPoll,
             LeapMotionHandLeft,
             LeapMotionHandRight,
-            MicrosoftMixedRealityLeft,
-            MicrosoftMixedRealityRight,
+            WindowsMixedRealityLeft,
+            WindowsMixedRealityRight,
             VideoSphereLatitude,
             VideoSphereCubemap,
             SnapdragonVRController,
@@ -106,6 +106,11 @@ namespace CognitiveVR
             {                
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
+                if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityRight)
+                    tempMeshName = "windows_mixed_reality_controller_right";
+                if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityLeft)
+                    tempMeshName = "windows_mixed_reality_controller_left";
+
                 if (SyncWithPlayerGazeTick)
                 {
                     UpdateRate = 64;
@@ -133,6 +138,9 @@ namespace CognitiveVR
                         Data.IsRightHand = true;
                     }
                     CognitiveVR.GameplayReferences.SetController(gameObject, Data.IsRightHand);
+#endif
+#if CVR_WINDOWSMR
+                    CognitiveVR.GameplayReferences.SetController(gameObject, IsRight);
 #endif
                     CognitiveVR.DynamicManager.RegisterController(Data);
                 }
