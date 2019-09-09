@@ -100,6 +100,11 @@ namespace CognitiveVR
             return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar;
         }
 
+        public static string GetBaseDirectory()
+        {
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar;
+        }
+
         //don't even try exporting the scene. just generate the folder and json file
         public static void ExportSceneAR()
         {
