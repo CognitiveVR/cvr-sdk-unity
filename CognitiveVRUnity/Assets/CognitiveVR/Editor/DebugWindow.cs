@@ -11,13 +11,19 @@ namespace CognitiveVR
         {
             DebugInformationWindow window = (DebugInformationWindow)EditorWindow.GetWindow(typeof(DebugInformationWindow), true, "Debug Information");
             window.Show();
-            window.Refresh();
+            Refresh();
         }
 
-        string DebugText;
+        static string DebugText;
         Vector2 view;
 
-        void Refresh()
+        public static string GetDebugContents()
+        {
+            Refresh();
+            return DebugText;
+        }
+
+        static void Refresh()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder(1024);
             CognitiveVR_Preferences p = CognitiveVR_Preferences.Instance;
@@ -37,8 +43,8 @@ namespace CognitiveVR
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             sb.AppendLine("SDK Type: " + s);
             sb.AppendLine("SDK Version: " + Core.SDK_VERSION);
-            sb.AppendLine("Api Key: " + p.ApplicationKey);
-            sb.AppendLine("Developer Key: " + EditorCore.DeveloperKey);
+            sb.AppendLine("Api Key: ****" + p.ApplicationKey.Substring(p.ApplicationKey.Length - 4));
+            sb.AppendLine("Developer Key: ****" + EditorCore.DeveloperKey.Substring(EditorCore.DeveloperKey.Length - 4));
             sb.AppendLine("Enable Logging: " + p.EnableLogging);
             sb.AppendLine("Enable Development Logging: " + p.EnableDevLogging);
             sb.AppendLine("Gaze Type: " + p.GazeType.ToString());
@@ -74,7 +80,6 @@ namespace CognitiveVR
             sb.AppendLine("Save Data to Local Cache if no internet connection: " + p.LocalStorage);
             sb.AppendLine("Cache Size (bytes): " + p.LocalDataCacheSize);
             sb.AppendLine("Cache Size (mb): " + EditorUtility.FormatBytes(p.LocalDataCacheSize));
-            sb.AppendLine("Upload Local Cache Rate: " + p.ReadLocalCacheCount);
             sb.AppendLine("Custom Protocol: " + p.Protocol);
             sb.AppendLine("Custom Gateway: " + p.Gateway);
             sb.AppendLine("Custom Viewer: " + p.Viewer);
@@ -267,7 +272,7 @@ namespace CognitiveVR
         }
 
         //probably need to do a stack of directory/file counts
-        void AppendDirectory(System.Text.StringBuilder sb, string directoryPath, int depth)
+        static void AppendDirectory(System.Text.StringBuilder sb, string directoryPath, int depth)
         {
             int lastItemIndex = System.IO.Directory.GetFiles(directoryPath).Length + System.IO.Directory.GetDirectories(directoryPath).Length-1;
             

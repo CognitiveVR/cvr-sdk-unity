@@ -1430,6 +1430,9 @@ public class InitWizard : EditorWindow
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
+                string debugContent = DebugInformationWindow.GetDebugContents();
+                System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
+
 
                 //CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
                 CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());

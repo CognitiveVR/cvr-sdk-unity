@@ -124,6 +124,9 @@ namespace CognitiveVR
             //write json settings file
             string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+            string debugContent = DebugInformationWindow.GetDebugContents();
+            File.WriteAllText(objPath + "debug.log", debugContent);
         }
 
         //export and try to decimate the scene
@@ -169,6 +172,9 @@ namespace CognitiveVR
 
                     string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                    string debugContent = DebugInformationWindow.GetDebugContents();
+                    File.WriteAllText(objPath + "debug.log", debugContent);
                 }
             }
             else

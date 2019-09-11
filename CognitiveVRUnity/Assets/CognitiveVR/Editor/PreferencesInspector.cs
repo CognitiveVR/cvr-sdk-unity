@@ -155,12 +155,6 @@ namespace CognitiveVR
             if (p.LocalDataCacheSize < 1048576) { p.LocalDataCacheSize = 1048576; } //at least 1mb of storage (1048576 bytes)
             EditorGUILayout.LabelField(EditorUtility.FormatBytes(p.LocalDataCacheSize),GUILayout.Width(100));
             GUILayout.EndHorizontal();
-            p.ReadLocalCacheCount = EditorGUILayout.IntField(new GUIContent("Upload Local Cache Rate", "For each successful network response, read this number of cached requests from the local data cache"), p.ReadLocalCacheCount);
-            p.ReadLocalCacheCount = Mathf.Max(p.ReadLocalCacheCount, 0);
-            if (p.ReadLocalCacheCount == 0 && p.LocalStorage)
-            {
-                EditorGUILayout.HelpBox("Saved data will only be uploaded if manually called! See Docs", MessageType.Warning);
-            }
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
@@ -279,6 +273,9 @@ namespace CognitiveVR
                 string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                string debugContent = DebugInformationWindow.GetDebugContents();
+                System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
 
                 //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
                 CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
