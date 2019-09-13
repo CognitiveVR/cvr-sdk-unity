@@ -66,7 +66,7 @@ namespace CognitiveVR
         }
 
         static string _hmdname;
-        //returns vive/rift/gear/unknown based on hmd model name
+        //returns vive/rift/gear/unknown based on hmd model name. used to display hmd mesh on scene viewer
         public static string GetSimpleHMDName(string rawHMDName)
         {
             if (_hmdname != null)

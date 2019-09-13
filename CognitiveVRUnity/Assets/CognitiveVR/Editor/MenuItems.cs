@@ -56,6 +56,12 @@ namespace CognitiveVR
             //open window
             Setup360Window.Init();
         }
+        [MenuItem(Menu + "Debug Information", priority = 58)]
+        static void CognitiveDebugWindow()
+        {
+            //open window
+            DebugInformationWindow.Init();
+        }
 
         [MenuItem(Menu + "Manage Dynamic Objects", priority = 60)]
         static void Cognitive3DManageDynamicObjects()

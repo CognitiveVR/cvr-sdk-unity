@@ -216,6 +216,9 @@ public class InitWizard : EditorWindow
 #if CVR_HOLOLENS
             selectedsdks.Add("CVR_HOLOLENS");
 #endif
+#if CVR_WINDOWSMR
+            selectedsdks.Add("CVR_WINDOWSMR");
+#endif
         }
 
         Vector2 sdkScrollPos;
@@ -226,8 +229,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -469,68 +472,67 @@ public class InitWizard : EditorWindow
                 }
             }
 #elif CVR_VIVEWAVE
-
-            var g = Resources.Load<GameObject>("AdaptiveController");
-
-            if (g == null)
+            if (leftcontroller != null && leftcontroller.GetComponent<ControllerInputTracker>() != null)
             {
-                Debug.LogWarning("could not load AdaptiveController");
+                leftSetupComplete = true;
             }
             else
             {
-                var dyn = g.GetComponent<DynamicObject>();
-                if (dyn == null)
+                leftSetupComplete = false;
+            }
+
+            if (rightcontroller != null && rightcontroller.GetComponent<ControllerInputTracker>() != null)
+            {
+                rightSetupComplete = true;
+            }
+            else
+            {
+                rightSetupComplete = false;
+            }
+
+            setupComplete = false;
+
+            var g = Resources.Load<GameObject>("AdaptiveController");
+            if (g != null)
+            {
+                var inputtracker = g.GetComponent<ControllerInputTracker>();
+                if (inputtracker != null)
                 {
-                    dyn = g.AddComponent<DynamicObject>();
+                    setupComplete = true;
                 }
-                dyn.UseCustomMesh = false;
-                dyn.IsController = true;
-                //dyn.IsRight = false; //set from dominant/non dominant hand
-                dyn.ControllerType = "vivefocuscontroller";
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-
-                var ct = g.GetComponent<ControllerInputTracker>();
-                if (ct == null)
+            }
+#elif CVR_WINDOWSMR
+            leftSetupComplete = false;
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
                 {
-                    ct = g.AddComponent<ControllerInputTracker>();
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft)
+                        leftSetupComplete = true;
                 }
             }
 
-            if (left != null && left.GetComponent<DynamicObject>() == null)
+            rightSetupComplete = false;
+            if (rightcontroller != null)
             {
-                left.AddComponent<DynamicObject>();
-            }
-            if (right != null && right.GetComponent<DynamicObject>() == null)
-            {
-                right.AddComponent<DynamicObject>();
-            }
-
-            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
-            {
-                left.AddComponent<ControllerInputTracker>();
-            }
-            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
-            {
-                right.AddComponent<ControllerInputTracker>();
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight)
+                        rightSetupComplete = true;
+                }
             }
 
-            if (left != null)
+            setupComplete = false;
+            if (rightSetupComplete && leftSetupComplete)
             {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = "vivefocuscontroller";
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = "vivefocuscontroller";
+                //add input tracker + left/right controllers set
+                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                {
+                    setupComplete = true;
+                }
             }
 #else
             //TODO add support for this stuff
@@ -852,6 +854,59 @@ public class InitWizard : EditorWindow
                 dyn.IsController = true;
                 dyn.ControllerType = "vivefocuscontroller";
             }
+#elif CVR_WINDOWSMR
+
+
+            //add component to cognitice manager
+            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            if (inputTracker == null)
+            {
+                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = left.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "windows_mixed_reality_controller_left";
+                inputTracker.LeftHand = dyn;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = right.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "windows_mixed_reality_controller_right";
+                inputTracker.RightHand = dyn;
+            }
+
+            try
+            {
+                EditorCore.BindAxis(new EditorCore.Axis("LeftTouchpadH", 16));
+                EditorCore.BindAxis(new EditorCore.Axis("LeftTouchpadV", 17,true));
+                EditorCore.BindAxis(new EditorCore.Axis("RightTouchpadH", 18));
+                EditorCore.BindAxis(new EditorCore.Axis("RightTouchpadV", 19, true));
+                EditorCore.BindAxis(new EditorCore.Axis("LeftJoystickH", 0));
+                EditorCore.BindAxis(new EditorCore.Axis("LeftJoystickV", 1, true));
+                EditorCore.BindAxis(new EditorCore.Axis("RightJoystickH", 3));
+                EditorCore.BindAxis(new EditorCore.Axis("RightJoystickV", 4, true));
+                EditorCore.BindAxis(new EditorCore.Axis("LeftTrigger", 8));
+                EditorCore.BindAxis(new EditorCore.Axis("RightTrigger", 9));
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
+            }
+
 #elif CVR_OCULUS
             if (left != null)
             {
@@ -1374,6 +1429,9 @@ public class InitWizard : EditorWindow
                 string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                string debugContent = DebugInformationWindow.GetDebugContents();
+                System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
 
 
                 //CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);

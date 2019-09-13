@@ -1196,6 +1196,57 @@ public class EditorCore
         position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
         rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
     }
-    #endregion
-}
+        #endregion
+
+    public class Axis
+    {
+        public string Name = String.Empty;
+        public float Gravity = 0.0f;
+        public float Deadzone = 0.001f;
+        public float Sensitivity = 1.0f;
+        public bool Snap = false;
+        public bool Invert = false;
+        public int InputType = 2;
+        public int AxisNum = 0;
+        public int JoystickNum = 0;
+            public Axis(string name, int axis, bool inverted = false)
+            {
+                Name = name;
+                AxisNum = axis;
+                Invert = inverted;
+            }
+    }
+
+    public static void BindAxis(Axis axis)
+    {
+        SerializedObject serializedObject = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/InputManager.asset")[0]);
+        SerializedProperty axesProperty = serializedObject.FindProperty("m_Axes");
+
+        SerializedProperty axisIter = axesProperty.Copy(); //m_axes
+        axisIter.Next(true); //m_axes.array
+        axisIter.Next(true); //m_axes.array.size
+        while (axisIter.Next(false))
+        {
+            if (axisIter.FindPropertyRelative("m_Name").stringValue == axis.Name)
+            {
+                return;
+            }
+        }
+
+        axesProperty.arraySize++;
+        serializedObject.ApplyModifiedProperties();
+
+        SerializedProperty axisProperty = axesProperty.GetArrayElementAtIndex(axesProperty.arraySize - 1);
+        axisProperty.FindPropertyRelative("m_Name").stringValue = axis.Name;
+        axisProperty.FindPropertyRelative("gravity").floatValue = axis.Gravity;
+        axisProperty.FindPropertyRelative("dead").floatValue = axis.Deadzone;
+        axisProperty.FindPropertyRelative("sensitivity").floatValue = axis.Sensitivity;
+        axisProperty.FindPropertyRelative("snap").boolValue = axis.Snap;
+        axisProperty.FindPropertyRelative("invert").boolValue = axis.Invert;
+        axisProperty.FindPropertyRelative("type").intValue = axis.InputType;
+        axisProperty.FindPropertyRelative("axis").intValue = axis.AxisNum;
+        axisProperty.FindPropertyRelative("joyNum").intValue = axis.JoystickNum;
+        serializedObject.ApplyModifiedProperties();
+    }
+    }
 }

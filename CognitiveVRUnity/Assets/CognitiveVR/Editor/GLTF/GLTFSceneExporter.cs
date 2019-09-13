@@ -74,7 +74,6 @@ namespace UnityGLTF
 
 		// Settings
 		public static bool ExportNames = true; //MUST BE TRUE
-        public static bool ExportFullPath = false; //MUST BE FALSE
 		public static bool RequireExtensions = false; //PROBABLY FALSE
 
         public CognitiveVR.DynamicObject Dynamic;
@@ -405,10 +404,16 @@ namespace UnityGLTF
 		{
 			var imagePath = _retrieveTexturePathDelegate(texture);
 			var filenamePath = Path.Combine(outputPath, imagePath);
-			if (!ExportFullPath)
-			{
-				filenamePath = outputPath + "/" + texture.name;
-			}
+            if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
+            {
+                string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
+                filenamePath = outputPath + "/" + texturenamehash;
+            }
+            else
+            {
+                filenamePath = outputPath + "/" + texture.name;
+            }
+            Debug.Log("export image " + filenamePath);
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
             return filenamePath + ".png";
@@ -1313,51 +1318,28 @@ namespace UnityGLTF
 			});
 
 			var imagePath = _retrieveTexturePathDelegate(texture);
-            if (string.IsNullOrEmpty(imagePath))
+
+            string texturenamehash = "";
+
+            if (texture.name != Uri.EscapeUriString(texture.name).Replace('#','_'))
             {
-                image.Uri = Uri.EscapeUriString(texture.name+".png")
-                    .Replace("!", "%21")
-                    .Replace("#", "%23")
-                    .Replace("$", "%24")
-                    .Replace("&", "%26")
-                    .Replace("'", "%27")
-                    .Replace("(", "%28")
-                    .Replace(")", "%29")
-                    .Replace("*", "%2A")
-                    .Replace("+", "%2B")
-                    .Replace(",", "%2C")
-                    .Replace("/", "%2F")
-                    .Replace(":", "%3A")
-                    .Replace(";", "%3B")
-                    .Replace("=", "%3D")
-                    .Replace("?", "%3F")
-                    .Replace("@", "%40");
+                texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
             }
             else
             {
-                var filenamePath = Path.ChangeExtension(imagePath, ".png");
+                texturenamehash = texture.name;
+            }
 
-                if (!ExportFullPath)
-                {
-                    filenamePath = texture.name + ".png";
-                }
-                image.Uri = Uri.EscapeUriString(filenamePath)
-                    .Replace("!", "%21")
-                    .Replace("#", "%23")
-                    .Replace("$", "%24")
-                    .Replace("&", "%26")
-                    .Replace("'", "%27")
-                    .Replace("(", "%28")
-                    .Replace(")", "%29")
-                    .Replace("*", "%2A")
-                    .Replace("+", "%2B")
-                    .Replace(",", "%2C")
-                    .Replace("/", "%2F")
-                    .Replace(":", "%3A")
-                    .Replace(";", "%3B")
-                    .Replace("=", "%3D")
-                    .Replace("?", "%3F")
-                    .Replace("@", "%40");
+
+
+            if (string.IsNullOrEmpty(imagePath))
+            {
+                image.Uri = texturenamehash + ".png";
+            }
+            else
+            {
+                var filenamePath = texturenamehash + ".png";
+                image.Uri = filenamePath;
             }
 
 			id = new ImageId
