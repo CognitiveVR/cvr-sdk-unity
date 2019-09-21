@@ -304,6 +304,34 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_PUPIL
+        const int CachedEyeCaptures = 120; //PUPIL LABS
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            //world gaze direction
+            ray = currentData.GazeRay;
+            return true;
+        }
+
+        public bool LeftEyeOpen() { return currentData.LeftEyeOpen; }
+        public bool RightEyeOpen() { return currentData.RightEyeOpen; }
+
+        public long EyeCaptureTimestamp()
+        {
+            return currentData.Timestamp;
+        }
+
+        PupilGazeData currentData;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (GazeDataQueue.Count > 0)
+            {
+                currentData = GazeDataQueue.Dequeue();
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
@@ -441,8 +469,90 @@ namespace CognitiveVR
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
+#elif CVR_PUPIL
+            PupilTools.SubscribeTo("pupil.");
+            PupilTools.OnReceiveData += CustomReceiveData;
 #endif
         }
+
+#if CVR_PUPIL
+
+        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
+        class PupilGazeData
+        {
+            public long Timestamp;
+            public Ray GazeRay;
+            public bool LeftEyeOpen;
+            public bool RightEyeOpen;
+        }
+
+        Queue<PupilGazeData> Left = new Queue<PupilGazeData>(8);
+        Queue<PupilGazeData> Right = new Queue<PupilGazeData>(8);
+
+        void CustomReceiveData(string topic, Dictionary<string, object> dictionary, byte[] thirdFrame = null)
+        {
+            //put data into left or right eye queues. combine when data from the other eye is received
+            if (topic.StartsWith("pupil"))
+            {
+                PupilGazeData pgd = new PupilGazeData();
+
+                pgd.Timestamp = (long)(Util.Timestamp() * 1000);
+                pgd.GazeRay = GameplayReferences.HMDCameraComponent.ViewportPointToRay(PupilTools.VectorFromDictionary(dictionary, "norm_pos"));
+
+                if (PupilTools.StringFromDictionary(dictionary, "id") == "1") //left eye
+                {
+                    if (PupilTools.FloatFromDictionary(dictionary, "diameter") > 1f && PupilTools.FloatFromDictionary(dictionary, "confidence") > 0.6f)
+                    {
+                        pgd.LeftEyeOpen = true;
+                    }
+
+                    if (Right.Count == 0)
+                    {
+                        Left.Enqueue(pgd);
+                        return;
+                    }
+                    else
+                    {
+                        var right = Right.Dequeue();
+                        pgd.RightEyeOpen = right.RightEyeOpen;
+                        Ray r = new Ray();
+
+                        r.direction = (pgd.GazeRay.direction + right.GazeRay.direction) / 2;
+                        r.origin = (pgd.GazeRay.origin + right.GazeRay.origin) / 2;
+                        pgd.GazeRay = r;
+                    }
+                }
+                else
+                {
+                    if (PupilTools.FloatFromDictionary(dictionary, "diameter") > 0.1f && PupilTools.FloatFromDictionary(dictionary, "confidence") > 0.6f)
+                    {
+                        pgd.RightEyeOpen = true;
+                    }
+                    if (Left.Count == 0)
+                    {
+                        Right.Enqueue(pgd);
+                        return;
+                    }
+                    else
+                    {
+                        var left = Left.Dequeue();
+                        pgd.LeftEyeOpen = left.LeftEyeOpen;
+                        Ray r = new Ray();
+
+                        r.direction = (pgd.GazeRay.direction + left.GazeRay.direction) / 2;
+                        r.origin = (pgd.GazeRay.origin + left.GazeRay.origin) / 2;
+                        pgd.GazeRay = r;
+                    }
+                }
+                GazeDataQueue.Enqueue(pgd);
+            }
+        }
+
+        private void OnDisable()
+        {
+            PupilTools.UnSubscribeFrom("pupil.");
+        }
+#endif
 
         private void Update()
         {
