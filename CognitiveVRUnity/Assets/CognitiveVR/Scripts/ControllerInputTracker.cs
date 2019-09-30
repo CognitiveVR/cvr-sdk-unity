@@ -856,7 +856,7 @@ public class ControllerInputTracker : MonoBehaviour
         public SteamVR_Action_Vector2 touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("cvr_input", "touchpad");
         public SteamVR_Action_Boolean touchAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_touch");
         public SteamVR_Action_Boolean pressAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_press");
-        public SteamVR_ActionSet CVR_ActionSet = SteamVR_Input.GetActionSet("cvr_input");
+        public SteamVR_ActionSet CVR_ActionSet = SteamVR_Input.GetActionSet("CVR_Input");
 
         int Trigger;
         int TouchForce;

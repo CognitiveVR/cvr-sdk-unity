@@ -197,6 +197,11 @@ namespace CognitiveVR
         {
             if (gazeCount == 0) { return; }
 
+            if (!Core.IsInitialized)
+            {
+                return;
+            }
+
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {
                 Util.logDebug("Cognitive GazeCore.SendData could not find scene settings for scene! do not upload gaze to sceneexplorer");

@@ -309,9 +309,9 @@ public class InitWizard : EditorWindow
 
 #region Controllers
 
-        GameObject cameraBase;
-        GameObject leftcontroller;
-        GameObject rightcontroller;
+        static GameObject cameraBase;
+        static GameObject leftcontroller;
+        static GameObject rightcontroller;
 
 #if CVR_STEAMVR2
         bool steamvr2bindings = false;
@@ -697,7 +697,7 @@ public class InitWizard : EditorWindow
 #endif
         }
 
-        void SetupControllers(GameObject left, GameObject right)
+        public static void SetupControllers(GameObject left, GameObject right)
         {
             Debug.Log("setup controllers");
 
@@ -1709,7 +1709,7 @@ public class InitWizard : EditorWindow
     }
 
 #if CVR_STEAMVR2
-        void AppendSteamVRActionSet()
+        public static void AppendSteamVRActionSet()
         {
             SteamVR_Input_ActionFile actionfile;
             if (LoadActionFile(out actionfile))
@@ -1719,7 +1719,7 @@ public class InitWizard : EditorWindow
                 //if actions.json already contains cognitive action set
                 if (actionfile.action_sets.Contains(cognitiveActionSet))
                 {
-                    Debug.LogWarning("SteamVR action set already contains Cognitive Action Set. Skip adding action set to actions.json");
+                    Debug.Log("SteamVR action set already contains Cognitive Action Set. Skip adding action set to actions.json");
                     return;
                 }
 
@@ -1732,6 +1732,11 @@ public class InitWizard : EditorWindow
                 actionfile.action_sets.Add(cognitiveActionSet);
 
                 SaveActionFile(actionfile);
+                Debug.Log("InitWizard::AppendSteamVRActionSet Added CognitiveVR Action Set");
+            }
+            else
+            {
+                Debug.LogError("InitWizard::AppendSteamVRActionSet SteamVR LoadActionFile failed!");
             }
         }
 
@@ -1770,7 +1775,7 @@ public class InitWizard : EditorWindow
             return true;
         }
 
-        static void SetDefaultBindings()
+        public static void SetDefaultBindings()
         {
             SteamVR_Input_BindingFile bindingfile;
             if (LoadBindingFile(out bindingfile))
@@ -1830,8 +1835,12 @@ public class InitWizard : EditorWindow
                 actionlist.sources.Add(bindingSource_right_pad);
 
                 bindingfile.bindings.Add("/actions/cvr_input", actionlist);
-
+                Debug.Log("InitWizard::SetDefaultBindings save CognitiveVR input bindings");
                 SaveBindingFile(bindingfile);
+            }
+            else
+            {
+                Debug.Log("InitWizard::SetDefaultBindings failed to load steamvr actions");
             }
         }
 

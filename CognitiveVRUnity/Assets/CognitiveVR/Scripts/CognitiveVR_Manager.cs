@@ -389,7 +389,7 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             Core.SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #elif CVR_VIVEPROEYE
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
+            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Vive Pro Eye");

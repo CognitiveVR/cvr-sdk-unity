@@ -1324,6 +1324,7 @@ namespace UnityGLTF
             if (texture.name != Uri.EscapeUriString(texture.name).Replace('#','_'))
             {
                 texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
+                image.Name = texturenamehash + ".png";
             }
             else
             {
