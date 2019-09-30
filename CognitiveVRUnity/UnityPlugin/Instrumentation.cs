@@ -77,6 +77,11 @@ namespace CognitiveVR
                 return;
             }
 
+            if (!Core.IsInitialized)
+            {
+                return;
+            }
+
             //TODO should hold until extreme batch size reached
             if (string.IsNullOrEmpty(Core.TrackingSceneId))
             {

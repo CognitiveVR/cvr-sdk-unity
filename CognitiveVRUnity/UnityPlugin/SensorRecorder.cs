@@ -98,6 +98,11 @@ namespace CognitiveVR
                 return;
             }
 
+            if (!Core.IsInitialized)
+            {
+                return;
+            }
+
 
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
