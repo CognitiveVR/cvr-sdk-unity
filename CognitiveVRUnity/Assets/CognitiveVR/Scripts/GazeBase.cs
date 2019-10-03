@@ -84,7 +84,13 @@ namespace CognitiveVR
 #if CVR_AH
             ah_calibrator = Calibrator.Instance;
 #endif
-
+#if CVR_PUPIL
+            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            if (gazeController != null)
+                gazeController.OnReceive3dGaze += ReceiveEyeData;
+            else
+                Debug.LogError("Pupil Labs GazeController is null!");
+#endif
             GazeCore.SetHMDType(hmdname);
             cameraRoot = GameplayReferences.HMD.root;
         }
@@ -255,6 +261,24 @@ namespace CognitiveVR
             }
         }
 
+#if CVR_PUPIL
+        PupilLabs.GazeController gazeController;
+        Vector3 localGazeDirection;
+        Vector3 pupilViewportPosition;
+
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            if (data.Confidence < 0.6f) { return; }
+            localGazeDirection = data.GazeDirection;
+            pupilViewportPosition = data.NormPos;
+        }
+
+        private void OnDisable()
+        {
+            gazeController.OnReceive3dGaze -= ReceiveEyeData;
+        }
+#endif
+
         /// <summary>
         /// get the raw gaze direction in world space. includes fove/pupil labs eye tracking
         /// </summary>
@@ -267,15 +291,7 @@ namespace CognitiveVR
             gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
             gazeDirection.Normalize();
 #elif CVR_PUPIL
-            //var v2 = PupilGazeTracker.Instance.GetEyeGaze(PupilGazeTracker.GazeSource.BothEyes); //0-1 screen pos
-            var v2 = PupilData._2D.GetEyeGaze("0");
-
-            //if it doesn't find the eyes, skip this snapshot
-            //if (PupilTools.Confidence(PupilData.rightEyeID) > 0.1f)
-            {
-                var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
-                gazeDirection = ray.direction.normalized;
-            } //else uses HMD forward
+            gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
 #elif CVR_TOBIIVR
             gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
 #elif CVR_VIVEPROEYE
@@ -324,7 +340,7 @@ namespace CognitiveVR
 
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
 #elif CVR_PUPIL//screenpoint
-            screenGazePoint = PupilData._2D.GetEyeGaze("0");
+            screenGazePoint = pupilViewportPosition;
 #elif CVR_TOBIIVR
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
 #elif CVR_VIVEPROEYE

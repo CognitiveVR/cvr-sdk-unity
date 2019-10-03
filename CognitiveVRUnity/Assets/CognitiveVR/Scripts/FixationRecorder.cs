@@ -470,12 +470,28 @@ namespace CognitiveVR
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
 #elif CVR_PUPIL
-            PupilTools.SubscribeTo("pupil.");
-            PupilTools.OnReceiveData += CustomReceiveData;
+            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            if (gazeController != null)
+                gazeController.OnReceive3dGaze += ReceiveEyeData;
+            else
+                Debug.LogError("Pupil Labs GazeController is null!");
 #endif
         }
 
 #if CVR_PUPIL
+
+        PupilLabs.GazeController gazeController;
+
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            PupilGazeData pgd = new PupilGazeData();
+
+            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
+            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
+            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
+            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
+            GazeDataQueue.Enqueue(pgd);
+        }
 
         Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
         class PupilGazeData
@@ -486,71 +502,9 @@ namespace CognitiveVR
             public bool RightEyeOpen;
         }
 
-        Queue<PupilGazeData> Left = new Queue<PupilGazeData>(8);
-        Queue<PupilGazeData> Right = new Queue<PupilGazeData>(8);
-
-        void CustomReceiveData(string topic, Dictionary<string, object> dictionary, byte[] thirdFrame = null)
-        {
-            //put data into left or right eye queues. combine when data from the other eye is received
-            if (topic.StartsWith("pupil"))
-            {
-                PupilGazeData pgd = new PupilGazeData();
-
-                pgd.Timestamp = (long)(Util.Timestamp() * 1000);
-                pgd.GazeRay = GameplayReferences.HMDCameraComponent.ViewportPointToRay(PupilTools.VectorFromDictionary(dictionary, "norm_pos"));
-
-                if (PupilTools.StringFromDictionary(dictionary, "id") == "1") //left eye
-                {
-                    if (PupilTools.FloatFromDictionary(dictionary, "diameter") > 1f && PupilTools.FloatFromDictionary(dictionary, "confidence") > 0.6f)
-                    {
-                        pgd.LeftEyeOpen = true;
-                    }
-
-                    if (Right.Count == 0)
-                    {
-                        Left.Enqueue(pgd);
-                        return;
-                    }
-                    else
-                    {
-                        var right = Right.Dequeue();
-                        pgd.RightEyeOpen = right.RightEyeOpen;
-                        Ray r = new Ray();
-
-                        r.direction = (pgd.GazeRay.direction + right.GazeRay.direction) / 2;
-                        r.origin = (pgd.GazeRay.origin + right.GazeRay.origin) / 2;
-                        pgd.GazeRay = r;
-                    }
-                }
-                else
-                {
-                    if (PupilTools.FloatFromDictionary(dictionary, "diameter") > 0.1f && PupilTools.FloatFromDictionary(dictionary, "confidence") > 0.6f)
-                    {
-                        pgd.RightEyeOpen = true;
-                    }
-                    if (Left.Count == 0)
-                    {
-                        Right.Enqueue(pgd);
-                        return;
-                    }
-                    else
-                    {
-                        var left = Left.Dequeue();
-                        pgd.LeftEyeOpen = left.LeftEyeOpen;
-                        Ray r = new Ray();
-
-                        r.direction = (pgd.GazeRay.direction + left.GazeRay.direction) / 2;
-                        r.origin = (pgd.GazeRay.origin + left.GazeRay.origin) / 2;
-                        pgd.GazeRay = r;
-                    }
-                }
-                GazeDataQueue.Enqueue(pgd);
-            }
-        }
-
         private void OnDisable()
         {
-            PupilTools.UnSubscribeFrom("pupil.");
+            gazeController.OnReceive3dGaze -= ReceiveEyeData;
         }
 #endif
 

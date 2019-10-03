@@ -168,6 +168,7 @@ namespace CognitiveVR
         public ExitPollParameters myparameters;
 
         GameObject pointerInstance = null;
+        double StartTime;
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
@@ -360,6 +361,7 @@ namespace CognitiveVR
             if (myparameters.OnBegin != null)
                 myparameters.OnBegin.Invoke();
 
+            StartTime = Util.Timestamp();
             IterateToNextQuestion();
             
         }
@@ -504,6 +506,7 @@ namespace CognitiveVR
             exitpoll.SetProperty("userId", CognitiveVR.Core.UniqueID);
             exitpoll.SetProperty("questionSetId", QuestionSetId);
             exitpoll.SetProperty("hook", myparameters.Hook);
+            exitpoll.SetProperty("duration", Util.Timestamp() - StartTime);
 
             var scenesettings = Core.TrackingScene;
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
