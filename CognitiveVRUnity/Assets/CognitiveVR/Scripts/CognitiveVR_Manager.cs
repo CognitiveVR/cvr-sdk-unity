@@ -110,11 +110,16 @@ namespace CognitiveVR
         static Error initResponse = Error.NotInitialized;
         public static Error InitResponse { get { return initResponse; } }
 
-        [Tooltip("Enable automatic initialization. If false, you must manually call Initialize()")]
-        public bool InitializeOnStart = true;
-
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 2;
+
+        [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
+        public bool InitializeOnStart = true;
+
+#if CVR_TOBIIVR || CVR_AH || CVR_PUPIL
+        [Tooltip("Start recording analytics after calibration is successfully completed")]
+        public bool InitializeAfterCalibration = true;
+#endif
 
         /// <summary>
         /// sets instance of CognitiveVR_Manager
@@ -128,11 +133,7 @@ namespace CognitiveVR
             }
             if (instance == this) { return; }
             instance = this;
-            if (InitializeOnStart && StartupDelayTime == 0)
-            {
-                GameObject.DontDestroyOnLoad(gameObject);
-                Initialize("");
-            }
+
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
 
@@ -145,7 +146,49 @@ namespace CognitiveVR
             }
             if (InitializeOnStart)
                 Initialize("");
+            
+#if CVR_TOBIIVR
+            if (InitializeAfterCalibration)
+            {
+                while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
+                {
+                    yield return new WaitForSeconds(1);
+                }
+                Initialize();
+            }
+#endif
+#if CVR_AH
+            if (InitializeAfterCalibration)
+            {
+                while (!AdhawkApi.Calibrator.Instance.Calibrated)
+                {
+                    yield return new WaitForSeconds(1);
+                }
+                Initialize();
+            }
+#endif
+#if CVR_PUPIL
+            if (InitializeAfterCalibration)
+            {
+                if (calibrationController == null)
+                    calibrationController = FindObjectOfType<PupilLabs.CalibrationController>();
+                if (calibrationController != null)
+                    calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
+                else
+                    Util.logWarning("Cognitive Manager could not find PupilLabs.CalibrationController in scene. Initialize After Calibration will not work as expected!");
+            }
+#endif
         }
+
+#if CVR_PUPIL
+        PupilLabs.CalibrationController calibrationController;
+
+        private void PupilLabs_OnCalibrationSucceeded()
+        {
+            calibrationController.OnCalibrationSucceeded -= PupilLabs_OnCalibrationSucceeded;
+            Initialize();
+        }
+#endif
 
 
         /// <summary>
