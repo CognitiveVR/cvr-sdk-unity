@@ -229,7 +229,7 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 0.61 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 2.1.1 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii Pro VR (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 

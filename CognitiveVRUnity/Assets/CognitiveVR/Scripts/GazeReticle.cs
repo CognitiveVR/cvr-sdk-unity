@@ -30,34 +30,45 @@ namespace CognitiveVR
     }
 
 #if CVR_PUPIL
+        
+        PupilLabs.GazeController gazeController;
+        Vector3 gazeDirection = Vector3.forward;
 
-    void Start()
-    {
-        if (GameplayReferences.HMD == null) { return; }
-        PupilTools.OnCalibrationEnded += PupilTools_OnCalibrationEnded;
-    }
-
-    private void PupilTools_OnCalibrationEnded()
-    {
-        PupilTools.IsGazing = true;
-        PupilTools.SubscribeTo("gaze");
-    }
-
-    void Update()
-    {
-        if (GameplayReferences.HMD == null) { return; }
-
-        Vector3 newPosition = t.position;
-        if (PupilTools.IsGazing)
+        void Start()
         {
-            var v2 = PupilData._2D.GetEyeGaze("0");
-            var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
-            newPosition = ray.GetPoint(Distance);
+            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            if (gazeController != null)
+                gazeController.OnReceive3dGaze += ReceiveEyeData;
+            else
+                Debug.LogError("Pupil Labs GazeController is null!");
+            gazeController.OnReceive3dGaze += ReceiveEyeData;
         }
 
-        t.position = Vector3.Lerp(t.position, newPosition, Speed);
-        t.LookAt(GameplayReferences.HMD.position);
-    }
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            if (data.Confidence < 0.6f) { return; }
+            gazeDirection = data.GazeDirection;
+        }
+
+        void Update()
+        {
+            if (GameplayReferences.HMD == null) { return; }
+
+            Vector3 newPosition = t.position;
+            var worldDir = GameplayReferences.HMD.TransformDirection(gazeDirection);
+            //var v2 = PupilData._2D.GetEyeGaze("0");
+            //var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
+            var ray = new Ray(GameplayReferences.HMDCameraComponent.transform.position, worldDir);
+            newPosition = ray.GetPoint(Distance);
+
+            t.position = Vector3.Lerp(t.position, newPosition, Speed);
+            t.LookAt(GameplayReferences.HMD.position);
+        }
+
+        private void OnDisable()
+        {
+            gazeController.OnReceive3dGaze -= ReceiveEyeData;
+        }
 
 #elif CVR_FOVE
 

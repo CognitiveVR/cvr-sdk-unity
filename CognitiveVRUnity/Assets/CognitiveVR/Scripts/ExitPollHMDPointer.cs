@@ -34,17 +34,33 @@ namespace CognitiveVR
 
 
 #if CVR_PUPIL
-    void Start()
-    {
-        if (GameplayReferences.HMD == null) { return; }
-        PupilTools.OnCalibrationEnded += PupilTools_OnCalibrationEnded;
-    }
+        
+        PupilLabs.GazeController gazeController;
+        Vector3 gazeDirection = Vector3.forward;
 
-    private void PupilTools_OnCalibrationEnded()
-    {
-        PupilTools.IsGazing = true;
-        PupilTools.SubscribeTo("gaze");
-    }
+        void Start()
+        {
+            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            if (gazeController != null)
+                gazeController.OnReceive3dGaze += ReceiveEyeData;
+            else
+                Debug.LogError("Pupil Labs GazeController is null!");
+            gazeController.OnReceive3dGaze += ReceiveEyeData;
+        }
+
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            if (!CognitiveVR.Core.IsInitialized) { return; }
+            if (data.Confidence < 0.6f) { return; }
+            gazeDirection = data.GazeDirection;
+        }
+        private void OnDisable()
+        {
+            if (gazeController != null)
+                gazeController.OnReceive3dGaze -= ReceiveEyeData;
+            else
+                Debug.LogError("Pupil Labs GazeController is null!");
+        }
 #endif
 #if CVR_VARJO
         Vector3 lastDir = Vector3.forward;
@@ -74,13 +90,7 @@ namespace CognitiveVR
         Vector3 GetGazeDirection()
         {
 #if CVR_PUPIL
-            if (PupilTools.IsGazing)
-            {
-                var v2 = PupilData._2D.GetEyeGaze("0");
-                var ray = GameplayReferences.HMDCameraComponent.ViewportPointToRay(v2);
-                return ray.direction;
-            }
-            return GameplayReferences.HMD.forward;
+            return GameplayReferences.HMD.TransformDirection(gazeDirection);
 #elif CVR_FOVE
             if (FoveInstance == null)
             {
