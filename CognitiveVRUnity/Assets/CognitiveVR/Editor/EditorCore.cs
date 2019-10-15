@@ -903,25 +903,35 @@ public class EditorCore
     {
         if (displayNames == null)
         {
+            //defaults, mostly loading from preferences
             displayNames = new Dictionary<DisplayKey, string>();
-            foreach (var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
-            {
-                displayNames.Add(keyvalue, "");
-            }
+            displayNames[DisplayKey.GatewayURL] = CognitiveVR_Preferences.Instance.Gateway;
+            displayNames[DisplayKey.DashboardURL] = CognitiveVR_Preferences.Instance.Dashboard;
+            displayNames[DisplayKey.ViewerName] = "Scene Explorer";
+            displayNames[DisplayKey.ViewerURL] = CognitiveVR_Preferences.Instance.Viewer;
+            displayNames[DisplayKey.DocumentationURL] = CognitiveVR_Preferences.Instance.Documentation;
+
+            displayNames[DisplayKey.FullName] = "Cognitive3D";
+            displayNames[DisplayKey.ShortName] = "Cognitive3D";
+            displayNames[DisplayKey.ManagerName] = "Cognitive3D_Manager";
+
             var ta = Resources.Load<TextAsset>("DisplayNames");
-            var lines = ta.text.Split('\n');
-            foreach(var line in lines)
+            if (ta != null)
             {
-                if (line.Length == 0) { continue; }
-                if (line.StartsWith("//")) { continue; }
-                string replacement = System.Text.RegularExpressions.Regex.Replace(line, @"\t|\n|\r", "");
-                var split = replacement.Split('|');
-                foreach(var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
+                var lines = ta.text.Split('\n');
+                foreach (var line in lines)
                 {
-                    if (keyvalue.ToString().ToUpper() == split[0].ToUpper())
+                    if (line.Length == 0) { continue; }
+                    if (line.StartsWith("//")) { continue; }
+                    string replacement = System.Text.RegularExpressions.Regex.Replace(line, @"\t|\n|\r", "");
+                    var split = replacement.Split('|');
+                    foreach (var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
                     {
-                        displayNames[keyvalue] = split[1];
-                        break;
+                        if (keyvalue.ToString().ToUpper() == split[0].ToUpper())
+                        {
+                            displayNames[keyvalue] = split[1];
+                            break;
+                        }
                     }
                 }
             }
