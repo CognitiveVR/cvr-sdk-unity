@@ -129,7 +129,7 @@ namespace CognitiveVR
                 string[] split = properties["csvanswers"].Split('|');
                 for (int i = 0; i < split.Length; i++)
                 {
-                    AnswerButtons[i].GetComponentInChildren<Text>().text = split[i] + " " + i;
+                    AnswerButtons[i].GetComponentInChildren<Text>().text = split[i];
                 }
                 for (int i = split.Length; i<AnswerButtons.Length; i++)
                 {
