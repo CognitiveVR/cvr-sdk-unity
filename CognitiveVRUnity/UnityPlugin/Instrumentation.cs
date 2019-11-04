@@ -148,6 +148,7 @@ namespace CognitiveVR
             string url = CognitiveStatics.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
 
             NetworkManager.Post(url, packagedEvents);
+            CustomEventSendEvent();
         }
 
         public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
@@ -166,10 +167,31 @@ namespace CognitiveVR
             eventBuilder.Append("}"); //close transaction object
             eventBuilder.Append(",");
 
+            CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), null, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
+            }
+        }
+
+        public delegate void onCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time);
+        public static event onCustomEventRecorded OnCustomEventRecorded;
+        private static void CustomEventRecordedEvent(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
+        {
+            if (OnCustomEventRecorded != null)
+            {
+                OnCustomEventRecorded.Invoke(name, pos, properties, dynamicObjectId, time);
+            }
+        }
+
+        //happens after the network has sent the request, before any response
+        public static event Core.onDataSend OnCustomEventSend;
+        private static void CustomEventSendEvent()
+        {
+            if (OnCustomEventSend != null)
+            {
+                OnCustomEventSend.Invoke();
             }
         }
 
@@ -190,6 +212,7 @@ namespace CognitiveVR
             eventBuilder.Append("}"); //close transaction object
             eventBuilder.Append(",");
 
+            CustomEventRecordedEvent(category, position, null, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {
@@ -239,6 +262,7 @@ namespace CognitiveVR
             eventBuilder.Append("}"); //close transaction object
             eventBuilder.Append(",");
 
+            CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), properties, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
             if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
             {

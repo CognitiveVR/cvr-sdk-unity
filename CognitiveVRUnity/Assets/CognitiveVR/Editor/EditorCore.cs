@@ -55,6 +55,10 @@ public class EditorCore
         newManager.AddComponent<CognitiveVR.Components.RoomSize>();
         newManager.AddComponent<CognitiveVR.Components.ArmLength>();
 
+#if CVR_VIVEPROEYE
+        newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
+#endif
+
 #if CVR_NEURABLE
         Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif

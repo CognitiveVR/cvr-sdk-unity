@@ -59,6 +59,8 @@ namespace CognitiveVR
         public static event LevelLoadedHandler LevelLoadedEvent;
         public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (LevelLoadedEvent != null) { LevelLoadedEvent(scene, mode, newSceneId); } }
 
+        public delegate void onDataSend();
+
         private static Transform _hmd;
         internal static Transform HMD
         {

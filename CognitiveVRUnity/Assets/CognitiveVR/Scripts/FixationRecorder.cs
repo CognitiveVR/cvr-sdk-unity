@@ -16,6 +16,7 @@ namespace CognitiveVR
     [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
+        public static FixationRecorder Instance;
         private enum GazeRaycastResult
         {
             Invalid,
@@ -380,7 +381,7 @@ namespace CognitiveVR
         public Fixation ActiveFixation;
 
         [Header("Blink")]
-        [Tooltip("the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is conciously closing their eyes")]
+        [Tooltip("the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is consciously closing their eyes")]
         public int MaxBlinkMs = 400;
         [Tooltip("when a blink occurs, ignore gaze preceding the blink up to this far back in time")]
         public int PreBlinkDiscardMs = 20;
@@ -433,6 +434,7 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
+            Instance = this;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());

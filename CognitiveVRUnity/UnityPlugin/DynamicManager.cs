@@ -33,6 +33,31 @@ namespace CognitiveVR
             CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
         }
 
+
+        //happens after the network has sent the request, before any response
+        public static event Core.onDataSend OnDynamicObjectSend;
+        internal static void DynamicObjectSendEvent()
+        {
+            if (OnDynamicObjectSend != null)
+                OnDynamicObjectSend.Invoke();
+        }
+
+        public static bool GetDynamicObjectName(string id, out string name)
+        {
+            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            {
+                if (!ActiveDynamicObjectsArray[i].active) { continue; }
+                if (id == ActiveDynamicObjectsArray[i].Id)
+                {
+                    name = ActiveDynamicObjectsArray[i].Name;
+                    return true;
+                }
+            }
+            name = string.Empty;
+
+            return false;
+        }
+
         public static void RegisterDynamicObject(DynamicData data)
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)

@@ -384,6 +384,7 @@ namespace CognitiveVR
                     string s = builder.ToString();
                     string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
                     NetworkManager.Post(url, s);
+                    DynamicManager.DynamicObjectSendEvent();
                 }
             }
         }
