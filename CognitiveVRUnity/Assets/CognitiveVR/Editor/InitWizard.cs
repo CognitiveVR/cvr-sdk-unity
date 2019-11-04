@@ -1553,7 +1553,9 @@ public class InitWizard : EditorWindow
                 //fifth upload manifest
                 System.Action completedRefreshSceneVersion = delegate ()
                 {
-                    ManageDynamicObjects.UploadManifest(completedmanifestupload, completedmanifestupload);
+                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    ManageDynamicObjects.AddOrReplaceDynamic(manifest, ManageDynamicObjects.GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
                 };
 
                 //fourth upload dynamics

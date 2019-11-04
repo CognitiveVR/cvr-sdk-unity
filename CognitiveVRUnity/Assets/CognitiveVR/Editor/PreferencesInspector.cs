@@ -294,7 +294,9 @@ namespace CognitiveVR
 
                 System.Action completedRefreshSceneVersion2 = delegate ()
                 {
-                    ManageDynamicObjects.UploadManifest(completedmanifestupload);
+                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    ManageDynamicObjects.AddOrReplaceDynamic(manifest, ManageDynamicObjects.GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest,completedmanifestupload);
                 };
 
                 //upload dynamics
