@@ -153,7 +153,12 @@ public class ManageDynamicObjects : EditorWindow
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 //GLTFExportMenu.ExportSelected();
                 {
-                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                    EditorCore.RefreshSceneVersion(delegate ()
+                    {
+                        var manifest = new AggregationManifest();
+                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                        ManageDynamicObjects.UploadManifest(manifest, () => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true));
+                    });
                 }
                 //if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 //{
@@ -178,7 +183,12 @@ public class ManageDynamicObjects : EditorWindow
                 //GLTFExportMenu.ExportSelected();
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 {
-                    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
+                    EditorCore.RefreshSceneVersion(delegate ()
+                    {
+                        var manifest = new AggregationManifest();
+                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                        ManageDynamicObjects.UploadManifest(manifest, () => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true));
+                    });
                 }
 
                 //if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
@@ -298,7 +308,12 @@ public class ManageDynamicObjects : EditorWindow
         {
             if (GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
             {
-                EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(null); });
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    AggregationManifest manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, null);
+                });
             }
         }
         else
@@ -326,6 +341,7 @@ public class ManageDynamicObjects : EditorWindow
         }
     }
 
+    //currently unused
     //get dynamic object aggregation manifest for the current scene
     void GetManifest()
     {
@@ -348,7 +364,8 @@ public class ManageDynamicObjects : EditorWindow
         EditorNetwork.Get(url, GetManifestResponse, headers,false);//AUTH
     }
 
-
+    
+    //currently unused
     void GetManifestResponse(int responsecode, string error, string text)
     {
         if (responsecode == 200)
@@ -358,7 +375,7 @@ public class ManageDynamicObjects : EditorWindow
 
             Debug.Log("Number of Dynamic Objects in current Manifest: " + allEntries.Length);
 
-            Manifest = new AggregationManifest();
+            var Manifest = new AggregationManifest();
 
             Manifest.objects = new List<AggregationManifest.AggregationManifestEntry>(allEntries);
             Repaint();
@@ -372,14 +389,10 @@ public class ManageDynamicObjects : EditorWindow
         }
     }
 
-    static List<DynamicObject> ObjectsInScene;
+    //static List<DynamicObject> ObjectsInScene;
     public static List<DynamicObject> GetDynamicObjectsInScene()
     {
-        if (ObjectsInScene == null)
-        {
-            ObjectsInScene = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-        }
-        return ObjectsInScene;
+        return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
     }
 
     [System.Serializable]
@@ -408,22 +421,18 @@ public class ManageDynamicObjects : EditorWindow
     }
 
     //only need id, mesh and name
-    static AggregationManifest Manifest;
+    //static AggregationManifest Manifest;
     //static SceneVersionCollection SceneVersionCollection;
 
     /// <summary>
     /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
     /// </summary>
-    public static void UploadManifest(System.Action callback, System.Action nodynamicscallback = null)
+    public static void UploadManifest(AggregationManifest manifest, System.Action callback, System.Action nodynamicscallback = null)
     {
-        if (Manifest == null) { Manifest = new AggregationManifest(); }
+        //if (Manifest == null) { Manifest = new AggregationManifest(); }
         //if (SceneVersionCollection == null) { Debug.LogError("SceneVersionCollection is null! Make sure RefreshSceneVersion was called before this"); return; }
 
-        ObjectsInScene = null;
-
-        AddOrReplaceDynamic(Manifest, GetDynamicObjectsInScene());
-
-        if (Manifest.objects.Count == 0)
+        if (manifest.objects.Count == 0)
         {
             Debug.LogWarning("Aggregation Manifest has nothing in list!");
             if (nodynamicscallback != null)
@@ -434,7 +443,7 @@ public class ManageDynamicObjects : EditorWindow
         }
 
         string json = "";
-        if (ManifestToJson(out json))
+        if (ManifestToJson(manifest, out json))
         {
             var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
             if (currentSettings != null && currentSettings.VersionNumber > 0)
@@ -444,14 +453,14 @@ public class ManageDynamicObjects : EditorWindow
         }
     }
 
-    static bool ManifestToJson(out string json)
+    static bool ManifestToJson(AggregationManifest manifest, out string json)
     {
         json = "{\"objects\":[";
 
         List<string> usedIds = new List<string>();
 
         bool containsValidEntry = false;
-        foreach (var entry in Manifest.objects)
+        foreach (var entry in manifest.objects)
         {
             if (string.IsNullOrEmpty(entry.mesh)) { Debug.LogWarning(entry.name + " missing meshname"); continue; }
             if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
@@ -511,7 +520,7 @@ public class ManageDynamicObjects : EditorWindow
         }
     }
 
-    static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
+    public static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
     {
         bool meshNameMissing = false;
         List<string> missingMeshGameObjects = new List<string>();
