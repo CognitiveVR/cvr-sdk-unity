@@ -146,13 +146,17 @@ namespace CognitiveVR
             }
             if (InitializeOnStart)
                 Initialize("");
-            
+
 #if CVR_TOBIIVR
             if (InitializeAfterCalibration)
             {
-                while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
+                if (Tobii.Research.Unity.VRCalibration.Instance != null)
                 {
-                    yield return new WaitForSeconds(1);
+                    while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
+                    {
+                        yield return new WaitForSeconds(1);
+                        if (Tobii.Research.Unity.VRCalibration.Instance == null){break;}
+                    }
                 }
                 Initialize();
             }
@@ -160,9 +164,13 @@ namespace CognitiveVR
 #if CVR_AH
             if (InitializeAfterCalibration)
             {
-                while (!AdhawkApi.Calibrator.Instance.Calibrated)
+                if (AdhawkApi.Calibrator.Instance != null)
                 {
-                    yield return new WaitForSeconds(1);
+                    while (!AdhawkApi.Calibrator.Instance.Calibrated)
+                    {
+                        yield return new WaitForSeconds(1);
+                        if (AdhawkApi.Calibrator.Instance == null){break;}
+                    }
                 }
                 Initialize();
             }

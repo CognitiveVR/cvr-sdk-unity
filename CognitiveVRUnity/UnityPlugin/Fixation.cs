@@ -16,6 +16,7 @@ namespace CognitiveVR
             StartMs = src.StartMs;
 
             IsLocal = src.IsLocal;
+            LocalTransform = src.LocalTransform;
             DynamicObjectId = src.DynamicObjectId;
             MaxRadius = src.MaxRadius;
         }

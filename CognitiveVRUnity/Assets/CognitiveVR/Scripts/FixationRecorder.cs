@@ -412,7 +412,9 @@ namespace CognitiveVR
 //#if UNITY_EDITOR || DEVELOPMENT_BUILD
 
         [Header("Debug (Editor Only)")]
-        public List<Vector3> VISGazepoints = new List<Vector3>(4096);
+        public Vector3[] DisplayGazePoints = new Vector3[4096];
+        public int currentGazePoint { get; private set; }
+        public bool DisplayGazePointBufferFull;
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
 
         //visualization
@@ -431,10 +433,14 @@ namespace CognitiveVR
             FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
+        void OnEnable()
+        {
+            Instance = this;
+        }
+
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
-            Instance = this;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
@@ -486,6 +492,10 @@ namespace CognitiveVR
 
         void ReceiveEyeData(PupilLabs.GazeData data)
         {
+            if (data.Confidence < 0.6f)
+            {
+                return;
+            }
             PupilGazeData pgd = new PupilGazeData();
 
             pgd.Timestamp = (long)(Util.Timestamp() * 1000);
@@ -647,12 +657,21 @@ namespace CognitiveVR
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].Discard = true;
             }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
             else if (lastEyeTrackingPointer != null){ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 
-            VISGazepoints.Add(EyeCaptures[index].WorldPosition);
-#endif
+            if (areEyesClosed || hitresult != GazeRaycastResult.HitWorld || EyeCaptures[index].Discard) { }
+            else
+            {
+                DisplayGazePoints[currentGazePoint] = EyeCaptures[index].WorldPosition;
+                currentGazePoint++;
+                if (currentGazePoint >= DisplayGazePoints.Length)
+                {
+                    currentGazePoint = 0;
+                    DisplayGazePointBufferFull = true;
+                }
+            }
             index = (index + 1) % CachedEyeCaptures;
         }
 
@@ -872,18 +891,16 @@ namespace CognitiveVR
             //check for blinking too long
             if (EyeCaptures[index].Time > testFixation.LastEyesOpen + MaxBlinkMs)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["microsleep"].Add(new Fixation(testFixation));
-#endif
+                FixationCore.FixationRecordEvent(testFixation);
                 return true;
             }
 
             //check for general discarding
             if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["discard"].Add(new Fixation(testFixation));
-#endif
+                FixationCore.FixationRecordEvent(testFixation);
                 //HMD issue, just a bunch of null data or some other issue
                 return true;
             }
@@ -891,9 +908,8 @@ namespace CognitiveVR
             //check for out of fixation point range
             if (EyeCaptures[index].Time > testFixation.LastInRange + SaccadeFixationEndMs)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 VISFixationEnds["out of range"].Add(new Fixation(testFixation));
-#endif
+                FixationCore.FixationRecordEvent(testFixation);
                 return true;
             }
 
@@ -902,14 +918,17 @@ namespace CognitiveVR
                 //if not looking at transform for a while, end fixation
                 if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
                 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     VISFixationEnds["off transform"].Add(new Fixation(testFixation));
-#endif
+                    FixationCore.FixationRecordEvent(testFixation);
                     return true;
                 }
 
                 //check that the transform still exists
-                if (ActiveFixation.LocalTransform == null) return true;
+                if (ActiveFixation.LocalTransform == null)
+                {
+                    FixationCore.FixationRecordEvent(testFixation);
+                    return true;
+                }
             }
 
             return false;

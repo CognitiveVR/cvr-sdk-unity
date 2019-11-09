@@ -11,6 +11,7 @@ namespace CognitiveVR
     {
         private static int jsonPart = 1;
         static List<Fixation> Fixations = new List<Fixation>();
+        public static int CachedFixations { get { return Fixations.Count; } }
 
         static FixationCore()
         {

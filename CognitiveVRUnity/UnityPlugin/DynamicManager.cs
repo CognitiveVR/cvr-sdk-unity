@@ -22,6 +22,8 @@ namespace CognitiveVR
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
+        public static int CachedSnapshots { get { return DynamicObjectCore.tempsnapshots; } }
+
         public static void Initialize()
         {
             CognitiveVR.Core.OnSendData -= SendData;

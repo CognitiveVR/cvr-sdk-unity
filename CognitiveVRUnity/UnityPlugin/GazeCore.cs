@@ -19,6 +19,7 @@ namespace CognitiveVR
         private static StringBuilder gazebuilder;
         private static int gazeCount = 0;
         private static string HMDName;
+        public static int CachedGaze { get { return gazeCount; } }
 
         static GazeCore()
         {

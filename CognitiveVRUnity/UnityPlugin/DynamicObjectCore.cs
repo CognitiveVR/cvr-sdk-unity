@@ -23,7 +23,7 @@ namespace CognitiveVR
 
         static float NextMinSendTime = 0;
 
-        private static int tempsnapshots = 0;
+        internal static int tempsnapshots = 0;
 
         internal static void Initialize()
         {

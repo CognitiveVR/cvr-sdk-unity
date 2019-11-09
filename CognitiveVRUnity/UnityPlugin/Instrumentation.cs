@@ -32,6 +32,7 @@ namespace CognitiveVR
         private static int partCount = 1;
         
         static int cachedEvents = 0;
+        public static int CachedEvents { get { return cachedEvents; } }
 
         private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(512);
         private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
