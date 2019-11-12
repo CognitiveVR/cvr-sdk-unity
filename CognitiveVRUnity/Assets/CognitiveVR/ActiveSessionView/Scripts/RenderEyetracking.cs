@@ -8,22 +8,34 @@ namespace CognitiveVR.ActiveSession
 {
     public class RenderEyetracking : MonoBehaviour
     {
+        public int FixationRenderLayer = 3; //unnamed internal layer
+        public int Mask = 8;
+        
         public float FixationScale = 0.2f;
         public Mesh FixationMesh;
         public Material FixationMaterial;
-        public Material SaccadeMaterial;
-        public Camera TargetCamera;
-
-        public int FixationRenderLayer = 3; //unnamed internal layer
         public Color FixationColor;
+        
+        public Material SaccadeMaterial;
+        public float Width = 0.03f;
 
         CognitiveVR.FixationRecorder fixationRecorder;
-        public float Width = 0.03f;
+        Camera FixationCamera;
+        Transform TargetCameraTransform;
+        Camera FollowCamera;
+        
+        public float LerpPositionSpeed = 1.0f;
+        public float LerpRotationSpeed = 1.0f;
+
         bool displayFixations = false;
 
-        private void Start()
+        Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
+
+        public void Initialize(Camera followCamera)
         {
-            TargetCamera = GetComponent<Camera>();
+            FollowCamera = followCamera;
+            TargetCameraTransform = followCamera.transform;
+            FixationCamera = GetComponent<Camera>();
             fixationRecorder = FixationRecorder.Instance;
             FixationMaterial.color = FixationColor;
 
@@ -39,6 +51,12 @@ namespace CognitiveVR.ActiveSession
             {
                 Core.InitEvent += Core_InitEvent;
             }
+            FixationCamera.cullingMask = Mask;
+#if CVR_FOVE
+            //just fully render the camera to be drawn on canvas
+            FixationCamera.clearFlags = CameraClearFlags.Skybox;
+            FixationCamera.cullingMask = -1;
+#endif
         }
 
         private void Core_InitEvent(Error initError)
@@ -53,7 +71,6 @@ namespace CognitiveVR.ActiveSession
             }
         }
 
-        Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
         private void FixationCore_OnFixationRecord(Fixation fixation)
         {
             if (fixationQueue.Count > 49)
@@ -73,14 +90,49 @@ namespace CognitiveVR.ActiveSession
                 if (f.IsLocal && f.LocalTransform != null)
                 {
                     Matrix4x4 m = Matrix4x4.TRS(f.LocalTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale);
-                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, TargetCamera);
+                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
                 }
                 else
                 {
                     Matrix4x4 m = Matrix4x4.TRS(f.WorldPosition, Quaternion.identity, scale);
-                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, TargetCamera);
+                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
                 }
             }
+        }
+
+        void MatchTargetCamera()
+        {
+#if CVR_STEAMVR || CVR_STEAMVR2
+            var vm = Valve.VR.OpenVR.System.GetProjectionMatrix(Valve.VR.EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
+            Matrix4x4 m = new Matrix4x4();
+            m.m00 = vm.m0;
+            m.m01 = vm.m1;
+            m.m02 = vm.m2;
+            m.m03 = vm.m3;
+            m.m10 = vm.m4;
+            m.m11 = vm.m5;
+            m.m12 = vm.m6;
+            m.m13 = vm.m7;
+            m.m20 = vm.m8;
+            m.m21 = vm.m9;
+            m.m22 = vm.m10;
+            m.m23 = vm.m11;
+            m.m30 = vm.m12;
+            m.m31 = vm.m13;
+            m.m32 = vm.m14;
+            m.m33 = vm.m15;
+
+            FixationCamera.projectionMatrix = m;
+#else
+            FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
+#endif
+        }
+
+        void LateUpdate()
+        {
+            if (TargetCameraTransform == null) { return; }
+            MatchTargetCamera();
+            transform.SetPositionAndRotation(Vector3.Lerp(transform.position, TargetCameraTransform.position, LerpPositionSpeed), Quaternion.Lerp(transform.rotation, TargetCameraTransform.rotation, LerpRotationSpeed));
         }
 
         private void OnPostRender()
@@ -90,8 +142,8 @@ namespace CognitiveVR.ActiveSession
             //draw saccade lines
             SaccadeMaterial.SetPass(0);
             GL.PushMatrix();
-            GL.LoadProjectionMatrix(TargetCamera.projectionMatrix);
-            GL.modelview = TargetCamera.worldToCameraMatrix;
+            GL.LoadProjectionMatrix(FixationCamera.projectionMatrix);
+            GL.modelview = FixationCamera.worldToCameraMatrix;
 
             GL.Begin(GL.QUADS);
 

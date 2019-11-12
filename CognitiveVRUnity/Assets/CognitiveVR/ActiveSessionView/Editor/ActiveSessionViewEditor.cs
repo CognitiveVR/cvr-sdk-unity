@@ -20,51 +20,53 @@ namespace CognitiveVR.ActiveSession
             ActiveSessionView asv = target as ActiveSessionView;
             var mc = asv.GetComponentInChildren<MetaCanvas>();
             var ret = asv.GetComponentInChildren<RenderEyetracking>();
-            var follower = asv.GetComponentInChildren<FixationRenderCamera>();
             var src = asv.GetComponentInChildren<SensorRenderCamera>();
             var sc = asv.GetComponentInChildren<SensorCanvas>();
 
+            if (IsSceneObject(asv.gameObject))
+            {
 
 #if CVR_TOBIIVR
-            if (asv.VRSceneCamera == null)
-            {
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox("VR Camera should be 'Camera (eye)'", MessageType.Error);
-                if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
+                if (asv.VRSceneCamera == null)
                 {
-                    var eye = GameObject.Find("Camera (eye)");
-                    if (eye != null)
-                        asv.VRSceneCamera = eye.GetComponent<Camera>();
-                }
-                GUILayout.EndHorizontal();
-            }
-#elif CVR_FOVE
-            if (asv.VRSceneCamera == null)
-            {
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox("VR Camera should be 'Fove Interface'", MessageType.Error);
-                if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
-                {
-                    var fove = FindObjectOfType<FoveInterfaceBase>();
-                    if (fove != null)
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox("VR Camera should be 'Camera (eye)'", MessageType.Error);
+                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
                     {
-                        asv.VRSceneCamera = fove.GetComponent<Camera>();
+                        var eye = GameObject.Find("Camera (eye)");
+                        if (eye != null)
+                            asv.VRSceneCamera = eye.GetComponent<Camera>();
                     }
+                    GUILayout.EndHorizontal();
                 }
-                GUILayout.EndHorizontal();
-            }
-#else //pupil, varjo, others
-            if (asv.VRSceneCamera == null)
-            {
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox("VR Camera should be 'MainCamera'", MessageType.Error);
-                if (GUILayout.Button("Fix", GUILayout.MaxWidth(40), GUILayout.Height(38)))
+#elif CVR_FOVE
+                if (asv.VRSceneCamera == null)
                 {
-                    asv.VRSceneCamera = Camera.main;
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox("VR Camera should be 'Fove Interface'", MessageType.Error);
+                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
+                    {
+                        var fove = FindObjectOfType<FoveInterfaceBase>();
+                        if (fove != null)
+                        {
+                            asv.VRSceneCamera = fove.GetComponent<Camera>();
+                        }
+                    }
+                    GUILayout.EndHorizontal();
                 }
-                GUILayout.EndHorizontal();
-            }
+#else //pupil, varjo, others
+                if (asv.VRSceneCamera == null)
+                {
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox("VR Camera should be 'MainCamera'", MessageType.Error);
+                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40), GUILayout.Height(38)))
+                    {
+                        asv.VRSceneCamera = Camera.main;
+                    }
+                    GUILayout.EndHorizontal();
+                }
 #endif
+            }
 
             asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("VR Scene Camera", asv.VRSceneCamera, typeof(Camera), true);
 
@@ -87,17 +89,21 @@ namespace CognitiveVR.ActiveSession
 
             GUILayout.Space(20);
             asv.MainCameraRenderImage = (RawImage)EditorGUILayout.ObjectField("Main Camera Render Image", asv.MainCameraRenderImage, typeof(RawImage), true);
-            asv.FixationRenderCamera = (FixationRenderCamera)EditorGUILayout.ObjectField("Fixation Render Camera", asv.FixationRenderCamera, typeof(FixationRenderCamera), true);
+            asv.RenderEyetracking = (RenderEyetracking)EditorGUILayout.ObjectField("Render EyeTracking Camera", asv.RenderEyetracking, typeof(RenderEyetracking), true);
             asv.WarningText = (Text)EditorGUILayout.ObjectField("Warning Text", asv.WarningText, typeof(Text), true);
 
             if (GUI.changed)
             {
-                EditorUtility.SetDirty(follower);
                 EditorUtility.SetDirty(ret);
                 EditorUtility.SetDirty(sc);
                 EditorUtility.SetDirty(asv);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(asv.gameObject.scene);
             }
+        }
+
+        static bool IsSceneObject(GameObject go)
+        {
+            return AssetDatabase.GetAssetPath(go) == string.Empty ? true : false;
         }
     }
 }

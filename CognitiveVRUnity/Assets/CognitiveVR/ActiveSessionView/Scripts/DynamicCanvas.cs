@@ -32,19 +32,15 @@ namespace CognitiveVR
 
             void Start()
             {
-                FixationRecorder fr = FixationRecorder.Instance;
-                if (fr != null)
-                {
-                    FocusTimeText.text = "Fixation Time";
-                    FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
-                }
-                else
-                {
-                    FocusTimeText.text = "Gaze Time";
-                    GazeCore.OnDynamicGazeRecord += GazeCore_OnDynamicGazeRecord;
-                }
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO
+                FocusTimeText.text = "Fixation Time";
+                FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+#else
+                FocusTimeText.text = "Gaze Time";
+                GazeCore.OnDynamicGazeRecord += GazeCore_OnDynamicGazeRecord;
+#endif
             }
-            
+
             Dictionary<string, DynamicObjectDisplay> DynamicFocusTimes = new Dictionary<string, DynamicObjectDisplay>();
 
             private void GazeCore_OnDynamicGazeRecord(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)

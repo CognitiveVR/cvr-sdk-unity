@@ -11,12 +11,14 @@ namespace CognitiveVR.ActiveSession
     public class SensorRenderCamera : MonoBehaviour
     {
         SensorCanvas sensorCanvas;
+        public int Mask = 64;
 
         public void Initialize(SensorCanvas canvas)
         {
             sensorCanvas = canvas;
             Camera = GetComponent<Camera>();
             Camera.enabled = false;
+            Camera.cullingMask = Mask;
         }
 
         public Camera Camera { get; private set; }

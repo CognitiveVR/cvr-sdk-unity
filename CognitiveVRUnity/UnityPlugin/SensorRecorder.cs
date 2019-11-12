@@ -12,6 +12,7 @@ namespace CognitiveVR
         private static int jsonPart = 1;
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
+        public static int CachedSensors { get { return currentSensorSnapshots; } }
 
         //holds the latest value of each sensor type. can be appended to custom events
         public static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
