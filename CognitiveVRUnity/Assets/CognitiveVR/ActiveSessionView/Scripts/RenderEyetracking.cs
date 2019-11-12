@@ -1,0 +1,207 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+//draws saccade lines and fixation spheres for target camera
+
+namespace CognitiveVR.ActiveSession
+{
+    public class RenderEyetracking : MonoBehaviour
+    {
+        public int FixationRenderLayer = 3; //unnamed internal layer
+        public int Mask = 8;
+        
+        public float FixationScale = 0.2f;
+        public Mesh FixationMesh;
+        public Material FixationMaterial;
+        public Color FixationColor;
+        
+        public Material SaccadeMaterial;
+        public float Width = 0.03f;
+
+        CognitiveVR.FixationRecorder fixationRecorder;
+        Camera FixationCamera;
+        Transform TargetCameraTransform;
+        Camera FollowCamera;
+        
+        public float LerpPositionSpeed = 1.0f;
+        public float LerpRotationSpeed = 1.0f;
+
+        bool displayFixations = false;
+
+        Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
+
+        public void Initialize(Camera followCamera)
+        {
+            FollowCamera = followCamera;
+            TargetCameraTransform = followCamera.transform;
+            FixationCamera = GetComponent<Camera>();
+            fixationRecorder = FixationRecorder.Instance;
+            FixationMaterial.color = FixationColor;
+
+            if (Core.IsInitialized)
+            {
+                if (fixationRecorder != null)
+                {
+                    displayFixations = true;
+                    FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                }
+            }
+            else
+            {
+                Core.InitEvent += Core_InitEvent;
+            }
+            FixationCamera.cullingMask = Mask;
+#if CVR_FOVE
+            //just fully render the camera to be drawn on canvas
+            FixationCamera.clearFlags = CameraClearFlags.Skybox;
+            FixationCamera.cullingMask = -1;
+#endif
+        }
+
+        private void Core_InitEvent(Error initError)
+        {
+            Core.InitEvent -= Core_InitEvent;
+
+            fixationRecorder = FixationRecorder.Instance;
+            if (initError == Error.None && fixationRecorder != null)
+            {
+                displayFixations = true;
+                FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+            }
+        }
+
+        private void FixationCore_OnFixationRecord(Fixation fixation)
+        {
+            if (fixationQueue.Count > 49)
+                fixationQueue.Dequeue();
+            fixationQueue.Enqueue(new Fixation(fixation));
+        }
+
+        void Update()
+        {
+            if (!displayFixations) { return; }
+
+            Vector3 scale = Vector3.one * FixationScale;
+
+            //on new fixation
+            foreach (Fixation f in fixationQueue)
+            {
+                if (f.IsLocal && f.LocalTransform != null)
+                {
+                    Matrix4x4 m = Matrix4x4.TRS(f.LocalTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale);
+                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                }
+                else
+                {
+                    Matrix4x4 m = Matrix4x4.TRS(f.WorldPosition, Quaternion.identity, scale);
+                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                }
+            }
+        }
+
+        void MatchTargetCamera()
+        {
+#if CVR_STEAMVR || CVR_STEAMVR2
+            var vm = Valve.VR.OpenVR.System.GetProjectionMatrix(Valve.VR.EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
+            Matrix4x4 m = new Matrix4x4();
+            m.m00 = vm.m0;
+            m.m01 = vm.m1;
+            m.m02 = vm.m2;
+            m.m03 = vm.m3;
+            m.m10 = vm.m4;
+            m.m11 = vm.m5;
+            m.m12 = vm.m6;
+            m.m13 = vm.m7;
+            m.m20 = vm.m8;
+            m.m21 = vm.m9;
+            m.m22 = vm.m10;
+            m.m23 = vm.m11;
+            m.m30 = vm.m12;
+            m.m31 = vm.m13;
+            m.m32 = vm.m14;
+            m.m33 = vm.m15;
+
+            FixationCamera.projectionMatrix = m;
+#else
+            FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
+#endif
+        }
+
+        void LateUpdate()
+        {
+            if (TargetCameraTransform == null) { return; }
+            MatchTargetCamera();
+            transform.SetPositionAndRotation(Vector3.Lerp(transform.position, TargetCameraTransform.position, LerpPositionSpeed), Quaternion.Lerp(transform.rotation, TargetCameraTransform.rotation, LerpRotationSpeed));
+        }
+
+        private void OnPostRender()
+        {
+            if (!displayFixations) { return; }
+
+            //draw saccade lines
+            SaccadeMaterial.SetPass(0);
+            GL.PushMatrix();
+            GL.LoadProjectionMatrix(FixationCamera.projectionMatrix);
+            GL.modelview = FixationCamera.worldToCameraMatrix;
+
+            GL.Begin(GL.QUADS);
+
+            var forward = CognitiveVR.GameplayReferences.HMD.forward;
+            var offsetDir = Vector3.one;
+
+            int count = fixationRecorder.DisplayGazePoints.Length;
+            try
+            {
+                Vector3 previousPoint;
+                //start to current
+                previousPoint = fixationRecorder.DisplayGazePoints[0];
+                for (int i = 1; i < fixationRecorder.currentGazePoint; i++)
+                {
+                    Vector3 currentPoint = fixationRecorder.DisplayGazePoints[i];
+                    GL.Vertex3(previousPoint.x - offsetDir.x * Width, previousPoint.y - offsetDir.y * Width, previousPoint.z - offsetDir.z * Width);
+                    GL.Vertex3(previousPoint.x + offsetDir.x * Width, previousPoint.y + offsetDir.y * Width, previousPoint.z + offsetDir.z * Width);
+                    GL.Vertex3(currentPoint.x + offsetDir.x * Width, currentPoint.y + offsetDir.y * Width, currentPoint.z + offsetDir.z * Width);
+                    GL.Vertex3(currentPoint.x - offsetDir.x * Width, currentPoint.y - offsetDir.y * Width, currentPoint.z - offsetDir.z * Width);
+
+                    previousPoint = currentPoint;
+                }
+
+                //current to end
+                if (fixationRecorder.currentGazePoint == 0 || fixationRecorder.DisplayGazePointBufferFull)
+                {
+                    previousPoint = fixationRecorder.DisplayGazePoints[fixationRecorder.currentGazePoint];
+                    //current gaze point to end, then start to current gaze point.
+                    for (int i = fixationRecorder.currentGazePoint + 1; i < count; i++)
+                    {
+                        Vector3 currentPoint = fixationRecorder.DisplayGazePoints[i];
+                        GL.Vertex3(previousPoint.x - offsetDir.x * Width, previousPoint.y - offsetDir.y * Width, previousPoint.z - offsetDir.z * Width);
+                        GL.Vertex3(previousPoint.x + offsetDir.x * Width, previousPoint.y + offsetDir.y * Width, previousPoint.z + offsetDir.z * Width);
+                        GL.Vertex3(currentPoint.x + offsetDir.x * Width, currentPoint.y + offsetDir.y * Width, currentPoint.z + offsetDir.z * Width);
+                        GL.Vertex3(currentPoint.x - offsetDir.x * Width, currentPoint.y - offsetDir.y * Width, currentPoint.z - offsetDir.z * Width);
+                        previousPoint = currentPoint;
+                    }
+                    //last point to first point
+                    {
+                        Vector3 currentPoint = fixationRecorder.DisplayGazePoints[0];
+                        GL.Vertex3(previousPoint.x - offsetDir.x * Width, previousPoint.y - offsetDir.y * Width + 0.1f, previousPoint.z - offsetDir.z * Width);
+                        GL.Vertex3(previousPoint.x + offsetDir.x * Width, previousPoint.y + offsetDir.y * Width + 0.1f, previousPoint.z + offsetDir.z * Width);
+                        GL.Vertex3(currentPoint.x + offsetDir.x * Width, currentPoint.y + offsetDir.y * Width + 0.1f, currentPoint.z + offsetDir.z * Width);
+                        GL.Vertex3(currentPoint.x - offsetDir.x * Width, currentPoint.y - offsetDir.y * Width + 0.1f, currentPoint.z - offsetDir.z * Width);
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+            GL.End();
+            GL.PopMatrix();
+        }
+
+        void OnDestroy()
+        {
+            FixationCore.OnFixationRecord -= FixationCore_OnFixationRecord;
+        }
+    }
+}

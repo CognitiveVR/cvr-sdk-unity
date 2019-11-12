@@ -59,6 +59,8 @@ namespace CognitiveVR
         public static event LevelLoadedHandler LevelLoadedEvent;
         public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (LevelLoadedEvent != null) { LevelLoadedEvent(scene, mode, newSceneId); } }
 
+        public delegate void onDataSend();
+
         private static Transform _hmd;
         internal static Transform HMD
         {
@@ -80,7 +82,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.15.0";
+        public const string SDK_VERSION = "0.16.0";
 
         public static string UserId { get; set; }
         private static string _deviceId;

@@ -55,11 +55,11 @@ namespace CognitiveVR
             GL.Begin(GL.LINES);
             GL.Color(lightWhite);
             mat.SetPass(0);
-            int count = fixationRecorder.VISGazepoints.Count;
+            int count = fixationRecorder.DisplayGazePoints.Length;
             for (int i = 1; i < count; i++)
             {
-                GL.Vertex(fixationRecorder.VISGazepoints[i - 1]);
-                GL.Vertex(fixationRecorder.VISGazepoints[i]);
+                GL.Vertex(fixationRecorder.DisplayGazePoints[i - 1]);
+                GL.Vertex(fixationRecorder.DisplayGazePoints[i]);
             }
             GL.End();
         }

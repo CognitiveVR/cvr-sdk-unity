@@ -264,6 +264,13 @@ namespace CognitiveVR
         static System.Action cacheCompletedAction;
         static System.Action cacheFailedAction;
 
+        public static int GetLocalStorageBatchCount()
+        {
+            if (lc == null)
+                InitLocalStorage(null);
+            return lc.GetCacheLineCount();
+        }
+
         //either started manually from LocalCache.UploadAllLocalData or from successful 200 response from current session data
         void LoopUploadFromLocalCache()
         {

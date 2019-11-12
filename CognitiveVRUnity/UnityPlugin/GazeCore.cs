@@ -19,6 +19,7 @@ namespace CognitiveVR
         private static StringBuilder gazebuilder;
         private static int gazeCount = 0;
         private static string HMDName;
+        public static int CachedGaze { get { return gazeCount; } }
 
         static GazeCore()
         {
@@ -27,6 +28,28 @@ namespace CognitiveVR
 
             gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 1200);
             gazebuilder.Append("{\"data\":[");
+        }
+
+        public static event Core.onDataSend OnGazeSend;
+
+        public delegate void onGazeRecord(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation);
+        public static event onGazeRecord OnDynamicGazeRecord;
+        public static void DynamicGazeRecordEvent(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
+        {
+            if (OnDynamicGazeRecord != null)
+                OnDynamicGazeRecord.Invoke(timestamp,objectid,localgazepoint,hmdpoint,hmdrotation);
+        }
+        public static event onGazeRecord OnWorldGazeRecord;
+        public static void WorldGazeRecordEvent(double timestamp, string ignored, Vector3 worldgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
+        {
+            if (OnWorldGazeRecord != null)
+                OnWorldGazeRecord.Invoke(timestamp, ignored, worldgazepoint, hmdpoint, hmdrotation);
+        }
+        public static event onGazeRecord OnSkyGazeRecord;
+        public static void SkyGazeRecordEvent(double timestamp, string ignored, Vector3 ignored2, Vector3 hmdpoint, Quaternion hmdrotation)
+        {
+            if (OnSkyGazeRecord != null)
+                OnSkyGazeRecord.Invoke(timestamp, ignored, ignored2, hmdpoint, hmdrotation);
         }
 
         public static void SetHMDType(string hmdname)
@@ -68,6 +91,7 @@ namespace CognitiveVR
             {
                 gazebuilder.Append(",");
             }
+            SkyGazeRecordEvent(timestamp, string.Empty, Vector3.zero, hmdpoint, hmdrotation);
         }
 
         //gaze on dynamic object
@@ -107,6 +131,7 @@ namespace CognitiveVR
             {
                 gazebuilder.Append(",");
             }
+            DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
         //world position
@@ -144,6 +169,7 @@ namespace CognitiveVR
             {
                 gazebuilder.Append(",");
             }
+            WorldGazeRecordEvent(timestamp, string.Empty, gazepoint, hmdpoint, hmdrotation);
         }
 
         //looking at a media dynamic object
@@ -191,6 +217,7 @@ namespace CognitiveVR
             {
                 gazebuilder.Append(",");
             }
+            DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
         private static void SendGazeData()
@@ -271,6 +298,8 @@ namespace CognitiveVR
             string url = CognitiveStatics.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
 
             CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
+            if (OnGazeSend != null)
+                OnGazeSend.Invoke();
 
             //gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
             gazebuilder.Length = 9;

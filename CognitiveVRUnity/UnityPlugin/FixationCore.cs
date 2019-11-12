@@ -11,6 +11,7 @@ namespace CognitiveVR
     {
         private static int jsonPart = 1;
         static List<Fixation> Fixations = new List<Fixation>();
+        public static int CachedFixations { get { return Fixations.Count; } }
 
         static FixationCore()
         {
@@ -55,6 +56,17 @@ namespace CognitiveVR
             Fixation f = new Fixation(newFixation);
             Fixations.Add(f);
         }
+
+        public delegate void onFixationRecord(Fixation fixation);
+        public static event onFixationRecord OnFixationRecord;
+        public static void FixationRecordEvent(Fixation fixation)
+        {
+            if (OnFixationRecord != null)
+                OnFixationRecord.Invoke(fixation);
+        }
+
+        //happens after the network has sent the request, before any response
+        public static event Core.onDataSend OnFixationSend;
 
         static float lastSendTime = -60;
         private static void Core_OnSendData()
@@ -120,6 +132,10 @@ namespace CognitiveVR
 
             string url = CognitiveStatics.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
             NetworkManager.Post(url, sb.ToString());
+            if (OnFixationSend != null)
+            {
+                OnFixationSend.Invoke();
+            }
         }
     }
 }
