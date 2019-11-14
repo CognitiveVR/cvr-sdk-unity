@@ -162,6 +162,7 @@ namespace CognitiveVR.ActiveSession
             {
                 sendtime += timeSinceLastTick;
                 t.color = normalColor;
+                //IMPROVEMENT look up array of strings
                 t.text = Mathf.Floor(sendtime).ToString() + "s ago";
             }
         }

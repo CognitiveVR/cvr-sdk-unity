@@ -410,7 +410,7 @@ namespace CognitiveVR
         public int SaccadeFixationEndMs = 10;
         
         [Header("Visualization")]
-        public Vector3[] DisplayGazePoints = new Vector3[4096];
+        public GazeBase.GazePoint[] DisplayGazePoints = new GazeBase.GazePoint[4096];
         public int currentGazePoint { get; private set; }
         public bool DisplayGazePointBufferFull;
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
@@ -632,9 +632,17 @@ namespace CognitiveVR
                 {
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
                     EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
+                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[currentGazePoint].IsLocal = true;
+                    DisplayGazePoints[currentGazePoint].LocalPoint = EyeCaptures[index].LocalPosition;
+                    DisplayGazePoints[currentGazePoint].Transform = hitDynamic.transform;
                 }
                 else
+                {
                     EyeCaptures[index].HitDynamicTransform = null;
+                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[currentGazePoint].IsLocal = false;
+                }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
             {
@@ -642,21 +650,24 @@ namespace CognitiveVR
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].WorldPosition = world;
+
+                DisplayGazePoints[currentGazePoint].WorldPoint = world;
+                DisplayGazePoints[currentGazePoint].IsLocal = false;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].Discard = true;
+                //ignored, don't write 
             }
 
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
             else if (lastEyeTrackingPointer != null){ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 
-            if (areEyesClosed || hitresult != GazeRaycastResult.HitWorld || EyeCaptures[index].Discard) { }
+            if (areEyesClosed || EyeCaptures[index].Discard) { }
             else
             {
-                DisplayGazePoints[currentGazePoint] = EyeCaptures[index].WorldPosition;
                 currentGazePoint++;
                 if (currentGazePoint >= DisplayGazePoints.Length)
                 {
