@@ -25,11 +25,9 @@ namespace CognitiveVR.ActiveSession
         public float LineWidth = 0.03f;
 
         Color ColorWhite = Color.white;
-        int ScreenWidth = Screen.width;
 
         void OnPostRender()
         {
-            ScreenWidth = Screen.width;
             double sessionTimestamp = Core.SessionTimeStamp;
             double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp);
 

@@ -542,7 +542,9 @@ namespace CognitiveVR
 
         #region Updates and Loops
 
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
         GameplayReferences.ControllerInfo tempControllerInfo = null;
+#endif
 
 #if CVR_STEAMVR || CVR_STEAMVR2
         private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
@@ -634,9 +636,9 @@ namespace CognitiveVR
             }
         }
 
-        #endregion
+#endregion
 
-        #region GPS
+#region GPS
         public void GetGPSLocation(ref Vector3 loc, ref float bearing)
         {
             if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)

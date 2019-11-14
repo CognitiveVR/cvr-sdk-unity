@@ -31,6 +31,24 @@ namespace CognitiveVR
             }
         }
 
+        [MenuItem(Menu + "Select Active Session View Canvas", priority = 3)]
+        static void SelectSessionView()
+        {
+            var found = Object.FindObjectOfType<ActiveSession.ActiveSessionView>();
+            if (found != null)
+            {
+                Selection.activeGameObject = found.gameObject;
+                return;
+            }
+
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t: Prefab activesessionview");
+            if (guids.Length > 0)
+            {
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[0])));
+                Selection.activeGameObject = instance;
+            }
+        }
+
         [MenuItem(Menu + "Open Web Dashboard...", priority = 5)]
         static void Cognitive3DDashboard()
         {

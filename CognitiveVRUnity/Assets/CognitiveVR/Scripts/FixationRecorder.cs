@@ -408,23 +408,15 @@ namespace CognitiveVR
         [Header("Saccade")]
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
-
-//#if UNITY_EDITOR || DEVELOPMENT_BUILD
-
-        [Header("Debug (Editor Only)")]
+        
+        [Header("Visualization")]
         public Vector3[] DisplayGazePoints = new Vector3[4096];
         public int currentGazePoint { get; private set; }
         public bool DisplayGazePointBufferFull;
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
-
-        //visualization
-        //shoudl use gaze reticle or something??
+        
         GameObject lastEyeTrackingPointer;
         public Material DebugMaterial;
-//#endif
-
-        //cognitive3d stuff
-        //CognitiveVR.CommandBufferHelper commandBufferHelper;
 
         void Reset()
         {

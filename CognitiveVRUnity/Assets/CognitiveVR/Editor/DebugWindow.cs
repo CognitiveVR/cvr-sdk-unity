@@ -43,8 +43,22 @@ namespace CognitiveVR
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             sb.AppendLine("SDK Type: " + s);
             sb.AppendLine("SDK Version: " + Core.SDK_VERSION);
-            sb.AppendLine("Api Key: ****" + p.ApplicationKey.Substring(p.ApplicationKey.Length - 4));
-            sb.AppendLine("Developer Key: ****" + EditorCore.DeveloperKey.Substring(EditorCore.DeveloperKey.Length - 4));
+            try
+            {
+                sb.AppendLine("Api Key: ****" + p.ApplicationKey.Substring(p.ApplicationKey.Length - 4));
+            }
+            catch
+            {
+                sb.AppendLine("Api Key: INVALID");
+            }
+            try
+            {
+                sb.AppendLine("Developer Key: ****" + EditorCore.DeveloperKey.Substring(EditorCore.DeveloperKey.Length - 4));
+            }
+            catch
+            {
+                sb.AppendLine("Developer Key: INVALID");
+            }
             sb.AppendLine("Enable Logging: " + p.EnableLogging);
             sb.AppendLine("Enable Development Logging: " + p.EnableDevLogging);
             sb.AppendLine("Gaze Type: " + p.GazeType.ToString());
