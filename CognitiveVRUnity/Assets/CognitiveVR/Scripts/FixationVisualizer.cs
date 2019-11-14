@@ -8,6 +8,7 @@ using UnityEngine;
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Testing/Fixation Visualizer")]
+    [System.Obsolete("Obsolete - Use Active Session View instead")]
     public class FixationVisualizer : MonoBehaviour
     {
         FixationRecorder fixationRecorder;

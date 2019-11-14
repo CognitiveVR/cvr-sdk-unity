@@ -118,6 +118,17 @@ namespace CognitiveVR
                 Debug.DrawRay(worldpos, Vector3.right, Color.red, 1);
                 Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 1);
                 Debug.DrawRay(worldpos, Vector3.up, Color.green, 1);
+                DisplayGazePoints[currentGazePoint].WorldPoint = hitWorld;
+                DisplayGazePoints[currentGazePoint].LocalPoint = hitLocal;
+                DisplayGazePoints[currentGazePoint].Transform = hitDynamic.transform;
+                DisplayGazePoints[currentGazePoint].IsLocal = true;
+
+                currentGazePoint++;
+                if (currentGazePoint >= DisplayGazePoints.Length)
+                {
+                    currentGazePoint = 0;
+                    DisplayGazePointBufferFull = true;
+                }
                 return;
             }
 
@@ -125,8 +136,13 @@ namespace CognitiveVR
             {
                 Vector3 pos = GameplayReferences.HMD.position;
                 Quaternion rot = GameplayReferences.HMD.rotation;
+                Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-                Debug.DrawRay(pos, GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane, Color.cyan, 1);
+                Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
+                DisplayGazePoints[currentGazePoint].WorldPoint = displayPosition;
+                DisplayGazePoints[currentGazePoint].LocalPoint = Vector3.zero;
+                DisplayGazePoints[currentGazePoint].Transform = null;
+                DisplayGazePoints[currentGazePoint].IsLocal = false;
             }
             else
             {
@@ -135,25 +151,26 @@ namespace CognitiveVR
 
                 //hit world
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), worldpos, pos, rot, gpsloc, compass, floorPos);
-                //Debug.DrawLine(pos, pos + gazepoint, Color.red, 1);
-
 
                 Debug.DrawLine(ray.origin, worldpos, Color.yellow, 1);
                 Debug.DrawRay(worldpos, Vector3.right, Color.red, 1);
                 Debug.DrawRay(worldpos, Vector3.forward, Color.blue, 1);
                 Debug.DrawRay(worldpos, Vector3.up, Color.green, 1);
 
-                //Debug.Log("hit world");
+                DisplayGazePoints[currentGazePoint].WorldPoint = worldpos;
+                DisplayGazePoints[currentGazePoint].LocalPoint = Vector3.zero;
+                DisplayGazePoints[currentGazePoint].Transform = null;
+                DisplayGazePoints[currentGazePoint].IsLocal = false;
+                
                 LastGazePoint = worldpos;
             }
+            currentGazePoint++;
+            if (currentGazePoint >= DisplayGazePoints.Length)
+            {
+                currentGazePoint = 0;
+                DisplayGazePointBufferFull = true;
+            }
         }
-
-        /*private void OnDrawGizmos()
-        {
-            UnityEditor.Handles.BeginGUI();
-            GUI.Label(new Rect(0, 0, 128, 128), rt);
-            UnityEditor.Handles.EndGUI();
-        }*/
 
         private void OnDestroy()
         {

@@ -111,6 +111,7 @@ namespace CognitiveVR
         return v.normalized;
     }
 #elif CVR_TOBIIVR
+    public Vector3 lastDirection = Vector3.forward;
     private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
     void Start()
     {
@@ -133,7 +134,12 @@ namespace CognitiveVR
         {
             return GameplayReferences.HMD.forward;
         }
-        return _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+        if (_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorldValid)
+        {
+            lastDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+        }
+
+        return lastDirection;
     }
 #elif CVR_NEURABLE
     void Start()

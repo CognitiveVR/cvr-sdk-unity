@@ -146,13 +146,17 @@ namespace CognitiveVR
             }
             if (InitializeOnStart)
                 Initialize("");
-            
+
 #if CVR_TOBIIVR
             if (InitializeAfterCalibration)
             {
-                while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
+                if (Tobii.Research.Unity.VRCalibration.Instance != null)
                 {
-                    yield return new WaitForSeconds(1);
+                    while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
+                    {
+                        yield return new WaitForSeconds(1);
+                        if (Tobii.Research.Unity.VRCalibration.Instance == null){break;}
+                    }
                 }
                 Initialize();
             }
@@ -160,9 +164,13 @@ namespace CognitiveVR
 #if CVR_AH
             if (InitializeAfterCalibration)
             {
-                while (!AdhawkApi.Calibrator.Instance.Calibrated)
+                if (AdhawkApi.Calibrator.Instance != null)
                 {
-                    yield return new WaitForSeconds(1);
+                    while (!AdhawkApi.Calibrator.Instance.Calibrated)
+                    {
+                        yield return new WaitForSeconds(1);
+                        if (AdhawkApi.Calibrator.Instance == null){break;}
+                    }
                 }
                 Initialize();
             }
@@ -534,7 +542,9 @@ namespace CognitiveVR
 
         #region Updates and Loops
 
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
         GameplayReferences.ControllerInfo tempControllerInfo = null;
+#endif
 
 #if CVR_STEAMVR || CVR_STEAMVR2
         private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
@@ -626,9 +636,9 @@ namespace CognitiveVR
             }
         }
 
-        #endregion
+#endregion
 
-        #region GPS
+#region GPS
         public void GetGPSLocation(ref Vector3 loc, ref float bearing)
         {
             if (CognitiveVR_Preferences.Instance.SyncGPSWithGaze)

@@ -12,9 +12,10 @@ namespace CognitiveVR
         private static int jsonPart = 1;
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
+        public static int CachedSensors { get { return currentSensorSnapshots; } }
 
         //holds the latest value of each sensor type. can be appended to custom events
-        internal static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
+        public static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
 
         static SensorRecorder()
         {
@@ -51,7 +52,7 @@ namespace CognitiveVR
             }
             else
             {
-                CachedSnapshots.Add(category, new List<string>());
+                CachedSnapshots.Add(category, new List<string>(512));
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             }
 
@@ -62,6 +63,8 @@ namespace CognitiveVR
             else
             {
                 LastSensorValues.Add(category, value);
+                if (OnNewSensorRecorded != null)
+                    OnNewSensorRecorded(category, value);
             }
 
             currentSensorSnapshots++;
@@ -83,6 +86,12 @@ namespace CognitiveVR
             }
             Core_OnSendData();
         }
+
+        public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
+        public static event onNewSensorRecorded OnNewSensorRecorded;
+
+        //happens after the network has sent the request, before any response
+        public static event Core.onDataSend OnSensorSend;
 
         static float lastSendTime = -60;
         private static void Core_OnSendData()
@@ -161,6 +170,10 @@ namespace CognitiveVR
             //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
             //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
             NetworkManager.Post(url, sb.ToString());
+            if (OnSensorSend != null)
+            {
+                OnSensorSend.Invoke();
+            }
         }
 
         #region json

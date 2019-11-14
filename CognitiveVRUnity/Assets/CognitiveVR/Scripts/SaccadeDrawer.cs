@@ -5,6 +5,7 @@ using UnityEngine;
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Testing/Saccade Drawer")]
+    [System.Obsolete("Obsolete - Use Active Session View instead")]
     public class SaccadeDrawer : MonoBehaviour
     {
 
@@ -55,11 +56,11 @@ namespace CognitiveVR
             GL.Begin(GL.LINES);
             GL.Color(lightWhite);
             mat.SetPass(0);
-            int count = fixationRecorder.VISGazepoints.Count;
+            int count = fixationRecorder.DisplayGazePoints.Length;
             for (int i = 1; i < count; i++)
             {
-                GL.Vertex(fixationRecorder.VISGazepoints[i - 1]);
-                GL.Vertex(fixationRecorder.VISGazepoints[i]);
+                //GL.Vertex(fixationRecorder.DisplayGazePoints[i - 1]);
+                //GL.Vertex(fixationRecorder.DisplayGazePoints[i]);
             }
             GL.End();
         }

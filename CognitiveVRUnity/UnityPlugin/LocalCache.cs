@@ -89,6 +89,12 @@ namespace CognitiveVR
             return false;
         }
 
+        //returns the total number of lines in the cache file
+        internal int GetCacheLineCount()
+        {
+            return linesizes.Count;
+        }
+
         //immediately abort uploading from cache and write this new session data to local cache
         internal bool Append(string url, string content)
         {

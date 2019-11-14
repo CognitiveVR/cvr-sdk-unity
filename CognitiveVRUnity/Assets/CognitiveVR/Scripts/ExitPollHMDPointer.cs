@@ -132,7 +132,7 @@ namespace CognitiveVR
             return lastDir;
 #else
 
-            return Vector3.forward;
+            return GameplayReferences.HMD.forward;
 #endif
         }
 

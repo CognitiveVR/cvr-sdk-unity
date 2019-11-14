@@ -156,6 +156,7 @@ namespace CognitiveVR
         }
         public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
         {
+            parameters.Hook = hookName;
             return parameters;
         }
     }
@@ -279,6 +280,8 @@ namespace CognitiveVR
 
         string QuestionSetId; //questionsetname:questionsetversion
 
+        Json.ExitPollSetJson questionSet;
+
         //TODO this should grab a question received and cached on CognitiveVRManager Init
         //build a collection of panel properties from the response
         void QuestionSetResponse(int responsecode, string error,string text)
@@ -292,10 +295,9 @@ namespace CognitiveVR
 
 
             //build all the panel properties
-            Json.ExitPollSetJson json;
             try
             {
-                 json = JsonUtility.FromJson<Json.ExitPollSetJson>(text);
+                questionSet = JsonUtility.FromJson<Json.ExitPollSetJson>(text);
             }
             catch
             {
@@ -304,50 +306,50 @@ namespace CognitiveVR
                 return;
             }
 
-            if (json.questions == null || json.questions.Length == 0)
+            if (questionSet.questions == null || questionSet.questions.Length == 0)
             {
                 CognitiveVR.Util.logDebug("Exit poll Question response empty! invoke end action");
                 Cleanup(false);
                 return;
             }
 
-            QuestionSetId = json.id;
-            QuestionSetName = json.name;
-            questionSetVersion = json.version;
+            QuestionSetId = questionSet.id;
+            QuestionSetName = questionSet.name;
+            questionSetVersion = questionSet.version;
 
             //foreach (var question in json.questions)
-            for (int i = 0; i < json.questions.Length; i++)
+            for (int i = 0; i < questionSet.questions.Length; i++)
             {
                 Dictionary<string, string> questionVariables = new Dictionary<string, string>();
                 if (!questionVariables.ContainsKey("title"))
                 {
-                    questionVariables.Add("title", json.title);
+                    questionVariables.Add("title", questionSet.title);
                 }
-                questionVariables.Add("question", json.questions[i].title);
-                questionVariables.Add("type", json.questions[i].type);
-                responseProperties.Add(new ResponseContext(json.questions[i].type));
-                questionVariables.Add("maxResponseLength", json.questions[i].maxResponseLength.ToString());
+                questionVariables.Add("question", questionSet.questions[i].title);
+                questionVariables.Add("type", questionSet.questions[i].type);
+                responseProperties.Add(new ResponseContext(questionSet.questions[i].type));
+                questionVariables.Add("maxResponseLength", questionSet.questions[i].maxResponseLength.ToString());
 
-                if (!string.IsNullOrEmpty(json.questions[i].minLabel))
-                    questionVariables.Add("minLabel", json.questions[i].minLabel);
-                if (!string.IsNullOrEmpty(json.questions[i].maxLabel))
-                    questionVariables.Add("maxLabel", json.questions[i].maxLabel);
+                if (!string.IsNullOrEmpty(questionSet.questions[i].minLabel))
+                    questionVariables.Add("minLabel", questionSet.questions[i].minLabel);
+                if (!string.IsNullOrEmpty(questionSet.questions[i].maxLabel))
+                    questionVariables.Add("maxLabel", questionSet.questions[i].maxLabel);
                 //put this into a csv string?
 
-                if (json.questions[i].range != null)
+                if (questionSet.questions[i].range != null) //range question
                 {
-                    questionVariables.Add("start", json.questions[i].range.start.ToString());
-                    questionVariables.Add("end", json.questions[i].range.end.ToString());
+                    questionVariables.Add("start", questionSet.questions[i].range.start.ToString());
+                    questionVariables.Add("end", questionSet.questions[i].range.end.ToString());
                 }
 
                 string csvMultipleAnswers = "";
-                if (json.questions[i].answers != null)
+                if (questionSet.questions[i].answers != null) //multiple choice question
                 {
-                    for (int j = 0; j < json.questions[i].answers.Length; j++)
+                    for (int j = 0; j < questionSet.questions[i].answers.Length; j++)
                     {
-                        if (json.questions[i].answers[j].answer.Length == 0) { continue; }
+                        if (questionSet.questions[i].answers[j].answer.Length == 0) { continue; }
                         //TODO include support for custom icons on multiple choice answers
-                        csvMultipleAnswers += json.questions[i].answers[j].answer + "|";
+                        csvMultipleAnswers += questionSet.questions[i].answers[j].answer + "|";
                     }
                 }
                 if (csvMultipleAnswers.Length > 0)
@@ -363,7 +365,6 @@ namespace CognitiveVR
 
             StartTime = Util.Timestamp();
             IterateToNextQuestion();
-            
         }
 
         //after a panel has been answered, the responses from each panel in a format to be sent to exitpoll microservice
@@ -502,23 +503,23 @@ namespace CognitiveVR
 
         void SendResponsesAsTransaction()
         {
-            var exitpoll = new CustomEvent("cvr.exitpoll");
-            exitpoll.SetProperty("userId", CognitiveVR.Core.UniqueID);
-            exitpoll.SetProperty("questionSetId", QuestionSetId);
-            exitpoll.SetProperty("hook", myparameters.Hook);
-            exitpoll.SetProperty("duration", Util.Timestamp() - StartTime);
+            var exitpollEvent = new CustomEvent("cvr.exitpoll");
+            exitpollEvent.SetProperty("userId", CognitiveVR.Core.UniqueID);
+            exitpollEvent.SetProperty("questionSetId", QuestionSetId);
+            exitpollEvent.SetProperty("hook", myparameters.Hook);
+            exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
 
             var scenesettings = Core.TrackingScene;
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
             {
-                exitpoll.SetProperty("sceneId", scenesettings.SceneId);
+                exitpollEvent.SetProperty("sceneId", scenesettings.SceneId);
             }
 
             foreach (var property in transactionProperties)
             {
-                exitpoll.SetProperty(property.Key, property.Value);
+                exitpollEvent.SetProperty(property.Key, property.Value);
             }
-            exitpoll.Send(CurrentExitPollPanel.transform.position);
+            exitpollEvent.Send(CurrentExitPollPanel.transform.position);
             Core.InvokeSendDataEvent();
         }
 

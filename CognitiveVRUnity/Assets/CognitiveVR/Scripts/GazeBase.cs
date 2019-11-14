@@ -24,6 +24,16 @@ namespace CognitiveVR
     [AddComponentMenu("")]
     public class GazeBase : MonoBehaviour
     {
+        public struct GazePoint
+        {
+            public bool IsLocal;
+            public Vector3 WorldPoint;
+            public Vector3 LocalPoint;
+            public Transform Transform;
+        }
+        public GazePoint[] DisplayGazePoints = new GazePoint[256]; //25.6 seconds
+        public int currentGazePoint { get; protected set; }
+        public bool DisplayGazePointBufferFull;
 #if CVR_TOBIIVR
         private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
 #endif
