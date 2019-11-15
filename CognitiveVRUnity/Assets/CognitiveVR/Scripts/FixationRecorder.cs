@@ -433,27 +433,10 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
             VISFixationEnds.Add("off transform", new List<Fixation>());
-
-            var viewer = FindObjectOfType<FixationVisualizer>();
-            if (viewer != null)
-                viewer.SetTarget(this);
-            var saccade = FindObjectOfType<SaccadeDrawer>();
-            if (saccade != null)
-                saccade.SetTarget(this);
-            //gameObject.AddComponent<FixationVisualizer>().SetTarget(this);
-            if (DebugMaterial != null)
-            {
-                lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material = DebugMaterial;
-                Destroy(lastEyeTrackingPointer.GetComponent<SphereCollider>());
-            }
-#endif
 
             ActiveFixation = new Fixation();
 

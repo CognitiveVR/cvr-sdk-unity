@@ -139,6 +139,7 @@ namespace CognitiveVR.ActiveSession
 
         void LateUpdate()
         {
+            if (!displayFixations && !displayGaze) { return; }
             if (TargetCameraTransform == null) { return; }
             MatchTargetCamera();
             transform.SetPositionAndRotation(Vector3.Lerp(transform.position, TargetCameraTransform.position, LerpPositionSpeed), Quaternion.Lerp(transform.rotation, TargetCameraTransform.rotation, LerpRotationSpeed));
@@ -183,7 +184,7 @@ namespace CognitiveVR.ActiveSession
 
                         if (previousPoint.IsLocal && previousPoint.Transform != null)
                         {
-                            Vector3 transformposition = currentPoint.Transform.TransformPoint(currentPoint.LocalPoint);
+                            Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
                             GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
                             GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
                         }
