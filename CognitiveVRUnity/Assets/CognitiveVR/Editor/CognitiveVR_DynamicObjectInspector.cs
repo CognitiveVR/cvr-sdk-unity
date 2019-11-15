@@ -52,6 +52,7 @@ namespace CognitiveVR
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
             var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
+            var idPool = serializedObject.FindProperty("IdPool");
 
             foreach (var t in serializedObject.targetObjects) //makes sure a custom id is valid
             {
@@ -175,7 +176,6 @@ namespace CognitiveVR
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
-
                 if (useCustomMesh.boolValue)
                 {
                     //Mesh
@@ -257,6 +257,7 @@ namespace CognitiveVR
 
                 GUILayout.EndHorizontal();
 
+                EditorGUILayout.ObjectField(idPool, new GUIContent("Id Pool"));
 
                 EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the dynamic object on the same frame as gaze. This may smooth movement of this object in SceneExplorer relative to the player's position"));
                 EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);

@@ -76,6 +76,8 @@ namespace CognitiveVR
         public bool IsRight;
         public string ControllerType;
 
+        public DynamicObjectIdPool IdPool;
+
         [System.NonSerialized]
         public Vector3 StartingScale;
 
@@ -95,7 +97,7 @@ namespace CognitiveVR
         }
 #endif
 
-        private void OnEnable()
+        private void OnEnable() //maybe this should just be 'start'??
         {
 #if CVR_VIVEWAVE
             if (IsController && !hasCompletedDelay)
@@ -117,6 +119,14 @@ namespace CognitiveVR
                 }
 
                 string registerid = UseCustomId ? CustomId : "";
+
+                if (!UseCustomId && IdPool != null)
+                {
+                    UseCustomId = true;
+                    CustomId = IdPool.GetId();
+                    registerid = CustomId;
+                }
+
                 var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType,IsRight);
 
                 DataId = Data.Id;
