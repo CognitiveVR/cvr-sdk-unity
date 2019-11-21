@@ -33,9 +33,7 @@ namespace CognitiveVR.ActiveSession
                     EditorGUILayout.HelpBox("VR Camera should be 'Camera (eye)'", MessageType.Error);
                     if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
                     {
-                        var eye = GameObject.Find("Camera (eye)");
-                        if (eye != null)
-                            asv.VRSceneCamera = eye.GetComponent<Camera>();
+                        SetCameraTarget(asv);
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -46,11 +44,7 @@ namespace CognitiveVR.ActiveSession
                     EditorGUILayout.HelpBox("VR Camera should be 'Fove Interface'", MessageType.Error);
                     if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
                     {
-                        var fove = FindObjectOfType<FoveInterfaceBase>();
-                        if (fove != null)
-                        {
-                            asv.VRSceneCamera = fove.GetComponent<Camera>();
-                        }
+                        SetCameraTarget(asv);
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -71,7 +65,7 @@ namespace CognitiveVR.ActiveSession
             asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("VR Scene Camera", asv.VRSceneCamera, typeof(Camera), true);
 
             //fixations
-            ret.Width = EditorGUILayout.Slider("Saccade Width", ret.Width, 0.001f, 0.1f);
+            ret.lineWidth = EditorGUILayout.Slider("Saccade Width", ret.lineWidth, 0.001f, 0.1f);
             ret.FixationMaterial.color = EditorGUILayout.ColorField("Fixation Colour", ret.FixationMaterial.color);
             ret.GetComponent<Camera>().backgroundColor = ret.FixationMaterial.color;
             ret.FixationColor = ret.FixationMaterial.color;
@@ -104,6 +98,24 @@ namespace CognitiveVR.ActiveSession
         static bool IsSceneObject(GameObject go)
         {
             return AssetDatabase.GetAssetPath(go) == string.Empty ? true : false;
+        }
+
+        public static void SetCameraTarget(ActiveSessionView activeSessionView)
+        {
+            if (activeSessionView == null) { return; }
+#if CVR_TOBIIVR
+            var eye = GameObject.Find("Camera (eye)");
+            if (eye != null)
+                activeSessionView.VRSceneCamera = eye.GetComponent<Camera>();
+#elif CVR_FOVE
+            var fove = FindObjectOfType<FoveInterfaceBase>();
+            if (fove != null)
+            {
+                activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();
+            }
+#else
+            activeSessionView.VRSceneCamera = Camera.main;
+#endif
         }
     }
 }

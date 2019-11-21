@@ -10,28 +10,34 @@ namespace CognitiveVR.ActiveSession
     {
         public int FixationRenderLayer = 3; //unnamed internal layer
         public int Mask = 8;
-        
+
         public float FixationScale = 0.2f;
         public Mesh FixationMesh;
         public Material FixationMaterial;
         public Color FixationColor;
-        
+
         public Material SaccadeMaterial;
-        public float Width = 0.03f;
 
         CognitiveVR.FixationRecorder fixationRecorder;
         CognitiveVR.GazeBase gazeBase;
         Camera FixationCamera;
         Transform TargetCameraTransform;
         Camera FollowCamera;
-        
-        public float LerpPositionSpeed = 1.0f;
-        public float LerpRotationSpeed = 1.0f;
 
         bool displayFixations = false;
         bool displayGaze = false;
 
         Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
+
+
+
+        Vector3 hmdforward;
+        Matrix4x4 m4proj;
+        Matrix4x4 m4world;
+        int pixelwidth;
+        int pixelheight;
+        public float lineWidth = 0.2f;
+        System.Threading.Thread VectorMathThread;
 
         public void Initialize(Camera followCamera)
         {
@@ -48,6 +54,15 @@ namespace CognitiveVR.ActiveSession
                 {
                     displayFixations = true;
                     FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                    if (threaded)
+                    {
+                        VectorMathThread = new System.Threading.Thread(CalculateVectors);
+                        VectorMathThread.Start();
+                    }
+                }
+                else
+                {
+                    displayGaze = true;
                 }
             }
             else
@@ -71,6 +86,11 @@ namespace CognitiveVR.ActiveSession
             {
                 displayFixations = true;
                 FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                if (threaded)
+                {
+                    VectorMathThread = new System.Threading.Thread(CalculateVectors);
+                    VectorMathThread.Start();
+                }
             }
             else
             {
@@ -89,25 +109,290 @@ namespace CognitiveVR.ActiveSession
 
         void Update()
         {
-            if (!displayFixations) { return; }
+            if (!displayFixations && !displayGaze) { return; }
 
-            Vector3 scale = Vector3.one * FixationScale;
+            hmdforward = CognitiveVR.GameplayReferences.HMD.forward;
 
-            //on new fixation
-            foreach (Fixation f in fixationQueue)
+            m4proj = FixationCamera.projectionMatrix;
+            m4world = FixationCamera.worldToCameraMatrix;
+            pixelwidth = FixationCamera.pixelWidth;
+            pixelheight = FixationCamera.pixelHeight;
+
+            if (displayFixations)
             {
-                if (f.IsLocal && f.LocalTransform != null)
+                Vector3 scale = Vector3.one * FixationScale;
+                //on new fixation
+                foreach (Fixation f in fixationQueue)
                 {
-                    Matrix4x4 m = Matrix4x4.TRS(f.LocalTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale);
-                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                    if (f.IsLocal && f.LocalTransform != null)
+                    {
+                        Matrix4x4 m = Matrix4x4.TRS(f.LocalTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale * f.MaxRadius);
+                        Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                    }
+                    else
+                    {
+                        Matrix4x4 m = Matrix4x4.TRS(f.WorldPosition, Quaternion.identity, scale * f.MaxRadius);
+                        Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                    }
                 }
-                else
+
+                //update list of points
+                Color magenta = Color.magenta;
+                int count = fixationRecorder.DisplayGazePoints.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    Matrix4x4 m = Matrix4x4.TRS(f.WorldPosition, Quaternion.identity, scale);
-                    Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                    ThreadGazePoint temp = fixationRecorder.DisplayGazePoints[i];
+
+                    if (!threaded && fixationRecorder.DisplayGazePoints[i - 1] != null)
+                        Debug.DrawLine(fixationRecorder.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
+                    if (!temp.IsLocal) { continue; }
+                    if (temp.Transform == null) { temp.IsLocal = false; continue; }
+                    temp.TransformMatrix = temp.Transform.localToWorldMatrix;
+                }
+            }
+            else if (displayGaze)
+            {
+                //update list of points
+                Color magenta = Color.magenta;
+                int count = gazeBase.DisplayGazePoints.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    ThreadGazePoint temp = gazeBase.DisplayGazePoints[i];
+
+                    if (!threaded && gazeBase.DisplayGazePoints[i - 1] != null)
+                        Debug.DrawLine(gazeBase.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
+                    if (!temp.IsLocal) { continue; }
+                    if (temp.Transform == null) { temp.IsLocal = false; continue; }
+                    temp.TransformMatrix = temp.Transform.localToWorldMatrix;
                 }
             }
         }
+
+        bool threaded = true;
+        void CalculateVectors()
+        {
+            Vector3 zero = Vector3.zero;
+            while (true)
+            {
+                int j = 0;
+
+                Vector3 b1 = zero; //inner corner
+                Vector3 b2 = zero; //outer corner
+
+                if (displayFixations)
+                {
+                    for (int i = 0; i < fixationRecorder.DisplayGazePoints.Count; i++)
+                    {
+                        int prevIndex = i - 1;
+                        int currentIndex = i;
+                        int nextIndex = i + 1;
+
+                        //draw everything
+                        Vector3 previousPoint = zero;
+                        if (fixationRecorder.DisplayGazePoints[prevIndex] != null)
+                        {
+
+                            if (fixationRecorder.DisplayGazePoints[prevIndex].IsLocal)
+                            {
+                                //do math from transform matrix
+                                previousPoint = fixationRecorder.DisplayGazePoints[prevIndex].TransformMatrix.MultiplyPoint(fixationRecorder.DisplayGazePoints[prevIndex].LocalPoint);
+                            }
+                            else
+                            {
+                                previousPoint = fixationRecorder.DisplayGazePoints[prevIndex].WorldPoint;
+                            }
+                        }
+                        else
+                        {
+                            previousPoint = fixationRecorder.DisplayGazePoints[currentIndex].WorldPoint + Vector3.down * 0.01f;
+                        }
+
+                        Vector3 currentPoint = zero;
+                        if (fixationRecorder.DisplayGazePoints[currentIndex].IsLocal)
+                        {
+                            //do math from transform matrix
+                            currentPoint = fixationRecorder.DisplayGazePoints[currentIndex].TransformMatrix.MultiplyPoint(fixationRecorder.DisplayGazePoints[currentIndex].LocalPoint);
+                        }
+                        else
+                        {
+                            currentPoint = fixationRecorder.DisplayGazePoints[currentIndex].WorldPoint;
+                        }
+
+                        Vector3 nextPoint = zero;
+                        if (fixationRecorder.DisplayGazePoints[nextIndex] != null)
+                        {
+                            if (fixationRecorder.DisplayGazePoints[nextIndex].IsLocal)
+                            {
+                                //do math from transform matrix
+                                nextPoint = fixationRecorder.DisplayGazePoints[nextIndex].TransformMatrix.MultiplyPoint(fixationRecorder.DisplayGazePoints[nextIndex].LocalPoint);
+                            }
+                            else
+                            {
+                                nextPoint = fixationRecorder.DisplayGazePoints[nextIndex].WorldPoint;
+                            }
+                        }
+                        else
+                        {
+                            nextPoint = fixationRecorder.DisplayGazePoints[currentIndex].WorldPoint + Vector3.up * 0.01f;
+                        }
+
+                        if (i == 0)
+                        {
+                            b1 = currentPoint;
+                            b2 = currentPoint;
+                        }
+                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref j);
+                    }
+                }
+                else if (displayGaze)
+                {
+                    for (int i = 0; i < gazeBase.DisplayGazePoints.Count; i++)
+                    {
+                        int prevIndex = i - 1;
+                        int currentIndex = i;
+                        int nextIndex = i + 1;
+
+                        //draw everything
+                        Vector3 previousPoint = zero;
+                        if (gazeBase.DisplayGazePoints[prevIndex] != null)
+                        {
+
+                            if (gazeBase.DisplayGazePoints[prevIndex].IsLocal)
+                            {
+                                //do math from transform matrix
+                                previousPoint = gazeBase.DisplayGazePoints[prevIndex].TransformMatrix.MultiplyPoint(gazeBase.DisplayGazePoints[prevIndex].LocalPoint);
+                            }
+                            else
+                            {
+                                previousPoint = gazeBase.DisplayGazePoints[prevIndex].WorldPoint;
+                            }
+                        }
+                        else
+                        {
+                            previousPoint = gazeBase.DisplayGazePoints[currentIndex].WorldPoint + Vector3.down * 0.01f;
+                        }
+
+                        Vector3 currentPoint = zero;
+                        if (gazeBase.DisplayGazePoints[currentIndex].IsLocal)
+                        {
+                            //do math from transform matrix
+                            currentPoint = gazeBase.DisplayGazePoints[currentIndex].TransformMatrix.MultiplyPoint(gazeBase.DisplayGazePoints[currentIndex].LocalPoint);
+                        }
+                        else
+                        {
+                            currentPoint = gazeBase.DisplayGazePoints[currentIndex].WorldPoint;
+                        }
+
+                        Vector3 nextPoint = zero;
+                        if (gazeBase.DisplayGazePoints[nextIndex] != null)
+                        {
+                            if (gazeBase.DisplayGazePoints[nextIndex].IsLocal)
+                            {
+                                //do math from transform matrix
+                                nextPoint = gazeBase.DisplayGazePoints[nextIndex].TransformMatrix.MultiplyPoint(gazeBase.DisplayGazePoints[nextIndex].LocalPoint);
+                            }
+                            else
+                            {
+                                nextPoint = gazeBase.DisplayGazePoints[nextIndex].WorldPoint;
+                            }
+                        }
+                        else
+                        {
+                            nextPoint = gazeBase.DisplayGazePoints[currentIndex].WorldPoint + Vector3.up * 0.01f;
+                        }
+
+                        if (i == 0)
+                        {
+                            b1 = currentPoint;
+                            b2 = currentPoint;
+                        }
+                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref j);
+                    }
+                }
+                quadPositionCount = j;
+                if (threaded)
+                {
+                    System.Threading.Thread.Sleep(10);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        private void CalculateQuadPoints(Vector3 previousPoint, Vector3 currentPoint, Vector3 nextPoint, ref Vector3 b1, ref Vector3 b2, ref int j)
+        {
+
+            //screenspace stuff
+            Vector3 mathscreenprevious = manualWorldToScreenPoint(previousPoint, m4proj, m4world, pixelwidth, pixelheight);
+            Vector3 mathscreencurrent = manualWorldToScreenPoint(currentPoint, m4proj, m4world, pixelwidth, pixelheight);
+            Vector3 mathscreennext = manualWorldToScreenPoint(nextPoint, m4proj, m4world, pixelwidth, pixelheight);
+            var screenDirection = (mathscreencurrent - mathscreenprevious).normalized;
+            Vector3 screencross = Vector3.Cross(screenDirection, hmdforward); //used to fallback with very acute corners
+
+            Vector3 firstDir = (mathscreenprevious - mathscreencurrent).normalized;
+            Vector3 secondDir = (mathscreennext - mathscreencurrent).normalized;
+
+            //line segment AB
+            var firstDirectionPerp = Vector3.Cross(firstDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
+
+            //line segment BC
+            var secondDirectionPerp = Vector3.Cross(secondDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
+
+            //line angle ABC
+            float lineAngleABC = SignedAngle(firstDir, secondDir, hmdforward);
+            float complementaryAngleABC = 90 - lineAngleABC;
+
+
+            //outer corner
+            float hypotenuse = (lineWidth / 2f) / Mathf.Cos(complementaryAngleABC * Mathf.Deg2Rad);
+            Vector3 lowerCorner = currentPoint + -secondDir.normalized * hypotenuse - firstDir * hypotenuse;
+
+            //inner corner
+            Vector3 upperCorner = currentPoint + secondDir.normalized * hypotenuse + firstDir * hypotenuse;
+
+            //quad corner points from previous line segment
+            quadPositions[j] = b1;
+            j++;
+            quadPositions[j] = b2;
+            j++;
+
+            if ((lineAngleABC < 40 && lineAngleABC > -40) || lineAngleABC > 160 || lineAngleABC < -160)
+            {
+                quadPositions[j] = currentPoint - screencross * 0.5f * lineWidth;
+                j++;
+                quadPositions[j] = currentPoint + screencross * 0.5f * lineWidth;
+                j++;
+
+                b1 = currentPoint + screencross * 0.5f * lineWidth;
+                b2 = currentPoint - screencross * 0.5f * lineWidth;
+                //Debug.DrawLine(b2, b1, Color.red);
+            }
+            else
+            {
+                b1 = upperCorner;
+                b2 = lowerCorner;
+                quadPositions[j] = b2;
+                j++;
+                quadPositions[j] = b1;
+                j++;
+                //Debug.DrawLine(b2, b1, Color.green);
+            }
+        }
+
+        //this doesn't exist in unity 5.6
+        public static float SignedAngle(Vector3 from, Vector3 to, Vector3 axis)
+        {
+            float unsignedAngle = Vector3.Angle(from, to);
+
+            float cross_x = from.y * to.z - from.z * to.y;
+            float cross_y = from.z * to.x - from.x * to.z;
+            float cross_z = from.x * to.y - from.y * to.x;
+            float sign = Mathf.Sign(axis.x * cross_x + axis.y * cross_y + axis.z * cross_z);
+            return unsignedAngle * sign;
+        }
+
 
         void MatchTargetCamera()
         {
@@ -139,229 +424,57 @@ namespace CognitiveVR.ActiveSession
 
         void LateUpdate()
         {
+            if (!displayFixations) { return; }
             if (TargetCameraTransform == null) { return; }
             MatchTargetCamera();
-            transform.SetPositionAndRotation(Vector3.Lerp(transform.position, TargetCameraTransform.position, LerpPositionSpeed), Quaternion.Lerp(transform.rotation, TargetCameraTransform.rotation, LerpRotationSpeed));
+            transform.SetPositionAndRotation(TargetCameraTransform.position, TargetCameraTransform.rotation);
+        }
+        
+        //the output of the thread
+        Vector3[] quadPositions = new Vector3[4096 * 4];
+        int quadPositionCount = 0;
+
+
+        Vector3 manualWorldToScreenPoint(Vector3 wp, Matrix4x4 camproj, Matrix4x4 worldtocam, int width, int height)
+        {
+            // calculate view-projection matrix
+            Matrix4x4 mat = camproj * worldtocam;
+
+            // multiply world point by VP matrix
+            Vector4 temp = mat * new Vector4(wp.x, wp.y, wp.z, 1f);
+
+            if (temp.w == 0f)
+            {
+                // point is exactly on camera focus point, screen point is undefined
+                // unity handles this by returning 0,0,0
+                return Vector3.zero;
+            }
+            else
+            {
+                // convert x and y from clip space to window coordinates
+                temp.x = (temp.x / temp.w + 1f) * .5f * width;
+                temp.y = (temp.y / temp.w + 1f) * .5f * height;
+                return new Vector3(temp.x, temp.y, wp.z);
+            }
         }
 
         private void OnPostRender()
         {
             if (!displayFixations && !displayGaze) { return; }
 
-            //draw saccade lines
             SaccadeMaterial.SetPass(0);
             GL.PushMatrix();
             GL.LoadProjectionMatrix(FixationCamera.projectionMatrix);
             GL.modelview = FixationCamera.worldToCameraMatrix;
 
-            var forward = CognitiveVR.GameplayReferences.HMD.forward;
-            var offsetDir = Vector3.one * Width;
+            GL.Begin(GL.QUADS);
 
-            if (displayFixations)
+            for (int i = 0; i < quadPositionCount; i++)
             {
-                GL.Begin(GL.QUADS);
-                int count = fixationRecorder.DisplayGazePoints.Length;
-                try
-                {
-                    GazeBase.GazePoint previousPoint = fixationRecorder.DisplayGazePoints[0];
-                    //start to current
-                    for (int i = 1; i < fixationRecorder.currentGazePoint; i++)
-                    {
-                        if (previousPoint.IsLocal && previousPoint.Transform != null)
-                        {
-                            Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                            GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                        }
-
-                        GazeBase.GazePoint currentPoint = fixationRecorder.DisplayGazePoints[i];
-
-                        if (previousPoint.IsLocal && previousPoint.Transform != null)
-                        {
-                            Vector3 transformposition = currentPoint.Transform.TransformPoint(currentPoint.LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(currentPoint.WorldPoint.x + offsetDir.x, currentPoint.WorldPoint.y + offsetDir.y, currentPoint.WorldPoint.z + offsetDir.z);
-                            GL.Vertex3(currentPoint.WorldPoint.x - offsetDir.x, currentPoint.WorldPoint.y - offsetDir.y, currentPoint.WorldPoint.z - offsetDir.z);
-                        }
-
-                        previousPoint = currentPoint;
-                    }
-
-                    //current to end
-                    if (fixationRecorder.currentGazePoint == 0 || fixationRecorder.DisplayGazePointBufferFull)
-                    {
-                        previousPoint = fixationRecorder.DisplayGazePoints[fixationRecorder.currentGazePoint];
-                        //current gaze point to end, then start to current gaze point.
-                        for (int i = fixationRecorder.currentGazePoint + 1; i < count; i++)
-                        {
-                            if (previousPoint.IsLocal && previousPoint.Transform != null)
-                            {
-                                Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                                GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                                GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                            }
-                            else
-                            {
-                                GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                                GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                            }
-
-                            GazeBase.GazePoint currentPoint = fixationRecorder.DisplayGazePoints[i];
-                            if (currentPoint.IsLocal && currentPoint.Transform != null)
-                            {
-                                Vector3 transformposition = currentPoint.Transform.TransformPoint(currentPoint.LocalPoint);
-                                GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                                GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                            }
-                            else
-                            {
-                                GL.Vertex3(currentPoint.WorldPoint.x + offsetDir.x, currentPoint.WorldPoint.y + offsetDir.y, currentPoint.WorldPoint.z + offsetDir.z);
-                                GL.Vertex3(currentPoint.WorldPoint.x - offsetDir.x, currentPoint.WorldPoint.y - offsetDir.y, currentPoint.WorldPoint.z - offsetDir.z);
-                            }
-                            previousPoint = currentPoint;
-                        }
-                        //last point to first point
-                        {
-                            if (previousPoint.IsLocal && previousPoint.Transform != null)
-                            {
-                                Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                                GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                                GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                            }
-                            else
-                            {
-                                GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                                GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                            }
-                            
-                            GazeBase.GazePoint currentPoint = fixationRecorder.DisplayGazePoints[0];
-                            if (currentPoint.IsLocal && currentPoint.Transform != null)
-                            {
-                                Vector3 transformposition = currentPoint.Transform.TransformPoint(currentPoint.LocalPoint);
-                                GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                                GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                            }
-                            else
-                            {
-                                GL.Vertex3(currentPoint.WorldPoint.x + offsetDir.x, currentPoint.WorldPoint.y + offsetDir.y, currentPoint.WorldPoint.z + offsetDir.z);
-                                GL.Vertex3(currentPoint.WorldPoint.x - offsetDir.x, currentPoint.WorldPoint.y - offsetDir.y, currentPoint.WorldPoint.z - offsetDir.z);
-                            }
-                        }
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogException(e);
-                }
-                GL.End();
-            }
-            else if (displayGaze)
-            {
-                GL.Begin(GL.QUADS);
-
-                GazeBase.GazePoint previousPoint = gazeBase.DisplayGazePoints[0];
-                //start to current
-                for (int i = 1; i < gazeBase.currentGazePoint; i++)
-                {
-                    if (previousPoint.IsLocal && previousPoint.Transform != null)
-                    {
-                        Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                        GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                        GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                    }
-                    else
-                    {
-                        GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                        GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                    }
-                    if (gazeBase.DisplayGazePoints[i].IsLocal && gazeBase.DisplayGazePoints[i].Transform != null)
-                    {
-                        Vector3 transformposition = gazeBase.DisplayGazePoints[i].Transform.TransformPoint(gazeBase.DisplayGazePoints[i].LocalPoint);
-                        GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                    }
-                    else
-                    {
-                        GL.Vertex3(gazeBase.DisplayGazePoints[i].WorldPoint.x + offsetDir.x, gazeBase.DisplayGazePoints[i].WorldPoint.y + offsetDir.y, gazeBase.DisplayGazePoints[i].WorldPoint.z + offsetDir.z);
-                        GL.Vertex3(gazeBase.DisplayGazePoints[i].WorldPoint.x - offsetDir.x, gazeBase.DisplayGazePoints[i].WorldPoint.y - offsetDir.y, gazeBase.DisplayGazePoints[i].WorldPoint.z - offsetDir.z);
-                    }
-                    previousPoint = gazeBase.DisplayGazePoints[i];
-                }
-
-                //current to end
-                if (gazeBase.DisplayGazePointBufferFull)
-                {
-                    bool skipLastPoint = false;
-
-                    previousPoint = gazeBase.DisplayGazePoints[gazeBase.currentGazePoint];
-                    for (int i = gazeBase.currentGazePoint + 1; i < gazeBase.DisplayGazePoints.Length; i++)
-                    {
-                        if (previousPoint.IsLocal && previousPoint.Transform != null)
-                        {
-                            Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                            GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                        }
-                        if (gazeBase.DisplayGazePoints[i].IsLocal && gazeBase.DisplayGazePoints[i].Transform != null)
-                        {
-                            Vector3 transformposition = gazeBase.DisplayGazePoints[i].Transform.TransformPoint(gazeBase.DisplayGazePoints[i].LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(gazeBase.DisplayGazePoints[i].WorldPoint.x + offsetDir.x, gazeBase.DisplayGazePoints[i].WorldPoint.y + offsetDir.y, gazeBase.DisplayGazePoints[i].WorldPoint.z + offsetDir.z);
-                            GL.Vertex3(gazeBase.DisplayGazePoints[i].WorldPoint.x - offsetDir.x, gazeBase.DisplayGazePoints[i].WorldPoint.y - offsetDir.y, gazeBase.DisplayGazePoints[i].WorldPoint.z - offsetDir.z);
-                        }
-                        previousPoint = gazeBase.DisplayGazePoints[i];
-                    }
-                    if (gazeBase.currentGazePoint == 0)
-                        skipLastPoint = true;
-
-                    //last point to first point
-                    if (!skipLastPoint)
-                    {
-                        if (previousPoint.IsLocal && previousPoint.Transform != null)
-                        {
-                            Vector3 transformposition = previousPoint.Transform.TransformPoint(previousPoint.LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(previousPoint.WorldPoint.x - offsetDir.x, previousPoint.WorldPoint.y - offsetDir.y, previousPoint.WorldPoint.z - offsetDir.z);
-                            GL.Vertex3(previousPoint.WorldPoint.x + offsetDir.x, previousPoint.WorldPoint.y + offsetDir.y, previousPoint.WorldPoint.z + offsetDir.z);
-                        }
-                        if (gazeBase.DisplayGazePoints[0].IsLocal && gazeBase.DisplayGazePoints[0].Transform != null)
-                        {
-                            Vector3 transformposition = gazeBase.DisplayGazePoints[0].Transform.TransformPoint(gazeBase.DisplayGazePoints[0].LocalPoint);
-                            GL.Vertex3(transformposition.x - offsetDir.x, transformposition.y - offsetDir.y, transformposition.z - offsetDir.z);
-                            GL.Vertex3(transformposition.x + offsetDir.x, transformposition.y + offsetDir.y, transformposition.z + offsetDir.z);
-                        }
-                        else
-                        {
-                            GL.Vertex3(gazeBase.DisplayGazePoints[0].WorldPoint.x + offsetDir.x, gazeBase.DisplayGazePoints[0].WorldPoint.y + offsetDir.y, gazeBase.DisplayGazePoints[0].WorldPoint.z + offsetDir.z);
-                            GL.Vertex3(gazeBase.DisplayGazePoints[0].WorldPoint.x - offsetDir.x, gazeBase.DisplayGazePoints[0].WorldPoint.y - offsetDir.y, gazeBase.DisplayGazePoints[0].WorldPoint.z - offsetDir.z);
-                        }
-                    }
-                }
-                GL.End();
+                GL.Vertex3(quadPositions[i].x, quadPositions[i].y, quadPositions[i].z);
             }
 
+            GL.End();
             GL.PopMatrix();
         }
 

@@ -6,7 +6,7 @@ using AdhawkApi;
 using AdhawkApi.Numerics.Filters;
 #endif
 
-//debug helper for gaze tracking with Fove and Pupil
+//debug helper for gaze tracking with Fove, Pupil, Tobii, Vive Pro Eye, Adhawk, Varjo
 
 namespace CognitiveVR
 {

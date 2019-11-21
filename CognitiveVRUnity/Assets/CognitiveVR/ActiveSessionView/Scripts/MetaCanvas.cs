@@ -38,18 +38,21 @@ namespace CognitiveVR
             System.Text.StringBuilder sb = new System.Text.StringBuilder(64);
             private void Update()
             {
-                double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp);
-                if ((int)sessionTimeSec != lastSecondTime)
+                if (Core.IsInitialized)
                 {
-                    sb.Length = 0;
-                    System.TimeSpan ts = new System.TimeSpan(0, 0, (int)sessionTimeSec);
-                    sb.Append(ts.Hours.ToString("00"));
-                    sb.Append(":");
-                    sb.Append(ts.Minutes.ToString("00"));
-                    sb.Append(":");
-                    sb.Append(ts.Seconds.ToString("00"));
-                    CurrentSessionLength.text = sb.ToString();
-                    lastSecondTime = (int)sessionTimeSec;
+                    double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp);
+                    if ((int)sessionTimeSec != lastSecondTime)
+                    {
+                        sb.Length = 0;
+                        System.TimeSpan ts = new System.TimeSpan(0, 0, (int)sessionTimeSec);
+                        sb.Append(ts.Hours.ToString("00"));
+                        sb.Append(":");
+                        sb.Append(ts.Minutes.ToString("00"));
+                        sb.Append(":");
+                        sb.Append(ts.Seconds.ToString("00"));
+                        CurrentSessionLength.text = sb.ToString();
+                        lastSecondTime = (int)sessionTimeSec;
+                    }
                 }
 
                 int currentBatchStorage = NetworkManager.GetLocalStorageBatchCount();
