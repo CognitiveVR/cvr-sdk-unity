@@ -8,6 +8,15 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    public class ThreadGazePoint
+    {
+        public Vector3 WorldPoint;
+        public bool IsLocal;
+        public Vector3 LocalPoint;
+        public Transform Transform; //ignored in thread
+        public Matrix4x4 TransformMatrix; //set in update. used in thread
+    }
+
     //TODO try removing noisy outliers when creating new fixation points
     //https://stackoverflow.com/questions/3779763/fast-algorithm-for-computing-percentiles-to-remove-outliers
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
@@ -408,11 +417,9 @@ namespace CognitiveVR
         [Header("Saccade")]
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
-        
+
         [Header("Visualization")]
-        public GazeBase.GazePoint[] DisplayGazePoints = new GazeBase.GazePoint[4096];
-        public int currentGazePoint { get; private set; }
-        public bool DisplayGazePointBufferFull;
+        public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         
         GameObject lastEyeTrackingPointer;
@@ -611,20 +618,23 @@ namespace CognitiveVR
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
 
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+
                 if (hitDynamic != null)
                 {
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
                     EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
-                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
-                    DisplayGazePoints[currentGazePoint].IsLocal = true;
-                    DisplayGazePoints[currentGazePoint].LocalPoint = EyeCaptures[index].LocalPosition;
-                    DisplayGazePoints[currentGazePoint].Transform = hitDynamic.transform;
+                    DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
+                    DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = EyeCaptures[index].LocalPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
                 }
                 else
                 {
                     EyeCaptures[index].HitDynamicTransform = null;
-                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
-                    DisplayGazePoints[currentGazePoint].IsLocal = false;
+                    DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -634,8 +644,10 @@ namespace CognitiveVR
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].WorldPosition = world;
 
-                DisplayGazePoints[currentGazePoint].WorldPoint = world;
-                DisplayGazePoints[currentGazePoint].IsLocal = false;
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
+                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
@@ -651,12 +663,7 @@ namespace CognitiveVR
             if (areEyesClosed || EyeCaptures[index].Discard) { }
             else
             {
-                currentGazePoint++;
-                if (currentGazePoint >= DisplayGazePoints.Length)
-                {
-                    currentGazePoint = 0;
-                    DisplayGazePointBufferFull = true;
-                }
+                DisplayGazePoints.Update();
             }
             index = (index + 1) % CachedEyeCaptures;
         }

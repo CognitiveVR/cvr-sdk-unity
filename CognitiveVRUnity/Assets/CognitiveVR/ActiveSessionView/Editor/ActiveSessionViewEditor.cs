@@ -65,7 +65,7 @@ namespace CognitiveVR.ActiveSession
             asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("VR Scene Camera", asv.VRSceneCamera, typeof(Camera), true);
 
             //fixations
-            ret.Width = EditorGUILayout.Slider("Saccade Width", ret.Width, 0.001f, 0.1f);
+            ret.lineWidth = EditorGUILayout.Slider("Saccade Width", ret.lineWidth, 0.001f, 0.1f);
             ret.FixationMaterial.color = EditorGUILayout.ColorField("Fixation Colour", ret.FixationMaterial.color);
             ret.GetComponent<Camera>().backgroundColor = ret.FixationMaterial.color;
             ret.FixationColor = ret.FixationMaterial.color;
