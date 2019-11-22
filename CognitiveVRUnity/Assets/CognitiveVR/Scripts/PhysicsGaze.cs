@@ -64,16 +64,14 @@ namespace CognitiveVR
             Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
             Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
             Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
-            DisplayGazePoints[currentGazePoint].WorldPoint = hitWorld;
-            DisplayGazePoints[currentGazePoint].LocalPoint = hitLocal;
-            DisplayGazePoints[currentGazePoint].Transform = hitDynamic.transform;
-            DisplayGazePoints[currentGazePoint].IsLocal = true;
-            currentGazePoint++;
-            if (currentGazePoint >= DisplayGazePoints.Length)
-            {
-                currentGazePoint = 0;
-                DisplayGazePointBufferFull = true;
-            }
+            if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+
+            DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = hitWorld;
+            DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = hitLocal;
+            DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
+            DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
+            DisplayGazePoints.Update();
             return;
         }
 
@@ -90,10 +88,14 @@ namespace CognitiveVR
             Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
             Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
             Debug.DrawRay(gazepoint, Vector3.up, Color.green, 10);
-            DisplayGazePoints[currentGazePoint].WorldPoint = hit.point;
-            DisplayGazePoints[currentGazePoint].LocalPoint = Vector3.zero;
-            DisplayGazePoints[currentGazePoint].Transform = null;
-            DisplayGazePoints[currentGazePoint].IsLocal = false;
+            if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+
+            DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = hit.point;
+            DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = Vector3.zero;
+            DisplayGazePoints[DisplayGazePoints.Count].Transform = null;
+            DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
+            DisplayGazePoints.Update();
         }
         else //hit sky / farclip
         {
@@ -102,16 +104,14 @@ namespace CognitiveVR
             Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
             Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
-            DisplayGazePoints[currentGazePoint].WorldPoint = displayPosition;
-            DisplayGazePoints[currentGazePoint].LocalPoint = Vector3.zero;
-            DisplayGazePoints[currentGazePoint].Transform = null;
-            DisplayGazePoints[currentGazePoint].IsLocal = false;
-        }
-        currentGazePoint++;
-        if (currentGazePoint >= DisplayGazePoints.Length)
-        {
-            currentGazePoint = 0;
-            DisplayGazePointBufferFull = true;
+            if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+
+            DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = displayPosition;
+            DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = Vector3.zero;
+            DisplayGazePoints[DisplayGazePoints.Count].Transform = null;
+            DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
+            DisplayGazePoints.Update();
         }
     }
 

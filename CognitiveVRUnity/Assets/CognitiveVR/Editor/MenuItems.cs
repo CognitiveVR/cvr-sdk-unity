@@ -46,6 +46,21 @@ namespace CognitiveVR
             {
                 GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[0])));
                 Selection.activeGameObject = instance;
+                var asv = instance.GetComponent<ActiveSession.ActiveSessionView>();
+                ActiveSession.ActiveSessionViewEditor.SetCameraTarget(asv);
+                Undo.RegisterCreatedObjectUndo(instance, "Added Active Session View");
+            }
+
+            //add the GazeReticle prefab too
+            GazeReticle gazeReticle = Object.FindObjectOfType<GazeReticle>();
+            if (gazeReticle == null)
+            {
+                var reticleAsset = Resources.Load<GameObject>("GazeReticle");
+                if (reticleAsset != null)
+                {
+                    GameObject reticleInstance = (GameObject)PrefabUtility.InstantiatePrefab(reticleAsset);
+                    Undo.RegisterCreatedObjectUndo(reticleAsset, "Added Gaze Reticle");
+                }
             }
         }
 

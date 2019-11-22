@@ -8,6 +8,15 @@ using AdhawkApi.Numerics.Filters;
 
 namespace CognitiveVR
 {
+    public class ThreadGazePoint
+    {
+        public Vector3 WorldPoint;
+        public bool IsLocal;
+        public Vector3 LocalPoint;
+        public Transform Transform; //ignored in thread
+        public Matrix4x4 TransformMatrix; //set in update. used in thread
+    }
+
     //TODO try removing noisy outliers when creating new fixation points
     //https://stackoverflow.com/questions/3779763/fast-algorithm-for-computing-percentiles-to-remove-outliers
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
@@ -28,7 +37,7 @@ namespace CognitiveVR
 
 #if CVR_FOVE
         const int CachedEyeCaptures = 70; //FOVE
-        FoveInterfaceBase fovebase;
+        Fove.Unity.FoveInterface fovebase;
         public bool CombinedWorldGazeRay(out Ray ray)
         {
             var r = fovebase.GetGazeRays();
@@ -36,8 +45,8 @@ namespace CognitiveVR
             return true;
         }
 
-        public bool LeftEyeOpen() { return fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Left && fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Both; }
-        public bool RightEyeOpen() { return fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Right && fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Both; }
+        public bool LeftEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Left; }
+        public bool RightEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Right; }
 
         public long EyeCaptureTimestamp()
         {
@@ -408,11 +417,9 @@ namespace CognitiveVR
         [Header("Saccade")]
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
-        
+
         [Header("Visualization")]
-        public GazeBase.GazePoint[] DisplayGazePoints = new GazeBase.GazePoint[4096];
-        public int currentGazePoint { get; private set; }
-        public bool DisplayGazePointBufferFull;
+        public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         
         GameObject lastEyeTrackingPointer;
@@ -433,27 +440,10 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
             VISFixationEnds.Add("off transform", new List<Fixation>());
-
-            var viewer = FindObjectOfType<FixationVisualizer>();
-            if (viewer != null)
-                viewer.SetTarget(this);
-            var saccade = FindObjectOfType<SaccadeDrawer>();
-            if (saccade != null)
-                saccade.SetTarget(this);
-            //gameObject.AddComponent<FixationVisualizer>().SetTarget(this);
-            if (DebugMaterial != null)
-            {
-                lastEyeTrackingPointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                lastEyeTrackingPointer.transform.localScale = Vector3.one * 0.2f;
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material = DebugMaterial;
-                Destroy(lastEyeTrackingPointer.GetComponent<SphereCollider>());
-            }
-#endif
 
             ActiveFixation = new Fixation();
 
@@ -462,7 +452,7 @@ namespace CognitiveVR
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
 #if CVR_FOVE
-            fovebase = FindObjectOfType<FoveInterfaceBase>();
+            fovebase = GameplayReferences.FoveInstance;
 #elif CVR_TOBIIVR
             if (EyeTracker == null)
                 EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
@@ -628,20 +618,23 @@ namespace CognitiveVR
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
 
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+
                 if (hitDynamic != null)
                 {
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
                     EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
-                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
-                    DisplayGazePoints[currentGazePoint].IsLocal = true;
-                    DisplayGazePoints[currentGazePoint].LocalPoint = EyeCaptures[index].LocalPosition;
-                    DisplayGazePoints[currentGazePoint].Transform = hitDynamic.transform;
+                    DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
+                    DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = EyeCaptures[index].LocalPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
                 }
                 else
                 {
                     EyeCaptures[index].HitDynamicTransform = null;
-                    DisplayGazePoints[currentGazePoint].WorldPoint = EyeCaptures[index].WorldPosition;
-                    DisplayGazePoints[currentGazePoint].IsLocal = false;
+                    DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
+                    DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -651,8 +644,10 @@ namespace CognitiveVR
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].WorldPosition = world;
 
-                DisplayGazePoints[currentGazePoint].WorldPoint = world;
-                DisplayGazePoints[currentGazePoint].IsLocal = false;
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
+                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
@@ -668,12 +663,7 @@ namespace CognitiveVR
             if (areEyesClosed || EyeCaptures[index].Discard) { }
             else
             {
-                currentGazePoint++;
-                if (currentGazePoint >= DisplayGazePoints.Length)
-                {
-                    currentGazePoint = 0;
-                    DisplayGazePointBufferFull = true;
-                }
+                DisplayGazePoints.Update();
             }
             index = (index + 1) % CachedEyeCaptures;
         }
