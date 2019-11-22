@@ -41,6 +41,21 @@ namespace CognitiveVR
         }
 #endif
 
+#if CVR_FOVE
+        static Fove.Unity.FoveInterface _foveInstance;
+        public static Fove.Unity.FoveInterface FoveInstance
+        {
+            get
+            {
+                if (_foveInstance == null)
+                {
+                    _foveInstance = GameObject.FindObjectOfType<Fove.Unity.FoveInterface>();
+                }
+                return _foveInstance;
+            }
+        }
+#endif
+
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
         public static Transform HMD
@@ -84,7 +99,12 @@ namespace CognitiveVR
 #elif CVR_FOVE
                     if (_hmd == null)
                     {
-                        if (Camera.main == null)
+                        var fi = FoveInstance;
+                        if (fi != null)
+                        {
+                            _hmd = fi.transform;
+                        }
+                        else if (Camera.main == null)
                         {
                             var c = GameObject.FindObjectOfType<Camera>();
                             if (c != null)

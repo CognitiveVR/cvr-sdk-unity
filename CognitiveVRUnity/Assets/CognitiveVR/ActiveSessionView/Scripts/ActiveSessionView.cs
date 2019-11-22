@@ -104,33 +104,23 @@ namespace CognitiveVR.ActiveSession
                 WarningText.text = "Could not find Calibration Component";
             }
 #elif CVR_FOVE
-            FoveInterfaceBase foveInterface = GazeBase.FoveInstance;
-            if (foveInterface != null)
+            if (!Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
             {
-                if (!foveInterface.IsEyeTrackingCalibrated())
-                {
-                    WarningText.text = "Eye Tracking not Calibrated";
-                }
-
-                while(foveInterface.IsEyeTrackingCalibrating() || !foveInterface.IsEyeTrackingCalibrated())
-                {
-                    if (foveInterface.IsEyeTrackingCalibrating())
-                        WarningText.text = "Calibration In Progress";
-                    yield return new WaitForSeconds(1);
-                    if (foveInterface == null)
-                        break;
-                }
-
-                if (foveInterface.IsEyeTrackingCalibrated())
-                {
-                    WarningText.text = "Eye Tracking Calibrated";
-                    yield return new WaitForSeconds(2);
-                    WarningText.enabled = false;
-                }
+                WarningText.text = "Eye Tracking not Calibrated";
             }
-            else
+
+            while (Fove.Unity.FoveManager.IsEyeTrackingCalibrating() || !Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
             {
-                WarningText.text = "Could not find Fove Interface";
+                if (Fove.Unity.FoveManager.IsEyeTrackingCalibrating())
+                    WarningText.text = "Calibration In Progress";
+                yield return new WaitForSeconds(1);
+            }
+
+            if (Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
+            {
+                WarningText.text = "Eye Tracking Calibrated";
+                yield return new WaitForSeconds(2);
+                WarningText.enabled = false;
             }
 #elif CVR_VIVEPROEYE
             bool needCalibration = false;

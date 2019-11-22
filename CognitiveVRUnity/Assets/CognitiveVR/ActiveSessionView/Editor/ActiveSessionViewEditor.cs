@@ -108,7 +108,7 @@ namespace CognitiveVR.ActiveSession
             if (eye != null)
                 activeSessionView.VRSceneCamera = eye.GetComponent<Camera>();
 #elif CVR_FOVE
-            var fove = FindObjectOfType<FoveInterfaceBase>();
+            var fove = FindObjectOfType<Fove.Unity.FoveInterface>();
             if (fove != null)
             {
                 activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();

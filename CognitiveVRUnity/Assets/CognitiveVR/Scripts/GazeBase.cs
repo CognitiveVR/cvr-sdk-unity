@@ -28,20 +28,6 @@ namespace CognitiveVR
 #if CVR_TOBIIVR
         private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
 #endif
-#if CVR_FOVE
-        static FoveInterfaceBase _foveInstance;
-        public static FoveInterfaceBase FoveInstance
-        {
-            get
-            {
-                if (_foveInstance == null)
-                {
-                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
-                }
-                return _foveInstance;
-            }
-        }
-#endif
 #if CVR_AH
         private static Calibrator ah_calibrator;
 #endif
@@ -287,7 +273,7 @@ namespace CognitiveVR
         {
             Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
-            var eyeRays = FoveInstance.GetGazeRays();
+            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
             gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
             gazeDirection.Normalize();
@@ -331,7 +317,7 @@ namespace CognitiveVR
 #if CVR_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(FoveInstance.GetGazeRays().left.GetPoint(1000));
+            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(GameplayReferences.FoveInstance.GetGazeRays().left.GetPoint(1000));
 
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))

@@ -37,7 +37,7 @@ namespace CognitiveVR
 
 #if CVR_FOVE
         const int CachedEyeCaptures = 70; //FOVE
-        FoveInterfaceBase fovebase;
+        Fove.Unity.FoveInterface fovebase;
         public bool CombinedWorldGazeRay(out Ray ray)
         {
             var r = fovebase.GetGazeRays();
@@ -45,8 +45,8 @@ namespace CognitiveVR
             return true;
         }
 
-        public bool LeftEyeOpen() { return fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Left && fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Both; }
-        public bool RightEyeOpen() { return fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Right && fovebase.CheckEyesClosed() != Fove.Managed.EFVR_Eye.Both; }
+        public bool LeftEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Left; }
+        public bool RightEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Right; }
 
         public long EyeCaptureTimestamp()
         {
@@ -452,7 +452,7 @@ namespace CognitiveVR
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
 #if CVR_FOVE
-            fovebase = FindObjectOfType<FoveInterfaceBase>();
+            fovebase = GameplayReferences.FoveInstance;
 #elif CVR_TOBIIVR
             if (EyeTracker == null)
                 EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
