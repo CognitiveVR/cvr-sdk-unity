@@ -452,7 +452,7 @@ namespace CognitiveVR
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
 #if CVR_FOVE
-            fovebase = FindObjectOfType<Fove.Unity.FoveInterface>();
+            fovebase = GameplayReferences.FoveInstance;
 #elif CVR_TOBIIVR
             if (EyeTracker == null)
                 EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();

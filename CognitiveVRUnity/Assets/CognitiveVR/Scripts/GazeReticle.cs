@@ -72,19 +72,6 @@ namespace CognitiveVR
 
 #elif CVR_FOVE
 
-    Fove.Unity.FoveInterface _foveInstance;
-        Fove.Unity.FoveInterface FoveInstance
-    {
-        get
-        {
-            if (_foveInstance == null)
-            {
-                _foveInstance = FindObjectOfType<Fove.Unity.FoveInterface>();
-            }
-            return _foveInstance;
-        }
-    }
-
     void Start()
     {
         t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
@@ -100,11 +87,12 @@ namespace CognitiveVR
 
     Vector3 GetLookDirection()
     {
-        if (FoveInstance == null)
+        Fove.Unity.FoveInterface fi = GameplayReferences.FoveInstance;
+        if (fi == null)
         {
             return GameplayReferences.HMD.forward;
         }
-        var eyeRays = FoveInstance.GetGazeRays();
+        var eyeRays = fi.GetGazeRays();
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
         return v.normalized;
     }

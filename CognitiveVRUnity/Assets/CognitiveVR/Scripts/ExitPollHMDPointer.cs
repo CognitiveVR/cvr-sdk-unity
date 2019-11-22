@@ -71,32 +71,16 @@ namespace CognitiveVR
 #if CVR_TOBIIVR
         private static Tobii.Research.Unity.VREyeTracker _eyeTracker; //tobii
 #endif
-
-#if CVR_FOVE
-        Fove.Unity.FoveInterface _foveInstance;
-        Fove.Unity.FoveInterface FoveInstance
-        {
-            get
-            {
-                if (_foveInstance == null)
-                {
-                    _foveInstance = FindObjectOfType<Fove.Unity.FoveInterface>();
-                }
-                return _foveInstance;
-            }
-        }
-#endif
-
         Vector3 GetGazeDirection()
         {
 #if CVR_PUPIL
             return GameplayReferences.HMD.TransformDirection(gazeDirection);
 #elif CVR_FOVE
-            if (FoveInstance == null)
+            if (GameplayReferences.FoveInstance == null)
             {
                 return GameplayReferences.HMD.forward;
             }
-            var eyeRays = FoveInstance.GetGazeRays();
+            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
             return v;
 #elif CVR_TOBIIVR
