@@ -72,14 +72,14 @@ namespace CognitiveVR
 
 #elif CVR_FOVE
 
-    FoveInterfaceBase _foveInstance;
-    FoveInterfaceBase FoveInstance
+    Fove.Unity.FoveInterface _foveInstance;
+        Fove.Unity.FoveInterface FoveInstance
     {
         get
         {
             if (_foveInstance == null)
             {
-                _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+                _foveInstance = FindObjectOfType<Fove.Unity.FoveInterface>();
             }
             return _foveInstance;
         }
@@ -87,8 +87,6 @@ namespace CognitiveVR
 
     void Start()
     {
-        
-
         t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
     }
 

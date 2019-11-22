@@ -73,14 +73,14 @@ namespace CognitiveVR
 #endif
 
 #if CVR_FOVE
-        FoveInterfaceBase _foveInstance;
-        FoveInterfaceBase FoveInstance
+        Fove.Unity.FoveInterface _foveInstance;
+        Fove.Unity.FoveInterface FoveInstance
         {
             get
             {
                 if (_foveInstance == null)
                 {
-                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+                    _foveInstance = FindObjectOfType<Fove.Unity.FoveInterface>();
                 }
                 return _foveInstance;
             }

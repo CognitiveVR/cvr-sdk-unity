@@ -29,14 +29,14 @@ namespace CognitiveVR
         private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
 #endif
 #if CVR_FOVE
-        static FoveInterfaceBase _foveInstance;
-        public static FoveInterfaceBase FoveInstance
+        static Fove.Unity.FoveInterface _foveInstance;
+        public static Fove.Unity.FoveInterface FoveInstance
         {
             get
             {
                 if (_foveInstance == null)
                 {
-                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
+                    _foveInstance = FindObjectOfType<Fove.Unity.FoveInterface>();
                 }
                 return _foveInstance;
             }

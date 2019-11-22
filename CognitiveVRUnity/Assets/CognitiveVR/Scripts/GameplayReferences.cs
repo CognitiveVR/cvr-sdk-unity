@@ -84,7 +84,12 @@ namespace CognitiveVR
 #elif CVR_FOVE
                     if (_hmd == null)
                     {
-                        if (Camera.main == null)
+                        var fi = Object.FindObjectOfType<Fove.Unity.FoveInterface>();
+                        if (fi != null)
+                        {
+                            _hmd = fi.transform;
+                        }
+                        else if (Camera.main == null)
                         {
                             var c = GameObject.FindObjectOfType<Camera>();
                             if (c != null)
