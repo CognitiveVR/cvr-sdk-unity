@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 //also includes fields for initialization
 //this would also include some nice functions for beginning/ending engagements
 
+//if this is using a dynamic object id pool, will grab a new id every time 'OnEnable' is called. if this is not needed, changing that function to 'Start' should be fine
+
 namespace CognitiveVR
 {
 #if CVR_VIVEWAVE
@@ -58,6 +60,9 @@ namespace CognitiveVR
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
 
+        /// <summary>
+        /// should use GetId() to get the currently assigned dynamic object id
+        /// </summary>
         public string CustomId;
         public float UpdateRate = 0.1f;
 
@@ -75,6 +80,8 @@ namespace CognitiveVR
         public bool IsController;
         public bool IsRight;
         public string ControllerType;
+
+        public DynamicObjectIdPool IdPool;
 
         [System.NonSerialized]
         public Vector3 StartingScale;
@@ -94,6 +101,7 @@ namespace CognitiveVR
             OnEnable();
         }
 #endif
+        
 
         private void OnEnable()
         {
@@ -117,15 +125,19 @@ namespace CognitiveVR
                 }
 
                 string registerid = UseCustomId ? CustomId : "";
+
+                if (!UseCustomId && IdPool != null)
+                {
+                    UseCustomId = true;
+                    CustomId = IdPool.GetId();
+                    registerid = CustomId;
+                }
+
                 var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType,IsRight);
 
                 DataId = Data.Id;
 
-                if (false /*IsMedia*/)
-                {
-                    //DynamicManager.RegisterMedia(Data, VideoUrl);
-                }
-                else if (IsController)
+                if (IsController)
                 {
 #if CVR_VIVEWAVE
                     var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;
