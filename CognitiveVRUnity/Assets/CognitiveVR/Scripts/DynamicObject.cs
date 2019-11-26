@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 //also includes fields for initialization
 //this would also include some nice functions for beginning/ending engagements
 
+//if this is using a dynamic object id pool, will grab a new id every time 'OnEnable' is called. if this is not needed, changing that function to 'Start' should be fine
+
 namespace CognitiveVR
 {
 #if CVR_VIVEWAVE
@@ -58,6 +60,9 @@ namespace CognitiveVR
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
 
+        /// <summary>
+        /// should use GetId() to get the currently assigned dynamic object id
+        /// </summary>
         public string CustomId;
         public float UpdateRate = 0.1f;
 
@@ -96,8 +101,9 @@ namespace CognitiveVR
             OnEnable();
         }
 #endif
+        
 
-        private void OnEnable() //maybe this should just be 'start'??
+        private void OnEnable()
         {
 #if CVR_VIVEWAVE
             if (IsController && !hasCompletedDelay)
@@ -131,11 +137,7 @@ namespace CognitiveVR
 
                 DataId = Data.Id;
 
-                if (false /*IsMedia*/)
-                {
-                    //DynamicManager.RegisterMedia(Data, VideoUrl);
-                }
-                else if (IsController)
+                if (IsController)
                 {
 #if CVR_VIVEWAVE
                     var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;

@@ -6,12 +6,14 @@ using UnityEditor;
 namespace CognitiveVR
 {
     [CustomEditor(typeof(DynamicObjectIdPool))]
+    [CanEditMultipleObjects]
     public class DynamicObjectIDPoolInspector : Editor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
 
+            var idpools = targets;
             var idpool = (DynamicObjectIdPool)target;
 
             if (!EditorCore.HasDynamicExportFiles(idpool.MeshName))
@@ -26,30 +28,45 @@ namespace CognitiveVR
 
             if (GUILayout.Button(AddIdString,GUILayout.Width(100)))
             {
-                if (idpool.Ids == null)
-                    idpool.Ids = new string[0];
+                foreach(Object opool in idpools)
+                {
+                    var pool = (DynamicObjectIdPool)opool;
 
-                if (holdingShift)
-                {
-                    for(int i = 0; i<5;i++)
-                        ArrayUtility.Add(ref idpool.Ids, System.Guid.NewGuid().ToString());
-                }
-                else
-                {
-                    ArrayUtility.Add(ref idpool.Ids, System.Guid.NewGuid().ToString());
+                    if (pool.Ids == null)
+                        pool.Ids = new string[0];
+
+                    if (holdingShift)
+                    {
+                        for (int i = 0; i < 5; i++)
+                        {
+                            ArrayUtility.Add(ref pool.Ids, System.Guid.NewGuid().ToString());
+                        }
+                            
+                    }
+                    else
+                    {
+                        ArrayUtility.Add(ref pool.Ids, System.Guid.NewGuid().ToString());
+                    }
                 }
             }
 
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(idpool.PrefabName) || string.IsNullOrEmpty(idpool.MeshName) || idpool.Ids == null || idpool.Ids.Length == 0);
             if (GUILayout.Button("Upload Ids"))
             {
-                ManageDynamicObjects.AggregationManifest manifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
-                foreach (var id in idpool.Ids)
+                EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(idpool.PrefabName, idpool.MeshName, id));
-                }
+                    ManageDynamicObjects.AggregationManifest manifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
+                    foreach (Object opool in idpools)
+                    {
+                        var pool = (DynamicObjectIdPool)opool;
+                        foreach (var id in pool.Ids)
+                        {
+                            manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id));
+                        }
+                    }
 
-                ManageDynamicObjects.UploadManifest(manifest, null);
+                    ManageDynamicObjects.UploadManifest(manifest, null);
+                });
             }
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();

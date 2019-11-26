@@ -27,7 +27,7 @@ public class ManageDynamicObjects : EditorWindow
         window.maxSize = new Vector2(500, 550);
         window.Show();
     }
-    
+
     private void OnGUI()
     {
         GUI.skin = EditorCore.WizardGUISkin;
@@ -53,32 +53,43 @@ public class ManageDynamicObjects : EditorWindow
 
         //headers
         Rect mesh = new Rect(30, 95, 120, 30);
-        GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
+        GUI.Label(mesh, "Mesh Name", "dynamicheader");
         Rect gameobject = new Rect(190, 95, 120, 30);
         GUI.Label(gameobject, "GameObject", "dynamicheader");
         //Rect ids = new Rect(320, 95, 120, 30);
         //GUI.Label(ids, "Ids", "dynamicheader");
         Rect uploaded = new Rect(380, 95, 120, 30);
-        GUI.Label(uploaded, "Uploaded", "dynamicheader");
+        GUI.Label(uploaded, "Exported Mesh", "dynamicheader");
+        //IMPROVEMENT get list of uploaded mesh names from dashboard
         
 
         //content
         DynamicObject[] tempdynamics = GetDynamicObjects;
-
+        
         if (tempdynamics.Length == 0)
         {
             GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
         }
 
-        Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
+        DynamicObjectIdPool[] poolAssets = EditorCore.GetDynamicObjectPoolAssets;
+
+
+        Rect innerScrollSize = new Rect(30, 0, 420, (tempdynamics.Length + poolAssets.Length) * 30);
         dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 285), dynamicScrollPosition, innerScrollSize, false, true);
 
         Rect dynamicrect;
-        for (int i = 0; i < tempdynamics.Length; i++)
+        int GuiOffset = 0;
+        for (; GuiOffset < tempdynamics.Length; GuiOffset++)
         {
-            if (tempdynamics[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
-            dynamicrect = new Rect(30, i * 30, 460, 30);
-            DrawDynamicObject(tempdynamics[i], dynamicrect, i % 2 == 0);
+            if (tempdynamics[GuiOffset] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
+            dynamicrect = new Rect(30, GuiOffset * 30, 460, 30);
+            DrawDynamicObject(tempdynamics[GuiOffset], dynamicrect, GuiOffset % 2 == 0);
+        }
+        for (int i = 0; i < poolAssets.Length; i++)
+        {
+            //if (poolAssets[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
+            dynamicrect = new Rect(30, (i + GuiOffset) * 30, 460, 30);
+            DrawDynamicObjectPool(poolAssets[i], dynamicrect, (i + GuiOffset) % 2 == 0);
         }
         GUI.EndScrollView();
         GUI.Box(new Rect(30, 120, 425, 285), "", "box_sharp_alpha");
@@ -105,7 +116,15 @@ public class ManageDynamicObjects : EditorWindow
                 selectionCount++;
         }
 
-
+        //IMPROVEMENT enable mesh upload from selected dynamic object id pool that has exported mesh files
+        //if (Selection.activeObject.GetType() == typeof(DynamicObjectIdPool))
+        //{
+        //    var pool = Selection.activeObject as DynamicObjectIdPool;
+        //    if (EditorCore.HasDynamicExportFiles(pool.MeshName))
+        //    {
+        //        selectionCount++;
+        //    }       
+        //}
 
         //texture resolution
 
@@ -125,7 +144,6 @@ public class ManageDynamicObjects : EditorWindow
         if (GUI.Button(new Rect(180, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 2;
-            //selectedExportQuality = ExportSettings.DefaultSettings;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 2)
         {
@@ -135,7 +153,6 @@ public class ManageDynamicObjects : EditorWindow
         if (GUI.Button(new Rect(330, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 1;
-            //selectedExportQuality = ExportSettings.HighSettings;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 1)
         {
@@ -144,14 +161,12 @@ public class ManageDynamicObjects : EditorWindow
         EditorGUI.EndDisabledGroup();
 
         
-        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
+        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId) || selectionCount == 0);
         if (GUI.Button(new Rect(30, 460, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
         {
-            //dowhattever thing get scene version
             EditorCore.RefreshSceneVersion(() =>
             {
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
-                //GLTFExportMenu.ExportSelected();
                 {
                     EditorCore.RefreshSceneVersion(delegate ()
                     {
@@ -166,7 +181,9 @@ public class ManageDynamicObjects : EditorWindow
                 //}
             });
         }
-
+        EditorGUI.EndDisabledGroup();
+        
+        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
         if (GUI.Button(new Rect(270, 460, 200, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
         {
             EditorCore.RefreshSceneVersion(() =>
@@ -179,8 +196,7 @@ public class ManageDynamicObjects : EditorWindow
                 }
 
                 Selection.objects = gos.ToArray();
-
-                //GLTFExportMenu.ExportSelected();
+                
                 if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
                 {
                     EditorCore.RefreshSceneVersion(delegate ()
@@ -213,6 +229,7 @@ public class ManageDynamicObjects : EditorWindow
     private void OnFocus()
     {
         RefreshSceneDynamics();
+        EditorCore._cachedPoolAssets = null;
     }
     
     void RefreshSceneDynamics()
@@ -281,6 +298,43 @@ public class ManageDynamicObjects : EditorWindow
     }
 
     #endregion
+
+    #region DynamicObjectPool
+
+    void DrawDynamicObjectPool(DynamicObjectIdPool dynamicpool, Rect rect, bool darkbackground)
+    {
+        Event e = Event.current;
+        if (e.isMouse && e.type == EventType.MouseDown)
+        {
+            if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x+rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y+rect.height)
+            {
+                //not clicking on button
+            }
+            else
+            {
+                Selection.activeObject = dynamicpool;
+            }
+        }
+
+        if (darkbackground)
+            GUI.Box(rect, "", "dynamicentry_even");
+        else
+            GUI.Box(rect, "", "dynamicentry_odd");
+
+        //GUI.color = Color.white;
+
+        Rect mesh = new Rect(rect.x + 10, rect.y, 120, rect.height);
+        Rect gameobject = new Rect(rect.x + 160, rect.y, 120, rect.height);
+        //Rect id = new Rect(rect.x + 290, rect.y, 120, rect.height);
+
+        Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
+        Rect uploaded = new Rect(rect.x + 380, rect.y, 24, rect.height);
+
+        GUI.Label(mesh, dynamicpool.MeshName, "dynamiclabel");
+        GUI.Label(gameobject, "ID POOL (" + dynamicpool.Ids.Length + " ids)", "dynamiclabel");
+    }
+
+    #endregion
     
     void DrawFooter()
     {
@@ -312,6 +366,16 @@ public class ManageDynamicObjects : EditorWindow
                 {
                     AggregationManifest manifest = new AggregationManifest();
                     AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+
+                    //do NOT upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
+                    //foreach (var pool in EditorCore.GetDynamicObjectPoolAssets)
+                    //{
+                    //    foreach (var id in pool.Ids)
+                    //    {
+                    //        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id));
+                    //    }
+                    //}
+
                     ManageDynamicObjects.UploadManifest(manifest, null);
                 });
             }
@@ -388,8 +452,7 @@ public class ManageDynamicObjects : EditorWindow
             Util.logWarning("GetManifestResponse " + responsecode + " " + error);
         }
     }
-
-    //static List<DynamicObject> ObjectsInScene;
+    
     public static List<DynamicObject> GetDynamicObjectsInScene()
     {
         return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
@@ -451,6 +514,14 @@ public class ManageDynamicObjects : EditorWindow
             else
                 Util.logError("Could not find scene version for current scene");
         }
+        else
+        {
+            Debug.LogWarning("Aggregation Manifest only contains dynamic objects with generated ids");
+            if (nodynamicscallback != null)
+            {
+                nodynamicscallback.Invoke();
+            }
+        }
     }
 
     static bool ManifestToJson(AggregationManifest manifest, out string json)
@@ -464,7 +535,7 @@ public class ManageDynamicObjects : EditorWindow
         {
             if (string.IsNullOrEmpty(entry.mesh)) { Debug.LogWarning(entry.name + " missing meshname"); continue; }
             if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
-            if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id that already exists in the scene. This may not be aggregated correctly"); }
+            if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id ("+entry.id+") that already exists in the scene. This may not be aggregated correctly"); }
             usedIds.Add(entry.id);
             json += "{";
             json += "\"id\":\"" + entry.id + "\",";

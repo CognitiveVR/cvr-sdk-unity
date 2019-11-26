@@ -121,6 +121,19 @@ public class EditorCore
         }
     }
 
+    private static Texture2D _info;
+    public static Texture2D Info
+    {
+        get
+        {
+            if (_info == null)
+            {
+                _info = EditorGUIUtility.FindTexture("console.infoicon.sml");
+            }
+            return _info;
+        }
+    }
+
     private static Texture2D _emptycheckmark;
     public static Texture2D EmptyCheckmark
     {
@@ -196,6 +209,24 @@ public class EditorCore
                 _wizardGuiSkin = Resources.Load<GUISkin>("WizardGUISkin");
             }
             return _wizardGuiSkin;
+        }
+    }
+
+    public static DynamicObjectIdPool[] _cachedPoolAssets;
+    public static DynamicObjectIdPool[] GetDynamicObjectPoolAssets
+    {
+        get
+        {
+            if (_cachedPoolAssets == null)
+            {
+                _cachedPoolAssets = new DynamicObjectIdPool[0];
+                string[] guids = AssetDatabase.FindAssets("t:dynamicobjectidpool");
+                foreach (var guid in guids)
+                {
+                    ArrayUtility.Add<DynamicObjectIdPool>(ref _cachedPoolAssets, AssetDatabase.LoadAssetAtPath<DynamicObjectIdPool>(AssetDatabase.GUIDToAssetPath(guid)));
+                }
+            }
+            return _cachedPoolAssets;
         }
     }
 
