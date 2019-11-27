@@ -66,57 +66,50 @@ namespace CognitiveVR
         }
 #elif CVR_TOBIIVR
         const int CachedEyeCaptures = 120; //TOBII
-        Tobii.Research.Unity.VREyeTracker EyeTracker;
-        Tobii.Research.Unity.IVRGazeData currentData;
+        Tobii.XR.IEyeTrackingProvider EyeTracker;
+        Tobii.XR.TobiiXR_EyeTrackingData currentData;
         public bool CombinedWorldGazeRay(out Ray ray)
         {
-            ray = currentData.CombinedGazeRayWorld;
-            return currentData.CombinedGazeRayWorldValid;
+            ray = new Ray();
+            ray.origin = GameplayReferences.HMD.TransformPoint(currentData.GazeRay.Origin);
+            ray.direction = GameplayReferences.HMD.TransformDirection(currentData.GazeRay.Direction);
+
+            if (currentData.GazeRay.IsValid)
+                Debug.DrawRay(ray.origin, ray.direction * 1000, Color.magenta, 5);
+
+            return currentData.GazeRay.IsValid;
         }
 
-        public bool LeftEyeOpen() { return currentData.Left.PupilDiameterValid && currentData.Left.PupilPosiitionInTrackingAreaValid; }
-        public bool RightEyeOpen() { return currentData.Right.PupilDiameterValid && currentData.Right.PupilPosiitionInTrackingAreaValid; }
+        public bool LeftEyeOpen() { return !currentData.IsLeftEyeBlinking; }
+        public bool RightEyeOpen() { return !currentData.IsRightEyeBlinking; }
 
-        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-
-        //raw time since computer restarted. in nanoseconds
+        //unix timestamp of application start in milliseconds
         long tobiiStartTimestamp;
         
-        //start time since epoch. in seconds
-        double epochtobiistart;
-
         private IEnumerator Start()
-        {
-            if (EyeTracker == null)
-                EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
-
-            while (true)
+        {            
+            while (EyeTracker == null)
             {
-                tobiiStartTimestamp = EyeTracker.LatestGazeData.TimeStamp;
-                if (tobiiStartTimestamp > 0)
-                {
-                    System.TimeSpan span = System.DateTime.UtcNow - epoch;
-                    epochtobiistart = span.TotalSeconds;
-                    break;
-                }
                 yield return null;
+                EyeTracker = Tobii.XR.TobiiXR.Internal.Provider;
+                //is this fixation recorder component added immediately? or after cognitive session start?
             }
+            tobiiStartTimestamp = CognitiveVR_Manager.Instance.StartupTimestampMilliseconds;
         }
 
         public long EyeCaptureTimestamp()
         {
-            long sinceStart = currentData.TimeStamp - tobiiStartTimestamp;
-            sinceStart = (sinceStart / 1000); //remove microseconds
-            var final = epochtobiistart * 1000 + sinceStart;
-            return (long)final;
+            return tobiiStartTimestamp + (long)(currentData.Timestamp * 1000);
         }
 
+        int lastProcessedFrame;
         //returns true if there is another data point to work on
         public bool GetNextData()
         {
-            if (EyeTracker.GazeDataCount > 0)
+            if (lastProcessedFrame != Time.frameCount)
             {
-                currentData = EyeTracker.NextData;
+                currentData = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal;
+                lastProcessedFrame = Time.frameCount;
                 return true;
             }
             return false;
@@ -453,9 +446,6 @@ namespace CognitiveVR
             }
 #if CVR_FOVE
             fovebase = GameplayReferences.FoveInstance;
-#elif CVR_TOBIIVR
-            if (EyeTracker == null)
-                EyeTracker = FindObjectOfType<Tobii.Research.Unity.VREyeTracker>();
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;

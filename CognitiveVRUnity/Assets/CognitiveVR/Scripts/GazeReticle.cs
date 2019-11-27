@@ -98,11 +98,9 @@ namespace CognitiveVR
     }
 #elif CVR_TOBIIVR
     public Vector3 lastDirection = Vector3.forward;
-    private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
     void Start()
     {
         t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
-        _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
         if (GameplayReferences.HMD == null) { return; }
     }
 
@@ -116,13 +114,15 @@ namespace CognitiveVR
 
     Vector3 GetLookDirection()
     {
-        if (_eyeTracker == null)
+        var provider = Tobii.XR.TobiiXR.Internal.Provider;
+
+        if (provider == null)
         {
             return GameplayReferences.HMD.forward;
         }
-        if (_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorldValid)
+        if (provider.EyeTrackingDataLocal.GazeRay.IsValid)
         {
-            lastDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+            lastDirection = GameplayReferences.HMD.TransformDirection(provider.EyeTrackingDataLocal.GazeRay.Direction);
         }
 
         return lastDirection;
