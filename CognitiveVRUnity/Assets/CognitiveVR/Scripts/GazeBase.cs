@@ -25,23 +25,6 @@ namespace CognitiveVR
     public class GazeBase : MonoBehaviour
     {
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
-#if CVR_TOBIIVR
-        private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
-#endif
-#if CVR_FOVE
-        static FoveInterfaceBase _foveInstance;
-        public static FoveInterfaceBase FoveInstance
-        {
-            get
-            {
-                if (_foveInstance == null)
-                {
-                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
-                }
-                return _foveInstance;
-            }
-        }
-#endif
 #if CVR_AH
         private static Calibrator ah_calibrator;
 #endif
@@ -77,11 +60,6 @@ namespace CognitiveVR
             string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 #endif
-
-#if CVR_TOBIIVR
-            _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
-#endif
-
 #if CVR_AH
             ah_calibrator = Calibrator.Instance;
 #endif
@@ -287,14 +265,17 @@ namespace CognitiveVR
         {
             Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
-            var eyeRays = FoveInstance.GetGazeRays();
+            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
             gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
             gazeDirection.Normalize();
 #elif CVR_PUPIL
             gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
 #elif CVR_TOBIIVR
-            gazeDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+            if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
+            {
+                gazeDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
+            }    
 #elif CVR_VIVEPROEYE
             var ray = new Ray();
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
@@ -331,7 +312,7 @@ namespace CognitiveVR
 #if CVR_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(FoveInstance.GetGazeRays().left.GetPoint(1000));
+            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(GameplayReferences.FoveInstance.GetGazeRays().left.GetPoint(1000));
 
             //Vector2 gazePoint = hmd.GetGazePoint();
             if (float.IsNaN(normalizedPoint.x))
@@ -343,7 +324,11 @@ namespace CognitiveVR
 #elif CVR_PUPIL//screenpoint
             screenGazePoint = pupilViewportPosition;
 #elif CVR_TOBIIVR
-            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.GetPoint(1000));
+            if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
+            {
+                var gazeray = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay;
+                screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(gazeray.Origin + GameplayReferences.HMD.TransformDirection(gazeray.Direction) * 1000);                
+            }
 #elif CVR_VIVEPROEYE
             var leftv2 = Vector2.zero;
             var rightv2 = Vector2.zero;

@@ -69,42 +69,26 @@ namespace CognitiveVR
         Vector3 lastDir = Vector3.forward; //vive pro
 #endif
 #if CVR_TOBIIVR
-        private static Tobii.Research.Unity.VREyeTracker _eyeTracker; //tobii
+        Vector3 lastDirection = Vector3.forward;
 #endif
-
-#if CVR_FOVE
-        FoveInterfaceBase _foveInstance;
-        FoveInterfaceBase FoveInstance
-        {
-            get
-            {
-                if (_foveInstance == null)
-                {
-                    _foveInstance = FindObjectOfType<FoveInterfaceBase>();
-                }
-                return _foveInstance;
-            }
-        }
-#endif
-
         Vector3 GetGazeDirection()
         {
 #if CVR_PUPIL
             return GameplayReferences.HMD.TransformDirection(gazeDirection);
 #elif CVR_FOVE
-            if (FoveInstance == null)
+            if (GameplayReferences.FoveInstance == null)
             {
                 return GameplayReferences.HMD.forward;
             }
-            var eyeRays = FoveInstance.GetGazeRays();
+            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
             return v;
 #elif CVR_TOBIIVR
-            if (_eyeTracker == null)
+            if (Tobii.XR.TobiiXR.Internal.Provider != null && !Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
             {
-                return GameplayReferences.HMD.forward;
-            }
-            return _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+                lastDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
+            }            
+            return lastDirection;
 #elif CVR_NEURABLE
             return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif CVR_AH

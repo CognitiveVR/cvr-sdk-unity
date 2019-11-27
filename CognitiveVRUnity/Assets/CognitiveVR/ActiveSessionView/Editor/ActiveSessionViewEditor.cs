@@ -30,7 +30,7 @@ namespace CognitiveVR.ActiveSession
                 if (asv.VRSceneCamera == null)
                 {
                     GUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("VR Camera should be 'Camera (eye)'", MessageType.Error);
+                    EditorGUILayout.HelpBox("VR Camera should be Main Camera", MessageType.Error);
                     if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
                     {
                         SetCameraTarget(asv);
@@ -104,11 +104,9 @@ namespace CognitiveVR.ActiveSession
         {
             if (activeSessionView == null) { return; }
 #if CVR_TOBIIVR
-            var eye = GameObject.Find("Camera (eye)");
-            if (eye != null)
-                activeSessionView.VRSceneCamera = eye.GetComponent<Camera>();
+            activeSessionView.VRSceneCamera = Camera.main;
 #elif CVR_FOVE
-            var fove = FindObjectOfType<FoveInterfaceBase>();
+            var fove = FindObjectOfType<Fove.Unity.FoveInterface>();
             if (fove != null)
             {
                 activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();

@@ -121,6 +121,19 @@ public class EditorCore
         }
     }
 
+    private static Texture2D _info;
+    public static Texture2D Info
+    {
+        get
+        {
+            if (_info == null)
+            {
+                _info = EditorGUIUtility.FindTexture("console.infoicon.sml");
+            }
+            return _info;
+        }
+    }
+
     private static Texture2D _emptycheckmark;
     public static Texture2D EmptyCheckmark
     {
@@ -196,6 +209,24 @@ public class EditorCore
                 _wizardGuiSkin = Resources.Load<GUISkin>("WizardGUISkin");
             }
             return _wizardGuiSkin;
+        }
+    }
+
+    public static DynamicObjectIdPool[] _cachedPoolAssets;
+    public static DynamicObjectIdPool[] GetDynamicObjectPoolAssets
+    {
+        get
+        {
+            if (_cachedPoolAssets == null)
+            {
+                _cachedPoolAssets = new DynamicObjectIdPool[0];
+                string[] guids = AssetDatabase.FindAssets("t:dynamicobjectidpool");
+                foreach (var guid in guids)
+                {
+                    ArrayUtility.Add<DynamicObjectIdPool>(ref _cachedPoolAssets, AssetDatabase.LoadAssetAtPath<DynamicObjectIdPool>(AssetDatabase.GUIDToAssetPath(guid)));
+                }
+            }
+            return _cachedPoolAssets;
         }
     }
 
@@ -902,27 +933,32 @@ public class EditorCore
 
 
     #region DisplayNames
-    static Dictionary<DisplayKey, string> displayNames;
-    public static string DisplayValue(DisplayKey key)
-    {
-        if (displayNames == null)
+        static TextAsset DisplayNameAsset;
+        public static string DisplayValue(DisplayKey key)
         {
-            //defaults, mostly loading from preferences
-            displayNames = new Dictionary<DisplayKey, string>();
-            displayNames[DisplayKey.GatewayURL] = CognitiveVR_Preferences.Instance.Gateway;
-            displayNames[DisplayKey.DashboardURL] = CognitiveVR_Preferences.Instance.Dashboard;
-            displayNames[DisplayKey.ViewerName] = "Scene Explorer";
-            displayNames[DisplayKey.ViewerURL] = CognitiveVR_Preferences.Instance.Viewer;
-            displayNames[DisplayKey.DocumentationURL] = CognitiveVR_Preferences.Instance.Documentation;
-
-            displayNames[DisplayKey.FullName] = "Cognitive3D";
-            displayNames[DisplayKey.ShortName] = "Cognitive3D";
-            displayNames[DisplayKey.ManagerName] = "Cognitive3D_Manager";
-
-            var ta = Resources.Load<TextAsset>("DisplayNames");
-            if (ta != null)
+            if (DisplayNameAsset == null)
             {
-                var lines = ta.text.Split('\n');
+                DisplayNameAsset = Resources.Load<TextAsset>("DisplayNames");
+            }
+            if (DisplayNameAsset == null)
+            {
+                //default
+                switch (key)
+                {
+                    case DisplayKey.GatewayURL: return CognitiveVR_Preferences.Instance.Gateway;
+                    case DisplayKey.DashboardURL: return CognitiveVR_Preferences.Instance.Dashboard;
+                    case DisplayKey.ViewerName: return "Scene Explorer";
+                    case DisplayKey.ViewerURL: return CognitiveVR_Preferences.Instance.Viewer;
+                    case DisplayKey.DocumentationURL: return CognitiveVR_Preferences.Instance.Documentation;
+                    case DisplayKey.FullName: return "Cognitive3D";
+                    case DisplayKey.ShortName: return "Cognitive3D";
+                    case DisplayKey.ManagerName: return "Cognitive3D_Manager";
+                }
+                return "unknown";
+            }
+            else
+            {
+                var lines = DisplayNameAsset.text.Split('\n');
                 foreach (var line in lines)
                 {
                     if (line.Length == 0) { continue; }
@@ -931,23 +967,21 @@ public class EditorCore
                     var split = replacement.Split('|');
                     foreach (var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
                     {
-                        if (keyvalue.ToString().ToUpper() == split[0].ToUpper())
+                        if (split[0].ToUpper() == key.ToString().ToUpper())
                         {
-                            displayNames[keyvalue] = split[1];
-                            break;
+                            return split[1];
                         }
                     }
                 }
             }
+            return "unknown";
         }
-        return displayNames[key];
-    }
-    #endregion
+        #endregion
 
-    #region Updates
+        #region Updates
 
-    //data about the last sdk release on github
-    public class ReleaseInfo
+        //data about the last sdk release on github
+        public class ReleaseInfo
     {
         public string tag_name;
         public string body;

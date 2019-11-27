@@ -116,7 +116,7 @@ namespace CognitiveVR
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool InitializeOnStart = true;
 
-#if CVR_TOBIIVR || CVR_AH || CVR_PUPIL
+#if CVR_AH || CVR_PUPIL
         [Tooltip("Start recording analytics after calibration is successfully completed")]
         public bool InitializeAfterCalibration = true;
 #endif
@@ -137,8 +137,12 @@ namespace CognitiveVR
             CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
 
+        [NonSerialized]
+        public long StartupTimestampMilliseconds;
+
         IEnumerator Start()
         {
+            StartupTimestampMilliseconds = (long)(Util.Timestamp() * 1000);
             GameObject.DontDestroyOnLoad(gameObject);
             if (StartupDelayTime > 0)
             {
@@ -147,20 +151,6 @@ namespace CognitiveVR
             if (InitializeOnStart)
                 Initialize("");
 
-#if CVR_TOBIIVR
-            if (InitializeAfterCalibration)
-            {
-                if (Tobii.Research.Unity.VRCalibration.Instance != null)
-                {
-                    while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
-                    {
-                        yield return new WaitForSeconds(1);
-                        if (Tobii.Research.Unity.VRCalibration.Instance == null){break;}
-                    }
-                }
-                Initialize();
-            }
-#endif
 #if CVR_AH
             if (InitializeAfterCalibration)
             {

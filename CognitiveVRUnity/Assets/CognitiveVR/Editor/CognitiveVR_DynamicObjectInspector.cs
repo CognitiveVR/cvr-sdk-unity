@@ -35,6 +35,13 @@ namespace CognitiveVR
             PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
         }
 
+        int idType = -1;
+        GUIContent[] idTypeNames = new GUIContent[] {
+            new GUIContent("Custom Id", "For objects that start in the scene"),
+            new GUIContent("Generate Id", "For spawned objects that DO NOT need aggregate data"),
+            new GUIContent("Pool Id", "For spawned objects that need aggregate data")
+        };
+
         static bool foldout = false;
         public override void OnInspectorGUI()
         {
@@ -52,13 +59,14 @@ namespace CognitiveVR
             var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
             var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
+            var idPool = serializedObject.FindProperty("IdPool");
 
             foreach (var t in serializedObject.targetObjects) //makes sure a custom id is valid
             {
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
-                    if (dynamic.UseCustomId)
+                    if (dynamic.UseCustomId && idType == 0)
                     {
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
@@ -77,12 +85,7 @@ namespace CognitiveVR
                     }
                 }
             }
-
-            //video
-            //var flipVideo = serializedObject.FindProperty("FlipVideo");
-            //var externalVideoSource = serializedObject.FindProperty("ExternalVideoSource");
-            //var videoPlayer = serializedObject.FindProperty("VideoPlayer");
-
+            
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
@@ -114,68 +117,65 @@ namespace CognitiveVR
             }
             GUILayout.EndHorizontal();
 
-
-            //use custom id and custom id text field
+            if (idType == -1)
+            {
+                var dyn = target as DynamicObject;
+                if (dyn.UseCustomId) idType = 0;
+                else if (dyn.IdPool != null) idType = 2;
+                else idType = 1;
+            }
             GUILayout.BeginHorizontal();
-            bool previousUseCustomId = useCustomId.boolValue;
-            EditorGUILayout.PropertyField(useCustomId, new GUIContent("Custom Id"));
+            idType = EditorGUILayout.Popup(new GUIContent("Id Source"),idType, idTypeNames);
 
-            if (Selection.activeGameObject)
+            if (idType == 0) //custom id
             {
-                string path = AssetDatabase.GetAssetPath(Selection.activeObject);
-                if (!string.IsNullOrEmpty(path) && useCustomId.boolValue)
-                {
-                    //display small warning icon when prefab has custom id set
-                    EditorGUILayout.LabelField(new GUIContent(EditorCore.Alert,"Project assets should not have CustomId set, unless there will be only 1 instance spawned during runtime"), GUILayout.Width(20));
-                }
+                EditorGUILayout.PropertyField(customId, new GUIContent(""));
+                useCustomId.boolValue = true;
+                idPool.objectReferenceValue = null;
             }
-
-            if (previousUseCustomId != useCustomId.boolValue)
-            {
-                if (previousUseCustomId != useCustomId.boolValue) //use custom id changed
-                {
-                    if (useCustomId.boolValue == false) //changed to false
-                    {
-                        customId.stringValue = string.Empty;
-                    }
-                    else
-                    {
-                        foreach (var t in targets)
-                        {
-                            var dyn = t as DynamicObject;
-                            CheckCustomId(ref dyn.CustomId);
-                        }
-                    }
-                }
-            }
-
-            if (!useCustomId.boolValue) //display custom id field
+            else if (idType == 1) //generate id
             {
                 EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime","This object will not be included in aggregation metrics on the dashboard"));
+                EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
                 EditorGUI.EndDisabledGroup();
+                customId.stringValue = string.Empty;
+                useCustomId.boolValue = false;
+                idPool.objectReferenceValue = null;
             }
-            else
+            else if (idType == 2) //id pool
             {
-                if (targets.Length > 1)
-                {
-                    EditorGUI.BeginDisabledGroup(true);
-                    EditorGUILayout.LabelField("multiple values");
-                    EditorGUI.EndDisabledGroup();
-                }
-                else
-                {
-                    EditorGUILayout.PropertyField(customId, new GUIContent(""));
-                }
-            }            
+                var dyn = target as DynamicObject;
+                EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
+                customId.stringValue = string.Empty;
+                useCustomId.boolValue = false;
+            }
             GUILayout.EndHorizontal();
 
-
+            if (idType == 2) //id pool
+            {
+                var dyn = target as DynamicObject;
+                if (dyn.IdPool == null)
+                {
+                    if (GUILayout.Button("New Dynamic Object Id Pool"))
+                    {
+                        var pool = ScriptableObject.CreateInstance<DynamicObjectIdPool>();
+                        //write some values
+                        pool.Ids = new string[1] { System.Guid.NewGuid().ToString() };
+                        pool.MeshName = dyn.MeshName;
+                        pool.PrefabName = dyn.gameObject.name;
+                        //save to root assets folder
+                        AssetDatabase.CreateAsset(pool, "Assets/" + pool.MeshName + " Id Pool.asset");
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                        //get reference to file
+                        idPool.objectReferenceValue = pool;
+                    }
+                }
+            }
 
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
-
                 if (useCustomMesh.boolValue)
                 {
                     //Mesh
@@ -219,7 +219,7 @@ namespace CognitiveVR
 
                 //Snapshot Threshold
                 
-                GUILayout.Label("Snapshot", EditorStyles.boldLabel);
+                GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
 
                 //controller stuff
                 GUILayout.BeginHorizontal();
@@ -257,7 +257,6 @@ namespace CognitiveVR
 
                 GUILayout.EndHorizontal();
 
-
                 EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the dynamic object on the same frame as gaze. This may smooth movement of this object in SceneExplorer relative to the player's position"));
                 EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);
                 EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This is the Snapshot interval in the Tracker Options Window"), GUILayout.MinWidth(50));
@@ -289,9 +288,6 @@ namespace CognitiveVR
                     }
                 }
 
-                //remove spaces from meshname
-                //meshname.stringValue = meshname.stringValue.Replace(" ", "_");
-
                 if (!Application.isPlaying)
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
@@ -300,69 +296,29 @@ namespace CognitiveVR
             serializedObject.Update();
         }
 
-        void DisplayGazeTrackHelpbox(bool trackgaze)
-        {
-            if (trackgaze && ((DynamicObject)serializedObject.targetObjects[0]).GetComponent<Canvas>() == null)
-            {
-                DynamicObject dyn = null;
-                int missingCollider = 0;
-                bool lots = false;
-                for (int i = 0; i < serializedObject.targetObjects.Length; i++)
-                {
-                    dyn = serializedObject.targetObjects[i] as DynamicObject;
-                    if (dyn)
-                    {
-                        if (EditorCore.GetPreferences().DynamicObjectSearchInParent)
-                        {
-                            if (!dyn.GetComponentInChildren<Collider>())
-                            {
-                                missingCollider++;
-                                if (missingCollider > 25)
-                                {
-                                    lots = true;
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (!dyn.GetComponent<Collider>())
-                            {
-                                missingCollider++;
-                                if (missingCollider > 25)
-                                {
-                                    lots = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                if (lots)
-                {
-                    EditorGUILayout.HelpBox("Lots of objects requires a collider to Track Gaze!", MessageType.Warning);
-                }
-                else if (missingCollider == 1)
-                {
-                    EditorGUILayout.HelpBox("This object requires a collider to Track Gaze!", MessageType.Warning);
-                }
-                else if (missingCollider > 1)
-                {
-                    EditorGUILayout.HelpBox(missingCollider + " objects requires a collider to Track Gaze!", MessageType.Warning);
-                }
-            }
-        }
-
         void CheckCustomId(ref string customId)
         {
             if (Application.isPlaying) { return; }
-
             HashSet<string> usedids = new HashSet<string>();
 
+
+            //check against all dynamic object id pool contents
+            var pools = EditorCore.GetDynamicObjectPoolAssets;
+
+            foreach(var pool in pools)
+            {
+                foreach(var id in pool.Ids)
+                {
+                    usedids.Add(id);
+                }
+            }
+            
             var dynamics = FindObjectsOfType<DynamicObject>();
 
             for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {
+                if (!dynamics[i].UseCustomId) { continue; }
+
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     string s = System.Guid.NewGuid().ToString();

@@ -72,23 +72,8 @@ namespace CognitiveVR
 
 #elif CVR_FOVE
 
-    FoveInterfaceBase _foveInstance;
-    FoveInterfaceBase FoveInstance
-    {
-        get
-        {
-            if (_foveInstance == null)
-            {
-                _foveInstance = FindObjectOfType<FoveInterfaceBase>();
-            }
-            return _foveInstance;
-        }
-    }
-
     void Start()
     {
-        
-
         t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
     }
 
@@ -102,21 +87,20 @@ namespace CognitiveVR
 
     Vector3 GetLookDirection()
     {
-        if (FoveInstance == null)
+        Fove.Unity.FoveInterface fi = GameplayReferences.FoveInstance;
+        if (fi == null)
         {
             return GameplayReferences.HMD.forward;
         }
-        var eyeRays = FoveInstance.GetGazeRays();
+        var eyeRays = fi.GetGazeRays();
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
         return v.normalized;
     }
 #elif CVR_TOBIIVR
     public Vector3 lastDirection = Vector3.forward;
-    private static Tobii.Research.Unity.VREyeTracker _eyeTracker;
     void Start()
     {
         t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
-        _eyeTracker = Tobii.Research.Unity.VREyeTracker.Instance;
         if (GameplayReferences.HMD == null) { return; }
     }
 
@@ -130,13 +114,15 @@ namespace CognitiveVR
 
     Vector3 GetLookDirection()
     {
-        if (_eyeTracker == null)
+        var provider = Tobii.XR.TobiiXR.Internal.Provider;
+
+        if (provider == null)
         {
             return GameplayReferences.HMD.forward;
         }
-        if (_eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorldValid)
+        if (provider.EyeTrackingDataLocal.GazeRay.IsValid)
         {
-            lastDirection = _eyeTracker.LatestProcessedGazeData.CombinedGazeRayWorld.direction;
+            lastDirection = GameplayReferences.HMD.TransformDirection(provider.EyeTrackingDataLocal.GazeRay.Direction);
         }
 
         return lastDirection;
