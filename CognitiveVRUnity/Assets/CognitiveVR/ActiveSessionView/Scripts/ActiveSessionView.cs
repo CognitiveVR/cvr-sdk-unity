@@ -76,33 +76,7 @@ namespace CognitiveVR.ActiveSession
                 WarningText.text = "Could not find Calibration Controller";
             }
 #elif CVR_TOBIIVR
-            if (Tobii.Research.Unity.VRCalibration.Instance != null)
-            {
-                if (!Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
-                {
-                    WarningText.text = "Eye Tracking not Calibrated";
-                }
-
-                while (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress || !Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
-                {
-                    yield return new WaitForSeconds(1);
-                    if (Tobii.Research.Unity.VRCalibration.Instance == null) { break; }
-                    if (Tobii.Research.Unity.VRCalibration.Instance.CalibrationInProgress)
-                    {
-                        WarningText.text = "Calibration In Progress";
-                    }
-                }
-                if (Tobii.Research.Unity.VRCalibration.Instance.LatestCalibrationSuccessful)
-                {
-                    WarningText.text = "Eye Tracking Calibrated";
-                    yield return new WaitForSeconds(2);
-                    WarningText.enabled = false;
-                }
-            }
-            else
-            {
-                WarningText.text = "Could not find Calibration Component";
-            }
+            WarningText.enabled = false;
 #elif CVR_FOVE
             if (!Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
             {

@@ -396,7 +396,7 @@ namespace CognitiveVR.ActiveSession
 
         void MatchTargetCamera()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
             var vm = Valve.VR.OpenVR.System.GetProjectionMatrix(Valve.VR.EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;
