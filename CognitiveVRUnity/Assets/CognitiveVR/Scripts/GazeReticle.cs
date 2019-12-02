@@ -179,9 +179,17 @@ namespace CognitiveVR
             return SvrManager.Instance.EyeDirection;
         }
 #elif CVR_VIVEPROEYE
+
+        ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;
+        ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion version;
         void Start()
         {
             t.position = GameplayReferences.HMD.position + GetLookDirection() * Distance;
+            framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null)
+            {
+                version = framework.EnableEyeVersion;
+            }
             if (GameplayReferences.HMD == null) { return; }
         }
 
@@ -197,9 +205,19 @@ namespace CognitiveVR
         Vector3 GetLookDirection()
         {
             var ray = new Ray();
-            if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+            if (version == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
             {
-                lastDir = GameplayReferences.HMD.TransformDirection(ray.direction);
+                if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+                {
+                    lastDir = GameplayReferences.HMD.TransformDirection(ray.direction);
+                }
+            }
+            else
+            {
+                if (ViveSR.anipal.Eye.SRanipal_Eye_v2.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
+                {
+                    lastDir = GameplayReferences.HMD.TransformDirection(ray.direction);
+                }
             }
             return lastDir;
         }

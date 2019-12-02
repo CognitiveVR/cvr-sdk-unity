@@ -56,7 +56,9 @@ public class EditorCore
         newManager.AddComponent<CognitiveVR.Components.ArmLength>();
 
 #if CVR_VIVEPROEYE
-        newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
+        var framework = GameObject.FindObjectOfType<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
+        if (framework == null)
+            newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
 #endif
 
 #if CVR_NEURABLE

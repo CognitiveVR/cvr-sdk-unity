@@ -115,10 +115,90 @@ namespace CognitiveVR
             return false;
         }
 #elif CVR_VIVEPROEYE
-        const int CachedEyeCaptures = 100; //VIVEPROEYE
-        
+        bool useDataQueue1;
+        bool useDataQueue2;
+        static Queue<ViveSR.anipal.Eye.EyeData> EyeDataQueue1;
+        static Queue<ViveSR.anipal.Eye.EyeData_v2> EyeDataQueue2;
+        const int CachedEyeCaptures = 120; //VIVEPROEYE
+        ViveSR.anipal.Eye.EyeData currentData1;
+        ViveSR.anipal.Eye.EyeData_v2 currentData2;
+
+        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        double epochStart;
+
+        void Start()
+        {
+            System.TimeSpan span = System.DateTime.UtcNow - epoch;
+            epochStart = span.TotalSeconds;
+
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null && framework.EnableEyeDataCallback)
+            {
+                if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
+                {
+                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
+                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
+
+                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
+                    {
+                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
+                        useDataQueue1 = true;
+                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                    }
+                    else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
+                    {
+                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
+                        useDataQueue1 = true;
+                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                    }
+                }
+                else
+                {
+                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
+                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
+
+                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
+                    {
+                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
+                        useDataQueue2 = true;
+                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                    }
+                    else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
+                    {
+                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
+                        useDataQueue2 = true;
+                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                    }
+                }
+            }
+        }
+
+        private static void EyeCallback(ref ViveSR.anipal.Eye.EyeData eye_data)
+        {
+            EyeDataQueue1.Enqueue(eye_data);
+        }
+
+        private static void EyeCallback2(ref ViveSR.anipal.Eye.EyeData_v2 eye_data)
+        {
+            EyeDataQueue2.Enqueue(eye_data);
+        }
+
         public bool CombinedWorldGazeRay(out Ray ray)
         {
+            if (useDataQueue1)
+            {
+                var gazedir = currentData1.verbose_data.combined.eye_data.gaze_direction_normalized;
+                gazedir.x *= -1;
+                ray = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(gazedir));
+                return currentData1.verbose_data.combined.eye_data.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY);
+            }
+            if (useDataQueue2)
+            {
+                var gazedir = currentData2.verbose_data.combined.eye_data.gaze_direction_normalized;
+                gazedir.x *= -1;
+                ray = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(gazedir));
+                return currentData2.verbose_data.combined.eye_data.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY);
+            }
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE,out ray))
             {
                 ray.direction = GameplayReferences.HMD.TransformDirection(ray.direction);
@@ -131,15 +211,40 @@ namespace CognitiveVR
         public bool LeftEyeOpen()
         {
             float openness = 0;
+            if (useDataQueue1)
+            {
+                if (!currentData1.verbose_data.left.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY))
+                    return false;
+                return currentData1.verbose_data.left.eye_openness > 0.5f;
+            }
+            if (useDataQueue2)
+            {
+                if (!currentData2.verbose_data.left.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY))
+                    return false;
+                return currentData2.verbose_data.left.eye_openness > 0.5f;
+            }
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetEyeOpenness(ViveSR.anipal.Eye.EyeIndex.LEFT, out openness))
             {
                 return openness > 0.5f;
             }
             return false;
         }
+
         public bool RightEyeOpen()
         {
             float openness = 0;
+            if (useDataQueue1)
+            {
+                if (!currentData1.verbose_data.right.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY))
+                    return false;
+                return currentData1.verbose_data.right.eye_openness > 0.5f;
+            }
+            if (useDataQueue2)
+            {
+                if (!currentData2.verbose_data.right.GetValidity(ViveSR.anipal.Eye.SingleEyeDataValidity.SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY))
+                    return false;
+                return currentData2.verbose_data.right.eye_openness > 0.5f;
+            }
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetEyeOpenness(ViveSR.anipal.Eye.EyeIndex.RIGHT, out openness))
             {
                 return openness > 0.5f;
@@ -149,6 +254,18 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
+            if (useDataQueue1)
+            {
+                var MsSincestart = currentData1.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
+                var final = epochStart * 1000 + MsSincestart;
+                return (long)final;
+            }
+            else if (useDataQueue2)
+            {
+                var MsSincestart = currentData2.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
+                var final = epochStart * 1000 + MsSincestart;
+                return (long)final;
+            }
             return (long)(Util.Timestamp() * 1000);
         }
 
@@ -156,6 +273,25 @@ namespace CognitiveVR
         //returns true if there is another data point to work on
         public bool GetNextData()
         {
+            if (useDataQueue1)
+            {
+                if (EyeDataQueue1.Count > 0)
+                {
+                    currentData1 = EyeDataQueue1.Dequeue();
+                    return true;
+                }
+                return false;
+            }
+            else if (useDataQueue2)
+            {
+                if (EyeDataQueue2.Count > 0)
+                {
+                    currentData2 = EyeDataQueue2.Dequeue();
+                    return true;
+                }
+                return false;
+            }
+
             if (lastProcessedFrame != Time.frameCount)
             {
                 lastProcessedFrame = Time.frameCount;

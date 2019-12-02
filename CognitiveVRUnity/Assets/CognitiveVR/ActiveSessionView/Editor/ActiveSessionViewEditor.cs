@@ -67,7 +67,6 @@ namespace CognitiveVR.ActiveSession
             //fixations
             ret.lineWidth = EditorGUILayout.Slider("Saccade Width", ret.lineWidth, 0.001f, 0.1f);
             ret.FixationMaterial.color = EditorGUILayout.ColorField("Fixation Colour", ret.FixationMaterial.color);
-            ret.GetComponent<Camera>().backgroundColor = ret.FixationMaterial.color;
             ret.FixationColor = ret.FixationMaterial.color;
             if (ret.FixationMaterial.HasProperty("_EmissionColor"))
             {
