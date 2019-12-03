@@ -15,7 +15,7 @@ namespace CognitiveVR.ActiveSession
 
         void Start()
         {
-            Instrumentation.OnCustomEventSend += Instrumentation_OnCustomEventSend;
+            CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
             GazeCore.OnGazeSend += GazeCore_OnGazeSend;
             FixationCore.OnFixationSend += FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
@@ -47,7 +47,7 @@ namespace CognitiveVR.ActiveSession
             #region Events
             if (EventTimeSinceSend < 0)
             {
-                if (CognitiveVR.Instrumentation.CachedEvents > 0)
+                if (CognitiveVR.CustomEvent.CachedEvents > 0)
                 {
                     //has data, not sent
                     EventSendText.color = noDataColor;
@@ -150,6 +150,13 @@ namespace CognitiveVR.ActiveSession
             timeSinceLastTick = 0;
         }
 
+        static string[] sendTimeArray = new string[] {
+              " ", "1s ago", "2s ago", "3s ago", "4s ago", "5s ago", "6s ago", "7s ago", "8s ago", "9s ago"
+            , "10s ago", "11s ago", "12s ago", "13s ago", "14s ago", "15s ago", "16s ago", "17s ago", "18s ago", "19s ago"
+            , "20s ago", "21s ago", "22s ago", "23s ago", "24s ago", "25s ago", "26s ago", "27s ago", "28s ago", "29s ago"
+            , "30s ago", ">30s ago"
+        };
+
         void UpdateText(Text t, ref float sendtime)
         {
             if (sendtime < 1)
@@ -162,8 +169,12 @@ namespace CognitiveVR.ActiveSession
             {
                 sendtime += timeSinceLastTick;
                 t.color = normalColor;
-                //IMPROVEMENT look up array of strings
-                t.text = Mathf.Floor(sendtime).ToString() + "s ago";
+
+                int floorInt = Mathf.FloorToInt(sendtime);
+                if (floorInt < sendTimeArray.Length)
+                    t.text = sendTimeArray[floorInt];
+                else
+                    t.text = sendTimeArray[31];
             }
         }
 
@@ -194,7 +205,7 @@ namespace CognitiveVR.ActiveSession
 
         private void OnDestroy()
         {
-            Instrumentation.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
+            CustomEvent.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
             GazeCore.OnGazeSend -= GazeCore_OnGazeSend;
             FixationCore.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;

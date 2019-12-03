@@ -43,12 +43,12 @@ namespace CognitiveVR
                     if (VideoPlayer.frame == 0)
                     {
                         //stopped event
-                        Instrumentation.SendCustomEvent("cvr.media.stop", new List<KeyValuePair<string, object>>() {new KeyValuePair<string, object>( "videoTime", lastFrame ), new KeyValuePair<string, object>("mediaId", MediaSource ) },transform.position);
+                        CustomEvent.SendCustomEvent("cvr.media.stop", new List<KeyValuePair<string, object>>() {new KeyValuePair<string, object>( "videoTime", lastFrame ), new KeyValuePair<string, object>("mediaId", MediaSource ) },transform.position);
                     }
                     else
                     {
                         //paused event
-                        Instrumentation.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                        CustomEvent.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
                     }
                     WasPlaying = false;
                 }
@@ -59,7 +59,7 @@ namespace CognitiveVR
                 if (VideoPlayer.isPlaying)
                 {
                     //play event
-                    Instrumentation.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
                     WasPlaying = true;
                 }
             }
@@ -71,7 +71,7 @@ namespace CognitiveVR
                 if (!VideoPlayer.isPrepared) //started buffering. possibly stopped
                 {
                     wasPrepared = false;
-                    Instrumentation.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
                 }
             }
             else

@@ -20,7 +20,7 @@ namespace CognitiveVR.ActiveSession
 
         void Start()
         {
-            CognitiveVR.Instrumentation.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
+            CognitiveVR.CustomEvent.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
             for (int i = 0; i < EventEntryPool.Length; i++)
             {
                 var go = Instantiate(EventFeedPrefab, EventFeedRoot);
@@ -53,7 +53,7 @@ namespace CognitiveVR.ActiveSession
 
         private void OnDestroy()
         {
-            CognitiveVR.Instrumentation.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
+            CognitiveVR.CustomEvent.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
         }
 
         public GameObject GetPrefab(Transform parent)

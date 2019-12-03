@@ -337,10 +337,10 @@ namespace CognitiveVR.ActiveSession
             Vector3 secondDir = (mathscreennext - mathscreencurrent).normalized;
 
             //line segment AB
-            var firstDirectionPerp = Vector3.Cross(firstDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
+            //var firstDirectionPerp = Vector3.Cross(firstDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
 
             //line segment BC
-            var secondDirectionPerp = Vector3.Cross(secondDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
+            //var secondDirectionPerp = Vector3.Cross(secondDir, hmdforward).normalized * lineWidth / 2f; //hmd forward
 
             //line angle ABC
             float lineAngleABC = SignedAngle(firstDir, secondDir, hmdforward);

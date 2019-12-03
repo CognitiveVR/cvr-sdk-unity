@@ -82,7 +82,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.16.2";
+        public const string SDK_VERSION = "0.17.0";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -240,6 +240,7 @@ namespace CognitiveVR
         {
             _hmd = HMDCamera;
             CognitiveStatics.Initialize();
+            CustomEvent.Initialize();
 
             Error error = Error.None;
             // Have we already initialized CognitiveVR?
