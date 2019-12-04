@@ -18,7 +18,6 @@ namespace CognitiveVR.ActiveSession
 
             //base.OnInspectorGUI();
             ActiveSessionView asv = target as ActiveSessionView;
-            var mc = asv.GetComponentInChildren<MetaCanvas>();
             var ret = asv.GetComponentInChildren<RenderEyetracking>();
             var src = asv.GetComponentInChildren<SensorRenderCamera>();
             var sc = asv.GetComponentInChildren<SensorCanvas>();

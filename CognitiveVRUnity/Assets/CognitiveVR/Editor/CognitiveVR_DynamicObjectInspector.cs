@@ -144,7 +144,6 @@ namespace CognitiveVR
             }
             else if (idType == 2) //id pool
             {
-                var dyn = target as DynamicObject;
                 EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
                 customId.stringValue = string.Empty;
                 useCustomId.boolValue = false;
@@ -190,7 +189,7 @@ namespace CognitiveVR
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
-                        CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        ExportUtility.ExportSelectedObjectsPrefab();
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
@@ -206,7 +205,7 @@ namespace CognitiveVR
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
                     if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                     {
-                        CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
+                        ExportUtility.UploadSelectedDynamicObjects(true);
                     }
                     EditorGUI.EndDisabledGroup();
 

@@ -22,6 +22,7 @@ namespace CognitiveVR.ActiveSession
         [ContextMenu("calc")]
         public void CalcSize()
         {
+            var rect = GetComponent<RectTransform>();
             float detailHeight = 10; //object id, local time, session time
             float propertyHeight = PropertyKeys.rectTransform.sizeDelta.y; //property details
             propertyHeight = Mathf.Max(propertyHeight, detailHeight);
@@ -30,7 +31,7 @@ namespace CognitiveVR.ActiveSession
             
             PropertyPanel.sizeDelta = new Vector2(PropertyPanel.sizeDelta.x, propertyHeight);
             DetailPanel.sizeDelta = new Vector2(DetailPanel.sizeDelta.x, (detailHeight * 3) + PropertyPanel.sizeDelta.y);
-            var rect = GetComponent<RectTransform>();
+            
             rect.sizeDelta = new Vector2(rect.sizeDelta.x, DetailPanel.sizeDelta.y + titleHeight + titleSpace);
 
             Vector3 panelLocalPosition = DetailPanel.localPosition;
