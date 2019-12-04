@@ -59,7 +59,7 @@ namespace CognitiveVR
                 if (reticleAsset != null)
                 {
                     GameObject reticleInstance = (GameObject)PrefabUtility.InstantiatePrefab(reticleAsset);
-                    Undo.RegisterCreatedObjectUndo(reticleAsset, "Added Gaze Reticle");
+                    Undo.RegisterCreatedObjectUndo(reticleInstance, "Added Gaze Reticle");
                 }
             }
         }

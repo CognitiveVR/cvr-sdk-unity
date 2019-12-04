@@ -174,6 +174,30 @@ public class EditorCore
             return _sceneBackground;
         }
     }
+    private static Texture2D _sceneBackgroundHalf;
+    public static Texture2D SceneBackgroundHalf
+    {
+        get
+        {
+            if (_sceneBackgroundHalf == null)
+            {
+                _sceneBackgroundHalf = Resources.Load<Texture2D>("scene_grey_half");
+            }
+            return _sceneBackgroundHalf;
+        }
+    }
+    private static Texture2D _sceneBackgroundQuarter;
+    public static Texture2D SceneBackgroundQuarter
+    {
+        get
+        {
+            if (_sceneBackgroundQuarter == null)
+            {
+                _sceneBackgroundQuarter = Resources.Load<Texture2D>("scene_grey_quarter");
+            }
+            return _sceneBackgroundQuarter;
+        }
+    }
 
     private static Texture2D _objectsHighlight;
     public static Texture2D ObjectsHightlight
@@ -257,8 +281,34 @@ public class EditorCore
     }
 
 
-    //Color Blue = new Color32(0xFA, 0x4F, 0xF2, 0xFF); //set in guiskin
-    //Color Black = new Color32(0x1A, 0x1A, 0x1A, 0xFF); //set in guiskin
+    public static bool CreateTargetFolder(string fullName)
+    {
+        try
+        {
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
+        }
+        catch
+        {
+            EditorUtility.DisplayDialog("Error!", "Failed to create folder: CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
+            return false;
+        }
+
+        return true;
+    }
+
+    //retrun path to CognitiveVR_SceneExplorerExport. create if it doesn't exist
+    public static string GetDirectory(string fullName)
+    {
+        CreateTargetFolder(fullName);
+
+        return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName + Path.DirectorySeparatorChar;
+    }
+
+    public static string GetBaseDirectory()
+    {
+        return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar;
+    }
+
     public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF); //E8EBEFFF
 
 
