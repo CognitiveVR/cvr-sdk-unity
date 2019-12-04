@@ -1093,6 +1093,15 @@ public class EditorCore
         return SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0;
     }
 
+    public static string GetSceneExportDirectory(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+    {
+        if (currentSceneSettings == null) { return ""; }
+        string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+        var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+        if (!SceneExportDirExists) { return ""; }
+        return sceneExportDirectory;
+    }
+
     /// <summary>
     /// has folder for scene. can be empty
     /// </summary>
@@ -1105,6 +1114,28 @@ public class EditorCore
         var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
         return SceneExportDirExists;
+    }
+
+    public static float GetSceneFileSize(CognitiveVR_Preferences.SceneSettings scene)
+    {
+        if (string.IsNullOrEmpty(EditorCore.GetSceneExportDirectory(scene)))
+        {
+            return 0;
+        }
+        float size = GetDirectorySize(EditorCore.GetSceneExportDirectory(scene)) / 1048576f;
+        return size;
+    }
+
+    public static long GetDirectorySize(string p)
+    {
+        string[] a = System.IO.Directory.GetFiles(p, "*.*", System.IO.SearchOption.AllDirectories);
+        long b = 0;
+        foreach (string name in a)
+        {
+            System.IO.FileInfo info = new System.IO.FileInfo(name);
+            b += info.Length;
+        }
+        return b;
     }
     #endregion
 
