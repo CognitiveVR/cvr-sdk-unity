@@ -270,7 +270,7 @@ namespace CognitiveVR
                 ExportUtility.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = EditorCore.GetDirectory(fullName);
+                string objPath = EditorCore.GetSubDirectoryPath(fullName);
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
@@ -287,7 +287,7 @@ namespace CognitiveVR
             {
                 System.Action completedmanifestupload = delegate ()
                 {
-                    ExportUtility.UploadAllDynamicObjects(true);
+                    ExportUtility.UploadAllDynamicObjectMeshes(true);
                 };
 
                 System.Action completedRefreshSceneVersion2 = delegate ()
@@ -359,7 +359,7 @@ namespace CognitiveVR
             {
                 if (GUILayout.Button(ButtonContent))
                 {
-                    EditorCore.UploadScreenshot();
+                    EditorCore.UploadCustomScreenshot();
                 }
             }
             EditorGUI.EndDisabledGroup();

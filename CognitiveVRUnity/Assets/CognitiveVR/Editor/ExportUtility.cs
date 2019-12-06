@@ -72,11 +72,14 @@ namespace CognitiveVR
     {
         #region Export Scene
 
-        //don't even try exporting the scene. just generate the folder and json file
+        /// <summary>
+        /// skip exporting any geometry from the scene. just generate the folder and json file
+        /// will delete any files in the export directory
+        /// </summary>
         public static void ExportSceneAR()
         {
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            string objPath = EditorCore.GetDirectory(fullName);
+            string objPath = EditorCore.GetSubDirectoryPath(fullName);
 
             //if folder exists, delete mtl, obj, png and json contents
             if (Directory.Exists(objPath))
@@ -96,6 +99,9 @@ namespace CognitiveVR
             File.WriteAllText(objPath + "debug.log", debugContent);
         }
 
+        /// <summary>
+        /// export all geometry for the active scene. will NOT delete existing files in this directory
+        /// </summary>
         public static void ExportGLTFScene()
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
@@ -114,17 +120,15 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
             try
             {
-                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f);
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
                 BakeNonstandardRenderers(null, temp, path);
                 var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
                 exporter.SetNonStandardOverrides(temp);
                 Directory.CreateDirectory(path);
 
-                EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f);
+                EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f); //export all all mesh renderers to gltf
                 exporter.SaveGLTFandBin(path, "scene");
-
-                EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f);
-                for (int i = 0; i < temp.Count; i++)
+                for (int i = 0; i < temp.Count; i++) //delete temporary generated meshes
                 {
                     if (temp[i].useOriginalscale)
                     {
@@ -136,6 +140,7 @@ namespace CognitiveVR
                         UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
                 }
 
+                EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f); //resize each texture from export directory
                 ResizeQueue.Enqueue(path);
                 EditorApplication.update -= UpdateResize;
                 EditorApplication.update += UpdateResize;
@@ -149,7 +154,10 @@ namespace CognitiveVR
         }
 
 
-        //wait for update message from the editor - reading files without this delay has issues reading data
+        /// <summary>
+        /// used by scene and dynamics to queue resizing textures
+        /// wait for update message from the editor - reading files without this delay has issues reading data
+        /// </summary>
         static Queue<string> ResizeQueue = new Queue<string>();
         static void UpdateResize()
         {
@@ -200,8 +208,14 @@ namespace CognitiveVR
         #endregion
 
         #region Upload Scene
-        //displays popup window confirming upload, then uploads the files
         static System.Action UploadComplete;
+        //displays popup window confirming upload, then uploads the files
+
+        /// <summary>
+        /// displays confirmation popup
+        /// reads files from export directory and sends POST request to backend
+        /// invokes uploadComplete if upload actually starts and PostSceneUploadResponse callback gets 200/201 responsecode
+        /// </summary>
         public static void UploadDecimatedScene(CognitiveVR_Preferences.SceneSettings settings, System.Action uploadComplete)
         {
             //if uploadNewScene POST
@@ -232,7 +246,7 @@ namespace CognitiveVR
                 {
                     uploadConfirmed = true;
                     //create a json.settings file in the directory
-                    string objPath = EditorCore.GetDirectory(sceneName);
+                    string objPath = EditorCore.GetSubDirectoryPath(sceneName);
 
                     Directory.CreateDirectory(objPath);
 
@@ -251,8 +265,7 @@ namespace CognitiveVR
             if (!uploadConfirmed)
             {
                 UploadSceneSettings = null;
-                return;
-                //just exit now
+                return; //just exit now
             }
 
             //after confirmation because uploading an empty scene creates a settings.json file
@@ -272,10 +285,6 @@ namespace CognitiveVR
             }
 
             string fileList = "Upload Files:\n";
-
-            string mtlFilepath = "";
-            string objFilepath = "";
-
             WWWForm wwwForm = new WWWForm();
             foreach (var f in filePaths)
             {
@@ -285,47 +294,10 @@ namespace CognitiveVR
                     continue;
                 }
 
-                //set obj file. prefer decimated
-                if (f.EndsWith(".obj"))
-                {
-                    if (f.EndsWith("_decimated.obj"))
-                    {
-                        objFilepath = f;
-                    }
-                    else if (string.IsNullOrEmpty(objFilepath))
-                    {
-                        objFilepath = f;
-                    }
-                    continue;
-                }
-
-                //set mtl file. prefer decimated
-                if (f.EndsWith(".mtl"))
-                {
-                    if (f.EndsWith("_decimated.mtl"))
-                    {
-                        mtlFilepath = f;
-                    }
-                    else if (string.IsNullOrEmpty(mtlFilepath))
-                    {
-                        mtlFilepath = f;
-                    }
-                    continue;
-                }
-
                 fileList += f + "\n";
 
                 var data = File.ReadAllBytes(f);
                 wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
-            }
-
-            if (!string.IsNullOrEmpty(objFilepath))
-            {
-                //add obj and mtl files
-                wwwForm.AddBinaryData("file", File.ReadAllBytes(objFilepath), Path.GetFileName(objFilepath));
-                fileList += objFilepath + "\n";
-                wwwForm.AddBinaryData("file", File.ReadAllBytes(mtlFilepath), Path.GetFileName(mtlFilepath));
-                fileList += mtlFilepath + "\n";
             }
 
             Debug.Log(fileList);
@@ -345,7 +317,6 @@ namespace CognitiveVR
                 if (EditorCore.IsDeveloperKeyValid)
                 {
                     headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    //headers.Add("Content-Type", "multipart/form-data; boundary=\""+)
                     foreach (var v in wwwForm.headers)
                     {
                         headers[v.Key] = v.Value;
@@ -355,7 +326,6 @@ namespace CognitiveVR
             }
             else //upload as new scene
             {
-                //posting wwwform with headers
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)
                 {
@@ -371,6 +341,9 @@ namespace CognitiveVR
             UploadComplete = uploadComplete;
         }
 
+        /// <summary>
+        /// callback from UploadDecimatedScene
+        /// </summary>
         static void PostSceneUploadResponse(int responseCode, string error, string text)
         {
             Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode
@@ -380,7 +353,6 @@ namespace CognitiveVR
             if (responseCode != 200 && responseCode != 201)
             {
                 Debug.LogError("Scene Upload Error " + error);
-
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;
@@ -404,10 +376,6 @@ namespace CognitiveVR
             }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
-
-            //after scene upload response, hit version route to get the version of the scene
-            //SendSceneVersionRequest(UploadSceneSettings);
-
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
             AssetDatabase.SaveAssets();
@@ -419,16 +387,25 @@ namespace CognitiveVR
             Debug.Log("<color=green>Scene Upload Complete!</color>");
         }
 
+        static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
+        /// <summary>
+        /// SceneSettings for the currently uploading scene
+        /// </summary>
         public static void ClearUploadSceneSettings() //sometimes not set to null when init window quits
         {
             UploadSceneSettings = null;
         }
-        static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
 
         #endregion
 
         #region Bake Renderers
 
+        /// <summary>
+        /// find all skeletal meshes, terrain and canvases in scene
+        /// </summary>
+        /// <param name="rootDynamic">if rootDynamic != null, limits baking to only child objects of that dynamic</param>
+        /// <param name="meshes">returned list that hold reference to temporary mesh renderers to be deleted after export</param>
+        /// <param name="path">used to bake terrain texture to file</param>
         static void BakeNonstandardRenderers(DynamicObject rootDynamic, List<BakeableMesh> meshes, string path)
         {
             SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
@@ -458,17 +435,10 @@ namespace CognitiveVR
                 {
                     continue;
                 }
-
-                //var pos = skinnedMeshRenderer.transform.localPosition;
-                //skinnedMeshRenderer.transform.localPosition = Vector3.zero;
-                //var rot = skinnedMeshRenderer.transform.localRotation;
-                //skinnedMeshRenderer.transform.localRotation = Quaternion.identity;
-
                 BakeableMesh bm = new BakeableMesh();
 
                 bm.tempGo = new GameObject(skinnedMeshRenderer.gameObject.name);
                 bm.tempGo.transform.parent = skinnedMeshRenderer.transform;
-                //bm.tempGo.transform.localScale = Vector3.one;
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
 
@@ -477,15 +447,9 @@ namespace CognitiveVR
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 var m = new Mesh();
                 m.name = skinnedMeshRenderer.sharedMesh.name;
-                //bm.originalScale = skinnedMeshRenderer.transform.localScale;
-                //bm.useOriginalscale = true;
-                //skinnedMeshRenderer.transform.localScale = Vector3.one;
                 skinnedMeshRenderer.BakeMesh(m);
                 bm.meshFilter.sharedMesh = m;
                 meshes.Add(bm);
-
-                //skinnedMeshRenderer.transform.localPosition = pos;
-                //skinnedMeshRenderer.transform.localRotation = rot;
             }
 
             //TODO ignore parent rotation and scale
@@ -507,15 +471,12 @@ namespace CognitiveVR
 
                 bm.tempGo = new GameObject(v.gameObject.name);
                 bm.tempGo.transform.parent = v.transform;
-                //bm.tempGo.transform.localScale = Vector3.one;
-                //bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
-
-
+                
                 //generate mesh from heightmap
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
                 bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
-                bm.meshRenderer.sharedMaterial.mainTexture = BakeTerrainTexture(path, v.terrainData);
+                bm.meshRenderer.sharedMaterial.mainTexture = BakeTerrainTexture(v.terrainData);
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 bm.meshFilter.sharedMesh = GenerateTerrainMesh(v);
                 meshes.Add(bm);
@@ -555,12 +516,16 @@ namespace CognitiveVR
 
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 //write simple quad
-                var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height);//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
                 bm.meshFilter.sharedMesh = mesh;
                 meshes.Add(bm);
             }
         }
 
+        /// <summary>
+        /// returns a low resolution mesh based on the heightmap of a terrain
+        /// </summary>
+        /// <param name="terrain">the terrain to bake</param>
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
             float downsample = 4;
@@ -570,16 +535,13 @@ namespace CognitiveVR
 
             var w = (int)(terrain.terrainData.heightmapWidth / downsample);
             var h = (int)(terrain.terrainData.heightmapHeight / downsample);
-
             Vector3[] vertices = new Vector3[w * h];
             Vector2[] uv = new Vector2[w * h];
             Vector4[] tangents = new Vector4[w * h];
-
-            //all points
-
             Vector2 uvScale = new Vector2(1.0f / (w - 1), 1.0f / (w - 1));
             Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (w - 1), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (h - 1));
 
+            //generate mesh strips + Assign them to the mesh
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
@@ -588,59 +550,44 @@ namespace CognitiveVR
                     Vector3 vertex = new Vector3(x, pixelHeight, y);
                     vertices[y * w + x] = Vector3.Scale(sizeScale, vertex);
                     uv[y * w + x] = Vector2.Scale(new Vector2(x, y), uvScale);
-
-                    // Calculate tangent vector: a vector that goes from previous vertex
-                    // to next along X direction. We need tangents if we intend to
-                    // use bumpmap shaders on the mesh.
-                    //Vector3 vertexL = new Vector3(x - 1, heightMap.GetPixel(x - 1, y).grayscale, y);
-                    //Vector3 vertexR = new Vector3(x + 1, heightMap.GetPixel(x + 1, y).grayscale, y);
-                    //Vector3 tan = Vector3.Scale(sizeScale, vertexR - vertexL).normalized;
-                    //tangents[y * w + x] = new Vector4(tan.x, tan.y, tan.z, -1.0f);
-
                     tangents[y * w + x] = new Vector4(1, 1, 1, -1.0f);
                 }
             }
-
-            //generate mesh strips
-            // Assign them to the mesh
             mesh.vertices = vertices;
             mesh.uv = uv;
-
-            // Build triangle indices: 3 indices into vertex array for each triangle
+            
             int[] triangles = new int[(h - 1) * (w - 1) * 6];
             int index = 0;
             for (int y = 0; y < h - 1; y++)
             {
                 for (int x = 0; x < w - 1; x++)
                 {
-                    // For each grid cell output two triangles
                     triangles[index++] = (y * w) + x;
                     triangles[index++] = ((y + 1) * w) + x;
                     triangles[index++] = (y * w) + x + 1;
-
                     triangles[index++] = ((y + 1) * w) + x;
                     triangles[index++] = ((y + 1) * w) + x + 1;
                     triangles[index++] = (y * w) + x + 1;
                 }
             }
-
             mesh.triangles = triangles;
             mesh.RecalculateNormals();
             mesh.tangents = tangents;
-
             return mesh;
         }
 
-        public static Texture2D BakeTerrainTexture(string destinationFolder, TerrainData data)
+        /// <summary>
+        /// read terrain data and sample texture from splatmaps
+        /// returns texture2d from the baked data
+        /// </summary>
+        public static Texture2D BakeTerrainTexture(TerrainData data)
         {
             float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
 
             //LIMIT to 6 layers for now! rbga + black + transparency?
             int layerCount = Mathf.Min(maps.GetLength(2), 6);
 
-
-            //set terrain textures to readable
-            bool[] textureReadable = new bool[layerCount];
+            bool[] textureReadable = new bool[layerCount]; //set terrain textures to readable
             for (int i = 0; i < layerCount; i++)
             {
                 try
@@ -651,28 +598,21 @@ namespace CognitiveVR
                         SetTextureImporterFormat(originalTexture, true);
                     }
                 }
-                catch
-                {
-
-                }
+                catch{}
             }
 
             var sizemax = Mathf.Max(
                 Mathf.NextPowerOfTwo((int)(data.heightmapScale.z * data.heightmapResolution * 16)),
                 Mathf.NextPowerOfTwo((int)(data.heightmapScale.x * data.heightmapResolution * 16)));
-
             int sizelimit = Mathf.Min(4096, sizemax);
-
             Texture2D outTex = new Texture2D(sizelimit, sizelimit);
-
-            //Texture2D outTex = new Texture2D(Mathf.Min(4096, (int)(data.heightmapScale.x * data.heightmapResolution * 64)), Mathf.Min(4096, (int)(data.heightmapScale.z * data.heightmapResolution * 64)));
             outTex.name = data.name.Replace(' ', '_');
-            float upscalewidth = (float)outTex.width / (float)data.alphamapWidth; //(data.heightmapScale.x * data.heightmapResolution * 64);
-            float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;// (data.heightmapScale.z * data.heightmapResolution * 64);
+            float upscalewidth = (float)outTex.width / (float)data.alphamapWidth;
+            float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;
 
             float[] colorAtLayer = new float[layerCount];
             SplatPrototype[] prototypes = data.splatPrototypes;
-
+            //get highest value splatmap at point and write terrain texture to baked texture
             for (int y = 0; y < outTex.height; y++)
             {
                 for (int x = 0; x < outTex.width; x++)
@@ -681,11 +621,9 @@ namespace CognitiveVR
                     {
                         colorAtLayer[i] = maps[(int)(x / upscalewidth), (int)(y / upscaleheight), i];
                     }
-
-
+                    //highest value splat
                     int highestMap = 0;
                     float highestMapValue = 0;
-
                     for (int i = 0; i < colorAtLayer.Length; i++)
                     {
                         if (colorAtLayer[i] > highestMapValue)
@@ -694,7 +632,7 @@ namespace CognitiveVR
                             highestMap = i;
                         }
                     }
-
+                    //write terrain texture to baked texture
                     if (prototypes.Length > 0 && prototypes[highestMap].texture != null)
                     {
                         //TODO figure out correct tiling for textures
@@ -707,11 +645,9 @@ namespace CognitiveVR
                     }
                 }
             }
-
             outTex.Apply();
 
-            //texture importer to original
-
+            //terrain texture importer to original read/write settings
             for (int i = 0; i < layerCount; i++)
             {
                 try
@@ -722,78 +658,68 @@ namespace CognitiveVR
                         SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i]);
                     }
                 }
-                catch
-                {
-
-                }
+                catch{}
             }
 
             return outTex;
         }
-
+        
+        /// <summary>
+        /// returns true if texture read/writable
+        /// </summary>
         public static bool GetTextureImportFormat(Texture2D texture, out bool isReadable)
         {
             isReadable = false;
-            if (null == texture)
-            {
-                return false;
-            }
-
+            if (null == texture) { return false; }
             string assetPath = AssetDatabase.GetAssetPath(texture);
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
                 tImporter.textureType = TextureImporterType.Default;
-
                 isReadable = tImporter.isReadable;
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// sets texture to be read/writable
+        /// </summary>
         public static void SetTextureImporterFormat(Texture2D texture, bool isReadable)
         {
             if (null == texture) return;
-
             string assetPath = AssetDatabase.GetAssetPath(texture);
             var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (tImporter != null)
             {
                 tImporter.textureType = TextureImporterType.Default;
-
                 tImporter.isReadable = isReadable;
-
                 AssetDatabase.ImportAsset(assetPath);
                 AssetDatabase.Refresh();
             }
         }
 
+        /// <summary>
+        /// return path to texture. used by gltf export
+        /// </summary>
         public static string RetrieveTexturePath(UnityEngine.Texture texture)
         {
             return AssetDatabase.GetAssetPath(texture);
         }
 
-        public static Mesh ExportQuad(string meshName, float width, float height, Transform transform, string sceneName, Texture2D tex = null)
+        /// <summary>
+        /// return a mesh quad with certain dimensions. used to bake canvases
+        /// </summary>
+        /// <param name="meshName"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public static Mesh ExportQuad(string meshName, float width, float height)
         {
-            //this writes data into a mesh class then passes it through to dynamic object exporter. to futureproof when we move from obj to gltf
-
             Vector3 size = new Vector3(width, height, 0);
             Vector3 pivot = size / 2;
 
             Mesh m = new Mesh();
             m.name = meshName;
-
-            //GameObject go = new GameObject("TEMP_MESH");
-            //go.AddComponent<MeshFilter>().mesh = m;
-
-            /*//DEBUGGING
-            go.AddComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
-            if (tex != null)
-            {
-                go.GetComponent<MeshRenderer>().material.mainTexture = tex;
-                go.GetComponent<MeshRenderer>().material.SetInt("_Mode", 2);
-            }
-            */
 
             var verts = new Vector3[4];
             verts[0] = new Vector3(0, 0, 0) - pivot;
@@ -850,13 +776,15 @@ namespace CognitiveVR
             return m;
         }
 
+        /// <summary>
+        /// returns texture2d baked from canvas target
+        /// </summary>
         public static Texture2D CanvasTextureBake(Transform target, int resolution = 128)
         {
             GameObject cameraGo = new GameObject("Temp_Camera");
             Camera cam = cameraGo.AddComponent<Camera>();
 
-            //put camera in editor camera position
-
+            //snap camera to canvas position
             cameraGo.transform.rotation = target.rotation;
             cameraGo.transform.position = target.position - target.forward * 0.05f;
 
@@ -864,7 +792,7 @@ namespace CognitiveVR
             var height = target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y;
             if (Mathf.Approximately(width, height))
             {
-                //whatever. centered
+                //centered
             }
             else if (height > width) //tall
             {
@@ -885,7 +813,7 @@ namespace CognitiveVR
             cam.backgroundColor = Color.clear;
 
             //create render texture and assign to camera
-            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16); //new RenderTexture(resolution, resolution, 16);
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16);
             RenderTexture.active = rt;
             cam.targetTexture = rt;
 
@@ -893,7 +821,7 @@ namespace CognitiveVR
             List<Transform> children = new List<Transform>();
             EditorCore.RecursivelyGetChildren(children, target);
 
-            //layer stuff
+            //set camera to render unassigned layer
             int layer = EditorCore.FindUnusedLayer();
             if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); }
 
@@ -902,6 +830,7 @@ namespace CognitiveVR
                 cam.cullingMask = 1 << layer;
             }
 
+            //save all canvas layers. put on unassigned layer then render
             try
             {
                 if (layer != -1)
@@ -912,7 +841,6 @@ namespace CognitiveVR
                         v.gameObject.layer = layer;
                     }
                 }
-
                 //render to texture
                 cam.Render();
             }
@@ -920,9 +848,10 @@ namespace CognitiveVR
             {
                 Debug.LogException(e);
             }
+
+            //reset dynamic object layers
             if (layer != -1)
             {
-                //reset dynamic object layers
                 foreach (var v in originallayers)
                 {
                     v.Key.layer = v.Value;
@@ -932,13 +861,11 @@ namespace CognitiveVR
             //write rendertexture to png
             Texture2D tex = new Texture2D(resolution, resolution);
             RenderTexture.active = rt;
-
             tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
             tex.Apply();
-
             RenderTexture.active = null;
 
-            //delete stuff
+            //delete temporary camera
             UnityEngine.Object.DestroyImmediate(cameraGo);
 
             return tex;
@@ -953,9 +880,6 @@ namespace CognitiveVR
         /// <returns>true if any dynamics are exported</returns>
         public static bool ExportAllDynamicsInScene()
         {
-            //List<Transform> entireSelection = new List<Transform>();
-            //entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
-
             var dynamics = UnityEngine.Object.FindObjectsOfType<DynamicObject>();
             List<GameObject> gos = new List<GameObject>();
             foreach (var v in dynamics)
@@ -965,6 +889,9 @@ namespace CognitiveVR
             return ExportSelectedObjectsPrefab();
         }
 
+        /// <summary>
+        /// adds all dynamics in children to list, starting from transform
+        /// </summary>
         static void RecurseThroughChildren(Transform t, List<DynamicObject> dynamics)
         {
             var d = t.GetComponent<DynamicObject>();
@@ -986,7 +913,6 @@ namespace CognitiveVR
         {
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
-
             if (entireSelection.Count == 0)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects selected", "Ok");
@@ -1024,40 +950,24 @@ namespace CognitiveVR
             List<string> totalExportedMeshNames = new List<string>();
 
             //recursively get all dynamic objects to export
-            List<DynamicObject> AllDynamics = new List<DynamicObject>();
-
-            //add spawned things to selection
-            //List<Transform> t = new List<Transform>(Selection.transforms);
-            //t.AddRange(sceneObjects);
-            //Selection.objects = t.ToArray();
-
-            foreach (var selected in Selection.transforms)
-            {
-                //GLTFExportMenu.RecurseThroughChildren(selected, AllDynamics);
-            }
+            List<DynamicObject> AllDynamics = new List<DynamicObject>();            
             foreach (var selected in sceneObjects)
             {
                 RecurseThroughChildren(selected.transform, AllDynamics);
             }
 
+            //create directory and export each dynamic
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
-            //create directory
-
             foreach (var dynamic in AllDynamics)
             {
                 if (dynamic == null) { Debug.LogError("ExportSelectedObjectsPrefab trying to export null DynamicObject"); continue; }
                 if (string.IsNullOrEmpty(dynamic.MeshName)) { Debug.LogError(dynamic.gameObject.name + " Skipping export because of null/empty mesh name", dynamic.gameObject); continue; }
-
-                //TODO remove successfully exported count. not really useful
                 if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
 
                 foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
                 {
                     if (common.ToLower() == dynamic.MeshName.ToLower())
-                    {
-                        //don't export common meshes!
-                        continue;
-                    }
+                        continue; //don't export common meshes!
                 }
 
                 if (!dynamic.UseCustomMesh)
@@ -1071,15 +981,9 @@ namespace CognitiveVR
                 Quaternion originalRot = dynamic.transform.localRotation;
                 dynamic.transform.localRotation = Quaternion.identity;
 
-                //bake skin, terrain, canvas
-
-                //Debug.Log("path " + path + dynamic.MeshName + Path.DirectorySeparatorChar + "   mesh " + dynamic.gameObject.name);
-
                 Directory.CreateDirectory(path + dynamic.MeshName + Path.DirectorySeparatorChar);
 
                 List<BakeableMesh> temp = new List<BakeableMesh>();
-
-                //string path2 = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
                 BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
 
                 //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
@@ -1096,10 +1000,8 @@ namespace CognitiveVR
                     Debug.LogException(e);
                 }
                 dynamic.transform.localScale = startScale;
-
-                successfullyExportedCount++;
-
-
+                
+                //destroy bakeable meshes from non-standard renderers
                 for (int i = 0; i < temp.Count; i++)
                 {
                     if (temp[i].useOriginalscale)
@@ -1112,6 +1014,7 @@ namespace CognitiveVR
 
                 EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
 
+                successfullyExportedCount++;
                 if (!totalExportedMeshNames.Contains(dynamic.MeshName))
                     totalExportedMeshNames.Add(dynamic.MeshName);
                 if (!exportedMeshNames.Contains(dynamic.MeshName))
@@ -1123,17 +1026,19 @@ namespace CognitiveVR
                 dynamic.transform.localPosition = originalOffset;
                 dynamic.transform.localRotation = originalRot;
 
+                //queue resize texture
                 ResizeQueue.Enqueue(path + dynamic.MeshName + Path.DirectorySeparatorChar);
                 EditorApplication.update -= UpdateResize;
                 EditorApplication.update += UpdateResize;
             }
 
-            //destroy the temporary prefabs
+            //destroy the temporary prefabs (spawned from project)
             foreach (var v in temporarySpawnedPrefabs)
             {
                 GameObject.DestroyImmediate(v);
             }
 
+            //display results from export
             if (successfullyExportedCount == 0)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
@@ -1153,15 +1058,13 @@ namespace CognitiveVR
 
         #region Upload Dynamic Objects
 
-        static List<DynamicObjectForm> dynamicObjectForms = new List<DynamicObjectForm>();
+        static Queue<DynamicObjectForm> dynamicObjectForms = new Queue<DynamicObjectForm>();
         static string currentDynamicUploadName;
 
         /// <summary>
         /// returns true if successfully uploaded dynamics
         /// </summary>
-        /// <param name="ShowPopupWindow"></param>
-        /// <returns></returns>
-        public static bool UploadSelectedDynamicObjects(bool ShowPopupWindow = false)
+        public static bool UploadSelectedDynamicObjectMeshes(bool ShowPopupWindow = false)
         {
             List<string> dynamicMeshNames = new List<string>();
             foreach (var v in Selection.transforms)
@@ -1170,40 +1073,35 @@ namespace CognitiveVR
                 if (dyn == null) { continue; }
                 dynamicMeshNames.Add(dyn.MeshName);
             }
-
             if (dynamicMeshNames.Count == 0) { return false; }
-
             return UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
         }
 
         /// <summary>
         /// returns true if successfully started uploading dynamics
         /// </summary>
-        /// <param name="ShowPopupWindow"></param>
-        /// <returns></returns>
-        public static bool UploadAllDynamicObjects(bool ShowPopupWindow = false)
+        public static bool UploadAllDynamicObjectMeshes(bool ShowPopupWindow = false)
         {
             if (!Directory.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic"))
             {
-                Debug.Log("skip uploading dynamic objects, folder doesn't exist");
+                Debug.Log("Skip uploading dynamic objects, folder doesn't exist");
                 return false;
             }
-
             List<string> dynamicMeshNames = new List<string>();
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
             foreach (var v in subdirectories)
             {
                 var split = v.Split(Path.DirectorySeparatorChar);
-                //
                 dynamicMeshNames.Add(split[split.Length - 1]);
             }
-
-            //upload all stuff from exported files
             return UploadDynamicObjects(dynamicMeshNames, ShowPopupWindow);
         }
 
-        //search through files. if dynamics.name contains exported folder, upload
+        /// <summary>
+        /// search through files for list of dynamic object meshes. if dynamics.name contains exported folder, upload
+        /// can display popup warning. returns false if cancelled
+        /// </summary>
         static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
@@ -1220,29 +1118,28 @@ namespace CognitiveVR
                 return false;
             }
 
+            //cancel if active scene has not been uploaded
             string sceneid = settings.SceneId;
-
             if (string.IsNullOrEmpty(sceneid))
             {
                 EditorUtility.DisplayDialog("Dynamic Object Upload Failed", "Could not find the SceneId for \"" + settings.SceneName + "\". Are you sure you've exported and uploaded this scene to SceneExplorer?", "Ok");
                 return false;
             }
 
+            //get list of export full directory names
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
-
-            //
             List<string> exportDirectories = new List<string>();
             foreach (var v in subdirectories)
             {
                 var split = v.Split(Path.DirectorySeparatorChar);
-
                 if (dynamicMeshNames.Contains(split[split.Length - 1]))
                 {
                     exportDirectories.Add(v);
                 }
             }
 
+            //optional confirmation window
             if (ShowPopupWindow)
             {
                 int option = EditorUtility.DisplayDialogComplex("Upload Dynamic Objects", "Do you want to upload " + exportDirectories.Count + " Objects to \"" + settings.SceneName + "\" (" + settings.SceneId + " Version:" + settings.VersionNumber + ")?", "Ok", "Cancel", "Open Directory");
@@ -1255,12 +1152,13 @@ namespace CognitiveVR
                     System.Diagnostics.Process.Start("explorer.exe", path);
                     return false;
 #elif UNITY_EDITOR_OSX
-                System.Diagnostics.Process.Start("open", path);
-                return false;
+                    System.Diagnostics.Process.Start("open", path);
+                    return false;
 #endif
                 }
             }
-            string objectNames = "";
+
+            //for each dynamic object mesh directory, create a 'dynamic object form' and add it to a queue
             foreach (var subdir in exportDirectories)
             {
                 var filePaths = Directory.GetFiles(subdir);
@@ -1275,29 +1173,24 @@ namespace CognitiveVR
                     }
 
                     fileList += f + "\n";
-
                     var data = File.ReadAllBytes(f);
                     wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
                 }
 
                 var dirname = new DirectoryInfo(subdir).Name;
-
-                objectNames += dirname + "\n";
-
                 string uploadUrl = CognitiveStatics.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)
                 {
                     headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    //headers.Add("Content-Type", "multipart/form-data; boundary=\""+)
                     foreach (var v in wwwForm.headers)
                     {
                         headers[v.Key] = v.Value;
                     }
                 }
 
-                dynamicObjectForms.Add(new DynamicObjectForm(uploadUrl, wwwForm, dirname, headers)); //AUTH
+                dynamicObjectForms.Enqueue(new DynamicObjectForm(uploadUrl, wwwForm, dirname, headers)); //AUTH
             }
 
             if (dynamicObjectForms.Count > 0)
@@ -1309,6 +1202,9 @@ namespace CognitiveVR
             return true;
         }
 
+        /// <summary>
+        /// holds info about what to post to scene. mesh, url, headers
+        /// </summary>
         class DynamicObjectForm
         {
             public string Url;
@@ -1329,6 +1225,9 @@ namespace CognitiveVR
         static int DynamicUploadSuccess;
 
         static UnityWebRequest dynamicUploadWWW;
+        /// <summary>
+        /// attached to editor update to go through dynamic object form queue
+        /// </summary>
         static void UpdateUploadDynamics()
         {
             if (dynamicUploadWWW == null)
@@ -1336,7 +1235,6 @@ namespace CognitiveVR
                 //get the next dynamic object to upload from forms
                 if (dynamicObjectForms.Count == 0)
                 {
-                    //DONE!
                     Debug.Log("Dynamic Object uploads complete. " + DynamicUploadSuccess + "/" + DynamicUploadTotal + " succeeded");
                     EditorApplication.update -= UpdateUploadDynamics;
                     EditorUtility.ClearProgressBar();
@@ -1345,19 +1243,18 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    dynamicUploadWWW = UnityWebRequest.Post(dynamicObjectForms[0].Url, dynamicObjectForms[0].Form);
-                    foreach (var v in dynamicObjectForms[0].Headers)
+                    var form = dynamicObjectForms.Dequeue();
+                    dynamicUploadWWW = UnityWebRequest.Post(form.Url, form.Form);
+                    foreach (var v in form.Headers)
                         dynamicUploadWWW.SetRequestHeader(v.Key, v.Value);
                     dynamicUploadWWW.Send();
-                    currentDynamicUploadName = dynamicObjectForms[0].Name;
-                    dynamicObjectForms.RemoveAt(0);
+                    currentDynamicUploadName = form.Name;
                 }
             }
 
             EditorUtility.DisplayProgressBar("Upload Dynamic Object", currentDynamicUploadName, dynamicUploadWWW.uploadProgress);
 
             if (!dynamicUploadWWW.isDone) { return; }
-
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
             {
                 Debug.LogError(dynamicUploadWWW.responseCode + " " + dynamicUploadWWW.error);
@@ -1366,9 +1263,7 @@ namespace CognitiveVR
             {
                 DynamicUploadSuccess++;
             }
-
             Debug.Log("Finished uploading Dynamic Object mesh: " + currentDynamicUploadName);
-
             dynamicUploadWWW = null;
         }
         #endregion

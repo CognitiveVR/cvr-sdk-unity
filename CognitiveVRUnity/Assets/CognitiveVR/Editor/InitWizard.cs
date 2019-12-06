@@ -1275,7 +1275,7 @@ public class InitWizard : EditorWindow
             ExportUtility.ExportGLTFScene();
 
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            string objPath = EditorCore.GetDirectory(fullName);
+            string objPath = EditorCore.GetSubDirectoryPath(fullName);
             string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
@@ -1512,7 +1512,7 @@ public class InitWizard : EditorWindow
 
                 System.Action completedmanifestupload = delegate ()
                 {
-                    ExportUtility.UploadAllDynamicObjects(true);
+                    ExportUtility.UploadAllDynamicObjectMeshes(true);
                     currentPage++;
                 };
 

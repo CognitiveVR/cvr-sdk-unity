@@ -205,7 +205,7 @@ namespace CognitiveVR
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
                     if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                     {
-                        ExportUtility.UploadSelectedDynamicObjects(true);
+                        ExportUtility.UploadSelectedDynamicObjectMeshes(true);
                     }
                     EditorGUI.EndDisabledGroup();
 

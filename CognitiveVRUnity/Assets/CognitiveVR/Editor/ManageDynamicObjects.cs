@@ -172,7 +172,7 @@ public class ManageDynamicObjects : EditorWindow
                     {
                         var manifest = new AggregationManifest();
                         AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjects(true));
+                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
                     });
                 }
             });
@@ -199,7 +199,7 @@ public class ManageDynamicObjects : EditorWindow
                     {
                         var manifest = new AggregationManifest();
                         AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjects(true));
+                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
                     });
                 }
             });
