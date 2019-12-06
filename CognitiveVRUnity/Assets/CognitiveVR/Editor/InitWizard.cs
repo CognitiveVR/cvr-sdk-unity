@@ -24,15 +24,13 @@ public class InitWizard : EditorWindow
         window.maxSize = new Vector2(500, 550);
         window.Show();
 
-        window.LoadKeys(); 
-        //window.selectedExportQuality = ExportSettings.HighSettings;
-
+        window.LoadKeys();
         window.GetSelectedSDKs();
 
         ExportUtility.ClearUploadSceneSettings();
     }
 
-    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", /*"upload",*/ "uploadsummary", "done" };
+    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
     public int currentPage;
 
     private void OnGUI()
@@ -52,7 +50,7 @@ public class InitWizard : EditorWindow
             case "setupcontrollers": ControllerUpdate(); break;
             case "listdynamics": ListDynamicUpdate(); break;
             case "uploadscene": UploadSceneUpdate(); break;
-            case "upload": UploadUpdate(); break;
+            //case "upload": UploadUpdate(); break;
             case "uploadsummary": UploadSummaryUpdate(); break;
             case "done": DoneUpdate(); break;
         }
@@ -1146,8 +1144,7 @@ public class InitWizard : EditorWindow
         else
         {
             GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
-        }
-        
+        }        
     }
 
 #endregion
@@ -1294,46 +1291,6 @@ public class InitWizard : EditorWindow
     bool delayUnderstandButton = true;
     double understandRevealTime;
 
-    void UploadUpdate()
-    {
-        if (delayUnderstandButton)
-        {
-            delayUnderstandButton = false;
-            understandRevealTime = EditorApplication.timeSinceStartup + 3;
-        }
-
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
-        {
-            //upload new version
-            GUI.Label(steptitlerect, "STEP 8 - UPLOAD", "steptitle");
-
-            Color scene1color = Color.HSVToRGB(0.55f, 0.5f, 1);
-            Color scene2color = Color.HSVToRGB(0.55f, 1f, 1);
-
-            GUI.color = scene1color;
-            GUI.Box(new Rect(100,40, 125, 125), EditorCore.SceneBackground, "image_centered");
-            GUI.color = Color.white;
-
-            GUI.Box(new Rect(100, 40, 125, 125), EditorCore.ObjectsBackground, "image_centered");
-
-            GUI.color = scene2color;
-            GUI.Box(new Rect(250, 40, 125, 125), EditorCore.SceneBackground, "image_centered");
-            GUI.color = Color.white;
-
-            GUI.Label(new Rect(30, 180, 440, 440), "In the final step, we will upload version <color=#62B4F3FF>" + (settings.VersionNumber+1)+ " </color>of the scene to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.\n\n\n" +
-                "This will archive the previous version <color=#62B4F3FF>" + (settings.VersionNumber) + " </color> of this scene. You will be prompted to copy the Dynamic Objects to the new version.\n\n\n" +
-                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
-        }
-        else
-        {
-            GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
-            GUI.Label(new Rect(30, 100, 440, 440), "In the final step, we will complete the upload process to our <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color> servers.\n\n\n" +
-                //"After your Scene is uploaded, if you make changes to your scene, you may want to open this window again and upload a new version of the scene.\n\n\n" +
-                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
-        }
-    }
-
     void UploadSummaryUpdate()
     {
         if (delayUnderstandButton)
@@ -1346,10 +1303,9 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
         var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+        if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
         {
-            //has been uploaded. this is a new version
-            int dynamicObjectCount = GetDynamicObjects.Length;
+            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
             string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (string.IsNullOrEmpty(scenename))
             {
@@ -1361,11 +1317,11 @@ public class InitWizard : EditorWindow
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
             "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
+            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
         }
         else
         {
-            int dynamicObjectCount = GetDynamicObjects.Length;
+            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count; ;
             string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (string.IsNullOrEmpty(scenename))
             {
@@ -1376,7 +1332,7 @@ public class InitWizard : EditorWindow
             if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
             
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
+            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
@@ -1384,10 +1340,7 @@ public class InitWizard : EditorWindow
         var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
             GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-
-
-            //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
-        }
+    }
 
     void DoneUpdate()
     {
