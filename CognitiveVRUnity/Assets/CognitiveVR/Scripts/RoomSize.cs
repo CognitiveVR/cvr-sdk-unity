@@ -64,7 +64,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_VARJO || CVR_STEAMVR || CVR_STEAMVR || CVR_OCULUS
+#if CVR_VARJO || CVR_STEAMVR || CVR_STEAMVR || CVR_OCULUS || CVR_STEAMVR2
             return false;
 #else
             return true;
