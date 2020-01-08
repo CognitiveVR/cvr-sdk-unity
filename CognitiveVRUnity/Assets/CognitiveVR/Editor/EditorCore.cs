@@ -36,6 +36,41 @@ namespace CognitiveVR
             //check sdk versions
             CheckForUpdates();
 
+            string savedSDKVersion = EditorPrefs.GetString("cognitive_sdk_version", "");
+            if (string.IsNullOrEmpty(savedSDKVersion) || Core.SDK_VERSION != savedSDKVersion)
+            {
+                Debug.Log("upgrade cognitive3d sdk to " + Core.SDK_VERSION);
+                EditorPrefs.SetString("cognitive_sdk_version", Core.SDK_VERSION);
+
+                bool needToUpdateDatabase = false;
+                //remove CognitiveVR_SceneExportWindow.cs
+                string[] exportWindowsGUIDs = AssetDatabase.FindAssets("cognitivevr_sceneexportwindow");
+                foreach (string s in exportWindowsGUIDs)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(s);
+                    AssetDatabase.DeleteAsset(path);
+                    needToUpdateDatabase = true;
+                }
+
+                //remove SaccadeDrawer.cs (and check that it was in cognitive folder)
+                string[] saccadeDrawerGUIDs = AssetDatabase.FindAssets("saccadedrawer");
+                foreach(string s in saccadeDrawerGUIDs)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(s);
+                    if (path.Contains("cognitive"))
+                    {
+                        AssetDatabase.DeleteAsset(path);
+                        needToUpdateDatabase = true;
+                    }
+                }
+
+                if (needToUpdateDatabase)
+                {
+                    AssetDatabase.Refresh();
+                }
+
+            }
+
             if (!EditorPrefs.HasKey("cognitive_init_popup"))
             {
                 InitWizard.Init();
@@ -1255,7 +1290,11 @@ namespace CognitiveVR
                     largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
                 }
 
-            if (largestBounds.size.magnitude <= 0)
+                //IMPROVEMENT include target's rotation
+                position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
+                rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
+            }
+            else //canvas dynamic objects
             {
                 position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * 3 / 4);
                 rotation = Quaternion.LookRotation(target.transform.position - position, Vector3.up);
