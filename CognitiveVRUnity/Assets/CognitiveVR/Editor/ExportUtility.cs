@@ -443,7 +443,7 @@ namespace CognitiveVR
                 bm.tempGo.transform.localPosition = Vector3.zero;
 
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = skinnedMeshRenderer.sharedMaterial;
+                bm.meshRenderer.sharedMaterials = skinnedMeshRenderer.sharedMaterials;
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 var m = new Mesh();
                 m.name = skinnedMeshRenderer.sharedMesh.name;
