@@ -1241,21 +1241,25 @@ namespace CognitiveVR
         /// </summary>
         static void CalcCameraTransform(GameObject target, out Vector3 position, out Quaternion rotation)
         {
-            Bounds largestBounds = new Bounds();
-            //TODO canvas dynamic objects
-            foreach (var renderer in target.GetComponentsInChildren<Renderer>())
-                largestBounds.Encapsulate(renderer.bounds);
+            var renderers = target.GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                Bounds largestBounds = renderers[0].bounds;
+                foreach (var renderer in renderers)
+                {
+                    largestBounds.Encapsulate(renderer.bounds);
+                }
+
+                if (largestBounds.size.magnitude <= 0)
+                {
+                    largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
+                }
 
             if (largestBounds.size.magnitude <= 0)
             {
-                //might happen if exporting temporary canvas meshes
-                //(since they don't have a renderer and the temp mesh is destroyed before taking screenshot so it doesn't cause z-fighting)
-                largestBounds = new Bounds(target.transform.position, Vector3.one * 5);
+                position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * 3 / 4);
+                rotation = Quaternion.LookRotation(target.transform.position - position, Vector3.up);
             }
-
-            //include target's rotation
-            position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
-            rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
         }
         #endregion
 
