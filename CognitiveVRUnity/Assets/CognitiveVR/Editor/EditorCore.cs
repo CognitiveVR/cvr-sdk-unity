@@ -800,6 +800,22 @@ namespace CognitiveVR
             return SceneExportDirExists && Directory.GetFiles(dynamicExportDirectory).Length > 0;
         }
 
+        internal static bool HasDynamicObjectThumbnail(string meshname)
+        {
+            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
+            var SceneExportDirExists = Directory.Exists(dynamicExportDirectory);
+
+            if (!SceneExportDirExists) return false;
+
+            var files = Directory.GetFiles(dynamicExportDirectory);
+            for (int i = 0;i<files.Length; i++)
+            {
+                if (files[i].EndsWith("cvr_object_thumbnail.png"))
+                { return true; }
+            }
+            return false;
+        }
+
         public static bool CreateTargetFolder(string fullName)
         {
             try
@@ -837,9 +853,8 @@ namespace CognitiveVR
         public static bool HasSceneExportFiles(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
         {
             if (currentSceneSettings == null) { return false; }
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar +  + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
-
             return SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0;
         }
 

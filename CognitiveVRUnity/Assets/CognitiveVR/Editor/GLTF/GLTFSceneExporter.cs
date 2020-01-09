@@ -413,7 +413,6 @@ namespace UnityGLTF
             {
                 filenamePath = outputPath + "/" + texture.name;
             }
-            Debug.Log("export image " + filenamePath);
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
             return filenamePath + ".png";

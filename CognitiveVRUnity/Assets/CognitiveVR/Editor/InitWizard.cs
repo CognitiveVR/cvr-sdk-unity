@@ -1444,7 +1444,7 @@ public class InitWizard : EditorWindow
                 buttonrect = new Rect(350, 510, 140, 30);
                 break;
             case "uploadscene":
-                appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+                    appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
 
                     if (appearDisabled)
                     {

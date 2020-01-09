@@ -185,7 +185,7 @@ namespace CognitiveVR
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
-                        ExportUtility.ExportSelectedObjectsPrefab();
+                        ExportUtility.ExportAllSelectedDynamicObjects();
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));

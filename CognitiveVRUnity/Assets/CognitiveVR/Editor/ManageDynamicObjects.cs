@@ -166,15 +166,28 @@ public class ManageDynamicObjects : EditorWindow
         {
             EditorCore.RefreshSceneVersion(() =>
             {
-                if (ExportUtility.ExportSelectedObjectsPrefab())
+                foreach(var go in Selection.gameObjects)
                 {
-                    EditorCore.RefreshSceneVersion(delegate ()
+                    var dyn = go.GetComponent<DynamicObject>();
+                    if (dyn == null) { continue; }
+                    //check if export files exist
+                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        var manifest = new AggregationManifest();
-                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
-                    });
+                        ExportUtility.ExportDynamicObject(dyn);
+                    }
+                    //check if thumbnail exists
+                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
+                    {
+                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                    }
                 }
+
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    var manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                });
             });
         }
         EditorGUI.EndDisabledGroup();
@@ -192,16 +205,29 @@ public class ManageDynamicObjects : EditorWindow
                 }
 
                 Selection.objects = gos.ToArray();
-                
-                if (ExportUtility.ExportSelectedObjectsPrefab())
+
+                foreach (var go in Selection.gameObjects)
                 {
-                    EditorCore.RefreshSceneVersion(delegate ()
+                    var dyn = go.GetComponent<DynamicObject>();
+                    if (dyn == null) { continue; }
+                    //check if export files exist
+                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        var manifest = new AggregationManifest();
-                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
-                    });
+                        ExportUtility.ExportDynamicObject(dyn);
+                    }
+                    //check if thumbnail exists
+                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
+                    {
+                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                    }
                 }
+
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    var manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                });
             });
         }
         EditorGUI.EndDisabledGroup();

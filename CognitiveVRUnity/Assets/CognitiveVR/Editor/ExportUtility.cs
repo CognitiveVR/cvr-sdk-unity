@@ -886,7 +886,8 @@ namespace CognitiveVR
                 gos.Add(v.gameObject);
 
             Selection.objects = gos.ToArray();
-            return ExportSelectedObjectsPrefab();
+
+            return ExportAllSelectedDynamicObjects();
         }
 
         /// <summary>
@@ -906,11 +907,103 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// export selected gameobjects, temporarily spawn them in the scene if they are prefabs
+        /// export a gameobject, temporarily spawn them in the scene if they are prefabs selected in the project window
         /// </summary>
-        /// <returns>true if exported at least 1 mesh</returns>
-        public static bool ExportSelectedObjectsPrefab()
+        /// <returns>true if exported successfully</returns>
+        public static bool ExportDynamicObject(DynamicObject dynamicObject, bool displayPopup = false)
         {
+            //setup
+            if (dynamicObject == null) { return false; }
+            GameObject prefabInScene = null;
+            if (!dynamicObject.gameObject.scene.IsValid())
+            {
+                prefabInScene = GameObject.Instantiate(dynamicObject.gameObject);
+                dynamicObject = prefabInScene.GetComponent<DynamicObject>();
+            }
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+
+
+            //export. this should skip nested dynamics
+            if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); return false; }
+
+            foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+            {
+                if (common.ToLower() == dynamicObject.MeshName.ToLower())
+                    continue; //don't export common meshes!
+            }
+
+            if (!dynamicObject.UseCustomMesh)
+            {
+                //skip exporting a mesh with no name
+                return false;
+            }
+
+            Vector3 originalOffset = dynamicObject.transform.localPosition;
+            dynamicObject.transform.localPosition = Vector3.zero;
+            Quaternion originalRot = dynamicObject.transform.localRotation;
+            dynamicObject.transform.localRotation = Quaternion.identity;
+
+            Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
+
+            List<BakeableMesh> temp = new List<BakeableMesh>();
+            BakeNonstandardRenderers(dynamicObject, temp, path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
+
+            //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
+            Vector3 startScale = dynamicObject.transform.localScale;
+            dynamicObject.transform.localScale = dynamicObject.transform.lossyScale;
+            try
+            {
+                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamicObject.transform }, RetrieveTexturePath, dynamicObject);
+                exporter.SetNonStandardOverrides(temp);
+                exporter.SaveGLTFandBin(path + dynamicObject.MeshName + Path.DirectorySeparatorChar, dynamicObject.MeshName);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            dynamicObject.transform.localScale = startScale;
+
+            //destroy bakeable meshes from non-standard renderers
+            for (int i = 0; i < temp.Count; i++)
+            {
+                if (temp[i].useOriginalscale)
+                    temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
+                UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
+                if (temp[i].tempGo != null)
+                    UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
+            }
+
+            EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
+
+            dynamicObject.transform.localPosition = originalOffset;
+            dynamicObject.transform.localRotation = originalRot;
+
+            //queue resize texture
+            ResizeQueue.Enqueue(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
+            EditorApplication.update -= UpdateResize;
+            EditorApplication.update += UpdateResize;
+
+
+            //clean up
+            if (prefabInScene != null)
+            {
+                GameObject.DestroyImmediate(prefabInScene);
+            }
+            if (displayPopup)
+            {
+                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// small wrapper to pass all selected gameobjects into ExportDynamicObject
+        /// </summary>
+        /// <returns></returns>
+        public static bool ExportAllSelectedDynamicObjects()
+        {
+            //get all dynamics in selection
             List<Transform> entireSelection = new List<Transform>();
             entireSelection.AddRange(Selection.GetTransforms(SelectionMode.Editable));
             if (entireSelection.Count == 0)
@@ -919,11 +1012,8 @@ namespace CognitiveVR
                 return false;
             }
 
-            Debug.Log("Starting export of " + entireSelection.Count + " Dynamic Objects");
-
             List<Transform> sceneObjects = new List<Transform>();
             sceneObjects.AddRange(Selection.GetTransforms(SelectionMode.Editable | SelectionMode.ExcludePrefab));
-
             List<Transform> prefabsToSpawn = new List<Transform>();
 
             //add prefab objects to a list
@@ -944,114 +1034,25 @@ namespace CognitiveVR
                 sceneObjects.Add(newPrefab.transform);
             }
 
-            //export all the objects
-            int successfullyExportedCount = 0;
-            List<string> exportedMeshNames = new List<string>();
-            List<string> totalExportedMeshNames = new List<string>();
-
             //recursively get all dynamic objects to export
-            List<DynamicObject> AllDynamics = new List<DynamicObject>();            
+            List<DynamicObject> AllDynamics = new List<DynamicObject>();
             foreach (var selected in sceneObjects)
             {
                 RecurseThroughChildren(selected.transform, AllDynamics);
             }
 
-            //create directory and export each dynamic
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+            //export each
             foreach (var dynamic in AllDynamics)
             {
-                if (dynamic == null) { Debug.LogError("ExportSelectedObjectsPrefab trying to export null DynamicObject"); continue; }
-                if (string.IsNullOrEmpty(dynamic.MeshName)) { Debug.LogError(dynamic.gameObject.name + " Skipping export because of null/empty mesh name", dynamic.gameObject); continue; }
-                if (exportedMeshNames.Contains(dynamic.MeshName)) { successfullyExportedCount++; continue; } //skip exporting same mesh
-
-                foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
-                {
-                    if (common.ToLower() == dynamic.MeshName.ToLower())
-                        continue; //don't export common meshes!
-                }
-
-                if (!dynamic.UseCustomMesh)
-                {
-                    //skip exporting a mesh with no name
-                    continue;
-                }
-
-                Vector3 originalOffset = dynamic.transform.localPosition;
-                dynamic.transform.localPosition = Vector3.zero;
-                Quaternion originalRot = dynamic.transform.localRotation;
-                dynamic.transform.localRotation = Quaternion.identity;
-
-                Directory.CreateDirectory(path + dynamic.MeshName + Path.DirectorySeparatorChar);
-
-                List<BakeableMesh> temp = new List<BakeableMesh>();
-                BakeNonstandardRenderers(dynamic, temp, path + dynamic.MeshName + Path.DirectorySeparatorChar);
-
-                //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
-                Vector3 startScale = dynamic.transform.localScale;
-                dynamic.transform.localScale = dynamic.transform.lossyScale;
-                try
-                {
-                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamic.transform }, RetrieveTexturePath, dynamic);
-                    exporter.SetNonStandardOverrides(temp);
-                    exporter.SaveGLTFandBin(path + dynamic.MeshName + Path.DirectorySeparatorChar, dynamic.MeshName);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-                dynamic.transform.localScale = startScale;
-                
-                //destroy bakeable meshes from non-standard renderers
-                for (int i = 0; i < temp.Count; i++)
-                {
-                    if (temp[i].useOriginalscale)
-                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
-                    UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
-                    UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
-                    if (temp[i].tempGo != null)
-                        UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
-                }
-
-                EditorCore.SaveDynamicThumbnailAutomatic(dynamic.gameObject);
-
-                successfullyExportedCount++;
-                if (!totalExportedMeshNames.Contains(dynamic.MeshName))
-                    totalExportedMeshNames.Add(dynamic.MeshName);
-                if (!exportedMeshNames.Contains(dynamic.MeshName))
-                {
-                    exportedMeshNames.Add(dynamic.MeshName);
-                }
-
-                //destroy baked skin, terrain, canvases
-                dynamic.transform.localPosition = originalOffset;
-                dynamic.transform.localRotation = originalRot;
-
-                //queue resize texture
-                ResizeQueue.Enqueue(path + dynamic.MeshName + Path.DirectorySeparatorChar);
-                EditorApplication.update -= UpdateResize;
-                EditorApplication.update += UpdateResize;
+                ExportDynamicObject(dynamic);
             }
 
-            //destroy the temporary prefabs (spawned from project)
+            //remove spawned prefabs
             foreach (var v in temporarySpawnedPrefabs)
             {
                 GameObject.DestroyImmediate(v);
             }
 
-            //display results from export
-            if (successfullyExportedCount == 0)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "No Dynamic Objects successfully exported.\n\nDo you have Mesh Renderers, Skinned Mesh Renderers or Canvas components attached or as children?", "Ok");
-                return false;
-            }
-            if (totalExportedMeshNames.Count == 1)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
-            }
-            else
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "From selected Dynamic Objects , found " + totalExportedMeshNames.Count + " unique mesh names", "Ok");
-            }
             return true;
         }
         #endregion
