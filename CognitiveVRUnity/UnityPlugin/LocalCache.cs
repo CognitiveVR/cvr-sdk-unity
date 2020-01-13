@@ -8,7 +8,7 @@ namespace CognitiveVR
     public class LocalCache
     {
         static int EOLByteCount = 2;
-        static string EnvironmentEOL;
+        internal static string EnvironmentEOL;
 
         //set on constructor. can become disabled if there are any file errors or if preferences have local storage disabled
         internal static bool LocalStorageActive = false;

@@ -214,6 +214,8 @@ namespace CognitiveVR
                 return;
             }
 
+            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
+
 #if CVR_STEAMVR
             SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
             PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;

@@ -44,6 +44,7 @@ namespace CognitiveVR
         /// <param name="environmentEOL"></param>
         public static void InitLocalStorage(string environmentEOL)
         {
+            if (lc == null || LocalCache.EnvironmentEOL != environmentEOL)
             lc = new LocalCache(Sender, environmentEOL);
         }
 
@@ -163,9 +164,10 @@ namespace CognitiveVR
         {
             if (responsecode == 200)
             {
+                if (lc == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
                 if (lc.CanReadFromCache())
                 {
-                    UploadAllLocalData(() => Debug.Log("automatic complete"), () => Debug.Log("automatic fail"));
+                    UploadAllLocalData(() => Util.logDebug("Network Post Data Local Cache Complete"), () => Util.logDebug("Network Post Data Local Cache Automatic Failure"));
                 }
             }
             else
@@ -181,6 +183,8 @@ namespace CognitiveVR
                     CacheRequest.Dispose();
                     CacheRequest = null;
                 }
+
+                if (lc == null) { Util.logError("Network Post Data !200 LocalCache null"); return; }
 
                 if (lc.CanAppend(url, content))
                 {
@@ -367,7 +371,8 @@ namespace CognitiveVR
             {
                 EndSession();
             }
-            lc.OnDestroy();
+            if (lc != null)
+                lc.OnDestroy();
             lc = null;
             isuploadingfromcache = false;
         }
