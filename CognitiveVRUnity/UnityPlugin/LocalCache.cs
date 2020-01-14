@@ -51,6 +51,8 @@ namespace CognitiveVR
                 sr = new StreamReader(fs);
                 sw = new StreamWriter(fs);
                 //read all line sizes from data
+                //Debug.Log("local cache initialize" + sr.Peek());
+
                 linesizes = new Stack<int>();
                 while (sr.Peek() != -1)
                 {
@@ -199,34 +201,40 @@ namespace CognitiveVR
         //network running localcache coroutine to pull data out of file
         internal void GetCachedDataPoint(out string url, out string content)
         {
+            url = "";
+            content = "";
+
+            //pop the line sizes off the stack to figure out how many characters to pull from the local data cache
             int contentsize = linesizes.Pop();
             int urlsize = linesizes.Pop();
-
             int lastrequestsize = contentsize + urlsize + EOLByteCount + EOLByteCount;
 
+            //put the line sizes back. if !200 response, this will still have the response
             linesizes.Push(urlsize);
             linesizes.Push(contentsize);
 
-            fs.Seek(-lastrequestsize, SeekOrigin.End);
-
+            //start reading characters from data
+            long newSeekPosition = fs.Seek(-lastrequestsize, SeekOrigin.End);
             long originallength = fs.Length;
-
             successfulReponseNewCacheSize = (int)(originallength - lastrequestsize);
 
-            url = "";
-            content = "";
-            
-            char[] buffer = new char[urlsize];
-            while (sr.Peek() != -1)
-            {
-                sr.ReadBlock(buffer, 0, urlsize);
+            //Debug.Log("fs.Length " + fs.Length + " last request size " + lastrequestsize + " new position " + (fs.Length - lastrequestsize) + " new seek position " + newSeekPosition);
+            //Debug.Log("content size " + contentsize);
+            //Debug.Log("sr " + sr.Peek());
+            //Debug.Log("sr read to end " + sr.read());
+            //Debug.Log("sr read to end " + sr.ReadToEnd());
 
+            //while (sr.Peek() != -1)
+            {
+                //read all the characters for the url
+                char[] buffer = new char[urlsize];
+                sr.ReadBlock(buffer, 0, urlsize);
                 url = new string(buffer);
                 //line return
                 for (int eolc = 0; eolc < EOLByteCount; eolc++)
                     sr.Read();
 
-
+                //read all the characters for the body
                 buffer = new char[contentsize];
                 sr.ReadBlock(buffer, 0, contentsize);
                 content = new string(buffer);
