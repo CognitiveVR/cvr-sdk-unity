@@ -269,6 +269,12 @@ namespace CognitiveVR
         }
 
         static FileInfo localDataInfo;
+
+        /// <summary>
+        /// returns 0.0-1.0 for the percent the local cache is full
+        /// </summary>
+        /// <param name="mute">optionally log the filesize and percent to the console</param>
+        /// <returns></returns>
         public static float GetLocalStorage(bool mute = false)
         {
             float percent = 0;
@@ -301,6 +307,9 @@ namespace CognitiveVR
             return percent;
         }
 
+        /// <summary>
+        /// opens the cached local data at the persistent data path
+        /// </summary>
         public static void OpenLocalStorageDirectory()
         {
             Application.OpenURL(Application.persistentDataPath + "/c3dlocal/");

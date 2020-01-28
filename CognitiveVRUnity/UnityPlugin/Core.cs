@@ -13,6 +13,10 @@ namespace CognitiveVR
         /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
+
+        /// <summary>
+        /// call this to send all outstanding data to the dashboard
+        /// </summary>
         public static void InvokeSendDataEvent() { if (OnSendData != null) { OnSendData(); } }
 
         public delegate void CoreInitHandler(Error initError);
