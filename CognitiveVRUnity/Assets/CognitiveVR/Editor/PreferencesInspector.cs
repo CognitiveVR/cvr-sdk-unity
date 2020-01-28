@@ -267,17 +267,15 @@ namespace CognitiveVR
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                CognitiveVR_SceneExportWindow.ExportGLTFScene();
+                ExportUtility.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
+                string objPath = EditorCore.GetSubDirectoryPath(fullName);
                 string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                 string debugContent = DebugInformationWindow.GetDebugContents();
                 System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
-
-                //CognitiveVR.CognitiveVR_SceneExportWindow.ExportScene(true, EditorCore.ExportSettings.ExportStaticOnly, EditorCore.ExportSettings.MinExportGeoSize, EditorCore.ExportSettings.TextureQuality, EditorCore.DeveloperKey, EditorCore.ExportSettings.DiffuseTextureName);
                 CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 UnityEditor.AssetDatabase.SaveAssets();
             }
@@ -289,7 +287,7 @@ namespace CognitiveVR
             {
                 System.Action completedmanifestupload = delegate ()
                 {
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+                    ExportUtility.UploadAllDynamicObjectMeshes(true);
                 };
 
                 System.Action completedRefreshSceneVersion2 = delegate ()
@@ -313,7 +311,7 @@ namespace CognitiveVR
                         //new scene
                         if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to SceneExplorer?", "Ok", "Cancel"))
                         {
-                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
                         }
                     }
                     else
@@ -321,7 +319,7 @@ namespace CognitiveVR
                         //new version
                         if (EditorUtility.DisplayDialog("Upload New Version","Upload a new version of this existing scene? Will archive previous version","Ok","Cancel"))
                         {
-                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
                         }
                     }
                 };
@@ -361,7 +359,7 @@ namespace CognitiveVR
             {
                 if (GUILayout.Button(ButtonContent))
                 {
-                    EditorCore.UploadScreenshot();
+                    EditorCore.UploadCustomScreenshot();
                 }
             }
             EditorGUI.EndDisabledGroup();

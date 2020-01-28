@@ -607,6 +607,9 @@ namespace CognitiveVR
                 Vector3 scale;
                 Quaternion rot;
 
+                if (ActiveDynamicObjectsArray[index].Transform == null)
+                    ActiveDynamicObjectsArray[index].remove = true;
+
                 if (ActiveDynamicObjectsArray[index].remove)
                 {
                     pos = ActiveDynamicObjectsArray[index].LastPosition;

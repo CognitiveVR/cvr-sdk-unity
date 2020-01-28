@@ -24,15 +24,13 @@ public class InitWizard : EditorWindow
         window.maxSize = new Vector2(500, 550);
         window.Show();
 
-        window.LoadKeys(); 
-        //window.selectedExportQuality = ExportSettings.HighSettings;
-
+        window.LoadKeys();
         window.GetSelectedSDKs();
 
-        CognitiveVR_SceneExportWindow.ClearUploadSceneSettings();
+        ExportUtility.ClearUploadSceneSettings();
     }
 
-    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", /*"upload",*/ "uploadsummary", "done" };
+    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
     public int currentPage;
 
     private void OnGUI()
@@ -52,7 +50,7 @@ public class InitWizard : EditorWindow
             case "setupcontrollers": ControllerUpdate(); break;
             case "listdynamics": ListDynamicUpdate(); break;
             case "uploadscene": UploadSceneUpdate(); break;
-            case "upload": UploadUpdate(); break;
+            //case "upload": UploadUpdate(); break;
             case "uploadsummary": UploadSummaryUpdate(); break;
             case "done": DoneUpdate(); break;
         }
@@ -1079,10 +1077,8 @@ public class InitWizard : EditorWindow
         else if (delayDisplayUploading == 0)
         {
             GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
-            //CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
             Selection.objects = GameObject.FindObjectsOfType<GameObject>();
-            CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene();
-            //GLTFExportMenu.ExportSelected();
+            ExportUtility.ExportAllDynamicsInScene();
             delayDisplayUploading--;
             EditorCore.ExportedDynamicObjects = null; //force refresh
         }
@@ -1148,35 +1144,14 @@ public class InitWizard : EditorWindow
         else
         {
             GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
-        }
-        
+        }        
     }
 
 #endregion
 
-    //int textureResolutionSettings = 1; //1 full resolution, 2 is half resolution, 4 is quarter res
-    //int qualityindex = 2; //0 low, 1 normal, 2 maximum
-    //ExportSettings selectedExportQuality;
-
-    Texture2D halfRes;
-    Texture2D quarterRes;
-
     void UploadSceneUpdate()
     {
-        if (halfRes == null)
-        {
-            halfRes = CognitiveVR_SceneExportWindow.RescaleForExport(EditorCore.SceneBackground, 128, 90);
-            halfRes = CognitiveVR_SceneExportWindow.RescaleForExport(halfRes, 256, 180);
-            halfRes.Apply();
-
-            quarterRes = CognitiveVR_SceneExportWindow.RescaleForExport(EditorCore.SceneBackground, 64, 45);
-            quarterRes = CognitiveVR_SceneExportWindow.RescaleForExport(quarterRes, 256, 180);
-            quarterRes.Apply();
-        }
         GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
-
-
-        //GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported and uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.", "boldlabel");
         GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
 
         GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
@@ -1197,13 +1172,12 @@ public class InitWizard : EditorWindow
         }
         else
         {
-            GUI.Box(new Rect(100, 70, 300, 300), quarterRes, "image_centered");
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
         }
 
         if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 2;
-            //selectedExportQuality = ExportSettings.DefaultSettings;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 2)
         {
@@ -1211,13 +1185,12 @@ public class InitWizard : EditorWindow
         }
         else
         {
-            GUI.Box(new Rect(100, 70, 300, 300), halfRes, "image_centered");
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
         }
 
         if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution","Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 1;
-            //selectedExportQuality = ExportSettings.HighSettings;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 1)
         {
@@ -1228,9 +1201,29 @@ public class InitWizard : EditorWindow
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
         }
         
-        //GUI.Label(new Rect(255, 465, 215, 30), "", "button_blueoutline"); //full
-        //GUI.Label(new Rect(367, 465, 103, 30), "", "button_blueoutline"); //partial
-        if (GUI.Button(new Rect(260, 460, 220, 40), "Augmented Reality?  Skip Scene Export", "miniheader"))
+        if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
+        {
+            float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
+            string displayString = "";
+            if (sceneSize < 1)
+            {
+                displayString = "Exported File Size: <1 MB";
+            }
+            else if (sceneSize > 500)
+            {
+                displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB. This scene will take a while to upload and view</color>";
+            }
+            else
+            {
+                displayString = "Exported File Size: "+string.Format("{0:0}", sceneSize)+" MB";
+            }
+            if (GUI.Button(new Rect(0, 395, 500, 35), displayString, "miniheadercenter"))
+            {
+                EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
+            }
+        }
+
+        if (GUI.Button(new Rect(0, 420, 500, 35), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
         {
             if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
             {
@@ -1249,7 +1242,7 @@ public class InitWizard : EditorWindow
                     return;//cancel from 'do you want to save' popup
                 }
             }
-            CognitiveVR_SceneExportWindow.ExportSceneAR();
+            ExportUtility.ExportSceneAR();
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorUtility.SetDirty(EditorCore.GetPreferences());
 
@@ -1257,58 +1250,46 @@ public class InitWizard : EditorWindow
             currentPage++;
         }
 
-        /*if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
+        if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
         {
-            GUI.Label(new Rect(300, 400, 24, 40), EditorCore.Checkmark, "image_centered");
+            if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            {
+                if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                {
+                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                    {
+                    }
+                    else
+                    {
+                        return;//cancel from save scene window
+                    }
+                }
+                else
+                {
+                    return;//cancel from 'do you want to save' popup
+                }
+            }
+            ExportUtility.ExportGLTFScene();
+
+            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+            string objPath = EditorCore.GetSubDirectoryPath(fullName);
+            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+            System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+            string debugContent = DebugInformationWindow.GetDebugContents();
+            System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
+
+            CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+            UnityEditor.AssetDatabase.SaveAssets();
+            EditorCore.RefreshSceneVersion(null);
         }
-        else
-        {
-            GUI.Label(new Rect(300, 400, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
-        }*/
+
     }
 
     bool delayUnderstandButton = true;
     double understandRevealTime;
-
-    void UploadUpdate()
-    {
-        if (delayUnderstandButton)
-        {
-            delayUnderstandButton = false;
-            understandRevealTime = EditorApplication.timeSinceStartup + 3;
-        }
-
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
-        {
-            //upload new version
-            GUI.Label(steptitlerect, "STEP 8 - UPLOAD", "steptitle");
-
-            Color scene1color = Color.HSVToRGB(0.55f, 0.5f, 1);
-            Color scene2color = Color.HSVToRGB(0.55f, 1f, 1);
-
-            GUI.color = scene1color;
-            GUI.Box(new Rect(100,40, 125, 125), EditorCore.SceneBackground, "image_centered");
-            GUI.color = Color.white;
-
-            GUI.Box(new Rect(100, 40, 125, 125), EditorCore.ObjectsBackground, "image_centered");
-
-            GUI.color = scene2color;
-            GUI.Box(new Rect(250, 40, 125, 125), EditorCore.SceneBackground, "image_centered");
-            GUI.color = Color.white;
-
-            GUI.Label(new Rect(30, 180, 440, 440), "In the final step, we will upload version <color=#62B4F3FF>" + (settings.VersionNumber+1)+ " </color>of the scene to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>.\n\n\n" +
-                "This will archive the previous version <color=#62B4F3FF>" + (settings.VersionNumber) + " </color> of this scene. You will be prompted to copy the Dynamic Objects to the new version.\n\n\n" +
-                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
-        }
-        else
-        {
-            GUI.Label(steptitlerect, "STEP 7 - UPLOAD", "steptitle");
-            GUI.Label(new Rect(30, 100, 440, 440), "In the final step, we will complete the upload process to our <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color> servers.\n\n\n" +
-                //"After your Scene is uploaded, if you make changes to your scene, you may want to open this window again and upload a new version of the scene.\n\n\n" +
-                "For <color=#8A9EB7FF>Dynamic Objects</color>, you will be able to continue editing those later in the <color=#8A9EB7FF>Manage Dynamic Objects</color> window.", "normallabel");
-        }
-    }
 
     void UploadSummaryUpdate()
     {
@@ -1322,10 +1303,9 @@ public class InitWizard : EditorWindow
         GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
         var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+        if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
         {
-            //has been uploaded. this is a new version
-            int dynamicObjectCount = GetDynamicObjects.Length;
+            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
             string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (string.IsNullOrEmpty(scenename))
             {
@@ -1337,11 +1317,11 @@ public class InitWizard : EditorWindow
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
             "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
+            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
         }
         else
         {
-            int dynamicObjectCount = GetDynamicObjects.Length;
+            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count; ;
             string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (string.IsNullOrEmpty(scenename))
             {
@@ -1352,7 +1332,7 @@ public class InitWizard : EditorWindow
             if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
             GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
             
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects", "label_disabledtext_large");
+            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
         }
         GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
@@ -1360,10 +1340,7 @@ public class InitWizard : EditorWindow
         var sceneRT = EditorCore.GetSceneRenderTexture();
         if (sceneRT != null)
             GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-
-
-            //GUI.Label(new Rect(30, 390, 440, 440), "You can add <color=#8A9EB7FF>ExitPoll</color> surveys, update <color=#8A9EB7FF>Dynamic Objects</color>, and add user engagement scripts after this process is complete.", "normallabel");
-        }
+    }
 
     void DoneUpdate()
     {
@@ -1388,61 +1365,6 @@ public class InitWizard : EditorWindow
         GUI.color = Color.white;
 
         DrawBackButton();
-
-        if (pageids[currentPage] == "uploadscene")
-        {
-            Rect buttonrect = new Rect(350, 510, 140, 30);
-            if (Event.current.shift)
-            {
-                if (GUI.Button(buttonrect, "SKIP EXPORT"))
-                {
-                    CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
-
-                    UnityEditor.AssetDatabase.SaveAssets();
-                    currentPage++;
-                    EditorCore.RefreshSceneVersion(null);
-                }
-            }
-            else if (GUI.Button(buttonrect, "Prepare Scene"))
-            {
-                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
-                {
-                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
-                    {
-                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
-                        {
-                        }
-                        else
-                        {
-                            return;//cancel from save scene window
-                        }
-                    }
-                    else
-                    {
-                        return;//cancel from 'do you want to save' popup
-                    }
-                }
-                CognitiveVR_SceneExportWindow.ExportGLTFScene();
-
-                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
-                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
-                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-                string debugContent = DebugInformationWindow.GetDebugContents();
-                System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
-
-
-                //CognitiveVR_SceneExportWindow.ExportScene(true, selectedExportQuality.ExportStaticOnly, selectedExportQuality.MinExportGeoSize, selectedExportQuality.TextureQuality, "companyname", selectedExportQuality.DiffuseTextureName);
-                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                EditorUtility.SetDirty(EditorCore.GetPreferences());
-
-                UnityEditor.AssetDatabase.SaveAssets();
-                currentPage++;
-                EditorCore.RefreshSceneVersion(null);
-            }
-        }
 
         DrawNextButton();
     }
@@ -1522,17 +1444,14 @@ public class InitWizard : EditorWindow
                 buttonrect = new Rect(350, 510, 140, 30);
                 break;
             case "uploadscene":
-                //buttonDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+                    appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
 
-                buttonrect = new Rect(1000, 1000, 100, 100);
-                onclick = () => { Debug.Log("custom button"); };
-
-                /*appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
-                if (appearDisabled)
-                {
-                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting this scene?", "Yes", "No")) { currentPage++; } };
-                }*/
-                break;
+                    if (appearDisabled)
+                    {
+                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting your scene?", "Yes", "No")) { currentPage++; } };
+                    }
+                    text = "Next";
+                    break;
             case "upload":
                 onclick += () => EditorCore.RefreshSceneVersion(null);
                 if (understandRevealTime > EditorApplication.timeSinceStartup)
@@ -1546,7 +1465,7 @@ public class InitWizard : EditorWindow
 
                 System.Action completedmanifestupload = delegate ()
                 {
-                    CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true);
+                    ExportUtility.UploadAllDynamicObjectMeshes(true);
                     currentPage++;
                 };
 
@@ -1573,7 +1492,7 @@ public class InitWizard : EditorWindow
                         if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
                         {
                             //new scene
-                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
                         }
                     }
                     else
@@ -1581,7 +1500,7 @@ public class InitWizard : EditorWindow
                         //new version
                         if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok","Cancel"))
                         {
-                            CognitiveVR_SceneExportWindow.UploadDecimatedScene(current, completeSceneUpload);
+                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
                         }
                     }
                 };
@@ -1668,28 +1587,21 @@ public class InitWizard : EditorWindow
         {
             case "welcome": buttonDisabled = true; break;
             case "authenticate":
-                //buttonDisabled = true;
                 text = "Back";
                 buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "listdynamics":
-                //buttonDisabled = true;
                 text = "Back";
                 buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "upload":
-                //buttonDisabled = true;
                 text = "Back";
                 buttonrect = new Rect(200, 510, 80, 30);
                 break;
             case "uploadscene":
-                //buttonDisabled = true;
                 text = "Back";
-                buttonrect = new Rect(260, 510, 80, 30);
                 break;
             case "uploadsummary":
-                //buttonDisabled = true;
-                //text = "Cancel";
                 break;
             case "done":
                 onclick = null;

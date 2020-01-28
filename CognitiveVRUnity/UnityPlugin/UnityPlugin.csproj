@@ -56,7 +56,6 @@
     <Compile Include="Fixation.cs" />
     <Compile Include="FixationCore.cs" />
     <Compile Include="GazeCore.cs" />
-    <Compile Include="Instrumentation.cs" />
     <Compile Include="LocalCache.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

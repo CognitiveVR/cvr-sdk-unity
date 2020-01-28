@@ -17,16 +17,18 @@ namespace CognitiveVR.ActiveSession
 
         public Color PrimaryBackgroundColor;
         public Color SecondaryBackgroundColor;
+        WaitForEndOfFrame endOfFrame;
 
         void Start()
         {
-            CognitiveVR.Instrumentation.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
+            CognitiveVR.CustomEvent.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
             for (int i = 0; i < EventEntryPool.Length; i++)
             {
                 var go = Instantiate(EventFeedPrefab, EventFeedRoot);
                 EventEntryPool[i] = go.GetComponent<EventFeedEntry>();
                 go.SetActive(false);
             }
+            StartCoroutine(CalcSizeEndOfFrame());
         }
 
         int eventCount = 0;
@@ -36,24 +38,30 @@ namespace CognitiveVR.ActiveSession
             var entry = entrygo.GetComponent<EventFeedEntry>();
             entry.SetEvent(name, pos, properties, dynamicObjectId, time);
             entry.SetBackgroundColor(eventCount % 2 == 0? PrimaryBackgroundColor: SecondaryBackgroundColor);
+            
             eventCount++;
         }
 
-        private void Update()
+        IEnumerator CalcSizeEndOfFrame()
         {
-            for (int i = 0; i < EventEntryPool.Length; i++)
+            endOfFrame = new WaitForEndOfFrame();
+            while (true)
             {
-                if (EventEntryPool[i].DirtySize)
+                yield return endOfFrame;
+                for (int i = 0; i < EventEntryPool.Length; i++)
                 {
-                    EventEntryPool[i].CalcSize();
-                    EventEntryPool[i].DirtySize = false;
+                    if (EventEntryPool[i].DirtySize)
+                    {
+                        EventEntryPool[i].CalcSize();
+                        EventEntryPool[i].DirtySize = false;
+                    }
                 }
             }
         }
 
         private void OnDestroy()
         {
-            CognitiveVR.Instrumentation.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
+            CognitiveVR.CustomEvent.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
         }
 
         public GameObject GetPrefab(Transform parent)

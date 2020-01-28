@@ -153,7 +153,7 @@ namespace CognitiveVR
                 sb.AppendLine("Version Id: " + currentScene.VersionId);
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = CognitiveVR_SceneExportWindow.GetDirectory(fullName);
+                string objPath = EditorCore.GetSubDirectoryPath(fullName);
 
                 if (System.IO.Directory.Exists(objPath))
                 {
@@ -255,7 +255,7 @@ namespace CognitiveVR
             sb.AppendLine("********EXPORT FOLDER********");
             sb.AppendLine("*****************************");
 
-            string baseDirectory = CognitiveVR_SceneExportWindow.GetBaseDirectory();
+            string baseDirectory = EditorCore.GetBaseDirectoryPath();
             if (System.IO.Directory.Exists(baseDirectory))
             {
                 System.IO.DirectoryInfo d = new System.IO.DirectoryInfo(baseDirectory);

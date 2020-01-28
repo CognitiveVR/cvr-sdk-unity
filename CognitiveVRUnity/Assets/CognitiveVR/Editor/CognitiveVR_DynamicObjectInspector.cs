@@ -25,7 +25,7 @@ namespace CognitiveVR
                 if (!string.IsNullOrEmpty(dynamic.CustomId))
                 {
                     dynamic.editorInstanceId = dynamic.GetInstanceID();
-                    CheckCustomId(ref dynamic.CustomId);
+                    CheckCustomId();
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace CognitiveVR
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
                             dynamic.editorInstanceId = dynamic.GetInstanceID();
-                            CheckCustomId(ref dynamic.CustomId);
+                            CheckCustomId();
                         }
                         else //project asset
                         {
@@ -105,7 +105,10 @@ namespace CognitiveVR
                     {
                         dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
                         if (!Application.isPlaying)
+                        {
+                            UnityEditor.EditorUtility.SetDirty(dyn);
                             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                        }
                     }
                     if (targets.Length == 1)
                         dyn.MeshName = UnityEditor.EditorGUILayout.TextField("", dyn.MeshName);
@@ -144,7 +147,6 @@ namespace CognitiveVR
             }
             else if (idType == 2) //id pool
             {
-                var dyn = target as DynamicObject;
                 EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
                 customId.stringValue = string.Empty;
                 useCustomId.boolValue = false;
@@ -180,17 +182,10 @@ namespace CognitiveVR
                 {
                     //Mesh
                     GUILayout.Label("Mesh", EditorStyles.boldLabel);
-                    if (string.IsNullOrEmpty(meshname.stringValue))
-                    {
-                        //meshname.stringValue = serializedObject.targetObject.name.ToLower().Replace(" ", "_");
-                        if (!Application.isPlaying)
-                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                    }
-
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
-                        CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab();
+                        ExportUtility.ExportAllSelectedDynamicObjects();
                     }
 
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
@@ -206,7 +201,7 @@ namespace CognitiveVR
                     EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
                     if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                     {
-                        CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true);
+                        ExportUtility.UploadSelectedDynamicObjectMeshes(true);
                     }
                     EditorGUI.EndDisabledGroup();
 
@@ -288,19 +283,25 @@ namespace CognitiveVR
                     }
                 }
 
+                //IMPROVEMENT should check that some meaningful property changed, not just foldout
                 if (!Application.isPlaying)
+                {
+                    foreach (var t in targets)
+                    {
+                        EditorUtility.SetDirty(t);
+                    }
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                }
             }
 
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
         }
 
-        void CheckCustomId(ref string customId)
+        void CheckCustomId()
         {
             if (Application.isPlaying) { return; }
             HashSet<string> usedids = new HashSet<string>();
-
 
             //check against all dynamic object id pool contents
             var pools = EditorCore.GetDynamicObjectPoolAssets;
@@ -322,10 +323,15 @@ namespace CognitiveVR
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
                     string s = System.Guid.NewGuid().ToString();
-                    customId = "editor_" + s;
+                    var customId = "editor_" + s;
                     dynamics[i].CustomId = customId;
                     usedids.Add(customId);
                     Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + customId);
+                    if (!Application.isPlaying)
+                    {
+                        UnityEditor.EditorUtility.SetDirty(dynamics[i]);
+                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                    }
                 }
                 else
                 {

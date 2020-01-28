@@ -91,8 +91,6 @@ namespace CognitiveVR
             ExitPollHolder t = (ExitPollHolder)target;
             ExitPollParameters p = t.Parameters;
 
-            GameObject lastBoolPrefab = boolPanelPrefab;
-
             //display script field
             var script = serializedObject.FindProperty("m_Script");
             EditorGUI.BeginDisabledGroup(true);

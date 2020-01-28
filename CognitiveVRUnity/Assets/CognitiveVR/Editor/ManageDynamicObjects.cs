@@ -166,19 +166,28 @@ public class ManageDynamicObjects : EditorWindow
         {
             EditorCore.RefreshSceneVersion(() =>
             {
-                if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+                foreach(var go in Selection.gameObjects)
                 {
-                    EditorCore.RefreshSceneVersion(delegate ()
+                    var dyn = go.GetComponent<DynamicObject>();
+                    if (dyn == null) { continue; }
+                    //check if export files exist
+                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        var manifest = new AggregationManifest();
-                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true));
-                    });
+                        ExportUtility.ExportDynamicObject(dyn);
+                    }
+                    //check if thumbnail exists
+                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
+                    {
+                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                    }
                 }
-                //if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
-                //{
-                //    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true)); });
-                //}
+
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    var manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                });
             });
         }
         EditorGUI.EndDisabledGroup();
@@ -196,21 +205,29 @@ public class ManageDynamicObjects : EditorWindow
                 }
 
                 Selection.objects = gos.ToArray();
-                
-                if (CognitiveVR_SceneExportWindow.ExportSelectedObjectsPrefab())
+
+                foreach (var go in Selection.gameObjects)
                 {
-                    EditorCore.RefreshSceneVersion(delegate ()
+                    var dyn = go.GetComponent<DynamicObject>();
+                    if (dyn == null) { continue; }
+                    //check if export files exist
+                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        var manifest = new AggregationManifest();
-                        AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        ManageDynamicObjects.UploadManifest(manifest, () => CognitiveVR_SceneExportWindow.UploadSelectedDynamicObjects(true));
-                    });
+                        ExportUtility.ExportDynamicObject(dyn);
+                    }
+                    //check if thumbnail exists
+                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
+                    {
+                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                    }
                 }
 
-                //if (CognitiveVR_SceneExportWindow.ExportAllDynamicsInScene())
-                //{
-                //    EditorCore.RefreshSceneVersion(delegate () { ManageDynamicObjects.UploadManifest(() => CognitiveVR_SceneExportWindow.UploadAllDynamicObjects(true)); });
-                //}
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    var manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                });
             });
         }
         EditorGUI.EndDisabledGroup();
@@ -327,8 +344,8 @@ public class ManageDynamicObjects : EditorWindow
         Rect gameobject = new Rect(rect.x + 160, rect.y, 120, rect.height);
         //Rect id = new Rect(rect.x + 290, rect.y, 120, rect.height);
 
-        Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
-        Rect uploaded = new Rect(rect.x + 380, rect.y, 24, rect.height);
+        //Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
+        //Rect uploaded = new Rect(rect.x + 380, rect.y, 24, rect.height);
 
         GUI.Label(mesh, dynamicpool.MeshName, "dynamiclabel");
         GUI.Label(gameobject, "ID POOL (" + dynamicpool.Ids.Length + " ids)", "dynamiclabel");
@@ -355,9 +372,6 @@ public class ManageDynamicObjects : EditorWindow
         }
 
         bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
-
-        //EditorGUI.BeginDisabledGroup(enabled);
-        //EditorGUI.EndDisabledGroup();
         if (enabled)
         {
             if (GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
@@ -366,16 +380,7 @@ public class ManageDynamicObjects : EditorWindow
                 {
                     AggregationManifest manifest = new AggregationManifest();
                     AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-
-                    //do NOT upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    //foreach (var pool in EditorCore.GetDynamicObjectPoolAssets)
-                    //{
-                    //    foreach (var id in pool.Ids)
-                    //    {
-                    //        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id));
-                    //    }
-                    //}
-
+                    //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
                     ManageDynamicObjects.UploadManifest(manifest, null);
                 });
             }

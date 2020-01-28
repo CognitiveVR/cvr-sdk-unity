@@ -44,8 +44,13 @@ namespace CognitiveVR
         //fove does it's own rendering stuff and doesn't render singlepass side by side to a texture
         rect = new Rect(0, 0, rt.width, rt.height);
 #else
+#if UNITY_2017_2_OR_NEWER
+            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
+            {
+#else
             if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
             {
+#endif
 #if CVR_OCULUS
                 //oculus renders side by side without a mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
@@ -83,7 +88,11 @@ namespace CognitiveVR
             //this viewport gaze point needs to be projected into openvr's camera projection matrix
 
             Matrix4x4 matrix = Matrix4x4.identity;
+#if UNITY_2017_2_OR_NEWER
+            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
+#else
             if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
+#endif
                 matrix = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
             else //multipass
                 matrix = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
