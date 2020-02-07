@@ -1063,11 +1063,10 @@ namespace CognitiveVR
             int samples = 0;
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
-                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
                 samples++;
+                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
             }
-
             Transform mostUsed = null;
 
             Transform[] hitTransforms = new Transform[samples];
@@ -1182,14 +1181,14 @@ namespace CognitiveVR
             //escape if any are eyes closed or discarded captures
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
-                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
-
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
                 sampleCount++;
                 if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
 
                 averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition;
                 averageWorldSamples++;
+
+                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
             }
             if (averageWorldSamples == 0)
             {
