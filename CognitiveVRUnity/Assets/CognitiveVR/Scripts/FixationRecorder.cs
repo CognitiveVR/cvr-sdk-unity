@@ -569,6 +569,7 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
+            VISFixationEnds = new Dictionary<string, List<Fixation>>();
             VISFixationEnds.Add("discard", new List<Fixation>());
             VISFixationEnds.Add("out of range", new List<Fixation>());
             VISFixationEnds.Add("microsleep", new List<Fixation>());
