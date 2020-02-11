@@ -853,7 +853,8 @@ namespace UnityGLTF
 				var primitive = new MeshPrimitive();
 
 				var triangles = meshObj.GetTriangles(submesh);
-				primitive.Indices = ExportAccessor(SchemaExtensions.FlipFacesAndCopy(triangles), true);
+                if (triangles.Length == 0) { continue; } //empty submesh
+                primitive.Indices = ExportAccessor(SchemaExtensions.FlipFacesAndCopy(triangles), true);
 
 				primitive.Attributes = new Dictionary<string, AccessorId>();
 				primitive.Attributes.Add(SemanticProperties.POSITION, aPosition);
@@ -881,13 +882,26 @@ namespace UnityGLTF
 
 				prims[submesh] = primitive;
 			}
+            //remove any prims that have empty triangles
+            List<MeshPrimitive> listPrims = new List<MeshPrimitive>(prims);
+            listPrims.RemoveAll(EmptyPrimitive);
+            prims = listPrims.ToArray();
 
-			_meshToPrims[meshObj] = prims;
+            _meshToPrims[meshObj] = prims;
 
 			return prims;
 		}
 
-		private MaterialId ExportMaterial(Material materialObj)
+        private static bool EmptyPrimitive(MeshPrimitive prim)
+        {
+            if (prim == null || prim.Attributes == null)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private MaterialId ExportMaterial(Material materialObj)
 		{
             //TODO if material is null
 			MaterialId id = GetMaterialId(_root, materialObj);
