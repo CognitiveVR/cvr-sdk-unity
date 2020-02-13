@@ -11,9 +11,12 @@ namespace CognitiveVR
         {
             WorldPosition = src.WorldPosition;
             LocalPosition = src.LocalPosition;
-            DebugScale = src.DebugScale;
             DurationMs = src.DurationMs;
             StartMs = src.StartMs;
+            LastNonDiscardedTime = StartMs;
+            LastEyesOpen = StartMs;
+            LastInRange = StartMs;
+            LastOnTransform = StartMs;
 
             IsLocal = src.IsLocal;
             LocalTransform = src.LocalTransform;
@@ -25,7 +28,6 @@ namespace CognitiveVR
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;
         public Transform LocalTransform;
-        public float DebugScale;
 
         //timestamp of last assigned valid eye capture. used to 'timeout' from eyes closed
         public long LastUpdated;
@@ -90,7 +92,7 @@ namespace CognitiveVR
             if (validEyeCapture)
             {
                 LastUpdated = eyeCapture.Time;
-                DurationMs = StartMs - LastUpdated;
+                DurationMs = eyeCapture.Time - StartMs;
             }
         }
     }
