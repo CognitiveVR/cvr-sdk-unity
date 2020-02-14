@@ -16,7 +16,6 @@ namespace CognitiveVR
         static FixationCore()
         {
             Core.OnSendData += Core_OnSendData;
-            Core.CheckSessionId();
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
             NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
         }
@@ -32,9 +31,12 @@ namespace CognitiveVR
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
-                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
-                    Util.logDevelopment("check to automatically send fixations");
-                Core_OnSendData();
+                if (Core.IsInitialized)
+                {
+                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                        Util.logDevelopment("check to automatically send fixations");
+                    Core_OnSendData();
+                }
             }
         }
 
