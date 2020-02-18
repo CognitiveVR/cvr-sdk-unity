@@ -292,7 +292,6 @@ namespace CognitiveVR
         {
             Core.OnSendData -= Core_OnSendData;
             Core.OnSendData += Core_OnSendData;
-            Core.CheckSessionId();
             autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
 
             if (automaticTimerActive == false)
@@ -327,9 +326,12 @@ namespace CognitiveVR
                 }
                 //try to send!
                 autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
-                    Util.logDevelopment("check to automatically send events");
-                SendTransactions();
+                if (!Core.IsInitialized)
+                {
+                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                        Util.logDevelopment("check to automatically send events");
+                    SendTransactions();
+                }
             }
         }
 

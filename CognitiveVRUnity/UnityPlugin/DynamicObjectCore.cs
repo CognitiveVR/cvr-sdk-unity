@@ -27,7 +27,6 @@ namespace CognitiveVR
 
         internal static void Initialize()
         {
-            CognitiveVR.Core.CheckSessionId();
             NetworkManager.Sender.StartCoroutine(WriteJson());
             for (int i = 0; i < CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
