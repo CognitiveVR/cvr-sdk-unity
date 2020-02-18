@@ -264,7 +264,7 @@ namespace CognitiveVR
         internal void OnDestroy()
         {
             if (sr != null) { sr.Close(); sr = null; }
-            if (sw != null) { sw.Close(); sw = null; }
+            if (sw != null) { try { sw.Close(); sw = null; } catch { sw.Dispose(); Util.logDebug("LocalCache::OnDestroy stream writer already closed!"); } }
             if (fs != null) { fs.Close(); fs = null; }
         }
 
@@ -280,7 +280,9 @@ namespace CognitiveVR
             float percent = 0;
             try
             {
-                localDataInfo = new FileInfo(localDataPath);
+                if (localDataInfo == null)
+                    localDataInfo = new FileInfo(localDataPath);
+                localDataInfo.Refresh();
                 if (!localDataInfo.Exists) { return 0; }
                 int length = (int)localDataInfo.Length;
                 percent = length / (float)CognitiveVR_Preferences.Instance.LocalDataCacheSize;

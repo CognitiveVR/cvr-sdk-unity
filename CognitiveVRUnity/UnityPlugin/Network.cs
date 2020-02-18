@@ -45,7 +45,9 @@ namespace CognitiveVR
         public static void InitLocalStorage(string environmentEOL)
         {
             if (lc == null || LocalCache.EnvironmentEOL != environmentEOL)
-            lc = new LocalCache(Sender, environmentEOL);
+            {
+                lc = new LocalCache(Sender, environmentEOL);
+            }
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -184,7 +186,7 @@ namespace CognitiveVR
                     CacheRequest = null;
                 }
 
-                if (lc == null) { Util.logError("Network Post Data !200 LocalCache null"); return; }
+                if (lc == null) { Util.logWarning("Network Post Data !200 LocalCache null"); return; }
 
                 if (lc.CanAppend(url, content))
                 {
@@ -365,15 +367,23 @@ namespace CognitiveVR
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        private void OnDestroy()
+        //skip network cleanup if immediately/manually destroyed
+        //gameobject is destroyed at end of frame
+        //issue if ending session/destroy gameobject/new session all in one frame
+        bool hasBeenDestroyed = false;
+        internal void OnDestroy()
         {
+            if (hasBeenDestroyed) { return; }
+            hasBeenDestroyed = true;
             if (activeRequests.Count > 0)
             {
                 EndSession();
             }
             if (lc != null)
+            {
                 lc.OnDestroy();
-            lc = null;
+                lc = null;
+            }
             isuploadingfromcache = false;
         }
 
@@ -398,7 +408,7 @@ namespace CognitiveVR
                         CacheRequest.Dispose();
                         CacheRequest = null;
                     }
-
+                    if (lc == null) { break; }
                     if (lc.CanAppend(v.url, content))
                     {
                         v.Abort();

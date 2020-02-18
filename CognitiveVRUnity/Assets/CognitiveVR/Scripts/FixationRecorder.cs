@@ -907,22 +907,19 @@ namespace CognitiveVR
             {
                 if (ActiveFixation.LocalTransform == null) { return true; }
 
-                //try to move fixation to include this capture too
-                var _fixationWorldPosition = ActiveFixation.WorldPosition;
-                var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
-                var _eyeCaptureWorldPos = capture.WorldPosition;
-                var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
-                var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
-                var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
-                var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
-                if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
-                {
-                    return true;
-                }
-
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
-
+                    var _fixationWorldPosition = ActiveFixation.WorldPosition;
+                    var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
+                    var _eyeCaptureWorldPos = capture.WorldPosition;
+                    var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
+                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
+                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
+                    if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
+                    {
+                        return true;
+                    }
                 }
                 else
                 {
@@ -933,6 +930,18 @@ namespace CognitiveVR
                     }
                     averageworldpos += capture.WorldPosition;
                     averageworldpos /= (CachedEyeCapturePositions.Count + 1);
+
+                    var _fixationWorldPosition = averageworldpos;
+                    var _fixationDirection = (_fixationWorldPosition - capture.HmdPosition).normalized;
+                    var _eyeCaptureWorldPos = capture.WorldPosition;
+                    var _eyeCaptureDirection = (_eyeCaptureWorldPos - capture.HmdPosition).normalized;
+                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
+                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
+                    if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
+                    {
+                        return true;
+                    }
 
                     float distance = Vector3.Magnitude(_fixationWorldPosition - capture.HmdPosition);
                     float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;

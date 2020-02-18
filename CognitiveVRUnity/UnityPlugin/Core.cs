@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.17.3pre";
+        public const string SDK_VERSION = "0.17.3";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -227,6 +227,7 @@ namespace CognitiveVR
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
             TrackingScene = null;
+            NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
         }
 
@@ -268,13 +269,12 @@ namespace CognitiveVR
                 DynamicManager.Initialize();
                 DynamicObjectCore.Initialize();
 
+                _timestamp = Util.Timestamp();
                 //set session timestamp
                 if (string.IsNullOrEmpty(_sessionId))
                 {
                     _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
                 }
-
-                _timestamp = Util.Timestamp();
 
                 IsInitialized = true;
             }
