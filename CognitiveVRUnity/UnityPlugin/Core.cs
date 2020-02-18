@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.17.0";
+        public const string SDK_VERSION = "0.17.3";
 
         public static string UserId { get; set; }
         private static string _deviceId;
@@ -124,8 +124,6 @@ namespace CognitiveVR
         {
             get
             {
-                if (_timestamp < 1)
-                    _timestamp = Util.Timestamp();
                 return _timestamp;
             }
         }
@@ -135,21 +133,16 @@ namespace CognitiveVR
         {
             get
             {
-                if (string.IsNullOrEmpty(_sessionId))
-                {
-                    _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
-                }
                 return _sessionId;
             }
         }
 
-        //sets session timestamp, uniqueid and sessionid if not set otherwise
-        public static void CheckSessionId()
+        public static void SetSessionId(string sessionId)
         {
-            if (string.IsNullOrEmpty(_sessionId))
-            {
-                _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
-            }
+            if (!IsInitialized)
+                _sessionId = sessionId;
+            else
+                Util.logWarning("Core::SetSessionId cannot be called during a session!");
         }
 
         public static string TrackingSceneId { get; private set; }
@@ -234,6 +227,7 @@ namespace CognitiveVR
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
             TrackingScene = null;
+            NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
         }
 
@@ -275,8 +269,12 @@ namespace CognitiveVR
                 DynamicManager.Initialize();
                 DynamicObjectCore.Initialize();
 
+                _timestamp = Util.Timestamp();
                 //set session timestamp
-                CheckSessionId();
+                if (string.IsNullOrEmpty(_sessionId))
+                {
+                    _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
+                }
 
                 IsInitialized = true;
             }

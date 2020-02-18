@@ -233,7 +233,7 @@ namespace CognitiveVR
 
                 if (dynamic.transform.childCount > 0)
                 {
-                    sb.AppendLine(preLineMid+" Has Children: true");
+                    sb.AppendLine(preLineMid+"Has Children: true");
                     int expectedColliderCount = mainCollider != null ? 1 : 0;
                     if (dynamic.GetComponentsInChildren<Collider>().Length > expectedColliderCount)
                     {

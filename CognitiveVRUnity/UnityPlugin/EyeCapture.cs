@@ -18,6 +18,7 @@ namespace CognitiveVR
         public bool EyesClosed; //blinking or eyes closed
         public bool OutOfRange; //compared to linkedFixation
         public bool OffTransform; //compared to linkedFixation
+        public Vector2 ScreenPos;
 
         public Transform HitDynamicTransform;
     }
