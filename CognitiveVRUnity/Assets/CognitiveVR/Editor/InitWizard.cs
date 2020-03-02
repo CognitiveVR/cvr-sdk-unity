@@ -227,7 +227,7 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.2.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.6.0 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.6.0 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
@@ -656,7 +656,7 @@ public class InitWizard : EditorWindow
             }
 
 #if CVR_STEAMVR2
-            GUI.Label(new Rect(120, 390, 300, 20), "You must have an 'actions.json' file in the project root from SteamVR");
+            GUI.Label(new Rect(135, 390, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
             if (GUI.Button(new Rect(125, 410, 250, 30), "Append Cognitive Action Set"))
             {
                 steamvr2actionset = true;
@@ -1509,7 +1509,8 @@ public class InitWizard : EditorWindow
                 System.Action completedRefreshSceneVersion1 = delegate ()
                 {
 #if UNITY_2018_3_OR_NEWER
-                    EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                    //EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                    EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #else
                     EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
 #endif
@@ -1656,11 +1657,7 @@ public class InitWizard : EditorWindow
 
         static bool LoadActionFile(out SteamVR_Input_ActionFile actionFile)
         {
-            string projectPath = Application.dataPath;
-            int lastIndex = projectPath.LastIndexOf("/");
-            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
-            string actionsFilePath = Path.Combine(projectPath, SteamVR_Settings.instance.actionsFilePath);
-
+            string actionsFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/actions.json";
             if (!File.Exists(actionsFilePath))
             {
                 Debug.LogErrorFormat("<b>[SteamVR]</b> Actions file doesn't exist: {0}", actionsFilePath);
@@ -1675,11 +1672,7 @@ public class InitWizard : EditorWindow
 
         static bool SaveActionFile(SteamVR_Input_ActionFile actionFile)
         {
-            string projectPath = Application.dataPath;
-            int lastIndex = projectPath.LastIndexOf("/");
-            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
-            string actionsFilePath = Path.Combine(projectPath, SteamVR_Settings.instance.actionsFilePath);
-
+            string actionsFilePath = SteamVR_Input.GetActionsFileFolder(true) +"/actions.json";
             string newJSON = JsonConvert.SerializeObject(actionFile, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
             File.WriteAllText(actionsFilePath, newJSON);
@@ -1774,11 +1767,7 @@ public class InitWizard : EditorWindow
 
         static bool LoadBindingFile(out SteamVR_Input_BindingFile bindingfile)
         {
-            string projectPath = Application.dataPath;
-            int lastIndex = projectPath.LastIndexOf("/");
-            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
-            string bindingFilePath = Path.Combine(projectPath, "bindings_vive_controller.json");
-
+            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/bindings_vive_controller.json";
             if (!File.Exists(bindingFilePath))
             {
                 Debug.LogErrorFormat("<b>[SteamVR]</b> binding file doesn't exist: {0}", bindingFilePath);
@@ -1793,10 +1782,7 @@ public class InitWizard : EditorWindow
 
         static bool SaveBindingFile(SteamVR_Input_BindingFile bindingfile)
         {
-            string projectPath = Application.dataPath;
-            int lastIndex = projectPath.LastIndexOf("/");
-            projectPath = projectPath.Remove(lastIndex, projectPath.Length - lastIndex);
-            string bindingFilePath = Path.Combine(projectPath, "bindings_vive_controller.json");
+            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/bindings_vive_controller.json";
 
             string newJSON = JsonConvert.SerializeObject(bindingfile, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 

@@ -236,7 +236,7 @@ namespace CognitiveVR
             {
                 scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
                 var cogscene = CognitiveVR_Preferences.FindSceneByPath(scene.path);
-                if (cogscene != null)
+                if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
                 {
                     Core.SetTrackingScene(cogscene);
                     break;
