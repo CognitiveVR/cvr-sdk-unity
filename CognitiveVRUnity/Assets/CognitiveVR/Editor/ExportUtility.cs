@@ -353,6 +353,7 @@ namespace CognitiveVR
             if (responseCode != 200 && responseCode != 201)
             {
                 Debug.LogError("Scene Upload Error " + error);
+                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;
@@ -362,6 +363,7 @@ namespace CognitiveVR
             if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
             {
                 Debug.LogError("Scene Upload Error:" + text);
+                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene. \n\nSee Console for more details", "Ok");
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;

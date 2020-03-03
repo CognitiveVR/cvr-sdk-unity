@@ -299,6 +299,7 @@ namespace CognitiveVR
             {
                 RefreshSceneVersionComplete = null;
                 Debug.LogError("GetSettingsResponse [CODE] " + responsecode + " [ERROR] " + error);
+                EditorUtility.DisplayDialog("Error Getting Scene Version", "There was an error getting data about this scene from the Cognitive3D Dashboard. Response code was " + responsecode + ".\n\nSee Console for more details", "Ok");
                 return;
             }
             var settings = CognitiveVR_Preferences.FindCurrentScene();
@@ -1057,6 +1058,27 @@ namespace CognitiveVR
             }
             returnTexture = null;
             return false;
+        }
+
+        public static void SaveScreenshot(RenderTexture renderTexture, string sceneName, Action completeScreenshot)
+        {
+            Texture2D tex = new Texture2D(renderTexture.width, renderTexture.height);
+            RenderTexture.active = renderTexture;
+            tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+
+            //save file
+            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+            //use editor update to delay teh screenshot 1 frame?
+
+            if (completeScreenshot != null)
+                completeScreenshot.Invoke();
+            completeScreenshot = null;
         }
 
 #if UNITY_2018_3_OR_NEWER
