@@ -37,6 +37,7 @@ namespace CognitiveVR
         static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
         static LocalCache lc;
+        int lastDataResponse = 0;
 
         /// <summary>
         /// called from CognitiveVR_Manager to set environmentEOL character. needed to correctly read local data cache
@@ -62,6 +63,7 @@ namespace CognitiveVR
 
             var headers = www.GetResponseHeaders();
             int responsecode = (int)www.responseCode;
+            lastDataResponse = responsecode;
             //check cvr header to make sure not blocked by capture portal
 
             if (!www.isDone)
@@ -140,7 +142,7 @@ namespace CognitiveVR
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
-
+            lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
                 var headers = www.GetResponseHeaders();
@@ -153,6 +155,7 @@ namespace CognitiveVR
                         if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                             Util.logDevelopment("capture portal error! " + www.url);
                         responsecode = 404;
+                        lastDataResponse = responsecode;
                     }
                 }
                 callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text);
@@ -395,26 +398,32 @@ namespace CognitiveVR
             //write all active webrequests to cache
             if (LocalCache.LocalStorageActive)
             {
-                foreach (var v in activeRequests)
+                if (lastDataResponse != 200)
                 {
-                    if (v.isDone) { continue; }
-                    string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
+                    //unclear if cached request will actually reach backend, based on previous response codes
+                    //session is ending, so can't wait for response from this request
+                    //abort request and write to local cache
+                    foreach (var v in activeRequests)
+                    {
+                        if (v.isDone) { continue; }
+                        string content = System.Text.Encoding.UTF8.GetString(v.uploadHandler.data);
 
-                    if (isuploadingfromcache && CacheRequest != null)
-                    {
-                        isuploadingfromcache = false;
-                        CacheResponseAction = null;
-                        CacheRequest.Abort();
-                        CacheRequest.Dispose();
-                        CacheRequest = null;
-                    }
-                    if (lc == null) { break; }
-                    if (lc.CanAppend(v.url, content))
-                    {
-                        v.Abort();
-                        if (v.uploadHandler.data.Length > 0)
+                        if (isuploadingfromcache && CacheRequest != null)
                         {
-                            lc.Append(v.url, content);
+                            isuploadingfromcache = false;
+                            CacheResponseAction = null;
+                            CacheRequest.Abort();
+                            CacheRequest.Dispose();
+                            CacheRequest = null;
+                        }
+                        if (lc == null) { break; }
+                        if (lc.CanAppend(v.url, content))
+                        {
+                            v.Abort();
+                            if (v.uploadHandler.data.Length > 0)
+                            {
+                                lc.Append(v.url, content);
+                            }
                         }
                     }
                 }

@@ -148,7 +148,13 @@ namespace CognitiveVR
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Local Data Cache", EditorStyles.boldLabel);
             //local storage
+            GUILayout.BeginHorizontal();
             p.LocalStorage = EditorGUILayout.Toggle("Save data to Local Cache if no internet connection", p.LocalStorage);
+            if (GUILayout.Button("Open Local Cache Folder"))
+            {
+                EditorUtility.RevealInFinder(Application.persistentDataPath);
+            }
+            GUILayout.EndHorizontal();
             EditorGUI.BeginDisabledGroup(!p.LocalStorage);
             GUILayout.BeginHorizontal();
             p.LocalDataCacheSize = EditorGUILayout.LongField("Cache Size", p.LocalDataCacheSize);
