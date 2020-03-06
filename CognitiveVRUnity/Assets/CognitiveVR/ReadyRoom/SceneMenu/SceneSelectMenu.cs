@@ -8,10 +8,13 @@ using UnityEngine.SceneManagement;
 
 public class SceneSelectMenu : AssessmentBase
 {
-    public GameObject SceneButtonPrefab;
-    public List<SceneInfo> SceneInfos;
+    [Tooltip("The button prefab to spawn for each scene")]
+    public GameObject SceneButtonPrefab;    
+    public float Height = 2;
     public float SpawnRadius = 3;
     public float ArcSize = 1f;
+
+    public List<SceneInfo> SceneInfos;
 
     //calls GetPositions and spawns SceneButtonPrefabs at each position
     public override void BeginAssessment()
@@ -41,7 +44,7 @@ public class SceneSelectMenu : AssessmentBase
         for (float i = 1f / count/2; i < 1; i+= 1f/count)
         {
             float angle = Mathf.Lerp(Mathf.PI / 2  + ArcSize, Mathf.PI / 2 - ArcSize, i);
-            Vector3 pos = new Vector3(Mathf.Cos(angle) * SpawnRadius, 2, Mathf.Sin(angle) * SpawnRadius);
+            Vector3 pos = new Vector3(Mathf.Cos(angle) * SpawnRadius, Height, Mathf.Sin(angle) * SpawnRadius);
             positions.Add(pos);
         }
         return positions;

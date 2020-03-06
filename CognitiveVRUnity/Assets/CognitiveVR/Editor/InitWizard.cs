@@ -38,8 +38,8 @@ public class InitWizard : EditorWindow
         GUI.skin = EditorCore.WizardGUISkin;
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
         
-        //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-        //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+        if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
+        if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
         switch (pageids[currentPage])
         {
             case "welcome":WelcomeUpdate(); break;
@@ -636,7 +636,7 @@ public class InitWizard : EditorWindow
             }
             else
             {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             }
 
             if (GUI.Button(new Rect(125, 360, 250, 30), "Setup Controller Dynamics"))
@@ -1345,16 +1345,32 @@ public class InitWizard : EditorWindow
     void DoneUpdate()
     {
         GUI.Label(steptitlerect, "STEP 10 - DONE", "steptitle");
-        GUI.Label(new Rect(30, 45, 440, 440), "That's it!\n\nThe <color=#8A9EB7FF>"+EditorCore.DisplayValue(DisplayKey.ManagerName)+"</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
-        if (GUI.Button(new Rect(150,200,200,40),"Open Dashboard","button_bluetext"))
+        GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>"+EditorCore.DisplayValue(DisplayKey.ManagerName)+"</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
+        if (GUI.Button(new Rect(150,150,200,40),"Open Dashboard","button_bluetext"))
         {
             Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
         }
 
-        GUI.Label(new Rect(30, 295, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
-        if (GUI.Button(new Rect(150,420,200,40),"Open Documentation","button_bluetext"))
+        GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
+        if (GUI.Button(new Rect(150, 320,200,40),"Open Documentation","button_bluetext"))
         {
             Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Documentation);
+        }
+
+        GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene.", "boldlabel");
+        if (GUI.Button(new Rect(150,440,200,40),"Ready Room Setup", "button_bluetext"))
+        {
+            var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
+            if (readyRoomScenes.Length == 1)
+            {
+                //ask if want save
+                if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
+                    Close();
+                    ReadyRoomSetupWindow.Init();
+                }
+            }
         }
     }
 

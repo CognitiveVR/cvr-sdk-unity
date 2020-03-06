@@ -14,31 +14,30 @@ public class ReadyRoomSetupWindow : EditorWindow
         window.maxSize = new Vector2(500, 550);
         window.Show();
 
-        window.UseEyeTracking = EditorPrefs.GetInt("useEyeTracking", -1);
-        window.UseRoomScale = EditorPrefs.GetInt("useRoomScale", -1);
-        window.UseGrabbableObjects = EditorPrefs.GetInt("useGrabbable", -1);
+        UseEyeTracking = EditorPrefs.GetInt("useEyeTracking", -1);
+        UseRoomScale = EditorPrefs.GetInt("useRoomScale", -1);
+        UseGrabbableObjects = EditorPrefs.GetInt("useGrabbable", -1);
 
-        if (window.UseEyeTracking != -1 && window.UseGrabbableObjects != -1 && window.UseRoomScale != -1)
+        if (UseEyeTracking != -1 && UseGrabbableObjects != -1 && UseRoomScale != -1)
         {
             //editor prefs will be between multiple projects
 
             //TODO how to mark that setup was completed??? set default enable/disable values
 
             //if already gone through setup, just jump to overview
-            window.currentPage = window.pageids.Count - 1;
+            //window.currentPage = window.pageids.Count - 1;
         }
     }
 
 
     List<AssessmentBase> AllAssessments = new List<AssessmentBase>();
 
-    //Debugging in editor
     public List<AssessmentBase> GetAllAssessments()
     {
         return AllAssessments;
     }
 
-    //Debugging in editor. Finds all assessments and sorts them
+    //Finds all assessments and sorts them
     public void RefreshAssessments()
     {
         AllAssessments = new List<AssessmentBase>(Object.FindObjectsOfType<AssessmentBase>());
@@ -49,7 +48,7 @@ public class ReadyRoomSetupWindow : EditorWindow
         });
     }
 
-    List<string> pageids = new List<string>() { "welcome", "eye tracking", "room scale", "grab components", "custom", "scene menu", "overview" };
+    List<string> pageids = new List<string>() { "welcome", "player", "eye tracking", "room scale", "grab components", "custom", "scene menu", "overview" };
     public int currentPage;
 
     Rect steptitlerect = new Rect(30, 0, 100, 440);
@@ -57,6 +56,19 @@ public class ReadyRoomSetupWindow : EditorWindow
 
     void OnGUI()
     {
+        Event e = Event.current;
+        if (e.type == EventType.keyDown && e.keyCode == KeyCode.BackQuote)
+        {
+            EditorPrefs.SetInt("useEyeTracking", -1);
+            EditorPrefs.SetInt("useRoomScale", -1);
+            EditorPrefs.SetInt("useGrabbable", -1);
+            UseEyeTracking = -1;
+            UseGrabbableObjects = -1;
+            UseRoomScale = -1;
+            Repaint();
+            Debug.Log("clear readyroom settings");
+        }
+
         GUI.skin = CognitiveVR.EditorCore.WizardGUISkin;
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
@@ -66,6 +78,7 @@ public class ReadyRoomSetupWindow : EditorWindow
         switch (pageids[currentPage])
         {
             case "welcome": WelcomeUpdate(); break;
+            case "player": PlayerUpdate(); break;
             case "eye tracking": EyeTrackingUpdate(); break;
             case "room scale": RoomScaleUpdate(); break;
             case "grab components": GrabUpdate(); break;
@@ -77,9 +90,9 @@ public class ReadyRoomSetupWindow : EditorWindow
         DrawFooter();
     }
 
-    int UseEyeTracking = -1;
-    int UseRoomScale = -1;
-    int UseGrabbableObjects = -1;
+    public static int UseEyeTracking = -1;
+    public static int UseRoomScale = -1;
+    public static int UseGrabbableObjects = -1;
 
     void WelcomeUpdate()
     {
@@ -89,6 +102,16 @@ public class ReadyRoomSetupWindow : EditorWindow
         GUI.Label(new Rect(30, 200, 440, 440), "The Ready Room provides a simple learning environment so users can understand how to interact more naturally with your experience.", "normallabel");
 
         GUI.Label(new Rect(30, 300, 440, 440), "This setup will ensure your experience starts correctly configured and that your users have familiarity with VR.", "normallabel");
+    }
+
+    void PlayerUpdate()
+    {
+        GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - PLAYER", "steptitle");
+
+        GUI.Label(boldlabelrect, "Ensure your Player is configured correctly", "boldlabel");
+        GUI.Label(new Rect(30, 200, 440, 30), "Add your <color=#084D76>Player</color> prefab to the Ready Room Scene", "normallabel_actionable");
+        GUI.Label(new Rect(30, 260, 440, 30), "If the player has controllers, add a <color=#084D76>SimplePointer</color> Component to each controller", "normallabel_actionable");
+        GUI.Label(new Rect(30, 340, 440, 30), "Otherwise, add a <color=#084D76>SimplePointer</color> Component to the player's HMD camera", "normallabel_actionable");
     }
 
     void EyeTrackingUpdate()
@@ -118,15 +141,19 @@ public class ReadyRoomSetupWindow : EditorWindow
             GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
         }
 
+        if (UseEyeTracking == 0)
+        {
+            GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about calibrating eye tracking", "normallabel");
+        }
         if (UseEyeTracking == 1)
         {
-            GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the user to ensure eye tracking is correctly calibrated", "normallabel");
             //TODO editorcore/core.HasEyetrackingSDK
 #if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
-
+            GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the user to ensure eye tracking is correctly calibrated", "normallabel");
+            GUI.Label(new Rect(30, 260, 440, 440), "Add any required Eye Tracking components to the scene", "normallabel_actionable");
 #else
-            GUI.Label(new Rect(0, 200, 475, 130), CognitiveVR.EditorCore.Alert, "image_centered");
-            GUI.Label(new Rect(30, 300, 440, 440), "Eye Tracking SDK is not selected in the Cognitive3D Setup Wizard", "normallabel");
+            GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
+            GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
 #endif
         }
     }
@@ -158,15 +185,18 @@ public class ReadyRoomSetupWindow : EditorWindow
             GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
         }
 
+        if (UseRoomScale == 0)
+        {
+            GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about moving around the room", "normallabel");
+        }
         if (UseRoomScale == 1)
         {
-            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the user to move around the room", "normallabel");
             //TODO editorcore.roomscale
 #if CVR_TOBIIVR || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2
-
+            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the user to move around the room", "normallabel");
 #else
-            GUI.Label(new Rect(0, 200, 475, 130), CognitiveVR.EditorCore.Alert, "image_centered");
-            GUI.Label(new Rect(30, 300, 440, 440), "Room Scale is not supported with the SDK selected in the Cognitive3D Setup Wizard", "normallabel");
+            GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
+            GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support room scale", "normallabel");
 #endif
         }
     }
@@ -199,7 +229,11 @@ public class ReadyRoomSetupWindow : EditorWindow
         {
             GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
         }
-        
+
+        if (UseGrabbableObjects == 0)
+        {
+            GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about picking up objects", "normallabel");
+        }
         if (UseGrabbableObjects == 1)
         {
             if (Grabbables == null || Grabbables.Contains(null))
@@ -207,13 +241,14 @@ public class ReadyRoomSetupWindow : EditorWindow
                 Grabbables = new List<GrabComponentsRequired>(FindObjectsOfType<GrabComponentsRequired>());
             }
 
+            GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the user to pickup and examine a small cube", "normallabel");
+
             if (Grabbables.Count > 0)
             {
-
-                GUI.Label(new Rect(30, 200, 440, 440), "These gameobject need to be configured to use your grabbing interaction logic", "normallabel");
+                GUI.Label(new Rect(30, 260, 440, 440), "These gameobject must to be configured to use your grabbing interaction:", "normallabel_actionable");
 
                 Rect innerScrollSize = new Rect(30, 0, 420, Grabbables.Count * 30);
-                dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 250, 440, 100), dynamicScrollPosition, innerScrollSize, false, true);
+                dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 330, 440, 100), dynamicScrollPosition, innerScrollSize, false, true);
 
                 Rect dynamicrect;
                 for (int i = 0; i < Grabbables.Count; i++)
@@ -228,73 +263,20 @@ public class ReadyRoomSetupWindow : EditorWindow
 
                 GUI.EndScrollView();
 
-                GUI.Box(new Rect(30, 250, 425, 100), "", "box_sharp_alpha");
+                GUI.Box(new Rect(30, 330, 425, 100), "", "box_sharp_alpha");
 
-                if (GUI.Button(new Rect(30, 360, 440, 35), "Select All", "button"))
+                if (GUI.Button(new Rect(180, 440, 140, 35), "Select All", "button"))
                 {
-                    Selection.objects = Grabbables.ToArray();
-                }
-                //GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
+                    List<GameObject> grabGameObjects = new List<GameObject>();
+                    for(int i = 0; i< Grabbables.Count;i++)
+                    {
+                        grabGameObjects.Add(Grabbables[i].gameObject);
+                    }
 
-                /*
-                //a couple horizontal buttons
-                if (GUI.Button(new Rect( 30, 360, 140, 35), new GUIContent("Oculus", "OVRGrabbable script"), "button_disabledtext"))
-                {
-                    SetupOculus(Grabbables.ToArray());
+                    Selection.objects = grabGameObjects.ToArray();
+                    EditorGUIUtility.PingObject(grabGameObjects[0]);
                 }
-                GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
-                if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("SteamVR2", "Interactable and Interactable Example scripts"), "button_disabledtext"))
-                {
-                    SetupSteamVR2(Grabbables.ToArray());
-                }
-                GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
-                if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("UnityXR", "XRInteractable script"), "button_disabledtext"))
-                {
-                    SetupXRInteractionToolkit(Grabbables.ToArray());
-                }
-                GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");*/
-
-                GUI.Label(new Rect(30, 410, 440, 440), "There will be a test asking the user to pickup and examine a small cube", "normallabel");
             }
-            else
-            {
-                GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the user to pickup and examine a small cube", "normallabel");
-            }
-        }
-    }
-
-    AssessmentBase FindAssessment(bool eyetracking = false, bool roomscale = false, bool grabbable = false)
-    {
-        var all = GetAllAssessments();
-        return all.Find(delegate (AssessmentBase obj)
-        {
-            if (eyetracking && obj.RequiresEyeTracking) { return true; }
-            if (roomscale && obj.RequiresRoomScale) { return true; }
-            if (grabbable && obj.RequiresGrabbing) { return true; }
-            return false;
-        });
-    }
-
-    void UpdateActiveAssessments()
-    {
-        var all = GetAllAssessments();
-        foreach (var a in all)
-            a.Active = true;
-        
-        var tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresGrabbing && (UseGrabbableObjects != 1); });
-        foreach (var a in tempAssessments)
-        {
-            a.Active = false;
-        }
-        tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresRoomScale && (UseRoomScale != 1); });
-        foreach (var a in tempAssessments)
-        {
-            a.Active = false;
-        }
-        tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresEyeTracking && (UseEyeTracking != 1); });
-        foreach (var a in tempAssessments)
-        {
-            a.Active = false;
         }
     }
 
@@ -302,11 +284,13 @@ public class ReadyRoomSetupWindow : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - CUSTOM", "steptitle");
 
-        GUI.Label(boldlabelrect, "Add your own assessments - any VR interactions that the user might not understand, such as using tools or interacting with distant objects", "boldlabel");
+        GUI.Label(boldlabelrect, "Add your own assessments", "boldlabel");
 
-        GUI.Label(new Rect(30,200,440,200), "Step 1: Create a new gameobject and add an assessment base script, or a script that inherits from that\n\n" +
-            "Step 2: Add any required game objects as children. These will be disable on awake and enabled when this assessment begins\n\n" +
-            "Step 3: Call <color=#8A9EB7FF>CompleteAssesment()</color> when the user has demonstrated understanding. This will disable child gameobjects", "normallabel");
+        GUI.Label(new Rect(30, 150, 440, 200), "A good assessment will teach the user how to use any unique tools or objects and explain common conventions in your experience","normallabel");
+
+        GUI.Label(new Rect(30,230,440,200), "Step 1: Create a new gameobject and add an <color=#084D76>AssessmentBase</color> script, or a script that inherits from this.\n\n" +
+            "Step 2: Add any required game objects as children. These will be disable on <color=#8A9EB7FF>Awake()</color> and enabled when your assessment begins.\n\n" +
+            "Step 3: Call <color=#8A9EB7FF>CompleteAssesment()</color> when the user has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
     }
 
     SceneSelectMenu sceneSelect;
@@ -314,7 +298,7 @@ public class ReadyRoomSetupWindow : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - SCENE MENU", "steptitle");
 
-        GUI.Label(boldlabelrect, "Choose which scenes to display after completing the Ready Room", "boldlabel");
+        GUI.Label(boldlabelrect, "Display scenes when the Ready Room is complete", "boldlabel");
 
         if (sceneSelect == null)
             sceneSelect = FindObjectOfType<SceneSelectMenu>();
@@ -329,7 +313,10 @@ public class ReadyRoomSetupWindow : EditorWindow
             Rect dropArea = new Rect(30, 150, 440, 100);
             Rect dropLabelArea = new Rect(60, 150, 380, 100);
 
+            //GUI.color = Color.green;
+            GUI.color = new Color(0, .8f, 0);
             GUI.Box(dropArea, "", "box_sharp_alpha");
+            GUI.color = Color.white;
 
             if (dropArea.Contains(Event.current.mousePosition))
             {
@@ -347,21 +334,36 @@ public class ReadyRoomSetupWindow : EditorWindow
                         if (string.IsNullOrEmpty(foundSceneByPath.ScenePath))
                         {
                             string filename = System.IO.Path.GetFileNameWithoutExtension(path);
-                            sceneSelect.SceneInfos.Add(new SceneInfo() { ScenePath = path, DisplayName = ObjectNames.NicifyVariableName(filename) });
+
+                            string displayname = ObjectNames.NicifyVariableName(filename.Replace('_', ' '));
+                            sceneSelect.SceneInfos.Add(new SceneInfo() { ScenePath = path, DisplayName = displayname });
+
+                            //popup to add scene to build settings
+                            var editorSceneList = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+                            var foundScene = editorSceneList.Find(delegate (EditorBuildSettingsScene obj) { return obj.path == path; });
+                            if (foundScene == null)
+                            {
+                                bool result = EditorUtility.DisplayDialog("Scene not in Build Settings", "The selected scene is not currently in the build settings. Do you want to add this now?", "Yes", "No");
+                                if (result)
+                                {
+                                    EditorBuildSettingsScene ebss = new EditorBuildSettingsScene(path, true);
+                                    editorSceneList.Add(ebss);
+                                    EditorBuildSettings.scenes = editorSceneList.ToArray();
+                                    Debug.Log("Added " + path + " to Editor Build Settings");
+                                }
+                            }
                         }
                     }
                 }
             }
             else
             {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             }
-            GUI.Label(dropArea, "Drag and Drop Scene Assets here to add to the Scene Select Menu", "ghostlabel");
-
-
+            GUI.Label(dropArea, "Drag and Drop Scene Assets here to add to the Scene Select Menu", "ghostlabel_actionable");
 
             Rect innerScrollSize = new Rect(30, 0, 420, sceneSelect.SceneInfos.Count * 30);
-            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 280, 440, 140), dynamicScrollPosition, innerScrollSize, false, true);
+            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 280, 440, 200), dynamicScrollPosition, innerScrollSize, false, true);
 
             Rect dynamicrect;
             for (int i = 0; i < sceneSelect.SceneInfos.Count; i++)
@@ -373,9 +375,11 @@ public class ReadyRoomSetupWindow : EditorWindow
             GUI.EndScrollView();
             Repaint();
 
-            GUI.Box(new Rect(30, 280, 425, 140), "", "box_sharp_alpha");
+            GUI.Box(new Rect(30, 280, 425, 200), "", "box_sharp_alpha");
         }
     }
+
+    string selectedSceneInfoPath;
 
     private void DrawSceneInfo(Rect dynamicrect, bool darkBackground, SceneInfo sceneInfo, SceneSelectMenu sceneSelect)
     {
@@ -390,18 +394,15 @@ public class ReadyRoomSetupWindow : EditorWindow
             else
             {
                 Selection.activeObject = sceneSelect;
+                selectedSceneInfoPath = sceneInfo.ScenePath;
             }
         }
 
-        /*if ()
-        {
-            Selection.activeGameObject = sceneSelect.gameObject;
-        }*/
         GUI.Label(dynamicrect, sceneInfo.DisplayName, background);
         if (string.IsNullOrEmpty(sceneInfo.ScenePath))
         {
             Rect warningRect = dynamicrect;
-            warningRect.x = 50;
+            warningRect.x = 30;
             warningRect.width = 30;
             GUI.Label(warningRect, new GUIContent(CognitiveVR.EditorCore.Alert,"Missing Scene Path"), "image_centered");
         }
@@ -414,12 +415,14 @@ public class ReadyRoomSetupWindow : EditorWindow
             //draw up/down arrows
             float height = dynamicrect.height / 2;
             float offset = dynamicrect.height / 2;
-            Rect up = new Rect(437, dynamicrect.y, 18, height);
-            Rect down = new Rect(437, dynamicrect.y + offset, 18, height);
+            Rect up = new Rect(435, dynamicrect.y, 18, height - 1);
+            Rect down = new Rect(435, dynamicrect.y + offset + 1, 18, height-1);
+
+            Rect options = new Rect(435, dynamicrect.y, 20, dynamicrect.height);
 
             if (GUI.Button(up, "^"))
             {
-                Debug.Log("move " + sceneInfo.DisplayName + " up ");
+                selectedSceneInfoPath = sceneInfo.ScenePath;
                 var all = sceneSelect.SceneInfos;
                 int index = all.IndexOf(sceneInfo);
                 if (index > 0)
@@ -430,7 +433,7 @@ public class ReadyRoomSetupWindow : EditorWindow
             }
             if (GUI.Button(down, "v"))
             {
-                Debug.Log("move " + sceneInfo.DisplayName + " down");
+                selectedSceneInfoPath = sceneInfo.ScenePath;
                 var all = sceneSelect.SceneInfos;
                 int index = all.IndexOf(sceneInfo);
                 if (index < all.Count - 1)
@@ -440,13 +443,17 @@ public class ReadyRoomSetupWindow : EditorWindow
                 }
             }
 
-            //draw x button
-            Rect removeButtonRect = new Rect(30, dynamicrect.y, 18, dynamicrect.height);
-            if (GUI.Button(removeButtonRect, "X"))
-            {
-                Debug.Log("remove " + sceneInfo.DisplayName + " from scene infos");
-                sceneSelect.SceneInfos.Remove(sceneInfo);
-            }
+            ////draw x button
+            //Rect removeButtonRect = new Rect(30, dynamicrect.y, 18, dynamicrect.height);
+            //if (GUI.Button(options, "X"))
+            //{
+            //    sceneSelect.SceneInfos.Remove(sceneInfo);
+            //}
+        }
+
+        if (selectedSceneInfoPath == sceneInfo.ScenePath)
+        {
+            GUI.Box(dynamicrect, "", "box_sharp_alpha");
         }
     }
 
@@ -456,31 +463,30 @@ public class ReadyRoomSetupWindow : EditorWindow
 
         GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - OVERVIEW", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the <color=#8A9EB7FF>Assessments</color> currently found in the scene.", "boldlabel");
+        GUI.Label(boldlabelrect, "These are the <color=#8A9EB7FF>Assessments</color> currently found in the scene.", "boldlabel");
         
-        Rect enabled = new Rect(40, 95, 120, 30);
-        GUI.Label(enabled, "Active", "dynamicheader");
+        Rect enabled = new Rect(30, 145, 120, 30);
+        GUI.Label(enabled, "Enabled", "dynamicheader");
 
-        Rect gameobject = new Rect(90, 95, 120, 30);
+        Rect gameobject = new Rect(90, 145, 120, 30);
         GUI.Label(gameobject, "GameObject", "dynamicheader");
 
         if (all.Count == 0)
         {
-            GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
+            GUI.Label(new Rect(30, 170, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
         }
 
         Rect innerScrollSize = new Rect(30, 0, 420, all.Count * 30);
-        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 280), dynamicScrollPosition, innerScrollSize, false, true);
+        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 170, 440, 280), dynamicScrollPosition, innerScrollSize, false, true);
 
         Rect dynamicrect;
         for (int i = 0; i < all.Count; i++)
         {
-            //if (all[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
             dynamicrect = new Rect(30, i * 30, 460, 30);
             DrawAssessment(all[i], dynamicrect, i % 2 == 0);
         }
         GUI.EndScrollView();
-        GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
+        GUI.Box(new Rect(30, 170, 425, 280), "", "box_sharp_alpha");
         Repaint();
     }
 
@@ -521,8 +527,8 @@ public class ReadyRoomSetupWindow : EditorWindow
         float height = rect.height / 2;
         float offset = rect.height / 2;
 
-        Rect up = new Rect(rect.x + 407, rect.y, 18, height);
-        Rect down = new Rect(rect.x + 407, rect.y + offset, 18, height);
+        Rect up = new Rect(rect.x + 407, rect.y, 18, height-1);
+        Rect down = new Rect(rect.x + 407, rect.y + offset + 1, 18, height-1);
 
         bool needsRefresh = false;
         if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
@@ -554,16 +560,16 @@ public class ReadyRoomSetupWindow : EditorWindow
             }
         }
 
-        Rect isActive = new Rect(rect.x + 10, rect.y, 24, rect.height);
-        Rect gameobject = new Rect(rect.x + 60, rect.y, 220, rect.height);
+        Rect isActiveRect = new Rect(rect.x + 10, rect.y, 24, rect.height);
+        Rect gameObjectRect = new Rect(rect.x + 60, rect.y, 420, rect.height);
 
         if (assessment.Active)
         {
-            GUI.Label(isActive, CognitiveVR.EditorCore.Checkmark, "image_centered");
+            GUI.Label(isActiveRect, CognitiveVR.EditorCore.Checkmark, "image_centered");
         }
         else
         {
-            GUI.Label(isActive, CognitiveVR.EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(isActiveRect, CognitiveVR.EditorCore.Alert, "image_centered");
         }
         
         if (needsRefresh)
@@ -575,7 +581,13 @@ public class ReadyRoomSetupWindow : EditorWindow
             }
         }
 
-        GUI.Label(gameobject, assessment.gameObject.name, "dynamiclabel");
+        string tooltip = "No Text Display";
+        var textComponent = assessment.GetComponentInChildren<UnityEngine.UI.Text>();
+        if (textComponent != null)
+        {
+            tooltip = textComponent.text;
+        }
+        GUI.Label(gameObjectRect,new GUIContent(assessment.gameObject.name,tooltip), "dynamiclabel");
     }
 
     void DrawFooter()
@@ -596,33 +608,61 @@ public class ReadyRoomSetupWindow : EditorWindow
         {
             //last page
             Rect nextbuttonrect = new Rect(410, 510, 80, 30);
-            GUI.Button(nextbuttonrect, "Next", "button_disabled");
+            GUI.Button(nextbuttonrect, "Done", "button_disabled");
         }
         else
         {
             Rect nextbuttonrect = new Rect(410, 510, 80, 30);
             string style = "button";
 
-            //, "room scale", "grab components"
+            System.Action clickAction = () => { currentPage = Mathf.Min(pageids.Count - 1, currentPage + 1); };
+
+            if (pageids[currentPage] == "player")
+            {
+                //style = "button_disabled";
+                //clickAction = null;
+            }
             if (pageids[currentPage] == "eye tracking")
             {
                 if (UseEyeTracking == -1)
+                {
                     style = "button_disabled";
+                    clickAction = null;
+                }
             }
             if (pageids[currentPage] == "room scale")
             {
                 if (UseRoomScale == -1)
+                {
                     style = "button_disabled";
+                    clickAction = null;
+                }
             }
             if (pageids[currentPage] == "grab components")
             {
                 if (UseGrabbableObjects == -1)
+                {
                     style = "button_disabled";
+                    clickAction = null;
+                }
+                else if (UseGrabbableObjects == 0)
+                {
+                    //not using grabbable things, find to skip
+                }
+                else if (UseGrabbableObjects == 1)
+                {
+                    if (Grabbables != null && Grabbables.Count > 0)
+                    {
+                        style = "button_disabled";
+                        clickAction = null;
+                    }
+                }
             }
 
             if (GUI.Button(nextbuttonrect, "Next", style))
             {
-                currentPage = Mathf.Min(pageids.Count - 1, currentPage + 1);
+                if (clickAction != null)
+                    clickAction.Invoke();
                 RefreshAssessments();
                 Grabbables = null;
             }
@@ -636,7 +676,7 @@ public class ReadyRoomSetupWindow : EditorWindow
 
     void OnSceneGUI(SceneView sceneView)
     {
-        if (GetAllAssessments() == null || GetAllAssessments().Count == 0)
+        /*if (GetAllAssessments() == null || GetAllAssessments().Count == 0)
             RefreshAssessments();
         var all = GetAllAssessments();
 
@@ -646,7 +686,7 @@ public class ReadyRoomSetupWindow : EditorWindow
             if (v == null) return;
             assessmentPoints.Add(v.transform.position);
         }
-        Handles.DrawPolyLine(assessmentPoints.ToArray());
+        Handles.DrawPolyLine(assessmentPoints.ToArray());*/
     }
 
     void OnDisable()
@@ -731,5 +771,40 @@ public class ReadyRoomSetupWindow : EditorWindow
             CognitiveVR.InitWizard.Init();
         }
 #endif
+    }
+
+    void UpdateActiveAssessments()
+    {
+        var all = GetAllAssessments();
+        foreach (var a in all)
+            a.Active = true;
+
+        var tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresGrabbing && (UseGrabbableObjects != 1); });
+        foreach (var a in tempAssessments)
+        {
+            a.Active = false;
+        }
+        tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresRoomScale && (UseRoomScale != 1); });
+        foreach (var a in tempAssessments)
+        {
+            a.Active = false;
+        }
+        tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresEyeTracking && (UseEyeTracking != 1); });
+        foreach (var a in tempAssessments)
+        {
+            a.Active = false;
+        }
+    }
+
+    AssessmentBase FindAssessment(bool eyetracking = false, bool roomscale = false, bool grabbable = false)
+    {
+        var all = GetAllAssessments();
+        return all.Find(delegate (AssessmentBase obj)
+        {
+            if (eyetracking && obj.RequiresEyeTracking) { return true; }
+            if (roomscale && obj.RequiresRoomScale) { return true; }
+            if (grabbable && obj.RequiresGrabbing) { return true; }
+            return false;
+        });
     }
 }

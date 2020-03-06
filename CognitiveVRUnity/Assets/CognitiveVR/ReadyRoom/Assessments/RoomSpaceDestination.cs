@@ -12,6 +12,7 @@ public class RoomSpaceDestination : MonoBehaviour
         Trigger
     }
 
+    [Tooltip("If null, this is automatically set to the HMD camera transform when enabled")]
     public Transform Target;
     public DestinationEnterType destinationEnterType;
     public float Distance = 1;
@@ -22,6 +23,8 @@ public class RoomSpaceDestination : MonoBehaviour
     //start a coroutine to check distance frequently
     void OnEnable ()
     {
+        if (Target == null)
+            Target = CognitiveVR.GameplayReferences.HMD;
         if (hasVisited) { return; }
         if (destinationEnterType == DestinationEnterType.Distance)
         {

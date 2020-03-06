@@ -8,9 +8,10 @@ using UnityEngine;
 public class SimplePointer : MonoBehaviour
 {
     static Material DefaultPointerMat;
-    LineRenderer LineRendererOverride;
-
     public static bool ForceLineVisible;
+
+    public bool DisplayLineRenderer = true;
+    public LineRenderer LineRendererOverride;
 
     float ForwardPower = 2;
     Vector3[] sampledPoints;
@@ -19,9 +20,9 @@ public class SimplePointer : MonoBehaviour
     [Tooltip("How many points along the curve to sample. Can lead to a smoother line renderer")]
     public int SampleResolution = 10;
     [Tooltip("The angle from this transform that should indicate 'forward'")]
-    public Vector3 Angle = new Vector3(0, -1, 1);
+    public Vector3 Angle = new Vector3(0, 0, 1);
     [Tooltip("When added to a controller, this offset is applied on start")]
-    public Vector3 LocalPositionOffset = new Vector3(0, -1, 1);
+    public Vector3 LocalPositionOffset = new Vector3(0, 0, 0);
     [Tooltip("If true, requires the HMD to be roughly pointed at a button to set focus")]
     public bool RequireHMDParallel = true;
 
@@ -29,8 +30,11 @@ public class SimplePointer : MonoBehaviour
     {
         sampledPoints = new Vector3[SampleResolution + 1];
         transform.localPosition = LocalPositionOffset;
-        LineRendererOverride = ConstructDefaultLineRenderer();
-        LineRendererOverride.positionCount = 5;
+        if (LineRendererOverride == null && DisplayLineRenderer)
+        {
+            LineRendererOverride = ConstructDefaultLineRenderer();
+            LineRendererOverride.positionCount = 5;
+        }
     }
 
     private LineRenderer ConstructDefaultLineRenderer()
@@ -54,14 +58,17 @@ public class SimplePointer : MonoBehaviour
         Vector3 dir = transform.TransformDirection(Angle);
         if (UpdateDrawLine(dir) != null || ForceLineVisible)
         {
-            LineRendererOverride.material.SetColor("_TintColor", new Color(1, 1, 1, 0.16f));
+            if (LineRendererOverride != null)
+                LineRendererOverride.material.SetColor("_TintColor", new Color(1, 1, 1, 0.16f));
         }
         else
         {
-            var c = LineRendererOverride.material.GetColor("_TintColor");
-            LineRendererOverride.material.SetColor("_TintColor", Color.Lerp(c, new Color(1, 1, 1, 0.0f), 0.1f));
+            if (LineRendererOverride != null)
+            {
+                var c = LineRendererOverride.material.GetColor("_TintColor");
+                LineRendererOverride.material.SetColor("_TintColor", Color.Lerp(c, new Color(1, 1, 1, 0.0f), 0.1f));
+            }
         }
-        Debug.DrawRay(transform.position, dir * 10, Color.red);
 	}
 
     IFocus UpdateDrawLine(Vector3 direction)
@@ -111,21 +118,16 @@ public class SimplePointer : MonoBehaviour
 
         if (!hasAnyButton || ForceLineVisible)
         {
-            //lastHasButtonTime += Time.deltaTime * 2;
-
             curve[0] = pos;
             curve[1] = pos + forward * ForwardPower;
 
             //lerp
             curve[2] = Vector3.Lerp(curve[2], pos + forward * ForwardPower,0.5f);
             curve[3] = Vector3.Lerp(curve[3], pos + forward * ForwardPower * 2,0.5f);
-
-            //snap
-            //curve[2] = pos + forward * ForwardPower;
-            //curve[3] = pos + forward * ForwardPower * 2;
         }
 
-        LineRendererOverride.SetPositions(EvaluatePoints(SampleResolution));
+        if (LineRendererOverride != null)
+            LineRendererOverride.SetPositions(EvaluatePoints(SampleResolution));
         return button;
     }
 
