@@ -16,20 +16,24 @@ public class AssessmentManager
     public static AssessmentManager Instance;
 
     //create an Assessment Manager instance and find + sort all assessments in the scene
+    //called from AssessmentBase on Start()
     public AssessmentManager()
     {
         Instance = this;
         AllAssessments = new List<AssessmentBase>(Object.FindObjectsOfType<AssessmentBase>());
-        
+
+        AllAssessments.RemoveAll(delegate (AssessmentBase obj) { return obj.Active == false; });
+
         AllAssessments.Sort(delegate (AssessmentBase a, AssessmentBase b)
         {
             return a.Order.CompareTo(b.Order);
         });
 
-        CurrentAssessmentIndex = -1;
+        foreach (var a in AllAssessments)
+            Debug.Log(a.gameObject);
 
-        if (Application.isPlaying)
-            ActivateNextAssessment();
+        CurrentAssessmentIndex = -1;
+        ActivateNextAssessment();
     }
 
     //Iterate to the next Assessment and call BeginAssessment on it
@@ -37,17 +41,17 @@ public class AssessmentManager
     {
         if (AllAssessments.Count > CurrentAssessmentIndex)
         {
+            CurrentAssessmentIndex++;
             var current = AllAssessments[CurrentAssessmentIndex];
             if (current == null)
             {
                 Debug.LogError("Assessment Manager returned null assessment!");
-                CurrentAssessmentIndex++;
                 return ActivateNextAssessment();
+                //return null;
             }
             else
             {
                 Debug.Log(">>>   Assessment Manager begin assessment " + current);
-                CurrentAssessmentIndex++;
                 current.BeginAssessment();
                 return current;
             }

@@ -45,7 +45,9 @@ public class SceneSelectMenuEditor : Editor
             EditorGUILayout.HelpBox("This assessment is disabled because due to how Ready Room is configured", MessageType.Info);
         }
 
-        EditorGUILayout.LabelField("The user is presented with the SceneInfos below and asked to choose which scene they want to load. This should always be the final assessment!", EditorStyles.boldLabel);
+        GUIStyle gs = new GUIStyle(EditorStyles.boldLabel);
+        gs.wordWrap = true;
+        EditorGUILayout.LabelField("The user is presented with the SceneInfos below and asked to choose which scene they want to load. This should always be the final assessment!", gs);
 
         GUILayout.Space(15);
         base.OnInspectorGUI();

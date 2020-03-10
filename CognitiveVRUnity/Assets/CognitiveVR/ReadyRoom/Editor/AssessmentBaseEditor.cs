@@ -10,6 +10,9 @@ public class AssessmentBaseEditor : Editor
     {
         var ab = target as AssessmentBase;
 
+        GUIStyle gs = new GUIStyle(EditorStyles.boldLabel);
+        gs.wordWrap = true;
+
         bool skipAssessment = false;
         if (ReadyRoomSetupWindow.UseEyeTracking != 1 && ab.RequiresEyeTracking)
         {
@@ -34,7 +37,7 @@ public class AssessmentBaseEditor : Editor
             var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
             if (textComponent != null)
             {
-                EditorGUILayout.LabelField("Text Display:",textComponent.text, EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Text Display:",textComponent.text, gs);
                 GUILayout.Space(15);
             }
         }

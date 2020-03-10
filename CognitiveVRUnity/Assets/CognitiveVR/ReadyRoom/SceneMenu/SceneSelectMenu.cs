@@ -49,4 +49,10 @@ public class SceneSelectMenu : AssessmentBase
         }
         return positions;
     }
+
+    //this should never be called. instead, the SceneButton prefab the user selects will load the next scene
+    public override void CompleteAssessment()
+    {
+        //base.CompleteAssessment();
+    }
 }

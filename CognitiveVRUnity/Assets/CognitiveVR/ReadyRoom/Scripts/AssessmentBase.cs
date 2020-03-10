@@ -26,6 +26,9 @@ public class AssessmentBase : MonoBehaviour
     //indicates that this assessment is only valid if interaction system allows picking up objects
     public bool RequiresGrabbing;
 
+    protected bool hasBegun;
+    protected bool hasCompleted;
+
     //disable all child gameobjects
     public virtual void OnEnable()
     {
@@ -44,10 +47,13 @@ public class AssessmentBase : MonoBehaviour
             new AssessmentManager();
         }
     }
-    
+
     //enables child gameobjects and calls OnAssessmentBegin event
     public virtual void BeginAssessment()
     {
+        if (hasBegun) { return; }
+        hasBegun = true;
+
         int childCount = transform.childCount;
         for (int i = 0; i < childCount; i++)
         {
@@ -62,15 +68,17 @@ public class AssessmentBase : MonoBehaviour
     //also calls ActivateNextAssessment
     public virtual void CompleteAssessment()
     {
+        if (hasCompleted) { return; }
+        hasCompleted = false;
+
         if (OnAssessmentComplete != null)
-            OnAssessmentComplete.Invoke(); //some objects could set parent == null and slowly disable if they want
+            OnAssessmentComplete.Invoke();
 
         int childCount = transform.childCount;
         for (int i = 0; i < childCount; i++)
         {
             transform.GetChild(i).gameObject.SetActive(false);
-        }
-
+        }        
         AssessmentManager.Instance.ActivateNextAssessment();
     }
 }
