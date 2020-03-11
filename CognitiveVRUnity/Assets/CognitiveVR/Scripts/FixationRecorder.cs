@@ -579,6 +579,7 @@ namespace CognitiveVR
             VISFixationEnds.Add("microsleep", new List<Fixation>());
             VISFixationEnds.Add("off transform", new List<Fixation>());
 
+            IsFixating = false;
             ActiveFixation = new Fixation();
 
             for (int i = 0; i < CachedEyeCaptures; i++)
