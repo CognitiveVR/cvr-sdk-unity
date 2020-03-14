@@ -19,6 +19,10 @@ public class AssessmentBase : MonoBehaviour
     public event onAssessmentStateChanged OnAssessmentBegin;
     public event onAssessmentStateChanged OnAssessmentComplete;
 
+    //a list of objects to disable when assessment is completed
+    //can be used to disable objects the player is grabbing, if these are normally parented to player hands
+    public List<GameObject> ControlledByAssessmentState;
+
     //indicates that this assessment is only valid if Eye Tracking SDK is present
     public bool RequiresEyeTracking;
     //indicates that this assessment is only valid if Room Scale is configured
@@ -36,6 +40,12 @@ public class AssessmentBase : MonoBehaviour
         for (int i = 0; i < childCount; i++)
         {
             transform.GetChild(i).gameObject.SetActive(false);
+        }
+
+        for (int i = 0; i < ControlledByAssessmentState.Count; i++)
+        {
+            if (ControlledByAssessmentState[i] == null) { continue; }
+            ControlledByAssessmentState[i].SetActive(false);
         }
     }
 
@@ -60,12 +70,19 @@ public class AssessmentBase : MonoBehaviour
             transform.GetChild(i).gameObject.SetActive(true);
         }
 
+        for (int i = 0; i < ControlledByAssessmentState.Count; i++)
+        {
+            if (ControlledByAssessmentState[i] == null) { continue; }
+            ControlledByAssessmentState[i].SetActive(true);
+        }
+
         if (OnAssessmentBegin != null)
             OnAssessmentBegin.Invoke();
     }
 
     //calls OnAssessmentComplete event and disables child gameobjects
     //also calls ActivateNextAssessment
+    [ContextMenu("DEBUG Complete")]
     public virtual void CompleteAssessment()
     {
         if (hasCompleted) { return; }
@@ -78,7 +95,13 @@ public class AssessmentBase : MonoBehaviour
         for (int i = 0; i < childCount; i++)
         {
             transform.GetChild(i).gameObject.SetActive(false);
-        }        
+        }
+
+        for (int i = 0; i < ControlledByAssessmentState.Count; i++)
+        {
+            if (ControlledByAssessmentState[i] == null) { continue; }
+            ControlledByAssessmentState[i].SetActive(false);
+        }
         AssessmentManager.Instance.ActivateNextAssessment();
     }
 }

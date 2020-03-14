@@ -6,6 +6,18 @@ using UnityEditor;
 [CustomEditor(typeof(SceneSelectMenu))]
 public class SceneSelectMenuEditor : Editor
 {
+    GUIStyle helpboxStyle;
+    GUIStyle boldWrap;
+    public void InitGUIStyle()
+    {
+        if (helpboxStyle != null) { return; }
+        helpboxStyle = new GUIStyle(EditorStyles.helpBox);
+        helpboxStyle.richText = true;
+
+        boldWrap = new GUIStyle(EditorStyles.boldLabel);
+        boldWrap.wordWrap = true;
+    }
+
     public void OnSceneGUI()
     {
         var menu = target as SceneSelectMenu;
@@ -40,14 +52,40 @@ public class SceneSelectMenuEditor : Editor
     public override void OnInspectorGUI()
     {
         var ab = target as AssessmentBase;
+
+        //display list of enable/disabled objects
+        string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
+        int childCount = ab.transform.childCount;
+        if (childCount > 0)
+            controlledComponentList += "\n<b>Child Transforms</b>";
+        for (int i = 0; i < childCount; i++)
+        {
+            controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
+        }
+        if (ab.ControlledByAssessmentState.Count > 0)
+            controlledComponentList += "\n<b>Controlled By Assessment State</b>";
+        foreach (var v in ab.ControlledByAssessmentState)
+        {
+            if (v == null) { continue; }
+            controlledComponentList += "\n   " + v.name;
+        }
+
+        InitGUIStyle();
+        EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
+
+
+
         if (ab.Active == false)
         {
             EditorGUILayout.HelpBox("This assessment is disabled because due to how Ready Room is configured", MessageType.Info);
         }
-
-        GUIStyle gs = new GUIStyle(EditorStyles.boldLabel);
-        gs.wordWrap = true;
-        EditorGUILayout.LabelField("The user is presented with the SceneInfos below and asked to choose which scene they want to load. This should always be the final assessment!", gs);
+        
+        var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
+        if (textComponent != null)
+        {
+            EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
+            GUILayout.Space(15);
+        }
 
         GUILayout.Space(15);
         base.OnInspectorGUI();

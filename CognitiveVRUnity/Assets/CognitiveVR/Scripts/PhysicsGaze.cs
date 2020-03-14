@@ -32,7 +32,8 @@ namespace CognitiveVR
         if (GameplayReferences.HMD == null) { return; }
 
         RaycastHit hit = new RaycastHit();
-        Ray ray = new Ray(GameplayReferences.HMD.position, GetWorldGazeDirection());
+        //Ray ray = new Ray(GameplayReferences.HMD.position, GetWorldGazeDirection());
+        Ray ray = GazeHelper.GetCurrentWorldGazeRay();
 
         Vector3 gpsloc = new Vector3();
         float compass = 0;

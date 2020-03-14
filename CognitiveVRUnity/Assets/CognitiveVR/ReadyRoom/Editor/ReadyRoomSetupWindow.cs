@@ -19,7 +19,7 @@ public class ReadyRoomSetupWindow : EditorWindow
         UseGrabbableObjects = EditorPrefs.GetInt("useGrabbable", -1);
 
         //check that window.Grabbables is empty
-        if (UseEyeTracking != -1 && UseGrabbableObjects != -1 && UseRoomScale != -1)
+        /*if (UseEyeTracking != -1 && UseGrabbableObjects != -1 && UseRoomScale != -1)
         {
             window.RefreshGrabbables(true);
             if (window.Grabbables.Count > 0)
@@ -33,8 +33,7 @@ public class ReadyRoomSetupWindow : EditorWindow
                 //user has already run through the Ready Room setup. Unlikely that they will need to change this basic stuff
                 window.currentPage = window.pageids.Count - 1;
             }
-        }
-
+        }*/
     }
 
     //called after recompile if window already open
@@ -64,10 +63,13 @@ public class ReadyRoomSetupWindow : EditorWindow
 
     public List<AssessmentBase> GetAllAssessments()
     {
-        if (AllAssessments.Contains(null))
+        foreach (var assessment in AllAssessments)
         {
-            Debug.Log("all assessments call refresh assessments");
-            RefreshAssessments();
+            if (assessment == null)
+            {
+                RefreshAssessments();
+                break;
+            }
         }
         return AllAssessments;
     }
@@ -134,9 +136,10 @@ public class ReadyRoomSetupWindow : EditorWindow
         GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - PLAYER", "steptitle");
 
         GUI.Label(boldlabelrect, "Ensure your Player is configured correctly", "boldlabel");
-        GUI.Label(new Rect(30, 200, 440, 30), "Add your <color=#084D76>Player</color> prefab to the Ready Room Scene", "normallabel_actionable");
-        GUI.Label(new Rect(30, 260, 440, 30), "If the player has controllers, add a <color=#084D76>SimplePointer</color> Component to each controller", "normallabel_actionable");
-        GUI.Label(new Rect(30, 340, 440, 30), "Otherwise, add a <color=#084D76>SimplePointer</color> Component to the player's HMD camera", "normallabel_actionable");
+        GUI.Label(new Rect(30, 200, 440, 30), "<b>Step 1:</b> Add your <b>Player</b> prefab to the Ready Room Scene", "normallabel_actionable");
+        GUI.Label(new Rect(30, 260, 440, 30), "<b>Step 2a:</b> If the player has controllers, add a <b>SimplePointer</b> Component to each controller", "normallabel_actionable");
+        GUI.Label(new Rect(30, 340, 440, 30), "<b>Step 2b:</b> Otherwise, add a <b>SimplePointer</b> Component to the player's HMD camera", "normallabel_actionable");
+        GUI.Label(new Rect(30, 420, 440, 30), "<b>Step 3:</b> Add a <b>HMDGazePointer</b> Component to the player's HMD camera", "normallabel_actionable");
     }
 
     void EyeTrackingUpdate()
@@ -175,7 +178,7 @@ public class ReadyRoomSetupWindow : EditorWindow
             //TODO editorcore/core.HasEyetrackingSDK
 #if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
             GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the user to ensure eye tracking is correctly calibrated", "normallabel");
-            GUI.Label(new Rect(30, 260, 440, 440), "Add any required Eye Tracking components to the scene", "normallabel_actionable");
+            GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 4:</b> Add any required Eye Tracking components to the scene", "normallabel_actionable");
 #else
             GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
             GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
@@ -219,7 +222,7 @@ public class ReadyRoomSetupWindow : EditorWindow
             //TODO editorcore.roomscale
 #if CVR_TOBIIVR || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the user to move around the room", "normallabel");
-            GUI.Label(new Rect(30, 260, 440, 440), "Add any required Room Scale components to the scene", "normallabel_actionable");
+            GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
 #else
             GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
             GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support room scale", "normallabel");
@@ -229,6 +232,20 @@ public class ReadyRoomSetupWindow : EditorWindow
     
     void RefreshGrabbables(bool forceRefresh = false)
     {
+#if UNITY_2018_3_OR_NEWER
+        //destroyed components won't trigger Grabbables.Contains(null). probably some internal nested prefab reason?
+        if (Grabbables != null)
+        {
+            foreach (var v in Grabbables)
+            {
+                if (v == null)
+                {
+                    forceRefresh = true;
+                    break;
+                }
+            }
+        }
+#endif
         if (forceRefresh || Grabbables == null || Grabbables.Contains(null))
         {
             Grabbables = new List<GrabComponentsRequired>(FindObjectsOfType<GrabComponentsRequired>());
@@ -256,6 +273,7 @@ public class ReadyRoomSetupWindow : EditorWindow
             UseGrabbableObjects = 1;
             UpdateActiveAssessments();
             EditorPrefs.SetInt("useGrabbable", UseGrabbableObjects);
+            RefreshGrabbables(true);
         }
         if (UseGrabbableObjects != 1)
         {
@@ -274,7 +292,7 @@ public class ReadyRoomSetupWindow : EditorWindow
 
             if (Grabbables.Count > 0)
             {
-                GUI.Label(new Rect(30, 260, 440, 440), "These gameobject must to be configured to use your grabbing interaction:", "normallabel_actionable");
+                GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 6:</b> These gameobject must to be configured to use your grabbing interaction:", "normallabel_actionable");
 
                 Rect innerScrollSize = new Rect(30, 0, 420, Grabbables.Count * 30);
                 dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 330, 440, 100), dynamicScrollPosition, innerScrollSize, false, true);
@@ -282,6 +300,8 @@ public class ReadyRoomSetupWindow : EditorWindow
                 Rect dynamicrect;
                 for (int i = 0; i < Grabbables.Count; i++)
                 {
+                    if (Grabbables[i] == null) { continue; }
+
                     dynamicrect = new Rect(30, i * 30, 100, 30);
                     string background = (i % 2 == 0) ? "dynamicentry_even" : "dynamicentry_odd";
                     if (GUILayout.Button(Grabbables[i].gameObject.name, background))
@@ -317,9 +337,9 @@ public class ReadyRoomSetupWindow : EditorWindow
 
         GUI.Label(new Rect(30, 150, 440, 200), "A good assessment will teach the user how to use any unique tools or objects and explain common conventions in your experience","normallabel");
 
-        GUI.Label(new Rect(30,230,440,200), "Step 1: Create a new gameobject and add an <color=#084D76>AssessmentBase</color> script, or a script that inherits from this.\n\n" +
-            "Step 2: Add any required game objects as children. These will be disable on <color=#8A9EB7FF>Awake()</color> and enabled when your assessment begins.\n\n" +
-            "Step 3: Call <color=#8A9EB7FF>CompleteAssesment()</color> when the user has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
+        GUI.Label(new Rect(30,230,440,200), "<b>Step 7a:</b> Create a new gameobject and add an <b>AssessmentBase</b> script, or a script that inherits from this.\n\n" +
+            "<b>Step 7b:</b> Add any required game objects as children. These will be disable on <b>Awake()</b> and enabled when your assessment begins.\n\n" +
+            "<b>Step 7c:</b> Call <b>CompleteAssesment()</b> when the user has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
     }
 
     bool hasDisplayedBuildPopup = false;
@@ -327,7 +347,7 @@ public class ReadyRoomSetupWindow : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - SCENE MENU", "steptitle");
 
-        GUI.Label(boldlabelrect, "Display scenes when the Ready Room is complete", "boldlabel");
+        GUI.Label(boldlabelrect, "<b>Step 8:</b> Display scenes when the Ready Room is complete", "normallabel_actionable");
 
         if (!hasDisplayedBuildPopup)
         {
