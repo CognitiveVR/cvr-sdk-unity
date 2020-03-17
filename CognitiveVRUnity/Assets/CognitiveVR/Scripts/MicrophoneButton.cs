@@ -14,7 +14,7 @@ using AdhawkApi.Numerics.Filters;
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Internal/Microphone Button")]
-    public class MicrophoneButton : GazeButton
+    public class MicrophoneButton : VirtualButton
     {
         [Header("Gaze Settings")]
         float _currentRecordTime;
@@ -36,9 +36,11 @@ namespace CognitiveVR
             this.questionSet = questionSet;
         }
 
-        protected override void OnEnable()
+        protected virtual void OnEnable()
         {
-            base.OnEnable();
+            if (GameplayReferences.HMD == null) { return; }
+            FillAmount = 0;
+            UpdateFillAmount();
         }
 
 
@@ -73,34 +75,34 @@ namespace CognitiveVR
         protected override void LateUpdate()
         {
             //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
-            if (OnLook == null) { return; }
+            if (OnFill == null) { return; }
             //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
 
             //set fill visual
             //check for over fill threshold to activate action
 
-            if (lookedAtThisFrame)
+            if (focusThisFrame)
             {
-                _currentLookTime += Time.deltaTime;
+                FillAmount += Time.deltaTime;
                 UpdateFillAmount();
-                if (_currentLookTime >= LookTime)
+                if (FillAmount >= FillDuration)
                 {
                     RecorderActivate();
                 }
             }
-            else if (_currentLookTime > 0)
+            else if (FillAmount > 0)
             {
-                _currentLookTime = 0;
+                FillAmount = 0;
                 UpdateFillAmount();
             }
-            lookedAtThisFrame = false;
+            focusThisFrame = false;
         }
 
         void RecorderActivate()
         {
             // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
             clip = Microphone.Start(null, false, RecordTime, outputRate);
-            Fill.color = Color.red;
+            fillImage.color = Color.red;
 
             GetComponentInParent<ExitPollPanel>().DisableTimeout();
             _currentRecordTime = RecordTime;
@@ -109,15 +111,15 @@ namespace CognitiveVR
             TipText.text = "Recording...";
         }
 
-        protected override void UpdateFillAmount()
+        protected void UpdateFillAmount()
         {
             if (_recording)
             {
-                Fill.fillAmount = _currentRecordTime / RecordTime;
+                fillImage.fillAmount = _currentRecordTime / RecordTime;
             }
             else
             {
-                Fill.fillAmount = _currentLookTime / LookTime;
+                fillImage.fillAmount = FillAmount / FillDuration;
             }
         }
     }

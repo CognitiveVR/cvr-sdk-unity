@@ -3,75 +3,78 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(AssessmentBase), true)]
-public class AssessmentBaseEditor : Editor
+namespace CognitiveVR
 {
-    GUIStyle helpboxStyle;
-    GUIStyle boldWrap;
-    public void InitGUIStyle()
+    [CustomEditor(typeof(AssessmentBase), true)]
+    public class AssessmentBaseEditor : Editor
     {
-        if (helpboxStyle != null) { return; }
-        helpboxStyle = new GUIStyle(EditorStyles.helpBox);
-        helpboxStyle.richText = true;
-
-        boldWrap = new GUIStyle(EditorStyles.boldLabel);
-        boldWrap.wordWrap = true;
-    }
-
-    public override void OnInspectorGUI()
-    {
-        var ab = target as AssessmentBase;
-
-        //display list of enable/disabled objects
-        string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
-        int childCount = ab.transform.childCount;
-        if (childCount > 0)
-            controlledComponentList += "\n<b>Child Transforms</b>";
-        for (int i = 0; i < childCount; i++)
+        GUIStyle helpboxStyle;
+        GUIStyle boldWrap;
+        public void InitGUIStyle()
         {
-            controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
-        }
-        if (ab.ControlledByAssessmentState.Count > 0)
-            controlledComponentList += "\n<b>Controlled By Assessment State</b>";
-        foreach (var v in ab.ControlledByAssessmentState)
-        {
-            if (v == null) { continue; }
-            controlledComponentList += "\n   " + v.name;
+            if (helpboxStyle != null) { return; }
+            helpboxStyle = new GUIStyle(EditorStyles.helpBox);
+            helpboxStyle.richText = true;
+
+            boldWrap = new GUIStyle(EditorStyles.boldLabel);
+            boldWrap.wordWrap = true;
         }
 
-        InitGUIStyle();
-        EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
+        public override void OnInspectorGUI()
+        {
+            var ab = target as AssessmentBase;
 
-        //display warnings from setup
-        bool skipAssessment = false;
-        if (EditorPrefs.GetInt("useEyeTracking", -1) != 1 && ab.RequiresEyeTracking)
-        {
-            EditorGUILayout.HelpBox("This assessment requires Eye Tracking.\n\nReady Room is not configured to use Eye Tracking or the selected VR SDK does not support Eye Tracking\n\nThis assessment will be skipped", MessageType.Warning, true);
-            GUILayout.Space(15);
-            skipAssessment = true;
-        }
-        else if (EditorPrefs.GetInt("useGrabbable", -1) != 1 && ab.RequiresGrabbing)
-        {
-            EditorGUILayout.HelpBox("This assessment requires grabbing objects.\n\nReady Room is not configured to use grabbing objects or the selected VR SDK does not support grabbing objects\n\nThis assessment will be skipped", MessageType.Warning, true);
-            GUILayout.Space(15);
-            skipAssessment = true;
-        }
-        else if (EditorPrefs.GetInt("useRoomScale", -1) != 1 && ab.RequiresRoomScale)
-        {
-            EditorGUILayout.HelpBox("This assessment requires Room Scale.\n\nReady Room is not configured to use Room Scale or the selected VR SDK does not support Room Scale\n\nThis assessment will be skipped", MessageType.Warning, true);
-            GUILayout.Space(15);
-            skipAssessment = true;
-        }
-        if (!skipAssessment)
-        {
-            var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
-            if (textComponent != null)
+            //display list of enable/disabled objects
+            string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
+            int childCount = ab.transform.childCount;
+            if (childCount > 0)
+                controlledComponentList += "\n<b>Child Transforms</b>";
+            for (int i = 0; i < childCount; i++)
             {
-                EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
-                GUILayout.Space(15);
+                controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
             }
-        }
+            if (ab.ControlledByAssessmentState.Count > 0)
+                controlledComponentList += "\n<b>Controlled By Assessment State</b>";
+            foreach (var v in ab.ControlledByAssessmentState)
+            {
+                if (v == null) { continue; }
+                controlledComponentList += "\n   " + v.name;
+            }
 
-        base.OnInspectorGUI();
+            InitGUIStyle();
+            EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
+
+            //display warnings from setup
+            bool skipAssessment = false;
+            if (EditorPrefs.GetInt("useEyeTracking", -1) != 1 && ab.RequiresEyeTracking)
+            {
+                EditorGUILayout.HelpBox("This assessment requires Eye Tracking.\n\nReady Room is not configured to use Eye Tracking or the selected VR SDK does not support Eye Tracking\n\nThis assessment will be skipped", MessageType.Warning, true);
+                GUILayout.Space(15);
+                skipAssessment = true;
+            }
+            else if (EditorPrefs.GetInt("useGrabbable", -1) != 1 && ab.RequiresGrabbing)
+            {
+                EditorGUILayout.HelpBox("This assessment requires grabbing objects.\n\nReady Room is not configured to use grabbing objects or the selected VR SDK does not support grabbing objects\n\nThis assessment will be skipped", MessageType.Warning, true);
+                GUILayout.Space(15);
+                skipAssessment = true;
+            }
+            else if (EditorPrefs.GetInt("useRoomScale", -1) != 1 && ab.RequiresRoomScale)
+            {
+                EditorGUILayout.HelpBox("This assessment requires Room Scale.\n\nReady Room is not configured to use Room Scale or the selected VR SDK does not support Room Scale\n\nThis assessment will be skipped", MessageType.Warning, true);
+                GUILayout.Space(15);
+                skipAssessment = true;
+            }
+            if (!skipAssessment)
+            {
+                var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
+                if (textComponent != null)
+                {
+                    EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
+                    GUILayout.Space(15);
+                }
+            }
+
+            base.OnInspectorGUI();
+        }
     }
 }

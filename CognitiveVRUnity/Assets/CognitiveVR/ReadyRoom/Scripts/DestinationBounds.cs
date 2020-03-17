@@ -6,7 +6,6 @@ namespace CognitiveVR
 {
     public class DestinationBounds : MonoBehaviour
     {
-        Bounds debugGizmoBounds;
         public Color displayColor = Color.cyan;
 
         void Start()
@@ -103,11 +102,6 @@ namespace CognitiveVR
             meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             meshRenderer.receiveShadows = false;
-        }
-
-        void OnDrawGizmos()
-        {
-            Gizmos.DrawWireCube(debugGizmoBounds.center, debugGizmoBounds.size);
         }
     }
 }

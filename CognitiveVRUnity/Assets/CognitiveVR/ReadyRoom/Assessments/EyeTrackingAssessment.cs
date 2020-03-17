@@ -4,28 +4,31 @@ using UnityEngine;
 
 //complete when the user looks at each target
 
-public class EyeTrackingAssessment : AssessmentBase
+namespace CognitiveVR
 {
-    public List<HMDFocusButton> Targets = new List<HMDFocusButton>();
-    int targetsRemaining;
-
-    public override void BeginAssessment()
+    public class EyeTrackingAssessment : AssessmentBase
     {
-        targetsRemaining = 0;
-        for (int i = 0; i < Targets.Count; i++)
+        public List<HMDFocusButton> Targets = new List<HMDFocusButton>();
+        int targetsRemaining;
+
+        public override void BeginAssessment()
         {
-            if (Targets[i] != null)
-                targetsRemaining++;
+            targetsRemaining = 0;
+            for (int i = 0; i < Targets.Count; i++)
+            {
+                if (Targets[i] != null)
+                    targetsRemaining++;
+            }
+            base.BeginAssessment();
         }
-        base.BeginAssessment();
-    }
 
-    public void ActivateTarget()
-    {
-        targetsRemaining--;
-        if (targetsRemaining <= 0)
+        public void ActivateTarget()
         {
-            CompleteAssessment();
+            targetsRemaining--;
+            if (targetsRemaining <= 0)
+            {
+                CompleteAssessment();
+            }
         }
     }
 }

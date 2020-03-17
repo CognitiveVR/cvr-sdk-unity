@@ -5,8 +5,12 @@ using UnityEngine;
 //indicates the implementor can be 'focused'
 //primarily used by controller pointer
 
-public interface IFocus
+namespace CognitiveVR
 {
-    void SetFocus();
-    Vector3 GetPosition();
+    public interface IPointerFocus
+    {
+        void SetPointerFocus();
+        Vector3 GetPosition();
+        MonoBehaviour MonoBehaviour { get; }
+    }
 }

@@ -4,68 +4,73 @@ using UnityEngine;
 
 //marks an area that should be 'visited' by the player within the room boundaries
 
-public class RoomSpaceDestination : MonoBehaviour
+namespace CognitiveVR
 {
-    public enum DestinationEnterType
+    public class RoomSpaceDestination : MonoBehaviour
     {
-        Distance,
-        Trigger
-    }
-
-    [Tooltip("If null, this is automatically set to the HMD camera transform when enabled")]
-    public Transform Target;
-    public DestinationEnterType destinationEnterType;
-    public float Distance = 1;
-
-    public UnityEngine.Events.UnityEvent OnEnter;
-    bool hasVisited = false;
-
-    //start a coroutine to check distance frequently
-    void OnEnable ()
-    {
-        if (Target == null)
-            Target = CognitiveVR.GameplayReferences.HMD;
-        if (hasVisited) { return; }
-        if (destinationEnterType == DestinationEnterType.Distance)
+        public enum DestinationEnterType
         {
-            StartCoroutine(CheckDistance());
+            Distance,
+            Trigger
         }
-	}
 
-    //check the distance between the target and this destination, ignoring vertical height
-    IEnumerator CheckDistance()
-    {
-        var wait = new WaitForSeconds(0.2f);
-        while (true)
+        [Tooltip("If null, this is automatically set to the HMD camera transform when enabled")]
+        public Transform Target;
+        public DestinationEnterType destinationEnterType;
+        public float Distance = 1;
+
+        public UnityEngine.Events.UnityEvent OnEnter;
+        bool hasVisited = false;
+
+        //start a coroutine to check distance frequently
+        void OnEnable()
         {
-            yield return wait;
-            if (hasVisited) { yield break; }
-            if (Target == null) { Debug.Log("Room Space Destination Target is null!",this); yield break; }
-            Vector3 position = transform.position;
-            position.y = 0;
-
-            Vector3 target = Target.position;
-            target.y = 0;
-
-            if (Vector3.Distance(position,target)<Distance)
+            if (Target == null)
+                Target = CognitiveVR.GameplayReferences.HMD;
+            if (hasVisited) { return; }
+            if (destinationEnterType == DestinationEnterType.Distance)
             {
-                OnEnter.Invoke();
-                hasVisited = true;
-                yield break;
+                StartCoroutine(CheckDistance());
             }
         }
-    }
 
-    //check that the entering trigger is a child of the target
-    void OnTriggerEnter(Collider other)
-    {
-        if (destinationEnterType != DestinationEnterType.Trigger) { return; }
-        if (hasVisited) { return; }
-        if (Target == null) { Debug.Log("Room Space Destination Target is null!", this); return; }
-        if (Target.IsChildOf(other.transform.root))
+        //check the distance between the target and this destination, ignoring vertical height
+        IEnumerator CheckDistance()
         {
-            OnEnter.Invoke();
-            hasVisited = true;
+            var wait = new WaitForSeconds(0.2f);
+            while (true)
+            {
+                yield return wait;
+                if (hasVisited) { yield break; }
+                if (Target == null) { Debug.Log("Room Space Destination Target is null!", this); yield break; }
+                Vector3 position = transform.position;
+                position.y = 0;
+
+                Vector3 target = Target.position;
+                target.y = 0;
+
+                if (Vector3.Distance(position, target) < Distance)
+                {
+                    OnEnter.Invoke();
+                    hasVisited = true;
+                    GetComponent<MeshRenderer>().enabled = false;
+                    yield break;
+                }
+            }
+        }
+
+        //check that the entering trigger is a child of the target
+        void OnTriggerEnter(Collider other)
+        {
+            if (destinationEnterType != DestinationEnterType.Trigger) { return; }
+            if (hasVisited) { return; }
+            if (Target == null) { Debug.Log("Room Space Destination Target is null!", this); return; }
+            if (Target.IsChildOf(other.transform.root))
+            {
+                OnEnter.Invoke();
+                GetComponent<MeshRenderer>().enabled = false;
+                hasVisited = true;
+            }
         }
     }
 }

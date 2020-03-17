@@ -7,23 +7,21 @@ using Valve.VR;
 
 //complete when the user moves to each destination in the VR Room Space
 
-public class RoomSpaceAssessment : AssessmentBase
+namespace CognitiveVR
 {
-    public List<RoomSpaceDestination> Destinations = new List<RoomSpaceDestination>();
-    int destinationsRemaining;
-
-    Bounds bounds;
-    public Bounds RoomBounds
+    public class RoomSpaceAssessment : AssessmentBase
     {
-        get { return bounds; }
-    }
+        public List<RoomSpaceDestination> Destinations = new List<RoomSpaceDestination>();
+        int destinationsRemaining;
 
-    //Returns the bounds of the Room as defined by the selected SDK
+        //Returns the bounds of the Room as defined by the selected SDK
+
 #if CVR_STEAMVR
     public Bounds CalculateBounds()
     {
         var playArea = FindObjectOfType<SteamVR_PlayArea>();
-        bounds = new Bounds();
+
+        var bounds = new Bounds();
         for (int i = 0; i < 4; i++)
         {
             bounds.Encapsulate(playArea.vertices[i]);
@@ -37,66 +35,65 @@ public class RoomSpaceAssessment : AssessmentBase
 #elif CVR_OCULUS
     public Bounds CalculateBounds()
     {
-        bounds = new Bounds();
+        var bounds = new Bounds();
         var dimensions = OVRPlugin.GetBoundaryDimensions(OVRPlugin.BoundaryType.PlayArea);
         bounds.extents = new Vector3(dimensions.x, dimensions.y, dimensions.z);
         return bounds;
     }
 #else
-    public Bounds CalculateBounds()
-    {
-        bounds = new Bounds();
-        bounds.extents = Vector3.one * 3;
-        return bounds;
-    }
+        public Bounds CalculateBounds()
+        {
+            var bounds = new Bounds();
+            bounds.extents = Vector3.one * 3;
+            return bounds;
+        }
 #endif
 
-    //calls CalculateBounds and SetDestinationPositions before base startup logic
-    public override void BeginAssessment()
-    {
-        Bounds bounds = CalculateBounds();
-        SetDestinationPositions(bounds);
-
-        destinationsRemaining = 0;
-        for (int i = 0; i < Destinations.Count; i++)
+        //calls CalculateBounds and SetDestinationPositions before base startup logic
+        public override void BeginAssessment()
         {
-            if (Destinations[i] != null)
-                destinationsRemaining++;
+            Bounds bounds = CalculateBounds();
+            SetDestinationPositions(bounds);
+
+            destinationsRemaining = 0;
+            for (int i = 0; i < Destinations.Count; i++)
+            {
+                if (Destinations[i] != null)
+                    destinationsRemaining++;
+            }
+            base.BeginAssessment();
+
+            if (destinationsRemaining == 0)
+            {
+                Debug.LogWarning("Ready Room RoomSpaceAssessment does not contain any destinations!");
+                CompleteAssessment();
+            }
         }
-        base.BeginAssessment();
 
-        if (destinationsRemaining == 0)
+        //moves each destination to a valid position within the Room Bounds
+        void SetDestinationPositions(Bounds bounds)
         {
-            Debug.LogWarning("Ready Room RoomSpaceAssessment does not contain any destinations!");
-            CompleteAssessment();
+            for (int i = 0; i < 4; i++)
+            {
+                if (Destinations.Count <= i || Destinations[i] == null) { break; }
+                Vector3 offset = (bounds.extents * 3f / 4f);
+                offset.y = 0;
+                if (i == 0) { }
+                else if (i == 1) { offset.x *= -1; }
+                else if (i == 2) { offset.z *= -1; }
+                else if (i == 3) { offset.x *= -1; offset.z *= -1; }
+                Destinations[i].transform.position = bounds.center + offset;
+            }
         }
-    }
 
-    //moves each destination to a valid position within the Room Bounds
-    void SetDestinationPositions(Bounds bounds)
-    {
-        List<Vector3> DestinationPositions = new List<Vector3>();
-
-        for(int i = 0; i< 4; i++)
+        //called from RoomSpaceDestination component
+        public void ActivateDestination()
         {
-            if (Destinations.Count <= i || Destinations[i] == null) { break; }
-            Vector3 offset = (bounds.extents * 3f / 4f);
-            offset.y = 0;
-            if (i == 0) {}
-            else if (i == 1) { offset.x *= -1; }
-            else if (i == 2) { offset.z *= -1; }
-            else if (i == 3) { offset.x *= -1; offset.z *= -1; }
-            Destinations[i].transform.position = bounds.center + offset;
-        }
-    }
-
-    //called from RoomSpaceDestination component
-    public void ActivateDestination()
-    {
-        destinationsRemaining--;
-        if (destinationsRemaining <= 0)
-        {
-            CompleteAssessment();
+            destinationsRemaining--;
+            if (destinationsRemaining <= 0)
+            {
+                CompleteAssessment();
+            }
         }
     }
 }

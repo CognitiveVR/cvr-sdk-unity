@@ -183,22 +183,30 @@ namespace CognitiveVR
             }
             else if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
-                pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollHMDPointer"));
+                GameObject prefab = Resources.Load<GameObject>("HMDPointer");
+                if (prefab != null)
+                    pointerInstance = GameObject.Instantiate(prefab);
+                else
+                    Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
             }
             else if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
             {
-                pointerInstance = GameObject.Instantiate(Resources.Load<GameObject>("ExitPollControllerPointer"));
+                GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
+                if (prefab != null)
+                    pointerInstance = GameObject.Instantiate(prefab);
+                else
+                    Debug.LogError("Spawning Exitpoll Controller Pointer, but cannot find prefab \"ControllerPointer\" in Resources!");
             }
             else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
             {
-                pointerInstance = GameObject.Instantiate(parameters.PointerOverride);
+                if (parameters.PointerOverride != null)
+                    pointerInstance = GameObject.Instantiate(parameters.PointerOverride);
+                else
+                    Debug.LogError("Spawning Exitpoll Pointer, but cannot pointer override prefab is null!");
             }
-
-            //TODO check and do something if pointer instance == null
-
+            
             if (pointerInstance != null)
             {
-
                 if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
                 {
                     //parent to hmd and zero position

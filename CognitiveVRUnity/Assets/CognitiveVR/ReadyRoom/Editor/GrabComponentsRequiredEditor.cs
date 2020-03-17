@@ -3,61 +3,63 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(GrabComponentsRequired))]
-[CanEditMultipleObjects]
-public class GrabComponentsRequiredEditor : Editor
+namespace CognitiveVR
 {
-    bool m_Initialized;
-
-    GUIStyle HeadingStyle { get { return m_HeadingStyle; } }
-    [SerializeField] GUIStyle m_HeadingStyle;
-
-    GUIStyle BodyStyle { get { return m_BodyStyle; } }
-    [SerializeField] GUIStyle m_BodyStyle;
-
-    GUIStyle SmallBodyStyle { get { return m_SmallBodyStyle; } }
-    [SerializeField] GUIStyle m_SmallBodyStyle;
-
-    void InitGUIStyles()
+    [CustomEditor(typeof(GrabComponentsRequired))]
+    [CanEditMultipleObjects]
+    public class GrabComponentsRequiredEditor : Editor
     {
-        if (m_Initialized)
-            return;
-        m_BodyStyle = new GUIStyle(EditorStyles.label);
-        m_BodyStyle.wordWrap = true;
-        m_BodyStyle.fontSize = 14;
-        m_BodyStyle.richText = true;
+        bool m_Initialized;
 
-        m_SmallBodyStyle = new GUIStyle(EditorStyles.label);
-        m_SmallBodyStyle.wordWrap = true;
-        m_SmallBodyStyle.fontSize = 11;
+        GUIStyle HeadingStyle { get { return m_HeadingStyle; } }
+        [SerializeField] GUIStyle m_HeadingStyle;
 
-        m_HeadingStyle = new GUIStyle(m_BodyStyle);
-        m_HeadingStyle.fontSize = 18;
+        GUIStyle BodyStyle { get { return m_BodyStyle; } }
+        [SerializeField] GUIStyle m_BodyStyle;
 
-        m_Initialized = true;
-    }
+        GUIStyle SmallBodyStyle { get { return m_SmallBodyStyle; } }
+        [SerializeField] GUIStyle m_SmallBodyStyle;
 
-    public override void OnInspectorGUI()
-	{
-        base.OnInspectorGUI();
-        InitGUIStyles();
+        void InitGUIStyles()
+        {
+            if (m_Initialized)
+                return;
+            m_BodyStyle = new GUIStyle(EditorStyles.label);
+            m_BodyStyle.wordWrap = true;
+            m_BodyStyle.fontSize = 14;
+            m_BodyStyle.richText = true;
 
-        GUILayout.Label("Setup Instructions", HeadingStyle);
+            m_SmallBodyStyle = new GUIStyle(EditorStyles.label);
+            m_SmallBodyStyle.wordWrap = true;
+            m_SmallBodyStyle.fontSize = 11;
 
-        EditorGUI.indentLevel++;
-        EditorGUILayout.LabelField("1. Add a '<b>grabbable</b>' component from your chosen SDK", BodyStyle);
+            m_HeadingStyle = new GUIStyle(m_BodyStyle);
+            m_HeadingStyle.fontSize = 18;
+
+            m_Initialized = true;
+        }
+
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            InitGUIStyles();
+
+            GUILayout.Label("Setup Instructions", HeadingStyle);
+
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("1. Add a '<b>grabbable</b>' component from your chosen SDK", BodyStyle);
 #if CVR_OCULUS
         EditorGUILayout.HelpBox("Oculus: You likely need to add the \"Grabbable\" component", MessageType.Info);
 #elif CVR_STEAMVR
-        EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" component", MessageType.Info);
+        EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" and \"InteractableExample\" component", MessageType.Info);
 #elif CVR_STEAMVR2
-        EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" component", MessageType.Info);
+        EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" and \"InteractableExample\" component", MessageType.Info);
 #elif CVR_UNITYXR
         EditorGUILayout.HelpBox("UnityXR: You likely need to add the \"XR Grab Interactable\" component", MessageType.Info);
 #endif
-        EditorGUILayout.LabelField("2. Add a collider if necessary", BodyStyle);
-        EditorGUILayout.LabelField("3. Remove this component", BodyStyle);
-        EditorGUI.indentLevel--;
+            EditorGUILayout.LabelField("2. Add a collider if necessary", BodyStyle);
+            EditorGUILayout.LabelField("3. Remove this component", BodyStyle);
+            EditorGUI.indentLevel--;
+        }
     }
 }
-

@@ -2,30 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowTarget : MonoBehaviour
+namespace CognitiveVR
 {
-    public bool FollowMainCamera;
-    public Transform Target;
-
-    public bool Position = true;
-    public float PositionLerpSpeed = 0.5f;
-    public bool Rotation = true;
-    public float RotationLerpSpeed = 0.5f;
-
-    void Start()
+    public class FollowTarget : MonoBehaviour
     {
-        if (FollowMainCamera)
+        public bool FollowMainCamera;
+        public Transform Target;
+
+        public bool Position = true;
+        public float PositionLerpSpeed = 0.5f;
+        public bool Rotation = true;
+        public float RotationLerpSpeed = 0.5f;
+
+        void Start()
         {
-            Target = Camera.main.transform;
+            if (FollowMainCamera)
+            {
+                Target = Camera.main.transform;
+            }
         }
-    }
 
-	void LateUpdate ()
-    {
-		if (Target == null) { return; }
-        if (Position == false && Rotation == false) { return; }
+        void LateUpdate()
+        {
+            if (Target == null) { return; }
+            if (Position == false && Rotation == false) { return; }
 
-        if (Position == true) { transform.position = Vector3.Lerp(transform.position, Target.position, PositionLerpSpeed); }
-        if (Rotation == true) { transform.rotation = Quaternion.Lerp(transform.rotation, Target.rotation, RotationLerpSpeed); }
+            if (Position == true) { transform.position = Vector3.Lerp(transform.position, Target.position, PositionLerpSpeed); }
+            if (Rotation == true) { transform.rotation = Quaternion.Lerp(transform.rotation, Target.rotation, RotationLerpSpeed); }
+        }
     }
 }

@@ -7,27 +7,29 @@ using UnityEngine.SceneManagement;
 //same focus logic as virtual button
 //should ignore the OnFill UnityEvent
 //instead calls SceneManager.LoadScene based on the scene that was passed to this button
-
-public class SceneLoadButton : VirtualButton, ISceneInfoHolder
+namespace CognitiveVR
 {
-    public Image SceneImage;
-    public Text SceneName;
-    SceneInfo sceneInfo;
-
-    //holds scene data and display names/images to represent scene
-    public void ApplySceneInfo(SceneInfo info)
+    public class SceneLoadButton : VirtualButton, ISceneInfoHolder
     {
-        sceneInfo = info;
-        if (sceneInfo.Icon != null)
-            SceneImage.sprite = sceneInfo.Icon;
-        SceneName.text = sceneInfo.DisplayName;
-    }
+        public Image SceneImage;
+        public Text SceneName;
+        SceneInfo sceneInfo;
 
-    //loads the scene after the button is filled
-    protected override IEnumerator FilledEvent()
-    {
-        yield return base.FilledEvent();
-        Debug.Log("Load Scene: " + sceneInfo.ScenePath);
-        SceneManager.LoadScene(sceneInfo.ScenePath);
+        //holds scene data and display names/images to represent scene
+        public void ApplySceneInfo(SceneInfo info)
+        {
+            sceneInfo = info;
+            if (sceneInfo.Icon != null)
+                SceneImage.sprite = sceneInfo.Icon;
+            SceneName.text = sceneInfo.DisplayName;
+        }
+
+        //loads the scene after the button is filled
+        protected override IEnumerator FilledEvent()
+        {
+            yield return base.FilledEvent();
+            Debug.Log("Load Scene: " + sceneInfo.ScenePath);
+            SceneManager.LoadScene(sceneInfo.ScenePath);
+        }
     }
 }

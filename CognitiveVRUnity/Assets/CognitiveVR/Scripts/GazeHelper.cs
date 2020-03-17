@@ -47,11 +47,6 @@ namespace CognitiveVR
             gazeDirection = data.GazeDirection;
         }
 
-        static void Cleanup()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-
 #elif CVR_FOVE
     static Vector3 GetLookDirection()
     {

@@ -440,7 +440,22 @@ namespace CognitiveVR
         }
 #endif
 
+        public static IControllerPointer ControllerPointerLeft;
+        public static IControllerPointer ControllerPointerRight;
 
+        public static bool DoesPointerExistInScene()
+        {
+            InitializeControllers();
+            if (ControllerPointerLeft == null && controllers[0].transform != null)
+                ControllerPointerLeft = controllers[0].transform.GetComponent<IControllerPointer>();
+            if (ControllerPointerRight == null && controllers[1].transform != null)
+                ControllerPointerRight = controllers[1].transform.GetComponent<IControllerPointer>();
+            if (ControllerPointerRight == null && ControllerPointerLeft == null)
+            {
+                return false;
+            }
+            return true;
+        }
 
 
         public class ControllerInfo
