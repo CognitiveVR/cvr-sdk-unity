@@ -127,9 +127,14 @@ namespace CognitiveVR
             GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - WELCOME", "steptitle");
 
             GUI.Label(boldlabelrect, "Welcome to the Ready Room Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "The Ready Room provides a simple learning environment so users can understand how to interact more naturally with your experience.", "normallabel");
+            GUI.Label(new Rect(30, 170, 440, 440), "Ready Room is a simple & configurable environment for your users to learn how to use VR properly.", "normallabel");
 
-            GUI.Label(new Rect(30, 300, 440, 440), "This setup will ensure your experience starts correctly configured and that your users have familiarity with VR.", "normallabel");
+            GUI.Label(new Rect(30, 230, 440, 440), "The purpose is to allow your users to explore and learn VR in a simple tutorial area before htey proceed to your VR experience. " +
+                "This ensure that any interaction data from users who are troubleshooting hardware, learning how to use controllers, or understand basic VR interactions is kept separate from your actual experience.", "normallabel");
+
+            GUI.Label(new Rect(30, 370, 440, 440), "By default, we do not collect any data from the Ready Room.", "normallabel");
+
+            GUI.Label(new Rect(30, 410, 440, 440), "This setup helps configure the Ready Room scene for your equipment.", "normallabel");
         }
 
         void PlayerUpdate()
@@ -151,8 +156,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseEyeTracking == 0 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseEyeTracking = 0;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useEyeTracking", UseEyeTracking);
+                UpdateActiveAssessments();
             }
             if (UseEyeTracking != 0)
             {
@@ -161,8 +166,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseEyeTracking == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseEyeTracking = 1;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useEyeTracking", UseEyeTracking);
+                UpdateActiveAssessments();
             }
             if (UseEyeTracking != 1)
             {
@@ -195,8 +200,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseRoomScale == 0 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseRoomScale = 0;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useRoomScale", UseRoomScale);
+                UpdateActiveAssessments();
             }
             if (UseRoomScale != 0)
             {
@@ -205,8 +210,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseRoomScale == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseRoomScale = 1;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useRoomScale", UseRoomScale);
+                UpdateActiveAssessments();
             }
             if (UseRoomScale != 1)
             {
@@ -264,8 +269,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseGrabbableObjects == 0 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseGrabbableObjects = 0;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useGrabbable", UseGrabbableObjects);
+                UpdateActiveAssessments();
             }
             if (UseGrabbableObjects != 0)
             {
@@ -274,8 +279,8 @@ namespace CognitiveVR
             if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseGrabbableObjects == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
                 UseGrabbableObjects = 1;
-                UpdateActiveAssessments();
                 EditorPrefs.SetInt("useGrabbable", UseGrabbableObjects);
+                UpdateActiveAssessments();
                 RefreshGrabbables(true);
             }
             if (UseGrabbableObjects != 1)
@@ -440,10 +445,10 @@ namespace CognitiveVR
                 {
                     //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                 }
-                GUI.Label(dropArea, "Drag and Drop Scene Assets here to add to the Scene Select Menu", "ghostlabel_actionable");
+                GUI.Label(dropArea, "Drag and Drop Scene Assets here\nto add to the Scene Select Menu", "ghostlabel_actionable");
 
                 Rect innerScrollSize = new Rect(30, 0, 420, sceneSelect.SceneInfos.Count * 30);
-                dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 280, 440, 200), dynamicScrollPosition, innerScrollSize, false, true);
+                dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 280, 440, 150), dynamicScrollPosition, innerScrollSize, false, true);
 
                 Rect dynamicrect;
                 for (int i = 0; i < sceneSelect.SceneInfos.Count; i++)
@@ -455,7 +460,15 @@ namespace CognitiveVR
                 GUI.EndScrollView();
                 Repaint();
 
-                GUI.Box(new Rect(30, 280, 425, 200), "", "box_sharp_alpha");
+                GUI.Box(new Rect(30, 280, 425, 150), "", "box_sharp_alpha");
+
+
+                if (GUI.Button(new Rect(70, 450, 350, 30), "Start Session when user selects a scene?", sceneSelect.StartSessionOnSceneChange ? "button_blueoutlineleft" : "button_disabledoutline"))
+                {
+                    sceneSelect.StartSessionOnSceneChange = !sceneSelect.StartSessionOnSceneChange;
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+                }
+                GUI.Label(new Rect(385, 455, 24, 24), sceneSelect.StartSessionOnSceneChange ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
             }
         }
 
@@ -734,6 +747,32 @@ namespace CognitiveVR
 
                 System.Action clickAction = () => { currentPage = Mathf.Min(pageids.Count - 1, currentPage + 1); };
 
+                if (pageids[currentPage] == "welcome")
+                {
+
+                    if (GUI.Button(nextbuttonrect, "Next", style))
+                    {
+                        currentPage = Mathf.Min(pageids.Count - 1, currentPage + 1);
+                        RefreshAssessments();
+                        Grabbables = null;
+                        if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name != "ReadyRoom")
+                        {
+                            if (EditorUtility.DisplayDialog("Open Ready Room Scene?", "Do you want to open the Ready Room scene?", "Yes", "No"))
+                            {
+                                var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
+                                if (readyRoomScenes.Length == 1)
+                                {
+                                    //ask if want save
+                                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                                    {
+                                        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 if (pageids[currentPage] == "player")
                 {
                     //style = "button_disabled";
@@ -870,6 +909,8 @@ namespace CognitiveVR
             foreach (var a in all)
                 a.Active = true;
 
+            OnEnable();
+
             var tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresGrabbing && (UseGrabbableObjects != 1); });
             foreach (var a in tempAssessments)
             {
@@ -885,6 +926,7 @@ namespace CognitiveVR
             {
                 a.Active = false;
             }
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
     }
 }

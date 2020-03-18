@@ -14,6 +14,7 @@ namespace CognitiveVR
         public Image SceneImage;
         public Text SceneName;
         SceneInfo sceneInfo;
+        System.Action<SceneInfo> Callback;
 
         //holds scene data and display names/images to represent scene
         public void ApplySceneInfo(SceneInfo info)
@@ -24,12 +25,18 @@ namespace CognitiveVR
             SceneName.text = sceneInfo.DisplayName;
         }
 
+        public void SetSelectCallback(System.Action<SceneInfo> callback)
+        {
+            Callback = callback;
+        }
+
         //loads the scene after the button is filled
         protected override IEnumerator FilledEvent()
         {
             yield return base.FilledEvent();
             Debug.Log("Load Scene: " + sceneInfo.ScenePath);
-            SceneManager.LoadScene(sceneInfo.ScenePath);
+            if (Callback != null)
+                Callback.Invoke(sceneInfo);
         }
     }
 }

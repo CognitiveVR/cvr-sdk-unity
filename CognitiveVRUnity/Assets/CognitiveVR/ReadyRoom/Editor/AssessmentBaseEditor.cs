@@ -24,26 +24,6 @@ namespace CognitiveVR
         {
             var ab = target as AssessmentBase;
 
-            //display list of enable/disabled objects
-            string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
-            int childCount = ab.transform.childCount;
-            if (childCount > 0)
-                controlledComponentList += "\n<b>Child Transforms</b>";
-            for (int i = 0; i < childCount; i++)
-            {
-                controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
-            }
-            if (ab.ControlledByAssessmentState.Count > 0)
-                controlledComponentList += "\n<b>Controlled By Assessment State</b>";
-            foreach (var v in ab.ControlledByAssessmentState)
-            {
-                if (v == null) { continue; }
-                controlledComponentList += "\n   " + v.name;
-            }
-
-            InitGUIStyle();
-            EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
-
             //display warnings from setup
             bool skipAssessment = false;
             if (EditorPrefs.GetInt("useEyeTracking", -1) != 1 && ab.RequiresEyeTracking)
@@ -66,6 +46,26 @@ namespace CognitiveVR
             }
             if (!skipAssessment)
             {
+                //display list of enable/disabled objects
+                string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
+                int childCount = ab.transform.childCount;
+                if (childCount > 0)
+                    controlledComponentList += "\n<b>Child Transforms</b>";
+                for (int i = 0; i < childCount; i++)
+                {
+                    controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
+                }
+                if (ab.ControlledByAssessmentState.Count > 0)
+                    controlledComponentList += "\n<b>Controlled By Assessment State</b>";
+                foreach (var v in ab.ControlledByAssessmentState)
+                {
+                    if (v == null) { continue; }
+                    controlledComponentList += "\n   " + v.name;
+                }
+
+                InitGUIStyle();
+                EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
+
                 var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
                 if (textComponent != null)
                 {

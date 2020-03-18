@@ -8,9 +8,11 @@ namespace CognitiveVR
     {
         public Color displayColor = Color.cyan;
 
+        public Vector3 BoundSize = new Vector3(1, 0.5f, 1);
+
         void Start()
         {
-            Bounds b = new Bounds(Vector3.zero, Vector3.one);
+            Bounds b = new Bounds(Vector3.zero, BoundSize);
             CreateMesh(b);
         }
 
@@ -24,7 +26,7 @@ namespace CognitiveVR
             if (meshRenderer == null)
                 meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
-            float height = 0.5f;
+            float height = bounds.extents.y;
             //create a couple quads using the extents of the room bounds
 
             Mesh mesh = new Mesh();

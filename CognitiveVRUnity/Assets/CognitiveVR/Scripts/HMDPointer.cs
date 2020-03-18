@@ -16,9 +16,12 @@ namespace CognitiveVR
             UpdateDrawLine(ray);
             Debug.DrawRay(transform.position, ray.direction * 10, Color.red);
 
-            var newPosition = ray.GetPoint(Distance);
-            MarkerTransform.position = Vector3.Lerp(MarkerTransform.position, newPosition, Speed);
-            MarkerTransform.LookAt(CognitiveVR.GameplayReferences.HMD.position);
+            if (MarkerTransform != null)
+            {
+                var newPosition = ray.GetPoint(Distance);
+                MarkerTransform.position = Vector3.Lerp(MarkerTransform.position, newPosition, Speed);
+                MarkerTransform.LookAt(CognitiveVR.GameplayReferences.HMD.position);
+            }
         }
 
         IGazeFocus UpdateDrawLine(Ray ray)

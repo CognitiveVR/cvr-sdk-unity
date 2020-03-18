@@ -17,6 +17,10 @@ namespace CognitiveVR
         public float ArcSize = 1f;
 
         public List<SceneInfo> SceneInfos;
+        [Tooltip("Destroy these gameobjects before the selected scene is loaded")]
+        public List<GameObject> DestroyOnSceneChange = new List<GameObject>();
+        [Tooltip("Automatically start a session when this scene changes")]
+        public bool StartSessionOnSceneChange = true;
 
         //calls GetPositions and spawns SceneButtonPrefabs at each position
         public override void BeginAssessment()
@@ -36,7 +40,12 @@ namespace CognitiveVR
             Vector3 horizontalPosition = position;
             horizontalPosition.y = 0;
             var button = Instantiate(SceneButtonPrefab, position, Quaternion.LookRotation(horizontalPosition), transform);
-            button.GetComponent<ISceneInfoHolder>().ApplySceneInfo(sceneInfo);
+            var infoHolder = button.GetComponent<ISceneInfoHolder>();
+            if (infoHolder != null)
+            {
+                infoHolder.ApplySceneInfo(sceneInfo);
+                infoHolder.SetSelectCallback(SelectSceneCallback);
+            }
         }
 
         //returns a list of positions to spawn SceneButtonPrefab at
@@ -50,6 +59,18 @@ namespace CognitiveVR
                 positions.Add(pos);
             }
             return positions;
+        }
+
+        void SelectSceneCallback(SceneInfo info)
+        {
+            foreach (var go in DestroyOnSceneChange)
+            {
+                if (go != null)
+                    Destroy(go);
+            }
+            if (StartSessionOnSceneChange)
+                CognitiveVR_Manager.Instance.Initialize();
+            SceneManager.LoadScene(info.ScenePath);
         }
 
         //this should never be called. instead, the SceneButton prefab the user selects will load the next scene

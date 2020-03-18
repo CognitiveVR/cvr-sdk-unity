@@ -16,5 +16,6 @@ namespace CognitiveVR
     public interface ISceneInfoHolder
     {
         void ApplySceneInfo(SceneInfo info);
+        void SetSelectCallback(System.Action<SceneInfo> callback);
     }
 }

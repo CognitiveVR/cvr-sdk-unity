@@ -27,8 +27,13 @@ namespace CognitiveVR
             targetsRemaining--;
             if (targetsRemaining <= 0)
             {
-                CompleteAssessment();
+                Invoke("Delay", 1);
             }
+        }
+
+        void Delay()
+        {
+            CompleteAssessment();
         }
     }
 }
