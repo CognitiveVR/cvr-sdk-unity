@@ -8,15 +8,8 @@ namespace CognitiveVR
 {
     public class RoomSpaceDestination : MonoBehaviour
     {
-        public enum DestinationEnterType
-        {
-            Distance,
-            Trigger
-        }
-
         [Tooltip("If null, this is automatically set to the HMD camera transform when enabled")]
         public Transform Target;
-        public DestinationEnterType destinationEnterType;
         public float Distance = 1;
 
         public UnityEngine.Events.UnityEvent OnEnter;
@@ -28,10 +21,7 @@ namespace CognitiveVR
             if (Target == null)
                 Target = CognitiveVR.GameplayReferences.HMD;
             if (hasVisited) { return; }
-            if (destinationEnterType == DestinationEnterType.Distance)
-            {
-                StartCoroutine(CheckDistance());
-            }
+            StartCoroutine(CheckDistance());
         }
 
         //check the distance between the target and this destination, ignoring vertical height
@@ -56,20 +46,6 @@ namespace CognitiveVR
                     GetComponent<MeshRenderer>().enabled = false;
                     yield break;
                 }
-            }
-        }
-
-        //check that the entering trigger is a child of the target
-        void OnTriggerEnter(Collider other)
-        {
-            if (destinationEnterType != DestinationEnterType.Trigger) { return; }
-            if (hasVisited) { return; }
-            if (Target == null) { Debug.Log("Room Space Destination Target is null!", this); return; }
-            if (Target.IsChildOf(other.transform.root))
-            {
-                OnEnter.Invoke();
-                GetComponent<MeshRenderer>().enabled = false;
-                hasVisited = true;
             }
         }
     }

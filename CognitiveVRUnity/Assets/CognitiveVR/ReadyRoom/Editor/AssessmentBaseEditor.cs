@@ -66,12 +66,14 @@ namespace CognitiveVR
                 InitGUIStyle();
                 EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
 
+                EditorGUI.BeginDisabledGroup(true);
                 var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
                 if (textComponent != null)
                 {
                     EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
-                    GUILayout.Space(15);
                 }
+                EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the user. Can be set in the Ready Room Setup window"), ab.Order);
+                EditorGUI.EndDisabledGroup();
             }
 
             base.OnInspectorGUI();

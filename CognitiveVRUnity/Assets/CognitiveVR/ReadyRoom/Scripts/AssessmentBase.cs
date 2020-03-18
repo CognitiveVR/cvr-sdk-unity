@@ -93,6 +93,21 @@ namespace CognitiveVR
             if (OnAssessmentComplete != null)
                 OnAssessmentComplete.Invoke();
 
+            //some VR interaction systems may need to destroy objects to make sure they correctly drop from the player's hand
+#if CVR_STEAMVR2 || CVR_STEAMVR
+            if (Valve.VR.InteractionSystem.Player.instance != null)
+            {
+                foreach (var v in Valve.VR.InteractionSystem.Player.instance.leftHand.AttachedObjects)
+                {
+                    Object.Destroy(v.attachedObject);
+                }
+                foreach (var v in Valve.VR.InteractionSystem.Player.instance.rightHand.AttachedObjects)
+                {
+                    Object.Destroy(v.attachedObject);
+                }
+            }
+#endif
+
             int childCount = transform.childCount;
             for (int i = 0; i < childCount; i++)
             {

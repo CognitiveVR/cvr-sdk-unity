@@ -209,6 +209,18 @@ namespace CognitiveVR
                     controllers[1] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
                 }
 
+                if (poses != null)
+                {
+                    for (int i = 0; i < poses.Length; i++)
+                    {
+                        if (poses[i] == null)
+                        {
+                            poses = null;
+                            break;
+                        }
+                    }
+                }
+
                 if (poses == null)
                 {
                     poses = GameObject.FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();

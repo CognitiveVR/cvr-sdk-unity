@@ -13,6 +13,7 @@ namespace CognitiveVR
     {
         public List<RoomSpaceDestination> Destinations = new List<RoomSpaceDestination>();
         int destinationsRemaining;
+        public RoomBoundsDisplay RoomBoundsDisplay;
 
         //Returns the bounds of the Room as defined by the selected SDK
 
@@ -53,6 +54,9 @@ namespace CognitiveVR
         public override void BeginAssessment()
         {
             Bounds bounds = CalculateBounds();
+
+            if (RoomBoundsDisplay != null)
+                RoomBoundsDisplay.Activate(bounds);
             SetDestinationPositions(bounds);
 
             destinationsRemaining = 0;

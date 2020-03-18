@@ -51,9 +51,9 @@ namespace CognitiveVR
 #if CVR_OCULUS
         EditorGUILayout.HelpBox("Oculus: You likely need to add the \"Grabbable\" component", MessageType.Info);
 #elif CVR_STEAMVR
-        EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" and \"Throwable\" components", MessageType.Info);
+        EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
 #elif CVR_STEAMVR2
-        EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" and \"Throwable\" components", MessageType.Info);
+        EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
 #elif CVR_UNITYXR
         EditorGUILayout.HelpBox("UnityXR: You likely need to add the \"XR Grab Interactable\" component", MessageType.Info);
 #endif

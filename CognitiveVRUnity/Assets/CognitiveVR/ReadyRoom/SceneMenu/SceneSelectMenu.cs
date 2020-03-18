@@ -63,6 +63,9 @@ namespace CognitiveVR
 
         void SelectSceneCallback(SceneInfo info)
         {
+            //TODO some VR SDKs put objects into DontDestroyOnLoad that might cause issues with changing scenes in your project
+            //you should customize this scene change function to suit your needs
+
             foreach (var go in DestroyOnSceneChange)
             {
                 if (go != null)
