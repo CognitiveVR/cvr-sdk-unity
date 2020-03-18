@@ -72,7 +72,7 @@ namespace CognitiveVR
                 {
                     EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
                 }
-                EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the user. Can be set in the Ready Room Setup window"), ab.Order);
+                EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the participant. Can be set in the Ready Room Setup window"), ab.Order);
                 EditorGUI.EndDisabledGroup();
             }
 

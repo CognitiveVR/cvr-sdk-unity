@@ -127,10 +127,10 @@ namespace CognitiveVR
             GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - WELCOME", "steptitle");
 
             GUI.Label(boldlabelrect, "Welcome to the Ready Room Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 170, 440, 440), "Ready Room is a simple & configurable environment for your users to learn how to use VR properly.", "normallabel");
+            GUI.Label(new Rect(30, 170, 440, 440), "Ready Room is a simple & configurable environment for your participants to learn how to use VR properly.", "normallabel");
 
-            GUI.Label(new Rect(30, 230, 440, 440), "The purpose is to allow your users to explore and learn VR in a simple tutorial area before htey proceed to your VR experience. " +
-                "This ensure that any interaction data from users who are troubleshooting hardware, learning how to use controllers, or understand basic VR interactions is kept separate from your actual experience.", "normallabel");
+            GUI.Label(new Rect(30, 230, 440, 440), "The purpose is to allow your participants to explore and learn VR in a simple tutorial area before htey proceed to your VR experience. " +
+                "This ensure that any interaction data from participants who are troubleshooting hardware, learning how to use controllers, or understand basic VR interactions is kept separate from your actual experience.", "normallabel");
 
             GUI.Label(new Rect(30, 370, 440, 440), "By default, we do not collect any data from the Ready Room.", "normallabel");
 
@@ -176,13 +176,13 @@ namespace CognitiveVR
 
             if (UseEyeTracking == 0)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about calibrating eye tracking", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about calibrating eye tracking", "normallabel");
             }
             if (UseEyeTracking == 1)
             {
                 //TODO editorcore/core.HasEyetrackingSDK
 #if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
-            GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the user to ensure eye tracking is correctly calibrated", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the participant to ensure eye tracking is correctly calibrated", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 4:</b> Add any required Eye Tracking components to the scene", "normallabel_actionable");
 #else
                 GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
@@ -220,16 +220,16 @@ namespace CognitiveVR
 
             if (UseRoomScale == 0)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about moving around the room", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about moving around the room", "normallabel");
             }
             if (UseRoomScale == 1)
             {
                 //TODO editorcore.roomscale
 #if CVR_TOBIIVR || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
-            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the user to move around the room", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
 #elif CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
-            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the user to move around the room", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add a SteamVR_PlayArea component to a new gameobject in this scene", "normallabel_actionable");
 #else
                 GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
@@ -264,7 +264,7 @@ namespace CognitiveVR
         {
             GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - INTERACTIONS", "steptitle");
 
-            GUI.Label(boldlabelrect, "Does the user pick up anything?", "boldlabel");
+            GUI.Label(boldlabelrect, "Does the participant pick up anything?", "boldlabel");
 
             if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseGrabbableObjects == 0 ? "button_blueoutline" : "button_disabledtext"))
             {
@@ -290,13 +290,13 @@ namespace CognitiveVR
 
             if (UseGrabbableObjects == 0)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The user will not see any instructions about picking up objects", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about picking up objects", "normallabel");
             }
             if (UseGrabbableObjects == 1)
             {
                 RefreshGrabbables();
 
-                GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the user to pickup and examine a small cube", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the participant to pickup and examine a small cube", "normallabel");
 
                 if (Grabbables.Count > 0)
                 {
@@ -340,11 +340,11 @@ namespace CognitiveVR
 
             GUI.Label(boldlabelrect, "Add your own assessments", "boldlabel");
 
-            GUI.Label(new Rect(30, 150, 440, 200), "A good assessment will teach the user how to use any unique tools or objects and explain common conventions in your experience", "normallabel");
+            GUI.Label(new Rect(30, 150, 440, 200), "A good assessment will teach the participant how to use any unique tools or objects and explain common conventions in your experience", "normallabel");
 
             GUI.Label(new Rect(30, 230, 440, 200), "<b>Step 7a:</b> Create a new gameobject and add an <b>AssessmentBase</b> script, or a script that inherits from this.\n\n" +
                 "<b>Step 7b:</b> Add any required game objects as children. These will be disable on <b>Awake()</b> and enabled when your assessment begins.\n\n" +
-                "<b>Step 7c:</b> Call <b>CompleteAssesment()</b> when the user has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
+                "<b>Step 7c:</b> Call <b>CompleteAssesment()</b> when the participant has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
         }
 
         bool hasDisplayedBuildPopup = false;
@@ -393,7 +393,7 @@ namespace CognitiveVR
             {
                 //display warning
                 GUI.Label(new Rect(0, 200, 475, 130), CognitiveVR.EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 300, 440, 440), "There is no Scene Select Menu in this scene. Make sure the user can correctly exit Ready Room when completed", "normallabel");
+                GUI.Label(new Rect(30, 300, 440, 440), "There is no Scene Select Menu in this scene. Make sure the participant can correctly exit Ready Room when completed", "normallabel");
             }
             else
             {
@@ -463,12 +463,12 @@ namespace CognitiveVR
                 GUI.Box(new Rect(30, 280, 425, 150), "", "box_sharp_alpha");
 
 
-                if (GUI.Button(new Rect(70, 450, 350, 30), "Start Session when user selects a scene?", sceneSelect.StartSessionOnSceneChange ? "button_blueoutlineleft" : "button_disabledoutline"))
+                if (GUI.Button(new Rect(30, 450, 440, 30), "Start Session when participant selects a scene?", sceneSelect.StartSessionOnSceneChange ? "button_blueoutlineleft" : "button_disabledoutline"))
                 {
                     sceneSelect.StartSessionOnSceneChange = !sceneSelect.StartSessionOnSceneChange;
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                 }
-                GUI.Label(new Rect(385, 455, 24, 24), sceneSelect.StartSessionOnSceneChange ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(425, 455, 24, 24), sceneSelect.StartSessionOnSceneChange ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
             }
         }
 

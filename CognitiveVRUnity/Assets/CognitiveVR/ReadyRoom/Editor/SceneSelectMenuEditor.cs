@@ -82,14 +82,15 @@ namespace CognitiveVR
                 EditorGUILayout.HelpBox("This assessment is disabled because due to how Ready Room is configured", MessageType.Info);
             }
 
+            EditorGUI.BeginDisabledGroup(true);
             var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
             if (textComponent != null)
             {
                 EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
-                GUILayout.Space(15);
             }
-
-            GUILayout.Space(15);
+            EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the participant. Can be set in the Ready Room Setup window"), ab.Order);
+            EditorGUI.EndDisabledGroup();
+            
             base.OnInspectorGUI();
         }
     }
