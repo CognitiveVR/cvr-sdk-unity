@@ -505,6 +505,12 @@ namespace CognitiveVR
 
         public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                return;
+            }
+
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
