@@ -33,7 +33,7 @@ namespace CognitiveVR
         {
             if (gazeController != null){return;}
 
-            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            gazeController = UnityEngine.Object.FindObjectOfType<PupilLabs.GazeController>();
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
