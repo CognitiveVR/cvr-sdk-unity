@@ -209,6 +209,18 @@ namespace CognitiveVR
                     controllers[1] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
                 }
 
+                if (poses != null)
+                {
+                    for (int i = 0; i < poses.Length; i++)
+                    {
+                        if (poses[i] == null)
+                        {
+                            poses = null;
+                            break;
+                        }
+                    }
+                }
+
                 if (poses == null)
                 {
                     poses = GameObject.FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
@@ -440,7 +452,22 @@ namespace CognitiveVR
         }
 #endif
 
+        public static IControllerPointer ControllerPointerLeft;
+        public static IControllerPointer ControllerPointerRight;
 
+        public static bool DoesPointerExistInScene()
+        {
+            InitializeControllers();
+            if (ControllerPointerLeft == null && controllers[0].transform != null)
+                ControllerPointerLeft = controllers[0].transform.GetComponent<IControllerPointer>();
+            if (ControllerPointerRight == null && controllers[1].transform != null)
+                ControllerPointerRight = controllers[1].transform.GetComponent<IControllerPointer>();
+            if (ControllerPointerRight == null && ControllerPointerLeft == null)
+            {
+                return false;
+            }
+            return true;
+        }
 
 
         public class ControllerInfo

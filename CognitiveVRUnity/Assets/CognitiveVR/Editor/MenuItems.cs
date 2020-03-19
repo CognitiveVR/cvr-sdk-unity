@@ -89,6 +89,14 @@ namespace CognitiveVR
             //open window
             Setup360Window.Init();
         }
+
+        [MenuItem(Menu + "Ready Room Setup", priority = 55)]
+        static void Cognitive3DAssessmentSetup()
+        {
+            //open window
+            ReadyRoomSetupWindow.Init();
+        }
+
         [MenuItem(Menu + "Debug Information", priority = 58)]
         static void CognitiveDebugWindow()
         {

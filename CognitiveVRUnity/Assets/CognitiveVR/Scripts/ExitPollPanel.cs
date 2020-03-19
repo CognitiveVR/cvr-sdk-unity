@@ -258,10 +258,10 @@ namespace CognitiveVR
                     yield return null;
                 }
                 _panel.localScale = Vector3.one;
-                var gazeButtons = GetComponentsInChildren<GazeButton>(true);
+                var gazeButtons = GetComponentsInChildren<IPointerFocus>(true);
                 for (int i = 0; i< gazeButtons.Length;i++)
                 {
-                    gazeButtons[i].enabled = true;
+                    gazeButtons[i].MonoBehaviour.enabled = true;
                 }
                 var microphoneButton = GetComponentInChildren<MicrophoneButton>(true);
                 if (microphoneButton != null)
@@ -271,10 +271,10 @@ namespace CognitiveVR
             }
             else
             {
-                var gazeButtons = GetComponentsInChildren<GazeButton>();
+                var gazeButtons = GetComponentsInChildren<IPointerFocus>();
                 for (int i = 0; i < gazeButtons.Length; i++)
                 {
-                    gazeButtons[i].enabled = false;
+                    gazeButtons[i].MonoBehaviour.enabled = false;
                 }
                 var microphoneButton = GetComponentInChildren<MicrophoneButton>();
                 if (microphoneButton != null)
