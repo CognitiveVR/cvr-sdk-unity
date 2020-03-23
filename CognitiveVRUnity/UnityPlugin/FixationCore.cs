@@ -90,7 +90,7 @@ namespace CognitiveVR
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
-            JsonUtil.SetString("userid", Core.UniqueID, sb);
+            JsonUtil.SetString("userid", Core.DeviceId, sb);
             sb.Append(",");
             JsonUtil.SetString("sessionid", Core.SessionID, sb);
             sb.Append(",");

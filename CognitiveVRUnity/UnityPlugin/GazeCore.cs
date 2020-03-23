@@ -246,7 +246,7 @@ namespace CognitiveVR
             gazeCount =0;
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, gazebuilder);
+            JsonUtil.SetString("userid", Core.DeviceId, gazebuilder);
             gazebuilder.Append(",");
 
             if (!string.IsNullOrEmpty(Core.LobbyId))

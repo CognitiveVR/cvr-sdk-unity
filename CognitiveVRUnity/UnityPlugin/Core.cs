@@ -86,9 +86,10 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.18.0";
+        public const string SDK_VERSION = "0.18.1";
 
-        public static string UserId { get; set; }
+        public static string ParticipantId { get; private set; }
+        public static string ParticipantName { get; private set; }
         private static string _deviceId;
         public static string DeviceId
         {
@@ -101,22 +102,6 @@ namespace CognitiveVR
                 return _deviceId;
             }
             private set { _deviceId = value; }
-        }
-
-        private static string _uniqueId;
-        public static string UniqueID
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_uniqueId))
-                {
-                    if (!string.IsNullOrEmpty(UserId))
-                        _uniqueId = UserId;
-                    else
-                        _uniqueId = DeviceId;
-                }
-                return _uniqueId;
-            }
         }
 
         private static double _timestamp;
@@ -205,6 +190,18 @@ namespace CognitiveVR
             LobbyId = lobbyId;
         }
 
+        public static void SetParticipantFullName(string name)
+        {
+            ParticipantName = name;
+            SetParticipantProperty("name", name);
+        }
+
+        public static void SetParticipantId(string id)
+        {
+            ParticipantId = id;
+            SetParticipantProperty("id", id);
+        }
+
         /// <summary>
         /// has the CognitiveVR session started?
         /// </summary>
@@ -217,10 +214,10 @@ namespace CognitiveVR
         {
             InvokeEndSessionEvent();
             NetworkManager.Sender.EndSession();
-            UserId = null;
+            ParticipantId = null;
+            ParticipantName = null;
             _sessionId = null;
             _timestamp = 0;
-            _uniqueId = null;
             DeviceId = null;
             IsInitialized = false;
             TrackingSceneId = "";
@@ -273,7 +270,7 @@ namespace CognitiveVR
                 //set session timestamp
                 if (string.IsNullOrEmpty(_sessionId))
                 {
-                    _sessionId = (int)SessionTimeStamp + "_" + UniqueID;
+                    _sessionId = (int)SessionTimeStamp + "_" + DeviceId;
                 }
 
                 IsInitialized = true;
@@ -393,6 +390,17 @@ namespace CognitiveVR
 
             knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+        }
+
+        /// <summary>
+        /// sets a property about the participant in the current session
+        /// should first call Core.SetParticipantName() and Core.SetParticipantId()
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public static void SetParticipantProperty(string key, object value)
+        {
+            SetSessionProperty("c3d.participant." + key, value);
         }
     }
 }

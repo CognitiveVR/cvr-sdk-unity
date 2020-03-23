@@ -512,7 +512,7 @@ namespace CognitiveVR
         void SendResponsesAsTransaction()
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
-            exitpollEvent.SetProperty("userId", CognitiveVR.Core.UniqueID);
+            exitpollEvent.SetProperty("userId", CognitiveVR.Core.DeviceId);
             exitpollEvent.SetProperty("questionSetId", QuestionSetId);
             exitpollEvent.SetProperty("hook", myparameters.Hook);
             exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
@@ -536,7 +536,7 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            JsonUtil.SetString("userId", CognitiveVR.Core.UniqueID, builder);
+            JsonUtil.SetString("userId", CognitiveVR.Core.DeviceId, builder);
             builder.Append(",");
             if (!string.IsNullOrEmpty(Core.LobbyId))
             {

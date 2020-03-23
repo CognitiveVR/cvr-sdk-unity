@@ -388,7 +388,7 @@ namespace CognitiveVR
             builder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.UniqueID, builder);
+            JsonUtil.SetString("userid", Core.DeviceId, builder);
             builder.Append(",");
 
             if (!string.IsNullOrEmpty(Core.LobbyId))
