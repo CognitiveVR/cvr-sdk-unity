@@ -114,6 +114,56 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_PICONEO2EYE
+        const int CachedEyeCaptures = 120; //PICO
+        Tobii.XR.IEyeTrackingProvider EyeTracker;
+        Tobii.XR.TobiiXR_EyeTrackingData currentData;
+
+        Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+            Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
+            var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
+            if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRay(ref gazeRay))
+            {
+                if (gazeRay.IsValid)
+                {
+                    ray.direction = gazeRay.Direction;
+                    ray.origin = gazeRay.Origin;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
+            return data.leftEyeOpenness > 0.5f;
+        }
+        public bool RightEyeOpen()
+        {
+            Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
+            return data.rightEyeOpenness > 0.5f;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            return (long)(CognitiveVR.Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #elif CVR_VIVEPROEYE
         bool useDataQueue1;
         bool useDataQueue2;
