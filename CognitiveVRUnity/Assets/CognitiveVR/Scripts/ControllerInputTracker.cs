@@ -1790,6 +1790,253 @@ public class ControllerInputTracker : MonoBehaviour
                 }
             }
         }
+#elif CVR_PICONEO2EYE
+
+        //one input tracker for both controllers??
+        //yes
+
+        public DynamicObject LeftHand;
+        public DynamicObject RightHand;
+
+        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
+        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
+
+        Vector3 LeftJoystickVector;
+        Vector3 RightJoystickVector;
+        float minMagnitude = 0.05f;
+        int LeftTrigger;
+        int RightTrigger;
+
+        enum TouchpadState
+        {
+            None,
+            Touch,
+            Press
+        }
+        
+        TouchpadState LeftJoystickState;
+        TouchpadState RightJoystickState;
+
+        void Init()
+        {
+
+        }
+
+        private void Update()
+        {
+            //grip left
+            if (Pvr_ControllerManager.controllerlink.Controller0.Left.PressedDown)
+                OnButtonChanged(LeftHand, false, "pico_grip", true, CurrentLeftButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller0.Left.PressedUp)
+                OnButtonChanged(LeftHand, false, "pico_grip", false, CurrentLeftButtonStates);
+
+            //grip right
+            if (Pvr_ControllerManager.controllerlink.Controller1.Right.PressedDown)
+                OnButtonChanged(RightHand, true, "pico_grip", true, CurrentRightButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller1.Right.PressedUp)
+                OnButtonChanged(RightHand, true, "pico_grip", false, CurrentRightButtonStates);
+
+            //x left
+            if (Pvr_ControllerManager.controllerlink.Controller0.X.PressedDown)
+                OnButtonChanged(LeftHand, false, "pico_xbtn", true, CurrentLeftButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller0.X.PressedUp)
+                OnButtonChanged(LeftHand, false, "pico_xbtn", false, CurrentLeftButtonStates);
+
+            //y left
+            if (Pvr_ControllerManager.controllerlink.Controller0.Y.PressedDown)
+                OnButtonChanged(LeftHand, false, "pico_ybtn", true, CurrentLeftButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller0.Y.PressedUp)
+                OnButtonChanged(LeftHand, false, "pico_ybtn", false, CurrentLeftButtonStates);
+
+            //menu left
+            if (Pvr_ControllerManager.controllerlink.Controller0.App.PressedDown)
+                OnButtonChanged(LeftHand, false, "pico_menubtn", true, CurrentLeftButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller0.App.PressedUp)
+                OnButtonChanged(LeftHand, false, "pico_menubtn", false, CurrentLeftButtonStates);
+
+            //a right
+            if (Pvr_ControllerManager.controllerlink.Controller1.A.PressedDown)
+                OnButtonChanged(RightHand, true, "pico_abtn", true, CurrentRightButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller1.A.PressedUp)
+                OnButtonChanged(RightHand, true, "pico_abtn", false, CurrentRightButtonStates);
+
+            //b right
+            if (Pvr_ControllerManager.controllerlink.Controller1.B.PressedDown)
+                OnButtonChanged(RightHand, true, "pico_bbtn", true, CurrentRightButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller1.B.PressedUp)
+                OnButtonChanged(RightHand, true, "pico_bbtn", false, CurrentRightButtonStates);
+
+            //menu right
+            if (Pvr_ControllerManager.controllerlink.Controller1.App.PressedDown)
+                OnButtonChanged(RightHand, true, "pico_menubtn", true, CurrentRightButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller1.App.PressedUp)
+                OnButtonChanged(RightHand, true, "pico_menubtn", false, CurrentRightButtonStates);
+
+            //left joystick
+
+            Vector2 leftJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
+
+            if (Pvr_ControllerManager.controllerlink.Controller0.Touch.PressedDown)
+            {
+                OnVectorChanged(LeftHand, false, "pico_joystick", 100, leftJoystickVector, CurrentLeftButtonStates);
+                LeftJoystickState = TouchpadState.Press;
+            }
+            if (Pvr_ControllerManager.controllerlink.Controller0.Touch.PressedUp)
+            {
+                OnVectorChanged(LeftHand, false, "pico_joystick", 0, leftJoystickVector, CurrentLeftButtonStates);
+                LeftJoystickState = TouchpadState.None;
+            }
+
+            //right joystick
+            Vector2 rightJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
+            if (Pvr_ControllerManager.controllerlink.Controller1.Touch.PressedDown)
+            {
+                OnVectorChanged(RightHand, true, "pico_joystick", 100, rightJoystickVector, CurrentRightButtonStates);
+                RightJoystickState = TouchpadState.Press;
+            }
+            if (Pvr_ControllerManager.controllerlink.Controller1.Touch.PressedUp)
+            {
+                OnVectorChanged(RightHand, true, "pico_joystick", 0, rightJoystickVector, CurrentRightButtonStates);
+                RightJoystickState = TouchpadState.None;
+            }
+
+            //left trigger
+            float lefttrigger = Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f;
+            //if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedDown)
+            //    OnSingleChanged(LeftHand, false, "pico_trigger", 100, CurrentLeftButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedUp)
+            {
+                //Pvr_ControllerManager.controllerlink.Controller0.Trigger;
+                //float lefttrigger = 0;
+                //float trigger = Input.GetAxis("LeftTrigger");
+                OnSingleChanged(LeftHand, false, "pico_trigger", (int)(lefttrigger * 100), CurrentLeftButtonStates);
+            }
+
+            //right trigger
+            float righttrigger = Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f;
+            //if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedDown)
+            //    OnSingleChanged(RightHand, true, "pico_trigger", 100, CurrentRightButtonStates);
+            if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedUp)
+            {
+                //float trigger = Input.GetAxis("RightTrigger");
+                //Pvr_ControllerManager.controllerlink.Controller1.Trigger;
+                //float trigger = 0;
+                OnSingleChanged(RightHand, true, "pico_trigger", (int)(righttrigger * 100), CurrentRightButtonStates);
+            }
+
+            if (Time.time > nextUpdateTime)
+            {
+                RecordAnalogInputs();
+                nextUpdateTime = Time.time + UpdateRate;
+            }
+            if (CurrentRightButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
+                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentRightButtonStates[i]);
+                }
+                CurrentRightButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
+            }
+            if (CurrentLeftButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
+                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentLeftButtonStates[i]);
+                }
+                CurrentLeftButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
+            }
+        }
+
+        void RecordAnalogInputs()
+        {
+            //joysticks
+            {
+                Vector2 leftJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
+                //Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
+                var x = leftJoystickVector.x;
+                var y = leftJoystickVector.y;
+                int force = LeftJoystickState == TouchpadState.Press ? 100 : 0;
+
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_joystick"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(LeftHand, false, "pico_joystick", force, leftJoystickVector, CurrentLeftButtonStates);
+                    }
+                    LeftJoystickVector = currentVector;
+                }
+            }
+
+            {
+                // Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
+                Vector2 rightJoystickVector = Pvr_ControllerManager.controllerlink.Controller1.TouchPadPosition / 255f;
+                var x = rightJoystickVector.x;
+                var y = rightJoystickVector.y;
+                int force = RightJoystickState == TouchpadState.Press ? 100 : 0;
+                Vector3 currentVector = new Vector3(x, y, force);
+                if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
+                {
+                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_joystick"; });
+                    if (joystick != null)
+                    {
+                        joystick.X = x;
+                        joystick.Y = y;
+                    }
+                    else
+                    {
+                        OnVectorChanged(RightHand, true, "pico_joystick", force, rightJoystickVector, CurrentRightButtonStates);
+                    }
+                    RightJoystickVector = currentVector;
+                }
+            }
+
+            //triggers
+            {
+                int currentTrigger = ((int)(Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f)) * 100;
+                if (LeftTrigger != currentTrigger)
+                {
+                    var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
+                    if (trigger != null)
+                    {
+                        trigger.ButtonPercent = currentTrigger;
+                    }
+                    else
+                    {
+                        OnSingleChanged(LeftHand, false, "pico_trigger", currentTrigger, CurrentLeftButtonStates);
+                    }
+                    LeftTrigger = currentTrigger;
+                }
+            }
+            {
+                int currentTrigger = ((int)(Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f)) * 100;
+                if (RightTrigger != currentTrigger)
+                {
+                    var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
+                    if (trigger != null)
+                    {
+                        trigger.ButtonPercent = currentTrigger;
+                    }
+                    else
+                    {
+                        OnSingleChanged(RightHand, true, "pico_trigger", currentTrigger, CurrentRightButtonStates);
+                    }
+                    RightTrigger = currentTrigger;
+                }
+            }
+        }
 #else //NO SDKS that deal with input
         void Init()
     {

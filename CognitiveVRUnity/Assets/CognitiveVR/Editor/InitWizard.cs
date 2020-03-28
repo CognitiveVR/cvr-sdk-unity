@@ -535,6 +535,54 @@ public class InitWizard : EditorWindow
                     setupComplete = true;
                 }
             }
+#elif CVR_PICONEO2EYE
+            if (cameraBase == null)
+            {
+                //basic setup
+                var manager = FindObjectOfType<Pvr_Controller>();
+                if (manager != null)
+                {
+                    if (Camera.main != null)
+                        cameraBase = Camera.main.gameObject;
+                    if (manager.controller0 != null)
+                        leftcontroller = manager.controller0;
+                    if (manager.controller1 != null)
+                        rightcontroller = manager.controller1;
+                }
+            }
+
+            leftSetupComplete = false;
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft)
+                        leftSetupComplete = true;
+                }
+            }
+
+            rightSetupComplete = false;
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.PicoNeoControllerRight)
+                        rightSetupComplete = true;
+                }
+            }
+
+            setupComplete = false;
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                //add input tracker + left/right controllers set
+                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                {
+                    setupComplete = true;
+                }
+            }
 #else
             //TODO add support for this stuff
             //hand motion stuff (hololens, meta, leapmotion, magicleap)
@@ -906,6 +954,38 @@ public class InitWizard : EditorWindow
             catch (System.Exception e)
             {
                 Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
+            }
+#elif CVR_PICONEO2EYE
+            //add component to cognitice manager
+            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            if (inputTracker == null)
+            {
+                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = left.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "pico_neo_2_eye_controller_left";
+                inputTracker.LeftHand = dyn;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = right.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "pico_neo_2_eye_controller_right";
+                inputTracker.RightHand = dyn;
             }
 
 #elif CVR_OCULUS

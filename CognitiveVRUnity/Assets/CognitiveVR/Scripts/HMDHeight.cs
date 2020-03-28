@@ -76,7 +76,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_TOBIIVR || CVR_PUPIL
+#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_TOBIIVR || CVR_PUPIL || CVR_PICONEO2EYE
             return false;
 #else
             return true;

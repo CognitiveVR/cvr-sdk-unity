@@ -116,9 +116,6 @@ namespace CognitiveVR
         }
 #elif CVR_PICONEO2EYE
         const int CachedEyeCaptures = 120; //PICO
-        Tobii.XR.IEyeTrackingProvider EyeTracker;
-        Tobii.XR.TobiiXR_EyeTrackingData currentData;
-
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
         public bool CombinedWorldGazeRay(out Ray ray)
         {

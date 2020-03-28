@@ -440,6 +440,42 @@ namespace CognitiveVR
                 controllers[1] = new ControllerInfo();
             }
         }
+#elif CVR_PICONEO2EYE
+
+        //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
+        public static void SetController(GameObject go, bool isRight)
+        {
+            InitializeControllers();
+            if (isRight)
+            {
+                controllers[1].transform = go.transform;
+                controllers[1].isRight = true;
+                controllers[1].connected = Pvr_ControllerManager.controllerlink.Controller1.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected;
+                controllers[1].visible = true;
+                controllers[1].id = 1;
+            }
+            else
+            {
+                controllers[0].transform = go.transform;
+                controllers[0].isRight = false;
+                controllers[0].connected = Pvr_ControllerManager.controllerlink.Controller0.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected; ;
+                controllers[0].visible = true;
+                controllers[0].id = 0;
+            }
+        }
+
+        static void InitializeControllers()
+        {
+#pragma warning disable 0414
+            var manager = Pvr_ControllerManager.Instance;
+#pragma warning restore 0414
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+                controllers[0] = new ControllerInfo();
+                controllers[1] = new ControllerInfo();
+            }
+        }
 #else
         static void InitializeControllers()
         {
@@ -507,7 +543,7 @@ namespace CognitiveVR
         /// </summary>
         public static bool GetController(int deviceid, out Transform transform)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICONEO2EYE
             InitializeControllers();
             if (controllers[0].id == deviceid) { transform = controllers[0].transform; return true; }
             if (controllers[1].id == deviceid) { transform = controllers[1].transform; return true; }
@@ -521,7 +557,7 @@ namespace CognitiveVR
 
         public static bool GetController(bool right, out Transform transform)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICONEO2EYE
             InitializeControllers();
             if (right == controllers[0].isRight && controllers[0].id > 0) { transform = controllers[0].transform; return true; }
             if (right == controllers[1].isRight && controllers[1].id > 0) { transform = controllers[1].transform; return true; }
@@ -536,7 +572,7 @@ namespace CognitiveVR
         /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
         public static bool GetControllerPosition(bool right, out Vector3 position)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE
 
             InitializeControllers();
             if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { position = controllers[0].transform.position; return true; }
