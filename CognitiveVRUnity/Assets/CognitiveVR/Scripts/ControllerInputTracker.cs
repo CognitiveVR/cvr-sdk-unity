@@ -288,7 +288,6 @@ public class ControllerInputTracker : MonoBehaviour
 
     void Init()
     {
-        //TODO singleton for oculus controllers, since they act as 1 combined controller
         var avatar = GetComponent<OVRCameraRig>();
         LeftHand = avatar.leftHandAnchor.GetComponent<DynamicObject>();
         RightHand = avatar.rightHandAnchor.GetComponent<DynamicObject>();
@@ -1813,7 +1812,7 @@ public class ControllerInputTracker : MonoBehaviour
             Touch,
             Press
         }
-        
+
         TouchpadState LeftJoystickState;
         TouchpadState RightJoystickState;
 
@@ -1901,27 +1900,29 @@ public class ControllerInputTracker : MonoBehaviour
             }
 
             //left trigger
-            float lefttrigger = Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f;
-            //if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedDown)
-            //    OnSingleChanged(LeftHand, false, "pico_trigger", 100, CurrentLeftButtonStates);
+            int leftTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f) * 100f);
+            if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedDown)
+            {
+                LeftTrigger = leftTrigger;
+                OnSingleChanged(LeftHand, false, "pico_trigger", leftTrigger, CurrentLeftButtonStates);
+            }
             if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedUp)
             {
-                //Pvr_ControllerManager.controllerlink.Controller0.Trigger;
-                //float lefttrigger = 0;
-                //float trigger = Input.GetAxis("LeftTrigger");
-                OnSingleChanged(LeftHand, false, "pico_trigger", (int)(lefttrigger * 100), CurrentLeftButtonStates);
+                LeftTrigger = leftTrigger;
+                OnSingleChanged(LeftHand, false, "pico_trigger", leftTrigger, CurrentLeftButtonStates);
             }
 
             //right trigger
-            float righttrigger = Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f;
-            //if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedDown)
-            //    OnSingleChanged(RightHand, true, "pico_trigger", 100, CurrentRightButtonStates);
+            int rightTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f) * 100f);
+            if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedDown)
+            {
+                RightTrigger = rightTrigger;
+                OnSingleChanged(RightHand, true, "pico_trigger", rightTrigger, CurrentRightButtonStates);
+            }
             if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedUp)
             {
-                //float trigger = Input.GetAxis("RightTrigger");
-                //Pvr_ControllerManager.controllerlink.Controller1.Trigger;
-                //float trigger = 0;
-                OnSingleChanged(RightHand, true, "pico_trigger", (int)(righttrigger * 100), CurrentRightButtonStates);
+                RightTrigger = rightTrigger;
+                OnSingleChanged(RightHand, true, "pico_trigger", rightTrigger, CurrentRightButtonStates);
             }
 
             if (Time.time > nextUpdateTime)
@@ -2005,7 +2006,7 @@ public class ControllerInputTracker : MonoBehaviour
 
             //triggers
             {
-                int currentTrigger = ((int)(Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f)) * 100;
+                int currentTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f) * 100f);
                 if (LeftTrigger != currentTrigger)
                 {
                     var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
@@ -2021,7 +2022,7 @@ public class ControllerInputTracker : MonoBehaviour
                 }
             }
             {
-                int currentTrigger = ((int)(Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f)) * 100;
+                int currentTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f) * 100f);
                 if (RightTrigger != currentTrigger)
                 {
                     var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
@@ -2047,7 +2048,7 @@ public class ControllerInputTracker : MonoBehaviour
     }
 #endif
 
-    void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
+        void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
     {
         states.Add(new ButtonState(name, down ? 100 : 0));
     }

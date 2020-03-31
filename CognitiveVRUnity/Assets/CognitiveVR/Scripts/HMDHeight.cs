@@ -9,9 +9,9 @@ using System.Collections.Generic;
 namespace CognitiveVR.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
-    public class HMDHeight: CognitiveVRAnalyticsComponent
+    public class HMDHeight : CognitiveVRAnalyticsComponent
     {
-        [ClampSetting(5,100)]
+        [ClampSetting(5, 100)]
         [Tooltip("Number of samples taken. The median is assumed to be HMD height")]
         public int SampleCount = 50;
 
@@ -22,7 +22,7 @@ namespace CognitiveVR.Components
         [ClampSetting(1)]
         public float Interval = 1;
 
-        [ClampSetting(0,20)]
+        [ClampSetting(0, 20)]
         [Tooltip("Distance from HMD Eye height to user's full height")]
         public float ForeheadHeight = 0.11f; //meters
 
@@ -46,12 +46,26 @@ namespace CognitiveVR.Components
             float hmdAccumHeight = 0;
             YieldInstruction wait = new WaitForSeconds(Interval);
 
+#if CVR_PICONEO2EYE
+            var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
+            if (sdkmanager == null || sdkmanager.TrackingOrigin != Pvr_UnitySDKAPI.TrackingOrigin.FloorLevel)
+            {
+                CognitiveVR.Util.logError("Pvr_UnitySDKManager.TrackingOrigin MUST be set to FloorLevel to track HMD height correctly!");
+                yield break;
+            }
+#endif
+
             //median
-            for(int i = 0;i<SampleCount;i++)
+            for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
+#if CVR_PICONEO2EYE
+                heights[i] = Pvr_UnitySDKEyeManager.Instance.transform.localPosition.y;
+                hmdAccumHeight += heights[i];
+#else
                 hmdAccumHeight += GameplayReferences.HMD.localPosition.y;
                 heights[i] = GameplayReferences.HMD.localPosition.y;
+#endif
             }
 
             float medianHeight = Median(heights);
@@ -71,12 +85,16 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
+#if CVR_PICONEO2EYE
+            return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nPvr_UnitySDKManager.TrackingOrigin MUST be set as FloorLevel!";
+#else
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
+#endif
         }
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_TOBIIVR || CVR_PUPIL || CVR_PICONEO2EYE
+#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_TOBIIVR || CVR_PUPIL
             return false;
 #else
             return true;

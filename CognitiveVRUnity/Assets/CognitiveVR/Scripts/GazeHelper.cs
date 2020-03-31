@@ -153,8 +153,10 @@ namespace CognitiveVR
             var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
             if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRay(ref gazeRay))
             {
-                if (gazeRay.IsValid)
-                    lastDirection = gazeRay.Direction;
+                if (gazeRay.IsValid && gazeRay.Direction.sqrMagnitude > 0.1f)
+                {
+                    lastDirection = GameplayReferences.HMD.TransformDirection(lastDirection = gazeRay.Direction);
+                }
             }
             return lastDirection;
         }

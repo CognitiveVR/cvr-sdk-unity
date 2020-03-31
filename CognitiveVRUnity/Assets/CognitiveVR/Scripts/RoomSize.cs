@@ -60,6 +60,7 @@ namespace CognitiveVR.Components
                 Core.SetSessionProperty("c3d.roomscale", OVRManager.boundary.GetConfigured());
             }
 #endif
+            //TODO pico. unclear how to get boundaries from api
         }
 
         public override bool GetWarning()

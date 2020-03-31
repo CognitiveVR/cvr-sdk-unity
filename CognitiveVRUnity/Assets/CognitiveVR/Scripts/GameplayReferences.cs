@@ -441,39 +441,28 @@ namespace CognitiveVR
             }
         }
 #elif CVR_PICONEO2EYE
-
-        //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
-        public static void SetController(GameObject go, bool isRight)
-        {
-            InitializeControllers();
-            if (isRight)
-            {
-                controllers[1].transform = go.transform;
-                controllers[1].isRight = true;
-                controllers[1].connected = Pvr_ControllerManager.controllerlink.Controller1.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected;
-                controllers[1].visible = true;
-                controllers[1].id = 1;
-            }
-            else
-            {
-                controllers[0].transform = go.transform;
-                controllers[0].isRight = false;
-                controllers[0].connected = Pvr_ControllerManager.controllerlink.Controller0.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected; ;
-                controllers[0].visible = true;
-                controllers[0].id = 0;
-            }
-        }
-
         static void InitializeControllers()
         {
-#pragma warning disable 0414
-            var manager = Pvr_ControllerManager.Instance;
-#pragma warning restore 0414
             if (controllers == null)
             {
+                var manager = Pvr_ControllerManager.Instance;
                 controllers = new ControllerInfo[2];
                 controllers[0] = new ControllerInfo();
                 controllers[1] = new ControllerInfo();
+                if (manager != null)
+                {
+                    var pico_controller = manager.GetComponent<Pvr_Controller>();
+                    controllers[0].transform = pico_controller.controller0.transform;
+                    controllers[0].isRight = false;
+                    controllers[0].connected = Pvr_ControllerManager.controllerlink.Controller0.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected; ;
+                    controllers[0].visible = true;
+                    controllers[0].id = 0;
+                    controllers[1].transform = pico_controller.controller1.transform;
+                    controllers[1].isRight = true;
+                    controllers[1].connected = Pvr_ControllerManager.controllerlink.Controller1.ConnectState == Pvr_UnitySDKAPI.ControllerState.Connected;
+                    controllers[1].visible = true;
+                    controllers[1].id = 1;
+                }
             }
         }
 #else
@@ -527,7 +516,7 @@ namespace CognitiveVR
             return false;
         }
 
-        public static bool GetControllerInfo(bool right, out ControllerInfo info)
+        public static bool GetControllerInfo(bool right, out ControllerInfo info) //TODO contorller[x].id isn't always above 0. that's only true of steamvr, maybe oculus
         {
             InitializeControllers();
             if (controllers[0].isRight == right && controllers[0].id > 0 && controllers[0].transform != null) { info = controllers[0]; return true; }

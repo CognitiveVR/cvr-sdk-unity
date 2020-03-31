@@ -169,17 +169,21 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             if (GameplayReferences.HMD == null) { return; }
+            rightControllerTracking = true;
+            leftControllerTracking = true;
             StartCoroutine(Tick());
         }
 #endif
 
-#if CVR_PCIONEO2EYE
+#if CVR_PICONEO2EYE
 
         public override void CognitiveVR_Init(Error initError)
         {
             if (initError != Error.None) { return; }
             if (GameplayReferences.HMD == null) { return; }
             //IMPROVEMENT - wait for participant input from controllers
+            rightControllerTracking = true;
+            leftControllerTracking = true;
             StartCoroutine(Tick());
         }
 #endif
@@ -197,6 +201,8 @@ namespace CognitiveVR.Components
             {
                 Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
                 if (GameplayReferences.HMD == null) { return; }
+                rightControllerTracking = true;
+                leftControllerTracking = true;
                 StartCoroutine(Tick());
             }
         }

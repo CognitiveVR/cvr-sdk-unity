@@ -17,7 +17,7 @@ namespace CognitiveVR
         public Matrix4x4 TransformMatrix; //set in update. used in thread
     }
 
-    //TODO try removing noisy outliers when creating new fixation points
+    //IMPROVEMENT? try removing noisy outliers when creating new fixation points
     //https://stackoverflow.com/questions/3779763/fast-algorithm-for-computing-percentiles-to-remove-outliers
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
 
@@ -1152,7 +1152,7 @@ namespace CognitiveVR
 
             if (hitTransformCount == 0) { return false; } //didn't hit any valid dynamic objects
 
-            //TODO replace with 2 arrays or something
+            //IMPROVEMENT replace with 2 arrays instead of dictionary
             Dictionary<Transform, int> hitCounts = new Dictionary<Transform, int>();
 
             for (int i = 0; i < hitTransforms.Length; i++)
