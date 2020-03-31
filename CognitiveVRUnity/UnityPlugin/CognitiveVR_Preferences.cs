@@ -133,6 +133,7 @@ namespace CognitiveVR
 
 
         public bool SendDataOnQuit = true;
+        public bool SendDataOnPause = true;
         public bool SendDataOnHMDRemove = true;
         public bool SendDataOnLevelLoad = true;
         public bool SendDataOnHotkey = true;

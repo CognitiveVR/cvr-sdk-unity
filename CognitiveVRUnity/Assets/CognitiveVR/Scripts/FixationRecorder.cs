@@ -122,9 +122,9 @@ namespace CognitiveVR
             ray = new Ray();
             Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
             var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
-            if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRay(ref gazeRay))
+            if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRayWorld(ref gazeRay))
             {
-                if (gazeRay.IsValid)
+                if (gazeRay.IsValid && gazeRay.Direction.sqrMagnitude > 0.1f)
                 {
                     ray.direction = gazeRay.Direction;
                     ray.origin = gazeRay.Origin;

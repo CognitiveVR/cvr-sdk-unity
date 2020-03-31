@@ -694,6 +694,15 @@ namespace CognitiveVR
             initResponse = Error.NotInitialized;
         }
 
+        void OnApplicationPause(bool paused)
+        {
+            if (CognitiveVR_Preferences.Instance.SendDataOnPause)
+            {
+                new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
+                Core.InvokeSendDataEvent();
+            }
+        }
+
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
