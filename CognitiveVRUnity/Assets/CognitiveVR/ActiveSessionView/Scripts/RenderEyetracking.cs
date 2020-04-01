@@ -77,6 +77,8 @@ namespace CognitiveVR.ActiveSession
             FixationCamera.clearFlags = CameraClearFlags.Skybox;
             FixationCamera.cullingMask = -1;
 #endif
+
+            quadPositions = new Vector3[FixationRecorder.Instance.DisplayGazePoints.Count * 4];
         }
 
         private void Core_InitEvent(Error initError)
@@ -452,9 +454,10 @@ namespace CognitiveVR.ActiveSession
             MatchTargetCamera();
             transform.SetPositionAndRotation(TargetCameraTransform.position, TargetCameraTransform.rotation);
         }
-        
+
+        //IMPROVEMENT allow duration of previous saccades to be configurable. this can currently only be changed by fixationrecorder.displaygazepoints count
         //the output of the thread
-        Vector3[] quadPositions = new Vector3[4096 * 4];
+        Vector3[] quadPositions;
         int quadPositionCount = 0;
 
 
