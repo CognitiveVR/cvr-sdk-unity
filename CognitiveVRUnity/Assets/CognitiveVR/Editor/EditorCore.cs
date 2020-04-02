@@ -459,7 +459,7 @@ namespace CognitiveVR
         /// <summary>
         /// TextField with copy-paste support
         /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength)
+        public static string TextField(Rect rect, string value, int maxlength, string styleOverride = null)
         {
             int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
             if (textFieldID == 0)
@@ -467,7 +467,14 @@ namespace CognitiveVR
 
             // Handle custom copy-paste
             value = HandleCopyPaste(textFieldID) ?? value;
-            return GUI.TextField(rect, value, maxlength);
+            if (styleOverride == null)
+            {
+                return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
+            }
+            else
+            {
+                return GUI.TextField(rect, value, maxlength, styleOverride);
+            }
         }
         #endregion
 
@@ -489,7 +496,7 @@ namespace CognitiveVR
             get
             {
                 if (_checkmark == null)
-                    _checkmark = Resources.Load<Texture2D>("nice_checkmark");
+                    _checkmark = Resources.Load<Texture2D>("checkmark_icon");
                 return _checkmark;
             }
         }
@@ -500,8 +507,30 @@ namespace CognitiveVR
             get
             {
                 if (_alert == null)
-                    _alert = Resources.Load<Texture2D>("alert");
+                    _alert = Resources.Load<Texture2D>("alert_icon");
                 return _alert;
+            }
+        }
+
+        private static Texture2D _error;
+        public static Texture2D Error
+        {
+            get
+            {
+                if (_error == null)
+                    _error = Resources.Load<Texture2D>("error_icon");
+                return _error;
+            }
+        }
+
+        private static Texture2D _question;
+        public static Texture2D Question
+        {
+            get
+            {
+                if (_question == null)
+                    _question = Resources.Load<Texture2D>("question_icon");
+                return _question;
             }
         }
 
@@ -1393,6 +1422,28 @@ namespace CognitiveVR
             axisProperty.FindPropertyRelative("axis").intValue = axis.AxisNum;
             axisProperty.FindPropertyRelative("joyNum").intValue = axis.JoystickNum;
             serializedObject.ApplyModifiedProperties();
+        }
+
+        public static void CheckForExpiredDeveloperKey(EditorNetwork.Response callback)
+        {
+            if (EditorPrefs.HasKey("developerkey"))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify", callback, headers, true);
+
+
+                /*//check if dev key is expired
+                var devkeyrequest = new UnityEngine.Networking.UnityWebRequest("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify");
+                devkeyrequest.SetRequestHeader("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
+                devkeyrequest.Send();
+                EditorApplication.update += DevKeyCheckUpdate;*/
+            }
+            else
+            {
+                callback.Invoke(0, "invalid url", "");
+            }
+            //invoke the callback with the response code
         }
 
         #endregion

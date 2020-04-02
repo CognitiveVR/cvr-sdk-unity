@@ -192,9 +192,9 @@ namespace CognitiveVR
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
         /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="userProperties"></param>
-        public void Initialize(string userName="", List<KeyValuePair<string,object>> userProperties = null)
+        /// <param name="participantName">friendly name for identifying participant</param>
+        /// <param name="participantId">unique id for identifying participant</param>
+        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
         {
             if (instance != null && instance != this)
             {
@@ -243,8 +243,8 @@ namespace CognitiveVR
                 }
             }
 
-            Core.UserId = userName;
-            Core.SetSessionProperty("c3d.username", userName);
+            Core.SetParticipantFullName(participantName);
+            Core.SetParticipantId(participantId);
 
             //sets session properties for system hardware
             Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
@@ -306,8 +306,8 @@ namespace CognitiveVR
 
             SetSessionProperties();
 
-            if (userProperties != null)
-                Core.SetSessionProperties(userProperties);
+            if (participantProperties != null)
+                Core.SetSessionProperties(participantProperties);
         }
 
         /// <summary>
@@ -467,10 +467,10 @@ namespace CognitiveVR
         /// sets the user's name property
         /// </summary>
         /// <param name="name"></param>
+        [Obsolete("Use Core.SetParticipantFullName and Core.SetParticipantId instead")]
         public static void SetUserName(string name)
         {
-            Core.UserId = name;
-            Core.SetSessionProperty("c3d.username", name);
+            Core.SetParticipantFullName(name);
         }
 
         /// <summary>

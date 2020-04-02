@@ -55,7 +55,7 @@ namespace CognitiveVR.Components
             }
 
             float medianHeight = Median(heights);
-            Core.SetSessionProperty("c3d.height", medianHeight * 100 + ForeheadHeight * 100);
+            Core.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
         }
 
         private float Median(float[] items)

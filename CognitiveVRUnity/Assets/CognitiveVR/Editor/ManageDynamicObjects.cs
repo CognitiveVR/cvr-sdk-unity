@@ -16,7 +16,7 @@ public class ManageDynamicObjects : EditorWindow
         {
             var currentscene = CognitiveVR_Preferences.FindCurrentScene();
             bool sceneIsNull = currentscene == null || string.IsNullOrEmpty(currentscene.SceneId);
-            return !EditorCore.IsDeveloperKeyValid || sceneIsNull;
+            return !EditorCore.IsDeveloperKeyValid || sceneIsNull || lastResponseCode != 200;
         }
     }
 
@@ -26,10 +26,33 @@ public class ManageDynamicObjects : EditorWindow
         window.minSize = new Vector2(500, 550);
         window.maxSize = new Vector2(500, 550);
         window.Show();
+        EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+        needsRefreshDevKey = false;
+    }
+
+    static bool needsRefreshDevKey = true;
+    static int lastResponseCode = 200;
+    static void GetDevKeyResponse(int responseCode, string error, string text)
+    {
+        lastResponseCode = responseCode;
+        if (responseCode == 200)
+        {
+            //dev key is fine 
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
+            Debug.LogError("Developer Key invalid or expired");
+        }
     }
 
     private void OnGUI()
     {
+        if (needsRefreshDevKey == true)
+        {
+            EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+            needsRefreshDevKey = false;
+        }
         GUI.skin = EditorCore.WizardGUISkin;
 
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
@@ -371,7 +394,7 @@ public class ManageDynamicObjects : EditorWindow
             tooltip = "Upload list of all Dynamic Object IDs and Mesh Names to " + currentScene.SceneName + " version " + currentScene.VersionNumber;
         }
 
-        bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
+        bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
         if (enabled)
         {
             if (GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
@@ -388,7 +411,17 @@ public class ManageDynamicObjects : EditorWindow
         else
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-            string errorMessage = "<color=#880000ff>This scene <color=red>" + scene.name.ToUpper() + "</color> does not have a valid SceneId.\n\nPlease upload this scene using the Scene Setup Window</color>";
+            string errorMessage;
+
+            if (lastResponseCode != 200)
+            {
+                errorMessage = "<color=#880000ff>The Developer Key is Invalid or Expired.\n\nPlease visit the project on our dashboard and update the key in the Scene Setup Window</color>";
+            }
+            else
+            {
+                errorMessage = "<color=#880000ff>This scene <color=red>" + scene.name.ToUpper() + "</color> does not have a valid SceneId.\n\nPlease upload this scene using the Scene Setup Window</color>";
+            }
+
             if (!EditorCore.IsDeveloperKeyValid)
             {
                 errorMessage = "Developer Key not set";
