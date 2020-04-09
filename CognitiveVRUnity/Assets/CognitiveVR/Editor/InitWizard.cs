@@ -29,7 +29,7 @@ public class InitWizard : EditorWindow
 
         ExportUtility.ClearUploadSceneSettings();
     }
-
+    
     List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
     public int currentPage;
 
@@ -224,6 +224,9 @@ public class InitWizard : EditorWindow
 #if CVR_VARJO
         selectedsdks.Add("CVR_VARJO");
 #endif
+#if CVR_PICONEO2EYE
+        selectedsdks.Add("CVR_PICONEO2EYE");
+#endif
 #if CVR_ARKIT //apple
             selectedsdks.Add("CVR_ARKIT");
 #endif
@@ -255,8 +258,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.6.0 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.6.0 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Pico Neo 2 Eye 2.8.4 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -546,6 +549,54 @@ public class InitWizard : EditorWindow
                 if (dyn != null)
                 {
                     if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight)
+                        rightSetupComplete = true;
+                }
+            }
+
+            setupComplete = false;
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                //add input tracker + left/right controllers set
+                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                {
+                    setupComplete = true;
+                }
+            }
+#elif CVR_PICONEO2EYE
+            if (cameraBase == null)
+            {
+                //basic setup
+                var manager = FindObjectOfType<Pvr_Controller>();
+                if (manager != null)
+                {
+                    if (Camera.main != null)
+                        cameraBase = Camera.main.gameObject;
+                    if (manager.controller0 != null)
+                        leftcontroller = manager.controller0;
+                    if (manager.controller1 != null)
+                        rightcontroller = manager.controller1;
+                }
+            }
+
+            leftSetupComplete = false;
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft)
+                        leftSetupComplete = true;
+                }
+            }
+
+            rightSetupComplete = false;
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.PicoNeoControllerRight)
                         rightSetupComplete = true;
                 }
             }
@@ -931,6 +982,38 @@ public class InitWizard : EditorWindow
             catch (System.Exception e)
             {
                 Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
+            }
+#elif CVR_PICONEO2EYE
+            //add component to cognitice manager
+            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            if (inputTracker == null)
+            {
+                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+            }
+
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = left.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "pico_neo_2_eye_controller_left";
+                inputTracker.LeftHand = dyn;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = right.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "pico_neo_2_eye_controller_right";
+                inputTracker.RightHand = dyn;
             }
 
 #elif CVR_OCULUS

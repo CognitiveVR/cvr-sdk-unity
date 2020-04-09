@@ -169,6 +169,21 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             if (GameplayReferences.HMD == null) { return; }
+            rightControllerTracking = true;
+            leftControllerTracking = true;
+            StartCoroutine(Tick());
+        }
+#endif
+
+#if CVR_PICONEO2EYE
+
+        public override void CognitiveVR_Init(Error initError)
+        {
+            if (initError != Error.None) { return; }
+            if (GameplayReferences.HMD == null) { return; }
+            //IMPROVEMENT - wait for participant input from controllers
+            rightControllerTracking = true;
+            leftControllerTracking = true;
             StartCoroutine(Tick());
         }
 #endif
@@ -186,6 +201,8 @@ namespace CognitiveVR.Components
             {
                 Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
                 if (GameplayReferences.HMD == null) { return; }
+                rightControllerTracking = true;
+                leftControllerTracking = true;
                 StartCoroutine(Tick());
             }
         }
@@ -234,7 +251,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_PICONEO2EYE
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
 #elif CVR_OCULUS
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";
@@ -245,7 +262,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS || CVR_PICONEO2EYE
             return false;
 #else
             return true;

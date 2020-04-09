@@ -290,7 +290,7 @@ namespace CognitiveVR
 
         Json.ExitPollSetJson questionSet;
 
-        //TODO this should grab a question received and cached on CognitiveVRManager Init
+        //IMPROVEMENT this should grab a question received and cached on CognitiveVRManager Init
         //build a collection of panel properties from the response
         void QuestionSetResponse(int responsecode, string error,string text)
         {
@@ -356,7 +356,7 @@ namespace CognitiveVR
                     for (int j = 0; j < questionSet.questions[i].answers.Length; j++)
                     {
                         if (questionSet.questions[i].answers[j].answer.Length == 0) { continue; }
-                        //TODO include support for custom icons on multiple choice answers
+                        //IMPROVEMENT include support for custom icons on multiple choice answers. requires dashboard feature + sending png data
                         csvMultipleAnswers += questionSet.questions[i].answers[j].answer + "|";
                     }
                 }

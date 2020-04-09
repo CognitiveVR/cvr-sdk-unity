@@ -32,7 +32,9 @@ namespace CognitiveVR
             SnapdragonVRController,
             ViveFocusController, //the 6dof controller
             OculusQuestTouchLeft,
-            OculusQuestTouchRight
+            OculusQuestTouchRight,
+            PicoNeoControllerLeft,
+            PicoNeoControllerRight
         }
 
 
