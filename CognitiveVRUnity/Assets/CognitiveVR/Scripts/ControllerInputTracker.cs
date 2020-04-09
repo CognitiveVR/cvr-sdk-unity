@@ -1873,7 +1873,7 @@ public class ControllerInputTracker : MonoBehaviour
 
             //left joystick
 
-            Vector2 leftJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
+            Vector2 leftJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(0);
 
             if (Pvr_ControllerManager.controllerlink.Controller0.Touch.PressedDown)
             {
@@ -1887,7 +1887,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
 
             //right joystick
-            Vector2 rightJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
+            Vector2 rightJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(1);
             if (Pvr_ControllerManager.controllerlink.Controller1.Touch.PressedDown)
             {
                 OnVectorChanged(RightHand, true, "pico_joystick", 100, rightJoystickVector, CurrentRightButtonStates);
@@ -1958,8 +1958,7 @@ public class ControllerInputTracker : MonoBehaviour
         {
             //joysticks
             {
-                Vector2 leftJoystickVector = Pvr_ControllerManager.controllerlink.Controller0.TouchPadPosition / 255f;
-                //Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
+                Vector2 leftJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(0);
                 var x = leftJoystickVector.x;
                 var y = leftJoystickVector.y;
                 int force = LeftJoystickState == TouchpadState.Press ? 100 : 0;
@@ -1982,8 +1981,7 @@ public class ControllerInputTracker : MonoBehaviour
             }
 
             {
-                // Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
-                Vector2 rightJoystickVector = Pvr_ControllerManager.controllerlink.Controller1.TouchPadPosition / 255f;
+                Vector2 rightJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(1);
                 var x = rightJoystickVector.x;
                 var y = rightJoystickVector.y;
                 int force = RightJoystickState == TouchpadState.Press ? 100 : 0;
