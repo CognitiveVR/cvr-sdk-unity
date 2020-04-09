@@ -33,6 +33,7 @@ public class InitWizard : EditorWindow
     List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
     public int currentPage;
 
+    static int lastDevKeyResponseCode = 0;
     private void OnGUI()
     {
         GUI.skin = EditorCore.WizardGUISkin;
@@ -91,26 +92,53 @@ public class InitWizard : EditorWindow
 
         //dev key
         GUI.Label(new Rect(30, 250, 100, 30), "Developer Key", "miniheader");
-        developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
-        if (string.IsNullOrEmpty(developerkey))
+        if (string.IsNullOrEmpty(developerkey)) //empty
         {
             GUI.Label(new Rect(30, 280, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+            GUI.Label(new Rect(440, 280, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+            lastDevKeyResponseCode = 0;
+            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
         }
-        else
+        else if (lastDevKeyResponseCode == 200) //valid key
         {
             GUI.Label(new Rect(440, 280, 24, 40), EditorCore.Checkmark, "image_centered");
+            string previous = developerkey;
+            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+            if (previous != developerkey)
+                lastDevKeyResponseCode = 0;
+        }
+        else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
+        {
+            GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
+            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+        }
+        else //invalid key
+        {
+            GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
+            string previous = developerkey;
+            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32, "textfield_warning");
+            if (previous != developerkey)
+                lastDevKeyResponseCode = 0;
+        }
+
+        if (lastDevKeyResponseCode != 200 && lastDevKeyResponseCode != 0)
+        {
+            GUI.Label(new Rect(30, 325, 400, 30), "This Developer Key is invalid or expired. Please visit this project on our dashboard and " +
+                "ensure you have a valid Developer Key. This is a requirement to upload or update any Scene or Dynamic Object. Developer Keys expire " +
+                "automatically after 90 days.", "miniwarning");
         }
 
         //api key
-        GUI.Label(new Rect(30, 350, 100, 30), "Application Key", "miniheader");
-        apikey = EditorCore.TextField(new Rect(30, 380, 400, 40), apikey, 32);
+        GUI.Label(new Rect(30, 360, 100, 30), "Application Key", "miniheader");
+        apikey = EditorCore.TextField(new Rect(30, 390, 400, 40), apikey, 32);
         if (string.IsNullOrEmpty(apikey))
         {
-            GUI.Label(new Rect(30, 380, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+            GUI.Label(new Rect(30, 390, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+            GUI.Label(new Rect(440, 390, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
         }
         else
         {
-            GUI.Label(new Rect(440, 380, 24, 40), EditorCore.Checkmark, "image_centered");
+            GUI.Label(new Rect(440, 390, 24, 40), EditorCore.Checkmark, "image_centered");
         }
 
     }
@@ -1468,6 +1496,22 @@ public class InitWizard : EditorWindow
         DrawNextButton();
     }
 
+    void GetDevKeyResponse(int responseCode, string error, string text)
+    {
+        lastDevKeyResponseCode = responseCode;
+        if (responseCode == 200)
+        {
+            //dev key is fine
+            currentPage++;
+            SaveKeys();
+        }
+        else
+        {
+            //EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
+            Debug.LogError("Developer Key invalid or expired");
+        }
+    }
+
     void DrawNextButton()
     {
         bool buttonDisabled = false;
@@ -1482,14 +1526,32 @@ public class InitWizard : EditorWindow
                 break;
             case "authenticate":
                 buttonrect = new Rect(350, 510, 140, 30);
-                onclick += () => SaveKeys();
-                onclick += () => ApplyBrandingUrls();
+                if (lastDevKeyResponseCode == 200)
+                {
+                    //next. use default action
+                    onclick += () => SaveKeys();
+                }
+                else
+                {
+                    //check and wait for response
+                    onclick = () => SaveKeys();
+                    onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+                }
+                
+                //onclick += () => ApplyBrandingUrls();
                 buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
                 if (buttonDisabled)
                 {
                     text = "Keys Required";
                 }
-                else
+
+                if (buttonDisabled == false && lastDevKeyResponseCode != 200)
+                {
+                    text = "Validate";
+                    //MuteDevKeyPopupWindow = true;
+                }
+
+                if (buttonDisabled == false && lastDevKeyResponseCode == 200)
                 {
                     text = "Next";
                 }
