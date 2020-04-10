@@ -228,7 +228,7 @@ namespace CognitiveVR
 
                     if (dyn.IsController)
                     {
-                        string[] controllernames = new string[8] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocuscontroller", "oculusquesttouchleft", "oculusquesttouchright", "windows_mixed_reality_controller_left", "windows_mixed_reality_controller_right" };
+                        string[] controllernames = new string[10] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocuscontroller", "oculusquesttouchleft", "oculusquesttouchright", "windows_mixed_reality_controller_left", "windows_mixed_reality_controller_right", "pico_neo_2_eye_controller_left", "pico_neo_2_eye_controller_right" };
                         int selected = 0;
                         if (dyn.ControllerType == "vivecontroller") selected = 0;
                         if (dyn.ControllerType == "oculustouchleft") selected = 1;
@@ -238,6 +238,8 @@ namespace CognitiveVR
                         if (dyn.ControllerType == "oculusquesttouchright") selected = 5;
                         if (dyn.ControllerType == "windows_mixed_reality_controller_left") selected = 6;
                         if (dyn.ControllerType == "windows_mixed_reality_controller_right") selected = 7;
+                        if (dyn.ControllerType == "pico_neo_2_eye_controller_left") selected = 8;
+                        if (dyn.ControllerType == "pico_neo_2_eye_controller_right") selected = 9;
 
                         selected = EditorGUILayout.Popup(selected, controllernames);
                         dyn.ControllerType = controllernames[selected];

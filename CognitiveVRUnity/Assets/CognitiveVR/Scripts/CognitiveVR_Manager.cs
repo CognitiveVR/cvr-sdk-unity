@@ -293,7 +293,7 @@ namespace CognitiveVR
                 case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE
             //fixation requires some kind of eye tracking hardware
             FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
             if (fixationRecorder == null)
@@ -692,6 +692,15 @@ namespace CognitiveVR
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             initResponse = Error.NotInitialized;
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (CognitiveVR_Preferences.Instance.SendDataOnPause)
+            {
+                new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
+                Core.InvokeSendDataEvent();
+            }
         }
 
         bool hasCanceled = false;

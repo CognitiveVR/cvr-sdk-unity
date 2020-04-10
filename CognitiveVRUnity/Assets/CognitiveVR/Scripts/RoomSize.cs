@@ -60,6 +60,7 @@ namespace CognitiveVR.Components
                 Core.SetSessionProperty("c3d.roomscale", OVRManager.boundary.GetConfigured());
             }
 #endif
+            //TODO pico. unclear how to get boundaries from api
         }
 
         public override bool GetWarning()
@@ -74,9 +75,9 @@ namespace CognitiveVR.Components
         public override string GetDescription()
         {
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
-            return "Include Room Size in Device Info from SteamVR Chaperone";
+            return "Include Room Size in Session Properties from SteamVR Chaperone";
 #elif CVR_OCULUS
-            return "Include Room Size in Device Info from Oculus Guardian";
+            return "Include Room Size in Session Properties from Oculus Guardian";
 #else
             return "Current platform does not support this component";
 #endif

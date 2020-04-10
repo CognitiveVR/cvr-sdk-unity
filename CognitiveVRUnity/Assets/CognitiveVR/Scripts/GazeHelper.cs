@@ -144,6 +144,22 @@ namespace CognitiveVR
             }
             return lastDir;
         }
+#elif CVR_PICONEO2EYE
+        static Vector3 lastDirection = Vector3.forward;
+
+        static Vector3 GetLookDirection()
+        {
+            Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
+            var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
+            if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRayWorld(ref gazeRay))
+            {
+                if (gazeRay.IsValid && gazeRay.Direction.sqrMagnitude > 0.1f)
+                {
+                    lastDirection = gazeRay.Direction;
+                }
+            }
+            return lastDirection;
+        }
 #else
         static Vector3 GetLookDirection()
         {

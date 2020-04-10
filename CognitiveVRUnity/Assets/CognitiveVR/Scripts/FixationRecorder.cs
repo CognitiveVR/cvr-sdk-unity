@@ -17,7 +17,7 @@ namespace CognitiveVR
         public Matrix4x4 TransformMatrix; //set in update. used in thread
     }
 
-    //TODO try removing noisy outliers when creating new fixation points
+    //IMPROVEMENT? try removing noisy outliers when creating new fixation points
     //https://stackoverflow.com/questions/3779763/fast-algorithm-for-computing-percentiles-to-remove-outliers
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
 
@@ -109,6 +109,53 @@ namespace CognitiveVR
             if (lastProcessedFrame != Time.frameCount)
             {
                 currentData = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal;
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
+#elif CVR_PICONEO2EYE
+        const int CachedEyeCaptures = 120; //PICO
+        Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+            Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
+            var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
+            if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRayWorld(ref gazeRay))
+            {
+                if (gazeRay.IsValid && gazeRay.Direction.sqrMagnitude > 0.1f)
+                {
+                    ray.direction = gazeRay.Direction;
+                    ray.origin = gazeRay.Origin;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
+            return data.leftEyeOpenness > 0.5f;
+        }
+        public bool RightEyeOpen()
+        {
+            Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
+            return data.rightEyeOpenness > 0.5f;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            return (long)(CognitiveVR.Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
                 lastProcessedFrame = Time.frameCount;
                 return true;
             }
@@ -1105,7 +1152,7 @@ namespace CognitiveVR
 
             if (hitTransformCount == 0) { return false; } //didn't hit any valid dynamic objects
 
-            //TODO replace with 2 arrays or something
+            //IMPROVEMENT replace with 2 arrays instead of dictionary
             Dictionary<Transform, int> hitCounts = new Dictionary<Transform, int>();
 
             for (int i = 0; i < hitTransforms.Length; i++)

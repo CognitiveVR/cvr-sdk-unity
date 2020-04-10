@@ -172,6 +172,7 @@ namespace CognitiveVR
             p.SendDataOnHMDRemove = EditorGUILayout.Toggle("Send Data on HMD Remove", p.SendDataOnHMDRemove);
             p.SendDataOnLevelLoad = EditorGUILayout.Toggle("Send Data on Level Load", p.SendDataOnLevelLoad);
             p.SendDataOnQuit = EditorGUILayout.Toggle("Send Data on Quit", p.SendDataOnQuit);
+            p.SendDataOnPause = EditorGUILayout.Toggle("Send Data on Pause", p.SendDataOnPause);
             p.SendDataOnHotkey = EditorGUILayout.Toggle("Send Data on Hotkey", p.SendDataOnHotkey);
             EditorGUI.indentLevel++;
             EditorGUI.BeginDisabledGroup(!p.SendDataOnHotkey);

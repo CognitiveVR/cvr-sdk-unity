@@ -684,10 +684,12 @@ namespace CognitiveVR
 
         #region Scene Setup Display Names
         static TextAsset DisplayNameAsset;
+        static bool HasLoadedDisplayNames;
         public static string DisplayValue(DisplayKey key)
         {
-            if (DisplayNameAsset == null)
+            if (DisplayNameAsset == null && !HasLoadedDisplayNames)
             {
+                HasLoadedDisplayNames = true;
                 DisplayNameAsset = Resources.Load<TextAsset>("DisplayNames");
             }
             if (DisplayNameAsset == null)

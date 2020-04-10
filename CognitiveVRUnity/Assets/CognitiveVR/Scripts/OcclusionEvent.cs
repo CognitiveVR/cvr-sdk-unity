@@ -69,6 +69,37 @@ namespace CognitiveVR.Components
         }
 #endif
 
+#if CVR_PICONEO2EYE
+
+        public override void CognitiveVR_Init(Error initError)
+        {
+            if (initError != Error.None) { return; }
+            base.CognitiveVR_Init(initError);
+
+            Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
+            Pvr_UnitySDKSensor.Enter3DofModelEvent += TrackingLost;
+            Pvr_UnitySDKSensor.Exit3DofModelEvent += TrackingAcquired;
+        }
+
+        private void TrackingAcquired()
+        {
+            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", true).Send();
+        }
+
+        private void TrackingLost()
+        {
+            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", false).Send();
+        }
+
+        //Neo controller，"int a,int b"，a(0:controller0,1：controller1)，b(0:Disconnect，1：Connect)  
+        private void Pvr_ControllerManager_PvrControllerStateChangedEvent(string data)
+        {
+            //Debug.Log("PicoControllerManager State Change:   " + data);
+            //OcclusionChanged();
+        }
+
+#endif
+
         //known bug - steamvr1.2 occlusion events will not be correctly reported if only 1 controller is enabled. need to test steamvr2
 #if CVR_STEAMVR2 || CVR_STEAMVR
         public override void CognitiveVR_Init(Error initError)
@@ -130,7 +161,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICONEO2EYE
             return false;
 #else
             return true;
