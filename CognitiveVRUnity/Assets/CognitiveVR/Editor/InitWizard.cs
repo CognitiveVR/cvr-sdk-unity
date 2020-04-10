@@ -39,8 +39,8 @@ public class InitWizard : EditorWindow
         GUI.skin = EditorCore.WizardGUISkin;
         GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
         
-        if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-        if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+        //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
+        //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
         switch (pageids[currentPage])
         {
             case "welcome":WelcomeUpdate(); break;
