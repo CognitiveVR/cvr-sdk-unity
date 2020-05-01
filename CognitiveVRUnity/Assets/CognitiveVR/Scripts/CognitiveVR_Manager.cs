@@ -243,8 +243,10 @@ namespace CognitiveVR
                 }
             }
 
-            Core.SetParticipantFullName(participantName);
-            Core.SetParticipantId(participantId);
+            if (!string.IsNullOrEmpty(participantName))
+                Core.SetParticipantFullName(participantName);
+            if (!string.IsNullOrEmpty(participantId))
+                Core.SetParticipantId(participantId);
 
             //sets session properties for system hardware
             Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
@@ -470,7 +472,8 @@ namespace CognitiveVR
         [Obsolete("Use Core.SetParticipantFullName and Core.SetParticipantId instead")]
         public static void SetUserName(string name)
         {
-            Core.SetParticipantFullName(name);
+            if (!string.IsNullOrEmpty(name))
+                Core.SetParticipantFullName(name);
         }
 
         /// <summary>
