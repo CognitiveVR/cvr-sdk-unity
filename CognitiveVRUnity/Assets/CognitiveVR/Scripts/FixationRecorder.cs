@@ -577,7 +577,7 @@ namespace CognitiveVR
         bool eyesClosed;
 
         [Header("Fixation")]
-        [Tooltip("the time that gaze must be within the max fixation angle before a fixation occurs")]
+        [Tooltip("the time that gaze must be within the max fixation angle before a fixation begins")]
         public int MinFixationMs = 60;
         [Tooltip("the amount of time gaze can be discarded before a fixation is ended. gaze can be discarded if eye tracking values are outside of expected ranges")]
         public int MaxConsecutiveDiscardMs = 10;
@@ -594,12 +594,11 @@ namespace CognitiveVR
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
 
-        [Header("Visualization")]
+        //[Header("Visualization")]
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
         public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         
         GameObject lastEyeTrackingPointer;
-        public Material DebugMaterial;
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
         bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation

@@ -234,8 +234,8 @@ namespace CognitiveVR
             }
             EditorGUILayout.Space();
 
-            GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter"), new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") };
-            int[] textureQualities = new int[] { 1, 2, 4, 8, 16, 32, 64 };
+            GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
+            int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64 */};
             p.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), p.TextureResize, textureQualityNames, textureQualities);
             //EditorCore.ExportSettings.TextureQuality = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), EditorCore.ExportSettings.TextureQuality, textureQualityNames, textureQualities);
             p.ExportSceneLODLowest = EditorGUILayout.Toggle("Export Lowest LOD from LODGroup components", p.ExportSceneLODLowest);

@@ -9,21 +9,16 @@ namespace CognitiveVR
 {
     public class AssessmentBase : MonoBehaviour
     {
-        //used in the editor to indicate if this Assessment should be 
+        // -------- meta data about how the assessment manager should display this assessment
+
+        //used in the editor to indicate if this Assessment will be activated
+        //deals with eye tracking/room scale/grabbing objects being supported by SDK and required by assessment
         [HideInInspector]
         public bool Active = true;
 
         //used by the AssessmentManager to sort assessments
         [HideInInspector]
         public int Order = 0;
-
-        public delegate void onAssessmentStateChanged();
-        public event onAssessmentStateChanged OnAssessmentBegin;
-        public event onAssessmentStateChanged OnAssessmentComplete;
-
-        //a list of objects to disable when assessment is completed
-        //can be used to disable objects the player is grabbing, if these are normally parented to player hands
-        public List<GameObject> ControlledByAssessmentState;
 
         //indicates that this assessment is only valid if Eye Tracking SDK is present
         public bool RequiresEyeTracking;
@@ -32,8 +27,20 @@ namespace CognitiveVR
         //indicates that this assessment is only valid if interaction system allows picking up objects
         public bool RequiresGrabbing;
 
+        // -------- variables and events about this assessment's logic
+        [Space(10)]
+
+        //a list of objects to disable when assessment is completed
+        //can be used to disable objects the player is grabbing, if these are normally parented to player hands
+        public List<GameObject> ControlledByAssessmentState;
+
+        // -------- internal logic and state
         protected bool hasBegun;
         protected bool hasCompleted;
+
+        public delegate void onAssessmentStateChanged();
+        public event onAssessmentStateChanged OnAssessmentBegin;
+        public event onAssessmentStateChanged OnAssessmentComplete;
 
         //disable all child gameobjects
         public virtual void OnEnable()

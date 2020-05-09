@@ -725,7 +725,10 @@ namespace CognitiveVR
             {
                 //last page
                 Rect nextbuttonrect = new Rect(410, 510, 80, 30);
-                GUI.Button(nextbuttonrect, "Done", "button_disabled");
+                if (GUI.Button(nextbuttonrect, "Refresh", "button"))
+                {
+                    RefreshAssessments();
+                }
             }
             else
             {
