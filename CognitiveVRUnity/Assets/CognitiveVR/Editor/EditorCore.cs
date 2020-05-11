@@ -136,51 +136,42 @@ namespace CognitiveVR
             }
         }
 
-        public static void SetPlayerDefine(List<string> newDefines)
+        public static void SetPlayerDefine(List<string> CVRSymbols)
         {
             //get all scripting define symbols
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            string[] symbols = s.Split(';');
-            int cvrDefineCount = 0;
-            int newDefineContains = 0;
-            for (int i = 0; i < symbols.Length; i++)
-            {
-                if (symbols[i].StartsWith("CVR_"))
-                {
-                    cvrDefineCount++;
-                }
-                if (newDefines.Contains(symbols[i]))
-                {
-                    newDefineContains++;
-                }
-            }
-            if (newDefineContains == cvrDefineCount && cvrDefineCount != 0)
-            {
-                //all defines already exist
-                return;
-            }
+            string[] ExistingSymbols = s.Split(';');
 
-            //remove all CVR_ symbols
-            for (int i = 0; i < symbols.Length; i++)
+            //categorizing definition symbols
+            List<string> ExistingNonCVRSymbols = new List<string>();
+            foreach (var v in ExistingSymbols)
             {
-                if (symbols[i].Contains("CVR_"))
+                if (!v.StartsWith("CVR_"))
                 {
-                    symbols[i] = "";
+                    ExistingNonCVRSymbols.Add(v);
                 }
             }
+            //foreach (var v in ExistingSymbols) Debug.Log("existing defines " + v);
+            //foreach (var v in CVRSymbols) Debug.Log("CVR defines " + v);
+            //foreach (var v in ExistingNonCVRSymbols) Debug.Log("existing non cvr defines " + v);
+
+            //IMPROVEMENT check if ExistingSymbols == (CVRSymbols + ExistingNonCVRSymbols) regardless of order
+
+            //combine symbols
+            List<string> finalDefines = new List<string>();
+            foreach (var v in ExistingNonCVRSymbols)
+                finalDefines.Add(v);
+            foreach (var v in CVRSymbols)
+                finalDefines.Add(v);
 
             //rebuild symbols
             string alldefines = "";
-            for (int i = 0; i < symbols.Length; i++)
+            for (int i = 0; i < finalDefines.Count; i++)
             {
-                if (!string.IsNullOrEmpty(symbols[i]))
+                if (!string.IsNullOrEmpty(finalDefines[i]))
                 {
-                    alldefines += symbols[i] + ";";
+                    alldefines += finalDefines[i] + ";";
                 }
-            }
-            foreach (string define in newDefines)
-            {
-                alldefines += define + ";";
             }
             PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, alldefines);
         }

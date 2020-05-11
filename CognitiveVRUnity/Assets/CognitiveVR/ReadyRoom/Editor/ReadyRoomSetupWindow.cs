@@ -88,19 +88,6 @@ namespace CognitiveVR
 
         void OnGUI()
         {
-            Event e = Event.current;
-            if (e.type == EventType.keyDown && e.keyCode == KeyCode.BackQuote)
-            {
-                EditorPrefs.SetInt("useEyeTracking", -1);
-                EditorPrefs.SetInt("useRoomScale", -1);
-                EditorPrefs.SetInt("useGrabbable", -1);
-                UseEyeTracking = -1;
-                UseGrabbableObjects = -1;
-                UseRoomScale = -1;
-                Repaint();
-                Debug.Log("clear readyroom settings");
-            }
-
             GUI.skin = CognitiveVR.EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
@@ -738,7 +725,10 @@ namespace CognitiveVR
             {
                 //last page
                 Rect nextbuttonrect = new Rect(410, 510, 80, 30);
-                GUI.Button(nextbuttonrect, "Done", "button_disabled");
+                if (GUI.Button(nextbuttonrect, "Refresh", "button"))
+                {
+                    RefreshAssessments();
+                }
             }
             else
             {

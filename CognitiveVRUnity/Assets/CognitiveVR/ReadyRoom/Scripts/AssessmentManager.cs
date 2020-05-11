@@ -31,9 +31,6 @@ namespace CognitiveVR
                 return a.Order.CompareTo(b.Order);
             });
 
-            foreach (var a in AllAssessments)
-                Debug.Log(a.gameObject);
-
             CurrentAssessmentIndex = -1;
             ActivateNextAssessment();
         }
@@ -53,7 +50,6 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    Debug.Log(">>>   Assessment Manager begin assessment " + current);
                     current.BeginAssessment();
                     return current;
                 }
