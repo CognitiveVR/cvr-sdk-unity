@@ -495,7 +495,7 @@ public class ControllerInputTracker : MonoBehaviour
             if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
                 OnButtonChanged(LeftHand, false, "joystick", false, CurrentLeftButtonStates);
             if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rjoystick", false, CurrentRightButtonStates);
+                OnButtonChanged(RightHand, true, "joystick", false, CurrentRightButtonStates);
 
         }
 

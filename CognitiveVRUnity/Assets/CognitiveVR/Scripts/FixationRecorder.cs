@@ -596,7 +596,6 @@ namespace CognitiveVR
 
         //[Header("Visualization")]
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
-        public Dictionary<string, List<Fixation>> VISFixationEnds = new Dictionary<string, List<Fixation>>();
         
         GameObject lastEyeTrackingPointer;
 
@@ -619,11 +618,6 @@ namespace CognitiveVR
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
-            VISFixationEnds = new Dictionary<string, List<Fixation>>();
-            VISFixationEnds.Add("discard", new List<Fixation>());
-            VISFixationEnds.Add("out of range", new List<Fixation>());
-            VISFixationEnds.Add("microsleep", new List<Fixation>());
-            VISFixationEnds.Add("off transform", new List<Fixation>());
 
             IsFixating = false;
             ActiveFixation = new Fixation();
@@ -1060,7 +1054,6 @@ namespace CognitiveVR
             //check for blinking too long
             if (EyeCaptures[index].Time > testFixation.LastEyesOpen + MaxBlinkMs)
             {
-                VISFixationEnds["microsleep"].Add(new Fixation(testFixation));
                 FixationCore.FixationRecordEvent(testFixation);
                 return true;
             }
@@ -1073,7 +1066,6 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    VISFixationEnds["discard"].Add(new Fixation(testFixation));
                     FixationCore.FixationRecordEvent(testFixation);
                     //HMD issue, just a bunch of null data or some other issue
                     return true;
@@ -1089,7 +1081,6 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    VISFixationEnds["out of range"].Add(new Fixation(testFixation));
                     FixationCore.FixationRecordEvent(testFixation);
                     return true;
                 }
@@ -1100,7 +1091,6 @@ namespace CognitiveVR
                 //if not looking at transform for a while, end fixation
                 if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
                 {
-                    VISFixationEnds["off transform"].Add(new Fixation(testFixation));
                     FixationCore.FixationRecordEvent(testFixation);
                     return true;
                 }

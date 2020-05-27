@@ -223,11 +223,23 @@ namespace CognitiveVR
             DynamicManager.SetProperties(DataId, temp);
         }
 
+        /// <summary>
+        /// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
+        /// </summary>
+        /// <param name="engagementName">name of the event</param>
+        /// <param name="uniqueEngagementId">if multiple events with the same name are expected on this object, this can be used to end specific events</param>
+        /// <param name="properties">optional parameters to add to the custom event</param>
         public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string,object>> properties = null)
         {
             DynamicManager.BeginEngagement(GetId(), engagementName, uniqueEngagementId, properties);
         }
 
+        /// <summary>
+        /// Alternate method to end a Custom Event on a specific Dynamic Object. If the event does not exist, creates and immediately ends the event
+        /// </summary>
+        /// <param name="engagementName">the name of the Event to end</param>
+        /// <param name="uniqueEngagementId">identifies the event to end, regardless of name</param>
+        /// <param name="properties">any properties to add to this event before it ends</param>
         public void EndEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             DynamicManager.EndEngagement(GetId(), engagementName, uniqueEngagementId, properties);
