@@ -97,72 +97,6 @@ namespace CognitiveVR.Components
         }
 #endif
 
-#if CVR_VARJO
-        
-        Varjo.Varjo_SteamVR_Controller.Device leftController;
-        Varjo.Varjo_SteamVR_Controller.Device rightController;
-
-        public override void CognitiveVR_Init(Error initError)
-        {
-            base.CognitiveVR_Init(initError);
-
-            Core.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
-        }
-
-        bool anyControllerTracking = false;
-        private void CognitiveVR_Manager_UpdateEvent(float deltaTime)
-        {
-            if (GameplayReferences.HMD == null) { Core.UpdateEvent -= CognitiveVR_Manager_UpdateEvent; return; }
-            //get left controller device
-            if (leftController == null && GameplayReferences.GetControllerInfo(false, out tempInfo))
-            {
-                var leftObject = tempInfo.transform.GetComponent<Varjo.Varjo_SteamVR_TrackedObject>();
-                if (leftObject != null)
-                {
-                    leftController = Varjo.Varjo_SteamVR_Controller.Input((int)leftObject.index);
-                }
-            }
-
-            //get right controller device
-            if (rightController == null && GameplayReferences.GetControllerInfo(true, out tempInfo))
-            {
-                var rightObject = tempInfo.transform.GetComponent<Varjo.Varjo_SteamVR_TrackedObject>();
-                if (rightObject != null)
-                {
-                    rightController = Varjo.Varjo_SteamVR_Controller.Input((int)rightObject.index);
-                }
-            }
-
-            if (!rightControllerTracking && rightController != null && rightController.GetHairTriggerDown())
-            {
-                //start coroutine if not started already
-                rightControllerTracking = true;
-                if (!anyControllerTracking)
-                {
-                    anyControllerTracking = true;
-                    StartCoroutine(Tick());
-                }
-            }
-            
-            if (!leftControllerTracking && leftController != null && leftController.GetHairTriggerDown())
-            {
-                //start coroutine if not started already
-                leftControllerTracking = true;
-                if (!anyControllerTracking)
-                {
-                    anyControllerTracking = true;
-                    StartCoroutine(Tick());
-                }
-            }
-
-            //if both controllers are actively tracking distance, stop this callback to check for controllers that become active
-            if (leftControllerTracking && rightControllerTracking)
-            {
-                Core.UpdateEvent -= CognitiveVR_Manager_UpdateEvent;
-            }
-        }
-#endif
-
 #if CVR_STEAMVR2
 
         public override void CognitiveVR_Init(Error initError)
@@ -251,7 +185,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_PICONEO2EYE
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_PICONEO2EYE
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
 #elif CVR_OCULUS
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";

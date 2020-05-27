@@ -215,7 +215,7 @@ namespace CognitiveVR
 #if CVR_TOBIIVR || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
-#elif CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO
+#elif CVR_STEAMVR || CVR_STEAMVR2
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add a SteamVR_PlayArea component to a new gameobject in this scene", "normallabel_actionable");
 #else
