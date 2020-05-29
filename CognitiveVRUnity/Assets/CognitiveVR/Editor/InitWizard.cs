@@ -258,7 +258,7 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 1.3 (eye tracking)","Pico Neo 2 Eye 2.8.4 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
+        List<string> sdknames = new List<string>() { "Unity Default", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)","Pico Neo 2 Eye 2.8.4 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
         List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
@@ -465,39 +465,6 @@ public class InitWizard : EditorWindow
                     && manager.RightHand == rightcontroller.GetComponent<DynamicObject>())
                 {
                     setupComplete = true;
-                }
-            }
-#elif CVR_VARJO
-            if (cameraBase == null)
-            {
-                //basic setup
-                var manager = FindObjectOfType<Varjo.Varjo_SteamVR_ControllerManager>();
-                if (manager != null)
-                {
-                    cameraBase = manager.gameObject;
-                    leftcontroller = manager.left;
-                    rightcontroller = manager.right;
-                }
-            }
-
-            if (leftcontroller != null)
-            {
-                leftSetupComplete = true;
-            }
-            if (rightcontroller != null)
-            {
-                rightSetupComplete = true;
-            }
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && rdyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && ldyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
-                    {
-                        setupComplete = true;
-                    }
                 }
             }
 #elif CVR_VIVEWAVE
@@ -789,34 +756,6 @@ public class InitWizard : EditorWindow
 
 #if CVR_STEAMVR
             
-            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
-            {
-                left.AddComponent<ControllerInputTracker>();
-            }
-            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
-            {
-                right.AddComponent<ControllerInputTracker>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
-            }
-#elif CVR_VARJO
             if (left != null && left.GetComponent<ControllerInputTracker>() == null)
             {
                 left.AddComponent<ControllerInputTracker>();

@@ -23,17 +23,6 @@ namespace CognitiveVR
             {
                 gameObject.SetActive(false);
             }
-#elif CVR_VARJO
-            float roomX = 0;
-            float roomY = 0;
-            if (Varjo.Valve.VR.OpenVR.Chaperone == null || !Varjo.Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
-            {
-                gameObject.SetActive(false);
-            }
-            else if (Mathf.Approximately(roomX, 1f) && Mathf.Approximately(roomY, 1f))
-            {
-                gameObject.SetActive(false);
-            }
 #elif CVR_OCULUS
         if (!OVRPlugin.GetBoundaryConfigured() || OVRPlugin.GetBoundaryDimensions(OVRPlugin.BoundaryType.PlayArea).FromVector3f().magnitude < 1)
         {
