@@ -271,7 +271,27 @@ namespace CognitiveVR
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
             
-            if (Core.GetNewSessionProperties(false).Count > 0)
+            if (Core.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
+            {
+                Core.ForceWriteSessionMetadata = false;
+                gazebuilder.Append(",");
+                gazebuilder.Append("\"properties\":{");
+                foreach (var kvp in Core.GetAllSessionProperties(true))
+                {
+                    if (kvp.Value.GetType() == typeof(string))
+                    {
+                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                    }
+                    else
+                    {
+                        JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
+                    }
+                    gazebuilder.Append(",");
+                }
+                gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                gazebuilder.Append("}");
+            }
+            else if (Core.GetNewSessionProperties(false).Count > 0) //if a session property has changed
             {
                 gazebuilder.Append(",");
                 gazebuilder.Append("\"properties\":{");
@@ -290,6 +310,7 @@ namespace CognitiveVR
                 gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
                 gazebuilder.Append("}");
             }
+
             gazebuilder.Append("}");
 
             var sceneSettings = Core.TrackingScene;
