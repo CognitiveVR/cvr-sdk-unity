@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.20.3";
+        public const string SDK_VERSION = "0.21.0";
 
         public static string ParticipantId { get; private set; }
         public static string ParticipantName { get; private set; }
@@ -172,6 +172,7 @@ namespace CognitiveVR
             //just to send this scene change event
             Core.InvokeSendDataEvent();
 
+            CachedAttributeParameter = string.Empty;
             ForceWriteSessionMetadata = true;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
@@ -216,6 +217,7 @@ namespace CognitiveVR
         {
             InvokeEndSessionEvent();
             NetworkManager.Sender.EndSession();
+            CachedAttributeParameter = string.Empty;
             ParticipantId = null;
             ParticipantName = null;
             _sessionId = null;
@@ -415,6 +417,27 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        //this is reset every scene change and session end
+        static string CachedAttributeParameter;
+        class AttributeParameters
+        {
+            public string attributionKey;
+            public string sessionId;
+            public string sceneVersionId;
+        }
+        public static string GetAttributionParameters()
+        {
+            if (string.IsNullOrEmpty(CachedAttributeParameter))
+            {
+                var ap = new AttributeParameters();
+                ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
+                ap.sessionId = SessionID;
+                ap.sceneVersionId = TrackingSceneId;
+                CachedAttributeParameter = "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
+            }
+            return CachedAttributeParameter;
         }
     }
 }
