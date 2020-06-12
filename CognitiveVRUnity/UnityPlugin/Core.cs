@@ -171,8 +171,6 @@ namespace CognitiveVR
 
             //just to send this scene change event
             Core.InvokeSendDataEvent();
-
-            CachedAttributeParameter = string.Empty;
             ForceWriteSessionMetadata = true;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
@@ -217,7 +215,6 @@ namespace CognitiveVR
         {
             InvokeEndSessionEvent();
             NetworkManager.Sender.EndSession();
-            CachedAttributeParameter = string.Empty;
             ParticipantId = null;
             ParticipantName = null;
             _sessionId = null;
@@ -419,8 +416,6 @@ namespace CognitiveVR
             SetSessionProperty("c3d.participant." + key, value);
         }
 
-        //this is reset every scene change and session end
-        static string CachedAttributeParameter;
         class AttributeParameters
         {
             public string attributionKey;
@@ -429,15 +424,11 @@ namespace CognitiveVR
         }
         public static string GetAttributionParameters()
         {
-            if (string.IsNullOrEmpty(CachedAttributeParameter))
-            {
-                var ap = new AttributeParameters();
-                ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
-                ap.sessionId = SessionID;
-                ap.sceneVersionId = TrackingSceneId;
-                CachedAttributeParameter = "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
-            }
-            return CachedAttributeParameter;
+            var ap = new AttributeParameters();
+            ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
+            ap.sessionId = SessionID;
+            ap.sceneVersionId = TrackingSceneId;
+            return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
         }
     }
 }
