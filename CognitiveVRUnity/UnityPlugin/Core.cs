@@ -194,12 +194,22 @@ namespace CognitiveVR
 
         public static void SetParticipantFullName(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                Util.logWarning("SetParticipantFullName is empty!");
+                return;
+            }
             ParticipantName = name;
             SetParticipantProperty("name", name);
         }
 
         public static void SetParticipantId(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                Util.logWarning("SetParticipantId is empty!");
+                return;
+            }
             ParticipantId = id;
             SetParticipantProperty("id", id);
         }

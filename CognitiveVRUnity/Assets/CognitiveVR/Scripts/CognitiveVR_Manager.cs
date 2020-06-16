@@ -672,13 +672,16 @@ namespace CognitiveVR
         /// </summary>
         public void EndSession()
         {
-            double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
-            new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
+            if (initResponse == Error.None)
+            {
+                double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
+                new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
-            Core.InvokeSendDataEvent();
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-            initResponse = Error.NotInitialized;
-            Core.Reset();
+                Core.InvokeSendDataEvent();
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+                initResponse = Error.NotInitialized;
+                Core.Reset();
+            }
         }
 
         void OnDestroy()
