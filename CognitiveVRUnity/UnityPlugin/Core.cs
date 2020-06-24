@@ -86,8 +86,9 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.20.3";
+        public const string SDK_VERSION = "0.21.0";
 
+        private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
         public static string ParticipantName { get; private set; }
         private static string _deviceId;
@@ -201,6 +202,8 @@ namespace CognitiveVR
             }
             ParticipantName = name;
             SetParticipantProperty("name", name);
+            if (!HasCustomSessionName)
+                SetSessionProperty("c3d.sessionName", name);
         }
 
         public static void SetParticipantId(string id)
@@ -238,6 +241,7 @@ namespace CognitiveVR
             TrackingScene = null;
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
+            HasCustomSessionName = false;
         }
 
         /// <summary>
@@ -425,6 +429,12 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        public static void SetSessionName(string sessionName)
+        {
+            HasCustomSessionName = true;
+            SetSessionProperty("c3d.sessionname", sessionName);
         }
     }
 }

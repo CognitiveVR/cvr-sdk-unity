@@ -460,9 +460,10 @@ namespace CognitiveVR
         /// sets a user friendly label for the session on the dashboard. automatically generated if not supplied
         /// </summary>
         /// <param name="name"></param>
+        [Obsolete("Use Core.SetSessionName instead")]
         public static void SetSessionName(string name)
         {
-            Core.SetSessionProperty("c3d.sessionname", name);
+            Core.SetSessionName(name);
         }
 
         /// <summary>
