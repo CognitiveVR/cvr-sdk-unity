@@ -86,8 +86,9 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.20.2";
+        public const string SDK_VERSION = "0.21.0";
 
+        private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
         public static string ParticipantName { get; private set; }
         private static string _deviceId;
@@ -146,6 +147,7 @@ namespace CognitiveVR
         }
 
         private static float SceneStartTime;
+        internal static bool ForceWriteSessionMetadata = false;
 
         /// <summary>
         /// Set the SceneId for recorded data by reference
@@ -171,6 +173,7 @@ namespace CognitiveVR
             //just to send this scene change event
             Core.InvokeSendDataEvent();
 
+            ForceWriteSessionMetadata = true;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
             TrackingSceneName = "";
@@ -192,12 +195,24 @@ namespace CognitiveVR
 
         public static void SetParticipantFullName(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                Util.logWarning("SetParticipantFullName is empty!");
+                return;
+            }
             ParticipantName = name;
             SetParticipantProperty("name", name);
+            if (!HasCustomSessionName)
+                SetSessionProperty("c3d.sessionName", name);
         }
 
         public static void SetParticipantId(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                Util.logWarning("SetParticipantId is empty!");
+                return;
+            }
             ParticipantId = id;
             SetParticipantProperty("id", id);
         }
@@ -226,6 +241,7 @@ namespace CognitiveVR
             TrackingScene = null;
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
+            HasCustomSessionName = false;
         }
 
         /// <summary>
@@ -297,7 +313,19 @@ namespace CognitiveVR
             return newSessionProperties;
         }
 
+        public static List<KeyValuePair<string, object>> GetAllSessionProperties(bool clearNewProperties)
+        {
+            if (clearNewProperties)
+            {
+                newSessionProperties.Clear();
+            }
+            return knownSessionProperties;
+        }
+
+        //any changed properties that have not been written to the session
         static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
+
+        //all session properties, including new properties not yet sent
         static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
         
         public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
@@ -401,6 +429,12 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        public static void SetSessionName(string sessionName)
+        {
+            HasCustomSessionName = true;
+            SetSessionProperty("c3d.sessionname", sessionName);
         }
     }
 }
