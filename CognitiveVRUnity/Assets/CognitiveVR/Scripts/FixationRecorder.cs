@@ -559,8 +559,8 @@ namespace CognitiveVR
         }
 #endif
 
-        public EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
-        public List<Fixation> Fixations = new List<Fixation>();
+        private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
+        private List<Fixation> Fixations = new List<Fixation>();
 
         public bool IsFixating { get; set; }
         public Fixation ActiveFixation;
@@ -612,6 +612,11 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (Instance != null && Instance != this)
+            {
+                Util.logWarning("Multiple Fixation Recorders found!");
+                return;
+            }
             Instance = this;
         }
 

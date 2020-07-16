@@ -297,9 +297,11 @@ namespace CognitiveVR
             }
 #if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE
             //fixation requires some kind of eye tracking hardware
-            FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+            FixationRecorder fixationRecorder = FixationRecorder.Instance;
             if (fixationRecorder == null)
+            {
                 fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+            }
             fixationRecorder.Initialize();
 #endif
 
