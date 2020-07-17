@@ -11,6 +11,7 @@ using Valve.VR;
 
 //adds controller input properties to dynamic object snapshot for display on sceneexplorer
 
+//TODO XR framework inputs
 //magic leap touchpad, trigger, hand pose, buttons
 //snapdragon touchpad, buttons
 //steamvr1 buttons, touchpad, trigger, grip
