@@ -508,8 +508,9 @@ namespace CognitiveVR
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
                 bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Transparent/Diffuse"));
 
-                var width = v.GetComponent<RectTransform>().sizeDelta.x * v.transform.localScale.x;
-                var height = v.GetComponent<RectTransform>().sizeDelta.y * v.transform.localScale.y;
+                //remove transform scale
+                var width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
+                var height = v.GetComponent<RectTransform>().sizeDelta.y;// * v.transform.localScale.y;
 
                 //bake texture from render
                 var screenshot = CanvasTextureBake(v.transform);
@@ -951,18 +952,19 @@ namespace CognitiveVR
             BakeNonstandardRenderers(dynamicObject, temp, path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
             //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
-            Vector3 startScale = dynamicObject.transform.localScale;
-            dynamicObject.transform.localScale = dynamicObject.transform.lossyScale;
-            RectTransform rt = dynamicObject.GetComponent<RectTransform>();
-            if (rt != null)
-            {
-                var width = rt.sizeDelta.x;
-                var height = rt.sizeDelta.y;
-                var min = Mathf.Min(width, height);
-                dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x * min,
-                    dynamicObject.transform.localScale.y * min,
-                    dynamicObject.transform.localScale.z);
-            }
+            //likely no longer true? GLTF includes scales from hierarchy. needs more testing
+            //Vector3 startScale = dynamicObject.transform.localScale;
+            //dynamicObject.transform.localScale = dynamicObject.transform.lossyScale;
+            //RectTransform rt = dynamicObject.GetComponent<RectTransform>();
+            //if (rt != null)
+            //{
+            //    var width = rt.sizeDelta.x;
+            //    var height = rt.sizeDelta.y;
+            //    var min = Mathf.Min(width, height);
+            //    dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x * min,
+            //        dynamicObject.transform.localScale.y * min,
+            //        dynamicObject.transform.localScale.z);
+            //}
             try
             {
                 var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamicObject.transform }, RetrieveTexturePath, dynamicObject);
@@ -973,16 +975,16 @@ namespace CognitiveVR
             {
                 Debug.LogException(e);
             }
-            if (rt != null)
-            {
-                var width = rt.sizeDelta.x;
-                var height = rt.sizeDelta.y;
-                var min = Mathf.Min(width, height);
-                dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x / min,
-                    dynamicObject.transform.localScale.y / min,
-                    dynamicObject.transform.localScale.z);
-            }
-            dynamicObject.transform.localScale = startScale;
+            //if (rt != null)
+            //{
+            //    var width = rt.sizeDelta.x;
+            //    var height = rt.sizeDelta.y;
+            //    var min = Mathf.Min(width, height);
+            //    dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x / min,
+            //        dynamicObject.transform.localScale.y / min,
+            //        dynamicObject.transform.localScale.z);
+            //}
+            //dynamicObject.transform.localScale = startScale;
 
             //destroy bakeable meshes from non-standard renderers
             for (int i = 0; i < temp.Count; i++)
