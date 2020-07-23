@@ -104,11 +104,19 @@ namespace CognitiveVR
         /// </summary>
         public static void ExportGLTFScene()
         {
-            var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-            var gameObjects = scene.GetRootGameObjects();
+            var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+            List<GameObject> allRootObjects = new List<GameObject>();
+            for(int i = 0; i< UnityEditor.SceneManagement.EditorSceneManager.sceneCount;i++)
+            {
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetSceneAt(i);
+                if (scene.isLoaded)
+                {
+                    allRootObjects.AddRange(scene.GetRootGameObjects());
+                }
+            }
 
             List<Transform> t = new List<Transform>();
-            foreach (var v in gameObjects)
+            foreach (var v in allRootObjects)
             {
                 if (v.GetComponent<MeshFilter>() != null && v.GetComponent<MeshFilter>().sharedMesh == null) { continue; }
                 if (v.activeInHierarchy) { t.Add(v.transform); }
@@ -117,7 +125,7 @@ namespace CognitiveVR
 
             List<BakeableMesh> temp = new List<BakeableMesh>();
 
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + scene.name;
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
             try
             {
                 EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
