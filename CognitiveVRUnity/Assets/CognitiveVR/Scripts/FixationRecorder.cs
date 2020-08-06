@@ -521,10 +521,10 @@ namespace CognitiveVR
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
-        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(); return false;}
+        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(GameplayReferences.HMD.position,GameplayReferences.HMD.forward); return true;}
 
-        public bool LeftEyeOpen() { return false; }
-        public bool RightEyeOpen() { return false; }
+        public bool LeftEyeOpen() { return true; }
+        public bool RightEyeOpen() { return true; }
 
         public long EyeCaptureTimestamp()
         {
@@ -532,8 +532,14 @@ namespace CognitiveVR
         }
 
         //returns true if there is another data point to work on
+        int lastProcessedFrame;
         public bool GetNextData()
         {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
             return false;
         }
 #endif
@@ -710,13 +716,13 @@ namespace CognitiveVR
         void RecordEyeCapture()
         {
             //check for new fixation
-            //check for ending fixation
+            //else check for ending fixation
             //update eyecapture state
 
             if (!IsFixating)
             {
                 //check if this is the start of a new fixation. set this and all next captures to this
-                //the 'current' fixation we're checking is 1 second behind recoding eye captures
+                //the 'current' fixation we're checking is 1 second behind recording eye captures
 
                 if (TryBeginLocalFixation(index))
                 {
@@ -726,7 +732,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    if (TryBeginFixation())
+                    if (TryBeginFixation(index))
                     {
                         ActiveFixation.IsLocal = false;
                         //FixationTransform = null;
@@ -736,14 +742,26 @@ namespace CognitiveVR
             }
             else
             {
-                //center is about 0.01
-                //off screen is ~0.3
+                //check if eye capture is valid to append to fixation
+                //check if fixation 
 
-                EyeCaptures[index].OffTransform = IsGazeOffTransform(EyeCaptures[index]);
-                EyeCaptures[index].OutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
+                //update if eye capture is out of range
+                //compared here since we don't necessarily know how fixation has changed since last capture
+                //this is relative to the fixation, not an absolute that could be changed since recording
+                bool IsOutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
+                if (!IsOutOfRange)
+                {
+                    //ActiveFixation.DurationMs = EyeCaptures[index].Time - ActiveFixation.StartMs;
+                }
+                else
+                {
+                    EyeCaptures[index].OutOfRange = true;
+                }
+
+                //update if eye capture is freshly off a transform (eg, if eye capture not on active fixation's dynamic object)
+                EyeCaptures[index].OffTransform = IsFixatingOffTransform(EyeCaptures[index]);
+
                 ActiveFixation.AddEyeCapture(EyeCaptures[index]);
-
-                ActiveFixation.DurationMs = EyeCaptures[index].Time - ActiveFixation.StartMs;
 
                 if (CheckEndFixation(ActiveFixation))
                 {
@@ -757,15 +775,16 @@ namespace CognitiveVR
                     }
                     CachedEyeCapturePositions.Clear();
                 }
+                WasOutOfDispersionLastFrame = IsOutOfRange;
             }
 
             WasCaptureDiscardedLastFrame = EyeCaptures[index].Discard;
-            WasOutOfDispersionLastFrame = EyeCaptures[index].OutOfRange;
+            
 
             //reset all values
             EyeCaptures[index].Discard = false;
             EyeCaptures[index].SkipPositionForFixationAverage = false;
-            EyeCaptures[index].OffTransform = false;
+            EyeCaptures[index].OffTransform = true;
             EyeCaptures[index].OutOfRange = false;
 
             bool areEyesClosed = AreEyesClosed();
@@ -786,6 +805,7 @@ namespace CognitiveVR
             EyeCaptures[index].EyesClosed = areEyesClosed;
             EyeCaptures[index].HmdPosition = GameplayReferences.HMD.position;
             EyeCaptures[index].Time = EyeCaptureTimestamp();
+            if (EyeCaptures[index].EyesClosed) { EyeCaptures[index].SkipPositionForFixationAverage = true; }
 
             Vector3 world;
 
@@ -810,12 +830,14 @@ namespace CognitiveVR
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
                     DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = EyeCaptures[index].LocalPosition;
                     DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
+                    EyeCaptures[index].OffTransform = false;
                 }
                 else
                 {
                     EyeCaptures[index].HitDynamicTransform = null;
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
+                    EyeCaptures[index].OffTransform = false;
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -830,13 +852,15 @@ namespace CognitiveVR
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
                 DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                EyeCaptures[index].OffTransform = true;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].HitDynamicTransform = null;
                 EyeCaptures[index].Discard = true;
-                //ignored, don't write 
+                EyeCaptures[index].OffTransform = true;
+                //don't write to display gaze points
             }
 
             if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
@@ -925,16 +949,21 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// for a smooth pursuit fixation, is transform
+        /// for local fixations, is this eye capture hitting the active fixation dynamic object
+        /// for either fixation return true if looking at sky
         /// </summary>
         /// <param name="capture"></param>
         /// <returns></returns>
-        bool IsGazeOffTransform(EyeCapture capture)
+        bool IsFixatingOffTransform(EyeCapture capture)
         {
-            if (!IsFixating) { return true; }
-
-            if (capture.HitDynamicTransform != ActiveFixation.LocalTransform) { return true; }
-
+            if (ActiveFixation.IsLocal)
+            {
+                if (capture.HitDynamicTransform != ActiveFixation.LocalTransform) { return true; }
+            }
+            if (capture.OffTransform)
+            {
+                return true;
+            }
             return false;
         }
 
@@ -969,6 +998,8 @@ namespace CognitiveVR
                 }
                 else
                 {
+                    //TODO if hit a dynamic, BUT NOT THIS DYNAMIC, don't update position
+                    //update average position then check angle
                     Vector3 averageworldpos = Vector3.zero;
                     foreach (var v in CachedEyeCapturePositions)
                     {
@@ -998,6 +1029,7 @@ namespace CognitiveVR
                         CachedEyeCapturePositions.RemoveAt(0);
                     ActiveFixation.WorldPosition = averageworldpos;
                 }
+                //ActiveFixation.LastInRange = capture.Time;
                 return false;
             }
             else
@@ -1005,7 +1037,7 @@ namespace CognitiveVR
                 var screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
                 var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-                if (capture.SkipPositionForFixationAverage) //eye capture is invalid (probably from looking at skybox)
+                if (capture.SkipPositionForFixationAverage || capture.OffTransform) //eye capture is invalid (probably from looking at skybox)
                 {
                     Vector3 lookDir = (capture.WorldPosition - capture.HmdPosition).normalized;
                     Vector3 fixationDir = (ActiveFixation.WorldPosition - capture.HmdPosition).normalized;
@@ -1016,11 +1048,12 @@ namespace CognitiveVR
                     }
                     else
                     {
-                        //looking at skybox. will not update fixation radius
+                        //look at skybox. not necessarily out of fixation range
                     }
                 }
                 else
                 {
+                    //TODO if hit dynamic, don't update position
                     Vector3 averageworldpos = Vector3.zero;
                     foreach (var v in CachedEyeCapturePositions)
                     {
@@ -1091,15 +1124,15 @@ namespace CognitiveVR
                 }
             }
 
+            //if not looking at transform for a while, end fixation
+            if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
+            {
+                FixationCore.FixationRecordEvent(testFixation);
+                return true;
+            }
+
             if (ActiveFixation.IsLocal)
             {
-                //if not looking at transform for a while, end fixation
-                if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
-                {
-                    FixationCore.FixationRecordEvent(testFixation);
-                    return true;
-                }
-
                 //check that the transform still exists
                 if (ActiveFixation.LocalTransform == null)
                 {
@@ -1122,12 +1155,14 @@ namespace CognitiveVR
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
+                //if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
                 samples++;
                 if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
             }
             Transform mostUsed = null;
 
             Transform[] hitTransforms = new Transform[samples];
+
 
             for (int i = 0; i < samples; i++)
             {
@@ -1143,9 +1178,8 @@ namespace CognitiveVR
                 if (hitTransforms[i] != null)
                     hitTransformCount++;
             }
-
+            
             if (hitTransformCount == 0) { return false; } //didn't hit any valid dynamic objects
-
             //IMPROVEMENT replace with 2 arrays instead of dictionary
             Dictionary<Transform, int> hitCounts = new Dictionary<Transform, int>();
 
@@ -1237,11 +1271,18 @@ namespace CognitiveVR
         }
 
         //checks the NEXT eyecaptures to see if we should start a fixation
-        bool TryBeginFixation()
+        bool TryBeginFixation(int index)
         {
             Vector3 averageWorldPos = Vector3.zero;
+            //number of eye captures on a surface
             int averageWorldSamples = 0;
             int sampleCount = 0;
+
+            long firstOnTransformTime = 0 ;
+
+            //int DynamicObjectCount = 0;
+            long lastSampleTime = 0;
+            long startECTime = EyeCaptures[index].Time;
 
             //take all the eye captures within the minimum fixation duration
             //escape if any are eyes closed or discarded captures
@@ -1249,22 +1290,41 @@ namespace CognitiveVR
             {
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
                 sampleCount++;
-                if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
+                lastSampleTime = EyeCaptures[GetIndex(i)].Time;
 
-                averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition;
+                if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage)
+                {
+                    //something is wrong here. future eye captures shouldn't be skipped when a surface appears
+                    if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
+                    continue;
+                }
+                if (firstOnTransformTime < 1)
+                    firstOnTransformTime = EyeCaptures[GetIndex(i)].Time;
+                averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition; //AVERAGE STUFF
                 averageWorldSamples++;
-
+                //if (EyeCaptures[GetIndex(i)].HitDynamicTransform != null) { DynamicObjectCount++; } //DEBUG
                 if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
             }
             if (averageWorldSamples == 0)
             {
-                //TODO figure out how to support fixation on skybox
+                //TODO figure out how to support fixation entirely on the skybox
                 //there could be a fixation somewhere on the skybox, but we can't really allow that
                 return false;
             }
+
+            //a fixation MUST start on a transform. alternatively could mark transform as 'on transform' early
+            //IMPROVEMENT set fixation as starting now if MaxOffTransformMS < time to first point with transform
+            //if (EyeCaptures[index].OffTransform) { return false; }
+
+            if (EyeCaptures[index].Time - firstOnTransformTime > MaxConsecutiveOffDynamicMs)
+            {
+                //fail now! off transform time will fail this before getting to first on transform time
+                //otherwise, fixation steady enough to be called a fixation and surface point will 'eventually' be valid
+                return false;
+            }
+
             averageWorldPos /= averageWorldSamples;
 
-            //TODO allow some noise here
             bool withinRadius = true;
 
             //get starting screen position to compare other eye capture points against
@@ -1301,6 +1361,7 @@ namespace CognitiveVR
                 ActiveFixation.LastEyesOpen = EyeCaptures[index].Time;
                 ActiveFixation.LastNonDiscardedTime = EyeCaptures[index].Time;
                 ActiveFixation.LastInRange = EyeCaptures[index].Time;
+                ActiveFixation.LastOnTransform = firstOnTransformTime;
                 for (int i = 0; i < sampleCount; i++)
                 {
                     if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
