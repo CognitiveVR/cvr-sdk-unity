@@ -172,6 +172,7 @@ namespace CognitiveVR
 
         static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         double epochStart;
+        long startTimestamp;
 
         void Start()
         {
@@ -299,22 +300,26 @@ namespace CognitiveVR
             return false;
         }
 
-        public long EyeCaptureTimestamp()
-        {
-            if (useDataQueue1)
-            {
-                var MsSincestart = currentData1.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
-                var final = epochStart * 1000 + MsSincestart;
-                return (long)final;
-            }
-            else if (useDataQueue2)
-            {
-                var MsSincestart = currentData2.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
-                var final = epochStart * 1000 + MsSincestart;
-                return (long)final;
-            }
-            return (long)(Util.Timestamp() * 1000);
-        }
+		public long EyeCaptureTimestamp()
+		{
+			if (useDataQueue1)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart * 1000 + MsSincestart;
+				return (long)final;
+			}
+			else if (useDataQueue2)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart * 1000 + MsSincestart;
+				return (long)final;
+			}
+			return (long)(Util.Timestamp() * 1000);
+		}
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
