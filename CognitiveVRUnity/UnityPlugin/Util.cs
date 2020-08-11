@@ -236,13 +236,13 @@ namespace CognitiveVR
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format("{0:0.00}", pos[0]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:0.00}", pos[0]));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos[1]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[1]));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos[2]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[2]));
 
             }
             else
@@ -284,13 +284,13 @@ namespace CognitiveVR
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format("{0:0.00}", pos.x));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.x));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos.y));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.y));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos.z));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.z));
 
             }
             else

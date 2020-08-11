@@ -314,9 +314,9 @@ namespace CognitiveVR
                     if (changedInputs[j].IncludeXY)
                     {
                         builder.Append(",\"x\":");
-                        builder.Append(changedInputs[j].X.ToString("0.000"));
+                        builder.Append(changedInputs[j].X.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
                         builder.Append(",\"y\":");
-                        builder.Append(changedInputs[j].Y.ToString("0.000"));
+                        builder.Append(changedInputs[j].Y.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
                     }
                     builder.Append("}");
                 }

@@ -534,6 +534,10 @@ namespace CognitiveVR
                     {
                         JsonUtil.SetString(properties[i].Key, (string)properties[i].Value, eventBuilder);
                     }
+                    else if (properties[i].Value.GetType() == typeof(float))
+                    {
+                        JsonUtil.SetFloat(properties[i].Key, (float)properties[i].Value, eventBuilder);
+                    }
                     else
                     {
                         JsonUtil.SetObject(properties[i].Key, properties[i].Value, eventBuilder);
