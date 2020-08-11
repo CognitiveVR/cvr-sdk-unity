@@ -173,6 +173,9 @@ namespace CognitiveVR
         static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         double epochStart;
 
+        //what exactly is this timestamp; since HMD enabled?
+        long startTimestamp;
+
         void Start()
         {
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
@@ -303,13 +306,17 @@ namespace CognitiveVR
         {
             if (useDataQueue1)
             {
-                var MsSincestart = currentData1.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
+                if (startTimestamp == 0)
+                    startTimestamp = currentData1.timestamp;
+                var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
                 var final = epochStart * 1000 + MsSincestart;
                 return (long)final;
             }
             else if (useDataQueue2)
             {
-                var MsSincestart = currentData2.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
+                if (startTimestamp == 0)
+                    startTimestamp = currentData1.timestamp;
+                var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
                 var final = epochStart * 1000 + MsSincestart;
                 return (long)final;
             }
