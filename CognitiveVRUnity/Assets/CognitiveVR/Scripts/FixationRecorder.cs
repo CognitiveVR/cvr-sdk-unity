@@ -526,10 +526,10 @@ namespace CognitiveVR
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
-        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(); return false;}
+        public bool CombinedWorldGazeRay(out Ray ray) { ray = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward); return true; }
 
-        public bool LeftEyeOpen() { return false; }
-        public bool RightEyeOpen() { return false; }
+        public bool LeftEyeOpen() { return true; }
+        public bool RightEyeOpen() { return true; }
 
         public long EyeCaptureTimestamp()
         {
@@ -537,8 +537,14 @@ namespace CognitiveVR
         }
 
         //returns true if there is another data point to work on
+        int lastProcessedFrame;
         public bool GetNextData()
         {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
             return false;
         }
 #endif
@@ -810,7 +816,7 @@ namespace CognitiveVR
                 if (hitDynamic != null)
                 {
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
-                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
+                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPointUnscaled(world);
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
                     DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = EyeCaptures[index].LocalPosition;
