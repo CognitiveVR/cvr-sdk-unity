@@ -8,6 +8,11 @@ namespace CognitiveVR
     {
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;
+        //captured transform matrix of the dynamic object
+        public Matrix4x4 CaptureMatrix;
+        //if the transform matrix was correctly set from local capture
+        public bool UseCaptureMatrix;
+        public string HitDynamicId;
 
         //this should be true if gazing at sky. within fixation angle, but position will just mess up the average
         public bool SkipPositionForFixationAverage = false;
@@ -20,6 +25,8 @@ namespace CognitiveVR
         public bool OffTransform; //compared to linkedFixation
         public Vector2 ScreenPos;
 
+        //TODO remove this
+        [System.Obsolete]
         public Transform HitDynamicTransform;
     }
 }

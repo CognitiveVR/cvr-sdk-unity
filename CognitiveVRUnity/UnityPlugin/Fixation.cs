@@ -19,7 +19,6 @@ namespace CognitiveVR
             LastOnTransform = StartMs;
 
             IsLocal = src.IsLocal;
-            LocalTransform = src.LocalTransform;
             DynamicObjectId = src.DynamicObjectId;
             MaxRadius = src.MaxRadius;
         }
@@ -27,7 +26,6 @@ namespace CognitiveVR
         //used for all eye tracking
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;
-        public Transform LocalTransform;
 
         //timestamp of last assigned valid eye capture. used to 'timeout' from eyes closed
         public long LastUpdated;
