@@ -282,6 +282,10 @@ namespace CognitiveVR
                     {
                         JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
                     }
+                    else if (kvp.Value.GetType() == typeof(float))
+                    {
+                        JsonUtil.SetFloat(kvp.Key, (float)kvp.Value, gazebuilder);
+                    }
                     else
                     {
                         JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
@@ -300,6 +304,10 @@ namespace CognitiveVR
                     if (kvp.Value.GetType() == typeof(string))
                     {
                         JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                    }
+                    else if (kvp.Value.GetType() == typeof(float))
+                    {
+                        JsonUtil.SetFloat(kvp.Key, (float)kvp.Value, gazebuilder);
                     }
                     else
                     {

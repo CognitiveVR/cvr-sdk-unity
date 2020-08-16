@@ -181,7 +181,7 @@ namespace CognitiveVR
                 if (useCustomMesh.boolValue)
                 {
                     //Mesh
-                    GUILayout.Label("Mesh", EditorStyles.boldLabel);
+                    GUILayout.Label("Export and Upload", EditorStyles.boldLabel);
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
                     {
@@ -205,11 +205,50 @@ namespace CognitiveVR
                     }
                     EditorGUI.EndDisabledGroup();
 
+                    //texture export settings
                     GUILayout.EndHorizontal();
                     GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
                     int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64*/ };
                     CognitiveVR_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), CognitiveVR_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
                     GUILayout.Space(5);
+
+                    //ID upload
+                    var dyn = target as DynamicObject;
+                    if (dyn.UseCustomId)
+                    {
+                        EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                        if (GUILayout.Button("Upload Custom ID for aggregation"))
+                        {
+                            Debug.Log("upload custom id to scene");
+                            //ExportUtility.UploadSelectedDynamicObjectMeshes(true);
+                            EditorCore.RefreshSceneVersion(delegate ()
+                            {
+                                ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId));
+                                ManageDynamicObjects.UploadManifest(manifest, null);
+                            });
+                        }
+                        EditorGUI.EndDisabledGroup();
+                    }
+                    else if (dyn.IdPool != null)
+                    {
+                        EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                        if (GUILayout.Button("Upload ID Pool for aggregation"))
+                        {
+                            Debug.Log("upload id pool to scene");
+                            //ExportUtility.UploadSelectedDynamicObjectMeshes(true);
+                            EditorCore.RefreshSceneVersion(delegate ()
+                            {
+                                ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                                for(int i = 0; i< dyn.IdPool.Ids.Length;i++)
+                                {
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i]));
+                                }
+                                ManageDynamicObjects.UploadManifest(manifest, null);
+                            });
+                        }
+                        EditorGUI.EndDisabledGroup();
+                    }
                 }
 
                 //Snapshot Threshold
