@@ -581,6 +581,64 @@ public class InitWizard : EditorWindow
                     setupComplete = true;
                 }
             }
+#elif CVR_XR
+            leftSetupComplete = false;
+
+            if (cameraBase == null && leftcontroller == null && rightcontroller == null)
+            {
+                cameraBase = Camera.main.gameObject;
+                var tracked = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
+                foreach (var v in tracked)
+                {
+                    if (v.deviceType == UnityEngine.SpatialTracking.TrackedPoseDriver.DeviceType.GenericXRController)
+                    {
+                        if (v.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.LeftPose)
+                        {
+                            leftcontroller = v.gameObject;
+                        }
+                        if (v.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.RightPose)
+                        {
+                            rightcontroller = v.gameObject;
+                        }
+                    }
+                }
+            }
+
+            if (leftcontroller != null)
+            {
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRController)
+                        leftSetupComplete = true;
+                }
+            }
+
+            rightSetupComplete = false;
+            if (rightcontroller != null)
+            {
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
+                if (dyn != null)
+                {
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRController)
+                        rightSetupComplete = true;
+                }
+            }
+
+            setupComplete = false;
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                //add input tracker + left/right controllers set
+                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                if (tracker != null
+                        && tracker.LeftHand != null
+                        && tracker.LeftHand.gameObject == leftcontroller
+                        && tracker.RightHand != null
+                        && tracker.RightHand.gameObject == rightcontroller)
+                {
+                    setupComplete = true;
+                }
+            }
 #else
             //TODO add support for this stuff
             //XR framework. find tracked pose components in scene
@@ -958,7 +1016,38 @@ public class InitWizard : EditorWindow
                 dyn.ControllerType = "pico_neo_2_eye_controller_right";
                 inputTracker.RightHand = dyn;
             }
+#elif CVR_XR
+            //add component to cognitice manager
+            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            if (inputTracker == null)
+            {
+                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+            }
 
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = left.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRController;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = "xr_controller_left";
+                inputTracker.LeftHand = dyn;
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                if (dyn == null)
+                    dyn = right.AddComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRController;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = "xr_controller_right";
+                inputTracker.RightHand = dyn;
+            }
 #elif CVR_OCULUS
             if (left != null)
             {

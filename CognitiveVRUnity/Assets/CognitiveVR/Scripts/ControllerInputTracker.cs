@@ -1820,8 +1820,492 @@ public class ControllerInputTracker : MonoBehaviour
                 }
             }
         }
-#else //NO SDKS that deal with input
+#elif CVR_XR
+        public DynamicObject LeftHand;
+        public DynamicObject RightHand;
+
+        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
+        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
+
+        Dictionary<string, ButtonState> LeftLastFrameButtonStates = new Dictionary<string, ButtonState>();
+        Dictionary<string, ButtonState> RightLastFrameButtonStates = new Dictionary<string, ButtonState>();
+
+        Vector3 LeftJoystickVector;
+        Vector3 RightJoystickVector;
+        Vector3 LeftTouchpadVector;
+        Vector3 RightTouchpadVector;
+        float minMagnitude = 0.05f;
+
         void Init()
+        {
+            //IMPROVEMENT this assumes oculus or windows-like controller. should be able to customize expected inputs? example, knuckle controllers, hand tracking
+            //how to show non-standard controller inputs? knuckles, hands
+            LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.grip.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, null);
+            LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, null);
+
+            RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.trigger.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.grip.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, null);
+            RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, null);
+        }
+
+        private void Update()
+        {
+            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftHandDevices);
+            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.RightHand, rightHandDevices);
+
+            if (leftHandDevices.Count > 0)
+            {
+                //menu left
+                bool menu;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
+                    {
+                        OnButtonChanged(LeftHand, false, "xr_menu", menu, CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent = menu ? 100 : 0;
+                    }
+                }
+                //left primary axis
+                Vector2 primaryaxis2d;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d))
+                {
+                    bool touchPressChanged = false;
+                    int axisPower = 0;
+                    //check for touch or press. if changed, write entire vector
+                    bool touch;
+                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch))
+                    {
+                        if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
+                        {
+                            touchPressChanged = true;
+                            LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
+                            axisPower = touch ? 50 : 0;
+                        }
+                    }
+                    bool press;
+                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press))
+                    {
+                        if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
+                        {
+                            touchPressChanged = true;
+                            LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
+                            axisPower = press ? 100 : 0;
+                        }
+                    }
+                    if (touchPressChanged)
+                    {
+                        OnVectorChanged(LeftHand, false, "xr_primaryaxis", axisPower, primaryaxis2d.x, primaryaxis2d.y, CurrentLeftButtonStates);
+                    }
+                }
+
+                //left secondary axis
+                Vector2 secondaryaxis2d;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d))
+                {
+                    bool touchPressChanged = false;
+                    int axisPower = 0;
+                    //check for touch or press. if changed, write entire vector
+                    bool touch;
+                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch))
+                    {
+                        if (LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
+                        {
+                            touchPressChanged = true;
+                            LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
+                            axisPower = touch ? 50 : 0;
+                        }
+                    }
+                    bool press;
+                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press))
+                    {
+                        if (LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
+                        {
+                            touchPressChanged = true;
+                            LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
+                            axisPower = press ? 100 : 0;
+                        }
+                    }
+                    if (touchPressChanged)
+                    {
+                        OnVectorChanged(LeftHand, false, "xr_secondaryaxis", axisPower, secondaryaxis2d.x, secondaryaxis2d.y, CurrentLeftButtonStates);
+                    }
+                }
+
+                //left trigger as button
+                bool triggerButton;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
+                    {
+                        OnButtonChanged(LeftHand, false, "xr_trigger", triggerButton, CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent = triggerButton ? 100 : 0;
+                    }
+                }
+
+
+
+                //left grip as button
+                bool gripButton;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
+                    {
+                        OnButtonChanged(LeftHand, false, "xr_grip", gripButton, CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent = gripButton ? 100 : 0;
+                    }
+                }
+
+                //left primary button
+                bool primaryButton;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
+                    {
+                        OnButtonChanged(LeftHand, false, "xr_primary", primaryButton, CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent = primaryButton ? 100 : 0;
+                    }
+                }
+
+                //left secondary button
+                bool secondaryButton;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
+                    {
+                        OnButtonChanged(LeftHand, false, "xr_secondary", secondaryButton, CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent = secondaryButton ? 100 : 0;
+                    }
+                }
+            }
+
+            if (rightHandDevices.Count > 0)
+            {
+                //menu right
+                bool menu;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
+                    {
+                        OnButtonChanged(RightHand, false, "xr_menu", menu, CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent = menu ? 100 : 0;
+                    }
+                }
+
+                //right primary axis
+                Vector2 primaryaxis2d;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d))
+                {
+                    bool touchPressChanged = false;
+                    int axisPower = 0;
+                    //check for touch or press. if changed, write entire vector
+                    bool touch;
+                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch))
+                    {
+                        if (RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
+                        {
+                            touchPressChanged = true;
+                            RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
+                            axisPower = touch ? 50 : 0;
+                        }
+                    }
+                    bool press;
+                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press))
+                    {
+                        if (RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
+                        {
+                            touchPressChanged = true;
+                            RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
+                            axisPower = press ? 100 : 0;
+                        }
+                    }
+                    if (touchPressChanged)
+                    {
+                        OnVectorChanged(RightHand, false, "xr_primaryaxis", axisPower, primaryaxis2d.x, primaryaxis2d.y, CurrentRightButtonStates);
+                    }
+                }
+
+                //right secondary axis
+                Vector2 secondaryaxis2d;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d))
+                {
+                    bool touchPressChanged = false;
+                    int axisPower = 0;
+                    //check for touch or press. if changed, write entire vector
+                    bool touch;
+                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch))
+                    {
+                        if (RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
+                        {
+                            touchPressChanged = true;
+                            RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
+                            axisPower = touch ? 50 : 0;
+                        }
+                    }
+                    bool press;
+                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press))
+                    {
+                        if (RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
+                        {
+                            touchPressChanged = true;
+                            RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
+                            axisPower = press ? 100 : 0;
+                        }
+                    }
+                    if (touchPressChanged)
+                    {
+                        OnVectorChanged(RightHand, false, "xr_secondaryaxis", axisPower, secondaryaxis2d.x, secondaryaxis2d.y, CurrentRightButtonStates);
+                    }
+                }
+                //right trigger button
+                bool triggerButton;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
+                    {
+                        OnButtonChanged(RightHand, true, "xr_trigger", triggerButton, CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent = triggerButton ? 100 : 0;
+                    }
+                }
+                //right grip button
+                bool gripButton;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
+                    {
+                        OnButtonChanged(RightHand, true, "xr_grip", gripButton, CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent = gripButton ? 100 : 0;
+                    }
+                }
+                //right primary button
+                bool primaryButton;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
+                    {
+                        OnButtonChanged(RightHand, true, "xr_primary", primaryButton, CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent = primaryButton ? 100 : 0;
+                    }
+                }
+                //right secondary button
+                bool secondaryButton;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
+                    {
+                        OnButtonChanged(RightHand, true, "xr_secondary", secondaryButton, CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent = secondaryButton ? 100 : 0;
+                    }
+                }
+            }
+
+            if (Time.time > nextUpdateTime)
+            {
+                nextUpdateTime = Time.time + UpdateRate;
+                RecordAnalogInputs();
+            }
+            if (CurrentRightButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
+                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentRightButtonStates[i]);
+                }
+                CurrentRightButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
+            }
+            if (CurrentLeftButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
+                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentLeftButtonStates[i]);
+                }
+                CurrentLeftButtonStates.Clear();
+
+                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
+            }
+        }
+
+        void RecordAnalogInputs()
+        {
+            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftHandDevices);
+            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.RightHand, rightHandDevices);
+
+            if (leftHandDevices.Count > 0)
+            {
+                //left primary joystick
+                Vector2 leftJoystickVector;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out leftJoystickVector))
+                {
+                    int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    var x = leftJoystickVector.x;
+                    var y = leftJoystickVector.y;
+
+                    Vector3 currentVector = new Vector3(x, y, axisPower);
+                    if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
+                    {
+                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "xr_primaryaxis"; });
+                        if (joystick != null)
+                        {
+                            joystick.X = x;
+                            joystick.Y = y;
+                        }
+                        else
+                        {
+                            OnVectorChanged(LeftHand, false, "xr_primaryaxis", axisPower, leftJoystickVector, CurrentLeftButtonStates);
+                        }
+                        OnVectorChanged(LeftHand, false, "xr_primaryaxis", axisPower, x, y, CurrentLeftButtonStates);
+                        LeftJoystickVector = currentVector;
+                    }
+                }
+                //left secondary touchpad
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out leftJoystickVector))
+                {
+                    int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
+                    var x = leftJoystickVector.x;
+                    var y = leftJoystickVector.y;
+
+                    Vector3 currentVector = new Vector3(x, y, axisPower);
+                    if (Vector3.Magnitude(LeftTouchpadVector - currentVector) > minMagnitude)
+                    {
+                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "xr_primaryaxis"; });
+                        if (joystick != null)
+                        {
+                            joystick.X = x;
+                            joystick.Y = y;
+                        }
+                        else
+                        {
+                            OnVectorChanged(LeftHand, false, "xr_secondaryaxis", axisPower, leftJoystickVector, CurrentLeftButtonStates);
+                        }
+                        OnVectorChanged(LeftHand, false, "xr_secondaryaxis", axisPower, x, y, CurrentLeftButtonStates);
+                        LeftTouchpadVector = currentVector;
+                    }
+                }
+                //grip left
+                float grip;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
+                    {
+                        OnSingleChanged(LeftHand, false, "xr_grip", (int)(grip * 100), CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent = (int)(grip * 100);
+                    }
+                }
+                //trigger left
+                float trigger;
+                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger))
+                {
+                    if (LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
+                    {
+                        OnSingleChanged(LeftHand, false, "xr_trigger", (int)(trigger * 100), CurrentLeftButtonStates);
+                        LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent = (int)(trigger * 100);
+                    }
+                }
+            }
+            if (rightHandDevices.Count > 0)
+            {
+
+                //right primary joystick
+                Vector2 rightJoystickVector;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out rightJoystickVector))
+                {
+                    int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    var x = rightJoystickVector.x;
+                    var y = rightJoystickVector.y;
+
+                    Vector3 currentVector = new Vector3(x, y, axisPower);
+                    if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
+                    {
+                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "xr_primaryaxis"; });
+                        if (joystick != null)
+                        {
+                            joystick.X = x;
+                            joystick.Y = y;
+                        }
+                        else
+                        {
+                            OnVectorChanged(RightHand, true, "xr_primaryaxis", axisPower, rightJoystickVector, CurrentRightButtonStates);
+                        }
+                        RightJoystickVector = currentVector;
+                    }
+                }
+                //right secondary touchpad
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out rightJoystickVector))
+                {
+                    int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
+                    var x = rightJoystickVector.x;
+                    var y = rightJoystickVector.y;
+
+                    Vector3 currentVector = new Vector3(x, y, axisPower);
+                    if (Vector3.Magnitude(RightTouchpadVector - currentVector) > minMagnitude)
+                    {
+                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "xr_primaryaxis"; });
+                        if (joystick != null)
+                        {
+                            joystick.X = x;
+                            joystick.Y = y;
+                        }
+                        else
+                        {
+                            OnVectorChanged(RightHand, true, "xr_secondaryaxis", axisPower, rightJoystickVector, CurrentRightButtonStates);
+                        }
+                        RightTouchpadVector = currentVector;
+                    }
+                }
+
+
+                //grip right
+                float grip;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
+                    {
+                        OnSingleChanged(RightHand, false, "xr_grip", (int)(grip * 100), CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent = (int)(grip * 100);
+                    }
+                }
+
+                //trigger right
+                float trigger;
+                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger))
+                {
+                    if (RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
+                    {
+                        OnSingleChanged(RightHand, false, "xr_trigger", (int)(trigger * 100), CurrentRightButtonStates);
+                        RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent = (int)(trigger * 100);
+                    }
+                }
+            }
+        }
+#else //NO SDKS that deal with input
+    void Init()
     {
     }
 
@@ -1830,7 +2314,7 @@ public class ControllerInputTracker : MonoBehaviour
     }
 #endif
 
-        void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
+    void OnButtonChanged(DynamicObject dynamic, bool right, string name, bool down, List<ButtonState> states)
     {
         states.Add(new ButtonState(name, down ? 100 : 0));
     }

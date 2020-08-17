@@ -528,9 +528,8 @@ namespace CognitiveVR
 
         public bool CombinedWorldGazeRay(out Ray ray)
         {
-            UnityEngine.XR.InputFeatureUsage<UnityEngine.XR.Eyes> eyeUsage;
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(eyeUsage, out eyes))
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
                 Vector3 convergancePoint;
@@ -557,9 +556,8 @@ namespace CognitiveVR
 
         public bool LeftEyeOpen()
         {
-            UnityEngine.XR.InputFeatureUsage<UnityEngine.XR.Eyes> eyeUsage;
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(eyeUsage, out eyes))
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 float open;
                 if (eyes.TryGetLeftEyeOpenAmount(out open))
@@ -571,9 +569,8 @@ namespace CognitiveVR
         }
         public bool RightEyeOpen()
         {
-            UnityEngine.XR.InputFeatureUsage<UnityEngine.XR.Eyes> eyeUsage;
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightEye).TryGetFeatureValue(eyeUsage, out eyes))
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 float open;
                 if (eyes.TryGetRightEyeOpenAmount(out open))

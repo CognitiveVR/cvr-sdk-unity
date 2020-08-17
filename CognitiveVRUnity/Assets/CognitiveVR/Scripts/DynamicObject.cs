@@ -34,7 +34,8 @@ namespace CognitiveVR
             OculusQuestTouchLeft,
             OculusQuestTouchRight,
             PicoNeoControllerLeft,
-            PicoNeoControllerRight
+            PicoNeoControllerRight,
+            XRController
         }
 
 

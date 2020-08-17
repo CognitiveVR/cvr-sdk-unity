@@ -318,7 +318,7 @@ namespace CognitiveVR
 
                     Vector3 centerPos = (rightPos + leftPos) / 2f;
 
-                    gazeDirection = (convergancePoint - centerPos).normalize;
+                    gazeDirection = (convergancePoint - centerPos).normalized;
                 }
             }
 #endif
