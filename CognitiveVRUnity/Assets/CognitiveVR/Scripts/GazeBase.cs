@@ -303,9 +303,8 @@ namespace CognitiveVR
 #elif CVR_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #elif CVR_XR
-            UnityEngine.XR.InputFeatureUsage<UnityEngine.XR.Eyes> eyeUsage;
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(eyeUsage, out eyes))
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
                 Vector3 convergancePoint;
@@ -375,9 +374,8 @@ namespace CognitiveVR
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
 #elif CVR_XR
-            UnityEngine.XR.InputFeatureUsage<UnityEngine.XR.Eyes> eyeUsage;
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(eyeUsage, out eyes))
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
                 Vector3 convergancePoint;
