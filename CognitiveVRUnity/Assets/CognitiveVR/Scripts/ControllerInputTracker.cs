@@ -8,6 +8,9 @@ using UnityEngine.XR.MagicLeap;
 #if CVR_STEAMVR || CVR_STEAMVR2
 using Valve.VR;
 #endif
+#if CVR_XR
+using UnityEngine.XR;
+#endif
 
 //adds controller input properties to dynamic object snapshot for display on sceneexplorer
 
