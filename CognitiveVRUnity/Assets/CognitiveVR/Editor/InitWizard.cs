@@ -609,7 +609,7 @@ public class InitWizard : EditorWindow
                 var dyn = leftcontroller.GetComponent<DynamicObject>();
                 if (dyn != null)
                 {
-                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRController)
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRControllerLeft)
                         leftSetupComplete = true;
                 }
             }
@@ -620,7 +620,7 @@ public class InitWizard : EditorWindow
                 var dyn = rightcontroller.GetComponent<DynamicObject>();
                 if (dyn != null)
                 {
-                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRController)
+                    if (dyn.CommonMesh == DynamicObject.CommonDynamicMesh.XRControllerRight)
                         rightSetupComplete = true;
                 }
             }
@@ -641,7 +641,6 @@ public class InitWizard : EditorWindow
             }
 #else
             //TODO add support for this stuff
-            //XR framework. find tracked pose components in scene
             //hand motion stuff (hololens, meta, leapmotion, magicleap)
             //ar stuff (arkit, arcore)
             //other oculus stuff (gear, go, quest_touch)
@@ -1030,7 +1029,7 @@ public class InitWizard : EditorWindow
                 if (dyn == null)
                     dyn = left.AddComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRController;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRControllerLeft;
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.ControllerType = "xr_controller_left";
@@ -1042,7 +1041,7 @@ public class InitWizard : EditorWindow
                 if (dyn == null)
                     dyn = right.AddComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRController;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.XRControllerRight;
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.ControllerType = "xr_controller_right";
