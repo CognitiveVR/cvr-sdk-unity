@@ -267,7 +267,7 @@ namespace CognitiveVR
 
                     if (dyn.IsController)
                     {
-                        string[] controllernames = new string[10] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocuscontroller", "oculusquesttouchleft", "oculusquesttouchright", "windows_mixed_reality_controller_left", "windows_mixed_reality_controller_right", "pico_neo_2_eye_controller_left", "pico_neo_2_eye_controller_right" };
+                        string[] controllernames = new string[10] { "vivecontroller", "oculustouchleft", "oculustouchright", "vivefocuscontroller", "oculusquesttouchleft", "oculusquesttouchright", "windows_mixed_reality_controller_left", "windows_mixed_reality_controller_right", "pico_neo_2_eye_controller_left", "pico_neo_2_eye_controller_right"};
                         int selected = 0;
                         if (dyn.ControllerType == "vivecontroller") selected = 0;
                         if (dyn.ControllerType == "oculustouchleft") selected = 1;
