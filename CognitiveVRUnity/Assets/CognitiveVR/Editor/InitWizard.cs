@@ -1013,7 +1013,7 @@ public class InitWizard : EditorWindow
 
                 if (controllerDisplayName == "Vive")
                 {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 }
                 else if (controllerDisplayName == "Oculus Rift")
