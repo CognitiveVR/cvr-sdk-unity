@@ -160,6 +160,33 @@ namespace CognitiveVR
             }
             return lastDirection;
         }
+#elif CVR_XR
+
+        static Vector3 lastDirection = Vector3.forward;
+        static Vector3 GetLookDirection()
+        {
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
+                Vector3 convergancePoint;
+                if (eyes.TryGetFixationPoint(out convergancePoint))
+                {
+                    Vector3 leftPos = Vector3.zero;
+                    eyes.TryGetLeftEyePosition(out leftPos);
+                    Vector3 rightPos = Vector3.zero;
+                    eyes.TryGetRightEyePosition(out rightPos);
+
+                    Vector3 centerPos = (rightPos + leftPos) / 2f;
+
+                    var worldGazeDirection = (convergancePoint - centerPos).normalized;
+
+                    lastDirection = worldGazeDirection;
+                    return worldGazeDirection;
+                }
+            }
+            return lastDirection;
+        }
 #else
         static Vector3 GetLookDirection()
         {

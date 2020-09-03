@@ -53,6 +53,10 @@ namespace CognitiveVR
                     hmdname = "arcore";
 #elif CVR_META
                     hmdname = "meta";
+#elif UNITY_2019_1_OR_NEWER
+            string rawHMDName = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name;
+            //string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
+            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
 #elif UNITY_2017_2_OR_NEWER
             string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
             hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
@@ -298,6 +302,24 @@ namespace CognitiveVR
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
+#elif CVR_XR
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
+                Vector3 convergancePoint;
+                if (eyes.TryGetFixationPoint(out convergancePoint))
+                {
+                    Vector3 leftPos = Vector3.zero;
+                    eyes.TryGetLeftEyePosition(out leftPos);
+                    Vector3 rightPos = Vector3.zero;
+                    eyes.TryGetRightEyePosition(out rightPos);
+
+                    Vector3 centerPos = (rightPos + leftPos) / 2f;
+
+                    gazeDirection = (convergancePoint - centerPos).normalized;
+                }
+            }
 #endif
             return gazeDirection;
         }
@@ -351,6 +373,25 @@ namespace CognitiveVR
 #elif CVR_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
+#elif CVR_XR
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
+                Vector3 convergancePoint;
+                if (eyes.TryGetFixationPoint(out convergancePoint))
+                {
+                    Vector3 leftPos = Vector3.zero;
+                    eyes.TryGetLeftEyePosition(out leftPos);
+                    Vector3 rightPos = Vector3.zero;
+                    eyes.TryGetRightEyePosition(out rightPos);
+
+                    Vector3 centerPos = (rightPos + leftPos) / 2f;
+
+                    var worldGazeDirection = (convergancePoint - centerPos).normalized;
+                    screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldGazeDirection);
+                }
+            }
 #endif
             return screenGazePoint;
         }
