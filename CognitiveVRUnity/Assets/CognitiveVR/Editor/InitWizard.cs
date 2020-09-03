@@ -775,7 +775,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
             if (right != null)
             {
@@ -784,7 +784,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
 #elif CVR_STEAMVR2
             
@@ -808,7 +808,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
             if (right != null)
             {
@@ -817,7 +817,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivecontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
 #elif CVR_VIVEWAVE
             var g = Resources.Load<GameObject>("AdaptiveController");
@@ -836,7 +836,7 @@ public class InitWizard : EditorWindow
                 dyn.UseCustomMesh = false;
                 dyn.IsController = true;
                 //dyn.IsRight = false; //set from dominant/non dominant hand
-                dyn.ControllerType = "vivefocuscontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
 
                 var ct = g.GetComponent<ControllerInputTracker>();
@@ -862,7 +862,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivefocuscontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
             }
             if (right != null)
             {
@@ -871,7 +871,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "vivefocuscontroller";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
             }
 #elif CVR_WINDOWSMR
 
@@ -892,7 +892,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "windows_mixed_reality_controller_left";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
                 inputTracker.LeftHand = dyn;
             }
             if (right != null)
@@ -904,7 +904,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "windows_mixed_reality_controller_right";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right;
                 inputTracker.RightHand = dyn;
             }
 
@@ -942,7 +942,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "pico_neo_2_eye_controller_left";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
                 inputTracker.LeftHand = dyn;
             }
             if (right != null)
@@ -954,7 +954,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "pico_neo_2_eye_controller_right";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
                 inputTracker.RightHand = dyn;
             }
 #elif CVR_XR
@@ -977,27 +977,27 @@ public class InitWizard : EditorWindow
 
                 if (controllerDisplayName == "Vive")
                 {
-                    dyn.ControllerType = "vivecontroller";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 }
                 else if (controllerDisplayName == "Oculus Rift")
                 {
-                    dyn.ControllerType = "oculustouchleft";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
                 }
                 else if (controllerDisplayName == "Oculus Quest")
                 {
-                    dyn.ControllerType = "oculusquesttouchleft";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
                 }
                 else if (controllerDisplayName == "Windows MR")
                 {
-                    dyn.ControllerType = "windows_mixed_reality_controller_left";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
                 }
                 else if (controllerDisplayName == "Pico Neo 2")
                 {
-                    dyn.ControllerType = "pico_neo_2_eye_controller_left";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
                 }
             }
@@ -1013,27 +1013,27 @@ public class InitWizard : EditorWindow
 
                 if (controllerDisplayName == "Vive")
                 {
-                    dyn.ControllerType = "vivecontroller";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 }
                 else if (controllerDisplayName == "Oculus Rift")
                 {
-                    dyn.ControllerType = "oculustouchleft";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
                 }
                 else if (controllerDisplayName == "Oculus Quest")
                 {
-                    dyn.ControllerType = "oculusquesttouchleft";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
                 }
                 else if (controllerDisplayName == "Windows MR")
                 {
-                    dyn.ControllerType = "windows_mixed_reality_controller_right";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight;
                 }
                 else if (controllerDisplayName == "Pico Neo 2")
                 {
-                    dyn.ControllerType = "pico_neo_2_eye_controller_right";
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
                 }
             }
@@ -1045,7 +1045,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = "oculustouchleft";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
 #if UNITY_ANDROID //check for oculus quest controllers
                 var config = OVRProjectConfig.GetProjectConfig();
                 if (config.targetDeviceTypes.Count > 0)
@@ -1053,7 +1053,7 @@ public class InitWizard : EditorWindow
                     if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
                     {
                         dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
-                        dyn.ControllerType = "oculusquesttouchleft";
+                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
                     }
                 }
 #endif
@@ -1065,7 +1065,7 @@ public class InitWizard : EditorWindow
                 dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = "oculustouchright";
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
 #if UNITY_ANDROID //check for oculus quest controllers
                 var config = OVRProjectConfig.GetProjectConfig();
                 if (config.targetDeviceTypes.Count > 0)
@@ -1073,7 +1073,7 @@ public class InitWizard : EditorWindow
                     if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
                     {
                         dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
-                        dyn.ControllerType = "oculusquesttouchright";
+                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
                     }
                 }
 #endif
