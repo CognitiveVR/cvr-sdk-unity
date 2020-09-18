@@ -25,8 +25,7 @@ namespace CognitiveVR
         public bool OffTransform; //compared to linkedFixation
         public Vector2 ScreenPos;
 
-        //TODO remove this
-        [System.Obsolete]
+        //only used for setting a reference in the fixation, for display on the active session view screen
         public Transform HitDynamicTransform;
     }
 }

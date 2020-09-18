@@ -21,11 +21,18 @@ namespace CognitiveVR
             IsLocal = src.IsLocal;
             DynamicObjectId = src.DynamicObjectId;
             MaxRadius = src.MaxRadius;
+            DynamicMatrix = src.DynamicMatrix;
+            DynamicTransform = src.DynamicTransform;
         }
 
         //used for all eye tracking
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;
+
+        //set when starting local fixation. should hold last evaluated eye capture matrix for a dynamic object (updated every frame)
+        public Matrix4x4 DynamicMatrix;
+        //only used for active session view visualization!
+        public Transform DynamicTransform;
 
         //timestamp of last assigned valid eye capture. used to 'timeout' from eyes closed
         public long LastUpdated;
@@ -91,6 +98,11 @@ namespace CognitiveVR
             {
                 LastUpdated = eyeCapture.Time;
                 DurationMs = eyeCapture.Time - StartMs;
+            }
+
+            if (IsLocal && eyeCapture.HitDynamicId == DynamicObjectId)
+            {
+                DynamicMatrix = eyeCapture.CaptureMatrix;
             }
         }
     }
