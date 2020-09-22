@@ -496,6 +496,37 @@ namespace CognitiveVR
             return false;
         }
 #elif CVR_PUPIL
+        PupilLabs.GazeController gazeController;
+
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            if (data.Confidence < 0.6f)
+            {
+                return;
+            }
+            PupilGazeData pgd = new PupilGazeData();
+
+            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
+            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
+            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
+            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
+            GazeDataQueue.Enqueue(pgd);
+        }
+
+        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
+        class PupilGazeData
+        {
+            public long Timestamp;
+            public Ray GazeRay;
+            public bool LeftEyeOpen;
+            public bool RightEyeOpen;
+        }
+
+        private void OnDisable()
+        {
+            gazeController.OnReceive3dGaze -= ReceiveEyeData;
+        }
+
         const int CachedEyeCaptures = 120; //PUPIL LABS
         public bool CombinedWorldGazeRay(out Ray ray)
         {
@@ -636,14 +667,6 @@ namespace CognitiveVR
             return (index + offset) % CachedEyeCaptures;
         }
 
-        //DEBUG ONLY
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public EyeCapture GetLastEyeCapture()
-        {
-            return EyeCaptures[index];
-        }
-#endif
-
         private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
         private List<Fixation> Fixations = new List<Fixation>();
 
@@ -681,8 +704,6 @@ namespace CognitiveVR
 
         //[Header("Visualization")]
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
-        
-        GameObject lastEyeTrackingPointer;
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
         bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation
@@ -729,58 +750,13 @@ namespace CognitiveVR
                 Debug.LogError("Pupil Labs GazeController is null!");
 #endif
         }
-
-#if CVR_PUPIL
-
-        PupilLabs.GazeController gazeController;
-
-        void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f)
-            {
-                return;
-            }
-            PupilGazeData pgd = new PupilGazeData();
-
-            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
-            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
-            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
-            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
-            GazeDataQueue.Enqueue(pgd);
-        }
-
-        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
-        class PupilGazeData
-        {
-            public long Timestamp;
-            public Ray GazeRay;
-            public bool LeftEyeOpen;
-            public bool RightEyeOpen;
-        }
-
-        private void OnDisable()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-#endif
-
+        
         private void Update()
         {
             if (!Core.IsInitialized) { return; }
             if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Fixation will not function"); return; }
 
             PostGazeCallback();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (lastEyeTrackingPointer == null) { return; }
-            if (IsFixating)
-            {
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", ActiveFixation.IsLocal ? Color.red : Color.cyan);
-            }
-            else
-            {
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", Color.white);
-            }
-#endif
         }
 
         //assuming command buffer will send a callback, use this when the command buffer is ready to read
@@ -923,9 +899,6 @@ namespace CognitiveVR
                 EyeCaptures[index].Discard = true;
                 //ignored, don't write 
             }
-
-            if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
-            else if (lastEyeTrackingPointer != null){ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 
             if (areEyesClosed || EyeCaptures[index].Discard) { }
             else

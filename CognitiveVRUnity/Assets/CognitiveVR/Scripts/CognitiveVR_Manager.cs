@@ -295,15 +295,16 @@ namespace CognitiveVR
                 case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE || CVR_XR
-            //fixation requires some kind of eye tracking hardware
-            FixationRecorder fixationRecorder = FixationRecorder.Instance;
-            if (fixationRecorder == null)
+            if (GameplayReferences.SDKSupportsEyeTracking)
             {
-                fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                //fixation requires some kind of eye tracking hardware
+                FixationRecorder fixationRecorder = FixationRecorder.Instance;
+                if (fixationRecorder == null)
+                {
+                    fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                }
+                fixationRecorder.Initialize();
             }
-            fixationRecorder.Initialize();
-#endif
 
             //if (InitEvent != null) { InitEvent(initError); }
             Core.InvokeInitEvent(initError);
