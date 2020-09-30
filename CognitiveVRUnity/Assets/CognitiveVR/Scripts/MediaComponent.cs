@@ -26,6 +26,7 @@ namespace CognitiveVR
         private void Start()
         {
             //not every frame + only if initialization is fine. MUST HAVE VALID SCENEID
+            if (!IsVideo) { return; }
             CognitiveVR.Core.TickEvent += CognitiveVR_Manager_TickEvent;
         }
 
@@ -35,7 +36,7 @@ namespace CognitiveVR
 
         private void CognitiveVR_Manager_TickEvent()
         {
-            if (IsVideo) { return; }
+            if (!IsVideo) { return; }
             if (WasPlaying)
             {
                 if (!VideoPlayer.isPlaying)

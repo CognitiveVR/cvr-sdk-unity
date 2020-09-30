@@ -32,13 +32,16 @@ namespace CognitiveVR
 
             void Start()
             {
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE
-                FocusTimeText.text = "Fixation Time";
-                FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
-#else
-                FocusTimeText.text = "Gaze Time";
-                GazeCore.OnDynamicGazeRecord += GazeCore_OnDynamicGazeRecord;
-#endif
+                if (GameplayReferences.SDKSupportsEyeTracking)
+                {
+                    FocusTimeText.text = "Fixation Time";
+                    FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                }
+                else
+                {
+                    FocusTimeText.text = "Gaze Time";
+                    GazeCore.OnDynamicGazeRecord += GazeCore_OnDynamicGazeRecord;
+                }
             }
 
             Dictionary<string, DynamicObjectDisplay> DynamicFocusTimes = new Dictionary<string, DynamicObjectDisplay>();

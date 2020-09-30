@@ -172,6 +172,7 @@ namespace CognitiveVR
 
         static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         double epochStart;
+        long startTimestamp;
 
         void Start()
         {
@@ -299,22 +300,26 @@ namespace CognitiveVR
             return false;
         }
 
-        public long EyeCaptureTimestamp()
-        {
-            if (useDataQueue1)
-            {
-                var MsSincestart = currentData1.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
-                var final = epochStart * 1000 + MsSincestart;
-                return (long)final;
-            }
-            else if (useDataQueue2)
-            {
-                var MsSincestart = currentData2.timestamp - CognitiveVR_Manager.Instance.StartupTimestampMilliseconds; //milliseconds since start
-                var final = epochStart * 1000 + MsSincestart;
-                return (long)final;
-            }
-            return (long)(Util.Timestamp() * 1000);
-        }
+		public long EyeCaptureTimestamp()
+		{
+			if (useDataQueue1)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart * 1000 + MsSincestart;
+				return (long)final;
+			}
+			else if (useDataQueue2)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart * 1000 + MsSincestart;
+				return (long)final;
+			}
+			return (long)(Util.Timestamp() * 1000);
+		}
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
@@ -491,6 +496,37 @@ namespace CognitiveVR
             return false;
         }
 #elif CVR_PUPIL
+        PupilLabs.GazeController gazeController;
+
+        void ReceiveEyeData(PupilLabs.GazeData data)
+        {
+            if (data.Confidence < 0.6f)
+            {
+                return;
+            }
+            PupilGazeData pgd = new PupilGazeData();
+
+            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
+            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
+            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
+            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
+            GazeDataQueue.Enqueue(pgd);
+        }
+
+        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
+        class PupilGazeData
+        {
+            public long Timestamp;
+            public Ray GazeRay;
+            public bool LeftEyeOpen;
+            public bool RightEyeOpen;
+        }
+
+        private void OnDisable()
+        {
+            gazeController.OnReceive3dGaze -= ReceiveEyeData;
+        }
+
         const int CachedEyeCaptures = 120; //PUPIL LABS
         public bool CombinedWorldGazeRay(out Ray ray)
         {
@@ -518,13 +554,87 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_XR
+        const int CachedEyeCaptures = 120;
+
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
+                Vector3 convergancePoint;
+                if (eyes.TryGetFixationPoint(out convergancePoint))
+                {
+                    Vector3 leftPos = Vector3.zero;
+                    eyes.TryGetLeftEyePosition(out leftPos);
+                    Vector3 rightPos = Vector3.zero;
+                    eyes.TryGetRightEyePosition(out rightPos);
+
+                    Vector3 centerPos = (rightPos + leftPos) / 2f;
+
+                    var worldGazeDirection = (convergancePoint - centerPos).normalized;
+                    //screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldGazeDirection);
+
+                    ray = new Ray(centerPos, worldGazeDirection);
+
+                    return true;
+                }
+            }
+            ray = new Ray(Vector3.zero, Vector3.forward);
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                float open;
+                if (eyes.TryGetLeftEyeOpenAmount(out open))
+                {
+                    return open > 0.6f;
+                }
+            }
+            return false;
+        }
+        public bool RightEyeOpen()
+        {
+            UnityEngine.XR.Eyes eyes;
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            {
+                float open;
+                if (eyes.TryGetRightEyeOpenAmount(out open))
+                {
+                    return open > 0.6f;
+                }
+            }
+            return false;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
-        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(); return false;}
+        public bool CombinedWorldGazeRay(out Ray ray) { ray = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward); return true; }
 
-        public bool LeftEyeOpen() { return false; }
-        public bool RightEyeOpen() { return false; }
+        public bool LeftEyeOpen() { return true; }
+        public bool RightEyeOpen() { return true; }
 
         public long EyeCaptureTimestamp()
         {
@@ -532,8 +642,14 @@ namespace CognitiveVR
         }
 
         //returns true if there is another data point to work on
+        int lastProcessedFrame;
         public bool GetNextData()
         {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
             return false;
         }
 #endif
@@ -551,16 +667,8 @@ namespace CognitiveVR
             return (index + offset) % CachedEyeCaptures;
         }
 
-        //DEBUG ONLY
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public EyeCapture GetLastEyeCapture()
-        {
-            return EyeCaptures[index];
-        }
-#endif
-
-        public EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
-        public List<Fixation> Fixations = new List<Fixation>();
+        private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
+        private List<Fixation> Fixations = new List<Fixation>();
 
         public bool IsFixating { get; set; }
         public Fixation ActiveFixation;
@@ -596,8 +704,6 @@ namespace CognitiveVR
 
         //[Header("Visualization")]
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
-        
-        GameObject lastEyeTrackingPointer;
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
         bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation
@@ -612,6 +718,11 @@ namespace CognitiveVR
 
         void OnEnable()
         {
+            if (Instance != null && Instance != this)
+            {
+                Util.logWarning("Multiple Fixation Recorders found!");
+                return;
+            }
             Instance = this;
         }
 
@@ -639,58 +750,13 @@ namespace CognitiveVR
                 Debug.LogError("Pupil Labs GazeController is null!");
 #endif
         }
-
-#if CVR_PUPIL
-
-        PupilLabs.GazeController gazeController;
-
-        void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f)
-            {
-                return;
-            }
-            PupilGazeData pgd = new PupilGazeData();
-
-            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
-            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
-            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
-            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
-            GazeDataQueue.Enqueue(pgd);
-        }
-
-        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
-        class PupilGazeData
-        {
-            public long Timestamp;
-            public Ray GazeRay;
-            public bool LeftEyeOpen;
-            public bool RightEyeOpen;
-        }
-
-        private void OnDisable()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-#endif
-
+        
         private void Update()
         {
             if (!Core.IsInitialized) { return; }
             if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Fixation will not function"); return; }
 
             PostGazeCallback();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (lastEyeTrackingPointer == null) { return; }
-            if (IsFixating)
-            {
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", ActiveFixation.IsLocal ? Color.red : Color.cyan);
-            }
-            else
-            {
-                lastEyeTrackingPointer.GetComponent<MeshRenderer>().material.SetColor("g_vOutlineColor", Color.white);
-            }
-#endif
         }
 
         //assuming command buffer will send a callback, use this when the command buffer is ready to read
@@ -800,7 +866,7 @@ namespace CognitiveVR
                 if (hitDynamic != null)
                 {
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
-                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
+                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPointUnscaled(world);
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;
                     DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = EyeCaptures[index].LocalPosition;
@@ -833,9 +899,6 @@ namespace CognitiveVR
                 EyeCaptures[index].Discard = true;
                 //ignored, don't write 
             }
-
-            if (float.IsNaN(world.x) || float.IsNaN(world.y) || float.IsNaN(world.z)) { }
-            else if (lastEyeTrackingPointer != null){ lastEyeTrackingPointer.transform.position = world; } //turned invalid somewhere
 
             if (areEyesClosed || EyeCaptures[index].Discard) { }
             else

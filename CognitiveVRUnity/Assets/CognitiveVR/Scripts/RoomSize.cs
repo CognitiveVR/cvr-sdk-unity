@@ -29,7 +29,7 @@ namespace CognitiveVR.Components
             {
                 bool seated = Mathf.Approximately(roomX, 1f) && Mathf.Approximately(roomY, 1f);
                 Core.SetSessionProperty("c3d.roomsize", roomX * roomY*100);
-                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", roomX*100, roomY*100));
+                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:0.0} x {1:0.0}", roomX*100, roomY*100));
                 Core.SetSessionProperty("c3d.roomscale", !seated);
             }
 #elif CVR_OCULUS
@@ -39,7 +39,7 @@ namespace CognitiveVR.Components
             if (OVRManager.boundary.GetConfigured())
             {
                 Vector3 dimensions = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
-                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format("{0:0.0} x {1:0.0}", dimensions.x * 100, dimensions.z * 100));
+                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:0.0} x {1:0.0}", dimensions.x * 100, dimensions.z * 100));
                 Core.SetSessionProperty("c3d.roomsize", dimensions.x * dimensions.z * 100);
                 Core.SetSessionProperty("c3d.roomscale", OVRManager.boundary.GetConfigured());
             }

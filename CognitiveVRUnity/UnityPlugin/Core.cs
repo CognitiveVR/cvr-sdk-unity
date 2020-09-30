@@ -86,8 +86,13 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
+<<<<<<< HEAD
         public const string SDK_VERSION = "0.21.0";
+=======
+        public const string SDK_VERSION = "0.22.0";
+>>>>>>> refs/remotes/origin/develop
 
+        private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
         public static string ParticipantName { get; private set; }
         private static string _deviceId;
@@ -193,12 +198,24 @@ namespace CognitiveVR
 
         public static void SetParticipantFullName(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                Util.logWarning("SetParticipantFullName is empty!");
+                return;
+            }
             ParticipantName = name;
             SetParticipantProperty("name", name);
+            if (!HasCustomSessionName)
+                SetSessionProperty("c3d.sessionName", name);
         }
 
         public static void SetParticipantId(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                Util.logWarning("SetParticipantId is empty!");
+                return;
+            }
             ParticipantId = id;
             SetParticipantProperty("id", id);
         }
@@ -227,6 +244,7 @@ namespace CognitiveVR
             TrackingScene = null;
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
+            HasCustomSessionName = false;
         }
 
         /// <summary>
@@ -333,6 +351,7 @@ namespace CognitiveVR
                 SetSessionProperty(prop.Key, prop.Value);
             }
         }
+        
         public static void SetSessionProperty(string key, object value)
         {
             int foundIndex = 0;
@@ -416,6 +435,7 @@ namespace CognitiveVR
             SetSessionProperty("c3d.participant." + key, value);
         }
 
+<<<<<<< HEAD
         class AttributeParameters
         {
             public string attributionKey;
@@ -429,6 +449,12 @@ namespace CognitiveVR
             ap.sessionId = SessionID;
             ap.sceneVersionId = TrackingSceneId;
             return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
+=======
+        public static void SetSessionName(string sessionName)
+        {
+            HasCustomSessionName = true;
+            SetSessionProperty("c3d.sessionname", sessionName);
+>>>>>>> refs/remotes/origin/develop
         }
     }
 }

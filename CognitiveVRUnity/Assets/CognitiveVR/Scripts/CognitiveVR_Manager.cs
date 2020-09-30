@@ -295,13 +295,16 @@ namespace CognitiveVR
                 case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE
-            //fixation requires some kind of eye tracking hardware
-            FixationRecorder fixationRecorder = gameObject.GetComponent<FixationRecorder>();
-            if (fixationRecorder == null)
-                fixationRecorder = gameObject.AddComponent<FixationRecorder>();
-            fixationRecorder.Initialize();
-#endif
+            if (GameplayReferences.SDKSupportsEyeTracking)
+            {
+                //fixation requires some kind of eye tracking hardware
+                FixationRecorder fixationRecorder = FixationRecorder.Instance;
+                if (fixationRecorder == null)
+                {
+                    fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                }
+                fixationRecorder.Initialize();
+            }
 
             //if (InitEvent != null) { InitEvent(initError); }
             Core.InvokeInitEvent(initError);
@@ -351,7 +354,9 @@ namespace CognitiveVR
 #endif
             Core.SetSessionProperty("c3d.version", Core.SDK_VERSION);
 
-#if UNITY_2017_2_OR_NEWER
+#if UNITY_2019_1_OR_NEWER
+            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+#elif UNITY_2017_2_OR_NEWER
             Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
 #else
             Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
@@ -416,6 +421,7 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
             Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
 #endif
+            //TODO add XR inputdevice name
 
             //eye tracker addons
 #if CVR_TOBIIVR
@@ -442,7 +448,9 @@ namespace CognitiveVR
 #elif CVR_WINDOWSMR
             Core.SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #endif
-#if UNITY_2017_2_OR_NEWER
+#if UNITY_2019_1_OR_NEWER
+            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+#elif UNITY_2017_2_OR_NEWER
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
 #else
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
@@ -460,9 +468,10 @@ namespace CognitiveVR
         /// sets a user friendly label for the session on the dashboard. automatically generated if not supplied
         /// </summary>
         /// <param name="name"></param>
+        [Obsolete("Use Core.SetSessionName instead")]
         public static void SetSessionName(string name)
         {
-            Core.SetSessionProperty("c3d.sessionname", name);
+            Core.SetSessionName(name);
         }
 
         /// <summary>
@@ -535,7 +544,7 @@ namespace CognitiveVR
             Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-        #region Updates and Loops
+#region Updates and Loops
 
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
         GameplayReferences.ControllerInfo tempControllerInfo = null;
@@ -672,13 +681,16 @@ namespace CognitiveVR
         /// </summary>
         public void EndSession()
         {
-            double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
-            new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
+            if (initResponse == Error.None)
+            {
+                double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
+                new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
-            Core.InvokeSendDataEvent();
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-            initResponse = Error.NotInitialized;
-            Core.Reset();
+                Core.InvokeSendDataEvent();
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+                initResponse = Error.NotInitialized;
+                Core.Reset();
+            }
         }
 
         void OnDestroy()

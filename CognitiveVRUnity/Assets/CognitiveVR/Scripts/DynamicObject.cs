@@ -81,7 +81,20 @@ namespace CognitiveVR
 
         public bool IsController;
         public bool IsRight;
-        public string ControllerType;
+        public enum ControllerDisplayType
+        {
+            vivecontroller, //wand
+            vivefocuscontroller,
+            oculustouchleft,
+            oculustouchright,
+            oculusquesttouchleft,
+            oculusquesttouchright,
+            windows_mixed_reality_controller_left,
+            windows_mixed_reality_controller_right,
+            pico_neo_2_eye_controller_left,
+            pico_neo_2_eye_controller_right,
+        }
+        public ControllerDisplayType ControllerType;
 
         public DynamicObjectIdPool IdPool;
 
@@ -135,7 +148,7 @@ namespace CognitiveVR
                     registerid = CustomId;
                 }
 
-                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType,IsRight);
+                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType.ToString(),IsRight);
 
                 DataId = Data.Id;
 

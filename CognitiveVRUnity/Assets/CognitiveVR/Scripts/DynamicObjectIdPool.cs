@@ -34,5 +34,7 @@ namespace CognitiveVR
             freeId++;
             return newId;
         }
+
+        //IMPROVEMENT return id to pool?
     }
 }
