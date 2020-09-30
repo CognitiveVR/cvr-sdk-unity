@@ -313,7 +313,56 @@ namespace CognitiveVR
 
             if (participantProperties != null)
                 Core.SetSessionProperties(participantProperties);
+
+            Core.EndSessionEvent += Core_EndSessionEvent;
+#if CVR_OMNICEPT
+            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+
+            if (gliaBehaviour != null)
+            {
+                gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
+                gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
+                gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
+            }
+#endif
         }
+
+#if CVR_OMNICEPT
+        double pupillometryTimestamp;
+
+        //update every 100MS
+        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyePupillometry data)
+        {
+            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            if (pupillometryTimestamp < timestampMS)
+            {
+                pupillometryTimestamp = timestampMS + 0.1;
+                if (data.LeftPupilDiameter.Confidence > 0.5f && data.LeftPupilDiameter.Size > 1.5f)
+                {
+                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftPupilDiameter.Size, timestampMS);
+                }
+                if (data.RightPupilDiameter.Confidence > 0.5f && data.RightPupilDiameter.Size > 1.5f)
+                {
+                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightPupilDiameter.Size, timestampMS);
+                }
+            }
+        }
+
+        //every 1000MS
+        void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
+        {
+            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            SensorRecorder.RecordDataPoint("HP.HeartRate", data.Rate, timestampMS);
+        }
+        
+        //every 1000MS
+        void RecordCognitiveLoad(HP.Omnicept.Messaging.Messages.CognitiveLoad data)
+        {
+            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            SensorRecorder.RecordDataPoint("HP.CognitiveLoad", data.CognitiveLoadValue, timestampMS);
+            SensorRecorder.RecordDataPoint("HP.CognitiveLoad.Confidence", data.StandardDeviation, timestampMS);
+        }
+#endif
 
         /// <summary>
         /// sets automatic session properties from scripting define symbols, device ids, etc
@@ -363,11 +412,13 @@ namespace CognitiveVR
 #endif
 
 #if CVR_STEAMVR2 || CVR_STEAMVR
+            //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive");
-#elif CVR_FOVE
+#endif
+#if CVR_FOVE
             Core.SetSessionProperty("c3d.device.hmd.type", "Fove");
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Fove");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -420,6 +471,11 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
             Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
+#elif CVR_OMNICEPT
+            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","HP Omnicept");
+            Core.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #endif
             //TODO add XR inputdevice name
 
@@ -691,6 +747,21 @@ namespace CognitiveVR
                 initResponse = Error.NotInitialized;
                 Core.Reset();
             }
+        }
+
+        private void Core_EndSessionEvent()
+        {
+            Core.EndSessionEvent -= Core_EndSessionEvent;
+#if CVR_OMNICEPT
+            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+
+            if (gliaBehaviour != null)
+            {
+                gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
+                gliaBehaviour.OnHeartRate.RemoveListener(RecordHeartRate);
+                gliaBehaviour.OnCognitiveLoad.RemoveListener(RecordCognitiveLoad);
+            }
+#endif
         }
 
         void OnDestroy()

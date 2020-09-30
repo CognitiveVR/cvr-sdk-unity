@@ -12,20 +12,22 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE || CVR_XR
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE || CVR_XR || CVR_OMNICEPT
                 return true;
-#endif
+#else
                 return false;
+#endif
             }
         }
         public static bool SDKSupportsControllers
         {
             get
             {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON || CVR_OMNICEPT
                 return true;
-#endif
+#else
                 return false;
+#endif
             }
         }
 
