@@ -86,11 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-<<<<<<< HEAD
-        public const string SDK_VERSION = "0.21.0";
-=======
         public const string SDK_VERSION = "0.22.0";
->>>>>>> refs/remotes/origin/develop
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -435,13 +431,18 @@ namespace CognitiveVR
             SetSessionProperty("c3d.participant." + key, value);
         }
 
-<<<<<<< HEAD
         class AttributeParameters
         {
             public string attributionKey;
             public string sessionId;
             public string sceneVersionId;
         }
+
+        /// <summary>
+        /// returns a formatted string to append to a web request
+        /// this can be used to identify an event outside of unity
+        /// requires javascript to parse this key. see the documentation for details
+        /// </summary>
         public static string GetAttributionParameters()
         {
             var ap = new AttributeParameters();
@@ -449,12 +450,12 @@ namespace CognitiveVR
             ap.sessionId = SessionID;
             ap.sceneVersionId = TrackingSceneId;
             return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
-=======
+        }
+
         public static void SetSessionName(string sessionName)
         {
             HasCustomSessionName = true;
             SetSessionProperty("c3d.sessionname", sessionName);
->>>>>>> refs/remotes/origin/develop
         }
     }
 }
