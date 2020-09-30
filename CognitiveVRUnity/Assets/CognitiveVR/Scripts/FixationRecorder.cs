@@ -554,6 +554,79 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_OMNICEPT
+        Queue<SimpleGliaEyeData> trackingDataQueue = new Queue<SimpleGliaEyeData>();
+
+        struct SimpleGliaEyeData
+        {
+            public float confidence;
+            public long timestamp;
+            public Vector3 worldPosition;
+            public Vector3 worldDirection;
+            public float leftEyeOpenness;
+            public float rightEyeOpenness;
+        }
+
+
+        void RecordEyeTracking(HP.Omnicept.Messaging.Messages.EyeTracking data)
+        {
+            SimpleGliaEyeData d = new SimpleGliaEyeData() {
+                confidence = data.CombinedGaze.Confidence,
+                timestamp = data.Timestamp.SystemTimeMicroSeconds / 1000,
+                worldDirection = GameplayReferences.HMD.TransformDirection(new Vector3(data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z)),
+                worldPosition = GameplayReferences.HMD.position,
+                leftEyeOpenness = data.LeftEye.Openness,
+                rightEyeOpenness = data.RightEye.Openness
+            };
+
+            trackingDataQueue.Enqueue(d);
+        }
+        
+        SimpleGliaEyeData currentData;
+        const int CachedEyeCaptures = 120;
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            if (currentData.confidence < 0.5f)
+            {
+                ray = new Ray(Vector3.zero, Vector3.forward);
+                return false;
+            }
+            ray = new Ray(currentData.worldPosition, currentData.worldDirection);
+            return true;
+        }
+
+        public bool LeftEyeOpen() { return currentData.leftEyeOpenness > 0.4f; }
+        public bool RightEyeOpen() { return currentData.rightEyeOpenness > 0.4f; }
+
+        public long EyeCaptureTimestamp()
+        {
+            //check that this correctly trims the microseconds
+            return currentData.timestamp;
+        }
+
+        
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (trackingDataQueue.Count > 0)
+            {
+                currentData = trackingDataQueue.Dequeue();
+                return true;
+            }
+            return false;
+        }
+
+        void OnDestroy()
+        {
+            //should be on destroy or on session end
+            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+
+            if (gliaBehaviour != null)
+            {
+                //eye tracking
+                gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
+            }
+        }
 #elif CVR_XR
         const int CachedEyeCaptures = 120;
 
@@ -748,9 +821,17 @@ namespace CognitiveVR
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
+#elif CVR_OMNICEPT
+
+            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+
+            if (gliaBehaviour != null)
+            {
+                gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
+            }
 #endif
         }
-        
+
         private void Update()
         {
             if (!Core.IsInitialized) { return; }
