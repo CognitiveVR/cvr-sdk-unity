@@ -70,6 +70,7 @@ namespace CognitiveVR
 
         [UnityEngine.Serialization.FormerlySerializedAs("APIKey")]
         public string ApplicationKey;
+        public string AttributionKey;
 
         public bool EnableLogging = true;
         public bool EnableDevLogging = false;

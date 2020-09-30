@@ -172,7 +172,6 @@ namespace CognitiveVR
 
             //just to send this scene change event
             Core.InvokeSendDataEvent();
-
             ForceWriteSessionMetadata = true;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
@@ -430,6 +429,27 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        class AttributeParameters
+        {
+            public string attributionKey;
+            public string sessionId;
+            public string sceneVersionId;
+        }
+
+        /// <summary>
+        /// returns a formatted string to append to a web request
+        /// this can be used to identify an event outside of unity
+        /// requires javascript to parse this key. see the documentation for details
+        /// </summary>
+        public static string GetAttributionParameters()
+        {
+            var ap = new AttributeParameters();
+            ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
+            ap.sessionId = SessionID;
+            ap.sceneVersionId = TrackingSceneId;
+            return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
         }
 
         public static void SetSessionName(string sessionName)
