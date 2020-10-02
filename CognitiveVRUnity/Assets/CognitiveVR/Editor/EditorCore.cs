@@ -878,7 +878,20 @@ namespace CognitiveVR
             if (currentSceneSettings == null) { return false; }
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
-            return SceneExportDirExists && Directory.GetFiles(sceneExportDirectory).Length > 0;
+            if (!SceneExportDirExists) { return false; }
+
+            var files = Directory.GetFiles(sceneExportDirectory);
+            bool hasBin = false;
+            bool hasGltf = false; ;
+            foreach (var f in files)
+            {
+                if (f.EndsWith("scene.bin"))
+                    hasBin = true;
+                if (f.EndsWith("scene.gltf"))
+                    hasGltf = true;
+            }
+
+            return SceneExportDirExists && files.Length > 0 && hasBin && hasGltf;
         }
 
         /// <summary>

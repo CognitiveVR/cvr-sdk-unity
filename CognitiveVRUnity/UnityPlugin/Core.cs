@@ -202,7 +202,7 @@ namespace CognitiveVR
             ParticipantName = name;
             SetParticipantProperty("name", name);
             if (!HasCustomSessionName)
-                SetSessionProperty("c3d.sessionName", name);
+                SetSessionProperty("c3d.sessionname", name);
         }
 
         public static void SetParticipantId(string id)
