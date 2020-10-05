@@ -435,7 +435,7 @@ namespace CognitiveVR
         {
             public string attributionKey;
             public string sessionId;
-            public string sceneVersionId;
+            public int sceneVersionId;
         }
 
         /// <summary>
@@ -448,7 +448,9 @@ namespace CognitiveVR
             var ap = new AttributeParameters();
             ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
             ap.sessionId = SessionID;
-            ap.sceneVersionId = TrackingSceneId;
+            if (TrackingScene != null)
+                ap.sceneVersionId = TrackingScene.VersionId;
+
             return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
         }
 
