@@ -12,6 +12,11 @@ namespace CognitiveVR
         public float Y = 0;
         public bool IncludeXY = false;
 
+        public ButtonState(string buttonName)
+        {
+            ButtonName = buttonName;
+        }
+
         public ButtonState(string buttonName, int buttonPercent, float x = 0, float y = 0, bool includexy = false)
         {
             ButtonName = buttonName;

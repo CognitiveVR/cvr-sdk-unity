@@ -73,6 +73,11 @@ namespace CognitiveVR
             {
                 return _hmdname;
             }
+            if (string.IsNullOrEmpty(rawHMDName))
+            {
+                _hmdname = "unknown";
+                return _hmdname;
+            }
             if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ _hmdname = "vive"; return _hmdname; }
             if (rawHMDName.Contains("rift cv1")) { _hmdname = "rift"; return _hmdname; }
             if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { _hmdname = "gear"; return _hmdname; }
@@ -236,13 +241,13 @@ namespace CognitiveVR
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format("{0:0.00}", pos[0]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:0.00}", pos[0]));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos[1]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[1]));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos[2]));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[2]));
 
             }
             else
@@ -284,13 +289,13 @@ namespace CognitiveVR
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format("{0:0.00}", pos.x));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.x));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos.y));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.y));
 
                 builder.Append(",");
-                builder.Append(string.Format("{0:0.00}", pos.z));
+                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos.z));
 
             }
             else

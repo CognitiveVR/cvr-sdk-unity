@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.21.0";
+        public const string SDK_VERSION = "0.22.0";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -172,7 +172,6 @@ namespace CognitiveVR
 
             //just to send this scene change event
             Core.InvokeSendDataEvent();
-
             ForceWriteSessionMetadata = true;
             TrackingSceneId = "";
             TrackingSceneVersionNumber = 0;
@@ -203,7 +202,7 @@ namespace CognitiveVR
             ParticipantName = name;
             SetParticipantProperty("name", name);
             if (!HasCustomSessionName)
-                SetSessionProperty("c3d.sessionName", name);
+                SetSessionProperty("c3d.sessionname", name);
         }
 
         public static void SetParticipantId(string id)
@@ -348,6 +347,7 @@ namespace CognitiveVR
                 SetSessionProperty(prop.Key, prop.Value);
             }
         }
+        
         public static void SetSessionProperty(string key, object value)
         {
             int foundIndex = 0;
@@ -429,6 +429,29 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        class AttributeParameters
+        {
+            public string attributionKey;
+            public string sessionId;
+            public int sceneVersionId;
+        }
+
+        /// <summary>
+        /// returns a formatted string to append to a web request
+        /// this can be used to identify an event outside of unity
+        /// requires javascript to parse this key. see the documentation for details
+        /// </summary>
+        public static string GetAttributionParameters()
+        {
+            var ap = new AttributeParameters();
+            ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
+            ap.sessionId = SessionID;
+            if (TrackingScene != null)
+                ap.sceneVersionId = TrackingScene.VersionId;
+
+            return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
         }
 
         public static void SetSessionName(string sessionName)

@@ -28,6 +28,7 @@ namespace CognitiveVR
                     var go = new GameObject("Cognitive Network");
                     Object.DontDestroyOnLoad(go);
                     _sender = go.AddComponent<NetworkManager>();
+                    CognitiveVR.CognitiveStatics.Initialize();
                 }
                 return _sender;
             }

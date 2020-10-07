@@ -8,6 +8,29 @@ namespace CognitiveVR
 {
     public static class GameplayReferences
     {
+        public static bool SDKSupportsEyeTracking
+        {
+            get
+            {
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE || CVR_XR || CVR_OMNICEPT
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+        public static bool SDKSupportsControllers
+        {
+            get
+            {
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON || CVR_OMNICEPT
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         #region HMD and Controllers
 
         private static Camera cam;
@@ -479,46 +502,55 @@ namespace CognitiveVR
         /// </summary>
         public static bool GetController(int deviceid, out Transform transform)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICONEO2EYE
-            InitializeControllers();
-            if (controllers[0].id == deviceid) { transform = controllers[0].transform; return true; }
-            if (controllers[1].id == deviceid) { transform = controllers[1].transform; return true; }
-            transform = null;
-            return false;
-#else
-            transform = null;
-            return false;
-#endif
+            if (SDKSupportsControllers)
+            {
+                InitializeControllers();
+                if (controllers[0].id == deviceid) { transform = controllers[0].transform; return true; }
+                if (controllers[1].id == deviceid) { transform = controllers[1].transform; return true; }
+                transform = null;
+                return false;
+            }
+            else
+            {
+                transform = null;
+                return false;
+            }
         }
 
         public static bool GetController(bool right, out Transform transform)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICONEO2EYE
-            InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].id > 0) { transform = controllers[0].transform; return true; }
-            if (right == controllers[1].isRight && controllers[1].id > 0) { transform = controllers[1].transform; return true; }
-            transform = null;
-            return false;
-#else
-            transform = null;
-            return false;
-#endif
+            if (SDKSupportsControllers)
+            {
+                InitializeControllers();
+                if (right == controllers[0].isRight && controllers[0].id > 0) { transform = controllers[0].transform; return true; }
+                if (right == controllers[1].isRight && controllers[1].id > 0) { transform = controllers[1].transform; return true; }
+                transform = null;
+                return false;
+            }
+            else
+            {
+                transform = null;
+                return false;
+            }
         }
 
         /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
         public static bool GetControllerPosition(bool right, out Vector3 position)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE
+            if (SDKSupportsControllers)
+            {
 
-            InitializeControllers();
-            if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { position = controllers[0].transform.position; return true; }
-            if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { position = controllers[1].transform.position; return true; }
-            position = Vector3.zero;
-            return false;
-#else
-            position = Vector3.zero;
-            return false;
-#endif
+                InitializeControllers();
+                if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id > 0) { position = controllers[0].transform.position; return true; }
+                if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id > 0) { position = controllers[1].transform.position; return true; }
+                position = Vector3.zero;
+                return false;
+            }
+            else
+            {
+                position = Vector3.zero;
+                return false;
+            }
         }
 
         #endregion
