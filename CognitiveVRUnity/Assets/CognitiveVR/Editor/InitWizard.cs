@@ -251,6 +251,9 @@ public class InitWizard : EditorWindow
 #if CVR_XR
             selectedsdks.Add("CVR_XR");
 #endif
+#if CVR_OMNICEPT
+            selectedsdks.Add("CVR_OMNICEPT");
+#endif
         }
 
         Vector2 sdkScrollPos;
@@ -261,11 +264,11 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Unity XR", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Fove SDK 3.1.2 (eye tracking)", "Pupil Labs SDK 1.0 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)","Vive Pro Eye (eye tracking)","Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)","Pico Neo 2 Eye 2.8.4 (eye tracking)","Windows Mixed Reality", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4","SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_XR", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_FOVE", "CVR_PUPIL", "CVR_TOBIIVR", "CVR_AH","CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdknames = new List<string>() { "Unity Default", "Unity XR", "HP Omnicept 1.6", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Pro Eye (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Windows Mixed Reality", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "Adhawk Microsystems SDK (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Meta 2", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+            List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_XR", "CVR_OMNICEPT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_PUPIL", "CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_AH", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_META", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
 
-        Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
+            Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
 
         for (int i = 0;i <sdknames.Count;i++)

@@ -265,26 +265,38 @@ namespace UnityGLTF
 			var binFile = File.Create(Path.Combine(path, fileName + ".bin"));
 			_bufferWriter = new BinaryWriter(binFile);
 
-			_root.Scene = ExportScene(fileName, _rootTransforms);
+            try
+            {
 
-			_buffer.Uri = fileName + ".bin";
-			_buffer.ByteLength = (uint)_bufferWriter.BaseStream.Length;
+                _root.Scene = ExportScene(fileName, _rootTransforms);
 
-			var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf"));
-			_root.Serialize(gltfFile);
+                _buffer.Uri = fileName + ".bin";
+                _buffer.ByteLength = (uint)_bufferWriter.BaseStream.Length;
+
+                var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf"));
+                _root.Serialize(gltfFile);
 
 #if WINDOWS_UWP
 			gltfFile.Dispose();
 			binFile.Dispose();
 #else
-			gltfFile.Close();
-			binFile.Close();
+                gltfFile.Close();
+                binFile.Close();
 #endif
-			ExportImages(path);
-
-            foreach(var v in LODDisabledRenderers)
+                ExportImages(path);
+            }
+            catch (System.Exception e)
             {
-                v.enabled = true;
+                Debug.LogException(e);
+                UnityEditor.EditorUtility.DisplayDialog("Error", "There was an error exporting the scene. See the Console for details", "Ok");
+            }
+            finally
+            {
+                foreach (var v in LODDisabledRenderers)
+                {
+                    if (v != null)
+                        v.enabled = true;
+                }
             }
 
         }

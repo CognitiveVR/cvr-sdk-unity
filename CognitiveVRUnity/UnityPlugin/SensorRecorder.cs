@@ -74,6 +74,36 @@ namespace CognitiveVR
             }
         }
 
+        public static void RecordDataPoint(string category, float value, double timestamp)
+        {
+            if (CachedSnapshots.ContainsKey(category))
+            {
+                CachedSnapshots[category].Add(GetSensorDataToString(timestamp, value));
+            }
+            else
+            {
+                CachedSnapshots.Add(category, new List<string>(512));
+                CachedSnapshots[category].Add(GetSensorDataToString(timestamp, value));
+            }
+
+            if (LastSensorValues.ContainsKey(category))
+            {
+                LastSensorValues[category] = value;
+            }
+            else
+            {
+                LastSensorValues.Add(category, value);
+                if (OnNewSensorRecorded != null)
+                    OnNewSensorRecorded(category, value);
+            }
+
+            currentSensorSnapshots++;
+            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            {
+                TrySendData();
+            }
+        }
+
         static void TrySendData()
         {
             if (!Core.IsInitialized) { return; }

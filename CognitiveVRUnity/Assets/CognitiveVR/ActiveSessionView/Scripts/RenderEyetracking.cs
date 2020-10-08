@@ -132,9 +132,9 @@ namespace CognitiveVR.ActiveSession
                 //on new fixation
                 foreach (Fixation f in fixationQueue)
                 {
-                    if (f.IsLocal && f.LocalTransform != null)
+                    if (f.IsLocal && f.DynamicTransform != null)
                     {
-                        Matrix4x4 m = Matrix4x4.TRS(f.LocalTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale * f.MaxRadius);
+                        Matrix4x4 m = Matrix4x4.TRS(f.DynamicTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale * f.MaxRadius);
                         Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
                     }
                     else
@@ -151,8 +151,8 @@ namespace CognitiveVR.ActiveSession
                 {
                     ThreadGazePoint temp = fixationRecorder.DisplayGazePoints[i];
 
-                    if (!threaded && fixationRecorder.DisplayGazePoints[i - 1] != null)
-                        Debug.DrawLine(fixationRecorder.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
+                    //if (!threaded && fixationRecorder.DisplayGazePoints[i - 1] != null)
+                        //Debug.DrawLine(fixationRecorder.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
                     if (!temp.IsLocal) { continue; }
                     if (temp.Transform == null) { temp.IsLocal = false; continue; }
                     temp.TransformMatrix = temp.Transform.localToWorldMatrix;
@@ -167,8 +167,8 @@ namespace CognitiveVR.ActiveSession
                 {
                     ThreadGazePoint temp = gazeBase.DisplayGazePoints[i];
 
-                    if (!threaded && gazeBase.DisplayGazePoints[i - 1] != null)
-                        Debug.DrawLine(gazeBase.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
+                    //if (!threaded && gazeBase.DisplayGazePoints[i - 1] != null)
+                        //Debug.DrawLine(gazeBase.DisplayGazePoints[i - 1].WorldPoint, temp.WorldPoint, magenta);
                     if (!temp.IsLocal) { continue; }
                     if (temp.Transform == null) { temp.IsLocal = false; continue; }
                     temp.TransformMatrix = temp.Transform.localToWorldMatrix;
