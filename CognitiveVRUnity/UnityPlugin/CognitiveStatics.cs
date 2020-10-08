@@ -68,6 +68,7 @@ namespace CognitiveVR
         //session urls
         internal static void Initialize()
         {
+            if (!string.IsNullOrEmpty(ApplicationKey)) { return; }
             dynamicUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/dynamics/");
             gazeUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/gaze/");
             eventUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/events/");

@@ -62,9 +62,9 @@ namespace CognitiveVR
             }
 
             Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1,0,1,0.5f), CognitiveVR_Preferences.Instance.SnapshotInterval);
-            Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
-            Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
-            Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
+            //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
+            //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
+            //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
             if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                 DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
 
@@ -86,9 +86,9 @@ namespace CognitiveVR
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
             Debug.DrawLine(pos, gazepoint, Color.red, CognitiveVR_Preferences.Instance.SnapshotInterval);
 
-            Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
-            Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
-            Debug.DrawRay(gazepoint, Vector3.up, Color.green, 10);
+            //Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
+            //Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
+            //Debug.DrawRay(gazepoint, Vector3.up, Color.green, 10);
             if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                 DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
 
@@ -104,7 +104,7 @@ namespace CognitiveVR
             Quaternion rot = GameplayReferences.HMD.rotation;
             Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
+            //Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
             if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                 DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
 
