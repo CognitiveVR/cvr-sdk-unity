@@ -74,8 +74,8 @@ namespace CognitiveVR
             ray.origin = GameplayReferences.HMD.TransformPoint(currentData.GazeRay.Origin);
             ray.direction = GameplayReferences.HMD.TransformDirection(currentData.GazeRay.Direction);
 
-            if (currentData.GazeRay.IsValid)
-                Debug.DrawRay(ray.origin, ray.direction * 1000, Color.magenta, 5);
+            //if (currentData.GazeRay.IsValid)
+                //Debug.DrawRay(ray.origin, ray.direction * 1000, Color.magenta, 5);
 
             return currentData.GazeRay.IsValid;
         }
@@ -911,10 +911,10 @@ namespace CognitiveVR
 
                 if (ActiveFixation.IsLocal)
                 {
-                    Vector3 hitWorld = EyeCaptures[index].LocalPosition;
-                    Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
-                    Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
-                    Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
+                    //Vector3 hitWorld = EyeCaptures[index].LocalPosition;
+                    //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
+                    //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
+                    //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
                 }
 
                 if (CheckEndFixation(ActiveFixation))
