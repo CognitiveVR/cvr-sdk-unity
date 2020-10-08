@@ -174,9 +174,6 @@ namespace CognitiveVR
         double epochStart;
         long startTimestamp;
 
-        //what exactly is this timestamp; since HMD enabled?
-        long startTimestamp;
-
         void Start()
         {
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
@@ -1376,7 +1373,12 @@ namespace CognitiveVR
             {
                 return false;
             }
-                        
+            if (usedCaptures.Count > 2)
+            {
+                if ((usedCaptures[usedCaptures.Count - 1].Time - usedCaptures[0].Time) < MinFixationMs) { return false; }
+            }
+            //TODO find source of rare bug with fixation duration < MinFixationMs when fixating on fast moving dynamic object
+
             if (EyeCaptures[index].Time - firstOnTransformTime > MaxConsecutiveOffDynamicMs)
             {
                 //fail now. off transform time will fail this before getting to first on transform time
