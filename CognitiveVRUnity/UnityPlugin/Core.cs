@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.23.0";
+        public const string SDK_VERSION = "0.23.1";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -350,6 +350,7 @@ namespace CognitiveVR
         
         public static void SetSessionProperty(string key, object value)
         {
+            if (value == null) { return; }
             int foundIndex = 0;
             bool foundKey = false;
             for(int i = 0; i< knownSessionProperties.Count;i++)
@@ -408,6 +409,7 @@ namespace CognitiveVR
         /// <param name="value"></param>
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
+            if (value == null) { return; }
             for (int i = 0; i < knownSessionProperties.Count; i++)
             {
                 if (knownSessionProperties[i].Key == key)

@@ -603,25 +603,77 @@ namespace CognitiveVR
             {
                 try
                 {
+#if UNITY_2019_4_OR_NEWER
+                    if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out textureReadable[i]))
+                    {
+                        Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
+                        SetTextureImporterFormat(originalTexture, true);
+                    }
+#else
+
                     if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
                         SetTextureImporterFormat(originalTexture, true);
                     }
+#endif
                 }
-                catch{}
+                catch {}
             }
 
-            var sizemax = Mathf.Max(
-                Mathf.NextPowerOfTwo((int)(data.heightmapScale.z * data.heightmapResolution * 16)),
-                Mathf.NextPowerOfTwo((int)(data.heightmapScale.x * data.heightmapResolution * 16)));
-            int sizelimit = Mathf.Min(4096, sizemax);
-            Texture2D outTex = new Texture2D(sizelimit, sizelimit);
+            Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
+
+            Texture2D outTex = new Texture2D((int)data.size.x, (int)data.size.z);
             outTex.name = data.name.Replace(' ', '_');
+
+            //these are used because texturemap = 512 and resolution = 513
             float upscalewidth = (float)outTex.width / (float)data.alphamapWidth;
             float upscaleheight = (float)outTex.height / (float)data.alphamapHeight;
 
             float[] colorAtLayer = new float[layerCount];
+
+#if UNITY_2019_4_OR_NEWER
+            TerrainLayer[] layers = data.terrainLayers;
+            //get highest value splatmap at point and write terrain texture to baked texture
+            for (int y = 0; y < outTex.height; y++)
+            {
+                for (int x = 0; x < outTex.width; x++)
+                {
+                    for (int i = 0; i < colorAtLayer.Length; i++)
+                    {
+                        colorAtLayer[i] = maps[(int)(y / upscaleheight), (int)(x / upscalewidth), i];
+                    }
+                    //highest value splat
+                    int highestMap = 0;
+                    float highestMapValue = 0;
+                    for (int i = 0; i < colorAtLayer.Length; i++)
+                    {
+                        if (colorAtLayer[i] > highestMapValue)
+                        {
+                            highestMapValue = colorAtLayer[i];
+                            highestMap = i;
+                        }
+                    }
+                    //write terrain texture to baked texture
+                    if (layers.Length > 0 && layers[highestMap].diffuseTexture != null)
+                    {
+                        Vector2 imageSize = new Vector2(layers[highestMap].diffuseTexture.width, layers[highestMap].diffuseTexture.height);
+                        Vector2 tileSize = layers[highestMap].tileSize;
+                        Vector2 imageScaling = TerrainSize / layers[highestMap].tileSize;
+                        Vector2 imageOffset = layers[highestMap].tileOffset;
+
+                        Color color = layers[highestMap].diffuseTexture.GetPixel(
+                            (int)((x + imageOffset.x) * imageSize.x / TerrainSize.x * (TerrainSize.x / tileSize.x)),
+                            (int)((y + imageOffset.y) * imageSize.y / TerrainSize.y * (TerrainSize.y / tileSize.y)));
+                        outTex.SetPixel(x, y, color);
+                    }
+                    else
+                    {
+                        outTex.SetPixel(x,y, Color.red);
+                    }
+                }
+            }
+#else
             SplatPrototype[] prototypes = data.splatPrototypes;
             //get highest value splatmap at point and write terrain texture to baked texture
             for (int y = 0; y < outTex.height; y++)
@@ -656,6 +708,7 @@ namespace CognitiveVR
                     }
                 }
             }
+#endif
             outTex.Apply();
 
             //terrain texture importer to original read/write settings
@@ -664,12 +717,22 @@ namespace CognitiveVR
                 try
                 {
                     bool ignored;
+#if UNITY_2019_4_OR_NEWER
+                    if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out ignored))
+                    {
+                        Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
+                        SetTextureImporterFormat(originalTexture, textureReadable[i]);
+                    }
+#else
+
                     if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored))
                     {
-                        SetTextureImporterFormat(data.splatPrototypes[i].texture, textureReadable[i]);
+                        Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
+                        SetTextureImporterFormat(originalTexture, textureReadable[i]);
                     }
+#endif
                 }
-                catch{}
+                catch {}
             }
 
             return outTex;
