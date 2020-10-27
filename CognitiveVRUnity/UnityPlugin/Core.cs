@@ -212,6 +212,11 @@ namespace CognitiveVR
                 Util.logWarning("SetParticipantId is empty!");
                 return;
             }
+            if (id.Length > 64)
+            {
+                Debug.LogError("Cognitive3D SetParticipantId exceeds maximum character limit. Clipping to 64");
+                id = id.Substring(0, 64);
+            }
             ParticipantId = id;
             SetParticipantProperty("id", id);
         }
