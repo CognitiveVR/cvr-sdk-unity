@@ -1034,8 +1034,21 @@ namespace UnityGLTF
                 }
                 material.DoubleSided = true;
             }
+			else if (materialObj.HasProperty("_BaseMap")) //urp main texture
+			{
+				var mainTex = materialObj.GetTexture("_BaseMap");
 
-            _materials.Add(materialObj);
+				if (mainTex != null)
+				{
+					material.PbrMetallicRoughness = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
+					material.PbrMetallicRoughness.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
+					ExportTextureTransform(material.PbrMetallicRoughness.BaseColorTexture, materialObj, "_BaseMap");
+				}
+				//particles in urp _BaseColor, like the surface lit shader, so doesn't need additional
+				material.DoubleSided = true;
+			}
+
+			_materials.Add(materialObj);
 
 			id = new MaterialId
 			{
@@ -1144,7 +1157,11 @@ namespace UnityGLTF
 			{
 				pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorRaw();
 			}
-            if (material.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
+			else if (material.HasProperty("_BaseColor"))
+			{
+				pbr.BaseColorFactor = material.GetColor("_BaseColor").ToNumericsColorRaw();
+			}
+			if (material.HasProperty("_TintColor")) //particles use _TintColor instead of _Color
             {
                 float white = 1;
                 if (material.HasProperty("_Color"))
@@ -1164,6 +1181,16 @@ namespace UnityGLTF
 				{
 					pbr.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
 					ExportTextureTransform(pbr.BaseColorTexture, material, "_MainTex");
+				}
+			}
+			else if (material.HasProperty("_BaseMap")) //universal render pipeline
+			{
+				var mainTex = material.GetTexture("_BaseMap");
+
+				if (mainTex != null)
+				{
+					pbr.BaseColorTexture = ExportTextureInfo(mainTex, TextureMapType.Main);
+					ExportTextureTransform(pbr.BaseColorTexture, material, "_BaseMap");
 				}
 			}
 

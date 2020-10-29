@@ -167,14 +167,16 @@ namespace CognitiveVR
             }
             if (UseEyeTracking == 1)
             {
-                //TODO editorcore/core.HasEyetrackingSDK
-#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
-            GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the participant to ensure eye tracking is correctly calibrated", "normallabel");
-            GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 4:</b> Add any required Eye Tracking components to the scene", "normallabel_actionable");
-#else
-                GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
-#endif
+                if (GameplayReferences.SDKSupportsEyeTracking)
+                {
+                    GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the participant to ensure eye tracking is correctly calibrated", "normallabel");
+                    GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 4:</b> Add any required Eye Tracking components to the scene", "normallabel_actionable");
+                }
+                else
+                {
+                    GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
+                    GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
+                }
             }
         }
 

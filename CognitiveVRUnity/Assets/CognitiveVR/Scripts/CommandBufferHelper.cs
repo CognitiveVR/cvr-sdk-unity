@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 namespace CognitiveVR
 {
     [AddComponentMenu("Cognitive3D/Internal/Command Buffer Helper")]
@@ -16,9 +14,8 @@ namespace CognitiveVR
 
 #if UNITY_2018_2_OR_NEWER
         CommandGaze gaze;
-#endif
-
         bool supportsAsyncGPUReadback = false; //used in 2018
+#endif
 
         public delegate void PostRenderCommandCallback(Ray ray, Vector3 viewportVector, Vector3 worldHitPoint);
         PostRenderCommandCallback onPostRenderCommand;
@@ -190,23 +187,8 @@ namespace CognitiveVR
             var pixels = request.GetData<Color>();
             Color c;
 
-            if (false) //TEXTURE
-            {
-                var x = (int)((ViewportGazePoint.x) * rect.width);
-                var y = (int)((ViewportGazePoint.y) * rect.height);
-
-                //Debug.Log(x + " " + y);
-
-                debugtex.SetPixels(pixels.ToArray());
-                //debugtex.Apply(); //EXPENSIVE BUT OK FOR DEBBUGING
-
-                depthR = debugtex.GetPixel(x, y).r;
-            }
-            else //PIXEL
-            {
-                depthR = pixels[0].r;
-                c = pixels[0];
-            }
+            depthR = pixels[0].r;
+            c = pixels[0];
 
             var wg = gaze.GetWorldGazeDirection();
             float actualDepth = GetAdjustedDistance(GameplayReferences.HMDCameraComponent.farClipPlane, wg, GameplayReferences.HMD.forward);
