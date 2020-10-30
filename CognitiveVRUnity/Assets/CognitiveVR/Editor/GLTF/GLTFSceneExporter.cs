@@ -718,6 +718,7 @@ namespace UnityGLTF
                 && mr != null
                 && mr.enabled
                 && mf.sharedMesh != null
+				&& mf.sharedMesh.vertexCount > 0
                 && (OverrideBakeables.Find(delegate (CognitiveVR.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
                 && transform.gameObject.activeInHierarchy)
 			{
