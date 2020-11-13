@@ -621,8 +621,6 @@ namespace CognitiveVR
                 catch {}
             }
 
-            Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
-
             Texture2D outTex = new Texture2D((int)data.size.x, (int)data.size.z);
             outTex.name = data.name.Replace(' ', '_');
 
@@ -633,6 +631,7 @@ namespace CognitiveVR
             float[] colorAtLayer = new float[layerCount];
 
 #if UNITY_2019_4_OR_NEWER
+            Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
             TerrainLayer[] layers = data.terrainLayers;
             //get highest value splatmap at point and write terrain texture to baked texture
             for (int y = 0; y < outTex.height; y++)

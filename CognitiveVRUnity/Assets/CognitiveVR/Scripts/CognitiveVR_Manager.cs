@@ -782,6 +782,7 @@ namespace CognitiveVR
 
         void OnApplicationPause(bool paused)
         {
+            if (!Core.IsInitialized) { return; }
             if (CognitiveVR_Preferences.Instance.SendDataOnPause)
             {
                 new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();

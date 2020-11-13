@@ -155,19 +155,22 @@ namespace CognitiveVR
         /// <param name="scene"></param>
         public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
         {
-            if (scene == null)
+            if (IsInitialized)
             {
-                //what scene is being loaded
-                float duration = Time.time - SceneStartTime;
-                SceneStartTime = Time.time;
-                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
-            }
-            else
-            {
-                //what scene is being loaded
-                float duration = Time.time - SceneStartTime;
-                SceneStartTime = Time.time;
-                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+                if (scene == null)
+                {
+                    //what scene is being loaded
+                    float duration = Time.time - SceneStartTime;
+                    SceneStartTime = Time.time;
+                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
+                }
+                else
+                {
+                    //what scene is being loaded
+                    float duration = Time.time - SceneStartTime;
+                    SceneStartTime = Time.time;
+                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+                }
             }
 
             //just to send this scene change event
