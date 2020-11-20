@@ -742,7 +742,6 @@ namespace CognitiveVR
         }
 
         private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
-        private List<Fixation> Fixations = new List<Fixation>();
 
         public bool IsFixating { get; set; }
         public Fixation ActiveFixation;
