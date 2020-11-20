@@ -572,9 +572,9 @@ public class InitWizard : EditorWindow
             //what controllers do we support. add scroll list here!
             //vive, oculus, microsoft, pico
 
-            
+#pragma warning disable 162
             int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
-
+#pragma warning restore 162
 
 #if CVR_XR
             offset = 80;
