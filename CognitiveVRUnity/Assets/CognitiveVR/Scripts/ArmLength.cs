@@ -25,10 +25,12 @@ namespace CognitiveVR.Components
         [Tooltip("Distance from HMD to average shoulder height")]
         public float EyeToShoulderHeight = 0.186f; //meters
 
+#pragma warning disable 649
         //if the left controller isn't null and has had trigger input
         bool leftControllerTracking;
         //if the right controller isn't null and has had trigger input
         bool rightControllerTracking;
+#pragma warning restore 649
         GameplayReferences.ControllerInfo tempInfo = null;
 
 #if CVR_STEAMVR

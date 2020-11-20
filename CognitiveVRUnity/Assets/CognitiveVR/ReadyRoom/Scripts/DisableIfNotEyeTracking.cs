@@ -11,11 +11,14 @@ namespace CognitiveVR
     {
         void Awake()
         {
-#if CVR_TOBIIVR || CVR_FOVE || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE || CVR_PICONEO2EYE
+            if (GameplayReferences.SDKSupportsEyeTracking)
+            {
 
-#else
-            gameObject.SetActive(false);
-#endif
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
     }
 }

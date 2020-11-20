@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.23.1";
+        public const string SDK_VERSION = "0.23.3";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -155,19 +155,22 @@ namespace CognitiveVR
         /// <param name="scene"></param>
         public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
         {
-            if (scene == null)
+            if (IsInitialized)
             {
-                //what scene is being loaded
-                float duration = Time.time - SceneStartTime;
-                SceneStartTime = Time.time;
-                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
-            }
-            else
-            {
-                //what scene is being loaded
-                float duration = Time.time - SceneStartTime;
-                SceneStartTime = Time.time;
-                new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+                if (scene == null)
+                {
+                    //what scene is being loaded
+                    float duration = Time.time - SceneStartTime;
+                    SceneStartTime = Time.time;
+                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
+                }
+                else
+                {
+                    //what scene is being loaded
+                    float duration = Time.time - SceneStartTime;
+                    SceneStartTime = Time.time;
+                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+                }
             }
 
             //just to send this scene change event
@@ -211,6 +214,11 @@ namespace CognitiveVR
             {
                 Util.logWarning("SetParticipantId is empty!");
                 return;
+            }
+            if (id.Length > 64)
+            {
+                Debug.LogError("Cognitive3D SetParticipantId exceeds maximum character limit. Clipping to 64");
+                id = id.Substring(0, 64);
             }
             ParticipantId = id;
             SetParticipantProperty("id", id);

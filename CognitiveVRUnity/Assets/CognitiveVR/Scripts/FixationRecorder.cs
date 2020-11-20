@@ -742,7 +742,6 @@ namespace CognitiveVR
         }
 
         private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
-        private List<Fixation> Fixations = new List<Fixation>();
 
         public bool IsFixating { get; set; }
         public Fixation ActiveFixation;
@@ -1521,7 +1520,7 @@ namespace CognitiveVR
             int sampleCount = 0;
 
             long firstOnTransformTime = 0;
-            long lastSampleTime = 0;
+            //long lastSampleTime = 0;
 
             //take all the eye captures within the minimum fixation duration
             //escape if any are eyes closed or discarded captures
@@ -1542,7 +1541,7 @@ namespace CognitiveVR
                 }
 
                 sampleCount++;
-                lastSampleTime = EyeCaptures[GetIndex(i)].Time;
+                //lastSampleTime = EyeCaptures[GetIndex(i)].Time;
                 if (firstOnTransformTime < 1)
                     firstOnTransformTime = EyeCaptures[GetIndex(i)].Time;
                 //TODO should use EyeCaptures.LocalPosition * EyeCaptures.Matrix. world position will be offset if object is moving
