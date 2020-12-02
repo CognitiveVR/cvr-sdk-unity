@@ -543,7 +543,42 @@ public class ManageDynamicObjects : EditorWindow
             return;
         }
 
-        string json = "";
+        
+        int manifestCount = 0;
+        //write up manifets into parts (if needed)
+        int debugBreakManifestLimit = 99;
+        while(true)
+        {
+            debugBreakManifestLimit--;
+            if (debugBreakManifestLimit == 0) { Debug.LogError("dynamic aggregation manifest error"); break; }
+            if (manifest.objects.Count == 0) { break; }
+
+            AggregationManifest am = new AggregationManifest();
+            am.objects.AddRange(manifest.objects.GetRange(0, Mathf.Min(500,manifest.objects.Count)));
+            manifest.objects.RemoveRange(0, Mathf.Min(500, manifest.objects.Count));
+            string json = "";
+            if (ManifestToJson(am, out json))
+            {
+                manifestCount++;
+                var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
+                if (currentSettings != null && currentSettings.VersionNumber > 0)
+                    SendManifest(json, currentSettings.VersionNumber, callback);
+                else
+                    Util.logError("Could not find scene version for current scene");
+            }
+            else
+            {
+                Debug.LogWarning("Aggregation Manifest only contains dynamic objects with generated ids");
+                if (nodynamicscallback != null)
+                {
+                    nodynamicscallback.Invoke();
+                }
+            }
+        }
+
+        Debug.Log("send " + manifestCount + " manifest requests");
+
+        /*string json = "";
         if (ManifestToJson(manifest, out json))
         {
             var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
@@ -559,7 +594,7 @@ public class ManageDynamicObjects : EditorWindow
             {
                 nodynamicscallback.Invoke();
             }
-        }
+        }*/
     }
 
     static bool ManifestToJson(AggregationManifest manifest, out string json)
