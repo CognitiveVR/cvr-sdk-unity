@@ -995,7 +995,6 @@ namespace CognitiveVR
             }
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
 
-
             //export. this should skip nested dynamics
             if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); return false; }
 
@@ -1015,6 +1014,9 @@ namespace CognitiveVR
             dynamicObject.transform.localPosition = Vector3.zero;
             Quaternion originalRot = dynamicObject.transform.localRotation;
             dynamicObject.transform.localRotation = Quaternion.identity;
+
+            Vector4 originalScale = dynamicObject.transform.localScale;
+            dynamicObject.transform.localScale = Vector3.one;
 
             Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
@@ -1071,6 +1073,7 @@ namespace CognitiveVR
 
             dynamicObject.transform.localPosition = originalOffset;
             dynamicObject.transform.localRotation = originalRot;
+            dynamicObject.transform.localScale = originalScale;
 
             //queue resize texture
             ResizeQueue.Enqueue(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);

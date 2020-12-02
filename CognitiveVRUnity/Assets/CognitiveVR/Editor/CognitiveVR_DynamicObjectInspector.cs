@@ -103,7 +103,7 @@ namespace CognitiveVR
                     anycustomnames = true;
                     if (string.IsNullOrEmpty(dyn.MeshName))
                     {
-                        dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
+                        dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_").Replace("#", "_");//.Replace("[", "_").Replace("]", "_");
                         if (!Application.isPlaying)
                         {
                             UnityEditor.EditorUtility.SetDirty(dyn);
@@ -306,7 +306,7 @@ namespace CognitiveVR
                     if (dyn.UseCustomMesh)
                     {
                         //replace all invalid characters <>|?*"/\: with _
-                        dyn.MeshName = dyn.MeshName.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
+                        dyn.MeshName = dyn.MeshName.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_").Replace("#", "_");//.Replace("[", "_").Replace("]", "_");
                     }
                 }
 
