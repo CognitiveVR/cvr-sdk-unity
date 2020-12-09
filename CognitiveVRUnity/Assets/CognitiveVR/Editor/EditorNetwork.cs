@@ -31,6 +31,9 @@ public class EditorNetwork
 
     static List<EditorWebRequest> EditorWebRequests = new List<EditorWebRequest>();
 
+    static Queue<EditorWebRequest> EditorWebRequestsQueue = new Queue<EditorWebRequest>();
+    static EditorWebRequest ActiveQueuedWebRequest;
+
     public static void Get(string url, Response callback, Dictionary<string,string> headers, bool blocking, string requestName = "Get", string requestInfo = "")
     {
         var req = UnityWebRequest.Get(url);
@@ -49,11 +52,9 @@ public class EditorNetwork
         EditorApplication.update += EditorUpdate;
     }
 
-    public static void Post(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
+    //adds a network post request to a queue that is sent one at a time
+    public static void QueuePost(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
-        //if (headers == null) { headers = new Dictionary<string, string>(); }
-        //if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
-
         var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
         var p = UnityWebRequest.Put(url, bytes);
         p.method = "POST";
@@ -63,15 +64,14 @@ public class EditorNetwork
         {
             p.SetRequestHeader(v.Key, v.Value);
         }
-        //p.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.APIKey);
-        p.Send();
 
-        EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
+        EditorWebRequestsQueue.Enqueue(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
 
-        EditorApplication.update -= EditorUpdate;
-        EditorApplication.update += EditorUpdate;
+        EditorApplication.update -= EditorQueueUpdate;
+        EditorApplication.update += EditorQueueUpdate;
     }
 
+    //post a request immediately and listen for a response callback
     public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {
         //if (headers == null) { headers = new Dictionary<string, string>(); }
@@ -91,6 +91,7 @@ public class EditorNetwork
         EditorApplication.update += EditorUpdate;
     }
 
+    //post a request immediately and listen for a response callback
     public static void Post(string url, WWWForm formcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
     {            
         var p = UnityWebRequest.Post(url, formcontent);
@@ -134,6 +135,33 @@ public class EditorNetwork
             {
                 EditorWebRequests.RemoveAt(i);
             }
+        }
+    }
+
+    static void EditorQueueUpdate()
+    {
+        if (ActiveQueuedWebRequest == null && EditorWebRequestsQueue.Count == 0) { EditorUtility.ClearProgressBar(); EditorApplication.update -= EditorQueueUpdate; return; }
+
+        if (ActiveQueuedWebRequest == null)
+        {
+            ActiveQueuedWebRequest = EditorWebRequestsQueue.Dequeue();
+            ActiveQueuedWebRequest.Request.Send();
+        }
+
+        EditorUtility.DisplayProgressBar(ActiveQueuedWebRequest.RequestName, ActiveQueuedWebRequest.RequestInfo, ActiveQueuedWebRequest.Request.uploadProgress);
+
+        if (ActiveQueuedWebRequest.Request.isDone)
+        {
+            EditorUtility.ClearProgressBar();
+            int responseCode = (int)ActiveQueuedWebRequest.Request.responseCode;
+            Util.logDebug("Got Response from " + ActiveQueuedWebRequest.Request.url + ": [CODE] " + responseCode
+                + (!string.IsNullOrEmpty(ActiveQueuedWebRequest.Request.downloadHandler.text) ? " [TEXT] " + ActiveQueuedWebRequest.Request.downloadHandler.text : "")
+                + (!string.IsNullOrEmpty(ActiveQueuedWebRequest.Request.error) ? " [ERROR] " + ActiveQueuedWebRequest.Request.error : ""));
+            if (ActiveQueuedWebRequest.Response != null)
+            {
+                ActiveQueuedWebRequest.Response.Invoke(responseCode, ActiveQueuedWebRequest.Request.error, ActiveQueuedWebRequest.Request.downloadHandler.text);
+            }
+            ActiveQueuedWebRequest = null;
         }
     }
 }
