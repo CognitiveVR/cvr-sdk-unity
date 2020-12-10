@@ -852,7 +852,7 @@ namespace CognitiveVR
         /// <summary>
         /// returns texture2d baked from canvas target
         /// </summary>
-        public static Texture2D CanvasTextureBake(Transform target, int resolution = 128)
+        public static Texture2D CanvasTextureBake(Transform target, int resolution = 512)
         {
             GameObject cameraGo = new GameObject("Temp_Camera");
             Camera cam = cameraGo.AddComponent<Camera>();

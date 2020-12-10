@@ -278,6 +278,7 @@ namespace CognitiveVR
                 gazebuilder.Append("\"properties\":{");
                 foreach (var kvp in Core.GetAllSessionProperties(true))
                 {
+                    if (kvp.Value == null) { Util.logDevelopment("Session Property " +kvp.Key+" is NULL "); continue; }
                     if (kvp.Value.GetType() == typeof(string))
                     {
                         JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
