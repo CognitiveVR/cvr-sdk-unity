@@ -775,7 +775,8 @@ namespace CognitiveVR
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
 
-        //[Header("Visualization")]
+        //used by RenderEyeTracking for rendering saccades
+        public const int DisplayGazePointCount = 4096;
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
