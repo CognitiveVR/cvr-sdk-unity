@@ -313,8 +313,8 @@ namespace CognitiveVR
 			else if (useDataQueue2)
 			{
 				if (startTimestamp == 0)
-					startTimestamp = currentData1.timestamp;
-				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+					startTimestamp = currentData2.timestamp;
+				var MsSincestart = currentData2.timestamp - startTimestamp; //milliseconds since start
 				var final = epochStart * 1000 + MsSincestart;
 				return (long)final;
 			}
