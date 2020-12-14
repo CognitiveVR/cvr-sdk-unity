@@ -603,7 +603,7 @@ namespace CognitiveVR
             {
                 try
                 {
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2019_2_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;

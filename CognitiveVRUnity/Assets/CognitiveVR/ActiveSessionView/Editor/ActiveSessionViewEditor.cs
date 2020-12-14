@@ -25,40 +25,26 @@ namespace CognitiveVR.ActiveSession
             if (IsSceneObject(asv.gameObject))
             {
 
-#if CVR_TOBIIVR
+                string tooltip = "VR Camera should be Main Camera";
+
+#if CVR_FOVE
+                tooltip = "VR Camera should be 'Fove Interface'"
+#elif CVR_STEAMVR
+                tooltip = "VR Camera should be 'Camera (eye)'";
+#elif CVR_STEAMVR2
+                tooltip = "VR Camera should be 'Camera'";
+#endif
                 if (asv.VRSceneCamera == null)
                 {
                     GUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("VR Camera should be Main Camera", MessageType.Error);
-                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
-                    {
-                        SetCameraTarget(asv);
-                    }
-                    GUILayout.EndHorizontal();
-                }
-#elif CVR_FOVE
-                if (asv.VRSceneCamera == null)
-                {
-                    GUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("VR Camera should be 'Fove Interface'", MessageType.Error);
-                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40),GUILayout.Height(38)))
-                    {
-                        SetCameraTarget(asv);
-                    }
-                    GUILayout.EndHorizontal();
-                }
-#else //pupil, varjo, others
-                if (asv.VRSceneCamera == null)
-                {
-                    GUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("VR Camera should be 'MainCamera'", MessageType.Error);
+                    EditorGUILayout.HelpBox(tooltip, MessageType.Error);
                     if (GUILayout.Button("Fix", GUILayout.MaxWidth(40), GUILayout.Height(38)))
                     {
-                        asv.VRSceneCamera = Camera.main;
+                        SetCameraTarget(asv);
                     }
                     GUILayout.EndHorizontal();
                 }
-#endif
+
             }
 
             asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("VR Scene Camera", asv.VRSceneCamera, typeof(Camera), true);
@@ -108,6 +94,35 @@ namespace CognitiveVR.ActiveSession
             if (fove != null)
             {
                 activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();
+            }
+#elif CVR_STEAMVR
+            var cam = FindObjectOfType<SteamVR_Camera>();
+            if (cam != null)
+            {
+                activeSessionView.VRSceneCamera = cam.GetComponent<Camera>();
+            }
+            else
+            {
+                Debug.LogError("Couldn't find Camera (eye)!");
+            }
+#elif CVR_STEAMVR2
+            
+            var playarea = FindObjectOfType<Valve.VR.SteamVR_PlayArea>();
+            if (playarea != null)
+            {
+                var cam = playarea.GetComponentInChildren<Camera>();
+                if (cam != null)
+                {
+                    activeSessionView.VRSceneCamera = cam;
+                }
+                else
+                {
+                    Debug.LogError("Couldn't find Camera!");
+                }
+            }
+            else
+            {
+                Debug.LogError("Couldn't find SteamVR Play Area!");
             }
 #else
             activeSessionView.VRSceneCamera = Camera.main;
