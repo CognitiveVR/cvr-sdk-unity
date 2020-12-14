@@ -167,21 +167,7 @@ namespace CognitiveVR
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
 
-                    Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(worldHitPoint);
-                    float relativeScalex = hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x;
-                    float relativeScaley = hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y;
-                    float relativeScalez = hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z;
-
-                    localHitPoint.x = LocalGaze.x / relativeScalex;
-                    localHitPoint.y = LocalGaze.y / relativeScaley;
-                    localHitPoint.z = LocalGaze.z / relativeScalez;
-
-                    //Vector3 relativeScale = new Vector3(
-                    //    hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x,
-                    //    hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y,
-                    //    hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z);
-                    //localHitPoint = new Vector3(LocalGaze.x / relativeScale.x, LocalGaze.y / relativeScale.y, LocalGaze.z / relativeScale.z);
-
+                    localHitPoint = hitDynamic.transform.InverseTransformPoint(worldHitPoint);
                     hitDistance = hit.distance;
                     hitTextureCoord = hit.textureCoord;
                 }
@@ -202,20 +188,7 @@ namespace CognitiveVR
                     didhitdynamic = true;
                     worldHitPoint = hit.point;
 
-                    Vector3 LocalGaze = hitDynamic.transform.InverseTransformPointUnscaled(worldHitPoint);
-                    float relativeScalex = hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x;
-                    float relativeScaley = hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y;
-                    float relativeScalez = hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z;
-
-                    localHitPoint.x = LocalGaze.x / relativeScalex;
-                    localHitPoint.y = LocalGaze.y / relativeScaley;
-                    localHitPoint.z = LocalGaze.z / relativeScalez;
-
-                    //Vector3 relativeScale = new Vector3(
-                    //    hitDynamic.transform.lossyScale.x / hitDynamic.StartingScale.x,
-                    //    hitDynamic.transform.lossyScale.y / hitDynamic.StartingScale.y,
-                    //    hitDynamic.transform.lossyScale.z / hitDynamic.StartingScale.z);
-                    //localHitPoint = new Vector3(LocalGaze.x / relativeScale.x, LocalGaze.y / relativeScale.y, LocalGaze.z / relativeScale.z);
+                    localHitPoint = hitDynamic.transform.InverseTransformPoint(worldHitPoint);
                     hitDistance = hit.distance;
                     hitTextureCoord = hit.textureCoord;
                 }

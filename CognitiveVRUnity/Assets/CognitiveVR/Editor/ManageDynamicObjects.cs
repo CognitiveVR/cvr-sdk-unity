@@ -505,15 +505,17 @@ public class ManageDynamicObjects : EditorWindow
             public string name;
             public string mesh;
             public string id;
-            public AggregationManifestEntry(string _name, string _mesh, string _id)
+            public float scale = 1;
+            public AggregationManifestEntry(string _name, string _mesh, string _id, float _scale)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
+                scale = _scale;
             }
             public override string ToString()
             {
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\"}";
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scale\":\"" + scale + "\"}";
             }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
@@ -554,8 +556,8 @@ public class ManageDynamicObjects : EditorWindow
             if (manifest.objects.Count == 0) { break; }
 
             AggregationManifest am = new AggregationManifest();
-            am.objects.AddRange(manifest.objects.GetRange(0, Mathf.Min(500,manifest.objects.Count)));
-            manifest.objects.RemoveRange(0, Mathf.Min(500, manifest.objects.Count));
+            am.objects.AddRange(manifest.objects.GetRange(0, Mathf.Min(250,manifest.objects.Count)));
+            manifest.objects.RemoveRange(0, Mathf.Min(250, manifest.objects.Count));
             string json = "";
             if (ManifestToJson(am, out json))
             {
@@ -613,7 +615,8 @@ public class ManageDynamicObjects : EditorWindow
             json += "{";
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
-            json += "\"name\":\"" + entry.name + "\"";
+            json += "\"name\":\"" + entry.name + "\",";
+            json += "\"scale\":" + entry.scale;
             json += "},";
             containsValidEntry = true;
         }
@@ -651,7 +654,7 @@ public class ManageDynamicObjects : EditorWindow
             headers.Add("Content-Type","application/json");
         }
         PostManifestResponseAction = callback;
-        EditorNetwork.Post(url, json, PostManifestResponse,headers,false);//AUTH
+        EditorNetwork.QueuePost(url, json, PostManifestResponse,headers,false);//AUTH
     }
 
     static void PostManifestResponse(int responsecode, string error, string text)
@@ -677,7 +680,7 @@ public class ManageDynamicObjects : EditorWindow
                 //don't include meshes with empty mesh names in manifest
                 if (!string.IsNullOrEmpty(dynamic.MeshName))
                 {
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),dynamic.transform.lossyScale.x));
                 }
                 else
                 {

@@ -992,6 +992,7 @@ namespace CognitiveVR
                     EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.localPosition, hitDynamic.transform.localRotation, hitDynamic.transform.localScale);
                     EyeCaptures[index].HitDynamicId = hitDynamic.GetId();
 
+                    //unscaled so point will appear on surface
                     EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPointUnscaled(world);
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
@@ -1166,9 +1167,17 @@ namespace CognitiveVR
 
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
-                    var captureWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(capture.LocalPosition);
-                    var activeFixationWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(ActiveFixation.LocalPosition);
-                    
+                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
+                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
+                    Quaternion rotation = Quaternion.LookRotation(
+                        ActiveFixation.DynamicMatrix.GetColumn(2),
+                        ActiveFixation.DynamicMatrix.GetColumn(1)
+                    );
+                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+
+                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
+                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
+
                     var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
                     var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
                     var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
@@ -1183,9 +1192,17 @@ namespace CognitiveVR
                 {
                     //should use transform matrix from when eye capture was captured instead of world position
                     //using the capture's matrix against the active fixation matrix. this will be 1 frame behind?
-                    //TEST HERE compare matrix * local position instead of world position
-                    var captureWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(capture.LocalPosition);
-                    var activeFixationWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(ActiveFixation.LocalPosition);
+
+                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
+                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
+                    Quaternion rotation = Quaternion.LookRotation(
+                        ActiveFixation.DynamicMatrix.GetColumn(2),
+                        ActiveFixation.DynamicMatrix.GetColumn(1)
+                    );
+                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
+
+                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
 
                     //if in range, we will add captureWorldPos to CachedEyeCapturePositions and update activefixation.localposition
                     //then update average position then check angle
@@ -1200,7 +1217,7 @@ namespace CognitiveVR
                     var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
                     var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
 
-                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
                     var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
                     float dot = Vector3.Dot(_eyeCaptureDirection, _fixationDirection);
@@ -1212,9 +1229,7 @@ namespace CognitiveVR
 
                     float distance = Vector3.Magnitude(activeFixationWorldPos - capture.HmdPosition);
                     float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-                    
                     ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
-                    //Debug.Log("hmd position: "+capture.HmdPosition + " fixation world position: "+ _fixationWorldPosition  + " distance: " + distance);
 
                     CachedEyeCapturePositions.Add(capture.LocalPosition);
 
@@ -1433,14 +1448,21 @@ namespace CognitiveVR
 
             //======== average positions and check if fixations are within radius. using only the first eye capture matrix as a reference
 
-            int hitSampleCount =0;
+            int hitSampleCount = 0;
+            Vector3 position = usedCaptures[0].CaptureMatrix.GetColumn(3);
+            Quaternion rotation = Quaternion.LookRotation(
+                usedCaptures[0].CaptureMatrix.GetColumn(2),
+                usedCaptures[0].CaptureMatrix.GetColumn(1)
+            );
+            var unscaledCatpureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+
             foreach (var v in usedCaptures)
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
                 hitSampleCount++;
                 averageLocalPosition += v.LocalPosition;
-                averageWorldPosition += usedCaptures[0].CaptureMatrix.MultiplyPoint(v.LocalPosition);
+                averageWorldPosition += unscaledCatpureMatrix.MultiplyPoint3x4(v.LocalPosition);
             }
 
             averageLocalPosition /= hitSampleCount;
@@ -1458,7 +1480,15 @@ namespace CognitiveVR
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
-                Vector3 lookDir = (v.HmdPosition - v.CaptureMatrix.MultiplyPoint(v.LocalPosition)).normalized;
+
+                Vector3 p = v.CaptureMatrix.GetColumn(3);
+                Quaternion r = Quaternion.LookRotation(
+                    v.CaptureMatrix.GetColumn(2),
+                    v.CaptureMatrix.GetColumn(1)
+                );
+                var m = Matrix4x4.TRS(p, r, Vector3.one);
+
+                Vector3 lookDir = (v.HmdPosition - m.MultiplyPoint3x4(v.LocalPosition)).normalized;
                 Vector3 fixationDir = (v.HmdPosition - averageWorldPosition).normalized;
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
@@ -1471,10 +1501,11 @@ namespace CognitiveVR
             {
                 //all eye captures within fixation radius. save transform, set ActiveFixation start time and world position
                 ActiveFixation.LocalPosition = averageLocalPosition;
-                ActiveFixation.WorldPosition = averageWorldPosition;
+                ActiveFixation.WorldPosition = averageWorldPosition; //average world position is already matrix unscaled above
                 ActiveFixation.DynamicObjectId = mostUsedId;
+                ActiveFixation.DynamicMatrix = usedCaptures[0].CaptureMatrix;
 
-                float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - usedCaptures[0].HmdPosition);
+                float distance = Vector3.Magnitude(averageWorldPosition - usedCaptures[0].HmdPosition);
                 float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
 
                 ActiveFixation.StartDistance = distance;
