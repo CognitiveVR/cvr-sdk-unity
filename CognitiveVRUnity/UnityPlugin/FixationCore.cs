@@ -57,18 +57,7 @@ namespace CognitiveVR
         {
             if (newFixation.IsLocal)
             {
-                /*
-                var copy = newFixation.DynamicMatrix;
-                // Extract new local scale
-                Vector3 scale = new Vector3(
-                    copy.GetColumn(0).magnitude,
-                    copy.GetColumn(1).magnitude,
-                    copy.GetColumn(2).magnitude
-                );
-                newFixation.LocalPosition /= scale.x;
-                */
-                
-                //reduced math version
+                //apply scale to fixation
                 newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
             }
             Fixation f = new Fixation(newFixation);
