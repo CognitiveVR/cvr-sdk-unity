@@ -179,14 +179,18 @@ namespace CognitiveVR
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
             epochStart = span.TotalSeconds;
 
+            //if using unsupported HMD, default to center of screen
+            if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
+            {
+                Debug.LogError("Cognitive3D Fixation Recorder using SRanipal with unsupported hardware");
+                return;
+            }
+
             var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
                 {
-                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
-                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
-
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
                         ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
@@ -202,9 +206,6 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
-                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
-
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
                         ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
@@ -221,6 +222,7 @@ namespace CognitiveVR
             }
         }
 
+        //this attribute fixes the issue with il2cpp scripting backend not marshaling to the callbacks below
         internal class MonoPInvokeCallbackAttribute : System.Attribute
         {
             public MonoPInvokeCallbackAttribute() { }
