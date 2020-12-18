@@ -221,11 +221,18 @@ namespace CognitiveVR
             }
         }
 
+        internal class MonoPInvokeCallbackAttribute : System.Attribute
+        {
+            public MonoPInvokeCallbackAttribute() { }
+        }
+
+        [MonoPInvokeCallback]
         private static void EyeCallback(ref ViveSR.anipal.Eye.EyeData eye_data)
         {
             EyeDataQueue1.Enqueue(eye_data);
         }
 
+        [MonoPInvokeCallback]
         private static void EyeCallback2(ref ViveSR.anipal.Eye.EyeData_v2 eye_data)
         {
             EyeDataQueue2.Enqueue(eye_data);

@@ -603,7 +603,7 @@ namespace CognitiveVR
             {
                 try
                 {
-#if UNITY_2019_2_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
@@ -630,7 +630,7 @@ namespace CognitiveVR
 
             float[] colorAtLayer = new float[layerCount];
 
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
             Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
             TerrainLayer[] layers = data.terrainLayers;
             //get highest value splatmap at point and write terrain texture to baked texture
@@ -716,7 +716,7 @@ namespace CognitiveVR
                 try
                 {
                     bool ignored;
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out ignored))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
