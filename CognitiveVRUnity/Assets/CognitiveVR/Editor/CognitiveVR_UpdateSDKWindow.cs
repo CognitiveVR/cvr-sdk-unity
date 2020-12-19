@@ -74,7 +74,7 @@ namespace CognitiveVR
             if (GUILayout.Button("Remind me next week", GUILayout.MaxWidth(300)))
             {
                 reminderSet = true;
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString("dd-MM-yyyy"));
 
                 Close();
             }
@@ -88,7 +88,7 @@ namespace CognitiveVR
         {
             if (!reminderSet)
             {
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             }
         }
     }
