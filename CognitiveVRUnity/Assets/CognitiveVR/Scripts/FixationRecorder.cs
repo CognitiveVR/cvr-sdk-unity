@@ -174,49 +174,86 @@ namespace CognitiveVR
         double epochStart;
         long startTimestamp;
 
-        void Start()
+        private void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.LoadSceneMode arg1)
         {
-            System.TimeSpan span = System.DateTime.UtcNow - epoch;
-            epochStart = span.TotalSeconds;
+            //if scene changed, check that the camera is fine
+            SetupCallbacks();
+
+            //throw out current recorded eye data
+            IsFixating = false;
+            ActiveFixation = new Fixation();
+
+            for (int i = 0; i < CachedEyeCaptures; i++)
+            {
+                EyeCaptures[i].Discard = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null && framework.EnableEyeDataCallback)
+            {
+                if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
+                {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback);
+                    ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(functionPointer);
+                }
+                else //v2
+                {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2);
+                    ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(functionPointer);
+                }
+            }
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+        }
+
+        public void SetupCallbacks()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
             //if using unsupported HMD, default to center of screen
             if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
             {
-                Debug.LogError("Cognitive3D Fixation Recorder using SRanipal with unsupported hardware");
+                Util.logWarning("FixationRecorder found SRanipal_Eye_Framework not in working status");
                 return;
             }
 
             var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null && framework.EnableEyeDataCallback)
             {
+                //unregister existing callbacks
+                OnDisable();
+
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
                 {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback);
+                    useDataQueue1 = true;
+                    EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
-                        useDataQueue1 = true;
-                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                     else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
-                        useDataQueue1 = true;
-                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(functionPointer);
                     }
                 }
                 else
                 {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2);
+                    useDataQueue2 = true;
+                    EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
-                        useDataQueue2 = true;
-                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                     else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
-                        useDataQueue2 = true;
-                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(functionPointer);
                     }
                 }
             }
@@ -822,6 +859,10 @@ namespace CognitiveVR
             }
 #if CVR_FOVE
             fovebase = GameplayReferences.FoveInstance;
+#elif CVR_VIVEPROEYE
+            SetupCallbacks();
+            System.TimeSpan span = System.DateTime.UtcNow - epoch;
+            epochStart = span.TotalSeconds;
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
