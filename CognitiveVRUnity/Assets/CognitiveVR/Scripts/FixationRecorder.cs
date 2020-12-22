@@ -1039,7 +1039,7 @@ namespace CognitiveVR
 
                     EyeCaptures[index].UseCaptureMatrix = true;
                     //TODO test that this matrix is correct if dynamic is parented to offset/rotated/scaled transform
-                    EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.localPosition, hitDynamic.transform.localRotation, hitDynamic.transform.localScale);
+                    EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
                     EyeCaptures[index].HitDynamicId = hitDynamic.GetId();
 
                     //unscaled so point will appear on surface
@@ -1230,7 +1230,7 @@ namespace CognitiveVR
 
                     var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
                     var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
-                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
                     var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
                     if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
@@ -1290,14 +1290,14 @@ namespace CognitiveVR
                 ActiveFixation.LastInRange = capture.Time;
                 return false;
             }
-            else
+            else //world
             {
                 if (capture.UseCaptureMatrix == true)
                 {
                     capture.SkipPositionForFixationAverage = true;
                 }
 
-                var screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                var screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
                 var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform) //eye capture is invalid (probably from looking at skybox)
