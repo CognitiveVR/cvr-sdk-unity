@@ -255,6 +255,7 @@ namespace CognitiveVR
             }    
 #elif CVR_VIVEPROEYE
             var ray = new Ray();
+            //improvement? - if using callback, listen and use last valid data instead of calling SRanipal_Eye_API.GetEyeData
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);

@@ -39,7 +39,7 @@ namespace CognitiveVR
             string savedSDKVersion = EditorPrefs.GetString("cognitive_sdk_version", "");
             if (string.IsNullOrEmpty(savedSDKVersion) || Core.SDK_VERSION != savedSDKVersion)
             {
-                Debug.Log("upgrade cognitive3d sdk to " + Core.SDK_VERSION);
+                Debug.Log("Cognitive3D SDK version " + Core.SDK_VERSION);
                 EditorPrefs.SetString("cognitive_sdk_version", Core.SDK_VERSION);
 
                 bool needToUpdateDatabase = false;
