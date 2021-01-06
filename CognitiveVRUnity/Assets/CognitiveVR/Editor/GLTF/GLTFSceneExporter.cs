@@ -15,12 +15,10 @@ namespace UnityGLTF
 	{
 		//shaders may have custom implementations for values (such as using roughness for roughness) unlike unity standard shader
 		//CONSIDER how to deal with separate metallic/roughness maps?
+		//CONSIDER should this just render out required channels and hold them in memory until they get combined/saved?
+		//TODO support for emission and occlusion maps/values
 		abstract class ShaderPropertyCollection
 		{
-			public bool doubleSided;
-			public AlphaMode alphaMode;
-			public float alphaCutoff;
-
 			public string AlbedoMapName;
 			public string AlbedoColorName;
 
@@ -39,11 +37,11 @@ namespace UnityGLTF
 			//the shader to apply when exporting texture. ignored if empty
 			public string NormalProcessShader;
 
-			public string EmissionMapName;
-			public string EmissionColorName;
+			//public string EmissionMapName;
+			//public string EmissionColorName;
 
-			public string OcclusionMapName;
-			public string OcclusionPowerName;
+			//public string OcclusionMapName;
+			//public string OcclusionPowerName;
 
 			public virtual void FillProperties(GLTFSceneExporter exporter, GLTFMaterial material, Material materialAsset)
 			{
@@ -219,6 +217,7 @@ namespace UnityGLTF
 
 		class UnityStandard : ShaderPropertyCollection
 		{
+			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
 			public UnityStandard()
 			{
 				AlbedoMapName = "_MainTex";
@@ -229,13 +228,12 @@ namespace UnityGLTF
 				//MetallicProcessShader = "Hidden/MetalGlossChannelSwap";
 
 				RoughnessMapName = "_MetallicGlossMap";
-				RoughnessPowerName = "_GlossMapScale"; //_GlossMapScale if _MetallicGlossMap is set
-													   //_Glossiness is not set
-				RoughnessProcessShader = "Hidden/MetalGlossChannelSwap";
+				RoughnessPowerName = "_GlossMapScale"; //_GlossMapScale if _MetallicGlossMap is set. _Glossiness if not set
+				RoughnessProcessShader = "Hidden/MetalGlossChannelSwap"; // UNITY metal r, gloss a  ->   GLTF metal  b, roughness g
 
 				NormalMapName = "_BumpMap";
 				NormalMapPowerName = "_BumpScale";
-				NormalProcessShader = "Hidden/NormalChannel";
+				NormalProcessShader = "Hidden/NormalChannel"; // UNITY rgba  ->   GLTF ag11
 			}
 
 			//only use the metalic power if the metallic map isn't present
@@ -250,9 +248,20 @@ namespace UnityGLTF
 				return base.TryGetMetallicPower(m, out power);
 			}
 
-			//invert smoothness for roughness
+			//invert smoothness for roughness. use glossmap or glossiness
+			//KNOWN ISSUE record 0 roughness if using albedo alpha
 			public override bool TryGetRoughness(Material m, out float power)
 			{
+				if (m.HasProperty("_SmoothnessTextureChannel"))
+				{
+					float channel = m.GetFloat("_SmoothnessTextureChannel");
+					if (Mathf.Approximately(channel, 1)) //albedo alpha channel for shininess
+					{
+						power = 1; //full roughness
+						return true;
+					}
+				}
+
 				if (m.HasProperty(MetallicMapName) && m.GetTexture(MetallicMapName) != null) //_GlossMapScale
 				{
 					bool hasRoughness = base.TryGetRoughness(m, out power);
@@ -309,37 +318,57 @@ namespace UnityGLTF
 
 		class UnityURP : ShaderPropertyCollection
 		{
+			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
 			public UnityURP()
 			{
 				AlbedoMapName = "_BaseMap";
 				AlbedoColorName = "_BaseColor";
 
 				MetallicMapName = "_MetallicGlossMap";
-				MetallicPowerName = "_Metallic";
+				MetallicPowerName = "_Metallic"; //only used if no map
 
-				RoughnessMapName = "_MetallicGlossMap";
-				RoughnessPowerName = "_GlossMapScale";
+				RoughnessMapName = "_MetallicGlossMap"; //alpha channel (metallic or albedo)
+				RoughnessPowerName = "_Smoothness";
 
-				NormalMapName = "_NormalMap";
-				NormalMapPowerName = "_NormalMapPower";
+				NormalMapName = "_BumpMap";
+				NormalMapPowerName = "_BumpScale";
 				NormalProcessShader = "Hidden/NormalChannel";
+			}
+
+			//invert smoothness for roughness
+			//KNOWN ISSUE record 0 roughness if using albedo alpha
+			public override bool TryGetRoughness(Material m, out float power)
+			{
+				if (m.HasProperty("_SmoothnessTextureChannel"))
+				{
+					float channel = m.GetFloat("_SmoothnessTextureChannel");
+					if (Mathf.Approximately(channel, 1))
+					{
+						power = 1; //full roughness
+						return true;
+					}
+				}
+
+				bool hasRoughness = base.TryGetRoughness(m, out power);
+				power = 1 - power;
+				return hasRoughness;
 			}
 		}
 
-		class UnityHRRP : ShaderPropertyCollection
+		class UnityHDRP : ShaderPropertyCollection
 		{
-			public UnityHRRP()
+			public UnityHDRP()
 			{
 				AlbedoMapName = "_MainTex";
-				AlbedoColorName = "_BaseColorMap";
+				AlbedoColorName = "_BaseColor";
 
 				//metallic R
-				MetallicMapName = "_MetallicGlossMap";
+				MetallicMapName = "_MaskMap";
 				MetallicPowerName = "_Metallic";
 
-				//smoothness A
-				RoughnessMapName = "_MetallicGlossMap";
-				RoughnessPowerName = "_GlossMapScale";
+				//smoothness A (can be remap 0-1 in material. not a single exportable value. could pass these values into a shader to modify exported texture?)
+				RoughnessMapName = "_MaskMap";
+				RoughnessPowerName = "_Smoothness";
 
 				NormalMapName = "_NormalMap";
 				NormalMapPowerName = "_NormalScale";
@@ -371,8 +400,11 @@ namespace UnityGLTF
 			//sample shaders from https://github.com/Siccity/GLTFUtility
 			{ "GLTFUtility/Standard (Metallic)", new GLTFStandard() },
 			{ "GLTFUtility/Standard (Specular)", new GLTFStandard() },
-			{ "URP", new UnityURP() },
-			{ "HDRP", new UnityHRRP() },
+			//unity universal render pipeline
+			{ "Universal Render Pipeline/Lit", new UnityURP() },
+			//unity hd render pipeline
+			{ "HDRP/Lit", new UnityHDRP() },
+			//built-in rendering
 			{ "Standard", new UnityStandard() }
 			};
 
