@@ -319,6 +319,7 @@ namespace UnityGLTF
 		class UnityURP : ShaderPropertyCollection
 		{
 			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
+			//KNOWN ISSUE - metallicMap.a *= _smoothness is higher than expected
 			public UnityURP()
 			{
 				AlbedoMapName = "_BaseMap";
@@ -734,11 +735,11 @@ namespace UnityGLTF
 			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
 			{
 				string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
-				filenamePath = outputPath + "/" + texturenamehash;
+				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texturenamehash;
 			}
 			else
 			{
-				filenamePath = outputPath + "/" + texture.name;
+				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texture.name;
 			}
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
@@ -1465,12 +1466,12 @@ namespace UnityGLTF
 
 			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
 			{
-				texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
+				texturenamehash = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(texture.name.GetHashCode()).ToString();
 				image.Name = texturenamehash + ".png";
 			}
 			else
 			{
-				texturenamehash = texture.name;
+				texturenamehash = Mathf.Abs(imagePath.GetHashCode()) + texture.name;
 			}
 
 
