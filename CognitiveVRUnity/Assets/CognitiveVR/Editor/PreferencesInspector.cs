@@ -75,6 +75,8 @@ namespace CognitiveVR
             dynamicMask = EditorGUILayout.MaskField("Dynamic Object Layer Mask", dynamicMask, (UnityEditorInternal.InternalEditorUtility.layers));
             p.DynamicLayerMask = dynamicMask.value;
 
+            p.TriggerInteraction = (QueryTriggerInteraction)EditorGUILayout.EnumPopup("Gaze Query Trigger Interaction", p.TriggerInteraction);
+
             p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);

@@ -252,6 +252,7 @@ namespace UnityGLTF
 			//KNOWN ISSUE record 0 roughness if using albedo alpha
 			public override bool TryGetRoughness(Material m, out float power)
 			{
+				//TODO why is gltf smoothness much stronger than unity? possible roughness channel baked wrong
 				if (m.HasProperty("_SmoothnessTextureChannel"))
 				{
 					float channel = m.GetFloat("_SmoothnessTextureChannel");

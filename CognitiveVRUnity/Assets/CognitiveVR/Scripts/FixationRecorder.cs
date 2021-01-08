@@ -1096,7 +1096,7 @@ namespace CognitiveVR
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
             if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
-            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
             {
                 world = hit.point;
 
@@ -1501,7 +1501,7 @@ namespace CognitiveVR
                 usedCaptures[0].CaptureMatrix.GetColumn(2),
                 usedCaptures[0].CaptureMatrix.GetColumn(1)
             );
-            var unscaledCatpureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+            var unscaledCaptureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
 
             foreach (var v in usedCaptures)
             {
@@ -1509,7 +1509,7 @@ namespace CognitiveVR
                 if (!v.UseCaptureMatrix) { continue; }
                 hitSampleCount++;
                 averageLocalPosition += v.LocalPosition;
-                averageWorldPosition += unscaledCatpureMatrix.MultiplyPoint3x4(v.LocalPosition);
+                averageWorldPosition += unscaledCaptureMatrix.MultiplyPoint3x4(v.LocalPosition);
             }
 
             averageLocalPosition /= hitSampleCount;

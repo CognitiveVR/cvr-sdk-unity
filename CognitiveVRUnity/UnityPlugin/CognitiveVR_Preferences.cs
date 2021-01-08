@@ -101,6 +101,7 @@ namespace CognitiveVR
 
         public int GazeLayerMask = -1;
         public int DynamicLayerMask = -1;
+        public QueryTriggerInteraction TriggerInteraction = QueryTriggerInteraction.Ignore;
 
         [Header("Send Data")]
         //min batch size
