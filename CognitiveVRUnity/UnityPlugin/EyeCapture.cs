@@ -27,5 +27,8 @@ namespace CognitiveVR
 
         //only used for setting a reference in the fixation, for display on the active session view screen
         public Transform HitDynamicTransform;
+
+        public Vector3 FixationHMDPos;
+        public Vector3 GazeHMDPos;
     }
 }

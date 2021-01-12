@@ -906,7 +906,7 @@ namespace CognitiveVR
             {
                 //check if this is the start of a new fixation. set this and all next captures to this
                 //the 'current' fixation we're checking is 1 second behind recording eye captures
-
+                ActiveFixation.EyeCaptures.Clear();
                 if (TryBeginLocalFixation(index))
                 {
                     IsFixating = true;
@@ -965,6 +965,17 @@ namespace CognitiveVR
 
                 if (CheckEndFixation(ActiveFixation))
                 {
+                    if (ActiveFixation.DurationMs < MinFixationMs)
+                    {
+                        Debug.LogError("fixation shorter than min!");
+
+                        for(int i = 0;i < ActiveFixation.EyeCaptures.Count;i++)
+                        {
+                            Debug.Log(i + " fixation HMD pos " + ActiveFixation.EyeCaptures[i].FixationHMDPos + "  gaze HMD pos " + ActiveFixation.EyeCaptures[i].GazeHMDPos + "      match? " + (ActiveFixation.EyeCaptures[i].FixationHMDPos == ActiveFixation.EyeCaptures[i].GazeHMDPos));
+                        }
+                    }
+
+
                     FixationCore.RecordFixation(ActiveFixation);
 
                     IsFixating = false;
