@@ -229,7 +229,7 @@ namespace UnityGLTF
 
 				RoughnessMapName = "_MetallicGlossMap";
 				RoughnessPowerName = "_GlossMapScale"; //_GlossMapScale if _MetallicGlossMap is set. _Glossiness if not set
-				RoughnessProcessShader = "Hidden/MetalGlossChannelSwap"; // UNITY metal r, gloss a  ->   GLTF metal  b, roughness g
+				RoughnessProcessShader = "Hidden/UnityStandardToORM"; // UNITY metal r, gloss a  ->   GLTF metal  b, roughness g
 
 				NormalMapName = "_BumpMap";
 				NormalMapPowerName = "_BumpScale";
@@ -265,9 +265,9 @@ namespace UnityGLTF
 
 				if (m.HasProperty(MetallicMapName) && m.GetTexture(MetallicMapName) != null) //_GlossMapScale
 				{
-					bool hasRoughness = base.TryGetRoughness(m, out power);
-					power = 1 - power;
-					return hasRoughness;
+					//if using map, set roughness as 1
+					power = 1;
+					return true;
 				}
 				else //_Glossiness
 				{
@@ -297,7 +297,7 @@ namespace UnityGLTF
 				//Gloss G
 				RoughnessMapName = "_MetallicGlossMap";
 				RoughnessPowerName = "_Roughness";
-				RoughnessProcessShader = "Hidden/MetalGlossChannelSwap";
+				//RoughnessProcessShader = "Hidden/MetalGlossChannelSwap";
 
 				NormalMapName = "_BumpMap";
 				NormalMapPowerName = "_BumpScale";
