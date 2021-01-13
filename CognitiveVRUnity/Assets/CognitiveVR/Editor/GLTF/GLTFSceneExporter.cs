@@ -444,7 +444,7 @@ namespace UnityGLTF
 		protected struct PrimKey
 		{
 			public Mesh Mesh;
-			public Material Material;
+			public Material[] Materials;
 		}
 		private readonly Dictionary<PrimKey, MeshId> _primOwner = new Dictionary<PrimKey, MeshId>();
 		private readonly Dictionary<Mesh, MeshPrimitive[]> _meshToPrims = new Dictionary<Mesh, MeshPrimitive[]>();
@@ -871,7 +871,7 @@ namespace UnityGLTF
 				{
 					var filter = prim.GetComponent<MeshFilter>();
 					var renderer = prim.GetComponent<MeshRenderer>();
-					_primOwner[new PrimKey { Mesh = filter.sharedMesh, Material = renderer.sharedMaterial }] = node.Mesh;
+					_primOwner[new PrimKey { Mesh = filter.sharedMesh, Materials = renderer.sharedMaterials }] = node.Mesh;
 				}
 			}
 
@@ -1084,7 +1084,7 @@ namespace UnityGLTF
 				var filter = prim.GetComponent<MeshFilter>();
 				var renderer = prim.GetComponent<MeshRenderer>();
 				key.Mesh = filter.sharedMesh;
-				key.Material = renderer.sharedMaterial;
+				key.Materials = renderer.sharedMaterials;
 
 				MeshId tempMeshId;
 				if (_primOwner.TryGetValue(key, out tempMeshId) && (existingMeshId == null || tempMeshId == existingMeshId))
