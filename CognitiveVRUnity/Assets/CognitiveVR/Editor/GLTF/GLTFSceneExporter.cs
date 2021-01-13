@@ -225,7 +225,7 @@ namespace UnityGLTF
 
 				MetallicMapName = "_MetallicGlossMap";
 				MetallicPowerName = "_Metallic";
-				//MetallicProcessShader = "Hidden/MetalGlossChannelSwap";
+				MetallicProcessShader = "Hidden/UnityStandardToORM"; //must be set the same as RoughnessProcessShader because of caching
 
 				RoughnessMapName = "_MetallicGlossMap";
 				RoughnessPowerName = "_GlossMapScale"; //_GlossMapScale if _MetallicGlossMap is set. _Glossiness if not set
