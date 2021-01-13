@@ -56,7 +56,7 @@
 
 				//Unity standard shader uses (r = metal, g = heightmap or occlusion, b = none, a = glossiness)
 				//GLTF uses ORM format (r = occlusion, g = rougness, b = metallic)
-				return float4(col.r, 1 - col.a, 0, 1);
+				return float4(1, 1-col.a, col.r, 1);
 			}
 			ENDCG
 		}

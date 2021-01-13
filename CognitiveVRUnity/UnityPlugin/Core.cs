@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.24.6";
+        public const string SDK_VERSION = "0.24.7";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }

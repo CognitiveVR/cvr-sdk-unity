@@ -1388,15 +1388,14 @@ namespace UnityGLTF
 
 			var texture = new GLTFTexture();
 
-			//If texture name not set give it a unique name using count
-			if (textureObj.name == "")
+			var imagePath = _retrieveTexturePathDelegate(textureObj);
+			if (textureObj.name != Uri.EscapeUriString(textureObj.name).Replace('#', '_'))
 			{
-				textureObj.name = (_root.Textures.Count + 1).ToString();
+				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(textureObj.name.GetHashCode()).ToString();
 			}
-
-			if (ExportNames)
+			else
 			{
-				texture.Name = textureObj.name;
+				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + textureObj.name;
 			}
 
 			texture.Source = ExportImage(textureObj, textureMapType, linear, shaderOverrideName);
