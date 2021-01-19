@@ -1424,10 +1424,12 @@ namespace CognitiveVR
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
+                if (!EyeCaptures[GetIndex(i)].UseCaptureMatrix) { return false; }
                 if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage)
                 {
-                    if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
-                    continue;
+                    //if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
+                    //continue;
+                    return false;
                 }
                 samples++;
                 usedCaptures.Add(EyeCaptures[GetIndex(i)]);
@@ -1526,9 +1528,6 @@ namespace CognitiveVR
             averageLocalPosition /= hitSampleCount;
             averageWorldPosition /= hitSampleCount;
             
-            var screendist = Vector2.Distance(EyeCaptures[index].ScreenPos, new Vector2(0.5f,0.5f));
-            var rescale = FocusSizeFromCenter.Evaluate(screendist);
-            var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
 
             //use captures that hit the most common dynamic to figure out fixation start point
             //then use all captures world position to check if within fixation radius
@@ -1538,6 +1537,10 @@ namespace CognitiveVR
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
+
+                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
 
                 Vector3 p = v.CaptureMatrix.GetColumn(3);
                 Quaternion r = Quaternion.LookRotation(
@@ -1615,6 +1618,8 @@ namespace CognitiveVR
             long firstSampleTime = long.MaxValue;
             long lastSampleTime = 0;
 
+            List<EyeCapture> samples = new List<EyeCapture>();
+
             //take all the eye captures within the minimum fixation duration
             //escape if any are eyes closed or discarded captures
             for (int i = 0; i < CachedEyeCaptures; i++)
@@ -1624,8 +1629,9 @@ namespace CognitiveVR
                 if (sample.SkipPositionForFixationAverage)
                 {
                     //eye capture should be skipped (look at sky, discarded). also check if out of min fixation time
-                    if (EyeCaptures[index].Time + MinFixationMs < sample.Time){break;}
-                    continue;
+                    //if (EyeCaptures[index].Time + MinFixationMs < sample.Time){break;}
+                    //continue;
+                    return false;
                 }
 
                 if (sample.UseCaptureMatrix)
@@ -1638,6 +1644,7 @@ namespace CognitiveVR
                 lastSampleTime = System.Math.Max(lastSampleTime, sample.Time);
 
                 sampleCount++;
+                samples.Add(EyeCaptures[GetIndex(i)]);
                 //lastSampleTime = EyeCaptures[GetIndex(i)].Time;
                 if (firstOnTransformTime < 1)
                     firstOnTransformTime = sample.Time;
@@ -1678,18 +1685,19 @@ namespace CognitiveVR
             
             bool withinRadius = true;
 
-            //get starting screen position to compare other eye capture points against
-            //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
-            var screendist = Vector2.Distance(EyeCaptures[index].ScreenPos, new Vector2(0.5f,0.5f));
-            var rescale = FocusSizeFromCenter.Evaluate(screendist);
-            var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-
             //check that each sample is within the fixation radius
-            for (int i = 0; i < sampleCount; i++)
+            //for (int i = 0; i < sampleCount; i++)
+            foreach(var v in samples)
             {
-                var sample = EyeCaptures[GetIndex(i)];
-                Vector3 lookDir = (sample.HmdPosition - sample.WorldPosition).normalized;
-                Vector3 fixationDir = (sample.HmdPosition - averageWorldPos).normalized;
+                //get starting screen position to compare other eye capture points against
+                //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
+                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
+
+                //var sample = EyeCaptures[GetIndex(i)];
+                Vector3 lookDir = (v.HmdPosition - v.WorldPosition).normalized;
+                Vector3 fixationDir = (v.HmdPosition - averageWorldPos).normalized;
 
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
