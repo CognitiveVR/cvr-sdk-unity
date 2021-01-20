@@ -23,6 +23,7 @@ namespace CognitiveVR
             MaxRadius = src.MaxRadius;
             DynamicMatrix = src.DynamicMatrix;
             DynamicTransform = src.DynamicTransform;
+            EyeCaptures = src.EyeCaptures;
         }
 
         //used for all eye tracking
@@ -51,9 +52,12 @@ namespace CognitiveVR
         public bool IsLocal;
         public string DynamicObjectId;
 
+        public List<EyeCapture> EyeCaptures = new List<EyeCapture>();
+
         //called just before new eyecapture is recorded. this has been around 1 second, so 'safe' to actually record
         public void AddEyeCapture(EyeCapture eyeCapture)
         {
+            EyeCaptures.Add(eyeCapture);
             bool validEyeCapture = true;
 
             if (eyeCapture.Discard)
