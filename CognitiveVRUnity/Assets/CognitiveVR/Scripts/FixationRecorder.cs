@@ -906,7 +906,6 @@ namespace CognitiveVR
             {
                 //check if this is the start of a new fixation. set this and all next captures to this
                 //the 'current' fixation we're checking is 1 second behind recording eye captures
-                ActiveFixation.EyeCaptures.Clear();
                 if (TryBeginLocalFixation(index))
                 {
                     IsFixating = true;
@@ -955,27 +954,8 @@ namespace CognitiveVR
 
                 ActiveFixation.AddEyeCapture(EyeCaptures[index]);
 
-                if (ActiveFixation.IsLocal)
-                {
-                    //Vector3 hitWorld = EyeCaptures[index].LocalPosition;
-                    //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
-                    //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
-                    //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
-                }
-
                 if (CheckEndFixation(ActiveFixation))
                 {
-                    if (ActiveFixation.DurationMs < MinFixationMs)
-                    {
-                        Debug.LogError("fixation shorter than min!");
-
-                        for(int i = 0;i < ActiveFixation.EyeCaptures.Count;i++)
-                        {
-                            Debug.Log(i + " fixation HMD pos " + ActiveFixation.EyeCaptures[i].FixationHMDPos + "  gaze HMD pos " + ActiveFixation.EyeCaptures[i].GazeHMDPos + "      match? " + (ActiveFixation.EyeCaptures[i].FixationHMDPos == ActiveFixation.EyeCaptures[i].GazeHMDPos));
-                        }
-                    }
-
-
                     FixationCore.RecordFixation(ActiveFixation);
 
                     IsFixating = false;
@@ -1549,8 +1529,8 @@ namespace CognitiveVR
                 );
                 var m = Matrix4x4.TRS(p, r, Vector3.one);
 
-                Vector3 lookDir = (v.HmdPosition - m.MultiplyPoint3x4(v.LocalPosition)).normalized;
-                Vector3 fixationDir = (v.HmdPosition - averageWorldPosition).normalized;
+                Vector3 lookDir = (m.MultiplyPoint3x4(v.LocalPosition) - v.HmdPosition).normalized;
+                Vector3 fixationDir = (averageWorldPosition - v.HmdPosition).normalized;
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
                     withinRadius = false;
@@ -1696,8 +1676,8 @@ namespace CognitiveVR
                 var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
 
                 //var sample = EyeCaptures[GetIndex(i)];
-                Vector3 lookDir = (v.HmdPosition - v.WorldPosition).normalized;
-                Vector3 fixationDir = (v.HmdPosition - averageWorldPos).normalized;
+                Vector3 lookDir = (v.WorldPosition - v.HmdPosition).normalized;
+                Vector3 fixationDir = (averageWorldPos - v.HmdPosition).normalized;
 
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
