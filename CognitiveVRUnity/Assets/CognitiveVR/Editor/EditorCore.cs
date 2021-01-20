@@ -39,7 +39,7 @@ namespace CognitiveVR
             string savedSDKVersion = EditorPrefs.GetString("cognitive_sdk_version", "");
             if (string.IsNullOrEmpty(savedSDKVersion) || Core.SDK_VERSION != savedSDKVersion)
             {
-                Debug.Log("upgrade cognitive3d sdk to " + Core.SDK_VERSION);
+                Debug.Log("Cognitive3D SDK version " + Core.SDK_VERSION);
                 EditorPrefs.SetString("cognitive_sdk_version", Core.SDK_VERSION);
 
                 bool needToUpdateDatabase = false;
@@ -735,14 +735,15 @@ namespace CognitiveVR
             if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_VERSION)
             {
                 EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_VERSION);
-                EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString("dd-MM-yyyy"));
             }
         }
 
         public static void ForceCheckUpdates()
         {
+            EditorPrefs.SetString("cvr_skipVersion", "");
             EditorApplication.update -= UpdateCheckForUpdates;
-            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             SaveEditorVersion();
 
             checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
@@ -754,11 +755,15 @@ namespace CognitiveVR
         static void CheckForUpdates()
         {
             System.DateTime remindDate; //current date must be this or beyond to show popup window
-            if (System.DateTime.TryParse(EditorPrefs.GetString("cvr_updateRemindDate", "1/1/1971 00:00:01"), out remindDate))
+
+            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
+            System.Globalization.DateTimeStyles styles = System.Globalization.DateTimeStyles.None;
+
+            if (System.DateTime.TryParseExact(EditorPrefs.GetString("cvr_updateRemindDate", "01/01/1971"), "dd-MM-yyyy", culture, styles, out remindDate))
             {
                 if (System.DateTime.UtcNow > remindDate)
                 {
-                    EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                     SaveEditorVersion();
 
                     checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
@@ -768,7 +773,7 @@ namespace CognitiveVR
             }
             else
             {
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             }
         }
 
@@ -794,13 +799,20 @@ namespace CognitiveVR
 
                     if (!string.IsNullOrEmpty(version))
                     {
-                        if (version != CognitiveVR.Core.SDK_VERSION) //new version
+                        string skipVersion = EditorPrefs.GetString("cvr_skipVersion");
+
+                        if (version != skipVersion) //new version, not the skipped one
                         {
-                            CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                            System.Version installedVersion = new Version(CognitiveVR.Core.SDK_VERSION);
+                            System.Version githubVersion = new Version(version);
+                            if (githubVersion > installedVersion)
+                            {
+                                CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                            }
                         }
-                        else if (EditorPrefs.GetString("cvr_skipVersion") == version) //skip this version. limit this check to once a day
+                        else if (skipVersion == version) //skip this version. limit this check to once a day
                         {
-                            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                         }
                         else //up to date
                         {

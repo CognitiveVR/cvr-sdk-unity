@@ -164,8 +164,8 @@ namespace CognitiveVR
 #elif CVR_VIVEPROEYE
         bool useDataQueue1;
         bool useDataQueue2;
-        static Queue<ViveSR.anipal.Eye.EyeData> EyeDataQueue1;
-        static Queue<ViveSR.anipal.Eye.EyeData_v2> EyeDataQueue2;
+        static System.Collections.Concurrent.ConcurrentQueue<ViveSR.anipal.Eye.EyeData> EyeDataQueue1;
+        static System.Collections.Concurrent.ConcurrentQueue<ViveSR.anipal.Eye.EyeData_v2> EyeDataQueue2;
         const int CachedEyeCaptures = 120; //VIVEPROEYE
         ViveSR.anipal.Eye.EyeData currentData1;
         ViveSR.anipal.Eye.EyeData_v2 currentData2;
@@ -174,58 +174,98 @@ namespace CognitiveVR
         double epochStart;
         long startTimestamp;
 
-        void Start()
+        private void SceneManager_sceneLoaded(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.LoadSceneMode arg1)
         {
-            System.TimeSpan span = System.DateTime.UtcNow - epoch;
-            epochStart = span.TotalSeconds;
+            //if scene changed, check that the camera is fine
+            SetupCallbacks();
 
+            //throw out current recorded eye data
+            IsFixating = false;
+            ActiveFixation = new Fixation();
+
+            for (int i = 0; i < CachedEyeCaptures; i++)
+            {
+                EyeCaptures[i].Discard = true;
+            }
+        }
+
+        private void OnDisable()
+        {
             var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
                 {
-                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
-                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback);
+                    ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(functionPointer);
+                }
+                else //v2
+                {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2);
+                    ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(functionPointer);
+                }
+            }
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+        }
+
+        public void SetupCallbacks()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+
+            //if using unsupported HMD, default to center of screen
+            if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
+            {
+                Util.logWarning("FixationRecorder found SRanipal_Eye_Framework not in working status");
+                return;
+            }
+
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null && framework.EnableEyeDataCallback)
+            {
+                //unregister existing callbacks
+                OnDisable();
+
+                if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
+                {
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback);
+                    useDataQueue1 = true;
+                    //EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                    EyeDataQueue1 = new System.Collections.Concurrent.ConcurrentQueue<ViveSR.anipal.Eye.EyeData>();
 
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
-                        useDataQueue1 = true;
-                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
-                    }
-                    else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
-                    {
-                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye.CallbackBasic)EyeCallback));
-                        useDataQueue1 = true;
-                        EyeDataQueue1 = new Queue<ViveSR.anipal.Eye.EyeData>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                 }
                 else
                 {
-                    if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING &&
-                        ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.NOT_SUPPORT) return;
+                    var functionPointer = System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2);
+                    useDataQueue2 = true;
+                    //EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                    EyeDataQueue2 = new System.Collections.Concurrent.ConcurrentQueue<ViveSR.anipal.Eye.EyeData_v2>();
 
                     if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == true)
                     {
-                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
-                        useDataQueue2 = true;
-                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
-                    }
-                    else if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance.EnableEyeDataCallback == false)
-                    {
-                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate((ViveSR.anipal.Eye.SRanipal_Eye_v2.CallbackBasic)EyeCallback2));
-                        useDataQueue2 = true;
-                        EyeDataQueue2 = new Queue<ViveSR.anipal.Eye.EyeData_v2>(4);
+                        ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                 }
             }
         }
 
+        //this attribute fixes the issue with il2cpp scripting backend not marshaling to the callbacks below
+        internal class MonoPInvokeCallbackAttribute : System.Attribute
+        {
+            public MonoPInvokeCallbackAttribute() { }
+        }
+
+        [MonoPInvokeCallback]
         private static void EyeCallback(ref ViveSR.anipal.Eye.EyeData eye_data)
         {
             EyeDataQueue1.Enqueue(eye_data);
         }
 
+        [MonoPInvokeCallback]
         private static void EyeCallback2(ref ViveSR.anipal.Eye.EyeData_v2 eye_data)
         {
             EyeDataQueue2.Enqueue(eye_data);
@@ -313,8 +353,8 @@ namespace CognitiveVR
 			else if (useDataQueue2)
 			{
 				if (startTimestamp == 0)
-					startTimestamp = currentData1.timestamp;
-				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+					startTimestamp = currentData2.timestamp;
+				var MsSincestart = currentData2.timestamp - startTimestamp; //milliseconds since start
 				var final = epochStart * 1000 + MsSincestart;
 				return (long)final;
 			}
@@ -329,7 +369,8 @@ namespace CognitiveVR
             {
                 if (EyeDataQueue1.Count > 0)
                 {
-                    currentData1 = EyeDataQueue1.Dequeue();
+                    //currentData1 = EyeDataQueue1.Dequeue();
+                    EyeDataQueue1.TryDequeue(out currentData1);
                     return true;
                 }
                 return false;
@@ -338,7 +379,8 @@ namespace CognitiveVR
             {
                 if (EyeDataQueue2.Count > 0)
                 {
-                    currentData2 = EyeDataQueue2.Dequeue();
+                    //currentData2 = EyeDataQueue2.Dequeue();
+                    EyeDataQueue2.TryDequeue(out currentData2);
                     return true;
                 }
                 return false;
@@ -775,7 +817,8 @@ namespace CognitiveVR
         [Tooltip("amount of consecutive eye samples before a fixation ends as the eye fixates elsewhere")]
         public int SaccadeFixationEndMs = 10;
 
-        //[Header("Visualization")]
+        //used by RenderEyeTracking for rendering saccades
+        public const int DisplayGazePointCount = 4096;
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
@@ -812,6 +855,10 @@ namespace CognitiveVR
             }
 #if CVR_FOVE
             fovebase = GameplayReferences.FoveInstance;
+#elif CVR_VIVEPROEYE
+            SetupCallbacks();
+            System.TimeSpan span = System.DateTime.UtcNow - epoch;
+            epochStart = span.TotalSeconds;
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
@@ -859,7 +906,6 @@ namespace CognitiveVR
             {
                 //check if this is the start of a new fixation. set this and all next captures to this
                 //the 'current' fixation we're checking is 1 second behind recording eye captures
-
                 if (TryBeginLocalFixation(index))
                 {
                     IsFixating = true;
@@ -907,14 +953,6 @@ namespace CognitiveVR
                 EyeCaptures[index].OffTransform = IsFixatingOffTransform(EyeCaptures[index]);
 
                 ActiveFixation.AddEyeCapture(EyeCaptures[index]);
-
-                if (ActiveFixation.IsLocal)
-                {
-                    //Vector3 hitWorld = EyeCaptures[index].LocalPosition;
-                    //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
-                    //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
-                    //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
-                }
 
                 if (CheckEndFixation(ActiveFixation))
                 {
@@ -988,9 +1026,10 @@ namespace CognitiveVR
 
                     EyeCaptures[index].UseCaptureMatrix = true;
                     //TODO test that this matrix is correct if dynamic is parented to offset/rotated/scaled transform
-                    EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.localPosition, hitDynamic.transform.localRotation, hitDynamic.transform.localScale);
+                    EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
                     EyeCaptures[index].HitDynamicId = hitDynamic.GetId();
 
+                    //unscaled so point will appear on surface
                     EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPointUnscaled(world);
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
@@ -1048,7 +1087,7 @@ namespace CognitiveVR
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
             if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
-            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
             {
                 world = hit.point;
 
@@ -1165,12 +1204,20 @@ namespace CognitiveVR
 
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform)
                 {
-                    var captureWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(capture.LocalPosition);
-                    var activeFixationWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(ActiveFixation.LocalPosition);
-                    
+                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
+                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
+                    Quaternion rotation = Quaternion.LookRotation(
+                        ActiveFixation.DynamicMatrix.GetColumn(2),
+                        ActiveFixation.DynamicMatrix.GetColumn(1)
+                    );
+                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+
+                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
+                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
+
                     var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
                     var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
-                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
                     var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
                     if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
@@ -1182,9 +1229,17 @@ namespace CognitiveVR
                 {
                     //should use transform matrix from when eye capture was captured instead of world position
                     //using the capture's matrix against the active fixation matrix. this will be 1 frame behind?
-                    //TEST HERE compare matrix * local position instead of world position
-                    var captureWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(capture.LocalPosition);
-                    var activeFixationWorldPos = ActiveFixation.DynamicMatrix.MultiplyPoint(ActiveFixation.LocalPosition);
+
+                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
+                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
+                    Quaternion rotation = Quaternion.LookRotation(
+                        ActiveFixation.DynamicMatrix.GetColumn(2),
+                        ActiveFixation.DynamicMatrix.GetColumn(1)
+                    );
+                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
+
+                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
 
                     //if in range, we will add captureWorldPos to CachedEyeCapturePositions and update activefixation.localposition
                     //then update average position then check angle
@@ -1199,7 +1254,7 @@ namespace CognitiveVR
                     var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
                     var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
 
-                    var _screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                     var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
                     var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
                     float dot = Vector3.Dot(_eyeCaptureDirection, _fixationDirection);
@@ -1211,9 +1266,7 @@ namespace CognitiveVR
 
                     float distance = Vector3.Magnitude(activeFixationWorldPos - capture.HmdPosition);
                     float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-                    
                     ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
-                    //Debug.Log("hmd position: "+capture.HmdPosition + " fixation world position: "+ _fixationWorldPosition  + " distance: " + distance);
 
                     CachedEyeCapturePositions.Add(capture.LocalPosition);
 
@@ -1224,14 +1277,14 @@ namespace CognitiveVR
                 ActiveFixation.LastInRange = capture.Time;
                 return false;
             }
-            else
+            else //world
             {
                 if (capture.UseCaptureMatrix == true)
                 {
                     capture.SkipPositionForFixationAverage = true;
                 }
 
-                var screendist = Vector2.Distance(capture.ScreenPos, Vector3.one * 0.5f);
+                var screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
                 var rescale = FocusSizeFromCenter.Evaluate(screendist);
                 var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
                 if (capture.SkipPositionForFixationAverage || capture.OffTransform) //eye capture is invalid (probably from looking at skybox)
@@ -1351,10 +1404,12 @@ namespace CognitiveVR
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
+                if (!EyeCaptures[GetIndex(i)].UseCaptureMatrix) { return false; }
                 if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage)
                 {
-                    if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
-                    continue;
+                    //if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
+                    //continue;
+                    return false;
                 }
                 samples++;
                 usedCaptures.Add(EyeCaptures[GetIndex(i)]);
@@ -1368,12 +1423,13 @@ namespace CognitiveVR
             }
 
             //check that there are any valid eye captures
-            if (samples == 0)
+            if (samples < 2)
             {
                 return false;
             }
             if (usedCaptures.Count > 2)
             {
+                //fail if the time between samples is < minFixationMs
                 if ((usedCaptures[usedCaptures.Count - 1].Time - usedCaptures[0].Time) < MinFixationMs) { return false; }
             }
             //TODO find source of rare bug with fixation duration < MinFixationMs when fixating on fast moving dynamic object
@@ -1432,22 +1488,26 @@ namespace CognitiveVR
 
             //======== average positions and check if fixations are within radius. using only the first eye capture matrix as a reference
 
-            int hitSampleCount =0;
+            int hitSampleCount = 0;
+            Vector3 position = usedCaptures[0].CaptureMatrix.GetColumn(3);
+            Quaternion rotation = Quaternion.LookRotation(
+                usedCaptures[0].CaptureMatrix.GetColumn(2),
+                usedCaptures[0].CaptureMatrix.GetColumn(1)
+            );
+            var unscaledCaptureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
+
             foreach (var v in usedCaptures)
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
                 hitSampleCount++;
                 averageLocalPosition += v.LocalPosition;
-                averageWorldPosition += usedCaptures[0].CaptureMatrix.MultiplyPoint(v.LocalPosition);
+                averageWorldPosition += unscaledCaptureMatrix.MultiplyPoint3x4(v.LocalPosition);
             }
 
             averageLocalPosition /= hitSampleCount;
             averageWorldPosition /= hitSampleCount;
             
-            var screendist = Vector2.Distance(EyeCaptures[index].ScreenPos, Vector3.one * 0.5f);
-            var rescale = FocusSizeFromCenter.Evaluate(screendist);
-            var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
 
             //use captures that hit the most common dynamic to figure out fixation start point
             //then use all captures world position to check if within fixation radius
@@ -1457,8 +1517,20 @@ namespace CognitiveVR
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
-                Vector3 lookDir = (v.HmdPosition - v.CaptureMatrix.MultiplyPoint(v.LocalPosition)).normalized;
-                Vector3 fixationDir = (v.HmdPosition - averageWorldPosition).normalized;
+
+                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
+
+                Vector3 p = v.CaptureMatrix.GetColumn(3);
+                Quaternion r = Quaternion.LookRotation(
+                    v.CaptureMatrix.GetColumn(2),
+                    v.CaptureMatrix.GetColumn(1)
+                );
+                var m = Matrix4x4.TRS(p, r, Vector3.one);
+
+                Vector3 lookDir = (m.MultiplyPoint3x4(v.LocalPosition) - v.HmdPosition).normalized;
+                Vector3 fixationDir = (averageWorldPosition - v.HmdPosition).normalized;
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
                     withinRadius = false;
@@ -1470,10 +1542,11 @@ namespace CognitiveVR
             {
                 //all eye captures within fixation radius. save transform, set ActiveFixation start time and world position
                 ActiveFixation.LocalPosition = averageLocalPosition;
-                ActiveFixation.WorldPosition = averageWorldPosition;
+                ActiveFixation.WorldPosition = averageWorldPosition; //average world position is already matrix unscaled above
                 ActiveFixation.DynamicObjectId = mostUsedId;
+                ActiveFixation.DynamicMatrix = usedCaptures[0].CaptureMatrix;
 
-                float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - usedCaptures[0].HmdPosition);
+                float distance = Vector3.Magnitude(averageWorldPosition - usedCaptures[0].HmdPosition);
                 float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
 
                 ActiveFixation.StartDistance = distance;
@@ -1487,8 +1560,11 @@ namespace CognitiveVR
                 ActiveFixation.DynamicTransform = usedCaptures[0].HitDynamicTransform;
                 foreach (var c in usedCaptures)
                 {
+                    if (c.SkipPositionForFixationAverage) { continue; }
                     if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
                     {
+                        //added to cachedEyeCapturePositions here - should skip when checking isGazeInRange
+                        c.SkipPositionForFixationAverage = true;
                         CachedEyeCapturePositions.Add(c.LocalPosition);
                     }
                 }
@@ -1516,55 +1592,64 @@ namespace CognitiveVR
         {
             Vector3 averageWorldPos = Vector3.zero;
             //number of eye captures on a surface
-            int averageWorldSamples = 0;
             int sampleCount = 0;
 
             long firstOnTransformTime = 0;
-            //long lastSampleTime = 0;
+            long firstSampleTime = long.MaxValue;
+            long lastSampleTime = 0;
+
+            List<EyeCapture> samples = new List<EyeCapture>();
 
             //take all the eye captures within the minimum fixation duration
             //escape if any are eyes closed or discarded captures
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
-                if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
-                if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage)
+                var sample = EyeCaptures[GetIndex(i)];
+                if (sample.Discard || sample.EyesClosed) { return false; }
+                if (sample.SkipPositionForFixationAverage)
                 {
                     //eye capture should be skipped (look at sky, discarded). also check if out of min fixation time
-                    if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time){break;}
-                    continue;
+                    //if (EyeCaptures[index].Time + MinFixationMs < sample.Time){break;}
+                    //continue;
+                    return false;
                 }
 
-                if (EyeCaptures[GetIndex(i)].UseCaptureMatrix)
+                if (sample.UseCaptureMatrix)
                 {
                     //CONSIDER would this be more accurate to return false if a threshold of eye captures are on dynamics? any dynamics? one dynamic?
                     return false;
                 }
 
+                firstSampleTime = System.Math.Min(firstSampleTime, sample.Time);
+                lastSampleTime = System.Math.Max(lastSampleTime, sample.Time);
+
                 sampleCount++;
+                samples.Add(EyeCaptures[GetIndex(i)]);
                 //lastSampleTime = EyeCaptures[GetIndex(i)].Time;
                 if (firstOnTransformTime < 1)
-                    firstOnTransformTime = EyeCaptures[GetIndex(i)].Time;
+                    firstOnTransformTime = sample.Time;
                 //TODO should use EyeCaptures.LocalPosition * EyeCaptures.Matrix. world position will be offset if object is moving
-                averageWorldPos += EyeCaptures[GetIndex(i)].WorldPosition;
-                averageWorldSamples++;
-                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time)
+                averageWorldPos += sample.WorldPosition;
+                if (EyeCaptures[index].Time + MinFixationMs < sample.Time)
                 {
                     break;
                 }
             }
             
-            if (sampleCount == 0)
+            if (sampleCount < 2)
             {
-                //no samples were within time
+                //need at least 2 samples for a time span
                 return false;
             }
-            
-            if (averageWorldSamples == 0)
+
+            //duration of first sample to last sample
+            long duration = lastSampleTime - firstSampleTime;
+            if (duration < MinFixationMs)
             {
-                //no samples hit any objects, so can't calculate fixation position
                 return false;
             }
-            averageWorldPos /= averageWorldSamples;
+
+            averageWorldPos /= sampleCount;
 
             //TODO what is the time span between samples - how does 1 sample think it's enough time to make a world fixation??
             //a fixation MUST start on a transform. alternatively could mark transform as 'on transform' early
@@ -1580,17 +1665,19 @@ namespace CognitiveVR
             
             bool withinRadius = true;
 
-            //get starting screen position to compare other eye capture points against
-            //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
-            var screendist = Vector2.Distance(EyeCaptures[index].ScreenPos, Vector3.one * 0.5f);
-            var rescale = FocusSizeFromCenter.Evaluate(screendist);
-            var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-
             //check that each sample is within the fixation radius
-            for (int i = 0; i < sampleCount; i++)
+            //for (int i = 0; i < sampleCount; i++)
+            foreach(var v in samples)
             {
-                Vector3 lookDir = (EyeCaptures[GetIndex(i)].HmdPosition - EyeCaptures[GetIndex(i)].WorldPosition).normalized;
-                Vector3 fixationDir = (EyeCaptures[GetIndex(i)].HmdPosition - averageWorldPos).normalized;
+                //get starting screen position to compare other eye capture points against
+                //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
+                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
+                var rescale = FocusSizeFromCenter.Evaluate(screendist);
+                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
+
+                //var sample = EyeCaptures[GetIndex(i)];
+                Vector3 lookDir = (v.WorldPosition - v.HmdPosition).normalized;
+                Vector3 fixationDir = (averageWorldPos - v.HmdPosition).normalized;
 
                 if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
                 {
@@ -1618,8 +1705,12 @@ namespace CognitiveVR
                 ActiveFixation.IsLocal = false;
                 for (int i = 0; i < sampleCount; i++)
                 {
-                    if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage) { continue; }
-                    CachedEyeCapturePositions.Add(EyeCaptures[GetIndex(i)].WorldPosition);
+                    var sample = EyeCaptures[GetIndex(i)];
+                    if (sample.SkipPositionForFixationAverage) { continue; }
+
+                    //added to cachedEyeCapturePositions here - should skip when checking isGazeInRange
+                    sample.SkipPositionForFixationAverage = true;
+                    CachedEyeCapturePositions.Add(sample.WorldPosition);
                 }
                 return true;
             }

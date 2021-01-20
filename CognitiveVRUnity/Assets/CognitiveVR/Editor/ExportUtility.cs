@@ -603,7 +603,7 @@ namespace CognitiveVR
             {
                 try
                 {
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
@@ -630,7 +630,7 @@ namespace CognitiveVR
 
             float[] colorAtLayer = new float[layerCount];
 
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
             Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
             TerrainLayer[] layers = data.terrainLayers;
             //get highest value splatmap at point and write terrain texture to baked texture
@@ -716,7 +716,7 @@ namespace CognitiveVR
                 try
                 {
                     bool ignored;
-#if UNITY_2019_4_OR_NEWER
+#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out ignored))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
@@ -852,7 +852,7 @@ namespace CognitiveVR
         /// <summary>
         /// returns texture2d baked from canvas target
         /// </summary>
-        public static Texture2D CanvasTextureBake(Transform target, int resolution = 128)
+        public static Texture2D CanvasTextureBake(Transform target, int resolution = 512)
         {
             GameObject cameraGo = new GameObject("Temp_Camera");
             Camera cam = cameraGo.AddComponent<Camera>();
@@ -995,7 +995,6 @@ namespace CognitiveVR
             }
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
 
-
             //export. this should skip nested dynamics
             if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); return false; }
 
@@ -1015,6 +1014,9 @@ namespace CognitiveVR
             dynamicObject.transform.localPosition = Vector3.zero;
             Quaternion originalRot = dynamicObject.transform.localRotation;
             dynamicObject.transform.localRotation = Quaternion.identity;
+
+            Vector4 originalScale = dynamicObject.transform.localScale;
+            dynamicObject.transform.localScale = Vector3.one;
 
             Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
@@ -1071,6 +1073,7 @@ namespace CognitiveVR
 
             dynamicObject.transform.localPosition = originalOffset;
             dynamicObject.transform.localRotation = originalRot;
+            dynamicObject.transform.localScale = originalScale;
 
             //queue resize texture
             ResizeQueue.Enqueue(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);

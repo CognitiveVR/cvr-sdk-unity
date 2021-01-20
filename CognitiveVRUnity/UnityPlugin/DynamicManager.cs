@@ -360,6 +360,8 @@ namespace CognitiveVR
                     {
                         props += "\"enabled\":true";
                     }
+                    writeScale = true;
+                    ActiveDynamicObjectsArray[i].LastScale = scale;
                 }
 
                 if (ActiveDynamicObjectsArray[i].remove)
@@ -557,6 +559,8 @@ namespace CognitiveVR
                         {
                             props += "\"enabled\":true";
                         }
+                        writeScale = true;
+                        ActiveDynamicObjectsArray[i].LastScale = scale;
                     }
 
                     if (ActiveDynamicObjectsArray[i].remove)
@@ -619,7 +623,7 @@ namespace CognitiveVR
                 else
                 {
                     pos = ActiveDynamicObjectsArray[index].Transform.position;
-                    scale = ActiveDynamicObjectsArray[index].Transform.lossyScale;
+                    scale = ActiveDynamicObjectsArray[index].Transform.localScale;
                     rot = ActiveDynamicObjectsArray[index].Transform.rotation;
                 }
 
@@ -697,6 +701,8 @@ namespace CognitiveVR
                         {
                             props += "\"enabled\":true";
                         }
+                        writeScale = true;
+                        ActiveDynamicObjectsArray[index].LastScale = scale;
                     }
 
                     if (ActiveDynamicObjectsArray[index].remove)

@@ -103,20 +103,23 @@ namespace CognitiveVR
                     anycustomnames = true;
                     if (string.IsNullOrEmpty(dyn.MeshName))
                     {
-                        dyn.MeshName = dyn.gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
+                        dyn.MeshName = ValidateMeshName(dyn.MeshName);
                         if (!Application.isPlaying)
                         {
                             UnityEditor.EditorUtility.SetDirty(dyn);
                             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                         }
                     }
-                    if (targets.Length == 1)
-                        dyn.MeshName = UnityEditor.EditorGUILayout.TextField("", dyn.MeshName);
                 }
             }
             if (!anycustomnames)
             {
                 UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
+            }
+            else //mesh names
+            {
+                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
+                meshname.stringValue = ValidateMeshName(meshname.stringValue);
             }
             GUILayout.EndHorizontal();
 
@@ -224,7 +227,7 @@ namespace CognitiveVR
                             EditorCore.RefreshSceneVersion(delegate ()
                             {
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId));
+                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, dyn.transform.lossyScale.x));
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });
                         }
@@ -242,7 +245,7 @@ namespace CognitiveVR
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
                                 for(int i = 0; i< dyn.IdPool.Ids.Length;i++)
                                 {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i]));
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], dyn.transform.lossyScale.x));
                                 }
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });
@@ -305,8 +308,7 @@ namespace CognitiveVR
                     var dyn = t as DynamicObject;
                     if (dyn.UseCustomMesh)
                     {
-                        //replace all invalid characters <>|?*"/\: with _
-                        dyn.MeshName = dyn.MeshName.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
+                        dyn.MeshName = ValidateMeshName(dyn.MeshName);
                     }
                 }
 
@@ -365,6 +367,13 @@ namespace CognitiveVR
                     usedids.Add(dynamics[i].CustomId);
                 }
             }
+        }
+
+        string ValidateMeshName(string input)
+        {
+            //TODO replace non-ascii characters
+            string inputMod = input.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_").Replace("#", "_").Replace("[", "_").Replace("]", "_").Replace("%", "_").Replace("^", "_").Replace("$", "_");
+            return inputMod;
         }
     }
 }

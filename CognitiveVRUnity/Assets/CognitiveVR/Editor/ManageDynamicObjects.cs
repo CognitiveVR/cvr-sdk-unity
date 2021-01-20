@@ -505,15 +505,17 @@ public class ManageDynamicObjects : EditorWindow
             public string name;
             public string mesh;
             public string id;
-            public AggregationManifestEntry(string _name, string _mesh, string _id)
+            public float scale = 1;
+            public AggregationManifestEntry(string _name, string _mesh, string _id, float _scale)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
+                scale = _scale;
             }
             public override string ToString()
             {
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\"}";
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scale\":\"" + scale + "\"}";
             }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
@@ -543,7 +545,42 @@ public class ManageDynamicObjects : EditorWindow
             return;
         }
 
-        string json = "";
+        
+        int manifestCount = 0;
+        //write up manifets into parts (if needed)
+        int debugBreakManifestLimit = 99;
+        while(true)
+        {
+            debugBreakManifestLimit--;
+            if (debugBreakManifestLimit == 0) { Debug.LogError("dynamic aggregation manifest error"); break; }
+            if (manifest.objects.Count == 0) { break; }
+
+            AggregationManifest am = new AggregationManifest();
+            am.objects.AddRange(manifest.objects.GetRange(0, Mathf.Min(250,manifest.objects.Count)));
+            manifest.objects.RemoveRange(0, Mathf.Min(250, manifest.objects.Count));
+            string json = "";
+            if (ManifestToJson(am, out json))
+            {
+                manifestCount++;
+                var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
+                if (currentSettings != null && currentSettings.VersionNumber > 0)
+                    SendManifest(json, currentSettings.VersionNumber, callback);
+                else
+                    Util.logError("Could not find scene version for current scene");
+            }
+            else
+            {
+                Debug.LogWarning("Aggregation Manifest only contains dynamic objects with generated ids");
+                if (nodynamicscallback != null)
+                {
+                    nodynamicscallback.Invoke();
+                }
+            }
+        }
+
+        Debug.Log("send " + manifestCount + " manifest requests");
+
+        /*string json = "";
         if (ManifestToJson(manifest, out json))
         {
             var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
@@ -559,7 +596,7 @@ public class ManageDynamicObjects : EditorWindow
             {
                 nodynamicscallback.Invoke();
             }
-        }
+        }*/
     }
 
     static bool ManifestToJson(AggregationManifest manifest, out string json)
@@ -578,7 +615,8 @@ public class ManageDynamicObjects : EditorWindow
             json += "{";
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
-            json += "\"name\":\"" + entry.name + "\"";
+            json += "\"name\":\"" + entry.name + "\",";
+            json += "\"scale\":" + entry.scale;
             json += "},";
             containsValidEntry = true;
         }
@@ -616,7 +654,7 @@ public class ManageDynamicObjects : EditorWindow
             headers.Add("Content-Type","application/json");
         }
         PostManifestResponseAction = callback;
-        EditorNetwork.Post(url, json, PostManifestResponse,headers,false);//AUTH
+        EditorNetwork.QueuePost(url, json, PostManifestResponse,headers,false);//AUTH
     }
 
     static void PostManifestResponse(int responsecode, string error, string text)
@@ -642,7 +680,7 @@ public class ManageDynamicObjects : EditorWindow
                 //don't include meshes with empty mesh names in manifest
                 if (!string.IsNullOrEmpty(dynamic.MeshName))
                 {
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString()));
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),dynamic.transform.lossyScale.x));
                 }
                 else
                 {

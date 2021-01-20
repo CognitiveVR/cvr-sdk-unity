@@ -1,4 +1,4 @@
-﻿Shader "Hidden/MetalGlossChannelSwap"
+﻿Shader "Hidden/UnityStandardToORM"
 {
 	Properties
 	{
@@ -52,8 +52,11 @@
 				//
 				// Conversion Summary
 				// Unity R channel goes into B channel
-				// Unity A channel goes into G channel, then inverted
-				return float4(1, 1 - col.a, col.r, 1);
+				// Unity A channel goes into G channel
+
+				//Unity standard shader uses (r = metal, g = heightmap or occlusion, b = none, a = glossiness)
+				//GLTF uses ORM format (r = occlusion, g = rougness, b = metallic)
+				return float4(1, 1-col.a, col.r, 1);
 			}
 			ENDCG
 		}

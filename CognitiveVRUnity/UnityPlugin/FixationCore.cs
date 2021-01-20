@@ -55,6 +55,11 @@ namespace CognitiveVR
 
         public static void RecordFixation(Fixation newFixation)
         {
+            if (newFixation.IsLocal)
+            {
+                //apply scale to fixation
+                newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
+            }
             Fixation f = new Fixation(newFixation);
             Fixations.Add(f);
         }

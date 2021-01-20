@@ -241,7 +241,7 @@ namespace CognitiveVR
         {
             if (!isuploadingfromcache)
             {
-                Debug.Log("NETWORK UploadAllLocalData");
+                Util.logDevelopment("NETWORK UploadAllLocalData");
                 if (string.IsNullOrEmpty(CognitiveStatics.ApplicationKey))
                 CognitiveStatics.Initialize();
 
@@ -260,7 +260,7 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("UploadAllLocalData cannot upload all local data - already in upload loop!");
+                Util.logDevelopment("UploadAllLocalData cannot upload all local data - already in upload loop!");
             }
         }
 

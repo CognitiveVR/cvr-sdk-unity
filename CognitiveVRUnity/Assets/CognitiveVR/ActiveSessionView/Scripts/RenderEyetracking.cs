@@ -54,6 +54,7 @@ namespace CognitiveVR.ActiveSession
             {
                 if (fixationRecorder != null)
                 {
+                    quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                     displayFixations = true;
                     FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
                     if (threaded)
@@ -77,9 +78,6 @@ namespace CognitiveVR.ActiveSession
             FixationCamera.clearFlags = CameraClearFlags.Skybox;
             FixationCamera.cullingMask = -1;
 #endif
-
-            if (FixationRecorder.Instance != null)
-                quadPositions = new Vector3[FixationRecorder.Instance.DisplayGazePoints.Count * 4];
         }
 
         private void Core_InitEvent(Error initError)
@@ -87,11 +85,10 @@ namespace CognitiveVR.ActiveSession
             Core.InitEvent -= Core_InitEvent;
 
             fixationRecorder = FixationRecorder.Instance;
-            if (fixationRecorder != null && quadPositions == null)
-                quadPositions = new Vector3[fixationRecorder.DisplayGazePoints.Count * 4];
 
             if (initError == Error.None && fixationRecorder != null)
             {
+                quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                 displayFixations = true;
                 FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
                 if (threaded)

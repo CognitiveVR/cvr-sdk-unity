@@ -74,6 +74,37 @@ namespace CognitiveVR
             }
         }
 
+        ///doubles are recorded raw, but cast to float for Active Session View
+        public static void RecordDataPoint(string category, double value)
+        {
+            if (CachedSnapshots.ContainsKey(category))
+            {
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            }
+            else
+            {
+                CachedSnapshots.Add(category, new List<string>(512));
+                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            }
+
+            if (LastSensorValues.ContainsKey(category))
+            {
+                LastSensorValues[category] = (float)value;
+            }
+            else
+            {
+                LastSensorValues.Add(category, (float)value);
+                if (OnNewSensorRecorded != null)
+                    OnNewSensorRecorded(category, (float)value);
+            }
+
+            currentSensorSnapshots++;
+            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            {
+                TrySendData();
+            }
+        }
+
         public static void RecordDataPoint(string category, float value, double timestamp)
         {
             if (CachedSnapshots.ContainsKey(category))

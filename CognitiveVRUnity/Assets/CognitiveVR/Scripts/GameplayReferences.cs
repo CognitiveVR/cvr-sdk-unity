@@ -90,17 +90,6 @@ namespace CognitiveVR
 #if CVR_STEAMVR
                     SteamVR_Camera cam = GameObject.FindObjectOfType<SteamVR_Camera>();
                     if (cam != null){ _hmd = cam.transform; }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main == null)
-                        {
-                            var c = GameObject.FindObjectOfType<Camera>();
-                            if (c != null)
-                                _hmd = c.transform;
-                        }
-                        else
-                            _hmd = Camera.main.transform;
-                    }
 #elif CVR_OCULUS
                     OVRCameraRig rig = GameObject.FindObjectOfType<OVRCameraRig>();
                     if (rig != null)
@@ -110,41 +99,21 @@ namespace CognitiveVR
                     }
                     if (_hmd == null)
                     {
-                        if (Camera.main == null)
+                        if (Camera.main != null)
                         {
-                            var c = GameObject.FindObjectOfType<Camera>();
-                            if (c != null)
-                                _hmd = c.transform;
-                        }
-                        else
                             _hmd = Camera.main.transform;
+                        }
                     }
 #elif CVR_FOVE
-                    if (_hmd == null)
+                    var fi = FoveInstance;
+                    if (fi != null)
                     {
-                        var fi = FoveInstance;
-                        if (fi != null)
-                        {
-                            _hmd = fi.transform;
-                        }
-                        else if (Camera.main == null)
-                        {
-                            var c = GameObject.FindObjectOfType<Camera>();
-                            if (c != null)
-                                _hmd = c.transform;
-                        }
-                        else
-                            _hmd = Camera.main.transform;
+                        _hmd = fi.transform;
                     }
-#elif CVR_SNAPDRAGON
-                    if (Camera.main == null)
+                    else if (Camera.main != null)
                     {
-                        var c = GameObject.FindObjectOfType<Camera>();
-                        if (c != null)
-                            _hmd = c.transform;
-                    }
-                    else
                         _hmd = Camera.main.transform;
+                    }
 #elif CVR_VIVEWAVE
                     if (Camera.main == null)
                     {
@@ -163,27 +132,11 @@ namespace CognitiveVR
 #elif CVR_VARJO
                     Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
                     if (manager != null){ _hmd = manager.varjoCamera.transform; }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main == null)
-                        {
-                            var c = GameObject.FindObjectOfType<Camera>();
-                            if (c != null)
-                                _hmd = c.transform;
-                        }
-                        else
-                            _hmd = Camera.main.transform;
-                    }
 #else
-                    if (Camera.main == null)
+                    if (Camera.main != null)
                     {
-                        var c = GameObject.FindObjectOfType<Camera>();
-                        if (c != null)
-                            _hmd = c.transform;
-                    }
-                    else
                         _hmd = Camera.main.transform;
-
+                    }
 #endif
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
                         Util.logWarning("HMD set to " + _hmd);

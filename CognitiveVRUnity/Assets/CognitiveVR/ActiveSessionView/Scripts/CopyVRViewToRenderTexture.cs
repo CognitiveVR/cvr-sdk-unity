@@ -12,6 +12,7 @@ namespace CognitiveVR.ActiveSession
     {
         Camera mainCamera;
         RawImage RawImage;
+        Material flipMat;
 
         RenderTexture rt;
         BuiltinRenderTextureType blitTo = BuiltinRenderTextureType.CurrentActive;
@@ -33,13 +34,20 @@ namespace CognitiveVR.ActiveSession
             buf.Blit(blitTo, rt, null, (int)0);
 
             RawImage.texture = temp;
+
+            Shader s = Shader.Find("Hidden/C3D/BlitFlip");
+            flipMat = new Material(s);
         }
 
         RenderTexture temp;
 
         private void OnPreRender()
         {
+#if UNITY_2019_2_OR_NEWER
+            Graphics.Blit(rt, temp, flipMat);
+#else
             Graphics.Blit(rt, temp);
+#endif
         }
     }
 }
