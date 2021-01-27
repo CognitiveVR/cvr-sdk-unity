@@ -615,7 +615,7 @@ namespace CognitiveVR
             SimpleGliaEyeData d = new SimpleGliaEyeData() {
                 confidence = data.CombinedGaze.Confidence,
                 timestamp = data.Timestamp.SystemTimeMicroSeconds / 1000,
-                worldDirection = GameplayReferences.HMD.TransformDirection(new Vector3(data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z)),
+                worldDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z)),
                 worldPosition = GameplayReferences.HMD.position,
                 leftEyeOpenness = data.LeftEye.Openness,
                 rightEyeOpenness = data.RightEye.Openness

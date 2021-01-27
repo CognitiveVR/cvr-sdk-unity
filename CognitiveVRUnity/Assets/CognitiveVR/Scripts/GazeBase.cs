@@ -74,6 +74,14 @@ namespace CognitiveVR
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
 #endif
+#if CVR_OMNICEPT
+            if (gb == null)
+            {
+                gb = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                if (gb != null)
+                    gb.OnEyeTracking.AddListener(DoEyeTracking);
+            }
+#endif
             GazeCore.SetHMDType(hmdname);
             cameraRoot = GameplayReferences.HMD.root;
         }
@@ -234,6 +242,15 @@ namespace CognitiveVR
             gazeController.OnReceive3dGaze -= ReceiveEyeData;
         }
 #endif
+#if CVR_OMNICEPT
+        static Vector3 lastDirection = Vector3.forward;
+        static HP.Omnicept.Unity.GliaBehaviour gb;
+
+        static void DoEyeTracking(HP.Omnicept.Messaging.Messages.EyeTracking data)
+        {
+            lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
+        }
+#endif
 
         /// <summary>
         /// get the raw gaze direction in world space. includes fove/pupil labs eye tracking
@@ -276,6 +293,8 @@ namespace CognitiveVR
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif CVR_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
+#elif CVR_OMNICEPT
+            gazeDirection = lastDirection;
 #elif CVR_XR
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
@@ -303,7 +322,7 @@ namespace CognitiveVR
         /// </summary>
         public Vector3 GetViewportGazePoint()
         {
-            Vector2 screenGazePoint = Vector2.one * 0.5f;
+            Vector2 screenGazePoint = new Vector2(0.5f,0.5f);
 
 #if CVR_FOVE //screenpoint
 
