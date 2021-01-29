@@ -994,22 +994,13 @@ namespace UnityGLTF
 				light.range = unityLight.range;
 				light.intensity = unityLight.intensity;
 			}
-			else if (unityLight.type == LightType.Area)
-			{
-				light = new GLTFAreaLight() { height = unityLight.areaSize.x, width = unityLight.areaSize.y };
-				light.Name = unityLight.name;
-				light.type = unityLight.type.ToString().ToLower();
-				light.color = new GLTF.Math.Color(unityLight.color.r, unityLight.color.g, unityLight.color.b, 1);
-				light.intensity = unityLight.intensity;
-			}
 			else
 			{
-				light = new GLTFLight();
-				//name
+				light = new GLTFPointLight();
 				light.Name = unityLight.name;
-
-				light.type = unityLight.type.ToString().ToLower();
-				light.color = new GLTF.Math.Color(unityLight.color.r, unityLight.color.g, unityLight.color.b, 1);
+				light.intensity = 0;
+				light.type = "point";
+				light.color = new GLTF.Math.Color(0,0,0, 1);
 			}
 
 			if (_root.Lights == null)
