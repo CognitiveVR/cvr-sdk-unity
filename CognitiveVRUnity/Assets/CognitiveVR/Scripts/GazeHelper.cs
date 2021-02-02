@@ -185,9 +185,10 @@ namespace CognitiveVR
         static Vector3 GetLookDirection()
         {
             UnityEngine.XR.Eyes eyes;
-            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
+            var centereye = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye);
+
+            if (centereye.TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
-                //first arg probably to mark which feature the value should return. type alone isn't enough to indicate the property
                 Vector3 convergancePoint;
                 if (eyes.TryGetFixationPoint(out convergancePoint))
                 {
@@ -203,6 +204,11 @@ namespace CognitiveVR
                     lastDirection = worldGazeDirection;
                     return worldGazeDirection;
                 }
+            }
+            else //hmd doesn't have eye data (ie, eye tracking)
+            {
+                //use center point of hmd
+                return CognitiveVR.GameplayReferences.HMD.forward;
             }
             return lastDirection;
         }
