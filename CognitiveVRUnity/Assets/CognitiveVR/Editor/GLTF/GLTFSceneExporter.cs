@@ -17,6 +17,7 @@ namespace UnityGLTF
 		//CONSIDER how to deal with separate metallic/roughness maps?
 		//CONSIDER should this just render out required channels and hold them in memory until they get combined/saved?
 		//TODO support for emission and occlusion maps/values
+		//TODO support texture tiling
 		abstract class ShaderPropertyCollection
 		{
 			public string AlbedoMapName;
@@ -317,6 +318,25 @@ namespace UnityGLTF
 			}
 		}
 
+		class AutodeskInteractive : ShaderPropertyCollection
+		{
+			public AutodeskInteractive()
+			{
+				AlbedoMapName = "_MainTex";
+				AlbedoColorName = "_Color";
+
+				MetallicMapName = "_MetallicGlossMap";
+				MetallicPowerName = "_Metallic";
+
+				RoughnessMapName = "_SpecGlossMap";
+				RoughnessPowerName = "_GlossMapScale";
+
+				NormalMapName = "_BumpMap";
+				NormalMapPowerName = "_BumpScale";
+				NormalProcessShader = "Hidden/NormalChannel"; // UNITY rgba  ->   GLTF ag11
+			}
+		}
+
 		class UnityURP : ShaderPropertyCollection
 		{
 			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
@@ -407,7 +427,8 @@ namespace UnityGLTF
 			//unity hd render pipeline
 			{ "HDRP/Lit", new UnityHDRP() },
 			//built-in rendering
-			{ "Standard", new UnityStandard() }
+			{ "Standard", new UnityStandard() },
+			{ "Autodesk Interactive", new AutodeskInteractive() }
 			};
 
 		public delegate string RetrieveTexturePathDelegate(Texture texture);
