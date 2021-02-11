@@ -248,7 +248,10 @@ namespace CognitiveVR
 
         static void DoEyeTracking(HP.Omnicept.Messaging.Messages.EyeTracking data)
         {
-            lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
+            if (data.CombinedGaze.Confidence > 0.5f)
+            {
+                lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
+            }
         }
 #endif
 
