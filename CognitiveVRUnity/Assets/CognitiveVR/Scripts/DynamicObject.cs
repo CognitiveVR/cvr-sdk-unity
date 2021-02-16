@@ -166,7 +166,7 @@ namespace CognitiveVR
                     }
                     CognitiveVR.GameplayReferences.SetController(gameObject, Data.IsRightHand);
 #endif
-#if CVR_WINDOWSMR
+#if CVR_WINDOWSMR || CVR_XR
                     CognitiveVR.GameplayReferences.SetController(gameObject, IsRight);
 #endif
                     CognitiveVR.DynamicManager.RegisterController(Data);
