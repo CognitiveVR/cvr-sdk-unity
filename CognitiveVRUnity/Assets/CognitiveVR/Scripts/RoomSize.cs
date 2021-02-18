@@ -45,6 +45,7 @@ namespace CognitiveVR.Components
             }
 #endif
             //TODO pico. unclear how to get boundaries from api
+            //TODO unity xr https://forum.unity.com/threads/get-vr-room-scale-bounds-w-native-unity.678289/
         }
 
         public override bool GetWarning()

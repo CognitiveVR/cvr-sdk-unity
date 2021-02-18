@@ -419,7 +419,6 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
 #if CVR_FOVE
-            Core.SetSessionProperty("c3d.device.hmd.type", "Fove");
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Fove");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Fove");
@@ -466,13 +465,11 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Meta");
 #elif CVR_VARJO
-            Core.SetSessionProperty("c3d.device.hmd.type", "Varjo VR-1");
             Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Varjo");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
             Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
 #elif CVR_OMNICEPT
-            Core.SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","HP Omnicept");
             Core.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
@@ -496,20 +493,12 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             Core.SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #elif CVR_VIVEPROEYE
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Vive Pro Eye");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif CVR_WINDOWSMR
             Core.SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
-#endif
-#if UNITY_2019_1_OR_NEWER
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
-#elif UNITY_2017_2_OR_NEWER
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.XR.XRDevice.model);
-#else
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.type", UnityEngine.VR.VRDevice.model);
 #endif
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);

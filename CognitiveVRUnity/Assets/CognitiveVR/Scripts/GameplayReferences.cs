@@ -332,7 +332,7 @@ namespace CognitiveVR
         }
 #elif CVR_WINDOWSMR
 
-        //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
+        //no clear way to get controller reliably. dynamic object calls this when enabled
         public static void SetController(GameObject go, bool isRight)
         {
             InitializeControllers();
@@ -386,6 +386,39 @@ namespace CognitiveVR
                     controllers[1].visible = true;
                     controllers[1].id = 1;
                 }
+            }
+        }
+#elif CVR_XR
+
+        //no clear way to get controller reliably. dynamic object calls this when enabled
+        public static void SetController(GameObject go, bool isRight)
+        {
+            InitializeControllers();
+            if (isRight)
+            {
+                controllers[1].transform = go.transform;
+                controllers[1].isRight = true;
+                controllers[1].connected = true;
+                controllers[1].visible = true;
+                controllers[1].id = 1;
+            }
+            else
+            {
+                controllers[0].transform = go.transform;
+                controllers[0].isRight = false;
+                controllers[0].connected = true;
+                controllers[0].visible = true;
+                controllers[0].id = 0;
+            }
+        }
+
+        static void InitializeControllers()
+        {
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+                controllers[0] = new ControllerInfo();
+                controllers[1] = new ControllerInfo();
             }
         }
 #else

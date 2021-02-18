@@ -17,8 +17,11 @@ namespace UnityGLTF
 		//CONSIDER how to deal with separate metallic/roughness maps?
 		//CONSIDER should this just render out required channels and hold them in memory until they get combined/saved?
 		//TODO support for emission and occlusion maps/values
-		abstract class ShaderPropertyCollection
+		//TODO support texture tiling
+		public abstract class ShaderPropertyCollection
 		{
+			public List<string> ShaderNames = new List<string>();
+
 			public string AlbedoMapName;
 			public string AlbedoColorName;
 
@@ -215,169 +218,6 @@ namespace UnityGLTF
 			}
 		}
 
-		class UnityStandard : ShaderPropertyCollection
-		{
-			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
-			public UnityStandard()
-			{
-				AlbedoMapName = "_MainTex";
-				AlbedoColorName = "_Color";
-
-				MetallicMapName = "_MetallicGlossMap";
-				MetallicPowerName = "_Metallic";
-				MetallicProcessShader = "Hidden/UnityStandardToORM"; //must be set the same as RoughnessProcessShader because of caching
-
-				RoughnessMapName = "_MetallicGlossMap";
-				RoughnessPowerName = "_GlossMapScale"; //_GlossMapScale if _MetallicGlossMap is set. _Glossiness if not set
-				RoughnessProcessShader = "Hidden/UnityStandardToORM"; // UNITY metal r, gloss a  ->   GLTF metal  b, roughness g
-
-				NormalMapName = "_BumpMap";
-				NormalMapPowerName = "_BumpScale";
-				NormalProcessShader = "Hidden/NormalChannel"; // UNITY rgba  ->   GLTF ag11
-			}
-
-			//only use the metalic power if the metallic map isn't present
-			public override bool TryGetMetallicPower(Material m, out float power)
-			{
-				Texture ignore = null;
-				if (TryGetMetallicMap(m, out ignore))
-				{
-					power = 1;
-					return false;
-				}
-				return base.TryGetMetallicPower(m, out power);
-			}
-
-			//invert smoothness for roughness. use glossmap or glossiness
-			//KNOWN ISSUE record 0 roughness if using albedo alpha
-			public override bool TryGetRoughness(Material m, out float power)
-			{
-				//TODO why is gltf smoothness much stronger than unity? possible roughness channel baked wrong
-				if (m.HasProperty("_SmoothnessTextureChannel"))
-				{
-					float channel = m.GetFloat("_SmoothnessTextureChannel");
-					if (Mathf.Approximately(channel, 1)) //albedo alpha channel for shininess
-					{
-						power = 1; //full roughness
-						return true;
-					}
-				}
-
-				if (m.HasProperty(MetallicMapName) && m.GetTexture(MetallicMapName) != null) //_GlossMapScale
-				{
-					//if using map, set roughness as 1
-					power = 1;
-					return true;
-				}
-				else //_Glossiness
-				{
-					power = 0;
-					if (m.HasProperty("_Glossiness"))
-					{
-						power = 1 - m.GetFloat("_Glossiness");
-						return true;
-					}
-					return false;
-				}
-			}
-		}
-
-		class GLTFStandard : ShaderPropertyCollection
-		{
-			public GLTFStandard()
-			{
-				AlbedoMapName = "_MainTex";
-				AlbedoColorName = "_Color";
-
-				//metallic B
-				MetallicMapName = "_MetallicGlossMap";
-				MetallicPowerName = "_Metallic";
-				//MetallicProcessShader = "Hidden/MetalGlossChannelSwap";
-
-				//Gloss G
-				RoughnessMapName = "_MetallicGlossMap";
-				RoughnessPowerName = "_Roughness";
-				//RoughnessProcessShader = "Hidden/MetalGlossChannelSwap";
-
-				NormalMapName = "_BumpMap";
-				NormalMapPowerName = "_BumpScale";
-				NormalProcessShader = "Hidden/NormalChannel";
-			}
-
-			//only use the metalic power if the metallic map isn't present
-			public override bool TryGetMetallicPower(Material m, out float power)
-			{
-				Texture ignore = null;
-				if (TryGetMetallicMap(m, out ignore))
-				{
-					power = 1;
-					return false;
-				}
-				return base.TryGetMetallicPower(m, out power);
-			}
-		}
-
-		class UnityURP : ShaderPropertyCollection
-		{
-			//KNOWN ISSUE - albedo alpha for smoothness isn't supported
-			//KNOWN ISSUE - metallicMap.a *= _smoothness is higher than expected
-			public UnityURP()
-			{
-				AlbedoMapName = "_BaseMap";
-				AlbedoColorName = "_BaseColor";
-
-				MetallicMapName = "_MetallicGlossMap";
-				MetallicPowerName = "_Metallic"; //only used if no map
-
-				RoughnessMapName = "_MetallicGlossMap"; //alpha channel (metallic or albedo)
-				RoughnessPowerName = "_Smoothness";
-
-				NormalMapName = "_BumpMap";
-				NormalMapPowerName = "_BumpScale";
-				NormalProcessShader = "Hidden/NormalChannel";
-			}
-
-			//invert smoothness for roughness
-			//KNOWN ISSUE record 0 roughness if using albedo alpha
-			public override bool TryGetRoughness(Material m, out float power)
-			{
-				if (m.HasProperty("_SmoothnessTextureChannel"))
-				{
-					float channel = m.GetFloat("_SmoothnessTextureChannel");
-					if (Mathf.Approximately(channel, 1))
-					{
-						power = 1; //full roughness
-						return true;
-					}
-				}
-
-				bool hasRoughness = base.TryGetRoughness(m, out power);
-				power = 1 - power;
-				return hasRoughness;
-			}
-		}
-
-		class UnityHDRP : ShaderPropertyCollection
-		{
-			public UnityHDRP()
-			{
-				AlbedoMapName = "_MainTex";
-				AlbedoColorName = "_BaseColor";
-
-				//metallic R
-				MetallicMapName = "_MaskMap";
-				MetallicPowerName = "_Metallic";
-
-				//smoothness A (can be remap 0-1 in material. not a single exportable value. could pass these values into a shader to modify exported texture?)
-				RoughnessMapName = "_MaskMap";
-				RoughnessPowerName = "_Smoothness";
-
-				NormalMapName = "_NormalMap";
-				NormalMapPowerName = "_NormalScale";
-				NormalProcessShader = "Hidden/NormalChannel";
-			}
-		}
-
 		internal enum TextureMapType
 		{
 			Main,
@@ -398,17 +238,7 @@ namespace UnityGLTF
 			public string ShaderOverrideName;
 		}
 
-		static Dictionary<string, ShaderPropertyCollection> MaterialExportPropertyCollection = new Dictionary<string, ShaderPropertyCollection>() {
-			//sample shaders from https://github.com/Siccity/GLTFUtility
-			{ "GLTFUtility/Standard (Metallic)", new GLTFStandard() },
-			{ "GLTFUtility/Standard (Specular)", new GLTFStandard() },
-			//unity universal render pipeline
-			{ "Universal Render Pipeline/Lit", new UnityURP() },
-			//unity hd render pipeline
-			{ "HDRP/Lit", new UnityHDRP() },
-			//built-in rendering
-			{ "Standard", new UnityStandard() }
-			};
+		static Dictionary<string, ShaderPropertyCollection> MaterialExportPropertyCollection;
 
 		public delegate string RetrieveTexturePathDelegate(Texture texture);
 
@@ -461,6 +291,26 @@ namespace UnityGLTF
 		/// <param name="rootTransforms">Root transform of object to export</param>
 		public GLTFSceneExporter(Transform[] rootTransforms, RetrieveTexturePathDelegate retrieveTexturePathDelegate, CognitiveVR.DynamicObject dynamic = null)
 		{
+			if (MaterialExportPropertyCollection == null)
+			{
+				var subclassTypes = System.Reflection.Assembly.GetAssembly(typeof(ShaderPropertyCollection)).GetTypes();
+				MaterialExportPropertyCollection = new Dictionary<string, ShaderPropertyCollection>();
+
+				foreach (var t in subclassTypes)
+				{
+					if (t.IsSubclassOf(typeof(ShaderPropertyCollection)))
+					{
+						var shaderProperties = System.Activator.CreateInstance(t);
+						var collection = shaderProperties as ShaderPropertyCollection;
+						foreach (var shaderName in collection.ShaderNames)
+						{
+							MaterialExportPropertyCollection.Add(shaderName, collection);
+							//Debug.Log(shaderName + "   " + collection.GetType().ToString());
+						}
+					}
+				}
+			}
+
 			Dynamic = dynamic;
 			_retrieveTexturePathDelegate = retrieveTexturePathDelegate;
 
@@ -996,12 +846,11 @@ namespace UnityGLTF
 			}
 			else
 			{
-				light = new GLTFLight();
-				//name
+				light = new GLTFPointLight();
 				light.Name = unityLight.name;
-
-				light.type = unityLight.type.ToString().ToLower();
-				light.color = new GLTF.Math.Color(unityLight.color.r, unityLight.color.g, unityLight.color.b, 1);
+				light.intensity = 0;
+				light.type = "point";
+				light.color = new GLTF.Math.Color(0,0,0, 1);
 			}
 
 			if (_root.Lights == null)
@@ -1264,7 +1113,6 @@ namespace UnityGLTF
 			{
 				material.Name = materialObj.name;
 			}
-
 
 			//pass GLTFMaterial into shader property collection and fill in the properties (albedo, metalic, roughness, normal, occlusion, emission)
 			ShaderPropertyCollection shaderProperties = null;

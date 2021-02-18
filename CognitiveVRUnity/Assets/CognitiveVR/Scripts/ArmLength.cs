@@ -41,7 +41,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
-
+            sentData = false;
             Core.UpdateEvent += CognitiveVR_Manager_UpdateEvent;
         }
 
@@ -105,6 +105,7 @@ namespace CognitiveVR.Components
         {
             if (initError != Error.None) { return; }
             if (GameplayReferences.HMD == null) { return; }
+            sentData = false;
             rightControllerTracking = true;
             leftControllerTracking = true;
             StartCoroutine(Tick());
@@ -118,6 +119,7 @@ namespace CognitiveVR.Components
             if (initError != Error.None) { return; }
             if (GameplayReferences.HMD == null) { return; }
             //IMPROVEMENT - wait for participant input from controllers
+            sentData = false;
             rightControllerTracking = true;
             leftControllerTracking = true;
             StartCoroutine(Tick());
@@ -128,6 +130,7 @@ namespace CognitiveVR.Components
         public override void CognitiveVR_Init(Error initError)
         {
             base.CognitiveVR_Init(initError);
+            sentData = false;
             Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
         }
 
@@ -144,8 +147,52 @@ namespace CognitiveVR.Components
         }
 #endif
 
+#if CVR_XR
+        public override void CognitiveVR_Init(Error initError)
+        {
+            if (initError != Error.None) { return; }
+            if (GameplayReferences.HMD == null) { return; }
+            anyControllerTracking = false;
+            sentData = false;
+            CognitiveVR.Core.UpdateEvent += Core_UpdateEvent;
+        }
+
+        bool anyControllerTracking = false;
+        private void Core_UpdateEvent(float deltaTime)
+        {
+            if (GameplayReferences.HMD == null) { Core.UpdateEvent -= Core_UpdateEvent; return; }
+            var leftHandDevices = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftHand);
+            var rightHandDevices = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightHand);
+
+            //trigger left
+            float trigger;
+            if (!leftControllerTracking && leftHandDevices.TryGetFeatureValue(UnityEngine.XR.CommonUsages.trigger, out trigger) && trigger > 0)
+            {
+                leftControllerTracking = true;
+                if (!anyControllerTracking)
+                    StartCoroutine(Tick());
+                anyControllerTracking = true;
+            }
+            trigger = 0;
+            if (!rightControllerTracking && rightHandDevices.TryGetFeatureValue(UnityEngine.XR.CommonUsages.trigger, out trigger) && trigger > 0)
+            {
+                rightControllerTracking = true;
+                if (!anyControllerTracking)
+                    StartCoroutine(Tick());
+                anyControllerTracking = true;
+            }
+            //if both controllers are actively tracking distance, stop this callback to check for controllers that become active
+            if (leftControllerTracking && rightControllerTracking)
+            {
+                Core.UpdateEvent -= Core_UpdateEvent;
+            }
+        }
+#endif
+
+        bool sentData = false;
         IEnumerator Tick()
         {
+            if (sentData) { yield break; }
             int samples = 0;
             float maxSqrDistance = 0;
 
@@ -168,8 +215,6 @@ namespace CognitiveVR.Components
                     if (tempInfo.connected && tempInfo.visible)
                     {
                         maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        //Debug.DrawLine(GameplayReferences.HMD.position, GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight,Color.red,1);
-                        //Debug.DrawLine(tempInfo.transform.position, GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight,Color.blue,1);
                     }
                 }
 
@@ -182,6 +227,7 @@ namespace CognitiveVR.Components
                 float distance = Mathf.Sqrt(maxSqrDistance);
                 //dashboard expects centimeters
                 Core.SetParticipantProperty("armlength", distance * 100);
+                sentData = true;
             }
         }
 
@@ -189,7 +235,7 @@ namespace CognitiveVR.Components
         {
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_PICONEO2EYE
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
-#elif CVR_OCULUS
+#elif CVR_OCULUS || CVR_XR
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";
 #else
             return "Current platform does not support this component";
@@ -198,7 +244,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS || CVR_PICONEO2EYE
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS || CVR_PICONEO2EYE || CVR_XR
             return false;
 #else
             return true;
