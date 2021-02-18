@@ -197,6 +197,10 @@ namespace CognitiveVR
                     Vector3 rightPos = Vector3.zero;
                     eyes.TryGetRightEyePosition(out rightPos);
 
+                    //TEST possible optimization. reduces math
+                    //Vector3 centerPointPosition = Vector3.zero;
+                    //centereye.TryGetFeatureValue(UnityEngine.XR.CommonUsages.centerEyePosition, out centerPointPosition);
+
                     Vector3 centerPos = (rightPos + leftPos) / 2f;
 
                     var worldGazeDirection = (convergancePoint - centerPos).normalized;

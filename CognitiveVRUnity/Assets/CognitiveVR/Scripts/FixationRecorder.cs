@@ -597,6 +597,7 @@ namespace CognitiveVR
             return false;
         }
 #elif CVR_OMNICEPT
+        //TODO check if this is on a different thread
         Queue<SimpleGliaEyeData> trackingDataQueue = new Queue<SimpleGliaEyeData>();
 
         struct SimpleGliaEyeData
