@@ -227,7 +227,15 @@ namespace CognitiveVR
             PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
 #endif
 
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;            
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+
+            if (!string.IsNullOrEmpty(participantName))
+                Core.SetParticipantFullName(participantName);
+            if (!string.IsNullOrEmpty(participantId))
+                Core.SetParticipantId(participantId);
+
+            //sets session properties for system hardware
+            Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
@@ -238,18 +246,10 @@ namespace CognitiveVR
                 var cogscene = CognitiveVR_Preferences.FindSceneByPath(scene.path);
                 if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
                 {
-                    Core.SetTrackingScene(cogscene);
+                    Core.SetTrackingScene(cogscene, false);
                     break;
                 }
             }
-
-            if (!string.IsNullOrEmpty(participantName))
-                Core.SetParticipantFullName(participantName);
-            if (!string.IsNullOrEmpty(participantId))
-                Core.SetParticipantId(participantId);
-
-            //sets session properties for system hardware
-            Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
 
             Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
@@ -564,7 +564,7 @@ namespace CognitiveVR
             
             if (replacingSceneId && CognitiveVR_Preferences.Instance.SendDataOnLevelLoad)
             {
-                Core.InvokeSendDataEvent();
+                Core.InvokeSendDataEvent(false);
             }
 
             if (replacingSceneId)
@@ -573,16 +573,16 @@ namespace CognitiveVR
                 {
                     if (!string.IsNullOrEmpty(loadingScene.SceneId))
                     {
-                        Core.SetTrackingScene(scene.name);
+                        Core.SetTrackingScene(scene.name,true);
                     }
                     else
                     {
-                        Core.SetTrackingScene("");
+                        Core.SetTrackingScene("", true);
                     }
                 }
                 else
                 {
-                    Core.SetTrackingScene("");
+                    Core.SetTrackingScene("", true);
                 }
             }
 
@@ -681,7 +681,7 @@ namespace CognitiveVR
                 if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
                 if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
 
-                Core.InvokeSendDataEvent();
+                Core.InvokeSendDataEvent(false);
             }
         }
 
@@ -731,7 +731,7 @@ namespace CognitiveVR
                 double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
 
-                Core.InvokeSendDataEvent();
+                Core.InvokeSendDataEvent(false);
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
                 initResponse = Error.NotInitialized;
                 Core.Reset();
@@ -775,7 +775,7 @@ namespace CognitiveVR
             if (CognitiveVR_Preferences.Instance.SendDataOnPause)
             {
                 new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
-                Core.InvokeSendDataEvent();
+                Core.InvokeSendDataEvent(false);
             }
         }
 
@@ -800,7 +800,7 @@ namespace CognitiveVR
             Core.QuitEventClear();
             
 
-            Core.InvokeSendDataEvent();
+            Core.InvokeSendDataEvent(false);
             Core.Reset();
             StartCoroutine(SlowQuit());
         }

@@ -169,6 +169,7 @@ namespace CognitiveVR
         public static void RemoveDynamicObject(string id)
         {
             if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             //if application is quitting, return?
 
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
@@ -209,6 +210,7 @@ namespace CognitiveVR
         /// <param name="properties"></param>
         public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
+            if (Core.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
             {
                 uniqueEngagementId = objectid + " " + engagementname;
@@ -236,6 +238,7 @@ namespace CognitiveVR
 
         public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
+            if (Core.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
             {
                 uniqueEngagementId = objectid + " " + engagementname;
@@ -741,7 +744,7 @@ namespace CognitiveVR
         /// <summary>
         /// used to manually send all outstanding dynamic data immediately
         /// </summary>
-        public static void SendData()
+        public static void SendData(bool copyDataToCache)
         {
             index = 0;
             do
@@ -752,7 +755,7 @@ namespace CognitiveVR
             while (index != 0);
 
             //force dynamicCore to send all queued data as web requests
-            CognitiveVR.DynamicObjectCore.FlushData();
+            CognitiveVR.DynamicObjectCore.FlushData(copyDataToCache);
         }
 
         //this happens AFTER tracking scene is set
@@ -780,7 +783,7 @@ namespace CognitiveVR
                     }
                 }
 
-                SendData(); //not 100% necessary. immediately sends dynamic manifest and snapshot to new scene
+                SendData(false); //not 100% necessary. immediately sends dynamic manifest and snapshot to new scene
             }
         }
 
