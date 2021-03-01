@@ -74,9 +74,9 @@ namespace CognitiveVR
 
         protected override void LateUpdate()
         {
-            //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (OnFill == null) { return; }
-            //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
+            if (_recording) { return; }
+            if (_finishedRecording) { return; }
 
             //set fill visual
             //check for over fill threshold to activate action
