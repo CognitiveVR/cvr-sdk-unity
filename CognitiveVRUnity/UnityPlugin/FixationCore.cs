@@ -35,7 +35,7 @@ namespace CognitiveVR
                 {
                     if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send fixations");
-                    Core_OnSendData();
+                    Core_OnSendData(false);
                 }
             }
         }
@@ -50,16 +50,24 @@ namespace CognitiveVR
             {
                 return;
             }
-            Core_OnSendData();
+            Core_OnSendData(false);
         }
 
         public static void RecordFixation(Fixation newFixation)
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Fixation cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Fixation recorded without SceneId"); return; }
+
             if (newFixation.IsLocal)
             {
                 //apply scale to fixation
                 newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
             }
+			
             Fixation f = new Fixation(newFixation);
             Fixations.Add(f);
         }
@@ -76,12 +84,12 @@ namespace CognitiveVR
         public static event Core.onDataSend OnFixationSend;
 
         static float lastSendTime = -60;
-        private static void Core_OnSendData()
+        private static void Core_OnSendData(bool copyDataToCache)
         {
             if (Fixations.Count <= 0) { CognitiveVR.Util.logDebug("Fixations.SendData found no data"); return; }
 
             //TODO should hold until extreme batch size reached
-            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            if (Core.TrackingScene == null)
             {
                 CognitiveVR.Util.logDebug("Fixations.SendData could not find scene settings for scene! do not upload fixations to sceneexplorer");
                 Fixations.Clear();
@@ -138,7 +146,17 @@ namespace CognitiveVR
             Fixations.Clear();
 
             string url = CognitiveStatics.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
-            NetworkManager.Post(url, sb.ToString());
+            string content = sb.ToString();
+            
+            if (copyDataToCache)
+            {
+                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, content))
+                {
+                    NetworkManager.lc.Append(url, content);
+                }
+            }
+
+            NetworkManager.Post(url, content);
             if (OnFixationSend != null)
             {
                 OnFixationSend.Invoke();

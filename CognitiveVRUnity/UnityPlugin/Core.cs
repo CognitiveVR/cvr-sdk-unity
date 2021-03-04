@@ -8,7 +8,7 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        public delegate void onSendData(); //send data
+        public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
         /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
         /// </summary>
@@ -17,7 +17,7 @@ namespace CognitiveVR
         /// <summary>
         /// call this to send all outstanding data to the dashboard
         /// </summary>
-        public static void InvokeSendDataEvent() { if (OnSendData != null) { OnSendData(); } }
+        public static void InvokeSendDataEvent(bool copyDataToCache) { if (OnSendData != null) { OnSendData(copyDataToCache); } }
 
         public delegate void CoreInitHandler(Error initError);
         /// <summary>
@@ -86,7 +86,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-        public const string SDK_VERSION = "0.25.3";
+		public const string SDK_VERSION = "0.26.0";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -131,19 +131,40 @@ namespace CognitiveVR
                 Util.logWarning("Core::SetSessionId cannot be called during a session!");
         }
 
-        public static string TrackingSceneId { get; private set; }
-        public static int TrackingSceneVersionNumber { get; private set; }
-        public static string TrackingSceneName { get; private set; }
+        public static string TrackingSceneId
+        {
+            get
+            {
+                if (TrackingScene == null) { return ""; }
+                return TrackingScene.SceneId;
+            }
+        }
+        public static int TrackingSceneVersionNumber
+        {
+            get
+            {
+                if (TrackingScene == null) { return 0; }
+                return TrackingScene.VersionNumber;
+            }
+        }
+        public static string TrackingSceneName
+        {
+            get
+            {
+                if (TrackingScene == null) { return ""; }
+                return TrackingScene.SceneName;
+            }
+        }
 
         public static CognitiveVR_Preferences.SceneSettings TrackingScene {get; private set;}
 
         /// <summary>
         /// Set the SceneId for recorded data by string
         /// </summary>
-        public static void SetTrackingScene(string sceneName)
+        public static void SetTrackingScene(string sceneName, bool writeSceneChangeEvent)
         {
             var scene = CognitiveVR_Preferences.FindScene(sceneName);
-            SetTrackingScene(scene);
+            SetTrackingScene(scene, writeSceneChangeEvent);
         }
 
         private static float SceneStartTime;
@@ -153,39 +174,36 @@ namespace CognitiveVR
         /// Set the SceneId for recorded data by reference
         /// </summary>
         /// <param name="scene"></param>
-        public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene)
+        public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene, bool WriteSceneChangeEvent)
         {
             if (IsInitialized)
             {
-                if (scene == null)
+                if (WriteSceneChangeEvent)
                 {
-                    //what scene is being loaded
-                    float duration = Time.time - SceneStartTime;
-                    SceneStartTime = Time.time;
-                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
+                    if (scene == null)
+                    {
+                        //what scene is being loaded
+                        float duration = Time.time - SceneStartTime;
+                        SceneStartTime = Time.time;
+                        new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
+                    }
+                    else
+                    {
+                        //what scene is being loaded
+                        float duration = Time.time - SceneStartTime;
+                        SceneStartTime = Time.time;
+                        new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
+                    }
                 }
-                else
-                {
-                    //what scene is being loaded
-                    float duration = Time.time - SceneStartTime;
-                    SceneStartTime = Time.time;
-                    new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
-                }
-            }
 
-            //just to send this scene change event
-            Core.InvokeSendDataEvent();
-            ForceWriteSessionMetadata = true;
-            TrackingSceneId = "";
-            TrackingSceneVersionNumber = 0;
-            TrackingSceneName = "";
-            TrackingScene = null;
-            if (scene != null)
-            {
-                TrackingSceneId = scene.SceneId;
-                TrackingSceneVersionNumber = scene.VersionNumber;
-                TrackingSceneName = scene.SceneName;
+                //just to send this scene change event
+                Core.InvokeSendDataEvent(false);
+                ForceWriteSessionMetadata = true;
                 TrackingScene = scene;
+            }
+            else
+            {
+                Util.logDevelopment("Trying to set scene without a session!");
             }
         }
 
@@ -242,9 +260,6 @@ namespace CognitiveVR
             _timestamp = 0;
             DeviceId = null;
             IsInitialized = false;
-            TrackingSceneId = "";
-            TrackingSceneVersionNumber = 0;
-            TrackingSceneName = "";
             TrackingScene = null;
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);

@@ -884,6 +884,7 @@ namespace CognitiveVR
         {
             if (!Core.IsInitialized) { return; }
             if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Fixation will not function"); return; }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
 
             PostGazeCallback();
         }

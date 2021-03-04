@@ -58,6 +58,13 @@ namespace CognitiveVR
         ///sky position
         public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at the camera far plane
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+
             gazebuilder.Append("{");
 
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
@@ -83,7 +90,7 @@ namespace CognitiveVR
             gazeCount++;
             if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
             {
-                SendGazeData();
+                SendGazeData(false);
             }
             else
             {
@@ -95,6 +102,13 @@ namespace CognitiveVR
         //gaze on dynamic object
         public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at a dynamic object
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+
             gazebuilder.Append("{");
 
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
@@ -123,7 +137,7 @@ namespace CognitiveVR
             gazeCount++;
             if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
             {
-                SendGazeData();
+                SendGazeData(false);
             }
             else
             {
@@ -135,6 +149,13 @@ namespace CognitiveVR
         //world position
         public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos) //looking at world
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+
             gazebuilder.Append("{");
 
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
@@ -161,7 +182,7 @@ namespace CognitiveVR
             gazeCount++;
             if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
             {
-                SendGazeData();
+                SendGazeData(false);
             }
             else
             {
@@ -174,6 +195,13 @@ namespace CognitiveVR
         //mediatime is milliseconds since the start of the video
         public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatimeMs, Vector2 uvs, Vector3 floorPos)
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+
             gazebuilder.Append("{");
 
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
@@ -209,7 +237,7 @@ namespace CognitiveVR
             gazeCount++;
             if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
             {
-                SendGazeData();
+                SendGazeData(false);
             }
             else
             {
@@ -218,7 +246,7 @@ namespace CognitiveVR
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
-        private static void SendGazeData()
+        private static void SendGazeData(bool copyDataToCache)
         {
             if (gazeCount == 0) { return; }
 
@@ -324,8 +352,17 @@ namespace CognitiveVR
 
             var sceneSettings = Core.TrackingScene;
             string url = CognitiveStatics.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string content = gazebuilder.ToString();
 
-            CognitiveVR.NetworkManager.Post(url, gazebuilder.ToString());
+            if (copyDataToCache)
+            {
+                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, content))
+                {
+                    NetworkManager.lc.Append(url, content);
+                }
+            }
+
+            CognitiveVR.NetworkManager.Post(url, content);
             if (OnGazeSend != null)
                 OnGazeSend.Invoke();
 
