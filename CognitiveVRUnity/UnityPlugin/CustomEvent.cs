@@ -298,9 +298,9 @@ namespace CognitiveVR
                 NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
         }
 
-        private static void Core_OnSendData()
+        private static void Core_OnSendData(bool copyDataToCache)
         {
-            SendTransactions();
+            SendTransactions(copyDataToCache);
         }
 
 
@@ -330,7 +330,7 @@ namespace CognitiveVR
                 {
                     if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");
-                    SendTransactions();
+                    SendTransactions(false);
                 }
             }
         }
@@ -348,11 +348,11 @@ namespace CognitiveVR
                 //Util.logDebug("instrumentation less than timer, less than extreme batch size");
                 return;
             }
-            SendTransactions();
+            SendTransactions(false);
         }
 
         static float minTimer_lastSendTime = -60;
-        static void SendTransactions()
+        static void SendTransactions(bool copyDataToCache)
         {
             if (cachedEvents == 0)
             {
@@ -364,10 +364,9 @@ namespace CognitiveVR
                 return;
             }
 
-            //TODO should hold until extreme batch size reached
-            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            if (Core.TrackingScene == null)
             {
-                Util.logDebug("Instrumentation.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
+                Util.logDebug("CustomEvent.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
                 cachedEvents = 0;
                 eventBuilder.Length = 0;
                 return;
@@ -428,6 +427,14 @@ namespace CognitiveVR
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
             string url = CognitiveStatics.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
 
+            if (copyDataToCache)
+            {
+                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, packagedEvents))
+                {
+                    NetworkManager.lc.Append(url, packagedEvents);
+                }
+            }
+
             NetworkManager.Post(url, packagedEvents);
             if (OnCustomEventSend != null)
             {
@@ -437,6 +444,13 @@ namespace CognitiveVR
 
         public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
@@ -474,6 +488,13 @@ namespace CognitiveVR
 
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
@@ -510,6 +531,7 @@ namespace CognitiveVR
                 CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);

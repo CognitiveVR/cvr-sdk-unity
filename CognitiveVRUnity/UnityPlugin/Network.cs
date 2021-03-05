@@ -37,7 +37,7 @@ namespace CognitiveVR
         //requests that are not from the cache and should write to the cache if session ends and requests are aborted
         static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
-        static LocalCache lc;
+        internal static LocalCache lc;
         int lastDataResponse = 0;
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace CognitiveVR
                     {
                         if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                             Util.logDevelopment("capture portal error! " + www.url);
-                        responsecode = 404;
+                        responsecode = 307;
                         lastDataResponse = responsecode;
                     }
                 }
@@ -178,8 +178,9 @@ namespace CognitiveVR
             }
             else
             {
-                if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; } //ignore if invalid auth api key
-                if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; } //ignore. couldn't parse response code, likely malformed url
+                if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; }
+                if (responsecode == 404) { Util.logWarning("Network Post Data response code is 404. Invalid URL?"); return; }
+                if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; }
 
                 if (CacheRequest != null)
                 {
@@ -246,7 +247,7 @@ namespace CognitiveVR
                 CognitiveStatics.Initialize();
 
                 //upload from local storage
-                if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } return; }
+                if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
 
                 if (lc == null)
                 {

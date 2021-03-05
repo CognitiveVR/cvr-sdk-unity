@@ -227,7 +227,7 @@ namespace CognitiveVR
                             EditorCore.RefreshSceneVersion(delegate ()
                             {
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, dyn.transform.lossyScale.x));
+                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z }));
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });
                         }
@@ -245,7 +245,7 @@ namespace CognitiveVR
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
                                 for(int i = 0; i< dyn.IdPool.Ids.Length;i++)
                                 {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], dyn.transform.lossyScale.x));
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z }));
                                 }
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });

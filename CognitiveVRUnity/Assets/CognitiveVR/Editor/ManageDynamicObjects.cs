@@ -505,17 +505,17 @@ public class ManageDynamicObjects : EditorWindow
             public string name;
             public string mesh;
             public string id;
-            public float scale = 1;
-            public AggregationManifestEntry(string _name, string _mesh, string _id, float _scale)
+            public float[] scaleCustom = new float[3]{1,1,1};
+            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
-                scale = _scale;
+                scaleCustom = _scaleCustom;
             }
             public override string ToString()
             {
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scale\":\"" + scale + "\"}";
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + "\"}";
             }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
@@ -616,7 +616,7 @@ public class ManageDynamicObjects : EditorWindow
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
-            json += "\"scale\":" + entry.scale;
+            json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "]";
             json += "},";
             containsValidEntry = true;
         }
@@ -680,7 +680,7 @@ public class ManageDynamicObjects : EditorWindow
                 //don't include meshes with empty mesh names in manifest
                 if (!string.IsNullOrEmpty(dynamic.MeshName))
                 {
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),dynamic.transform.lossyScale.x));
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),new float[3] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z }));
                 }
                 else
                 {

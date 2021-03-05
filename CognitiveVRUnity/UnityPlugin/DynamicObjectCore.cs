@@ -51,12 +51,15 @@ namespace CognitiveVR
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
-                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
-                    Util.logDevelopment("check to automatically send dynamics");
-                if (queuedManifest.Count > 0 || queuedSnapshots.Count > 0)
+                if (Core.TrackingScene != null)
                 {
-                    tempsnapshots = 0;
-                    ReadyToWriteJson = true;
+                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                        Util.logDevelopment("check to automatically send dynamics");
+                    if (queuedManifest.Count > 0 || queuedSnapshots.Count > 0)
+                    {
+                        tempsnapshots = 0;
+                        ReadyToWriteJson = true;
+                    }
                 }
             }
         }
@@ -68,6 +71,8 @@ namespace CognitiveVR
 
         internal static void WriteControllerManifestEntry(DynamicData data)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.controllerType = data.ControllerType;
@@ -98,6 +103,8 @@ namespace CognitiveVR
 
         internal static void WriteDynamicMediaManifestEntry(DynamicData data, string videourl)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
             dome.videoURL = videourl;
 
@@ -117,6 +124,8 @@ namespace CognitiveVR
 
         internal static void WriteDynamicManifestEntry(DynamicData data, string formattedProperties)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.HasProperties = true;
@@ -142,6 +151,8 @@ namespace CognitiveVR
         /// <param name="data"></param>
         internal static void WriteDynamicManifestEntry(DynamicData data)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             queuedManifest.Enqueue(dome);
@@ -160,6 +171,8 @@ namespace CognitiveVR
 
         internal static void WriteDynamic(DynamicData data, string props, bool writeScale)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -197,6 +210,8 @@ namespace CognitiveVR
         //button properties are formated as   ,"buttons":{"input":value,"input":value}
         internal static void WriteDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates)
         {
+            if (!Core.IsInitialized) { return; }
+            if (Core.TrackingScene == null) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -236,10 +251,11 @@ namespace CognitiveVR
 
         //if WriteImmediate don't start threads 
         static bool WriteImmediate = false;
-        internal static void FlushData()
+        static bool CopyDataToCache = false;
+        internal static void FlushData(bool copyDataToCache)
         {
             if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { return; }
-
+            CopyDataToCache = copyDataToCache;
             ReadyToWriteJson = true;
             WriteImmediate = true;
 
@@ -247,6 +263,7 @@ namespace CognitiveVR
                 WriteJson().MoveNext();
 
             WriteImmediate = false;
+            CopyDataToCache = false;
         }
 
         static IEnumerator WriteJson()
@@ -382,6 +399,15 @@ namespace CognitiveVR
 
                     string s = builder.ToString();
                     string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+
+                    if (CopyDataToCache)
+                    {
+                        if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, s))
+                        {
+                            NetworkManager.lc.Append(url, s);
+                        }
+                    }
+
                     NetworkManager.Post(url, s);
                     DynamicManager.DynamicObjectSendEvent();
                 }

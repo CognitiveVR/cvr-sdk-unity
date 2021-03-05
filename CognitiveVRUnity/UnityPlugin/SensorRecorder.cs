@@ -39,13 +39,20 @@ namespace CognitiveVR
                 {
                     if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send sensors");
-                    Core_OnSendData();
+                    Core_OnSendData(false);
                 }
             }
         }
 
         public static void RecordDataPoint(string category, float value)
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+
             if (CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
@@ -77,6 +84,13 @@ namespace CognitiveVR
         ///doubles are recorded raw, but cast to float for Active Session View
         public static void RecordDataPoint(string category, double value)
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+
             if (CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
@@ -107,6 +121,13 @@ namespace CognitiveVR
 
         public static void RecordDataPoint(string category, float value, double timestamp)
         {
+            if (Core.IsInitialized == false)
+            {
+                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                return;
+            }
+            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+
             if (CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots[category].Add(GetSensorDataToString(timestamp, value));
@@ -146,7 +167,7 @@ namespace CognitiveVR
             {
                 return;
             }
-            Core_OnSendData();
+            Core_OnSendData(false);
         }
 
         public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
@@ -156,12 +177,11 @@ namespace CognitiveVR
         public static event Core.onDataSend OnSensorSend;
 
         static float lastSendTime = -60;
-        private static void Core_OnSendData()
+        private static void Core_OnSendData(bool copyDataToCache)
         {
             if (CachedSnapshots.Keys.Count <= 0) { CognitiveVR.Util.logDebug("Sensor.SendData found no data"); return; }
 
-            //TODO should hold until extreme batch size reached
-            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            if (Core.TrackingScene == null)
             {
                 CognitiveVR.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
                 CachedSnapshots.Clear();
@@ -229,9 +249,17 @@ namespace CognitiveVR
             currentSensorSnapshots = 0;
 
             string url = CognitiveStatics.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
-            //byte[] outBytes = System.Text.UTF8Encoding.UTF8.GetBytes();
-            //CognitiveVR_Manager.Instance.StartCoroutine(CognitiveVR_Manager.Instance.PostJsonRequest(outBytes, url));
-            NetworkManager.Post(url, sb.ToString());
+            string content = sb.ToString();
+
+            if (copyDataToCache)
+            {
+                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, content))
+                {
+                    NetworkManager.lc.Append(url, content);
+                }
+            }
+
+            NetworkManager.Post(url, content);
             if (OnSensorSend != null)
             {
                 OnSensorSend.Invoke();

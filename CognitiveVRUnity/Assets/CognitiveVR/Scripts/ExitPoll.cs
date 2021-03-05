@@ -532,7 +532,7 @@ namespace CognitiveVR
                 exitpollEvent.SetProperty(property.Key, property.Value);
             }
             exitpollEvent.Send(CurrentExitPollPanel.transform.position);
-            Core.InvokeSendDataEvent();
+            Core.InvokeSendDataEvent(false);
         }
 
         //puts responses from questions into json for exitpoll microservice

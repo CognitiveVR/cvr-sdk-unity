@@ -83,8 +83,8 @@ namespace CognitiveVR
         private static string fixationUrl;
         internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
-        //TODO make this internal once static dynamic object code is moved into DynamicObjectCore script
-        public static string POSTDYNAMICDATA (string sceneid, int versionnumber)
+        
+        internal static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
             return string.Concat(dynamicUrl, sceneid, "?version=",versionnumber.ToString());
         }
