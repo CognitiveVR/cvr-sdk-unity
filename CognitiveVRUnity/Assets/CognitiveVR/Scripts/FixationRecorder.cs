@@ -1031,8 +1031,8 @@ namespace CognitiveVR
                     EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
                     EyeCaptures[index].HitDynamicId = hitDynamic.GetId();
 
-                    //unscaled so point will appear on surface
-                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPointUnscaled(world);
+                    //scaled because dynamic obejct handles the scale so point will appear on surface
+                    EyeCaptures[index].LocalPosition = hitDynamic.transform.InverseTransformPoint(world);
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = true;

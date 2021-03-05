@@ -65,7 +65,7 @@ namespace CognitiveVR
             if (newFixation.IsLocal)
             {
                 //apply scale to fixation
-                newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
+                //newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
             }
 			
             Fixation f = new Fixation(newFixation);
