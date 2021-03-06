@@ -979,6 +979,24 @@ namespace CognitiveVR
             }
         }
 
+        static List<TransformHolder> GetParentTransformList(List<TransformHolder> list, Transform owner)
+        {
+            if (owner.parent != null)
+            {
+                var th = new TransformHolder() { target = owner.parent, localScale = owner.parent.localScale };
+                list.Add(th);
+                GetParentTransformList(list, owner.parent);
+            }
+
+            return list;
+        }
+
+        class TransformHolder
+        {
+            public Transform target;
+            public Vector3 localScale;
+        }
+
         /// <summary>
         /// export a gameobject, temporarily spawn them in the scene if they are prefabs selected in the project window
         /// </summary>
@@ -1015,8 +1033,16 @@ namespace CognitiveVR
             Quaternion originalRot = dynamicObject.transform.localRotation;
             dynamicObject.transform.localRotation = Quaternion.identity;
 
-            Vector4 originalScale = dynamicObject.transform.localScale;
-            dynamicObject.transform.localScale = Vector3.one;
+            //Vector4 originalScale = dynamicObject.transform.localScale;
+            //dynamicObject.transform.localScale = Vector3.one;
+            //normalize the dynamic object (and all it's parents) so scale is not doubly applied in OE/SE since manifest data / session data also holds LOSSYscale
+            var list = new List<TransformHolder>();
+            list.Add(new TransformHolder() { target = dynamicObject.transform, localScale = dynamicObject.transform.localScale });
+            GetParentTransformList(list, dynamicObject.transform);
+            foreach (var v in list)
+            {
+                v.target.transform.localScale = Vector3.one;
+            }
 
             Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
@@ -1069,17 +1095,20 @@ namespace CognitiveVR
                     UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
             }
 
-            EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
-
             dynamicObject.transform.localPosition = originalOffset;
             dynamicObject.transform.localRotation = originalRot;
-            dynamicObject.transform.localScale = originalScale;
+            //dynamicObject.transform.localScale = originalScale;
+            foreach (var v in list)
+            {
+                v.target.transform.localScale = v.localScale;
+            }
+
+            EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
 
             //queue resize texture
             ResizeQueue.Enqueue(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
             EditorApplication.update -= UpdateResize;
             EditorApplication.update += UpdateResize;
-
 
             //clean up
             if (prefabInScene != null)

@@ -626,7 +626,7 @@ namespace CognitiveVR
                 else
                 {
                     pos = ActiveDynamicObjectsArray[index].Transform.position;
-                    scale = ActiveDynamicObjectsArray[index].Transform.localScale;
+                    scale = ActiveDynamicObjectsArray[index].Transform.lossyScale;
                     rot = ActiveDynamicObjectsArray[index].Transform.rotation;
                 }
 
