@@ -821,6 +821,7 @@ namespace CognitiveVR
         //used by RenderEyeTracking for rendering saccades
         public const int DisplayGazePointCount = 4096;
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
+        public List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
         bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation
@@ -1012,6 +1013,7 @@ namespace CognitiveVR
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
 
                 //IMPROVEMENT allocate this at startup
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
@@ -1064,6 +1066,7 @@ namespace CognitiveVR
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
                 DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
                 EyeCaptures[index].OffTransform = true;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
@@ -1072,6 +1075,13 @@ namespace CognitiveVR
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].Discard = true;
                 EyeCaptures[index].OffTransform = true;
+                if (SaccadeScreenPoints.Count > 0)
+                    SaccadeScreenPoints.RemoveAt(0);
+            }
+
+            if (SaccadeScreenPoints.Count > 15)
+            {
+                SaccadeScreenPoints.RemoveAt(0);
             }
 
             if (areEyesClosed || EyeCaptures[index].Discard) { }

@@ -66,6 +66,7 @@ namespace CognitiveVR.ActiveSession
             //sensor colors
 
             GUILayout.Space(20);
+            asv.FullscreenDisplay = (FullscreenDisplay)EditorGUILayout.ObjectField("Fullscreen Display", asv.FullscreenDisplay, typeof(FullscreenDisplay), true);
             asv.MainCameraRenderImage = (RawImage)EditorGUILayout.ObjectField("Main Camera Render Image", asv.MainCameraRenderImage, typeof(RawImage), true);
             asv.RenderEyetracking = (RenderEyetracking)EditorGUILayout.ObjectField("Render EyeTracking Camera", asv.RenderEyetracking, typeof(RenderEyetracking), true);
             asv.WarningText = (Text)EditorGUILayout.ObjectField("Warning Text", asv.WarningText, typeof(Text), true);
@@ -122,7 +123,7 @@ namespace CognitiveVR.ActiveSession
             }
             else
             {
-                Debug.LogError("Couldn't find SteamVR Play Area!");
+                activeSessionView.VRSceneCamera = Camera.main;
             }
 #else
             activeSessionView.VRSceneCamera = Camera.main;
