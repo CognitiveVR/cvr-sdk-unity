@@ -775,7 +775,7 @@ namespace CognitiveVR
             if (CognitiveVR_Preferences.Instance.SendDataOnPause)
             {
                 new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
-                Core.InvokeSendDataEvent(false);
+                Core.InvokeSendDataEvent(true);
             }
         }
 
@@ -800,7 +800,7 @@ namespace CognitiveVR
             Core.QuitEventClear();
             
 
-            Core.InvokeSendDataEvent(false);
+            Core.InvokeSendDataEvent(true);
             Core.Reset();
             StartCoroutine(SlowQuit());
         }

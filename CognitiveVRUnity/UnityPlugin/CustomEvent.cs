@@ -560,9 +560,25 @@ namespace CognitiveVR
                     {
                         JsonUtil.SetFloat(properties[i].Key, (float)properties[i].Value, eventBuilder);
                     }
+                    else if (properties[i].Value.GetType() == typeof(double))
+                    {
+                        JsonUtil.SetDouble(properties[i].Key, (double)properties[i].Value, eventBuilder);
+                    }
+                    else if (properties[i].Value.GetType() == typeof(int))
+                    {
+                        JsonUtil.SetInt(properties[i].Key, (int)properties[i].Value, eventBuilder);
+                    }
+                    else if (properties[i].Value.GetType() == typeof(long))
+                    {
+                        JsonUtil.SetLong(properties[i].Key, (long)properties[i].Value, eventBuilder);
+                    }
+                    else if (properties[i].Value.GetType() == null)
+                    {
+                        JsonUtil.SetNull(properties[i].Key, eventBuilder);
+                    }
                     else
                     {
-                        JsonUtil.SetObject(properties[i].Key, properties[i].Value, eventBuilder);
+                        JsonUtil.SetString(properties[i].Key, properties[i].Value.ToString(), eventBuilder);
                     }
                 }
                 eventBuilder.Append("}"); //close properties object

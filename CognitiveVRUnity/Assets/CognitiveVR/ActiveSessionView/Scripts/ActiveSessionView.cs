@@ -22,7 +22,7 @@ namespace CognitiveVR.ActiveSession
 
         IEnumerator Start()
         {
-            FullscreenDisplay.Initialize(VRSceneCamera);
+            FullscreenDisplay.Initialize(this,VRSceneCamera);
             FullscreenDisplay.SetVisible(false);
             if (RenderEyetracking == null)
             {
@@ -37,7 +37,7 @@ namespace CognitiveVR.ActiveSession
                 yield break;
             }
 
-            RenderEyetracking.Initialize(VRSceneCamera);
+            RenderEyetracking.Initialize(this,VRSceneCamera);
             var copy = VRSceneCamera.gameObject.AddComponent<CopyVRViewToRenderTexture>();
             copy.Initialize(MainCameraRenderImage);
 

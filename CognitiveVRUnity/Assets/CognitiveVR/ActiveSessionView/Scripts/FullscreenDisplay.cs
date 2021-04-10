@@ -15,8 +15,10 @@ namespace CognitiveVR.ActiveSession
 {
     public class FullscreenDisplay : MonoBehaviour
     {
-        public void Initialize(Camera camera)
+        ActiveSessionView Asv;
+        public void Initialize(ActiveSessionView asv, Camera camera)
         {
+            Asv = asv;
             HMDCamera = camera;
 #if CVR_XR //if openvr xr. windowsMR displays both eyes. CONSIDER solutions
         openVROffset = new Vector2(-0.05f,-0.11f);
@@ -93,7 +95,7 @@ namespace CognitiveVR.ActiveSession
         void DrawTextureCentered(Texture texture, Vector2 size, Vector2 position, Color color)
         {
             Rect reticuleRect = new Rect(position.x - size.x / 2, Screen.height - position.y - size.y / 2, size.x, size.y);
-            Graphics.DrawTexture(reticuleRect, texture, new Rect(0, 0, texture.width, texture.height), 0, 0, 0, 0, color);
+            Graphics.DrawTexture(reticuleRect, texture, new Rect(0, 0, 1,1), 0, 0, 0, 0, color);
         }
 
         float Remap(float num, float low1, float high1, float low2, float high2)
@@ -130,42 +132,50 @@ namespace CognitiveVR.ActiveSession
 
             DrawTextureCentered(reticuleTexture, new Vector2(reticuleSize, reticuleSize), screenPoint, ReticuleColor);
         }
-#endregion
+        #endregion
 
-#region Fixations
+        #region Fixations
 
         public Texture fixationTexture;
-        Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
+        List<Fixation> fixations = new List<Fixation>(64);
         public float fixationSize = 32;
         public Color FixationColor = Color.white;
 
         private void Fixation_OnFixationRecord(Fixation fixation)
         {
-            if (fixationQueue.Count > 49)
-                fixationQueue.Dequeue();
-            fixationQueue.Enqueue(new Fixation(fixation));
+            if (fixations.Count > 63)
+                fixations.RemoveAt(0);
+            fixations.Add(new Fixation(fixation));
         }
 
         void Fixation_OnGUI()
         {
-            foreach (Fixation f in fixationQueue)
+            //hold more than shown in collection. CONSIDER adding controls to show more fixations
+            //show most recent fixations - the last part of the collection
+
+            int displayed = 0;
+            for (int i = fixations.Count - 1; i >= 0; i--)
             {
-                if (f.IsLocal && f.DynamicTransform != null)
+                if (displayed > Asv.NumberOfFixationsToDisplay) { break; }
+                if (fixations[i] == null) { continue; }
+
+                displayed++;
+                if (fixations[i].IsLocal && fixations[i].DynamicTransform != null)
                 {
-                    var screenPoint = WorldToRemapScreen(f.DynamicTransform.TransformPoint(f.LocalPosition));
+                    var screenPoint = WorldToRemapScreen(fixations[i].DynamicTransform.TransformPoint(fixations[i].LocalPosition));
                     DrawTextureCentered(fixationTexture, new Vector2(fixationSize, fixationSize), screenPoint, FixationColor);
                 }
                 else
                 {
-                    var screenPoint = WorldToRemapScreen(f.WorldPosition);
+                    var screenPoint = WorldToRemapScreen(fixations[i].WorldPosition);
                     DrawTextureCentered(fixationTexture, new Vector2(fixationSize, fixationSize), screenPoint, FixationColor);
                 }
             }
         }
 
-#endregion
+        #endregion
 
-#region Saccades
+        #region Saccades
 
         Vector3 hmdforward;
         Matrix4x4 m4proj;

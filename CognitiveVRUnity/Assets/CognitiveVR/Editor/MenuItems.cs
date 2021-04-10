@@ -10,7 +10,7 @@ namespace CognitiveVR
 #if CVR_NEURABLE
         public const string Menu = "Neurable/Analytics Portal/";
 #else
-        public const string Menu = "cognitive3D/";
+        public const string Menu = "Cognitive3D/";
 #endif
 
         [MenuItem(Menu + "Select Cognitive3D Analytics Manager", priority = 0)]
@@ -111,7 +111,7 @@ namespace CognitiveVR
             ManageDynamicObjects.Init();
         }
 
-        [MenuItem(Menu + "Advanced Options", priority = 65)]
+        [MenuItem(Menu + "Preferences", priority = 65)]
         static void Cognitive3DOptions()
         {
             //select asset

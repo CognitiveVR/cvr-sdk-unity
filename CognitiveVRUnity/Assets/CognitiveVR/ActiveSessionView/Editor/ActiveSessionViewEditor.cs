@@ -59,6 +59,10 @@ namespace CognitiveVR.ActiveSession
             }
             ret.FixationScale = EditorGUILayout.Slider("Fixation Display Size", ret.FixationScale, 0, 1);
 
+            //full screen display number of fixatiosn
+            asv.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.NumberOfFixationsToDisplay, 0, 64);
+            //asv.SaccadesFromLastSeconds = EditorGUILayout.Slider("Saccade Cutoff Time", asv.SaccadesFromLastSeconds, 0, 10);
+
             //sensors
             src.LineWidth = EditorGUILayout.Slider("Sensor Line Width", src.LineWidth, 0.001f, 0.01f);
             sc.MaxSensorTimeSpan = EditorGUILayout.Slider("Sensor Timespan", sc.MaxSensorTimeSpan, 10, 120);

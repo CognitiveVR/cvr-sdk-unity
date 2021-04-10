@@ -29,7 +29,7 @@ namespace CognitiveVR.ActiveSession
         bool displayFixations = false;
         bool displayGaze = false;
 
-        Queue<Fixation> fixationQueue = new Queue<Fixation>(50);
+        List<Fixation> fixations = new List<Fixation>(64);
 
 
 
@@ -40,9 +40,11 @@ namespace CognitiveVR.ActiveSession
         int pixelheight;
         public float lineWidth = 0.2f;
         System.Threading.Thread VectorMathThread;
+        ActiveSessionView Asv;
 
-        public void Initialize(Camera followCamera)
+        public void Initialize(ActiveSessionView asv, Camera followCamera)
         {
+            Asv = asv;
             FollowCamera = followCamera;
             TargetCameraTransform = followCamera.transform;
             FixationCamera = GetComponent<Camera>();
@@ -107,9 +109,9 @@ namespace CognitiveVR.ActiveSession
 
         private void FixationCore_OnFixationRecord(Fixation fixation)
         {
-            if (fixationQueue.Count > 49)
-                fixationQueue.Dequeue();
-            fixationQueue.Enqueue(new Fixation(fixation));
+            if (fixations.Count > 63)
+                fixations.RemoveAt(0);
+            fixations.Add(new Fixation(fixation));
         }
 
         void Update()
@@ -127,16 +129,21 @@ namespace CognitiveVR.ActiveSession
             {
                 Vector3 scale = Vector3.one * FixationScale;
                 //on new fixation
-                foreach (Fixation f in fixationQueue)
+                int displayed = 0;
+                for (int i = fixations.Count - 1; i >= 0; i--)
                 {
-                    if (f.IsLocal && f.DynamicTransform != null)
+                    if (displayed > Asv.NumberOfFixationsToDisplay) { break; }
+                    if (fixations[i] == null) { continue; }
+
+                    displayed++;
+                    if (fixations[i].IsLocal && fixations[i].DynamicTransform != null)
                     {
-                        Matrix4x4 m = Matrix4x4.TRS(f.DynamicTransform.TransformPoint(f.LocalPosition), Quaternion.identity, scale * f.MaxRadius);
+                        Matrix4x4 m = Matrix4x4.TRS(fixations[i].DynamicTransform.TransformPoint(fixations[i].LocalPosition), Quaternion.identity, scale * fixations[i].MaxRadius);
                         Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
                     }
                     else
                     {
-                        Matrix4x4 m = Matrix4x4.TRS(f.WorldPosition, Quaternion.identity, scale * f.MaxRadius);
+                        Matrix4x4 m = Matrix4x4.TRS(fixations[i].WorldPosition, Quaternion.identity, scale * fixations[i].MaxRadius);
                         Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
                     }
                 }

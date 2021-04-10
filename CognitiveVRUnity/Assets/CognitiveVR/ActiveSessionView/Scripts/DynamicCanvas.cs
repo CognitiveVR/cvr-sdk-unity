@@ -232,7 +232,7 @@ namespace CognitiveVR.ActiveSession
             DynamicSeqenceList.Sort(delegate (DynamicSortable x, DynamicSortable y)
             {
                 if (x.Sequence == y.Sequence) { return 0; }
-                if (x.Sequence < y.Sequence) { return 1; }
+                if (x.Sequence > y.Sequence) { return 1; }
                 return -1;
             });
             if (SortMethod == SortByMethod.ReverseSequence)
