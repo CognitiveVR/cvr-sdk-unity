@@ -9,6 +9,17 @@ namespace CognitiveVR.ActiveSession
     [CustomEditor(typeof(ActiveSessionView))]
     public class ActiveSessionViewEditor : Editor
     {
+        enum FeatureVisibility
+        {
+            DetailViewAndFullscreen,
+            DetailView,
+            Fullscreen,
+            Off
+        }
+
+        UnityEngine.EventSystems.EventSystem eventSystem;
+        bool foldout;
+
         public override void OnInspectorGUI()
         {
             var script = serializedObject.FindProperty("m_Script");
@@ -19,7 +30,6 @@ namespace CognitiveVR.ActiveSession
             //base.OnInspectorGUI();
             ActiveSessionView asv = target as ActiveSessionView;
             var ret = asv.GetComponentInChildren<RenderEyetracking>();
-            var src = asv.GetComponentInChildren<SensorRenderCamera>();
             var sc = asv.GetComponentInChildren<SensorCanvas>();
 
             if (IsSceneObject(asv.gameObject))
@@ -44,39 +54,163 @@ namespace CognitiveVR.ActiveSession
                     }
                     GUILayout.EndHorizontal();
                 }
+                if (eventSystem == null)
+                    eventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                if (eventSystem == null)
+                {
+                    GUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox("Cannot find Event System", MessageType.Error);
+                    if (GUILayout.Button("Fix", GUILayout.MaxWidth(40), GUILayout.Height(38)))
+                    {
+                        GameObject go = new GameObject("Event System");
+                        eventSystem = go.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                        go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                    }
+                    GUILayout.EndHorizontal();
+                }
 
             }
 
-            asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("VR Scene Camera", asv.VRSceneCamera, typeof(Camera), true);
+            asv.VRSceneCamera = (Camera)EditorGUILayout.ObjectField("HMD Camera", asv.VRSceneCamera, typeof(Camera), true);
+
+            #region get feature visibility
+
+            FeatureVisibility reticleVisibility = FeatureVisibility.Off;
+            if (asv.FullscreenDisplay.showReticle && ret.showReticle)
+            {
+                reticleVisibility = FeatureVisibility.DetailViewAndFullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showReticle && ret.showReticle)
+            {
+                reticleVisibility = FeatureVisibility.DetailView;
+            }
+            else if (asv.FullscreenDisplay.showReticle && !ret.showReticle)
+            {
+                reticleVisibility = FeatureVisibility.Fullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showReticle && !ret.showReticle)
+            {
+                reticleVisibility = FeatureVisibility.Off;
+            }
+
+            FeatureVisibility fixationVisibility = FeatureVisibility.Off;
+            if (asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
+            {
+                fixationVisibility = FeatureVisibility.DetailViewAndFullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
+            {
+                fixationVisibility = FeatureVisibility.DetailView;
+            }
+            else if (asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
+            {
+                fixationVisibility = FeatureVisibility.Fullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
+            {
+                fixationVisibility = FeatureVisibility.Off;
+            }
+
+            FeatureVisibility saccadeVisibility = FeatureVisibility.Off;
+            if (asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
+            {
+                saccadeVisibility = FeatureVisibility.DetailViewAndFullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
+            {
+                saccadeVisibility = FeatureVisibility.DetailView;
+            }
+            else if (asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
+            {
+                saccadeVisibility = FeatureVisibility.Fullscreen;
+            }
+            else if (!asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
+            {
+                saccadeVisibility = FeatureVisibility.Off;
+            }
+
+            #endregion
+
+
+            //reticle
+            EditorGUILayout.LabelField("Reticle", EditorStyles.boldLabel);
+            reticleVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Reticle", reticleVisibility);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Reticle Texture");
+            asv.FullscreenDisplay.ReticleTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.ReticleTexture, typeof(Texture), false);
+            GUILayout.EndHorizontal();
+            asv.FullscreenDisplay.ReticleSize = EditorGUILayout.Slider("Reticle Size (pixels)", asv.FullscreenDisplay.ReticleSize, 10, 120);
+            asv.FullscreenDisplay.ReticleColor = EditorGUILayout.ColorField("Reticle Colour", asv.FullscreenDisplay.ReticleColor);
+            ret.ReticleColor = asv.FullscreenDisplay.ReticleColor;
+            ret.ReticleSize = asv.FullscreenDisplay.ReticleSize;
+            ret.ReticleTexture = asv.FullscreenDisplay.ReticleTexture;
+            //TODO reticle on detail view
+
 
             //fixations
-            ret.lineWidth = EditorGUILayout.Slider("Saccade Width", ret.lineWidth, 0.001f, 0.1f);
-            ret.FixationMaterial.color = EditorGUILayout.ColorField("Fixation Colour", ret.FixationMaterial.color);
-            ret.FixationColor = ret.FixationMaterial.color;
-            if (ret.FixationMaterial.HasProperty("_EmissionColor"))
-            {
-                ret.FixationMaterial.SetColor("_EmissionColor", ret.FixationColor / 2);
-            }
-            ret.FixationScale = EditorGUILayout.Slider("Fixation Display Size", ret.FixationScale, 0, 1);
-
-            //full screen display number of fixatiosn
+            EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
+            fixationVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Fixations", fixationVisibility);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Fixation Texture");
+            asv.FullscreenDisplay.fixationTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.fixationTexture, typeof(Texture), false);
+            GUILayout.EndHorizontal();
+            asv.FullscreenDisplay.fixationSize = EditorGUILayout.Slider("Fixation Size (pixels)", asv.FullscreenDisplay.fixationSize, 10, 120);
+            asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Colour", asv.FullscreenDisplay.FixationColor);
             asv.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.NumberOfFixationsToDisplay, 0, 64);
-            //asv.SaccadesFromLastSeconds = EditorGUILayout.Slider("Saccade Cutoff Time", asv.SaccadesFromLastSeconds, 0, 10);
+            ret.FixationColor = asv.FullscreenDisplay.FixationColor;
+            //TODO copy fullscreen display texture and color to rendereyetracking display
+            //TEST number of fixations to display fullscreen
+            //TODO number of fixations to display render view
+
+
+            //saccades
+            EditorGUILayout.LabelField("Saccades", EditorStyles.boldLabel);
+            saccadeVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Saccades", saccadeVisibility);
+            asv.FullscreenDisplay.SaccadeColor = EditorGUILayout.ColorField("Saccade Color", asv.FullscreenDisplay.SaccadeColor);
+            asv.FullscreenDisplay.SaccadeWidth = EditorGUILayout.Slider("Saccade Width", asv.FullscreenDisplay.SaccadeWidth, 0.001f, 0.1f);
+            asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Cutoff Time", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
+            ret.SaccadesFromLastSeconds = asv.FullscreenDisplay.SaccadeTimespan;
+            ret.SaccadeColor = asv.FullscreenDisplay.SaccadeColor;
+            ret.SaccadeWidth = asv.FullscreenDisplay.SaccadeWidth;
+            //TODO saccade clip to time
+            //TODO saccades in fullscreen view
+
 
             //sensors
-            src.LineWidth = EditorGUILayout.Slider("Sensor Line Width", src.LineWidth, 0.001f, 0.01f);
+            EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
+            sc.LineWidth = EditorGUILayout.Slider("Sensor Line Width", sc.LineWidth, 0.001f, 0.03f);
             sc.MaxSensorTimeSpan = EditorGUILayout.Slider("Sensor Timespan", sc.MaxSensorTimeSpan, 10, 120);
 
-            //sensor colors
 
-            GUILayout.Space(20);
-            asv.FullscreenDisplay = (FullscreenDisplay)EditorGUILayout.ObjectField("Fullscreen Display", asv.FullscreenDisplay, typeof(FullscreenDisplay), true);
-            asv.MainCameraRenderImage = (RawImage)EditorGUILayout.ObjectField("Main Camera Render Image", asv.MainCameraRenderImage, typeof(RawImage), true);
-            asv.RenderEyetracking = (RenderEyetracking)EditorGUILayout.ObjectField("Render EyeTracking Camera", asv.RenderEyetracking, typeof(RenderEyetracking), true);
-            asv.WarningText = (Text)EditorGUILayout.ObjectField("Warning Text", asv.WarningText, typeof(Text), true);
+
+            //internal
+            foldout = EditorGUILayout.Foldout(foldout, "Internal");
+            if (foldout)
+            {
+                asv.FullscreenDisplay = (FullscreenDisplay)EditorGUILayout.ObjectField("Fullscreen Display", asv.FullscreenDisplay, typeof(FullscreenDisplay), true);
+                asv.MainCameraRenderImage = (RawImage)EditorGUILayout.ObjectField("Main Camera Render Image", asv.MainCameraRenderImage, typeof(RawImage), true);
+                asv.RenderEyetracking = (RenderEyetracking)EditorGUILayout.ObjectField("Render EyeTracking Camera", asv.RenderEyetracking, typeof(RenderEyetracking), true);
+                asv.WarningText = (Text)EditorGUILayout.ObjectField("Warning Text", asv.WarningText, typeof(Text), true);
+            }
 
             if (GUI.changed)
             {
+                sc.SetTimespan(sc.MaxSensorTimeSpan);
+
+                #region set feature visibility
+
+                ret.showReticle = reticleVisibility == FeatureVisibility.DetailView || reticleVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                asv.FullscreenDisplay.showReticle = reticleVisibility == FeatureVisibility.Fullscreen || reticleVisibility == FeatureVisibility.DetailViewAndFullscreen;
+
+                ret.shouldDisplayFixations = fixationVisibility == FeatureVisibility.DetailView || fixationVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                asv.FullscreenDisplay.showFixations = fixationVisibility == FeatureVisibility.Fullscreen || fixationVisibility == FeatureVisibility.DetailViewAndFullscreen;
+
+                ret.shouldDisplaySaccades = saccadeVisibility == FeatureVisibility.DetailView || saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                asv.FullscreenDisplay.showSaccades = saccadeVisibility == FeatureVisibility.Fullscreen || saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen;
+
+                #endregion
+
+
                 EditorUtility.SetDirty(ret);
                 EditorUtility.SetDirty(sc);
                 EditorUtility.SetDirty(asv);

@@ -10,35 +10,53 @@ namespace CognitiveVR.ActiveSession
 {
     public class RenderEyetracking : MonoBehaviour
     {
-        public int FixationRenderLayer = 3; //unnamed internal layer
-        public int Mask = 8;
+        //reticle
+        [Space(10)]
+        public bool showReticle;
+        public Color ReticleColor = Color.white;
+        public float ReticleSize = 32;
+        public Texture ReticleTexture;
 
-        public float FixationScale = 0.2f;
+        //fixations
+        [Space(10)]
+        public bool shouldDisplayFixations;
+        bool canDisplayFixations;
+        float FixationScale = 1;
         public Mesh FixationMesh;
         public Material FixationMaterial;
         public Color FixationColor;
 
+        //saccades
+        [Space(10)]
+        public bool shouldDisplaySaccades;
+        bool canDisplaySaccades;
         public Material SaccadeMaterial;
+        public Color SaccadeColor;
+        public float SaccadeWidth = 0.005f;
+        public float SaccadesFromLastSeconds = 2;
 
+        //internal
+        [Space(10)]
+        public int FixationRenderLayer = 3; //unnamed internal layer
+        public int Mask = 8;
         CognitiveVR.FixationRecorder fixationRecorder;
         CognitiveVR.GazeBase gazeBase;
         Camera FixationCamera;
         Transform TargetCameraTransform;
         Camera FollowCamera;
 
-        bool displayFixations = false;
-        bool displayGaze = false;
+        //fallback for calculating/displaying 'saccades' when fixations aren't enable
+        //uses data from gaze recorder instead of fixation recorder
+        bool canDisplayGaze;
+        public bool shouldDisplayGaze;
+
 
         List<Fixation> fixations = new List<Fixation>(64);
-
-
-
         Vector3 hmdforward;
         Matrix4x4 m4proj;
         Matrix4x4 m4world;
         int pixelwidth;
         int pixelheight;
-        public float lineWidth = 0.2f;
         System.Threading.Thread VectorMathThread;
         ActiveSessionView Asv;
 
@@ -57,7 +75,7 @@ namespace CognitiveVR.ActiveSession
                 if (fixationRecorder != null)
                 {
                     quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
-                    displayFixations = true;
+                    canDisplayFixations = true;
                     FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
                     if (threaded)
                     {
@@ -67,8 +85,9 @@ namespace CognitiveVR.ActiveSession
                 }
                 else
                 {
-                    displayGaze = true;
+                    canDisplayGaze = true;
                 }
+                canDisplaySaccades = true;
             }
             else
             {
@@ -91,7 +110,7 @@ namespace CognitiveVR.ActiveSession
             if (initError == Error.None && fixationRecorder != null)
             {
                 quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
-                displayFixations = true;
+                canDisplayFixations = true;
                 FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
                 if (threaded)
                 {
@@ -103,8 +122,9 @@ namespace CognitiveVR.ActiveSession
             {
                 if (gazeBase == null)
                     gazeBase = FindObjectOfType<GazeBase>();
-                displayGaze = true;
+                canDisplayGaze = true;
             }
+            canDisplaySaccades = true;
         }
 
         private void FixationCore_OnFixationRecord(Fixation fixation)
@@ -116,7 +136,20 @@ namespace CognitiveVR.ActiveSession
 
         void Update()
         {
-            if (!displayFixations && !displayGaze) { return; }
+            if (showReticle)
+            {
+                FixationMaterial.color = ReticleColor;
+                var gazeRay = CognitiveVR.GazeHelper.GetCurrentWorldGazeRay();
+                var point = gazeRay.GetPoint(20);
+                //draw a texture on screen?
+                //graphics.drawmesh in world?
+                Matrix4x4 m = Matrix4x4.TRS(point, Quaternion.identity, Vector3.one*0.2f);
+                Graphics.DrawMesh(FixationMesh, m, FixationMaterial, FixationRenderLayer, FixationCamera);
+                //draw a quad with an unlit material (using the texture?)
+            }
+
+            if (!canDisplayFixations && !canDisplayGaze) { return; }
+            FixationMaterial.color = FixationColor;
 
             hmdforward = CognitiveVR.GameplayReferences.HMD.forward;
 
@@ -125,7 +158,7 @@ namespace CognitiveVR.ActiveSession
             pixelwidth = FixationCamera.pixelWidth;
             pixelheight = FixationCamera.pixelHeight;
 
-            if (displayFixations)
+            if (canDisplayFixations && shouldDisplayFixations)
             {
                 Vector3 scale = Vector3.one * FixationScale;
                 //on new fixation
@@ -162,7 +195,7 @@ namespace CognitiveVR.ActiveSession
                     temp.TransformMatrix = temp.Transform.localToWorldMatrix;
                 }
             }
-            else if (displayGaze)
+            else if (canDisplayGaze && shouldDisplayGaze)
             {
                 //update list of points
                 Color magenta = Color.magenta;
@@ -191,7 +224,7 @@ namespace CognitiveVR.ActiveSession
                 Vector3 b1 = zero; //inner corner
                 Vector3 b2 = zero; //outer corner
 
-                if (displayFixations)
+                if (canDisplaySaccades && shouldDisplaySaccades && canDisplayFixations)
                 {
                     for (int i = 0; i < fixationRecorder.DisplayGazePoints.Count; i++)
                     {
@@ -256,7 +289,8 @@ namespace CognitiveVR.ActiveSession
                         CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref j);
                     }
                 }
-                else if (displayGaze)
+                //else if (canDisplayGaze && shouldDisplayGaze)
+                else if (canDisplaySaccades && shouldDisplaySaccades && !canDisplayFixations)
                 {
                     for (int i = 0; i < gazeBase.DisplayGazePoints.Count; i++)
                     {
@@ -358,7 +392,7 @@ namespace CognitiveVR.ActiveSession
 
 
             //outer corner
-            float hypotenuse = (lineWidth / 2f) / Mathf.Cos(complementaryAngleABC * Mathf.Deg2Rad);
+            float hypotenuse = (SaccadeWidth / 2f) / Mathf.Cos(complementaryAngleABC * Mathf.Deg2Rad);
             Vector3 lowerCorner = currentPoint + -secondDir.normalized * hypotenuse - firstDir * hypotenuse;
 
             //inner corner
@@ -372,13 +406,13 @@ namespace CognitiveVR.ActiveSession
 
             if ((lineAngleABC < 40 && lineAngleABC > -40) || lineAngleABC > 160 || lineAngleABC < -160)
             {
-                quadPositions[j] = currentPoint - screencross * 0.5f * lineWidth;
+                quadPositions[j] = currentPoint - screencross * 0.5f * SaccadeWidth;
                 j++;
-                quadPositions[j] = currentPoint + screencross * 0.5f * lineWidth;
+                quadPositions[j] = currentPoint + screencross * 0.5f * SaccadeWidth;
                 j++;
 
-                b1 = currentPoint + screencross * 0.5f * lineWidth;
-                b2 = currentPoint - screencross * 0.5f * lineWidth;
+                b1 = currentPoint + screencross * 0.5f * SaccadeWidth;
+                b2 = currentPoint - screencross * 0.5f * SaccadeWidth;
                 //Debug.DrawLine(b2, b1, Color.red);
             }
             else
@@ -428,8 +462,11 @@ namespace CognitiveVR.ActiveSession
 
         void MatchTargetCamera()
         {
+            //prioritiz checking for xr - this is a specific backend as opposed to sranipal, steamvr2, etc
+#if CVR_XR
+            FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
             //uses projection matrix from openvr if developer is using a openvr-based sdk
-#if CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
+#elif CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;
@@ -457,7 +494,7 @@ namespace CognitiveVR.ActiveSession
 
         void LateUpdate()
         {
-            if (!displayFixations) { return; }
+            if (!canDisplayFixations) { return; }
             if (TargetCameraTransform == null) { return; }
             MatchTargetCamera();
             transform.SetPositionAndRotation(TargetCameraTransform.position, TargetCameraTransform.rotation);
@@ -494,7 +531,7 @@ namespace CognitiveVR.ActiveSession
 
         private void OnPostRender()
         {
-            if (!displayFixations && !displayGaze) { return; }
+            if (!canDisplaySaccades || !shouldDisplaySaccades) { return; }
 
             SaccadeMaterial.SetPass(0);
             GL.PushMatrix();
@@ -517,7 +554,7 @@ namespace CognitiveVR.ActiveSession
             FixationCore.OnFixationRecord -= FixationCore_OnFixationRecord;
         }
 
-        #region OpenVR Functions
+#region OpenVR Functions
 
         //this section gets the projection matrix from openvr to correctly offset drawing the gaze render point on screen
         //from https://github.com/ValveSoftware/openvr/blob/master/headers/openvr_api.cs
@@ -578,9 +615,9 @@ namespace CognitiveVR.ActiveSession
             internal static extern uint GetInitToken();
         }
 
-        #endregion
+#endregion
 
-        #region Enums and Structs
+#region Enums and Structs
 
         public enum EVRApplicationType
         {
@@ -1505,6 +1542,6 @@ namespace CognitiveVR.ActiveSession
             public VRControllerAxis_t rAxis3;
             public VRControllerAxis_t rAxis4;
         }
-        #endregion
+#endregion
     }
 }

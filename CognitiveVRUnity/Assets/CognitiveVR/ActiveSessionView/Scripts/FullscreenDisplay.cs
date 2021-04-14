@@ -10,6 +10,7 @@ using CognitiveVR;
 //BUG this only works correctly at a 16:9 aspect ratio
 //TODO figure out the correct vector math. need to know the sub-region from the HMD image
 //CONSIDER scaling fixation/reticle size based on screen resolution
+//TODO render saccades
 
 namespace CognitiveVR.ActiveSession
 {
@@ -33,7 +34,7 @@ namespace CognitiveVR.ActiveSession
 
         public bool showReticle = true;
         public bool showFixations = true;
-        bool showSaccades = false;
+        public bool showSaccades = false;
 
         Vector2 openVROffset = new Vector2(0.083f, 0.11f);
 
@@ -114,10 +115,10 @@ namespace CognitiveVR.ActiveSession
 
 #region Reticle
 
-        public Texture reticuleTexture;
-        public Color ReticuleColor = Color.white;
-        public float reticuleSize = 64;
-        public float smoothness = 0.2f;
+        public Texture ReticleTexture;
+        public Color ReticleColor = Color.white;
+        public float ReticleSize = 64;
+        public float Smoothness = 0.2f;
         Vector2 lastScreenPos;
 
         void Reticle_OnGUI()
@@ -127,10 +128,10 @@ namespace CognitiveVR.ActiveSession
             var screenPoint = WorldToRemapScreen(point);
 
             //smooth
-            screenPoint = Vector2.Lerp(lastScreenPos, screenPoint, smoothness);
+            screenPoint = Vector2.Lerp(lastScreenPos, screenPoint, Smoothness);
             lastScreenPos = screenPoint;
 
-            DrawTextureCentered(reticuleTexture, new Vector2(reticuleSize, reticuleSize), screenPoint, ReticuleColor);
+            DrawTextureCentered(ReticleTexture, new Vector2(ReticleSize, ReticleSize), screenPoint, ReticleColor);
         }
         #endregion
 
@@ -176,6 +177,11 @@ namespace CognitiveVR.ActiveSession
         #endregion
 
         #region Saccades
+
+        public Color SaccadeColor;
+        public float SaccadeWidth;
+        public float SaccadeTimespan;
+
 
         Vector3 hmdforward;
         Matrix4x4 m4proj;
