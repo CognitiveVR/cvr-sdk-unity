@@ -17,9 +17,6 @@ namespace CognitiveVR.ActiveSession
         public RenderEyetracking RenderEyetracking;
         public Text WarningText;
 
-        public int NumberOfFixationsToDisplay = 10;
-        public float SaccadesFromLastSeconds = 1;
-
         IEnumerator Start()
         {
             FullscreenDisplay.Initialize(this,VRSceneCamera);

@@ -156,9 +156,9 @@ namespace CognitiveVR.ActiveSession
             GUILayout.EndHorizontal();
             asv.FullscreenDisplay.fixationSize = EditorGUILayout.Slider("Fixation Size (pixels)", asv.FullscreenDisplay.fixationSize, 10, 120);
             asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Colour", asv.FullscreenDisplay.FixationColor);
-            asv.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.NumberOfFixationsToDisplay, 0, 64);
+            asv.FullscreenDisplay.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.FullscreenDisplay.NumberOfFixationsToDisplay, 0, 64);
             ret.FixationColor = asv.FullscreenDisplay.FixationColor;
-            //TODO copy fullscreen display texture and color to rendereyetracking display
+            ret.NumberOfFixationsToDisplay = asv.FullscreenDisplay.NumberOfFixationsToDisplay;
             //TEST number of fixations to display fullscreen
             //TODO number of fixations to display render view
 
@@ -166,6 +166,10 @@ namespace CognitiveVR.ActiveSession
             //saccades
             EditorGUILayout.LabelField("Saccades", EditorStyles.boldLabel);
             saccadeVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Saccades", saccadeVisibility);
+            if (saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen || saccadeVisibility == FeatureVisibility.Fullscreen)
+            {
+                EditorGUILayout.HelpBox("Saccades not currently supported on Fullscreen view", MessageType.Warning);
+            }
             asv.FullscreenDisplay.SaccadeColor = EditorGUILayout.ColorField("Saccade Color", asv.FullscreenDisplay.SaccadeColor);
             asv.FullscreenDisplay.SaccadeWidth = EditorGUILayout.Slider("Saccade Width", asv.FullscreenDisplay.SaccadeWidth, 0.001f, 0.1f);
             asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Cutoff Time", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
@@ -214,6 +218,7 @@ namespace CognitiveVR.ActiveSession
                 EditorUtility.SetDirty(ret);
                 EditorUtility.SetDirty(sc);
                 EditorUtility.SetDirty(asv);
+                EditorUtility.SetDirty(asv.FullscreenDisplay);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(asv.gameObject.scene);
             }
         }

@@ -141,6 +141,7 @@ namespace CognitiveVR.ActiveSession
         List<Fixation> fixations = new List<Fixation>(64);
         public float fixationSize = 32;
         public Color FixationColor = Color.white;
+        public int NumberOfFixationsToDisplay = 10;
 
         private void Fixation_OnFixationRecord(Fixation fixation)
         {
@@ -157,7 +158,7 @@ namespace CognitiveVR.ActiveSession
             int displayed = 0;
             for (int i = fixations.Count - 1; i >= 0; i--)
             {
-                if (displayed > Asv.NumberOfFixationsToDisplay) { break; }
+                if (displayed >= NumberOfFixationsToDisplay) { break; }
                 if (fixations[i] == null) { continue; }
 
                 displayed++;
@@ -392,6 +393,7 @@ namespace CognitiveVR.ActiveSession
         private void Saccade_OnGUI()
         {
             if (!displaySaccades) { return; }
+            return;
 
             //TODO remap to screen
 

@@ -25,6 +25,7 @@ namespace CognitiveVR.ActiveSession
         public Mesh FixationMesh;
         public Material FixationMaterial;
         public Color FixationColor;
+        public int NumberOfFixationsToDisplay = 10;
 
         //saccades
         [Space(10)]
@@ -165,7 +166,7 @@ namespace CognitiveVR.ActiveSession
                 int displayed = 0;
                 for (int i = fixations.Count - 1; i >= 0; i--)
                 {
-                    if (displayed > Asv.NumberOfFixationsToDisplay) { break; }
+                    if (displayed >= NumberOfFixationsToDisplay) { break; }
                     if (fixations[i] == null) { continue; }
 
                     displayed++;
@@ -463,10 +464,12 @@ namespace CognitiveVR.ActiveSession
         void MatchTargetCamera()
         {
             //prioritiz checking for xr - this is a specific backend as opposed to sranipal, steamvr2, etc
-#if CVR_XR
-            FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
+            //BUT reticle and fixations don't match the projection without using CVR_VIVEPROEYE and OpenVR XR 1.1.4. what is happening?
+            //TODO make a combination chart of backends, sdks and headsets for testing
+//#if CVR_XR
+            //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
             //uses projection matrix from openvr if developer is using a openvr-based sdk
-#elif CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
+#if CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;
