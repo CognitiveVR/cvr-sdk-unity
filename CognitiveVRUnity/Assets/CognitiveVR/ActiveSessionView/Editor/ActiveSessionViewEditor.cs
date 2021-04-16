@@ -140,11 +140,10 @@ namespace CognitiveVR.ActiveSession
             asv.FullscreenDisplay.ReticleTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.ReticleTexture, typeof(Texture), false);
             GUILayout.EndHorizontal();
             asv.FullscreenDisplay.ReticleSize = EditorGUILayout.Slider("Reticle Size (pixels)", asv.FullscreenDisplay.ReticleSize, 10, 120);
-            asv.FullscreenDisplay.ReticleColor = EditorGUILayout.ColorField("Reticle Colour", asv.FullscreenDisplay.ReticleColor);
+            asv.FullscreenDisplay.ReticleColor = EditorGUILayout.ColorField("Reticle Color", asv.FullscreenDisplay.ReticleColor);
             ret.ReticleColor = asv.FullscreenDisplay.ReticleColor;
             ret.ReticleSize = asv.FullscreenDisplay.ReticleSize;
             ret.ReticleTexture = asv.FullscreenDisplay.ReticleTexture;
-            //TODO reticle on detail view
 
 
             //fixations
@@ -155,7 +154,7 @@ namespace CognitiveVR.ActiveSession
             asv.FullscreenDisplay.fixationTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.fixationTexture, typeof(Texture), false);
             GUILayout.EndHorizontal();
             asv.FullscreenDisplay.fixationSize = EditorGUILayout.Slider("Fixation Size (pixels)", asv.FullscreenDisplay.fixationSize, 10, 120);
-            asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Colour", asv.FullscreenDisplay.FixationColor);
+            asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Color", asv.FullscreenDisplay.FixationColor);
             asv.FullscreenDisplay.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.FullscreenDisplay.NumberOfFixationsToDisplay, 0, 64);
             ret.FixationColor = asv.FullscreenDisplay.FixationColor;
             ret.NumberOfFixationsToDisplay = asv.FullscreenDisplay.NumberOfFixationsToDisplay;
@@ -172,7 +171,7 @@ namespace CognitiveVR.ActiveSession
             }
             asv.FullscreenDisplay.SaccadeColor = EditorGUILayout.ColorField("Saccade Color", asv.FullscreenDisplay.SaccadeColor);
             asv.FullscreenDisplay.SaccadeWidth = EditorGUILayout.Slider("Saccade Width", asv.FullscreenDisplay.SaccadeWidth, 0.001f, 0.1f);
-            asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Cutoff Time", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
+            asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Recent Time (seconds)", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
             ret.SaccadesFromLastSeconds = asv.FullscreenDisplay.SaccadeTimespan;
             ret.SaccadeColor = asv.FullscreenDisplay.SaccadeColor;
             ret.SaccadeWidth = asv.FullscreenDisplay.SaccadeWidth;

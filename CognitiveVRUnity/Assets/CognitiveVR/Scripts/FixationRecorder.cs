@@ -1077,18 +1077,17 @@ namespace CognitiveVR
                 EyeCaptures[index].OffTransform = true;
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
+                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             }
 
             if (SaccadeScreenPoints.Count > 15)
             {
                 SaccadeScreenPoints.RemoveAt(0);
             }
-
-            if (areEyesClosed || EyeCaptures[index].Discard) { }
-            else
-            {
-                DisplayGazePoints.Update();
-            }
+            DisplayGazePoints.Update();
             index = (index + 1) % CachedEyeCaptures;
         }
 

@@ -220,19 +220,39 @@ namespace CognitiveVR.ActiveSession
             Vector3 zero = Vector3.zero;
             while (true)
             {
-                int j = 0;
+                int fixationHead = fixationRecorder.DisplayGazePoints.HeadIndex;
+                int fixationPointCount = fixationRecorder.DisplayGazePoints.Count;
+
+                int gazeHead = gazeBase.DisplayGazePoints.HeadIndex;
+                int gazePointCount = gazeBase.DisplayGazePoints.Count;
+
+                int maxDisplayPoints = (int)(120 * SaccadesFromLastSeconds); //assumes eye tracker records at 120hz
+                int fixationActualDisplayPoints = Mathf.Min(maxDisplayPoints, fixationPointCount) - 1;
+                int gazeActualDisplayPoints = Mathf.Min(maxDisplayPoints, gazePointCount) - 1;
+
+                //head and backward is where i want to sample from
+                //instead letting circular buffer remove old data and render everything
+
+                int quadIndex = 0;
+                
 
                 Vector3 b1 = zero; //inner corner
                 Vector3 b2 = zero; //outer corner
 
                 if (canDisplaySaccades && shouldDisplaySaccades && canDisplayFixations)
                 {
-                    for (int i = 0; i < fixationRecorder.DisplayGazePoints.Count; i++)
+                    if (fixationActualDisplayPoints <= 3)
                     {
-                        int prevIndex = i - 1;
-                        int currentIndex = i;
-                        int nextIndex = i + 1;
+                        System.Threading.Thread.Sleep(100);
+                        continue;
+                    }
 
+                    quadPositionCount = fixationActualDisplayPoints * 4;
+                    for (int i = 0; i < fixationActualDisplayPoints; i++)
+                    {
+                        int prevIndex = fixationHead - i - 2;
+                        int currentIndex = fixationHead - i - 1;
+                        int nextIndex = fixationHead - i;
                         //draw everything
                         Vector3 previousPoint = zero;
                         if (fixationRecorder.DisplayGazePoints[prevIndex] != null)
@@ -287,17 +307,24 @@ namespace CognitiveVR.ActiveSession
                             b1 = currentPoint;
                             b2 = currentPoint;
                         }
-                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref j);
+                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref quadIndex);
                     }
                 }
                 //else if (canDisplayGaze && shouldDisplayGaze)
                 else if (canDisplaySaccades && shouldDisplaySaccades && !canDisplayFixations)
                 {
-                    for (int i = 0; i < gazeBase.DisplayGazePoints.Count; i++)
+                    if (gazeActualDisplayPoints <= 3)
                     {
-                        int prevIndex = i - 1;
-                        int currentIndex = i;
-                        int nextIndex = i + 1;
+                        System.Threading.Thread.Sleep(100);
+                        continue;
+                    }
+
+                    quadPositionCount = gazeActualDisplayPoints * 4;
+                    for (int i = 0; i < gazeActualDisplayPoints; i++)
+                    {
+                        int prevIndex = gazeHead - i - 2;
+                        int currentIndex = gazeHead - i - 1;
+                        int nextIndex = gazeHead - i;
 
                         //draw everything
                         Vector3 previousPoint = zero;
@@ -353,10 +380,10 @@ namespace CognitiveVR.ActiveSession
                             b1 = currentPoint;
                             b2 = currentPoint;
                         }
-                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref j);
+                        CalculateQuadPoints(previousPoint, currentPoint, nextPoint, ref b1, ref b2, ref quadIndex);
                     }
                 }
-                quadPositionCount = j;
+                //quadPositionCount = j;
                 if (threaded)
                 {
                     System.Threading.Thread.Sleep(10);
