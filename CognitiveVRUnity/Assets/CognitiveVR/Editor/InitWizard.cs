@@ -524,7 +524,9 @@ public class InitWizard : EditorWindow
 #elif CVR_XR
             if (cameraBase == null && leftcontroller == null && rightcontroller == null)
             {
-                cameraBase = Camera.main.gameObject;
+                if (Camera.main != null)
+                    cameraBase = Camera.main.gameObject;
+
                 var tracked = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
                 foreach (var v in tracked)
                 {

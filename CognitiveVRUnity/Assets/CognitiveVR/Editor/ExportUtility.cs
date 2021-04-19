@@ -106,7 +106,12 @@ namespace CognitiveVR
         {
             var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
             List<GameObject> allRootObjects = new List<GameObject>();
-            for(int i = 0; i< UnityEditor.SceneManagement.EditorSceneManager.sceneCount;i++)
+            List<BakeableMesh> temp = new List<BakeableMesh>();
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
+
+            EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
+            BakeNonstandardRenderers(null, temp, path); //needs to happen before scene root transforms are grabbed - terrain spawns tree prefabs
+            for (int i = 0; i < UnityEditor.SceneManagement.EditorSceneManager.sceneCount; i++)
             {
                 var scene = UnityEditor.SceneManagement.EditorSceneManager.GetSceneAt(i);
                 if (scene.isLoaded)
@@ -122,31 +127,14 @@ namespace CognitiveVR
                 if (v.activeInHierarchy) { t.Add(v.transform); }
                 //check for mesh renderers here, before nodes are constructed for invalid objects?
             }
-
-            List<BakeableMesh> temp = new List<BakeableMesh>();
-
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
             try
             {
-                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
-                BakeNonstandardRenderers(null, temp, path);
                 var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
                 exporter.SetNonStandardOverrides(temp);
                 Directory.CreateDirectory(path);
 
                 EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f); //export all all mesh renderers to gltf
                 exporter.SaveGLTFandBin(path, "scene");
-                for (int i = 0; i < temp.Count; i++) //delete temporary generated meshes
-                {
-                    if (temp[i].useOriginalscale)
-                    {
-                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
-                    }
-                    UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
-                    UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
-                    if (temp[i].tempGo != null)
-                        UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
-                }
 
                 EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f); //resize each texture from export directory
                 ResizeQueue.Enqueue(path);
@@ -158,6 +146,20 @@ namespace CognitiveVR
                 EditorUtility.ClearProgressBar();
                 Debug.LogException(e);
                 Debug.LogError("Could not complete GLTF Export");
+            }
+            finally
+            {
+                for (int i = 0; i < temp.Count; i++) //delete temporary generated meshes
+                {
+                    if (temp[i].useOriginalscale)
+                    {
+                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                    }
+                    UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
+                    UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
+                    if (temp[i].tempGo != null)
+                        UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
+                }
             }
         }
 
@@ -490,6 +492,23 @@ namespace CognitiveVR
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 bm.meshFilter.sharedMesh = GenerateTerrainMesh(v);
                 meshes.Add(bm);
+
+                //trees
+                foreach (var treedata in v.terrainData.treeInstances)
+                {
+                    var treeposition = new Vector3(treedata.position.x * v.terrainData.size.x, 0, treedata.position.z * v.terrainData.size.z);
+                    treeposition.y = v.SampleHeight(treeposition);
+                    var prototype = v.terrainData.treePrototypes[treedata.prototypeIndex];
+
+                    //instantiate tree prefabs, export everything, destroy tree prefabs
+                    BakeableMesh tbm = new BakeableMesh();
+                    tbm.tempGo = GameObject.Instantiate(prototype.prefab, treeposition, Quaternion.identity);
+
+                    //scale and rotation
+                    tbm.tempGo.transform.localScale = new Vector3(treedata.widthScale * tbm.tempGo.transform.localScale.x, treedata.heightScale * tbm.tempGo.transform.localScale.y, treedata.widthScale * tbm.tempGo.transform.localScale.z);
+                    tbm.tempGo.transform.rotation = Quaternion.Euler(0, treedata.rotation * Mathf.Rad2Deg, 0);
+                    meshes.Add(tbm);
+                }
             }
 
             foreach (var v in Canvases)
