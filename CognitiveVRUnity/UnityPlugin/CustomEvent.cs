@@ -324,9 +324,8 @@ namespace CognitiveVR
                 {
                     yield return null;
                 }
-                //try to send!
                 autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (!Core.IsInitialized)
+                if (Core.IsInitialized)
                 {
                     if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");

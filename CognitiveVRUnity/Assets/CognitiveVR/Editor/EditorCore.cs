@@ -76,6 +76,46 @@ namespace CognitiveVR
                 InitWizard.Init();
             }
             EditorPrefs.SetBool("cognitive_init_popup", true);
+
+            if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+            {
+                EditorApplication.playmodeStateChanged -= ModeChanged;
+                EditorApplication.playmodeStateChanged += ModeChanged;
+            }
+        }
+
+#if UNITY_2019_OR_NEWER
+        static void ModeChanged(PlayModeStateChange playModeState)
+        {
+            if (playModeState == PlayModeStateChange.EnteredEditMode)
+            {
+                EditorApplication.update += DelayUploadCache;
+                uploadDelayFrames = 10;
+            }
+        }
+#else
+        static void ModeChanged()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
+                 EditorApplication.isPlaying)
+            {
+                EditorApplication.update += DelayUploadCache;
+                uploadDelayFrames = 10;
+            }
+        }
+#endif
+
+        static int uploadDelayFrames = 0;
+        private static void DelayUploadCache()
+        {
+            uploadDelayFrames--;
+            if (uploadDelayFrames < 0)
+            {
+                EditorApplication.update -= DelayUploadCache;
+                CognitiveVR.ICache ic = new CognitiveVR.BasicCacheReader(Application.persistentDataPath + "/c3dlocal/");
+                if (ic.HasContent())
+                    new CognitiveVR.EditorDataUploader(ic);
+            }
         }
 
         public static void SpawnManager(string gameobjectName)

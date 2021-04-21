@@ -152,7 +152,21 @@ namespace CognitiveVR
             p.LocalStorage = EditorGUILayout.Toggle("Save data to Local Cache if no internet connection", p.LocalStorage);
             if (GUILayout.Button("Open Local Cache Folder"))
             {
-                EditorUtility.RevealInFinder(Application.persistentDataPath);
+                EditorUtility.RevealInFinder(Application.persistentDataPath+"/c3dlocal/");
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(!p.LocalStorage);
+            p.UploadCacheOnEndPlay = EditorGUILayout.Toggle("Upload Cache on End Play (in Editor)", p.UploadCacheOnEndPlay);
+            EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button("Upload Local Cache Data"))
+            {
+                ICache ic = new BasicCacheReader(Application.persistentDataPath + "/c3dlocal/");
+                if (ic.HasContent())
+                    new EditorDataUploader(ic);
+                else
+                    Debug.Log("No data in Local Cache to upload!");
             }
             GUILayout.EndHorizontal();
             EditorGUI.BeginDisabledGroup(!p.LocalStorage);

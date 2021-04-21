@@ -7,6 +7,8 @@ using UnityEngine.Networking;
 //stack of line lengths, read/write through single filestream
 
 //IMPROVEMENT? single coroutine queue waiting for network responses instead of creating many
+//IMPROVEMENT shouldn't be a monobehaviour. shouldn't be static. instance should live on Core
+//IMPROVEMENT should use an interface. what would this include? implementation handles writing to cache (if it exists)
 
 namespace CognitiveVR
 {
@@ -48,7 +50,7 @@ namespace CognitiveVR
         {
             if (lc == null || LocalCache.EnvironmentEOL != environmentEOL)
             {
-                lc = new LocalCache(Sender, environmentEOL);
+                lc = new LocalCache(environmentEOL);
             }
         }
 
@@ -171,6 +173,7 @@ namespace CognitiveVR
             if (responsecode == 200)
             {
                 if (lc == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
+                if (isuploadingfromcache) { return; }
                 if (lc.CanReadFromCache())
                 {
                     UploadAllLocalData(() => Util.logDebug("Network Post Data Local Cache Complete"), () => Util.logDebug("Network Post Data Local Cache Automatic Failure"));
@@ -251,7 +254,10 @@ namespace CognitiveVR
 
                 if (lc == null)
                 {
-                    lc = new LocalCache(Sender,null);
+                    Debug.LogError("local cache doesn't exist!");
+                    return;
+                    //need to know EOL character or this could cause cache reading errors on unix systems
+                    //lc = new LocalCache(null);
                 }
 
                 cacheCompletedAction = completedCallback;

@@ -5,6 +5,7 @@ using System.IO;
 
 namespace CognitiveVR
 {
+    //shouldn't have any static fields!
     public class LocalCache
     {
         static int EOLByteCount = 2;
@@ -20,11 +21,12 @@ namespace CognitiveVR
         static StreamWriter sw;
         static FileStream fs;
         
+        //TODO compare readline and readblock performance + garbage
         //line sizes of contents, ignoring line breaks. line breaks added automatically from StreamWriter.WriteLine
         static Stack<int> linesizes = new Stack<int>();
         static int totalBytes = 0;
 
-        internal LocalCache(NetworkManager network, string EOLCharacter)
+        internal LocalCache(string EOLCharacter)
         {
             //constructed from CognitiveVR_Manager enable. sets environment end of line character
             if (EnvironmentEOL == null && !string.IsNullOrEmpty(EOLCharacter))
@@ -181,11 +183,12 @@ namespace CognitiveVR
             return true;
         }
 
+        //IMPROVEMENT shouldn't have reference to network manager. CanReadFromCache should only be called when NetworkManager knows it can read
         //returns false if network isuploadingfromcache
         //returns false if cache is empty
         internal bool CanReadFromCache()
         {
-            if (NetworkManager.isuploadingfromcache) { return false; }
+            //if (NetworkManager.isuploadingfromcache) { return false; }
             if (linesizes.Count < 2) { return false; }
             return true;
         }
