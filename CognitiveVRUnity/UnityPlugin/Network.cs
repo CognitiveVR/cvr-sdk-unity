@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
 
-//IMPROVEMENT? single coroutine queue waiting for network responses instead of creating many
+//IMPROVEMENT? single coroutine queue waiting for network responses instead of creating many. not much improvement, major hit comes from unity web request constructor
 //IMPROVEMENT shouldn't be a monobehaviour. shouldn't be static. instance should live on Core
 //IMPROVEMENT should use an interface. what would this include? implementation handles writing to cache (if it exists)
 
@@ -20,38 +20,20 @@ namespace CognitiveVR
         //used by getting exitpoll question set - only need to know the c
         public delegate void Response(int responsecode, string error, string text);
 
-        static NetworkManager _sender;
-        internal static NetworkManager Sender
-        {
-            get
-            {
-                if (_sender == null)
-                {
-                    var go = new GameObject("Cognitive Network");
-                    Object.DontDestroyOnLoad(go);
-                    _sender = go.AddComponent<NetworkManager>();
-                    CognitiveVR.CognitiveStatics.Initialize();
-                }
-                return _sender;
-            }
-        }
+        static NetworkManager instance;
 
         //requests that are not from the cache and should write to the cache if session ends and requests are aborted
         static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
-        internal static LocalCache lc;
+        internal ICache runtimeCache;
+        internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
 
-        /// <summary>
-        /// called from CognitiveVR_Manager to set environmentEOL character. needed to correctly read local data cache
-        /// </summary>
-        /// <param name="environmentEOL"></param>
-        public static void InitLocalStorage(string environmentEOL)
+        internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
         {
-            if (lc == null || LocalCache.EnvironmentEOL != environmentEOL)
-            {
-                lc = new LocalCache(environmentEOL);
-            }
+            instance = this;
+            this.runtimeCache = runtimeCache;
+            this.exitpollCache = exitpollCache;
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -82,10 +64,10 @@ namespace CognitiveVR
 
             if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
             {
-                if (LocalCache.LocalStorageActive)
+                if (CognitiveVR_Preferences.Instance.LocalStorage)
                 {
                     string text;
-                    if (LocalCache.GetExitpoll(hookname, out text))
+                    if (Core.ExitpollHandler.GetExitpoll(hookname,out text))
                     {
                         if (callback != null)
                         {
@@ -114,9 +96,10 @@ namespace CognitiveVR
                 {
                     callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
-                if (LocalCache.LocalStorageActive)
+                if (CognitiveVR_Preferences.Instance.LocalStorage)
                 {
-                    LocalCache.WriteExitpoll(hookname, www.downloadHandler.text);
+                    Core.ExitpollHandler.WriteExitpoll(hookname, www.downloadHandler.text);
+                    //LocalCache.WriteExitpoll(hookname, www.downloadHandler.text);
                 }
             }
             www.Dispose();
@@ -172,9 +155,9 @@ namespace CognitiveVR
         {
             if (responsecode == 200)
             {
-                if (lc == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
+                if (runtimeCache == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
                 if (isuploadingfromcache) { return; }
-                if (lc.CanReadFromCache())
+                if (runtimeCache.HasContent())
                 {
                     UploadAllLocalData(() => Util.logDebug("Network Post Data Local Cache Complete"), () => Util.logDebug("Network Post Data Local Cache Automatic Failure"));
                 }
@@ -194,12 +177,12 @@ namespace CognitiveVR
                     CacheRequest = null;
                 }
 
-                if (lc == null) { Util.logWarning("Network Post Data !200 LocalCache null"); return; }
+                if (runtimeCache == null) { Util.logWarning("Network Post Data !200 LocalCache null"); return; }
 
-                if (lc.CanAppend(url, content))
+                if (runtimeCache.CanWrite(url, content))
                 {
                     //try to append to local cache file
-                    lc.Append(url, content);
+                    runtimeCache.WriteContent(url, content);
                 }
             }
         }
@@ -215,7 +198,7 @@ namespace CognitiveVR
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
-                lc.SuccessfulResponse();
+                runtimeCache.PopContent();
                 isuploadingfromcache = false;
                 LoopUploadFromLocalCache();
             }
@@ -252,7 +235,7 @@ namespace CognitiveVR
                 //upload from local storage
                 if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
 
-                if (lc == null)
+                if (instance.runtimeCache == null)
                 {
                     Debug.LogError("local cache doesn't exist!");
                     return;
@@ -263,7 +246,7 @@ namespace CognitiveVR
                 cacheCompletedAction = completedCallback;
                 cacheFailedAction = failedCallback;
 
-                Sender.LoopUploadFromLocalCache();
+                instance.LoopUploadFromLocalCache();
             }
             else
             {
@@ -281,11 +264,12 @@ namespace CognitiveVR
         static System.Action cacheCompletedAction;
         static System.Action cacheFailedAction;
 
+        //TODO this should be in core, not on network manager
         public static int GetLocalStorageBatchCount()
         {
-            if (lc == null)
-                InitLocalStorage(null);
-            return lc.GetCacheLineCount();
+            if (instance.runtimeCache == null)
+                return 0;
+            return instance.runtimeCache.NumberOfBatches();
         }
 
         //either started manually from LocalCache.UploadAllLocalData or from successful 200 response from current session data
@@ -293,12 +277,12 @@ namespace CognitiveVR
         {
             if (isuploadingfromcache) { return; }
 
-            if (lc.CanReadFromCache())
+            string url = "";
+            string content = "";
+            if (runtimeCache.PeekContent(ref url, ref content))
             {
                 isuploadingfromcache = true;
-                string url = "";
-                string content = "";
-                lc.GetCachedDataPoint(out url, out content);
+                //lc.GetCachedDataPoint(out url, out content);
                 
                 //wait for post response
                 var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
@@ -312,11 +296,11 @@ namespace CognitiveVR
                 if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                     Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
 
-                CacheResponseAction = Sender.CACHEDResponseCallback;
+                CacheResponseAction = instance.CACHEDResponseCallback;
 
-                Sender.StartCoroutine(Sender.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
+                instance.StartCoroutine(instance.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
             }
-            else if (lc.CacheEmpty())
+            else if (!runtimeCache.HasContent())
             {
                 if (cacheCompletedAction != null)
                     cacheCompletedAction.Invoke();
@@ -339,7 +323,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.Send();
 
-            Sender.StartCoroutine(Sender.WaitForExitpollResponse(request, hookname, callback,timeout));
+            instance.StartCoroutine(instance.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
 
         public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
@@ -355,13 +339,13 @@ namespace CognitiveVR
             request.Send();
 
             activeRequests.Add(request);
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.POSTResponseCallback, true));
+            instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        public static void Post(string url, string stringcontent)
+        public void Post(string url, string stringcontent)
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
@@ -372,7 +356,7 @@ namespace CognitiveVR
             request.Send();
 
             activeRequests.Add(request);
-            Sender.StartCoroutine(Sender.WaitForFullResponse(request, stringcontent, Sender.POSTResponseCallback,true));
+            instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));
 
             if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
@@ -390,10 +374,10 @@ namespace CognitiveVR
             {
                 EndSession();
             }
-            if (lc != null)
+            if (runtimeCache != null)
             {
-                lc.OnDestroy();
-                lc = null;
+                runtimeCache.Close();
+                runtimeCache = null;
             }
             isuploadingfromcache = false;
         }
@@ -404,7 +388,7 @@ namespace CognitiveVR
             StopAllCoroutines();
 
             //write all active webrequests to cache
-            if (LocalCache.LocalStorageActive)
+            if (CognitiveVR_Preferences.Instance.LocalStorage)
             {
                 if (lastDataResponse != 200)
                 {
@@ -424,13 +408,14 @@ namespace CognitiveVR
                             CacheRequest.Dispose();
                             CacheRequest = null;
                         }
-                        if (lc == null) { break; }
-                        if (lc.CanAppend(v.url, content))
+                        if (runtimeCache == null) { break; }
+                        if (runtimeCache.CanWrite(v.url, content))
                         {
                             v.Abort();
                             if (v.uploadHandler.data.Length > 0)
                             {
-                                lc.Append(v.url, content);
+                                //lc.Append(v.url, content);
+                                runtimeCache.WriteContent(v.url, content);
                             }
                         }
                     }

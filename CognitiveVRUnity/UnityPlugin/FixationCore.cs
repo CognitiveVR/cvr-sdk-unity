@@ -17,7 +17,7 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
-            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+            Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
         static float nextSendTime = 0;
@@ -150,13 +150,13 @@ namespace CognitiveVR
             
             if (copyDataToCache)
             {
-                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, content))
+                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, content))
                 {
-                    NetworkManager.lc.Append(url, content);
+                    Core.NetworkManager.runtimeCache.WriteContent(url, content);
                 }
             }
 
-            NetworkManager.Post(url, content);
+            Core.NetworkManager.Post(url, content);
             if (OnFixationSend != null)
             {
                 OnFixationSend.Invoke();

@@ -19,11 +19,22 @@ namespace CognitiveVR
 
         static SensorRecorder()
         {
-            Core.OnSendData += Core_OnSendData;
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
-            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+
         }
 
+        internal static void Initialize()
+        {
+            Core.OnSendData -= Core_OnSendData;
+            Core.OnSendData += Core_OnSendData;
+            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
+            if (automaticTimerActive == false)
+            {
+                automaticTimerActive = true;
+                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            }
+        }
+
+        static bool automaticTimerActive = false;
         static float nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
@@ -253,13 +264,13 @@ namespace CognitiveVR
 
             if (copyDataToCache)
             {
-                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, content))
+                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, content))
                 {
-                    NetworkManager.lc.Append(url, content);
+                    Core.NetworkManager.runtimeCache.WriteContent(url, content);
                 }
             }
 
-            NetworkManager.Post(url, content);
+            Core.NetworkManager.Post(url, content);
             if (OnSensorSend != null)
             {
                 OnSensorSend.Invoke();

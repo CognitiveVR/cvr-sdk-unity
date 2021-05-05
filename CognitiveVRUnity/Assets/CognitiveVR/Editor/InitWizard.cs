@@ -1352,7 +1352,7 @@ public class InitWizard : EditorWindow
             }
             else if (sceneSize > 500)
             {
-                displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB. This scene will take a while to upload and view</color>";
+                displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((CognitiveVR_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>": "</color>");
             }
             else
             {

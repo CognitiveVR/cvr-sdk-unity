@@ -173,6 +173,8 @@ namespace CognitiveVR
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
+            if (!CognitiveVR.Core.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
+
             myparameters = parameters;
 
             //spawn pointers if override isn't set

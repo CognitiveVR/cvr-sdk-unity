@@ -162,7 +162,7 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
             if (GUILayout.Button("Upload Local Cache Data"))
             {
-                ICache ic = new BasicCacheReader(Application.persistentDataPath + "/c3dlocal/");
+                ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
                     new EditorDataUploader(ic);
                 else

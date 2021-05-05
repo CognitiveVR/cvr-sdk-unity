@@ -45,6 +45,7 @@
     <Compile Include="CognitiveStatics.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="CustomEvent.cs" />
+    <Compile Include="DualFileCache.cs" />
     <Compile Include="DynamicData.cs" />
     <Compile Include="DynamicManager.cs" />
     <Compile Include="DynamicObjectCore.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="FixationCore.cs" />
     <Compile Include="GazeCore.cs" />
     <Compile Include="ICache.cs" />
+    <Compile Include="ILocalExitpoll.cs" />
     <Compile Include="LocalCache.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

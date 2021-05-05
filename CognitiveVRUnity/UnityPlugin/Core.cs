@@ -85,6 +85,11 @@ namespace CognitiveVR
             }
         }
 
+        internal static ILocalExitpoll ExitpollHandler;
+        internal static ICache DataCache;
+        internal static NetworkManager NetworkManager;
+
+
         private const string SDK_NAME_PREFIX = "unity";
 		public const string SDK_VERSION = "0.26.4";
 
@@ -253,7 +258,8 @@ namespace CognitiveVR
         public static void Reset()
         {
             InvokeEndSessionEvent();
-            NetworkManager.Sender.EndSession();
+            if (NetworkManager != null)
+                NetworkManager.EndSession();
             ParticipantId = null;
             ParticipantName = null;
             _sessionId = null;
@@ -261,8 +267,11 @@ namespace CognitiveVR
             DeviceId = null;
             IsInitialized = false;
             TrackingScene = null;
-            NetworkManager.Sender.OnDestroy();
-            GameObject.Destroy(NetworkManager.Sender.gameObject);
+            if (NetworkManager != null)
+            {
+                GameObject.Destroy(NetworkManager.gameObject);
+                //NetworkManager.OnDestroy();
+            }
             HasCustomSessionName = false;
         }
 
@@ -273,7 +282,6 @@ namespace CognitiveVR
         {
             _hmd = HMDCamera;
             CognitiveStatics.Initialize();
-            CustomEvent.Initialize();
 
             Error error = Error.None;
             // Have we already initialized CognitiveVR?
@@ -297,12 +305,18 @@ namespace CognitiveVR
                 
                 DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
                 SetSessionProperty("c3d.deviceid", DeviceId);
-
-                //initialize Network Manager early, before gameplay actually starts
-                var temp = NetworkManager.Sender;
+                
+                ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
+                DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                GameObject networkGo = new GameObject("Cognitive Network");
+                networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+                NetworkManager = networkGo.AddComponent<NetworkManager>();
+                NetworkManager.Initialize(DataCache, ExitpollHandler);
 
                 DynamicManager.Initialize();
                 DynamicObjectCore.Initialize();
+                CustomEvent.Initialize();
+                SensorRecorder.Initialize();
 
                 _timestamp = Util.Timestamp();
                 //set session timestamp

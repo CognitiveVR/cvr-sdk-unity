@@ -89,7 +89,9 @@ namespace CognitiveVR
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)
             {
-                EditorApplication.update += DelayUploadCache;
+                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                    EditorApplication.update += DelayUploadCache;
+                EditorApplication.playmodeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
             }
         }
@@ -99,7 +101,9 @@ namespace CognitiveVR
             if (!EditorApplication.isPlayingOrWillChangePlaymode &&
                  EditorApplication.isPlaying)
             {
-                EditorApplication.update += DelayUploadCache;
+                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                    EditorApplication.update += DelayUploadCache;
+                EditorApplication.playmodeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
             }
         }
@@ -112,7 +116,7 @@ namespace CognitiveVR
             if (uploadDelayFrames < 0)
             {
                 EditorApplication.update -= DelayUploadCache;
-                CognitiveVR.ICache ic = new CognitiveVR.BasicCacheReader(Application.persistentDataPath + "/c3dlocal/");
+                CognitiveVR.ICache ic = new CognitiveVR.DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
                     new CognitiveVR.EditorDataUploader(ic);
             }
