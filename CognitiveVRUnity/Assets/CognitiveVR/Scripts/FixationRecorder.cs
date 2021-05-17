@@ -210,6 +210,8 @@ namespace CognitiveVR
 
         public void SetupCallbacks()
         {
+            Core.OnPostEndSession -= PostSessionEndEvent;
+            Core.OnPostEndSession += PostSessionEndEvent;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
@@ -250,6 +252,25 @@ namespace CognitiveVR
                         ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                 }
+            }
+        }
+
+        void PostSessionEndEvent()
+        {
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null && framework.EnableEyeDataCallback)
+            {
+                //unregister existing callbacks
+                OnDisable();
+                startTimestamp = 0;
+                useDataQueue1 = false;
+                useDataQueue2 = false;
+                while (EyeDataQueue1 != null && !EyeDataQueue1.IsEmpty)
+                    EyeDataQueue1.TryDequeue(out currentData1);
+                while (EyeDataQueue2 != null && !EyeDataQueue2.IsEmpty)
+                    EyeDataQueue2.TryDequeue(out currentData2);
+                currentData1 = new ViveSR.anipal.Eye.EyeData();
+                currentData2 = new ViveSR.anipal.Eye.EyeData_v2();
             }
         }
 
@@ -386,7 +407,7 @@ namespace CognitiveVR
                 return false;
             }
 
-            if (lastProcessedFrame != Time.frameCount)
+            if (lastProcessedFrame != Time.frameCount) //useDataQueue1 or useDataQueue2 are only true if using the callback. this is used in other cases
             {
                 lastProcessedFrame = Time.frameCount;
                 return true;
@@ -959,7 +980,10 @@ namespace CognitiveVR
 
                 if (CheckEndFixation(ActiveFixation))
                 {
-                    FixationCore.RecordFixation(ActiveFixation);
+                    if (ActiveFixation.DurationMs > MinFixationMs)
+                    {
+                        FixationCore.RecordFixation(ActiveFixation);
+                    }
 
                     IsFixating = false;
 

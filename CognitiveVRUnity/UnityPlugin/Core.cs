@@ -33,6 +33,9 @@ namespace CognitiveVR
         public static event CoreEndSessionHandler EndSessionEvent;
         public static void InvokeEndSessionEvent() { if (EndSessionEvent != null) { EndSessionEvent.Invoke(); } }
 
+        public static event CoreEndSessionHandler OnPostSessionEnd;
+        public static void InvokePostEndSessionEvent() { if (OnPostSessionEnd != null) { OnPostSessionEnd.Invoke(); } }
+
         public delegate void UpdateHandler(float deltaTime);
         /// <summary>
         /// Update. Called through Manager's update function
@@ -264,6 +267,7 @@ namespace CognitiveVR
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
             HasCustomSessionName = false;
+            InvokePostEndSessionEvent();
         }
 
         /// <summary>
