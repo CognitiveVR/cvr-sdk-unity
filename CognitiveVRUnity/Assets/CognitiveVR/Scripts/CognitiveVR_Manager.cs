@@ -621,7 +621,7 @@ namespace CognitiveVR
         /// </summary>
         IEnumerator Tick()
         {
-            while (Application.isPlaying)
+            while (Core.IsInitialized)
             {
                 yield return playerSnapshotInverval;
                 FrameCount = Time.frameCount;
@@ -708,7 +708,7 @@ namespace CognitiveVR
         float CompassOrientation;
         IEnumerator GPSTick()
         {
-            while (Application.isPlaying)
+            while (Core.IsInitialized)
             {
                 yield return GPSUpdateInverval;
                 GPSLocation.x = Input.location.lastData.latitude;

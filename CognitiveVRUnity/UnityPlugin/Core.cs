@@ -460,6 +460,26 @@ namespace CognitiveVR
             SetSessionProperty("c3d.participant." + key, value);
         }
 
+        /// <summary>
+        /// sets a tag to a session for filtering on the dashboard
+        /// MUST contain 12 or fewer characters
+        /// </summary>
+        /// <param name="tag"></param>
+        public static void SetSessionTag(string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                Debug.LogWarning("Session Tag cannot be empty!");
+                return;
+            }
+            if (tag.Length > 12)
+            {
+                Debug.LogWarning("Session Tag must be less that 12 characters!");
+                return;
+            }
+            SetSessionProperty("c3d.session_tag." + tag, true);
+        }
+
         class AttributeParameters
         {
             public string attributionKey;
