@@ -1341,7 +1341,7 @@ public class InitWizard : EditorWindow
         {
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
         }
-        
+
         if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
         {
             float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
@@ -1356,16 +1356,19 @@ public class InitWizard : EditorWindow
             }
             else
             {
-                displayString = "Exported File Size: "+string.Format("{0:0}", sceneSize)+" MB";
+                displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
             }
-            if (GUI.Button(new Rect(0, 395, 500, 35), displayString, "miniheadercenter"))
+            if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
             {
                 EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
             }
         }
 
-        if (GUI.Button(new Rect(0, 420, 500, 35), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
-        {
+        if (numberOfLights > 50)
+            GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
+
+        if (GUI.Button(new Rect(0, 430, 500, 15), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
+            {
             if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
             {
                 if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save","Cancel"))
@@ -1429,6 +1432,7 @@ public class InitWizard : EditorWindow
 
     }
 
+    int numberOfLights = 0;
     bool delayUnderstandButton = true;
     double understandRevealTime;
 
@@ -1632,6 +1636,7 @@ public class InitWizard : EditorWindow
                 {
                     text = dynamicsFromSceneExported + "/" + dynamics.Length + " Prepared";
                 }
+                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                 buttonrect = new Rect(350, 510, 140, 30);
                 break;
             case "uploadscene":
@@ -1794,6 +1799,7 @@ public class InitWizard : EditorWindow
                 text = "Back";
                 break;
             case "uploadsummary":
+                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                 break;
             case "done":
                 onclick = null;
