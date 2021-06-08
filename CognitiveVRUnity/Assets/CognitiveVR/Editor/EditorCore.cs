@@ -136,8 +136,21 @@ namespace CognitiveVR
             }
         }
 
+        static string assetTypeHDRP = "HDRenderPipelineAsset";
+
+        static bool IsHDRP()
+        {
+            return UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name.Contains(assetTypeHDRP);
+        }
+
         public static void SetPlayerDefine(List<string> CVRSymbols)
         {
+            //check for Unity HDRP. add to CVRSymbols if so
+            if (IsHDRP())
+            {
+                CVRSymbols.Add("CVR_HDRP");
+            }
+
             //get all scripting define symbols
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             string[] ExistingSymbols = s.Split(';');

@@ -853,6 +853,43 @@ namespace UnityGLTF
 				light.color = new GLTF.Math.Color(0,0,0, 1);
 			}
 
+#if CVR_HDRP
+			var lightData = unityLight.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
+
+			//nits only used on arealights, which we don't support
+			float unityUnitAmount = 0;
+
+			//1000 lumen ~1 unity light unit
+            switch (lightData.lightUnit)
+            {
+                case UnityEngine.Rendering.HighDefinition.LightUnit.Lumen:
+					unityUnitAmount = lightData.intensity / 1000f;
+					break;
+                case UnityEngine.Rendering.HighDefinition.LightUnit.Candela:
+					unityUnitAmount = lightData.intensity / 79.5f;
+					break;
+                case UnityEngine.Rendering.HighDefinition.LightUnit.Lux:
+					unityUnitAmount = lightData.intensity / 79.5f;
+					break;
+                case UnityEngine.Rendering.HighDefinition.LightUnit.Nits: //nits only used on arealights, which we don't support
+					break;
+                case UnityEngine.Rendering.HighDefinition.LightUnit.Ev100:
+					unityUnitAmount = lightData.intensity / 9.31f;
+					break;
+            }
+			if (unityUnitAmount > 1)
+			{
+				//light falloff is different. simplify to log10
+				light.intensity = Mathf.Log10(unityUnitAmount)+1;
+			}
+			else
+            {
+				light.intensity = unityUnitAmount;
+			}
+
+			//improvement - add support for kelvin effecting colour
+#endif
+
 			if (_root.Lights == null)
 			{
 				_root.Lights = new List<GLTFLight>();
