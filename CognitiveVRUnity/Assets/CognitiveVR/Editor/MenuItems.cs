@@ -76,7 +76,7 @@ namespace CognitiveVR
             EditorCore.ForceCheckUpdates();
         }
 
-        [MenuItem(Menu + "Scene Setup", priority = 55)]
+        [MenuItem(Menu + "Scene Setup And Upload", priority = 55)]
         static void Cognitive3DSceneSetup()
         {
             //open window

@@ -264,8 +264,8 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Unity XR", "HP Omnicept 1.6", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Pro Eye (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Windows Mixed Reality", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_XR", "CVR_OMNICEPT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_PUPIL", "CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+        List<string> sdknames = new List<string>() { "None", "OpenXR", "HP Omnicept 1.6", "Vive Pro Eye (eye tracking)", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Windows Mixed Reality", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_XR", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
         //removed CVR_META and CVR_AH
 
         Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
@@ -275,10 +275,15 @@ public class InitWizard : EditorWindow
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
             GUIContent content = new GUIContent(sdknames[i]);
+                float verticalSeparator = 0;
+                if (i > 3)
+                {
+                    verticalSeparator = 32;
+                }
 
-            if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
+                if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers"; //openvr xr plugin, varjo 3 sdk, oculus?
             if (sdkdefines[i] == "CVR_OMNICEPT") content.tooltip = "requires 2018+";
-            if (GUI.Button(new Rect(30, i * 32, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            if (GUI.Button(new Rect(30, i * 32 + verticalSeparator, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -297,8 +302,13 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-        }
+            GUI.Label(new Rect(420, i * 32 + verticalSeparator, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+                if (i == 4)
+                {
+                    int kerning = 4;
+                    GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Legacy Support", "boldlabel");
+                }
+            }
 
         GUI.EndScrollView();
     }
@@ -1420,8 +1430,7 @@ public class InitWizard : EditorWindow
             string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
-            string debugContent = DebugInformationWindow.GetDebugContents();
-            System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
+            DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
 
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorUtility.SetDirty(EditorCore.GetPreferences());

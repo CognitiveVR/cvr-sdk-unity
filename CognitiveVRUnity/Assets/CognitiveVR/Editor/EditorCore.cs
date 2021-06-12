@@ -140,6 +140,7 @@ namespace CognitiveVR
 
         static bool IsHDRP()
         {
+            if (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset == null) { return false; }
             return UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name.Contains(assetTypeHDRP);
         }
 
