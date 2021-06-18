@@ -68,7 +68,6 @@ namespace CognitiveVR
             }
         }
 
-        [UnityEngine.Serialization.FormerlySerializedAs("APIKey")]
         public string ApplicationKey;
         public string AttributionKey;
 

@@ -50,18 +50,6 @@ namespace CognitiveVR
                 ActiveSession.ActiveSessionViewEditor.SetCameraTarget(asv);
                 Undo.RegisterCreatedObjectUndo(instance, "Added Active Session View");
             }
-
-            //add the GazeReticle prefab too
-            GazeReticle gazeReticle = Object.FindObjectOfType<GazeReticle>();
-            if (gazeReticle == null)
-            {
-                var reticleAsset = Resources.Load<GameObject>("GazeReticle");
-                if (reticleAsset != null)
-                {
-                    GameObject reticleInstance = (GameObject)PrefabUtility.InstantiatePrefab(reticleAsset);
-                    Undo.RegisterCreatedObjectUndo(reticleInstance, "Added Gaze Reticle");
-                }
-            }
         }
 
         [MenuItem(Menu + "Open Web Dashboard...", priority = 5)]

@@ -210,8 +210,8 @@ namespace CognitiveVR
 
         public void SetupCallbacks()
         {
-            Core.OnPostEndSession -= PostSessionEndEvent;
-            Core.OnPostEndSession += PostSessionEndEvent;
+            Core.OnPostSessionEnd -= PostSessionEndEvent;
+            Core.OnPostSessionEnd += PostSessionEndEvent;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 

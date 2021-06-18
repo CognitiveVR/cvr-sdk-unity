@@ -320,7 +320,8 @@ namespace CognitiveVR
 
             if (gliaBehaviour != null)
             {
-                gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
+                //TODO latest SDK renamed or removed Pupillometry callback
+                //gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
             }
@@ -746,7 +747,7 @@ namespace CognitiveVR
 
             if (gliaBehaviour != null)
             {
-                gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
+                //gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.RemoveListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.RemoveListener(RecordCognitiveLoad);
             }

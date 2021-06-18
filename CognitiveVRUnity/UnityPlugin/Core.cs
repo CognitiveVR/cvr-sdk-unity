@@ -89,7 +89,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-		public const string SDK_VERSION = "0.26.3";
+		public const string SDK_VERSION = "0.26.4";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -465,7 +465,7 @@ namespace CognitiveVR
         /// MUST contain 12 or fewer characters
         /// </summary>
         /// <param name="tag"></param>
-        public static void SetSessionTag(string tag)
+        public static void SetSessionTag(string tag, bool setValue = true)
         {
             if (string.IsNullOrEmpty(tag))
             {
@@ -477,7 +477,7 @@ namespace CognitiveVR
                 Debug.LogWarning("Session Tag must be less that 12 characters!");
                 return;
             }
-            SetSessionProperty("c3d.session_tag." + tag, true);
+            SetSessionProperty("c3d.session_tag." + tag, setValue);
         }
 
         class AttributeParameters

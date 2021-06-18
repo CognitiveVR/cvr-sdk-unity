@@ -9,7 +9,10 @@ namespace CognitiveVR
         void OnEnable()
         {
 #if CVR_OCULUS
-#if UNITY_2017_2_OR_NEWER
+#if UNITY_2019_1_OR_NEWER
+            if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name.Contains("Rift"))
+                gameObject.SetActive(false);
+#elif UNITY_2017_2_OR_NEWER
             if (UnityEngine.XR.XRDevice.model == "Oculus Rift S")
                 gameObject.SetActive(false);
 #else
