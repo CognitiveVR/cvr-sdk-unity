@@ -16,7 +16,7 @@ namespace CognitiveVR.ActiveSession
 
         RenderTexture rt;
         BuiltinRenderTextureType blitTo = BuiltinRenderTextureType.CurrentActive;
-        CameraEvent camevent = CameraEvent.AfterEverything;
+        CameraEvent camevent = CameraEvent.AfterImageEffects; //after everything doesn't work with 2019.4? or steamvr2?
 
         public void Initialize(RawImage outputImage)
         {

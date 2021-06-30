@@ -210,6 +210,8 @@ namespace CognitiveVR
 
         public void SetupCallbacks()
         {
+            Core.OnPostSessionEnd -= PostSessionEndEvent;
+            Core.OnPostSessionEnd += PostSessionEndEvent;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
@@ -250,6 +252,25 @@ namespace CognitiveVR
                         ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperRegisterEyeDataCallback(functionPointer);
                     }
                 }
+            }
+        }
+
+        void PostSessionEndEvent()
+        {
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null && framework.EnableEyeDataCallback)
+            {
+                //unregister existing callbacks
+                OnDisable();
+                startTimestamp = 0;
+                useDataQueue1 = false;
+                useDataQueue2 = false;
+                while (EyeDataQueue1 != null && !EyeDataQueue1.IsEmpty)
+                    EyeDataQueue1.TryDequeue(out currentData1);
+                while (EyeDataQueue2 != null && !EyeDataQueue2.IsEmpty)
+                    EyeDataQueue2.TryDequeue(out currentData2);
+                currentData1 = new ViveSR.anipal.Eye.EyeData();
+                currentData2 = new ViveSR.anipal.Eye.EyeData_v2();
             }
         }
 
@@ -386,7 +407,7 @@ namespace CognitiveVR
                 return false;
             }
 
-            if (lastProcessedFrame != Time.frameCount)
+            if (lastProcessedFrame != Time.frameCount) //useDataQueue1 or useDataQueue2 are only true if using the callback. this is used in other cases
             {
                 lastProcessedFrame = Time.frameCount;
                 return true;
@@ -821,6 +842,7 @@ namespace CognitiveVR
         //used by RenderEyeTracking for rendering saccades
         public const int DisplayGazePointCount = 4096;
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
+        public List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
 
         bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
         bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation
@@ -958,7 +980,10 @@ namespace CognitiveVR
 
                 if (CheckEndFixation(ActiveFixation))
                 {
-                    FixationCore.RecordFixation(ActiveFixation);
+                    if (ActiveFixation.DurationMs > MinFixationMs)
+                    {
+                        FixationCore.RecordFixation(ActiveFixation);
+                    }
 
                     IsFixating = false;
 
@@ -1012,6 +1037,7 @@ namespace CognitiveVR
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
 
                 //IMPROVEMENT allocate this at startup
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
@@ -1064,6 +1090,7 @@ namespace CognitiveVR
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
                 DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
                 EyeCaptures[index].OffTransform = true;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
@@ -1072,13 +1099,19 @@ namespace CognitiveVR
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].Discard = true;
                 EyeCaptures[index].OffTransform = true;
+                if (SaccadeScreenPoints.Count > 0)
+                    SaccadeScreenPoints.RemoveAt(0);
+                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
+                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
+                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
+                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             }
 
-            if (areEyesClosed || EyeCaptures[index].Discard) { }
-            else
+            if (SaccadeScreenPoints.Count > 15)
             {
-                DisplayGazePoints.Update();
+                SaccadeScreenPoints.RemoveAt(0);
             }
+            DisplayGazePoints.Update();
             index = (index + 1) % CachedEyeCaptures;
         }
 

@@ -11,20 +11,20 @@ namespace CognitiveVR.ActiveSession
     public class SensorRenderCamera : MonoBehaviour
     {
         SensorCanvas sensorCanvas;
-        public int Mask = 64;
+        public Camera Camera { get; private set; }
+        int mask = 64;
+        float lineWidth = 0.03f;
+        Color ColorWhite = Color.white;
 
         public void Initialize(SensorCanvas canvas)
         {
+            mask = canvas.Mask;
+            lineWidth = canvas.LineWidth;
             sensorCanvas = canvas;
             Camera = GetComponent<Camera>();
             Camera.enabled = false;
-            Camera.cullingMask = Mask;
+            Camera.cullingMask = mask;
         }
-
-        public Camera Camera { get; private set; }
-        public float LineWidth = 0.03f;
-
-        Color ColorWhite = Color.white;
 
         void OnPostRender()
         {
@@ -81,10 +81,10 @@ namespace CognitiveVR.ActiveSession
                         normal.y = normal.y / mag;
                     }
 
-                    GL.Vertex3(x1 - normal.x * LineWidth, y1 - normal.y * LineWidth, 0);
-                    GL.Vertex3(x1 + normal.x * LineWidth, y1 + normal.y * LineWidth, 0);
-                    GL.Vertex3(x2 + normal.x * LineWidth, y2 + normal.y * LineWidth, 0);
-                    GL.Vertex3(x2 - normal.x * LineWidth, y2 - normal.y * LineWidth, 0);
+                    GL.Vertex3(x1 - normal.x * lineWidth, y1 - normal.y * lineWidth, 0);
+                    GL.Vertex3(x1 + normal.x * lineWidth, y1 + normal.y * lineWidth, 0);
+                    GL.Vertex3(x2 + normal.x * lineWidth, y2 + normal.y * lineWidth, 0);
+                    GL.Vertex3(x2 - normal.x * lineWidth, y2 - normal.y * lineWidth, 0);
                     previousSdp = sdp;
 
                 }

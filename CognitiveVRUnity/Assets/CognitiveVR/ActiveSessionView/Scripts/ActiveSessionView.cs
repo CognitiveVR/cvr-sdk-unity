@@ -12,13 +12,15 @@ namespace CognitiveVR.ActiveSession
         //sensor materials
 
         public RawImage MainCameraRenderImage;
-
+        public FullscreenDisplay FullscreenDisplay;
         public Camera VRSceneCamera;
         public RenderEyetracking RenderEyetracking;
         public Text WarningText;
 
         IEnumerator Start()
         {
+            FullscreenDisplay.Initialize(this,VRSceneCamera);
+            FullscreenDisplay.SetVisible(false);
             if (RenderEyetracking == null)
             {
                 Debug.LogError("ActiveSessionView missing FixationRenderCamera");
@@ -32,7 +34,7 @@ namespace CognitiveVR.ActiveSession
                 yield break;
             }
 
-            RenderEyetracking.Initialize(VRSceneCamera);
+            RenderEyetracking.Initialize(this,VRSceneCamera);
             var copy = VRSceneCamera.gameObject.AddComponent<CopyVRViewToRenderTexture>();
             copy.Initialize(MainCameraRenderImage);
 
@@ -152,5 +154,25 @@ namespace CognitiveVR.ActiveSession
             WarningText.text = "Is Calibrating";
         }
 #endif
+        public void Button_ToggleFullscreen(bool showFullscreen)
+        {
+            if (showFullscreen)
+            {
+                var canvases = GetComponentsInChildren<Canvas>();
+                foreach (var c in canvases)
+                    c.enabled = false;
+                //hide all other canvases
+                //display basicgui
+                FullscreenDisplay.SetVisible(true);
+            }
+            else
+            {
+                //enable canvases
+                var canvases = GetComponentsInChildren<Canvas>();
+                foreach (var c in canvases)
+                    c.enabled = true;
+                FullscreenDisplay.SetVisible(false);
+            }
+        }
     }
 }

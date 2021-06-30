@@ -33,6 +33,9 @@ namespace CognitiveVR
         public static event CoreEndSessionHandler EndSessionEvent;
         public static void InvokeEndSessionEvent() { if (EndSessionEvent != null) { EndSessionEvent.Invoke(); } }
 
+        public static event CoreEndSessionHandler OnPostSessionEnd;
+        public static void InvokePostEndSessionEvent() { if (OnPostSessionEnd != null) { OnPostSessionEnd.Invoke(); } }
+
         public delegate void UpdateHandler(float deltaTime);
         /// <summary>
         /// Update. Called through Manager's update function
@@ -86,7 +89,7 @@ namespace CognitiveVR
         }
 
         private const string SDK_NAME_PREFIX = "unity";
-		public const string SDK_VERSION = "0.26.0";
+		public const string SDK_VERSION = "0.26.4";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -264,6 +267,7 @@ namespace CognitiveVR
             NetworkManager.Sender.OnDestroy();
             GameObject.Destroy(NetworkManager.Sender.gameObject);
             HasCustomSessionName = false;
+            InvokePostEndSessionEvent();
         }
 
         /// <summary>
@@ -454,6 +458,26 @@ namespace CognitiveVR
         public static void SetParticipantProperty(string key, object value)
         {
             SetSessionProperty("c3d.participant." + key, value);
+        }
+
+        /// <summary>
+        /// sets a tag to a session for filtering on the dashboard
+        /// MUST contain 12 or fewer characters
+        /// </summary>
+        /// <param name="tag"></param>
+        public static void SetSessionTag(string tag, bool setValue = true)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                Debug.LogWarning("Session Tag cannot be empty!");
+                return;
+            }
+            if (tag.Length > 12)
+            {
+                Debug.LogWarning("Session Tag must be less that 12 characters!");
+                return;
+            }
+            SetSessionProperty("c3d.session_tag." + tag, setValue);
         }
 
         class AttributeParameters

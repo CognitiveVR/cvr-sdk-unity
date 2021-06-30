@@ -33,15 +33,26 @@ namespace CognitiveVR.ActiveSession
             public float maxValue = 0;
         }
 
+        public float LineWidth = 0.03f;
+        public float MaxSensorTimeSpan = 120;
+
         public SensorEntry[] SensorEntries;
         public SensorRenderCamera renderCamera;
-
-
-        public float MaxSensorTimeSpan = 120;
 
         System.Reflection.FieldInfo canvasHackField;
         object canvasHackObject;
         float RenderDelayFrameCount = 0;
+
+        public int Mask = 64;
+        public Text MaxTimeText;
+        public Text HalfTimeText;
+
+        public void SetTimespan(float maxTime)
+        {
+            float halfTime = maxTime / 2;
+            MaxTimeText.text = Mathf.RoundToInt(maxTime).ToString() + " seconds ago";
+            HalfTimeText.text = Mathf.RoundToInt(halfTime).ToString() + " seconds ago";
+        }
 
         void Start()
         {

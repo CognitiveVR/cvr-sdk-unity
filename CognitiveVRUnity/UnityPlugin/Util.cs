@@ -215,6 +215,13 @@ namespace CognitiveVR
             return builder;
         }
 
+        /// <returns>"name":"null value"</returns>
+        public static StringBuilder SetNull(string name, StringBuilder builder)
+        {
+            builder.Append("null");
+            return builder;
+        }
+
         /// <returns>"name":objectValue.ToString()</returns>
         public static StringBuilder SetObject(string name, object objectValue, StringBuilder builder)
         {

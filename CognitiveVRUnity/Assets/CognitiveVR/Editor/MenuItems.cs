@@ -10,7 +10,7 @@ namespace CognitiveVR
 #if CVR_NEURABLE
         public const string Menu = "Neurable/Analytics Portal/";
 #else
-        public const string Menu = "cognitive3D/";
+        public const string Menu = "Cognitive3D/";
 #endif
 
         [MenuItem(Menu + "Select Cognitive3D Analytics Manager", priority = 0)]
@@ -50,18 +50,6 @@ namespace CognitiveVR
                 ActiveSession.ActiveSessionViewEditor.SetCameraTarget(asv);
                 Undo.RegisterCreatedObjectUndo(instance, "Added Active Session View");
             }
-
-            //add the GazeReticle prefab too
-            GazeReticle gazeReticle = Object.FindObjectOfType<GazeReticle>();
-            if (gazeReticle == null)
-            {
-                var reticleAsset = Resources.Load<GameObject>("GazeReticle");
-                if (reticleAsset != null)
-                {
-                    GameObject reticleInstance = (GameObject)PrefabUtility.InstantiatePrefab(reticleAsset);
-                    Undo.RegisterCreatedObjectUndo(reticleInstance, "Added Gaze Reticle");
-                }
-            }
         }
 
         [MenuItem(Menu + "Open Web Dashboard...", priority = 5)]
@@ -76,7 +64,7 @@ namespace CognitiveVR
             EditorCore.ForceCheckUpdates();
         }
 
-        [MenuItem(Menu + "Scene Setup", priority = 55)]
+        [MenuItem(Menu + "Scene Setup And Upload", priority = 55)]
         static void Cognitive3DSceneSetup()
         {
             //open window
@@ -111,7 +99,7 @@ namespace CognitiveVR
             ManageDynamicObjects.Init();
         }
 
-        [MenuItem(Menu + "Advanced Options", priority = 65)]
+        [MenuItem(Menu + "Preferences", priority = 65)]
         static void Cognitive3DOptions()
         {
             //select asset

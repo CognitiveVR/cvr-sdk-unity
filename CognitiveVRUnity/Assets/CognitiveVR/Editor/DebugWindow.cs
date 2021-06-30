@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+#if UNITY_2019_4_OR_NEWER
+using UnityEditor.PackageManager.Requests;
+using UnityEditor.PackageManager;
+#endif
+
 namespace CognitiveVR
 {
     public class DebugInformationWindow : EditorWindow
@@ -23,6 +28,45 @@ namespace CognitiveVR
             return DebugText;
         }
 
+#if UNITY_2019_4_OR_NEWER
+        static ListRequest Request;
+        static List<string> PackageList = new List<string>();
+        static string filePath;
+        public static void WriteDebugToFile(string filepath)
+        {
+            filePath = filepath;
+            Request = Client.List();    // List packages installed for the Project
+            EditorApplication.update += Progress;
+        }
+
+        static void Progress()
+        {
+            if (Request.IsCompleted)
+            {
+                PackageList = new List<string>();
+
+                if (Request.Status == StatusCode.Success)
+                    foreach (var package in Request.Result)
+                    {
+                        PackageList.Add(package.name + " " + package.version);
+                    }
+                else if (Request.Status >= StatusCode.Failure)
+                    Debug.Log(Request.Error.message);
+
+                string debugContent = DebugInformationWindow.GetDebugContents();
+                System.IO.File.WriteAllText(filePath, debugContent);
+
+                EditorApplication.update -= Progress;
+            }
+        }
+#else
+        public static void WriteDebugToFile(string filepath)
+        {
+            string debugContent = GetDebugContents();
+            System.IO.File.WriteAllText(filepath, debugContent);
+        }
+#endif
+
         static void Refresh()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder(1024);
@@ -35,13 +79,22 @@ namespace CognitiveVR
             sb.AppendLine("OS:" + SystemInfo.operatingSystem);
             sb.AppendLine("System Time: " + System.DateTime.Now.ToString());
 
-            #region Project Settings
+#region Project Settings
             sb.AppendLine();
             sb.AppendLine("*****************************");
             sb.AppendLine("***********PROJECT***********");
             sb.AppendLine("*****************************");
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            sb.AppendLine("SDK Type: " + s);
+            sb.AppendLine("Scripting Define Symbols: " + s);
+
+#if UNITY_2019_4_OR_NEWER
+            sb.AppendLine("Packages:");
+            foreach (var package in PackageList)
+            {
+                sb.AppendLine("  " + package);
+            }
+#endif
+
             sb.AppendLine("SDK Version: " + Core.SDK_VERSION);
             try
             {
@@ -136,7 +189,7 @@ namespace CognitiveVR
             }
 #endregion
 
-            #region Current Scene
+#region Current Scene
             sb.AppendLine();
             sb.AppendLine("*****************************");
             sb.AppendLine("********CURRENT SCENE********");
@@ -194,7 +247,7 @@ namespace CognitiveVR
             }
 #endregion
 
-            #region Scene Dynamics
+#region Scene Dynamics
             sb.AppendLine();
             sb.AppendLine("*****************************");
             sb.AppendLine("****CURRENT SCENE OBJECTS****");
@@ -249,7 +302,7 @@ namespace CognitiveVR
                     sb.AppendLine(preLineLast+"Has Children: false");
                 }
             }
-            #endregion
+#endregion
             sb.AppendLine();
             sb.AppendLine("*****************************");
             sb.AppendLine("********EXPORT FOLDER********");

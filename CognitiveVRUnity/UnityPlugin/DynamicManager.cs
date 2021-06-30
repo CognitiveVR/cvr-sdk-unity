@@ -355,7 +355,7 @@ namespace CognitiveVR
                 if (!ActiveDynamicObjectsArray[i].hasEnabled)
                 {
                     ActiveDynamicObjectsArray[i].hasEnabled = true;
-                    if (ActiveDynamicObjectsArray[i].HasProperties)
+                    if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                     {
                         props += ",\"enabled\":true";
                     }
@@ -369,7 +369,7 @@ namespace CognitiveVR
 
                 if (ActiveDynamicObjectsArray[i].remove)
                 {
-                    if (ActiveDynamicObjectsArray[i].HasProperties)
+                    if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                     {
                         props += ",\"enabled\":false";
                     }
@@ -554,7 +554,7 @@ namespace CognitiveVR
                     if (!ActiveDynamicObjectsArray[i].hasEnabled)
                     {
                         ActiveDynamicObjectsArray[i].hasEnabled = true;
-                        if (ActiveDynamicObjectsArray[i].HasProperties)
+                        if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",\"enabled\":true";
                         }
@@ -568,7 +568,7 @@ namespace CognitiveVR
 
                     if (ActiveDynamicObjectsArray[i].remove)
                     {
-                        if (ActiveDynamicObjectsArray[i].HasProperties)
+                        if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",\"enabled\":false";
                         }
@@ -626,7 +626,7 @@ namespace CognitiveVR
                 else
                 {
                     pos = ActiveDynamicObjectsArray[index].Transform.position;
-                    scale = ActiveDynamicObjectsArray[index].Transform.localScale;
+                    scale = ActiveDynamicObjectsArray[index].Transform.lossyScale;
                     rot = ActiveDynamicObjectsArray[index].Transform.rotation;
                 }
 
@@ -696,7 +696,7 @@ namespace CognitiveVR
                     if (!ActiveDynamicObjectsArray[index].hasEnabled)
                     {
                         ActiveDynamicObjectsArray[index].hasEnabled = true;
-                        if (ActiveDynamicObjectsArray[index].HasProperties)
+                        if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",\"enabled\":true";
                         }
@@ -710,7 +710,7 @@ namespace CognitiveVR
 
                     if (ActiveDynamicObjectsArray[index].remove)
                     {
-                        if (ActiveDynamicObjectsArray[index].HasProperties)
+                        if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",\"enabled\":false";
                         }
