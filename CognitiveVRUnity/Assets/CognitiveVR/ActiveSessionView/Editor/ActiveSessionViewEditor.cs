@@ -213,12 +213,12 @@ namespace CognitiveVR.ActiveSession
 
                 #endregion
 
-
                 EditorUtility.SetDirty(ret);
                 EditorUtility.SetDirty(sc);
                 EditorUtility.SetDirty(asv);
                 EditorUtility.SetDirty(asv.FullscreenDisplay);
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(asv.gameObject.scene);
+                if (!Application.isPlaying)
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(asv.gameObject.scene);
             }
         }
 

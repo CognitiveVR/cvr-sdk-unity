@@ -317,7 +317,8 @@ namespace CognitiveVR
 
             if (gliaBehaviour != null)
             {
-                gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
+                //TODO latest SDK renamed or removed Pupillometry callback
+                //gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
             }
@@ -618,7 +619,7 @@ namespace CognitiveVR
         /// </summary>
         IEnumerator Tick()
         {
-            while (Application.isPlaying)
+            while (Core.IsInitialized)
             {
                 yield return playerSnapshotInverval;
                 FrameCount = Time.frameCount;
@@ -705,7 +706,7 @@ namespace CognitiveVR
         float CompassOrientation;
         IEnumerator GPSTick()
         {
-            while (Application.isPlaying)
+            while (Core.IsInitialized)
             {
                 yield return GPSUpdateInverval;
                 GPSLocation.x = Input.location.lastData.latitude;
@@ -743,7 +744,7 @@ namespace CognitiveVR
 
             if (gliaBehaviour != null)
             {
-                gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
+                //gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.RemoveListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.RemoveListener(RecordCognitiveLoad);
             }

@@ -262,23 +262,40 @@ public class InitWizard : EditorWindow
     {
         GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
 
-        GUI.Label(new Rect(30, 45, 440, 440), "Please select the hardware SDK you will be including in this project.", "boldlabel");
+            
 
-        List<string> sdknames = new List<string>() { "Unity Default", "Unity XR", "HP Omnicept 1.6", "Oculus SDK 1.38", "SteamVR SDK 1.2", "SteamVR SDK 2.5.0", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Pro Eye (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Windows Mixed Reality", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-        List<string> sdkdefines = new List<string>() { "CVR_DEFAULT", "CVR_XR", "CVR_OMNICEPT", "CVR_OCULUS", "CVR_STEAMVR", "CVR_STEAMVR2", "CVR_PUPIL", "CVR_VIVEPROEYE", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_WINDOWSMR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
-        //removed CVR_META and CVR_AH
+            GUI.Label(new Rect(30, 45, 440, 440), "Please select the Runtime API you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
 
-        Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
+            GUIContent help = new GUIContent(EditorCore.Info);
+            help.tooltip = "docs.cognitive3d.com/unity/runtimes";
+            if (GUI.Button(new Rect(430, 75, 20, 20), help, "boldlabel"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
+            }
+
+            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "OpenVR 1.1.4 (SteamVR)", "Oculus", "HP Omnicept Runtime", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+
+            Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
 
         for (int i = 0;i <sdknames.Count;i++)
         {
             bool selected = selectedsdks.Contains(sdkdefines[i]);
             GUIContent content = new GUIContent(sdknames[i]);
+            float separatorOne = 0;
+            float separatorTwo = 0;
+            if (i > 3)
+            {
+                    separatorOne = 32;
+            }
+            if (i > 5)
+            {
+                separatorTwo = 32;
+            }
 
-            if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
-            if (sdkdefines[i] == "CVR_OMNICEPT") content.tooltip = "requires 2018+";
-            if (GUI.Button(new Rect(30, i * 32, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+            //if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
+            if (GUI.Button(new Rect(30, i * 32 + separatorOne + separatorTwo, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
             {
                 if (selected)
                 {
@@ -297,8 +314,18 @@ public class InitWizard : EditorWindow
                     }
                 }
             }
-            GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-        }
+            GUI.Label(new Rect(420, i * 32 + separatorOne+separatorTwo, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            if (i == 4)
+            {
+                int kerning = 4;
+                GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Eye Tracking", "boldlabel");
+            }
+            if (i == 7)
+            {
+                int kerning = 4;
+                GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Legacy Support", "boldlabel");
+            }
+            }
 
         GUI.EndScrollView();
     }
@@ -1118,9 +1145,9 @@ public class InitWizard : EditorWindow
 #endif
         }
 
-        #endregion
+#endregion
 
-        #region Dynamic Objects
+#region Dynamic Objects
 
         Vector2 dynamicScrollPosition;
 
@@ -1341,7 +1368,7 @@ public class InitWizard : EditorWindow
         {
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
         }
-        
+
         if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
         {
             float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
@@ -1356,16 +1383,19 @@ public class InitWizard : EditorWindow
             }
             else
             {
-                displayString = "Exported File Size: "+string.Format("{0:0}", sceneSize)+" MB";
+                displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
             }
-            if (GUI.Button(new Rect(0, 395, 500, 35), displayString, "miniheadercenter"))
+            if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
             {
                 EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
             }
         }
 
-        if (GUI.Button(new Rect(0, 420, 500, 35), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
-        {
+        if (numberOfLights > 50)
+            GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
+
+        if (GUI.Button(new Rect(0, 430, 500, 15), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
+            {
             if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
             {
                 if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save","Cancel"))
@@ -1417,8 +1447,7 @@ public class InitWizard : EditorWindow
             string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
             System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
-            string debugContent = DebugInformationWindow.GetDebugContents();
-            System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
+            DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
 
             CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorUtility.SetDirty(EditorCore.GetPreferences());
@@ -1429,6 +1458,7 @@ public class InitWizard : EditorWindow
 
     }
 
+    int numberOfLights = 0;
     bool delayUnderstandButton = true;
     double understandRevealTime;
 
@@ -1632,6 +1662,7 @@ public class InitWizard : EditorWindow
                 {
                     text = dynamicsFromSceneExported + "/" + dynamics.Length + " Prepared";
                 }
+                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                 buttonrect = new Rect(350, 510, 140, 30);
                 break;
             case "uploadscene":
@@ -1794,6 +1825,7 @@ public class InitWizard : EditorWindow
                 text = "Back";
                 break;
             case "uploadsummary":
+                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                 break;
             case "done":
                 onclick = null;

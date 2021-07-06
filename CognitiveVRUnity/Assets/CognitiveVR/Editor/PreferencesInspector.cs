@@ -12,11 +12,8 @@ namespace CognitiveVR
         bool gpsFoldout;
         bool hasCheckedRenderType = false;
 
-        [UnityEditor.Callbacks.DidReloadScripts]
-        public static void CheckGazeRenderType()
+        public static void CheckGazeRenderType(CognitiveVR_Preferences p)
         {
-            var p = EditorCore.GetPreferences();
-
             if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
             {
                 p.RenderPassType = 0;
@@ -36,13 +33,12 @@ namespace CognitiveVR
 
         public override void OnInspectorGUI()
         {
+            var p = (CognitiveVR_Preferences)target;
             if (!hasCheckedRenderType)
             {
-                CheckGazeRenderType();
+                CheckGazeRenderType(p);
                 hasCheckedRenderType = true;
             }
-
-            var p = (CognitiveVR_Preferences)target;
 
             p.ApplicationKey = EditorGUILayout.TextField("Application Key", p.ApplicationKey);
             p.AttributionKey = EditorGUILayout.TextField("Attribution Key", p.AttributionKey);
@@ -55,7 +51,7 @@ namespace CognitiveVR
             p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
             if (GUI.changed)
             {
-                CheckGazeRenderType();
+                CheckGazeRenderType(p);
             }
             p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
@@ -179,10 +175,10 @@ namespace CognitiveVR
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
-            CognitiveVR_Preferences.Instance.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), CognitiveVR_Preferences.Instance.Protocol);
-            CognitiveVR_Preferences.Instance.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), CognitiveVR_Preferences.Instance.Gateway);
-            CognitiveVR_Preferences.Instance.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), CognitiveVR_Preferences.Instance.Viewer);
-            CognitiveVR_Preferences.Instance.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), CognitiveVR_Preferences.Instance.Dashboard);
+            p.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), p.Protocol);
+            p.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), p.Gateway);
+            p.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), p.Viewer);
+            p.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), p.Dashboard);
             p.SendDataOnHMDRemove = EditorGUILayout.Toggle("Send Data on HMD Remove", p.SendDataOnHMDRemove);
             p.SendDataOnLevelLoad = EditorGUILayout.Toggle("Send Data on Level Load", p.SendDataOnLevelLoad);
             p.SendDataOnQuit = EditorGUILayout.Toggle("Send Data on Quit", p.SendDataOnQuit);

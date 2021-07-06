@@ -1,12 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using CognitiveVR;
-#if CVR_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
 
 //debug helper for gaze tracking with Fove, Pupil, Tobii, Vive Pro Eye, Adhawk, Varjo
+//does not need to have a 'Cognitive3D session' active to work
 
 namespace CognitiveVR
 {
