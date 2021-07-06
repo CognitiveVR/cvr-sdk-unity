@@ -17,7 +17,16 @@ namespace CognitiveVR
         {
             Core.OnSendData += Core_OnSendData;
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
-            Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            Core.InitEvent += Core_InitEvent;
+        }
+
+        private static void Core_InitEvent(Error initError)
+        {
+            if (initError == Error.None)
+            {
+                Core.InitEvent -= Core_InitEvent;
+                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            }
         }
 
         static float nextSendTime = 0;

@@ -279,6 +279,12 @@ namespace CognitiveVR
             InvokePostEndSessionEvent();
         }
 
+        internal static Error InitError;
+        public static Error GetInitError()
+        {
+            return InitError;
+        }
+
         /// <summary>
         /// Starts a CognitiveVR session. Records hardware info, creates network manager
         /// </summary>
@@ -287,15 +293,15 @@ namespace CognitiveVR
             _hmd = HMDCamera;
             CognitiveStatics.Initialize();
 
-            Error error = Error.None;
+            InitError = Error.None;
             // Have we already initialized CognitiveVR?
             if (IsInitialized)
             {
                 Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
-                error = Error.AlreadyInitialized;
+                InitError = Error.AlreadyInitialized;
             }
 
-            if (error == Error.None)
+            if (InitError == Error.None)
             {
                 SetSessionProperty("c3d.app.name", Application.productName);
                 SetSessionProperty("c3d.app.version", Application.version);
@@ -332,7 +338,7 @@ namespace CognitiveVR
                 IsInitialized = true;
             }
 
-            return error;
+            return InitError;
         }
 
         public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
@@ -521,6 +527,13 @@ namespace CognitiveVR
         {
             HasCustomSessionName = true;
             SetSessionProperty("c3d.sessionname", sessionName);
+        }
+
+        public static int GetLocalStorageBatchCount()
+        {
+            if (DataCache == null)
+                return 0;
+            return DataCache.NumberOfBatches();
         }
     }
 }

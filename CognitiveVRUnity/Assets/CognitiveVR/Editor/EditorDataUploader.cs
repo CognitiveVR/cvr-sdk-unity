@@ -87,13 +87,13 @@ namespace CognitiveVR
 				if (attemptedUploads > numberOfBatches)
                 {
 					//everything has been attempted to be uploaded
-					Debug.Log("Editor attempted to upload everything");
+					Util.logDebug("Editor attempted to upload everything");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
 				}
 				if (!cacheSource.HasContent())
                 {
-					Debug.Log("Editor has no more session data to upload");
+					Util.logDebug("Editor has no more session data to upload");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
 				}

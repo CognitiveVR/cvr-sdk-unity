@@ -264,14 +264,6 @@ namespace CognitiveVR
         static System.Action cacheCompletedAction;
         static System.Action cacheFailedAction;
 
-        //TODO this should be in core, not on network manager
-        public static int GetLocalStorageBatchCount()
-        {
-            if (instance.runtimeCache == null)
-                return 0;
-            return instance.runtimeCache.NumberOfBatches();
-        }
-
         //either started manually from LocalCache.UploadAllLocalData or from successful 200 response from current session data
         void LoopUploadFromLocalCache()
         {
