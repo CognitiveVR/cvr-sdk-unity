@@ -47,7 +47,27 @@ namespace CognitiveVR
             if (writer == null)
                 writer = new StreamWriter(write_filestream);
 
-            if (numberWriteBatches > 0)
+            //copy all lines into data_write, then delete
+            bool legacyDataExists = false;
+            if (File.Exists(path + "data"))
+            {
+                legacyDataExists = true;
+                var legacyReader = new StreamReader(path + "data");
+                writer.BaseStream.Seek(0, SeekOrigin.End);
+                while (true)
+                {
+                    var url = legacyReader.ReadLine();
+                    var content = legacyReader.ReadLine();
+                    if (string.IsNullOrEmpty(url)) { break; }
+                    if (string.IsNullOrEmpty(content)) { break; }
+                    WriteContent(url, content);
+                }
+                writer.Flush();
+                legacyReader.Dispose();
+                File.Delete(path + "data");
+            }
+
+            if (legacyDataExists || numberWriteBatches > 0)
                 MergeDataFiles();
 
             //stack lines from reader
@@ -154,6 +174,7 @@ namespace CognitiveVR
             var write_reader = new StreamReader(write_filestream);
             write_reader.BaseStream.Position = 0;
             read_writer = new StreamWriter(read_filestream);
+            read_writer.BaseStream.Seek(0, SeekOrigin.End);
             while (true)
             {
                 var s = write_reader.ReadLine();
@@ -161,6 +182,7 @@ namespace CognitiveVR
                 read_writer.WriteLine(s);
             }
             read_writer.Flush();
+            //disposing write_reader or read_writer here will close the filestreams
 
             //clear write file
             write_filestream.SetLength(0);
