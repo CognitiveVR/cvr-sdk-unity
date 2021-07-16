@@ -659,6 +659,15 @@ namespace UnityGLTF
 								}
 							}
 						}
+						foreach (var renderer in lods[lodCount - 1].renderers)
+						{
+							if (renderer == null) { continue; }
+							if (LODDisabledRenderers.Contains(renderer))
+							{
+								renderer.enabled = true;
+								LODDisabledRenderers.Remove(renderer);
+							}
+						}
 					}
 					else
 					{
@@ -671,6 +680,15 @@ namespace UnityGLTF
 									renderer.enabled = false;
 									LODDisabledRenderers.Add(renderer);
 								}
+							}
+						}
+						foreach (var renderer in lods[0].renderers)
+						{
+							if (renderer == null) { continue; }
+							if (LODDisabledRenderers.Contains(renderer))
+							{
+								renderer.enabled = true;
+								LODDisabledRenderers.Remove(renderer);
 							}
 						}
 					}
@@ -1033,10 +1051,17 @@ namespace UnityGLTF
 			{
 				for (var i = 0; i < primVariations.Length; i++)
 				{
-					prims[i] = new MeshPrimitive(primVariations[i], _root)
+					if (materialsObj.Length > i)
 					{
-						Material = ExportMaterial(materialsObj[i])
-					};
+						prims[i] = new MeshPrimitive(primVariations[i], _root)
+						{
+							Material = ExportMaterial(materialsObj[i])
+						};
+					}
+					else
+					{
+						prims[i] = new MeshPrimitive(primVariations[i], _root) { };
+					}
 				}
 
 				return prims;
@@ -1119,7 +1144,7 @@ namespace UnityGLTF
 
 		private MaterialId ExportMaterial(Material materialObj)
 		{
-			//TODO if material is null
+			//TODO if material is null, what happens?
 			MaterialId id = GetMaterialId(_root, materialObj);
 			if (id != null)
 			{
