@@ -652,6 +652,7 @@ namespace UnityGLTF
 						{
 							foreach (var renderer in lods[i].renderers)
 							{
+								if (renderer == null) { continue; }
 								if (renderer.enabled)
 								{
 									renderer.enabled = false;
@@ -675,6 +676,7 @@ namespace UnityGLTF
 						{
 							foreach (var renderer in lods[i].renderers)
 							{
+								if (renderer == null) { continue; }
 								if (renderer.enabled)
 								{
 									renderer.enabled = false;
@@ -1108,8 +1110,8 @@ namespace UnityGLTF
 					primitive.Attributes.Add(SemanticProperties.TexCoord(0), aTexcoord0);
 				if (aTexcoord1 != null)
 					primitive.Attributes.Add(SemanticProperties.TexCoord(1), aTexcoord1);
-				if (aColor0 != null)
-					primitive.Attributes.Add(SemanticProperties.Color(0), aColor0);
+				//if (aColor0 != null)
+					//primitive.Attributes.Add(SemanticProperties.Color(0), aColor0);
 
 				if (submesh < materialsObj.Length)
 				{
