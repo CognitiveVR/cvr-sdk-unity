@@ -599,7 +599,7 @@ namespace CognitiveVR
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
 
                 //remove transform scale
                 var width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
