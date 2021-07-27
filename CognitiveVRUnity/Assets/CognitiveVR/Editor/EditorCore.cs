@@ -867,14 +867,14 @@ namespace CognitiveVR
                             {
                                 CognitiveVR_UpdateSDKWindow.Init(version, summary);
                             }
+                            else
+                            {
+                                Debug.Log("Version: " + installedVersion + ". Up to date!");
+                            }
                         }
                         else if (skipVersion == version) //skip this version. limit this check to once a day
                         {
                             EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
-                        }
-                        else //up to date
-                        {
-                            Debug.Log("Version " + version + ". You are up to date");
                         }
                     }
                 }

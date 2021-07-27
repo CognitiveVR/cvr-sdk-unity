@@ -412,6 +412,11 @@ namespace CognitiveVR
                         }
                     }
                 }
+                if (runtimeCache != null)
+                {
+                    runtimeCache.Close();
+                    runtimeCache = null;
+                }
             }
             activeRequests.Clear();
         }

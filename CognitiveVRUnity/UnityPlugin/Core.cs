@@ -188,7 +188,7 @@ namespace CognitiveVR
             {
                 if (WriteSceneChangeEvent)
                 {
-                    if (scene == null)
+                    if (scene == null || string.IsNullOrEmpty(scene.SceneId))
                     {
                         //what scene is being loaded
                         float duration = Time.time - SceneStartTime;
@@ -211,7 +211,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logDevelopment("Trying to set scene without a session!");
+                Util.logWarning("Trying to set scene without a session!");
             }
         }
 

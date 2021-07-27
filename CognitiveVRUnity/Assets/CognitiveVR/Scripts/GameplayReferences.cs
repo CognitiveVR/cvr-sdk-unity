@@ -133,13 +133,16 @@ namespace CognitiveVR
                     Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
                     if (manager != null){ _hmd = manager.varjoCamera.transform; }
 #else
+#endif
                     if (Camera.main != null)
                     {
                         _hmd = Camera.main.transform;
                     }
-#endif
+
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
                         Util.logWarning("HMD set to " + _hmd);
+                    if (_hmd == null)
+                        Util.logError("No HMD camera found. Is it tagged as 'MainCamera'?");
                 }
                 return _hmd;
             }

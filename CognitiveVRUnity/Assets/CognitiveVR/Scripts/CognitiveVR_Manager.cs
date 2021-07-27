@@ -247,6 +247,10 @@ namespace CognitiveVR
                     break;
                 }
             }
+            if (Core.TrackingScene == null)
+            {
+                Util.logWarning("CogntitiveVRManager No Tracking Scene Set!");
+            }
 
             Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
