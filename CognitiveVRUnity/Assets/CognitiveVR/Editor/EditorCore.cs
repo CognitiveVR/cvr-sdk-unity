@@ -73,7 +73,7 @@ namespace CognitiveVR
 
             if (!EditorPrefs.HasKey("cognitive_init_popup"))
             {
-                InitWizard.Init();
+                EditorApplication.update += UpdateInitWizard;
             }
             EditorPrefs.SetBool("cognitive_init_popup", true);
 
@@ -82,6 +82,15 @@ namespace CognitiveVR
                 EditorApplication.playmodeStateChanged -= ModeChanged;
                 EditorApplication.playmodeStateChanged += ModeChanged;
             }
+        }
+
+        //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that
+        static int initDelay = 4;
+        static void UpdateInitWizard()
+        {
+            if (initDelay > 0) { initDelay--; return; }
+            EditorApplication.update -= UpdateInitWizard;
+            InitWizard.Init();
         }
 
 #if UNITY_2019_OR_NEWER
