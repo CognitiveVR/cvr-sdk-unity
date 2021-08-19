@@ -546,7 +546,7 @@ public class InitWizard : EditorWindow
             {
                 //add input tracker + left/right controllers set
                 var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
                 {
                     setupComplete = true;
                 }
@@ -562,7 +562,7 @@ public class InitWizard : EditorWindow
             {
                 //add input tracker + left/right controllers set
                 var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
                 {
                     setupComplete = true;
                 }
