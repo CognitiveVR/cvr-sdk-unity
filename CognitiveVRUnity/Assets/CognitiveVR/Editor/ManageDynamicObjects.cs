@@ -506,17 +506,21 @@ public class ManageDynamicObjects : EditorWindow
             public string mesh;
             public string id;
             public float[] scaleCustom = new float[3]{1,1,1};
-            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom)
+                public float[] position = new float[3] { 0, 0, 0 };
+                public float[] rotation = new float[4] { 0, 0, 0 , 1};
+                public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom, float[] _position, float[] _rotation)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
                 scaleCustom = _scaleCustom;
+                    position = _position;
+                    rotation = _rotation;
             }
             public override string ToString()
             {
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + "\"}";
-            }
+                    return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + ",\"position\":\"" + position[0] + "," + position[1] + "," + position[2] + ",\"rotation\":\"" + rotation[0] + "," + rotation[1] + "," + rotation[2] + "," + rotation[3] + "\"}";
+                }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
         //public int Version;
@@ -616,8 +620,10 @@ public class ManageDynamicObjects : EditorWindow
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
-            json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "]";
-            json += "},";
+            json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "],";
+                json += "\"position\":[" + entry.position[0] + "," + entry.position[1] + "," + entry.position[2] + "],";
+                json += "\"rotation\":[" + entry.rotation[0] + "," + entry.rotation[1] + "," + entry.rotation[2] + "," + entry.rotation[3] + "]";
+                json += "},";
             containsValidEntry = true;
         }
 
@@ -680,7 +686,10 @@ public class ManageDynamicObjects : EditorWindow
                 //don't include meshes with empty mesh names in manifest
                 if (!string.IsNullOrEmpty(dynamic.MeshName))
                 {
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),new float[3] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z }));
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),
+                        new float[3] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
+                        new float[3] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
+                        new float[4] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));
                 }
                 else
                 {

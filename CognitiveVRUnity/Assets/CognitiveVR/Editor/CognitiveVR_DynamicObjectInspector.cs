@@ -227,7 +227,10 @@ namespace CognitiveVR
                             EditorCore.RefreshSceneVersion(delegate ()
                             {
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z }));
+                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                                    new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
+                                    new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
+                                    new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });
                         }
@@ -245,7 +248,10 @@ namespace CognitiveVR
                                 ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
                                 for(int i = 0; i< dyn.IdPool.Ids.Length;i++)
                                 {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z }));
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                                        new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
+                                        new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
+                                        new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
                                 }
                                 ManageDynamicObjects.UploadManifest(manifest, null);
                             });
