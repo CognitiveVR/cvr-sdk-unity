@@ -12,7 +12,9 @@ namespace CognitiveVR.ActiveSession
     {
         Camera mainCamera;
         RawImage RawImage;
+#pragma warning disable 0414
         Material flipMat;
+#pragma warning restore 0414
 
         RenderTexture rt;
         BuiltinRenderTextureType blitTo = BuiltinRenderTextureType.CurrentActive;

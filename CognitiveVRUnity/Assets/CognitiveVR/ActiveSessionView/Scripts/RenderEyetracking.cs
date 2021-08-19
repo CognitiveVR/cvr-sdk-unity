@@ -59,11 +59,9 @@ namespace CognitiveVR.ActiveSession
         int pixelwidth;
         int pixelheight;
         System.Threading.Thread VectorMathThread;
-        ActiveSessionView Asv;
 
         public void Initialize(ActiveSessionView asv, Camera followCamera)
         {
-            Asv = asv;
             FollowCamera = followCamera;
             TargetCameraTransform = followCamera.transform;
             FixationCamera = GetComponent<Camera>();

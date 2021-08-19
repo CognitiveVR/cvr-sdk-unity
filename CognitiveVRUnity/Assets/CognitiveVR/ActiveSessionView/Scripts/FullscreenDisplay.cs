@@ -36,7 +36,9 @@ namespace CognitiveVR.ActiveSession
         public bool showFixations = true;
         public bool showSaccades = false;
 
+#pragma warning disable 0414
         Vector2 openVROffset = new Vector2(0.083f, 0.11f);
+#pragma warning restore 0414
 
         private void Core_InitEvent(Error initError)
         {
@@ -191,13 +193,15 @@ namespace CognitiveVR.ActiveSession
         int pixelheight;
         float lineWidth = 0.2f;
         Vector3[] quadPositions;
-        int quadPositionCount = 0;
         System.Threading.Thread VectorMathThread;
         bool displaySaccades = true;
         bool threaded = true;
+#pragma warning disable 0414
+        int quadPositionCount = 0;
         Material SaccadeMaterial;
         Texture saccadeTexture;
         float gazePointSize = 16;
+#pragma warning restore 0414
 
         private void UpdateSaccades()
         {
@@ -393,9 +397,9 @@ namespace CognitiveVR.ActiveSession
         private void Saccade_OnGUI()
         {
             if (!displaySaccades) { return; }
-            return;
 
             //TODO remap to screen
+            /*
 
             if (fixationRecorder == null) { return; }
             if (fixationRecorder.SaccadeScreenPoints == null) { return; }
@@ -424,7 +428,7 @@ namespace CognitiveVR.ActiveSession
             }
             
             GL.End();
-            GL.PopMatrix();
+            GL.PopMatrix();*/
         }
 #endregion
 
