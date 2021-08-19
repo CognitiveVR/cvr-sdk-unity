@@ -5,33 +5,38 @@ using System.IO;
 
 namespace CognitiveVR
 {
-    public class LocalCache
+    //shouldn't have any static fields!
+    public class LocalCache : ICache
     {
-        static int EOLByteCount = 2;
-        internal static string EnvironmentEOL;
+        static int EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(System.Environment.NewLine);
+        static string EnvironmentEOL = System.Environment.NewLine;
 
         //set on constructor. can become disabled if there are any file errors or if preferences have local storage disabled
-        internal static bool LocalStorageActive = false;
+        //internal static bool LocalStorageActive = false;
 
-        static string localDataPath = Application.persistentDataPath + "/c3dlocal/data";
-        static string localExitPollPath = Application.persistentDataPath + "/c3dlocal/exitpoll/";
+        static string localDataPath;// = Application.persistentDataPath + "/c3dlocal/data";
+        //static string localExitPollPath = Application.persistentDataPath + "/c3dlocal/exitpoll/";
 
         static StreamReader sr;
         static StreamWriter sw;
         static FileStream fs;
         
+        //TODO compare readline and readblock performance + garbage
         //line sizes of contents, ignoring line breaks. line breaks added automatically from StreamWriter.WriteLine
         static Stack<int> linesizes = new Stack<int>();
         static int totalBytes = 0;
 
-        internal LocalCache(NetworkManager network, string EOLCharacter)
+        public LocalCache(string directoryPath)
         {
+            localDataPath = directoryPath;// + "data/";
+            //localExitPollPath = directoryPath + "exitpoll/";
+
             //constructed from CognitiveVR_Manager enable. sets environment end of line character
-            if (EnvironmentEOL == null && !string.IsNullOrEmpty(EOLCharacter))
-            {
-                EnvironmentEOL = EOLCharacter;
-                EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(EOLCharacter);
-            }
+            //if (EnvironmentEOL == null && !string.IsNullOrEmpty(EOLCharacter))
+            //{
+            //    EnvironmentEOL = EOLCharacter;
+            //    EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(EOLCharacter);
+            //}
 
             //open file streams
             //should listen for network destroy event
@@ -39,13 +44,13 @@ namespace CognitiveVR
             if (sw != null) { sw.Close(); sw = null; }
             if (fs != null) { fs.Close(); fs = null; }
 
-            LocalStorageActive = CognitiveVR_Preferences.Instance.LocalStorage;
+            //LocalStorageActive = CognitiveVR_Preferences.Instance.LocalStorage;
 
-            if (!LocalStorageActive) { return; }
+            if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
             try
             {
-                if (!Directory.Exists(localExitPollPath))
-                    Directory.CreateDirectory(localExitPollPath);
+                if (!Directory.Exists(localDataPath))
+                    Directory.CreateDirectory(localDataPath);
 
                 fs = File.Open(localDataPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 sr = new StreamReader(fs);
@@ -63,7 +68,7 @@ namespace CognitiveVR
             }
             catch (System.Exception e)
             {
-                LocalStorageActive = false;
+                //LocalStorageActive = false;
                 Debug.LogException(e);
             }
         }
@@ -74,9 +79,9 @@ namespace CognitiveVR
         /// <param name="url"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        internal bool CanAppend(string url, string content)
+        public bool CanWrite(string url, string content)
         {
-            if (!LocalStorageActive) { return false; }
+            if (!CognitiveVR_Preferences.Instance.LocalStorage) { return false; }
             if (sw == null)
             {
                 Util.logError("LocalCache attempting to write request after streamwriter closed");
@@ -97,10 +102,16 @@ namespace CognitiveVR
             return linesizes.Count;
         }
 
-        //immediately abort uploading from cache and write this new session data to local cache
-        internal bool Append(string url, string content)
+        public int NumberOfBatches()
         {
-            if (!LocalStorageActive)
+            return linesizes.Count / 2;
+        }
+
+        //immediately abort uploading from cache and write this new session data to local cache
+        //internal bool Append(string url, string content)
+        public bool WriteContent(string url, string content)
+        {
+            if (!CognitiveVR_Preferences.Instance.LocalStorage)
             {
                 Util.logWarning("LocalCache could not append data. Local Cache is inactive");
                 return false;
@@ -128,43 +139,13 @@ namespace CognitiveVR
             catch (System.Exception e)
             {
                 //turn off to avoid other errors
-                LocalStorageActive = false;
+                //LocalStorageActive = false;
                 Debug.LogException(e);
                 return false;
             }
 
             //write to cache file
             return true;
-        }
-
-        internal static bool GetExitpoll(string hookname, out string text)
-        {
-            try
-            {
-                if (File.Exists(localExitPollPath + hookname))
-                {
-                    text = File.ReadAllText(localExitPollPath + hookname);
-                    return true;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-            text = "";
-            return false;
-        }
-
-        internal static void WriteExitpoll(string hookname, string text)
-        {
-            try
-            {
-                File.WriteAllText(localExitPollPath + hookname, text);
-            }
-            catch(Exception e)
-            {
-                Debug.LogException(e);
-            }
         }
 
         /// <summary>
@@ -181,11 +162,12 @@ namespace CognitiveVR
             return true;
         }
 
+        //IMPROVEMENT shouldn't have reference to network manager. CanReadFromCache should only be called when NetworkManager knows it can read
         //returns false if network isuploadingfromcache
         //returns false if cache is empty
         internal bool CanReadFromCache()
         {
-            if (NetworkManager.isuploadingfromcache) { return false; }
+            //if (NetworkManager.isuploadingfromcache) { return false; }
             if (linesizes.Count < 2) { return false; }
             return true;
         }
@@ -196,13 +178,22 @@ namespace CognitiveVR
             return false;
         }
 
+        public bool HasContent()
+        {
+            if (linesizes.Count > 0) { return true; }
+            return false;
+        }
+
         int successfulReponseNewCacheSize;
 
         //network running localcache coroutine to pull data out of file
-        internal void GetCachedDataPoint(out string url, out string content)
+        //internal void GetCachedDataPoint(out string url, out string content)
+        public bool PeekContent(ref string url, ref string content)
         {
             url = "";
             content = "";
+            if (!HasContent())
+                return false;
 
             //pop the line sizes off the stack to figure out how many characters to pull from the local data cache
             int contentsize = linesizes.Pop();
@@ -242,10 +233,12 @@ namespace CognitiveVR
                 for (int eolc2 = 0; eolc2 < EOLByteCount; eolc2++)
                     sr.Read();
             }
+            return true;
         }
 
         //if the network recieves a successful cache cache web request response
-        internal void SuccessfulResponse()
+        //internal void SuccessfulResponse()
+        public void PopContent()
         {
             try
             {
@@ -258,6 +251,11 @@ namespace CognitiveVR
             {
                 Debug.LogError(e);
             }
+        }
+
+        public void Close()
+        {
+            OnDestroy();
         }
 
         //called from Network.OnDestroy

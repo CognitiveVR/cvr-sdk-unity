@@ -146,6 +146,7 @@ namespace CognitiveVR
         //defualt 10MB cache size
         public long LocalDataCacheSize = 1024 * 1024 * 100;
         public bool LocalStorage = true;
+        public bool UploadCacheOnEndPlay = true;
 
         public int TextureResize = 1;
         public bool ExportSceneLODLowest = true;

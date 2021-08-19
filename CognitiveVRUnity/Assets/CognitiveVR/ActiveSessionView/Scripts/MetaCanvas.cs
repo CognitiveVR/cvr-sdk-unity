@@ -55,7 +55,7 @@ namespace CognitiveVR
                     }
                 }
 
-                int currentBatchStorage = NetworkManager.GetLocalStorageBatchCount();
+                int currentBatchStorage = Core.GetLocalStorageBatchCount();
                 if (currentBatchStorage != lastBatchStorage)
                 {
                     OfflineBatches.text = (currentBatchStorage / 2).ToString();

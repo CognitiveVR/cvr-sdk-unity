@@ -423,11 +423,30 @@ namespace CognitiveVR
             SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
+            List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
+
             if (rootDynamic != null)
             {
                 SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
                 Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
+                foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
+                    {
+                        ProceduralMeshFilters.Add(mf);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var mf in UnityEngine.Object.FindObjectsOfType<MeshFilter>())
+                {
+                    if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
+                    {
+                        ProceduralMeshFilters.Add(mf);
+                    }
+                }
             }
 
             foreach (var skinnedMeshRenderer in SkinnedMeshes)
@@ -464,6 +483,41 @@ namespace CognitiveVR
                 meshes.Add(bm);
             }
 
+            foreach (var meshFilter in ProceduralMeshFilters)
+            {
+                if (!meshFilter.gameObject.activeInHierarchy) { continue; }
+                var mr = meshFilter.GetComponent<MeshRenderer>();
+                if (mr == null) { continue; }
+                if (!mr.enabled) { continue; }
+
+                if (rootDynamic == null && meshFilter.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //skinned mesh as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && meshFilter.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found skinned mesh in some other dynamic
+                    continue;
+                }
+
+                BakeableMesh bm = new BakeableMesh();
+                bm.tempGo = new GameObject(meshFilter.gameObject.name);
+                bm.tempGo.transform.parent = meshFilter.transform;
+                bm.tempGo.transform.localRotation = Quaternion.identity;
+                bm.tempGo.transform.localPosition = Vector3.zero;
+                bm.tempGo.transform.localScale = Vector3.one;
+
+                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterials = mr.sharedMaterials;
+                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+                var m = new Mesh();
+                m.name = meshFilter.sharedMesh.name;
+                m = meshFilter.sharedMesh;
+                bm.meshFilter.sharedMesh = m;
+                meshes.Add(bm);
+            }
+
             //TODO ignore parent rotation and scale
             foreach (var v in Terrains)
             {
@@ -488,7 +542,17 @@ namespace CognitiveVR
                 //generate mesh from heightmap
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
                 bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
-                bm.meshRenderer.sharedMaterial.mainTexture = BakeTerrainTexture(v.terrainData);
+                if (v.materialTemplate != null && v.materialTemplate.shader.name.Contains("CTS"))
+                {
+                    //check if CTS material
+                    bm.meshRenderer.sharedMaterial.mainTexture = BakeCTSTerrainTexture(v.terrainData, v.materialTemplate);
+                    bm.meshRenderer.sharedMaterial.SetFloat("_Glossiness", 0);
+                }
+                else
+                {
+                    bm.meshRenderer.sharedMaterial.mainTexture = BakeTerrainTexture(v.terrainData);
+                    bm.meshRenderer.sharedMaterial.SetFloat("_Glossiness", 0);
+                }
                 bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
                 bm.meshFilter.sharedMesh = GenerateTerrainMesh(v);
                 meshes.Add(bm);
@@ -496,7 +560,9 @@ namespace CognitiveVR
                 //trees
                 foreach (var treedata in v.terrainData.treeInstances)
                 {
-                    var treeposition = new Vector3(treedata.position.x * v.terrainData.size.x, 0, treedata.position.z * v.terrainData.size.z);
+                    var treeposition = new Vector3(treedata.position.x * v.terrainData.size.x, 0, treedata.position.z * v.terrainData.size.z) + v.transform.position;
+
+                    //also accounts for terrain position
                     treeposition.y = v.SampleHeight(treeposition);
                     var prototype = v.terrainData.treePrototypes[treedata.prototypeIndex];
 
@@ -533,7 +599,7 @@ namespace CognitiveVR
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
 
                 //remove transform scale
                 var width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
@@ -558,6 +624,7 @@ namespace CognitiveVR
         /// <param name="terrain">the terrain to bake</param>
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
+            //CONSIDER splitting terrain into different mesh. too many polygons causes issues?
             float downsample = 4;
 
             Mesh mesh = new Mesh();
@@ -604,6 +671,114 @@ namespace CognitiveVR
             mesh.RecalculateNormals();
             mesh.tangents = tangents;
             return mesh;
+        }
+
+        public static Texture2D BakeCTSTerrainTexture(TerrainData data, Material material)
+        {
+            //read splatmaps and texture arrays
+            var t = material.GetTexture("_Texture_Array_Albedo");
+            var albedos = t as Texture2DArray;
+
+            //get albedo indexes
+            int[] albedoIndex = new int[6];
+            albedoIndex[0] = (int)material.GetFloat("_Texture_1_Albedo_Index");
+            albedoIndex[1] = (int)material.GetFloat("_Texture_2_Albedo_Index");
+            albedoIndex[2] = (int)material.GetFloat("_Texture_3_Albedo_Index");
+            albedoIndex[3] = (int)material.GetFloat("_Texture_4_Albedo_Index");
+            albedoIndex[4] = (int)material.GetFloat("_Texture_5_Albedo_Index");
+            albedoIndex[5] = (int)material.GetFloat("_Texture_6_Albedo_Index");
+
+            //get colour values
+            Vector4[] colors = new Vector4[6];
+            colors[0] = material.GetVector("_Texture_1_Color");
+            colors[1] = material.GetVector("_Texture_2_Color");
+            colors[2] = material.GetVector("_Texture_3_Color");
+            colors[3] = material.GetVector("_Texture_4_Color");
+            colors[4] = material.GetVector("_Texture_5_Color");
+            colors[5] = material.GetVector("_Texture_6_Color");
+
+            Texture2D s1 = material.GetTexture("_Texture_Splat_1") as Texture2D;
+            Texture2D s2 = material.GetTexture("_Texture_Splat_2") as Texture2D;
+
+            Texture2D[] albedoTextures = new Texture2D[6];
+            for (int i = 0; i < albedoIndex.Length; i++)
+            {
+                if (albedoIndex[i] < 0) albedoIndex[i] = 0;
+                Color32[] pixels = albedos.GetPixels32(albedoIndex[i], 0);
+                albedoTextures[i] = new Texture2D(albedos.width, albedos.height);
+                albedoTextures[i].SetPixels32(pixels);
+                albedoTextures[i].Apply();
+            }
+
+            Texture2D finalTexture = new Texture2D((int)data.size.x, (int)data.size.z);
+            Color c = Color.white;
+
+            int textureResolution = albedos.width;
+
+            float upscalewidth = (float)finalTexture.width / (float)data.alphamapWidth;
+            float upscaleheight = (float)finalTexture.height / (float)data.alphamapHeight;
+
+            //go through each pixel in the splatmap?
+            for (int x = 0; x < finalTexture.width; x++)
+            {
+                for (int y = 0; y < finalTexture.height; y++)
+                {
+                    var p1 = s1.GetPixel((int)(x / upscalewidth), (int)(y / upscaleheight));
+                    var p2 = s2.GetPixel((int)(x / upscalewidth), (int)(y / upscaleheight));
+
+                    int selectedIndex = 1;
+                    if (p1.b > 0.2f)
+                        selectedIndex = 2;
+                    if (p2.g > 0.2f)
+                        selectedIndex = 5;
+                    if (p2.r > 0.4f)
+                        selectedIndex = 4;
+                    if (p1.a > 0.1f)
+                        selectedIndex = 3;
+
+                    var texture = albedoTextures[selectedIndex];
+                    //get pixel (ignore scaling) modulo to stay within bounds and multiply color
+                    c = texture.GetPixel(x % textureResolution, y % textureResolution) * (Color)colors[selectedIndex];
+                    c.a = 1;
+
+                    //grid
+                    //Color c = white;
+                    //if (x % 10 == 0 || y % 10 == 0)
+                    //  c = grey;
+
+                    finalTexture.SetPixel(x, y, c);
+                }
+            }
+
+            finalTexture.Apply();
+
+            return finalTexture;
+        }
+
+        public static Texture2D BakeGridTerrainTexture(TerrainData data, Material material)
+        {
+            Texture2D finalTexture = new Texture2D((int)data.size.x, (int)data.size.z);
+            Color c = Color.white;
+            Color white = Color.white;
+            Color grey = Color.grey;
+
+            //go through each pixel in the splatmap?
+            for (int x = 0; x < finalTexture.width; x++)
+            {
+                for (int y = 0; y < finalTexture.height; y++)
+                {
+                    //grid
+                    c = white;
+                    if (x % 10 == 0 || y % 10 == 0)
+                      c = grey;
+
+                    finalTexture.SetPixel(x, y, c);
+                }
+            }
+
+            finalTexture.Apply();
+
+            return finalTexture;
         }
 
         /// <summary>

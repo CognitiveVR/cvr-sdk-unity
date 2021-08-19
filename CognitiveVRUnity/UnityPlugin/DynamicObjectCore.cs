@@ -27,7 +27,7 @@ namespace CognitiveVR
 
         internal static void Initialize()
         {
-            NetworkManager.Sender.StartCoroutine(WriteJson());
+            Core.NetworkManager.StartCoroutine(WriteJson());
             for (int i = 0; i < CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
@@ -37,7 +37,7 @@ namespace CognitiveVR
             Core.UpdateEvent += Core_UpdateEvent;
 
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
-            NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+            Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
         private static float nextSendTime = 0;
@@ -402,13 +402,13 @@ namespace CognitiveVR
 
                     if (CopyDataToCache)
                     {
-                        if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, s))
+                        if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, s))
                         {
-                            NetworkManager.lc.Append(url, s);
+                            Core.NetworkManager.runtimeCache.WriteContent(url, s);
                         }
                     }
 
-                    NetworkManager.Post(url, s);
+                    Core.NetworkManager.Post(url, s);
                     DynamicManager.DynamicObjectSendEvent();
                 }
             }

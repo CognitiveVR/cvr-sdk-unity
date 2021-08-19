@@ -12,7 +12,7 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICONEO2EYE || CVR_XR || CVR_OMNICEPT
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICOVR || CVR_PICOXR || CVR_XR || CVR_OMNICEPT
                 return true;
 #else
                 return false;
@@ -23,7 +23,7 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICONEO2EYE || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON || CVR_OMNICEPT
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICOVR || CVR_PICOXR || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON || CVR_OMNICEPT
                 return true;
 #else
                 return false;
@@ -133,13 +133,16 @@ namespace CognitiveVR
                     Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
                     if (manager != null){ _hmd = manager.varjoCamera.transform; }
 #else
+#endif
                     if (Camera.main != null)
                     {
                         _hmd = Camera.main.transform;
                     }
-#endif
+
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
                         Util.logWarning("HMD set to " + _hmd);
+                    if (_hmd == null)
+                        Util.logError("No HMD camera found. Is it tagged as 'MainCamera'?");
                 }
                 return _hmd;
             }
@@ -363,7 +366,7 @@ namespace CognitiveVR
                 controllers[1] = new ControllerInfo();
             }
         }
-#elif CVR_PICONEO2EYE
+#elif CVR_PICOVR
         static void InitializeControllers()
         {
             if (controllers == null)
@@ -387,6 +390,58 @@ namespace CognitiveVR
                     controllers[1].id = 1;
                 }
             }
+        }
+#elif CVR_PICOXR
+        static void InitializeControllers()
+        {
+            if (controllers == null)
+            {
+                controllers = new ControllerInfo[2];
+                controllers[0] = new ControllerInfo();
+                controllers[1] = new ControllerInfo();
+            }
+        }
+
+        public static void SetController(GameObject go, bool isRight)
+        {
+            InitializeControllers();
+            if (isRight)
+            {
+                controllers[1].transform = go.transform;
+                controllers[1].isRight = true;
+                controllers[1].connected = true;
+                controllers[1].visible = true;
+                controllers[1].id = 1;
+            }
+            else
+            {
+                controllers[0].transform = go.transform;
+                controllers[0].isRight = false;
+                controllers[0].connected = true;
+                controllers[0].visible = true;
+                controllers[0].id = 0;
+            }
+        }
+
+        public static bool GetEyeTrackingDevice(out UnityEngine.XR.InputDevice device)
+        {
+            //TODO cache input device and check if 'IsValid'
+            device = default(UnityEngine.XR.InputDevice);
+
+            if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
+                return false;
+
+            List<UnityEngine.XR.InputDevice> devices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.EyeTracking | UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, devices);
+            if (devices.Count == 0)
+            {
+                Debug.Log("Failed at GetEyeTrackingDevice 0");
+                return false;
+            }
+            device = devices[0];
+            if (!device.isValid)
+                Debug.Log("Failed at GetEyeTrackingDevice 1");
+            return device.isValid;
         }
 #elif CVR_XR
 

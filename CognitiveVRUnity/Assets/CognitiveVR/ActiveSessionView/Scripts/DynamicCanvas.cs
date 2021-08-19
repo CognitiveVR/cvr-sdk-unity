@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace CognitiveVR.ActiveSession
 {
+    [AddComponentMenu("")]
     public class DynamicCanvas : MonoBehaviour
     {
         public GameObject DynamicSortablePrefab;

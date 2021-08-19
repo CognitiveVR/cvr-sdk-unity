@@ -295,7 +295,10 @@ namespace CognitiveVR
             autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
 
             if (automaticTimerActive == false)
-                NetworkManager.Sender.StartCoroutine(AutomaticSendTimer());
+            {
+                automaticTimerActive = true;
+                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            }
         }
 
         private static void Core_OnSendData(bool copyDataToCache)
@@ -317,16 +320,14 @@ namespace CognitiveVR
         static float autoTimer_nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
-            automaticTimerActive = true;
             while (true)
             {
                 while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
                 {
                     yield return null;
                 }
-                //try to send!
                 autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (!Core.IsInitialized)
+                if (Core.IsInitialized)
                 {
                     if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");
@@ -338,7 +339,6 @@ namespace CognitiveVR
         //checks for min send time and extreme batch size before calling send
         static void TrySendTransactions()
         {
-
             bool withinMinTimer = minTimer_lastSendTime + CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
             bool withinExtremeBatchSize = cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount;
 
@@ -429,13 +429,13 @@ namespace CognitiveVR
 
             if (copyDataToCache)
             {
-                if (NetworkManager.lc != null && NetworkManager.lc.CanAppend(url, packagedEvents))
+                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, packagedEvents))
                 {
-                    NetworkManager.lc.Append(url, packagedEvents);
+                    Core.NetworkManager.runtimeCache.WriteContent(url, packagedEvents);
                 }
             }
 
-            NetworkManager.Post(url, packagedEvents);
+            Core.NetworkManager.Post(url, packagedEvents);
             if (OnCustomEventSend != null)
             {
                 OnCustomEventSend.Invoke();

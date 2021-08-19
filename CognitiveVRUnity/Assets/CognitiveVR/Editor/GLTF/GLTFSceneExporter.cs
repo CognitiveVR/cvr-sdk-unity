@@ -218,7 +218,15 @@ namespace UnityGLTF
 			}
 		}
 
-		internal enum TextureMapType
+		public class TextureImageCache
+		{
+			public TextureId Id;
+			public GLTFRoot Root;
+			public Texture texture;
+			public TextureMapType textureMapType;
+		}
+
+		public enum TextureMapType
 		{
 			Main,
 			Bump,
@@ -259,7 +267,7 @@ namespace UnityGLTF
 		private GLTFBuffer _buffer;
 		private BinaryWriter _bufferWriter;
 		private List<ImageInfo> _imageInfos;
-		private List<Texture> _textures;
+		private List<TextureImageCache> _textures;
 		private List<Material> _materials;
 
 		private RetrieveTexturePathDelegate _retrieveTexturePathDelegate;
@@ -339,7 +347,7 @@ namespace UnityGLTF
 
 			_imageInfos = new List<ImageInfo>();
 			_materials = new List<Material>();
-			_textures = new List<Texture>();
+			_textures = new List<TextureImageCache>();
 
 			_buffer = new GLTFBuffer();
 			_bufferId = new BufferId
@@ -519,7 +527,6 @@ namespace UnityGLTF
 						v.enabled = true;
 				}
 			}
-
 		}
 
 		private void ExportImages(string outputPath)
@@ -530,11 +537,11 @@ namespace UnityGLTF
 				//int height = image.height;
 				//int width = image.width;
 
-				ExportTexture(_imageInfos[t].texture, outputPath, _imageInfos[t].Linear, _imageInfos[t].ShaderOverrideName);
+				ExportTexture(_imageInfos[t].texture, outputPath, _imageInfos[t].Linear, _imageInfos[t].ShaderOverrideName, _imageInfos[t].textureMapType);
 			}
 		}
 
-		private void ExportTexture(Texture2D texture, string outputPath, bool linear, string ShaderOverride)
+		private void ExportTexture(Texture2D texture, string outputPath, bool linear, string ShaderOverride, TextureMapType textureMapType)
 		{
 			RenderTextureReadWrite textureType = RenderTextureReadWrite.sRGB;
 			if (linear)
@@ -564,7 +571,7 @@ namespace UnityGLTF
 			exportTexture.ReadPixels(new Rect(0, 0, destRenderTexture.width, destRenderTexture.height), 0, 0);
 			exportTexture.Apply();
 
-			var finalFilenamePath = ConstructImageFilenamePath(texture, outputPath);
+			var finalFilenamePath = ConstructImageFilenamePath(texture, textureMapType, outputPath);
 			File.WriteAllBytes(finalFilenamePath, exportTexture.EncodeToPNG());
 
 			RenderTexture.active = null;
@@ -579,18 +586,18 @@ namespace UnityGLTF
 			}
 		}
 
-		private string ConstructImageFilenamePath(Texture2D texture, string outputPath)
+		private string ConstructImageFilenamePath(Texture2D texture, TextureMapType textureMapType, string outputPath)
 		{
 			var imagePath = _retrieveTexturePathDelegate(texture);
 			var filenamePath = Path.Combine(outputPath, imagePath);
 			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
 			{
 				string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
-				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texturenamehash;
+				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texturenamehash + textureMapType;
 			}
 			else
 			{
-				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texture.name;
+				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texture.name + textureMapType;
 			}
 			var file = new FileInfo(filenamePath);
 			file.Directory.Create();
@@ -652,11 +659,21 @@ namespace UnityGLTF
 						{
 							foreach (var renderer in lods[i].renderers)
 							{
+								if (renderer == null) { continue; }
 								if (renderer.enabled)
 								{
 									renderer.enabled = false;
 									LODDisabledRenderers.Add(renderer);
 								}
+							}
+						}
+						foreach (var renderer in lods[lodCount - 1].renderers)
+						{
+							if (renderer == null) { continue; }
+							if (LODDisabledRenderers.Contains(renderer))
+							{
+								renderer.enabled = true;
+								LODDisabledRenderers.Remove(renderer);
 							}
 						}
 					}
@@ -666,11 +683,21 @@ namespace UnityGLTF
 						{
 							foreach (var renderer in lods[i].renderers)
 							{
+								if (renderer == null) { continue; }
 								if (renderer.enabled)
 								{
 									renderer.enabled = false;
 									LODDisabledRenderers.Add(renderer);
 								}
+							}
+						}
+						foreach (var renderer in lods[0].renderers)
+						{
+							if (renderer == null) { continue; }
+							if (LODDisabledRenderers.Contains(renderer))
+							{
+								renderer.enabled = true;
+								LODDisabledRenderers.Remove(renderer);
 							}
 						}
 					}
@@ -1033,17 +1060,24 @@ namespace UnityGLTF
 			{
 				for (var i = 0; i < primVariations.Length; i++)
 				{
-					prims[i] = new MeshPrimitive(primVariations[i], _root)
+					if (materialsObj.Length > i)
 					{
-						Material = ExportMaterial(materialsObj[i])
-					};
+						prims[i] = new MeshPrimitive(primVariations[i], _root)
+						{
+							Material = ExportMaterial(materialsObj[i])
+						};
+					}
+					else
+					{
+						prims[i] = new MeshPrimitive(primVariations[i], _root) { };
+					}
 				}
 
 				return prims;
 			}
 
 			AccessorId aPosition = null, aNormal = null, aTangent = null,
-				aTexcoord0 = null, aTexcoord1 = null, aColor0 = null;
+				aTexcoord0 = null, aTexcoord1 = null;//, aColor0 = null;
 
 			aPosition = ExportAccessor(SchemaExtensions.ConvertVector3CoordinateSpaceAndCopy(meshObj.vertices, SchemaExtensions.CoordinateSpaceConversionScale));
 
@@ -1059,8 +1093,8 @@ namespace UnityGLTF
 			if (meshObj.uv2.Length != 0)
 				aTexcoord1 = ExportAccessor(SchemaExtensions.FlipTexCoordArrayVAndCopy(meshObj.uv2));
 
-			if (meshObj.colors.Length != 0)
-				aColor0 = ExportAccessor(meshObj.colors);
+			//if (meshObj.colors.Length != 0)
+				//aColor0 = ExportAccessor(meshObj.colors);
 
 			MaterialId lastMaterialId = null;
 
@@ -1083,8 +1117,8 @@ namespace UnityGLTF
 					primitive.Attributes.Add(SemanticProperties.TexCoord(0), aTexcoord0);
 				if (aTexcoord1 != null)
 					primitive.Attributes.Add(SemanticProperties.TexCoord(1), aTexcoord1);
-				if (aColor0 != null)
-					primitive.Attributes.Add(SemanticProperties.Color(0), aColor0);
+				//if (aColor0 != null)
+					//primitive.Attributes.Add(SemanticProperties.Color(0), aColor0);
 
 				if (submesh < materialsObj.Length)
 				{
@@ -1119,7 +1153,7 @@ namespace UnityGLTF
 
 		private MaterialId ExportMaterial(Material materialObj)
 		{
-			//TODO if material is null
+			//TODO if material is null, what happens?
 			MaterialId id = GetMaterialId(_root, materialObj);
 			if (id != null)
 			{
@@ -1265,28 +1299,46 @@ namespace UnityGLTF
 
 		private TextureId ExportTexture(Texture textureObj, TextureMapType textureMapType, bool linear, string shaderOverrideName)
 		{
-			TextureId id = GetTextureId(_root, textureObj);
+			TextureId id = GetTextureId(_root, textureObj, textureMapType, shaderOverrideName);
 			if (id != null)
 			{
 				return id;
 			}
 
 			var texture = new GLTFTexture();
+			if (textureObj == null)
+			{
+				id = new TextureId
+				{
+					Id = _root.Textures.Count,
+					Root = _root
+				};
+
+				var textureCache1 = new TextureImageCache
+				{
+					Id = id,
+					texture = textureObj,
+					Root = _root,
+					textureMapType = textureMapType
+				};
+
+				_textures.Add(textureCache1);
+				_root.Textures.Add(texture);
+				return id;
+			}
 
 			var imagePath = _retrieveTexturePathDelegate(textureObj);
 			if (textureObj.name != Uri.EscapeUriString(textureObj.name).Replace('#', '_'))
 			{
-				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(textureObj.name.GetHashCode()).ToString();
+				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(textureObj.name.GetHashCode()).ToString() + textureMapType;
 			}
 			else
 			{
-				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + textureObj.name;
+				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + textureObj.name + textureMapType;
 			}
 
 			texture.Source = ExportImage(textureObj, textureMapType, linear, shaderOverrideName);
 			texture.Sampler = ExportSampler(textureObj);
-
-			_textures.Add(textureObj);
 
 			id = new TextureId
 			{
@@ -1294,14 +1346,23 @@ namespace UnityGLTF
 				Root = _root
 			};
 
+			var textureCache = new TextureImageCache
+			{
+				Id = id,
+				texture = textureObj,
+				Root = _root,
+				textureMapType = textureMapType
+			};
+
+			_textures.Add(textureCache);
 			_root.Textures.Add(texture);
 
 			return id;
 		}
 
-		private ImageId ExportImage(Texture texture, TextureMapType texturMapType, bool linear, string shaderOverrideName)
+		private ImageId ExportImage(Texture texture, TextureMapType textureMapType, bool linear, string shaderOverrideName)
 		{
-			ImageId id = GetImageId(_root, texture);
+			ImageId id = GetImageId(_root, texture, textureMapType);
 			if (id != null)
 			{
 				return id;
@@ -1340,7 +1401,7 @@ namespace UnityGLTF
 			_imageInfos.Add(new ImageInfo
 			{
 				texture = texture as Texture2D,
-				textureMapType = texturMapType,
+				textureMapType = textureMapType,
 				Linear = linear,
 				ShaderOverrideName = shaderOverrideName
 			}); ;
@@ -1352,7 +1413,7 @@ namespace UnityGLTF
 			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
 			{
 				texturenamehash = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(texture.name.GetHashCode()).ToString();
-				image.Name = texturenamehash + ".png";
+				image.Name = texturenamehash + textureMapType + ".png";
 			}
 			else
 			{
@@ -1363,11 +1424,11 @@ namespace UnityGLTF
 
 			if (string.IsNullOrEmpty(imagePath))
 			{
-				image.Uri = texturenamehash + ".png";
+				image.Uri = texturenamehash + textureMapType + ".png";
 			}
 			else
 			{
-				var filenamePath = texturenamehash + ".png";
+				var filenamePath = texturenamehash + textureMapType + ".png";
 				image.Uri = filenamePath;
 			}
 
@@ -1888,11 +1949,11 @@ namespace UnityGLTF
 			return null;
 		}
 
-		public TextureId GetTextureId(GLTFRoot root, Texture textureObj)
+		public TextureId GetTextureId(GLTFRoot root, Texture textureObj, TextureMapType textureMapType, string shaderOverrideName)
 		{
 			for (var i = 0; i < _textures.Count; i++)
 			{
-				if (_textures[i] == textureObj)
+				if (_textures[i].texture == textureObj && _textures[i].textureMapType == textureMapType)
 				{
 					return new TextureId
 					{
@@ -1905,11 +1966,11 @@ namespace UnityGLTF
 			return null;
 		}
 
-		public ImageId GetImageId(GLTFRoot root, Texture imageObj)
+		public ImageId GetImageId(GLTFRoot root, Texture imageObj, TextureMapType textureMapType)
 		{
 			for (var i = 0; i < _imageInfos.Count; i++)
 			{
-				if (_imageInfos[i].texture == imageObj)
+				if (_imageInfos[i].texture == imageObj && _imageInfos[i].textureMapType == textureMapType)
 				{
 					return new ImageId
 					{

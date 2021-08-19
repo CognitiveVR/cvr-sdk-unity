@@ -73,9 +73,62 @@ namespace CognitiveVR
 
             if (!EditorPrefs.HasKey("cognitive_init_popup"))
             {
-                InitWizard.Init();
+                EditorApplication.update += UpdateInitWizard;
             }
             EditorPrefs.SetBool("cognitive_init_popup", true);
+
+            if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+            {
+                EditorApplication.playmodeStateChanged -= ModeChanged;
+                EditorApplication.playmodeStateChanged += ModeChanged;
+            }
+        }
+
+        //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that
+        static int initDelay = 4;
+        static void UpdateInitWizard()
+        {
+            if (initDelay > 0) { initDelay--; return; }
+            EditorApplication.update -= UpdateInitWizard;
+            InitWizard.Init();
+        }
+
+#if UNITY_2019_OR_NEWER
+        static void ModeChanged(PlayModeStateChange playModeState)
+        {
+            if (playModeState == PlayModeStateChange.EnteredEditMode)
+            {
+                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                    EditorApplication.update += DelayUploadCache;
+                EditorApplication.playmodeStateChanged -= ModeChanged;
+                uploadDelayFrames = 10;
+            }
+        }
+#else
+        static void ModeChanged()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
+                 EditorApplication.isPlaying)
+            {
+                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                    EditorApplication.update += DelayUploadCache;
+                EditorApplication.playmodeStateChanged -= ModeChanged;
+                uploadDelayFrames = 10;
+            }
+        }
+#endif
+
+        static int uploadDelayFrames = 0;
+        private static void DelayUploadCache()
+        {
+            uploadDelayFrames--;
+            if (uploadDelayFrames < 0)
+            {
+                EditorApplication.update -= DelayUploadCache;
+                CognitiveVR.ICache ic = new CognitiveVR.DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                if (ic.HasContent())
+                    new CognitiveVR.EditorDataUploader(ic);
+            }
         }
 
         public static void SpawnManager(string gameobjectName)
@@ -823,14 +876,14 @@ namespace CognitiveVR
                             {
                                 CognitiveVR_UpdateSDKWindow.Init(version, summary);
                             }
+                            else
+                            {
+                                Debug.Log("Version: " + installedVersion + ". Up to date!");
+                            }
                         }
                         else if (skipVersion == version) //skip this version. limit this check to once a day
                         {
                             EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
-                        }
-                        else //up to date
-                        {
-                            Debug.Log("Version " + version + ". You are up to date");
                         }
                     }
                 }

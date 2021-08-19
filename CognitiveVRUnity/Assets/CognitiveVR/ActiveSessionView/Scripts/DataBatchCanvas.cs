@@ -15,11 +15,22 @@ namespace CognitiveVR.ActiveSession
 
         void Start()
         {
-            CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
-            GazeCore.OnGazeSend += GazeCore_OnGazeSend;
-            FixationCore.OnFixationSend += FixationCore_OnFixationSend;
-            DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
-            SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
+            if (Core.IsInitialized) { Core_InitEvent(Core.GetInitError()); }
+            else { Core.InitEvent += Core_InitEvent; }
+            Core.EndSessionEvent += Core_EndSessionEvent;
+        }
+
+        private void Core_InitEvent(Error initError)
+        {
+            if (initError == Error.None)
+            {
+                Core.InitEvent -= Core_InitEvent;
+                CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
+                GazeCore.OnGazeSend += GazeCore_OnGazeSend;
+                FixationCore.OnFixationSend += FixationCore_OnFixationSend;
+                DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
+                SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
+            }
         }
 
         float EventTimeSinceSend = -1;
@@ -90,7 +101,7 @@ namespace CognitiveVR.ActiveSession
             #region Fixations
             if (FixationTimeSinceSend < 0)
             {
-                if (CognitiveVR.FixationCore.CachedFixations > 0)
+                if (FixationCore.CachedFixations > 0)
                 {
                     FixationSendText.color = noDataColor;
                     FixationSendText.text = notYetSentString;
@@ -210,6 +221,12 @@ namespace CognitiveVR.ActiveSession
             FixationCore.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
+            Core.InitEvent -= Core_InitEvent;
+        }
+
+        private void Core_EndSessionEvent()
+        {
+            Core.InitEvent += Core_InitEvent;
         }
     }
 }

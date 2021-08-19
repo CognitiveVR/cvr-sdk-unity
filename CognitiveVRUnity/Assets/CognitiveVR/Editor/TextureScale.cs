@@ -125,9 +125,17 @@ namespace CognitiveVR
                 {
                     int xFloor = (int)Mathf.Floor(x * ratioX);
                     var xLerp = x * ratioX - xFloor;
-                    newColors[yw + x] = ColorLerpUnclamped(ColorLerpUnclamped(texColors[y1 + xFloor], texColors[y1 + xFloor + 1], xLerp),
-                                                           ColorLerpUnclamped(texColors[y2 + xFloor], texColors[y2 + xFloor + 1], xLerp),
-                                                           y * ratioY - yFloor);
+                    try
+                    {
+                        newColors[yw + x] = ColorLerpUnclamped(ColorLerpUnclamped(texColors[y1 + xFloor], texColors[y1 + xFloor + 1], xLerp),
+                                                               ColorLerpUnclamped(texColors[y2 + xFloor], texColors[y2 + xFloor + 1], xLerp),
+                                                               y * ratioY - yFloor);
+                    }
+                    catch
+                    {
+                        Debug.LogError("exception. range is " + (y1 + xFloor + 1) + " and " + (y2 + xFloor + 1) + "/" + texColors.Length);
+                        newColors[yw + x] = Color.magenta;
+                    }
                 }
             }
 

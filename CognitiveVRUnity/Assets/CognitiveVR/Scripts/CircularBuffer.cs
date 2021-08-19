@@ -23,7 +23,9 @@ namespace CognitiveVR
             get { return _buffer.Length; }
         }
 
-        //called after a change to an item (in place) to increase tail and count
+        /// <summary>
+        /// called after a change to an item (in place) to increase tail and count
+        /// </summary>
         public void Update()
         {
             _head = (_head + 1) % _buffer.Length;

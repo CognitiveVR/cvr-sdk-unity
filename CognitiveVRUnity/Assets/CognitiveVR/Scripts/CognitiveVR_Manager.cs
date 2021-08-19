@@ -133,8 +133,6 @@ namespace CognitiveVR
             }
             if (instance == this) { return; }
             instance = this;
-
-            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
         }
 
         [NonSerialized]
@@ -214,8 +212,6 @@ namespace CognitiveVR
                 return;
             }
 
-            CognitiveVR.NetworkManager.InitLocalStorage(System.Environment.NewLine);
-
 #if CVR_STEAMVR
             SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
             PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
@@ -235,6 +231,7 @@ namespace CognitiveVR
                 Core.SetParticipantId(participantId);
 
             //sets session properties for system hardware
+            //also constructs network and local cache files/readers
             Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
 
             //get all loaded scenes. if one has a sceneid, use that
@@ -249,6 +246,10 @@ namespace CognitiveVR
                     Core.SetTrackingScene(cogscene, false);
                     break;
                 }
+            }
+            if (Core.TrackingScene == null)
+            {
+                Util.logWarning("CogntitiveVRManager No Tracking Scene Set!");
             }
 
             Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);

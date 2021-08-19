@@ -16,10 +16,10 @@ namespace CognitiveVR.ActiveSession
 {
     public class FullscreenDisplay : MonoBehaviour
     {
-        ActiveSessionView Asv;
+        //ActiveSessionView Asv;
         public void Initialize(ActiveSessionView asv, Camera camera)
         {
-            Asv = asv;
+            //Asv = asv;
             HMDCamera = camera;
 #if CVR_XR //if openvr xr. windowsMR displays both eyes. CONSIDER solutions
         openVROffset = new Vector2(-0.05f,-0.11f);

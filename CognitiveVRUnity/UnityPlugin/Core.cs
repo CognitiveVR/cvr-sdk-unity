@@ -88,8 +88,13 @@ namespace CognitiveVR
             }
         }
 
+        internal static ILocalExitpoll ExitpollHandler;
+        internal static ICache DataCache;
+        internal static NetworkManager NetworkManager;
+
+
         private const string SDK_NAME_PREFIX = "unity";
-		public const string SDK_VERSION = "0.26.4";
+		public const string SDK_VERSION = "0.26.7";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
@@ -183,7 +188,7 @@ namespace CognitiveVR
             {
                 if (WriteSceneChangeEvent)
                 {
-                    if (scene == null)
+                    if (scene == null || string.IsNullOrEmpty(scene.SceneId))
                     {
                         //what scene is being loaded
                         float duration = Time.time - SceneStartTime;
@@ -206,7 +211,7 @@ namespace CognitiveVR
             }
             else
             {
-                Util.logDevelopment("Trying to set scene without a session!");
+                Util.logWarning("Trying to set scene without a session!");
             }
         }
 
@@ -256,7 +261,8 @@ namespace CognitiveVR
         public static void Reset()
         {
             InvokeEndSessionEvent();
-            NetworkManager.Sender.EndSession();
+            if (NetworkManager != null)
+                NetworkManager.EndSession();
             ParticipantId = null;
             ParticipantName = null;
             _sessionId = null;
@@ -264,10 +270,19 @@ namespace CognitiveVR
             DeviceId = null;
             IsInitialized = false;
             TrackingScene = null;
-            NetworkManager.Sender.OnDestroy();
-            GameObject.Destroy(NetworkManager.Sender.gameObject);
+            if (NetworkManager != null)
+            {
+                GameObject.Destroy(NetworkManager.gameObject);
+                //NetworkManager.OnDestroy();
+            }
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
+        }
+
+        internal static Error InitError;
+        public static Error GetInitError()
+        {
+            return InitError;
         }
 
         /// <summary>
@@ -277,17 +292,16 @@ namespace CognitiveVR
         {
             _hmd = HMDCamera;
             CognitiveStatics.Initialize();
-            CustomEvent.Initialize();
 
-            Error error = Error.None;
+            InitError = Error.None;
             // Have we already initialized CognitiveVR?
             if (IsInitialized)
             {
                 Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
-                error = Error.AlreadyInitialized;
+                InitError = Error.AlreadyInitialized;
             }
 
-            if (error == Error.None)
+            if (InitError == Error.None)
             {
                 SetSessionProperty("c3d.app.name", Application.productName);
                 SetSessionProperty("c3d.app.version", Application.version);
@@ -301,12 +315,18 @@ namespace CognitiveVR
                 
                 DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
                 SetSessionProperty("c3d.deviceid", DeviceId);
-
-                //initialize Network Manager early, before gameplay actually starts
-                var temp = NetworkManager.Sender;
+                
+                ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
+                DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                GameObject networkGo = new GameObject("Cognitive Network");
+                networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+                NetworkManager = networkGo.AddComponent<NetworkManager>();
+                NetworkManager.Initialize(DataCache, ExitpollHandler);
 
                 DynamicManager.Initialize();
                 DynamicObjectCore.Initialize();
+                CustomEvent.Initialize();
+                SensorRecorder.Initialize();
 
                 _timestamp = Util.Timestamp();
                 //set session timestamp
@@ -318,7 +338,7 @@ namespace CognitiveVR
                 IsInitialized = true;
             }
 
-            return error;
+            return InitError;
         }
 
         public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
@@ -507,6 +527,13 @@ namespace CognitiveVR
         {
             HasCustomSessionName = true;
             SetSessionProperty("c3d.sessionname", sessionName);
+        }
+
+        public static int GetLocalStorageBatchCount()
+        {
+            if (DataCache == null)
+                return 0;
+            return DataCache.NumberOfBatches();
         }
     }
 }
