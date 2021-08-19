@@ -114,7 +114,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_PICONEO2EYE
+#elif CVR_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -143,6 +143,87 @@ namespace CognitiveVR
         {
             Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
             return data.rightEyeOpenness > 0.5f;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            return (long)(CognitiveVR.Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
+#elif CVR_PICOXR
+        const int CachedEyeCaptures = 120; //PICO
+
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+
+            if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
+            {
+                Debug.LogError("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED MANAGER NO EYE TRACKING");
+                return false;
+            }
+
+            UnityEngine.XR.InputDevice device;
+            if (!GameplayReferences.GetEyeTrackingDevice(out device))
+            {
+                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED TRACKING DEVICE");
+                return false;
+            }
+
+            Vector3 headPos;
+            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
+            {
+                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED HEAD POSITION");
+                return false;
+            }
+            Quaternion headRot = Quaternion.identity;
+            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
+            {
+                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED HEAD ROTATION");
+                return false;
+            }
+
+            Vector3 direction;
+            if (Unity.XR.PXR.PXR_EyeTracking.GetCombineEyeGazeVector(out direction) && direction.sqrMagnitude > 0.1f)
+            {
+                Matrix4x4 matrix = Matrix4x4.identity;
+                matrix = Matrix4x4.TRS(Vector3.zero, headRot, Vector3.one);
+                direction = matrix.MultiplyPoint3x4(direction);
+                ray.origin = headPos;
+                ray.direction = direction;
+                return true;
+            }
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            float openness = 0;
+            if (Unity.XR.PXR.PXR_EyeTracking.GetLeftEyeGazeOpenness(out openness))
+            {
+                return openness > 0.5f;
+            }
+            return false;
+        }
+        public bool RightEyeOpen()
+        {
+            float openness = 0;
+            if (Unity.XR.PXR.PXR_EyeTracking.GetRightEyeGazeOpenness(out openness))
+            {
+                return openness > 0.5f;
+            }
+            return false;
         }
 
         public long EyeCaptureTimestamp()

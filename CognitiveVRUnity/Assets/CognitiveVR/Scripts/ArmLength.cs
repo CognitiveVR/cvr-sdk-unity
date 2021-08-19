@@ -112,7 +112,7 @@ namespace CognitiveVR.Components
         }
 #endif
 
-#if CVR_PICONEO2EYE
+#if CVR_PICOVR || CVR_PICOXR
 
         public override void CognitiveVR_Init(Error initError)
         {
@@ -233,7 +233,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_PICONEO2EYE
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_PICOVR || CVR_PICOXR
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed the Steam Controller Trigger";
 #elif CVR_OCULUS || CVR_XR
             return "Samples distances from the HMD to the player's controller. Max is assumed to be roughly player arm length. This only starts tracking when the player has pressed any button";
@@ -244,7 +244,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS || CVR_PICONEO2EYE || CVR_XR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_VARJO || CVR_OCULUS || CVR_PICOVR || CVR_PICOXR || CVR_XR
             return false;
 #else
             return true;

@@ -224,8 +224,11 @@ public class InitWizard : EditorWindow
 #if CVR_VARJO
         selectedsdks.Add("CVR_VARJO");
 #endif
-#if CVR_PICONEO2EYE
-        selectedsdks.Add("CVR_PICONEO2EYE");
+#if CVR_PICOVR
+        selectedsdks.Add("CVR_PICOVR");
+#endif
+#if CVR_PICOXR
+        selectedsdks.Add("CVR_PICOXR");
 #endif
 #if CVR_ARKIT //apple
             selectedsdks.Add("CVR_ARKIT");
@@ -273,8 +276,8 @@ public class InitWizard : EditorWindow
                 Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
             }
 
-            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "OpenVR 1.1.4 (SteamVR)", "Oculus", "HP Omnicept Runtime", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "Pico Neo 2 Eye 2.8.4 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICONEO2EYE", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "OpenVR 1.1.4 (SteamVR)", "Oculus", "HP Omnicept Runtime", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.0 (eye tracking)", "Vive Wave 3.0.1", "Varjo 2.3 (eye tracking)", "PicoVR Unity SDK 2.8.4 (eye tracking)", "Pico Unity XR Platform 1.2.3 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_VARJO", "CVR_PICOVR", "CVR_PICOXR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
             Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -519,7 +522,7 @@ public class InitWizard : EditorWindow
                     setupComplete = true;
                 }
             }
-#elif CVR_PICONEO2EYE
+#elif CVR_PICOVR
             if (cameraBase == null)
             {
                 //basic setup
@@ -548,6 +551,23 @@ public class InitWizard : EditorWindow
                     setupComplete = true;
                 }
             }
+#elif CVR_PICOXR
+            
+            //TODO set controller input tracker to listen for the dynamic object component on some gameobject?
+            leftSetupComplete = leftcontroller != null;
+            rightSetupComplete = rightcontroller != null;
+
+            setupComplete = false;
+            if (rightSetupComplete && leftSetupComplete)
+            {
+                //add input tracker + left/right controllers set
+                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                {
+                    setupComplete = true;
+                }
+            }
+
 #elif CVR_XR
             if (cameraBase == null && leftcontroller == null && rightcontroller == null)
             {
@@ -961,8 +981,7 @@ public class InitWizard : EditorWindow
             {
                 Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
             }
-#elif CVR_PICONEO2EYE
-            //add component to cognitice manager
+#elif CVR_PICOVR || CVR_PICOXR
             var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
@@ -1145,9 +1164,9 @@ public class InitWizard : EditorWindow
 #endif
         }
 
-#endregion
+        #endregion
 
-#region Dynamic Objects
+        #region Dynamic Objects
 
         Vector2 dynamicScrollPosition;
 
