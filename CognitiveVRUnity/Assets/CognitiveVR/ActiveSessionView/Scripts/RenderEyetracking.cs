@@ -70,6 +70,7 @@ namespace CognitiveVR.ActiveSession
             fixationRecorder = FixationRecorder.Instance;
             gazeBase = FindObjectOfType<GazeBase>();
             FixationMaterial.color = FixationColor;
+            SaccadeMaterial.color = SaccadeColor;
 
             if (Core.IsInitialized)
             {
@@ -107,6 +108,8 @@ namespace CognitiveVR.ActiveSession
             Core.InitEvent -= Core_InitEvent;
 
             fixationRecorder = FixationRecorder.Instance;
+            if (gazeBase == null)
+                gazeBase = FindObjectOfType<GazeBase>();
 
             if (initError == Error.None && fixationRecorder != null)
             {
@@ -121,8 +124,6 @@ namespace CognitiveVR.ActiveSession
             }
             else
             {
-                if (gazeBase == null)
-                    gazeBase = FindObjectOfType<GazeBase>();
                 canDisplayGaze = true;
             }
             canDisplaySaccades = true;
@@ -496,7 +497,7 @@ namespace CognitiveVR.ActiveSession
 //#if CVR_XR
             //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
             //uses projection matrix from openvr if developer is using a openvr-based sdk
-#if CVR_VIVEPROEYE || CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;

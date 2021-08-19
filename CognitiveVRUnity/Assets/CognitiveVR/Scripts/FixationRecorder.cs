@@ -1147,6 +1147,7 @@ namespace CognitiveVR
                     DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
+                    DisplayGazePoints.Update();
                 }
                 else
                 {
@@ -1156,6 +1157,7 @@ namespace CognitiveVR
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicId = string.Empty;
+                    DisplayGazePoints.Update();
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -1163,15 +1165,10 @@ namespace CognitiveVR
                 //eye capture world point could be used for getting the direction, but position is invalid (on skybox)
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
-
                 EyeCaptures[index].WorldPosition = world;
-
-                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
-                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
-                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
-                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
-                SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
+                if (SaccadeScreenPoints.Count > 0)
+                    SaccadeScreenPoints.RemoveAt(0);
                 EyeCaptures[index].OffTransform = true;
             }
             else if (hitresult == GazeRaycastResult.Invalid)
@@ -1182,17 +1179,12 @@ namespace CognitiveVR
                 EyeCaptures[index].OffTransform = true;
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
-                if (DisplayGazePoints[DisplayGazePoints.Count] == null)
-                    DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
-                DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = world;
-                DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             }
 
             if (SaccadeScreenPoints.Count > 15)
             {
                 SaccadeScreenPoints.RemoveAt(0);
             }
-            DisplayGazePoints.Update();
             index = (index + 1) % CachedEyeCaptures;
         }
 

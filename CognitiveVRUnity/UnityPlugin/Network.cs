@@ -164,9 +164,10 @@ namespace CognitiveVR
             }
             else
             {
-                if (responsecode == 401) { Util.logWarning("Network Post Data response code is 401. Is APIKEY set?"); return; }
-                if (responsecode == 404) { Util.logWarning("Network Post Data response code is 404. Invalid URL?"); return; }
-                if (responsecode == -1) { Util.logWarning("Network Post Data could not parse response code. Check upload URL"); return; }
+                //TODO what is response if no internet?
+                if (responsecode == 401) { Util.logError("Network Post Data response code is 401. Is APIKEY set?"); return; }
+                if (responsecode == 404) { Util.logError("Network Post Data response code is 404. Invalid URL?"); return; }
+                if (responsecode == -1) { Util.logError("Network Post Data could not parse response code. Check upload URL"); return; }
 
                 if (CacheRequest != null)
                 {
@@ -177,7 +178,7 @@ namespace CognitiveVR
                     CacheRequest = null;
                 }
 
-                if (runtimeCache == null) { Util.logWarning("Network Post Data !200 LocalCache null"); return; }
+                if (runtimeCache == null) { Util.logWarning("Network Post Data Error. LocalCache null"); return; }
 
                 if (runtimeCache.CanWrite(url, content))
                 {
