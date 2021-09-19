@@ -327,7 +327,6 @@ namespace CognitiveVR
             QuestionSetName = questionSet.name;
             questionSetVersion = questionSet.version;
 
-            //foreach (var question in json.questions)
             for (int i = 0; i < questionSet.questions.Length; i++)
             {
                 Dictionary<string, string> questionVariables = new Dictionary<string, string>();
@@ -344,7 +343,6 @@ namespace CognitiveVR
                     questionVariables.Add("minLabel", questionSet.questions[i].minLabel);
                 if (!string.IsNullOrEmpty(questionSet.questions[i].maxLabel))
                     questionVariables.Add("maxLabel", questionSet.questions[i].maxLabel);
-                //put this into a csv string?
 
                 if (questionSet.questions[i].range != null) //range question
                 {
@@ -390,12 +388,12 @@ namespace CognitiveVR
         List<ResponseContext> responseProperties = new List<ResponseContext>();
 
         //these go to personalization api
-        Dictionary<string, object> transactionProperties = new Dictionary<string, object>();
+        Dictionary<string, object> eventProperties = new Dictionary<string, object>();
 
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, int objectValue)
         {
-            transactionProperties.Add(key, objectValue);
+            eventProperties.Add(key, objectValue);
             responseProperties[panelId].ResponseValue = objectValue;
             currentPanelIndex++;
             IterateToNextQuestion();
@@ -403,7 +401,7 @@ namespace CognitiveVR
 
         public void OnPanelClosedVoice(int panelId, string key, string base64voice)
         {
-            transactionProperties.Add(key, 0);
+            eventProperties.Add(key, 0);
             responseProperties[panelId].ResponseValue = base64voice;
             currentPanelIndex++;
             IterateToNextQuestion();
@@ -502,7 +500,7 @@ namespace CognitiveVR
             }
             else //finished everything format and send
             {
-                SendResponsesAsTransaction(); //for personalization api
+                SendResponsesAsCustomEvents(); //for personalization api
                 var responses = FormatResponses();
                 NetworkManager.PostExitpollAnswers(responses, QuestionSetName, questionSetVersion); //for exitpoll microservice
                 CurrentExitPollPanel = null;
@@ -511,7 +509,7 @@ namespace CognitiveVR
             panelCount++;
         }
 
-        void SendResponsesAsTransaction()
+        void SendResponsesAsCustomEvents()
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
             exitpollEvent.SetProperty("userId", CognitiveVR.Core.DeviceId);
@@ -529,7 +527,7 @@ namespace CognitiveVR
                 exitpollEvent.SetProperty("sceneId", scenesettings.SceneId);
             }
 
-            foreach (var property in transactionProperties)
+            foreach (var property in eventProperties)
             {
                 exitpollEvent.SetProperty(property.Key, property.Value);
             }

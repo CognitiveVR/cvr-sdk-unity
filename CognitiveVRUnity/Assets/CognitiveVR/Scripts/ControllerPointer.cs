@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//activates ifocus button components. to be attached to controllers
+//this is attached to a controller
+//activates a IPointerFocus component. that component must be on the UI layer
+//line color lerps to transparent is not pointing at IPointerFocus component. this uses _TintColor
 
 namespace CognitiveVR
 {
@@ -14,6 +16,7 @@ namespace CognitiveVR
         public bool DisplayLineRenderer = true;
         public LineRenderer LineRendererOverride;
 
+        //pointer curved line rendering
         float ForwardPower = 2;
         Vector3[] sampledPoints;
         Vector3[] curve = new Vector3[4] { Vector3.zero, Vector3.forward * 1, Vector3.forward * 2, Vector3.forward * 3 };
@@ -67,7 +70,7 @@ namespace CognitiveVR
                 if (LineRendererOverride != null)
                 {
                     var c = LineRendererOverride.material.GetColor("_TintColor");
-                    LineRendererOverride.material.SetColor("_TintColor", Color.Lerp(c, new Color(1, 1, 1, 0.0f), 0.1f));
+                    LineRendererOverride.material.SetColor("_TintColor", Color.Lerp(c, new Color(1, 1, 1, 0.0f), 0.1f)); //fade line out over time
                 }
             }
         }
@@ -89,10 +92,7 @@ namespace CognitiveVR
                     bool validFocusButton = true;
                     if (RequireHMDParallel)
                     {
-                        //direction
                         Vector3 dir = (button.GetPosition() - CognitiveVR.GameplayReferences.HMD.position).normalized;
-
-                        //dot
                         float d = Vector3.Dot(CognitiveVR.GameplayReferences.HMD.forward, dir);
                         if (d < 0.87f)
                             validFocusButton = false;
@@ -102,8 +102,6 @@ namespace CognitiveVR
                     {
                         hasAnyButton = true;
                         //bend the line renderer over to here
-                        //lastTarget = button.transform;
-                        //lastButton = button;
                         curve[0] = pos;
                         curve[1] = pos + forward * ForwardPower;
                         curve[2] = button.GetPosition();
@@ -119,10 +117,9 @@ namespace CognitiveVR
 
             if (!hasAnyButton || ForceLineVisible)
             {
+                //lerp pointer curve forward over time
                 curve[0] = pos;
                 curve[1] = pos + forward * ForwardPower;
-
-                //lerp
                 curve[2] = Vector3.Lerp(curve[2], pos + forward * ForwardPower, 0.5f);
                 curve[3] = Vector3.Lerp(curve[3], pos + forward * ForwardPower * 2, 0.5f);
             }

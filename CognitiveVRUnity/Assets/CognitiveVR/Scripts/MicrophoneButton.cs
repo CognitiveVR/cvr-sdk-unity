@@ -4,12 +4,9 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using CognitiveVR;
 using System.IO;
-#if CVR_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
 
-//used in cognitivevr exit poll to call actions on the main exit poll panel
+//used in ExitPoll to record participant's voice
+//on completion, will encode the audio to a wav and pass a base64 string of the data to the ExitPoll
 
 namespace CognitiveVR
 {
@@ -43,14 +40,12 @@ namespace CognitiveVR
             UpdateFillAmount();
         }
 
-
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
+        //uses QuestionSet's CurrentExitPollPanel to pass base64 string to panel using the 'AnswerMicrophone' method
         void Update()
         {
             if (GameplayReferences.HMD == null) { return; }
-            //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.NextResponseTimeValid == false) { return; }
             if (_finishedRecording) { return; }
-            //if (ExitPoll.CurrentExitPollSet.CurrentExitPollPanel.IsClosing) { return; }
 
             if (_recording)
             {
@@ -66,20 +61,18 @@ namespace CognitiveVR
                     byte[] bytes;
                     CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
                     string encodedWav = MicrophoneUtility.EncodeWav(bytes);
-                    questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav); //TODO need some method of accessing question set on this component - probably pass in at start
+                    questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
                     _finishedRecording = true;
                 }
             }
         }
 
+        //increase the fill amount if this image was focused this frame. calls RecorderActivate if past threshold
         protected override void LateUpdate()
         {
-            if (OnFill == null) { return; }
+            if (OnConfirm == null) { return; }
             if (_recording) { return; }
             if (_finishedRecording) { return; }
-
-            //set fill visual
-            //check for over fill threshold to activate action
 
             if (focusThisFrame)
             {
@@ -100,7 +93,6 @@ namespace CognitiveVR
 
         void RecorderActivate()
         {
-            // Call this to start recording. 'null' in the first argument selects the default microphone. Add some mic checking later
             clip = Microphone.Start(null, false, RecordTime, outputRate);
             fillImage.color = Color.red;
 
@@ -111,6 +103,7 @@ namespace CognitiveVR
             TipText.text = "Recording...";
         }
 
+        //increases the fill image if confirming selection with a pointer. lowers as recording time increases
         protected void UpdateFillAmount()
         {
             if (_recording)

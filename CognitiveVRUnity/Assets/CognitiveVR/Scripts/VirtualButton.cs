@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-//player calls 'set focus' from simple pointer
-//can be extended to load scenes, do other actions, etc
+//SetPointerFocus called from ControllerPointer, or SetGazeFocus from HMDPointer
+//fills an image over time
+//activates OnFill action after pointing at this button for a duration
 
 namespace CognitiveVR
 {
@@ -20,8 +21,10 @@ namespace CognitiveVR
     {
         public Image fillImage;
         public float FillDuration = 1;
+        //limits the button to certain types of pointers
         public ActivationType ActivationType;
-        public UnityEngine.Events.UnityEvent OnFill;
+        [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
+        public UnityEngine.Events.UnityEvent OnConfirm;
 
         protected float FillAmount;
         protected bool focusThisFrame = false;
@@ -33,10 +36,11 @@ namespace CognitiveVR
         //save the fill starting color
         protected virtual void Start()
         {
-            fillStartingColor = fillImage.color;
+            if (fillImage != null)
+                fillStartingColor = fillImage.color;
         }
-
-        //this is called from update in the simplepointer script
+        
+        //this is called from update in the ControllerPointer script
         public virtual void SetPointerFocus()
         {
             if (ActivationType == ActivationType.Gaze) { return; }
@@ -48,10 +52,9 @@ namespace CognitiveVR
             focusThisFrame = true;
         }
 
+        //this is called from update in the HMDPointer script
         public virtual void SetGazeFocus()
         {
-            //how to tell if pointers don't exist?
-
             if (ActivationType != ActivationType.PointerFallbackGaze || (ActivationType == ActivationType.PointerFallbackGaze && CognitiveVR.GameplayReferences.DoesPointerExistInScene() == false))
             {
                 if (ActivationType == ActivationType.Pointer) { return; }
@@ -64,13 +67,13 @@ namespace CognitiveVR
             }
         }
 
-        //used to draw a line to this button
+        //used by ControllerPointer to draw a line to this button
         public virtual Vector3 GetPosition()
         {
             return transform.position;
         }
 
-        //increase the fill amount if this button was focused this frame
+        //increase the fill amount if this image was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
             if (!gameObject.activeInHierarchy) { return; }
@@ -88,18 +91,19 @@ namespace CognitiveVR
                 FillAmount += Time.deltaTime;
             }
 
-            fillImage.fillAmount = FillAmount / FillDuration;
+            if (fillImage != null)
+                fillImage.fillAmount = FillAmount / FillDuration;
             focusThisFrame = false;
 
             if (FillAmount > FillDuration && canActivate)
             {
                 canActivate = false;
                 StartCoroutine(FilledEvent());
-                OnFill.Invoke();
+                OnConfirm.Invoke();
             }
         }
 
-        //when filled, change the colour of the fill ring
+        //when filled, change the color of the fill ring to black for half a second before returning to starting color
         protected virtual IEnumerator FilledEvent()
         {
             float t = 0;
@@ -108,11 +112,13 @@ namespace CognitiveVR
             {
                 yield return null;
                 t += Time.deltaTime / duration;
-                fillImage.color = Color.black;
+                if (fillImage != null)
+                    fillImage.color = Color.black;
             }
             FillAmount = 0;
             yield return null;
-            fillImage.color = fillStartingColor;
+            if (fillImage != null)
+                fillImage.color = fillStartingColor;
         }
     }
 }

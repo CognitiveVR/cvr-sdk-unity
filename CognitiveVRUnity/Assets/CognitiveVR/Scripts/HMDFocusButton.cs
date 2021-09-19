@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //immediately activate when gazed at
+//used by eye tracking assessment
 
 namespace CognitiveVR
 {

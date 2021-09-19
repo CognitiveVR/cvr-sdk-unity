@@ -232,7 +232,7 @@ namespace CognitiveVR
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
-            Error initError = CognitiveVR.Core.Init(GameplayReferences.HMD);
+            initResponse = CognitiveVR.Core.Init(GameplayReferences.HMD);
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
@@ -254,10 +254,7 @@ namespace CognitiveVR
 
             Core.InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
-            //on init stuff here
-            initResponse = initError;
-
-            if (initError == Error.None)
+            if (initResponse == Error.None)
             {
                 new CustomEvent("c3d.sessionStart").Send();
                 if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
@@ -281,13 +278,13 @@ namespace CognitiveVR
             else //some failure
             {
                 StopAllCoroutines();
-                Util.logDebug("CognitiveVR Error" + initError.ToString());
+                Util.logDebug("CognitiveVR Error" + initResponse.ToString());
             }
 
             var components = GetComponentsInChildren<CognitiveVR.Components.CognitiveVRAnalyticsComponent>();
             for (int i = 0; i < components.Length; i++)
             {
-                components[i].CognitiveVR_Init(initError);
+                components[i].CognitiveVR_Init(initResponse);
             }
 
             switch (CognitiveVR_Preferences.Instance.GazeType)
@@ -308,7 +305,7 @@ namespace CognitiveVR
             }
 
             //if (InitEvent != null) { InitEvent(initError); }
-            Core.InvokeInitEvent(initError);
+            Core.InvokeInitEvent(initResponse);
 
             SetSessionProperties();
 
