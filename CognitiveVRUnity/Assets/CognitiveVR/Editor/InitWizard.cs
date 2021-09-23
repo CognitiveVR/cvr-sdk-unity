@@ -1192,10 +1192,10 @@ public class InitWizard : EditorWindow
 
         GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
-        Rect mesh = new Rect(30, 95, 120, 30);
-        GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
-        Rect gameobject = new Rect(190, 95, 120, 30);
+        Rect gameobject = new Rect(30, 95, 120, 30);
         GUI.Label(gameobject, "GameObject", "dynamicheader");
+        Rect mesh = new Rect(190, 95, 120, 30);
+        GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
         Rect uploaded = new Rect(380, 95, 120, 30);
         GUI.Label(uploaded, "Uploaded", "dynamicheader");
 
@@ -1308,8 +1308,8 @@ public class InitWizard : EditorWindow
             GUI.Box(rect, "", "dynamicentry_even");
         else
             GUI.Box(rect, "", "dynamicentry_odd");
-        Rect mesh = new Rect(rect.x + 10, rect.y, 120, rect.height);
-        Rect gameobject = new Rect(rect.x + 160, rect.y, 120, rect.height);
+        Rect mesh = new Rect(rect.x + 160, rect.y, 120, rect.height);
+        Rect gameobject = new Rect(rect.x + 10, rect.y, 120, rect.height);
 
         Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
         Rect uploaded = new Rect(rect.x + 360, rect.y, 24, rect.height);
