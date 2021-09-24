@@ -559,6 +559,17 @@ namespace CognitiveVR
             }
         }
 
+        private static Texture2D _blueCheckmark;
+        public static Texture2D BlueCheckmark
+        {
+            get
+            {
+                if (_blueCheckmark == null)
+                    _blueCheckmark = Resources.Load<Texture2D>("blue_checkmark_icon");
+                return _blueCheckmark;
+            }
+        }
+
         private static Texture2D _alert;
         public static Texture2D Alert
         {
@@ -603,6 +614,17 @@ namespace CognitiveVR
             }
         }
 
+        private static Texture2D _searchIcon;
+        public static Texture2D SearchIcon
+        {
+            get
+            {
+                if (_searchIcon == null)
+                    _searchIcon = EditorGUIUtility.FindTexture("search focused");
+                return _searchIcon;
+            }
+        }
+
         private static Texture2D _emptycheckmark;
         public static Texture2D EmptyCheckmark
         {
@@ -613,6 +635,17 @@ namespace CognitiveVR
                 return _emptycheckmark;
             }
         }
+
+        private static Texture2D _emptybluecheckmark;
+        public static Texture2D EmptyBlueCheckmark
+        {
+            get
+            {
+                if (_emptybluecheckmark == null)
+                    _emptybluecheckmark = Resources.Load<Texture2D>("blue_circle");
+                return _emptybluecheckmark;
+            }
+        }        
 
         private static Texture2D _sceneHighlight;
         public static Texture2D SceneHighlight
@@ -677,10 +710,32 @@ namespace CognitiveVR
                 return _objectsBackground;
             }
         }
+
+        private static Texture2D _settingsIcon;
+        public static Texture2D SettingsIcon
+        {
+            get
+            {
+                if (_settingsIcon == null)
+                    _settingsIcon = EditorGUIUtility.FindTexture("_Popup");
+                return _settingsIcon;
+            }
+        }
+        private static Texture2D _filterIcon;
+        public static Texture2D FilterIcon
+        {
+            get
+            {
+                if (_filterIcon == null)
+                    _filterIcon = EditorGUIUtility.FindTexture("d_FilterByType");
+                return _filterIcon;
+            }
+        }
+
         #endregion
 
         #region Media
-        
+
         /// <summary>
         /// make a get request to get media available to this scene
         /// </summary>
@@ -983,6 +1038,14 @@ namespace CognitiveVR
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
             if (!SceneExportDirExists) { return ""; }
             return sceneExportDirectory;
+        }
+
+        public static string GetDynamicExportDirectory()
+        {
+            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+            var ExportDirExists = Directory.Exists(dynamicExportDirectory);
+            if (!ExportDirExists) { return ""; }
+            return dynamicExportDirectory;
         }
 
         /// <summary>

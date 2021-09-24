@@ -36,10 +36,12 @@ namespace CognitiveVR
             if (GUILayout.Button("Rename"))
             {
                 action.Invoke(defaultMeshName);
+                sourceWindow.RefreshList();
                 Close();
             }
             if (GUILayout.Button("Cancel"))
             {
+                sourceWindow.RefreshList();
                 Close();
             }
             GUILayout.EndHorizontal();
@@ -55,6 +57,7 @@ namespace CognitiveVR
 
     class Entry
     {
+        //IMPROVEMENT for objects in scene, cache warning for missing collider in children
         public bool visible = true; //currently shown in the filtered list
         public bool selected; //not necessarily selected as a gameobject, just checked in this list
         public string meshName;
@@ -180,50 +183,32 @@ namespace CognitiveVR
             GUI.Label(new Rect(30, 80, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
         }
 
-        //DynamicObjectIdPool[] poolAssets = EditorCore.GetDynamicObjectPoolAssets;
-
         //build up list of Entries, then cache?
         GetEntryList(GetDynamicObjects, EditorCore.GetDynamicObjectPoolAssets);
 
         //filter
-        Rect filterRect = new Rect(40, 25, 20, 20);
-        Rect searchBarRect = new Rect(60, 25, 200, 20);
-        Rect eyeGlassRect = new Rect(260, 25, 50, 20);
-        Rect eyeGlassRect2 = new Rect(290, 25, 50, 20);
-        //dropdown with id/mesh/gameobject toggles
-
-
-        //EditorGUIUtility.FindTexture( "toolbarsearch focused@2x" )
-        var filterIcon = EditorGUIUtility.FindTexture("d_FilterByType");
-        var settingsIcon = EditorGUIUtility.FindTexture("_Popup");
-        //_Popup   _Popup@2x
-        //	d_Search Icon
-        //	console.infoicon
-        //d_FilterByType
-
-        //GUI.Label(eyeGlassRect, searchIcon);
-        //GUI.Label(eyeGlassRect2, endIcon);
-        string temp = GUI.TextField(searchBarRect, searchBarString);
+        int searchBarWidth = 300;
+        Rect filterRect = new Rect(600 / 2 - searchBarWidth / 2-20, 25, 20, 20);
+        Rect searchBarRect = new Rect(600/2 - searchBarWidth/2, 25, searchBarWidth, 20);
+        Rect searchClearRect = new Rect(600 / 2 + searchBarWidth / 2, 25, 20, 20);
+        string temp = EditorCore.TextField(searchBarRect, searchBarString, 64);
         if (temp == string.Empty)
         {
             GUI.Label(searchBarRect, "<size=15>Search</size>", "ghostlabel");
             if (searchBarString != string.Empty)
-                {
-                    Debug.Log("show all");
-                    ShowAllList();
-                }
+            {
+                ShowAllList();
+            }
                 
             searchBarString = temp;
         }
         else if (temp != searchBarString)
         {
-                Debug.Log("DIRTY SEARCH STRING");
             searchBarString = temp;
-                //re-filter the list
-                FilterList(searchBarString);
+            //re-filter the list
+            FilterList(searchBarString);
         }
-
-        if (GUI.Button(filterRect, filterIcon, "label"))
+        if (GUI.Button(filterRect, EditorCore.FilterIcon, "label"))
         {
             //generic menu
             GenericMenu gm = new GenericMenu();
@@ -232,23 +217,30 @@ namespace CognitiveVR
             gm.AddItem(new GUIContent("Ids"), filterIds, OnToggleIdFilter);
             gm.ShowAsContext();
         }
-
-        //GUI.TextField
+        if (GUI.Button(searchClearRect,"X", "ghostlabel"))
+        {
+            searchBarString = string.Empty;
+            FilterList(searchBarString);
+        }
 
         //headers
-        Rect toggleRect = new Rect(40, 55, 20, 30);
-        bool pressed = GUI.Button(toggleRect, "","toggle");
+        Rect toggleRect = new Rect(30, 55, 30,30);
+        bool allselected = true;
+        int visibleCount = 0;
+        foreach (var entry in Entries)
+        {
+            if (!entry.visible) { continue; }
+            visibleCount++;
+            if (!entry.selected) { allselected = false; }
+        }
+        if (visibleCount == 0)
+            allselected = false;
+        var toggleIcon = allselected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
+        bool pressed = GUI.Button(toggleRect, toggleIcon, "image_centered");
         if (pressed)
         {
-            bool allselected = true;
-            foreach (var entry in Entries)
-            {
-                if (!entry.visible) { continue; }
-                if (!entry.selected) { allselected = false; break; }
-            }
             if (allselected)
             {
-                Debug.Log("deselect all");
                 //deselect all
                 foreach (var entry in Entries)
                 {
@@ -258,7 +250,6 @@ namespace CognitiveVR
             }
             else
             {
-                Debug.Log("select all visible");
                 //select all visible
                 foreach (var entry in Entries)
                 {
@@ -269,24 +260,24 @@ namespace CognitiveVR
         }
 
         Rect gameobject =  new Rect(60, 55, 120, 30);
-        //GUI.Label(gameobject, "GameObject", "dynamicheader");
-        if (GUI.Button(gameobject, "GameObject", "dynamicheader"))
+        string gameObjectNameStyle = (SortMethod == SortByMethod.GameObjectName || SortMethod == SortByMethod.ReverseGameObjectName) ? "dynamicheaderbold" : "dynamicheader";
+        if (GUI.Button(gameobject, "GameObject", gameObjectNameStyle))
         {
-            if (SortMethod != SortByMethod.Duration)
-                SortMethod = SortByMethod.Duration;
+            if (SortMethod != SortByMethod.GameObjectName)
+                SortMethod = SortByMethod.GameObjectName;
             else
-                SortMethod = SortByMethod.ReverseDuration;
+                SortMethod = SortByMethod.ReverseGameObjectName;
             SortByName();
         }
 
         Rect mesh = new Rect(210, 55, 120, 30);
-        //GUI.Label(mesh, "Mesh Name", "dynamicheader");
-        if (GUI.Button(mesh,"Mesh Name","dynamicheader"))
+        string meshNameStyle = (SortMethod == SortByMethod.MeshName || SortMethod == SortByMethod.ReverseMeshName) ? "dynamicheaderbold" : "dynamicheader";
+        if (GUI.Button(mesh,"Mesh Name", meshNameStyle))
         {
-            if (SortMethod != SortByMethod.Duration)
-                SortMethod = SortByMethod.Duration;
+            if (SortMethod != SortByMethod.MeshName)
+                SortMethod = SortByMethod.MeshName;
             else
-                SortMethod = SortByMethod.ReverseDuration;
+                SortMethod = SortByMethod.ReverseMeshName;
             SortByMeshName();
         }
 
@@ -301,24 +292,22 @@ namespace CognitiveVR
             SortByExported();*/
         }
 
-        Rect uploaded = new Rect(480, 55, 80, 30);
-        //GUI.Label(uploaded, "Exported Mesh", "dynamicheader");
-        if (GUI.Button(uploaded, "Exported Mesh", "dynamicheader"))
+        Rect uploaded = new Rect(470, 55, 90, 30);
+        string exportedStyle = (SortMethod == SortByMethod.Exported || SortMethod == SortByMethod.ReverseExported) ? "dynamicheaderbold" : "dynamicheader";
+        if (GUI.Button(uploaded, "Exported Mesh", exportedStyle))
         {
-            if (SortMethod != SortByMethod.Duration)
-                SortMethod = SortByMethod.Duration;
+            if (SortMethod != SortByMethod.Exported)
+                SortMethod = SortByMethod.Exported;
             else
-                SortMethod = SortByMethod.ReverseDuration;
+                SortMethod = SortByMethod.ReverseExported;
             SortByExported();
         }
 
         //IMPROVEMENT get list of uploaded mesh names from dashboard
 
-        
-
         //gear icon
-        Rect tools = new Rect(580, 55, 20, 30);
-        if (GUI.Button(tools, settingsIcon,"label")) //rename dropdown
+        Rect tools = new Rect(570, 55, 30, 30);
+        if (GUI.Button(tools, EditorCore.SettingsIcon, "image_centered")) //rename dropdown
         {
             //drop down menu?
             GenericMenu gm = new GenericMenu();
@@ -339,12 +328,15 @@ namespace CognitiveVR
                 gm.AddItem(new GUIContent("Rename Selected Mesh"), false, OnRenameMeshSelected);
                 gm.AddItem(new GUIContent("Rename Selected GameObject"), false, OnRenameGameObjectSelected);
             }
+            gm.AddSeparator("");
+            gm.AddItem(new GUIContent("Open Dynamic Export Folder"), false, OnOpenDynamicExportFolder);
+
             gm.ShowAsContext();
             //gm.AddItem("rename selected", false, OnRenameSelected);
         }
 
-
-        Rect innerScrollSize = new Rect(30, 0, 520, (Entries.Count) * 30);
+        
+        Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
         dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, 325), dynamicScrollPosition, innerScrollSize, false, true);
 
         Rect dynamicrect;
@@ -406,42 +398,96 @@ namespace CognitiveVR
 
         //resolution settings here
         EditorGUI.BeginDisabledGroup(DisableButtons);
-        if (GUI.Button(new Rect(30, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(80, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 4;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 4)
         {
-            GUI.Box(new Rect(30, 415, 140, 35), "", "box_sharp_alpha");
+            GUI.Box(new Rect(80, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(180, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(230, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 2;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 2)
         {
-            GUI.Box(new Rect(180, 415, 140, 35), "", "box_sharp_alpha");
+            GUI.Box(new Rect(230, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(330, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(380, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
             CognitiveVR_Preferences.Instance.TextureResize = 1;
         }
         if (CognitiveVR_Preferences.Instance.TextureResize != 1)
         {
-            GUI.Box(new Rect(330, 415, 140, 35), "", "box_sharp_alpha");
+            GUI.Box(new Rect(380, 415, 140, 35), "", "box_sharp_alpha");
         }
         EditorGUI.EndDisabledGroup();
 
         
         EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId) || selectionCount == 0);
-        if (GUI.Button(new Rect(30, 460, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
+        if (GUI.Button(new Rect(80, 460, 215, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
         {
             EditorCore.RefreshSceneVersion(() =>
             {
                 foreach(var entry in Entries)
-                //foreach(var go in Selection.gameObjects)
+                {
+                    var dyn = entry.objectReference;
+                    if (dyn == null) { continue; }
+                    if (!entry.selected) { continue; }
+                    //check if export files exist
+                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
+                    {
+                        ExportUtility.ExportDynamicObject(dyn);
+                    }
+                    //check if thumbnail exists
+                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
+                    {
+                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
+                    }
+                }
+
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    var manifest = new AggregationManifest();
+                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    //if an id pool is explicitly selected, you can upload it here. otherwise this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
+                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+
+                    foreach (var entry in Entries)
+                    {
+                        if (!entry.isIdPool) { continue; }
+                        if (!entry.selected) { continue; }
+
+                        ManageDynamicObjects.AggregationManifest poolManifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
+                        foreach (var id in entry.poolReference.Ids)
+                        {
+                            poolManifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, id, new float[3] { 1, 1, 1 }));
+                        }
+                        ManageDynamicObjects.UploadManifest(poolManifest, null);
+                    }
+                });
+            });
+        }
+        EditorGUI.EndDisabledGroup();
+        
+        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
+        if (GUI.Button(new Rect(305, 460, 210, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
+        {
+            EditorCore.RefreshSceneVersion(() =>
+            {
+                var dynamics = GameObject.FindObjectsOfType<DynamicObject>();
+                List<GameObject> gos = new List<GameObject>();
+                foreach (var v in dynamics)
+                {
+                    gos.Add(v.gameObject);
+                }
+
+                Selection.objects = gos.ToArray();
+
+                foreach (var entry in Entries)
                 {
                     var dyn = entry.objectReference;
                     if (dyn == null) { continue; }
@@ -461,46 +507,7 @@ namespace CognitiveVR
                 {
                     var manifest = new AggregationManifest();
                     AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
-                });
-            });
-        }
-        EditorGUI.EndDisabledGroup();
-        
-        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
-        if (GUI.Button(new Rect(270, 460, 200, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
-        {
-            EditorCore.RefreshSceneVersion(() =>
-            {
-                var dynamics = GameObject.FindObjectsOfType<DynamicObject>();
-                List<GameObject> gos = new List<GameObject>();
-                foreach (var v in dynamics)
-                {
-                    gos.Add(v.gameObject);
-                }
-
-                Selection.objects = gos.ToArray();
-
-                foreach (var go in Selection.gameObjects)
-                {
-                    var dyn = go.GetComponent<DynamicObject>();
-                    if (dyn == null) { continue; }
-                    //check if export files exist
-                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
-                    {
-                        ExportUtility.ExportDynamicObject(dyn);
-                    }
-                    //check if thumbnail exists
-                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
-                    {
-                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                    }
-                }
-
-                EditorCore.RefreshSceneVersion(delegate ()
-                {
-                    var manifest = new AggregationManifest();
-                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
                     ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
                 });
             });
@@ -523,14 +530,17 @@ namespace CognitiveVR
         _cachedDynamics = FindObjectsOfType<DynamicObject>();
         EditorCore.ExportedDynamicObjects = null;
         EditorCore._cachedPoolAssets = null;
-        
+
         //TODO want to refresh list, but also keep selected items
         //make a list of selected dynamics by reference. when reconstructing the entries list, 
-        foreach(var e in Entries)
+        if (Entries != null)
         {
-            if (e.objectReference == null) { continue; }
-            if (!e.selected) { continue; }
-            selectedDynamicsOnFocus.Add(e.objectReference);
+            foreach (var e in Entries)
+            {
+                if (e.objectReference == null) { continue; }
+                if (!e.selected) { continue; }
+                selectedDynamicsOnFocus.Add(e.objectReference);
+            }
         }
             
         Entries = null;
@@ -538,12 +548,11 @@ namespace CognitiveVR
         if (!string.IsNullOrEmpty(searchBarString))
             FilterList(searchBarString);
     }
-    
-    //void RefreshSceneDynamics()
-    //{
-    //    _cachedDynamics = FindObjectsOfType<DynamicObject>();
-    //    EditorCore.ExportedDynamicObjects = null;
-    //}
+
+        public void RefreshList()
+        {
+            OnFocus();
+        }
 
         void OnRenameGameObjectSelected()
         {
@@ -555,7 +564,7 @@ namespace CognitiveVR
                     defaultvalue = entry.gameobjectName;
                 else if (defaultvalue != entry.gameobjectName)
                 {
-                    defaultvalue = "Multple";
+                    defaultvalue = "Multple Values";
                     break;
                 }
             }
@@ -572,21 +581,28 @@ namespace CognitiveVR
                     defaultvalue = entry.meshName;
                 else if (defaultvalue != entry.meshName)
                 {
-                    defaultvalue = "Multple";
+                    defaultvalue = "Multple Values";
                     break;
                 }
             }
             RenameDynamicWindow.Init(this, defaultvalue, RenameMesh);
         }
 
+        void OnOpenDynamicExportFolder()
+        {
+            EditorUtility.RevealInFinder(EditorCore.GetDynamicExportDirectory());
+        }
+
         enum SortByMethod
         {
-            Sequence,
-            ReverseSequence,
-            Duration,
-            ReverseDuration,
-            Visits,
-            ReverseVisits
+            GameObjectName,
+            ReverseGameObjectName,
+            MeshName,
+            ReverseMeshName,
+            //Id,
+            //ReverseId,
+            Exported,
+            ReverseExported
         }
         SortByMethod SortMethod;
 
@@ -596,7 +612,7 @@ namespace CognitiveVR
         {
             return string.Compare(x.gameobjectName, y.gameobjectName);
         });
-        if (SortMethod == SortByMethod.ReverseDuration)
+        if (SortMethod == SortByMethod.ReverseGameObjectName)
             Entries.Reverse();
     }
 
@@ -606,7 +622,7 @@ namespace CognitiveVR
         {
             return string.Compare(x.meshName, y.meshName);
         });
-        if (SortMethod == SortByMethod.ReverseDuration)
+        if (SortMethod == SortByMethod.ReverseMeshName)
             Entries.Reverse();
     }
 
@@ -620,47 +636,10 @@ namespace CognitiveVR
             if (!x.hasExportedMesh && y.hasExportedMesh) { return 1; }
             return -1;
         });
-        if (SortMethod == SortByMethod.ReverseDuration)
+        if (SortMethod == SortByMethod.ReverseExported)
             Entries.Reverse();
     }
 
-    void DrawSortIcons()
-    {
-        //SequenceSortIcon.enabled = false;
-        //DurationSortIcon.enabled = false;
-        //VisitsSortIcon.enabled = false;
-        //
-        //if (SortMethod == SortByMethod.Sequence)
-        //{
-        //    SequenceSortIcon.enabled = true;
-        //    SequenceSortIcon.transform.rotation = Quaternion.identity;
-        //}
-        //else if (SortMethod == SortByMethod.ReverseSequence)
-        //{
-        //    SequenceSortIcon.enabled = true;
-        //    SequenceSortIcon.transform.rotation = Quaternion.Euler(0, 0, 180);
-        //}
-        //else if (SortMethod == SortByMethod.Duration)
-        //{
-        //    DurationSortIcon.enabled = true;
-        //    DurationSortIcon.transform.rotation = Quaternion.identity;
-        //}
-        //else if (SortMethod == SortByMethod.ReverseDuration)
-        //{
-        //    DurationSortIcon.enabled = true;
-        //    DurationSortIcon.transform.rotation = Quaternion.Euler(0, 0, 180);
-        //}
-        //else if (SortMethod == SortByMethod.Visits)
-        //{
-        //    VisitsSortIcon.enabled = true;
-        //    VisitsSortIcon.transform.rotation = Quaternion.identity;
-        //}
-        //else if (SortMethod == SortByMethod.ReverseVisits)
-        //{
-        //    VisitsSortIcon.enabled = true;
-        //    VisitsSortIcon.transform.rotation = Quaternion.Euler(0, 0, 180);
-        //}
-    }
     void OnToggleMeshFilter()
     {
         filterMeshes = !filterMeshes;
@@ -720,55 +699,6 @@ namespace CognitiveVR
         }
     }
 
-        /*
-    public void FilterMeshNames(string meshname)
-    {
-        foreach(var entry in Entries)
-        {
-            entry.visible = false;
-            if (entry.meshName.Contains(meshname))
-            {
-                entry.visible = true;
-            }
-        }
-    }
-
-    public void FilterObjectNames(string objectName)
-    {
-        foreach(var entry in Entries)
-        {
-            entry.visible = false;
-            if (entry.gameobjectName.Contains(objectName))
-            {
-                entry.visible = true;
-            }
-        }
-    }
-
-    public void FilterIds(string id)
-    {
-        foreach (var entry in Entries)
-        {
-            entry.visible = false;
-            if (!entry.isIdPool)
-            {
-                if (entry.objectReference.CustomId == id)
-                    entry.visible = true;
-            }
-            else
-            {
-                foreach(var i in entry.poolReference.Ids)
-                {
-                    if (i.Contains(id))
-                    {
-                        entry.visible = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-        */
     void RenameMesh(string newMeshName)
     {
         foreach (var entry in Entries)
@@ -800,26 +730,40 @@ namespace CognitiveVR
     void DrawDynamicObjectEntry(Entry dynamic, Rect rect, bool darkbackground)
     {
         Event e = Event.current;
-        /*if (e.isMouse && e.type == EventType.MouseDown)
+        //CONSIDER also allowing selection with e.type == EventType.MouseDrag
+        if (e.isMouse && e.type == EventType.MouseDown)
         {
-            if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x+rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y+rect.height)
+            if (e.mousePosition.x < rect.x + 40 || e.mousePosition.x > rect.x+rect.width - 80 || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y+rect.height)
             {
             }
             else
             {
                 if (e.shift) //add to selection
                 {
-                    GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
-                    Selection.gameObjects.CopyTo(gos, 0);
-                    gos[gos.Length - 1] = dynamic.gameObject;
-                    Selection.objects = gos;
+                    if (!dynamic.isIdPool)
+                    {
+                        GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
+                        Selection.gameObjects.CopyTo(gos, 0);
+                        gos[gos.Length - 1] = dynamic.objectReference.gameObject;
+                        Selection.objects = gos;
+                    }
+                    else
+                    {
+                        Object[] gos = new Object[Selection.objects.Length + 1];
+                        Selection.objects.CopyTo(gos, 0);
+                        gos[gos.Length - 1] = dynamic.poolReference;
+                        Selection.objects = gos;
+                    }
                 }
                 else
                 {
-                    Selection.activeTransform = dynamic.transform;
+                    if (!dynamic.isIdPool)
+                        Selection.activeTransform = dynamic.objectReference.transform;
+                    else
+                        Selection.activeObject = dynamic.poolReference;
                 }
             }
-        }*/
+        }
 
         //background
         if (darkbackground)
@@ -834,7 +778,8 @@ namespace CognitiveVR
         Rect idRect = new Rect(rect.x + 320, rect.y, 150, rect.height);
         Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
 
-        dynamic.selected = GUI.Toggle(selectedRect, dynamic.selected,"");
+        var toggleIcon = dynamic.selected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
+        dynamic.selected = GUI.Toggle(selectedRect, dynamic.selected, toggleIcon, "image_centered");
 
 
         //gameobject name or id pool count
@@ -843,8 +788,8 @@ namespace CognitiveVR
 
         if (dynamic.isIdPool)
         {
-                GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", "dynamiclabel");
-            }
+            GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", "dynamiclabel");
+        }
         else
         {
             GUI.Label(idRect, dynamic.objectReference.CustomId, "dynamiclabel");
@@ -882,7 +827,7 @@ namespace CognitiveVR
         bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
         if (enabled)
         {
-            if (GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
+            if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
             {
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
@@ -917,11 +862,11 @@ namespace CognitiveVR
             EditorGUI.EndDisabledGroup();
 
             GUI.color = new Color(1, 0.9f, 0.9f);
-            GUI.DrawTexture(new Rect(0, 420, 550, 150), EditorGUIUtility.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 420, 650, 150), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
-            GUI.Label(new Rect(30, 430, 430, 30), errorMessage,"normallabel");
+            GUI.Label(new Rect(30, 430, 530, 30), errorMessage,"normallabel");
         
-            if (GUI.Button(new Rect(380, 510, 80, 30), "Fix"))
+            if (GUI.Button(new Rect(380, 510, 120, 30), "Scene Setup"))
             {
                 InitWizard.Init();
             }
@@ -1065,24 +1010,6 @@ namespace CognitiveVR
         }
 
         Debug.Log("send " + manifestCount + " manifest requests");
-
-        /*string json = "";
-        if (ManifestToJson(manifest, out json))
-        {
-            var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
-            if (currentSettings != null && currentSettings.VersionNumber > 0)
-                SendManifest(json, currentSettings.VersionNumber, callback);
-            else
-                Util.logError("Could not find scene version for current scene");
-        }
-        else
-        {
-            Debug.LogWarning("Aggregation Manifest only contains dynamic objects with generated ids");
-            if (nodynamicscallback != null)
-            {
-                nodynamicscallback.Invoke();
-            }
-        }*/
     }
 
     static bool ManifestToJson(AggregationManifest manifest, out string json)
@@ -1102,15 +1029,8 @@ namespace CognitiveVR
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
-//<<<<<<< Updated upstream
             json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "]";
             json += "},";
-//=======
-            //json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "],";
-                //json += "\"initialPosition\":[" + entry.position[0] + "," + entry.position[1] + "," + entry.position[2] + "],";
-                //json += "\"initialRotation\":[" + entry.rotation[0] + "," + entry.rotation[1] + "," + entry.rotation[2] + "," + entry.rotation[3] + "]";
-//                json += "},";
-//>>>>>>> Stashed changes
             containsValidEntry = true;
         }
 

@@ -12,6 +12,7 @@ namespace CognitiveVR
     [CreateAssetMenu(fileName = "New Dynamic Object Id Pool", menuName = "Cognitive3D/Dynamic Object Id Pool")]
     public class DynamicObjectIdPool : ScriptableObject
     {
+        //CONSIDER use prefab reference instead of prefab name
         public string PrefabName; //friendly prefab name to be displayed on dashboard. will be appended 1,2,3,etc
         public string MeshName; //mesh name
         public string[] Ids;
