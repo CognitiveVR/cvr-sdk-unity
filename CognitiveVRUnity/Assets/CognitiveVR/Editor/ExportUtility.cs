@@ -1384,10 +1384,10 @@ namespace CognitiveVR
         /// <summary>
         /// returns true if successfully uploaded dynamics
         /// </summary>
-        public static bool UploadSelectedDynamicObjectMeshes(bool ShowPopupWindow = false)
+        public static bool UploadSelectedDynamicObjectMeshes(List<GameObject> uploadList, bool ShowPopupWindow = false)
         {
             List<string> dynamicMeshNames = new List<string>();
-            foreach (var v in Selection.gameObjects)
+            foreach (var v in uploadList)
             {
                 var dyn = v.GetComponent<DynamicObject>();
                 if (dyn == null) { continue; }

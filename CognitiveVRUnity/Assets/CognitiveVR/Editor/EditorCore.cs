@@ -320,7 +320,7 @@ namespace CognitiveVR
         /// <param name="refreshSceneVersionComplete"></param>
         public static void RefreshSceneVersion(System.Action refreshSceneVersionComplete)
         {
-            Debug.Log("refresh scene version");
+            //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
             string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
             var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);

@@ -75,7 +75,7 @@ namespace CognitiveVR
                 hasExportedMesh = exportedMesh;
                 selected = initiallySelected;
             }
-            public Entry(bool exportedMesh, DynamicObjectIdPool reference)
+            public Entry(bool exportedMesh, DynamicObjectIdPool reference, bool initiallySelected)
             {
                 isIdPool = true;
                 poolReference = reference;
@@ -83,6 +83,7 @@ namespace CognitiveVR
                 gameobjectName = poolReference.PrefabName;
                 meshName = poolReference.MeshName;
                 hasExportedMesh = exportedMesh;
+                selected = initiallySelected;
             }
         }
 
@@ -132,13 +133,16 @@ namespace CognitiveVR
             {
                 bool selected = selectedDynamicsOnFocus.Contains(o);
 
+
                 Entries.Add(new Entry(o.MeshName, (EditorCore.GetExportedDynamicObjectNames().Contains(o.MeshName) || !o.UseCustomMesh), o, o.gameObject.name, selected));
             }
             foreach (var p in pools)
             {
-                Entries.Add(new Entry(EditorCore.GetExportedDynamicObjectNames().Contains(p.MeshName), p));
+                bool selected = selectedPoolsOnFocus.Contains(p);
+                Entries.Add(new Entry(EditorCore.GetExportedDynamicObjectNames().Contains(p.MeshName), p, selected));
             }
                 selectedDynamicsOnFocus = new List<DynamicObject>();
+                selectedPoolsOnFocus = new List<DynamicObjectIdPool>();
         }
         return Entries;
         //Entries
@@ -432,6 +436,7 @@ namespace CognitiveVR
         {
             EditorCore.RefreshSceneVersion(() =>
             {
+                List<GameObject> uploadList = new List<GameObject>();
                 foreach(var entry in Entries)
                 {
                     var dyn = entry.objectReference;
@@ -447,27 +452,29 @@ namespace CognitiveVR
                     {
                         EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
                     }
+                    uploadList.Add(dyn.gameObject);
                 }
 
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    var manifest = new AggregationManifest();
-                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                    //if an id pool is explicitly selected, you can upload it here. otherwise this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
-
-                    foreach (var entry in Entries)
-                    {
-                        if (!entry.isIdPool) { continue; }
-                        if (!entry.selected) { continue; }
-
-                        ManageDynamicObjects.AggregationManifest poolManifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
-                        foreach (var id in entry.poolReference.Ids)
-                        {
-                            poolManifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, id, new float[3] { 1, 1, 1 }));
-                        }
-                        ManageDynamicObjects.UploadManifest(poolManifest, null);
-                    }
+                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    //var manifest = new AggregationManifest();
+                    //AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ////if an id pool is explicitly selected, you can upload it here. otherwise this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
+                    //ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                    //
+                    //foreach (var entry in Entries)
+                    //{
+                    //    if (!entry.isIdPool) { continue; }
+                    //    if (!entry.selected) { continue; }
+                    //
+                    //    ManageDynamicObjects.AggregationManifest poolManifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
+                    //    foreach (var id in entry.poolReference.Ids)
+                    //    {
+                    //        poolManifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, id, new float[3] { 1, 1, 1 }));
+                    //    }
+                    //    ManageDynamicObjects.UploadManifest(poolManifest, null);
+                    //}
                 });
             });
         }
@@ -487,6 +494,7 @@ namespace CognitiveVR
 
                 Selection.objects = gos.ToArray();
 
+                List<GameObject> uploadList = new List<GameObject>();
                 foreach (var entry in Entries)
                 {
                     var dyn = entry.objectReference;
@@ -501,14 +509,16 @@ namespace CognitiveVR
                     {
                         EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
                     }
+                    uploadList.Add(dyn.gameObject);
                 }
 
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    var manifest = new AggregationManifest();
-                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
+                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    //var manifest = new AggregationManifest();
+                    //AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
                     //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
+                    //ManageDynamicObjects.UploadManifest(manifest, () => );
                 });
             });
         }
@@ -524,7 +534,13 @@ namespace CognitiveVR
     DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
 
 
-        List<DynamicObject> selectedDynamicsOnFocus = new List<DynamicObject>();
+    public static List<DynamicObject> GetDynamicObjectsInScene()
+    {
+        return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+    }
+
+    List<DynamicObject> selectedDynamicsOnFocus = new List<DynamicObject>();
+        List<DynamicObjectIdPool> selectedPoolsOnFocus = new List<DynamicObjectIdPool>();
     private void OnFocus()
     {
         _cachedDynamics = FindObjectsOfType<DynamicObject>();
@@ -537,8 +553,12 @@ namespace CognitiveVR
         {
             foreach (var e in Entries)
             {
-                if (e.objectReference == null) { continue; }
                 if (!e.selected) { continue; }
+                if (e.isIdPool && e.poolReference != null)
+                {
+                    selectedPoolsOnFocus.Add(e.poolReference);
+                }
+                else if (!e.isIdPool && e.objectReference != null)
                 selectedDynamicsOnFocus.Add(e.objectReference);
             }
         }
@@ -827,15 +847,77 @@ namespace CognitiveVR
         bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
         if (enabled)
         {
-            if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip)))
+            //all, unless selected
+            int selectionCount = 0;
+            int selectedEntries = 0;
+            foreach (var entry in Entries)
             {
-                EditorCore.RefreshSceneVersion(delegate ()
+                if (!entry.selected) { continue; }
+                    selectedEntries++;
+                if (entry.isIdPool)
                 {
-                    AggregationManifest manifest = new AggregationManifest();
-                    AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                    //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    ManageDynamicObjects.UploadManifest(manifest, null);
-                });
+                    selectionCount += entry.idPoolCount;
+                }
+                else
+                    selectionCount++;
+            }
+            if (selectedEntries == 0 || selectedEntries == Entries.Count)
+            {
+                if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload All Ids for Aggregation", tooltip)))
+                {
+                    //all dynamics in scene - should be selected dynamics?
+                    EditorCore.RefreshSceneVersion(delegate ()
+                    {
+                        AggregationManifest manifest = new AggregationManifest();
+                        //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+                        var uploadList = new List<DynamicObject>();
+                        foreach (var entry in Entries)
+                        {
+                            if (!entry.isIdPool)
+                                uploadList.Add(entry.objectReference);
+                            else
+                            {
+                                foreach (var poolid in entry.poolReference.Ids)
+                                {
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }));
+                                }
+                            }
+                        }
+                        AddOrReplaceDynamic(manifest, uploadList);
+                        //TODO manifest add pool ids
+                        //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
+                        ManageDynamicObjects.UploadManifest(manifest, null);
+                    });
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload "+selectionCount+" Selected Ids for Aggregation", tooltip)))
+                {
+                    //all dynamics in scene - should be selected dynamics?
+                    EditorCore.RefreshSceneVersion(delegate ()
+                    {
+                        AggregationManifest manifest = new AggregationManifest();
+                        //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+                        var uploadList = new List<DynamicObject>();
+                        foreach (var entry in Entries)
+                        {
+                            if (!entry.selected) { continue; }
+                            if (!entry.isIdPool)
+                                uploadList.Add(entry.objectReference);
+                            else
+                            {
+                                foreach (var poolid in entry.poolReference.Ids)
+                                {
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }));
+                                }
+                            }
+                        }
+                        AddOrReplaceDynamic(manifest, uploadList);
+                        //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
+                        ManageDynamicObjects.UploadManifest(manifest, null);
+                    });
+                }
             }
         }
         else
@@ -920,11 +1002,6 @@ namespace CognitiveVR
             Util.logWarning("GetManifestResponse " + responsecode + " " + error);
         }
     }
-    
-    public static List<DynamicObject> GetDynamicObjectsInScene()
-    {
-        return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-    }
 
     [System.Serializable]
     public class AggregationManifest
@@ -1008,8 +1085,7 @@ namespace CognitiveVR
                 }
             }
         }
-
-        Debug.Log("send " + manifestCount + " manifest requests");
+        //Debug.Log("send " + manifestCount + " manifest requests");
     }
 
     static bool ManifestToJson(AggregationManifest manifest, out string json)
