@@ -8,6 +8,8 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
+        public const string SDK_VERSION = "0.26.8";
+
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
         /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
@@ -91,10 +93,6 @@ namespace CognitiveVR
         internal static ILocalExitpoll ExitpollHandler;
         internal static ICache DataCache;
         internal static NetworkManager NetworkManager;
-
-
-        private const string SDK_NAME_PREFIX = "unity";
-		public const string SDK_VERSION = "0.26.7";
 
         private static bool HasCustomSessionName;
         public static string ParticipantId { get; private set; }
