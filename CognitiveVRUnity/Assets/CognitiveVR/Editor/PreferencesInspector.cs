@@ -40,6 +40,10 @@ namespace CognitiveVR
                 hasCheckedRenderType = true;
             }
 
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.LabelField("SDK Version " + Core.SDK_VERSION);
+            EditorGUI.EndDisabledGroup();
+
             p.ApplicationKey = EditorGUILayout.TextField("Application Key", p.ApplicationKey);
             p.AttributionKey = EditorGUILayout.TextField("Attribution Key", p.AttributionKey);
             p.EnableLogging = EditorGUILayout.Toggle("Enable Logging", p.EnableLogging);

@@ -62,7 +62,7 @@ public class InitWizard : EditorWindow
 
     void WelcomeUpdate()
     {
-        GUI.Label(steptitlerect, "STEP 1 - WELCOME", "steptitle");
+        GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Core.SDK_VERSION + ")", "steptitle");
 
         var settings = CognitiveVR_Preferences.FindCurrentScene();
         if (settings != null && !string.IsNullOrEmpty(settings.SceneId))

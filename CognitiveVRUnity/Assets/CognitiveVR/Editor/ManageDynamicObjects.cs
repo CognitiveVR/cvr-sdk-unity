@@ -184,7 +184,7 @@ namespace CognitiveVR
 
         if (GetDynamicObjects.Length == 0)
         {
-            GUI.Label(new Rect(30, 80, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
+            GUI.Label(new Rect(30, 80, 520, 270), "No Scene objects found.\n\nHave you attached Dynamic Object components to objects?\nAre the GameObjects active in your hierarchy?", "button_disabledtext");
         }
 
         //build up list of Entries, then cache?
