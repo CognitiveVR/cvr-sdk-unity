@@ -519,8 +519,8 @@ public class ManageDynamicObjects : EditorWindow
             }
             public override string ToString()
             {
-                    return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + ",\"position\":\"" + position[0] + "," + position[1] + "," + position[2] + ",\"rotation\":\"" + rotation[0] + "," + rotation[1] + "," + rotation[2] + "," + rotation[3] + "\"}";
-                }
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + ",\"initialPosition\":\"" + position[0] + "," + position[1] + "," + position[2] + ",\"initialRotation\":\"" + rotation[0] + "," + rotation[1] + "," + rotation[2] + "," + rotation[3] + "\"}";
+            }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
         //public int Version;
@@ -621,8 +621,8 @@ public class ManageDynamicObjects : EditorWindow
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
             json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "],";
-                json += "\"position\":[" + entry.position[0] + "," + entry.position[1] + "," + entry.position[2] + "],";
-                json += "\"rotation\":[" + entry.rotation[0] + "," + entry.rotation[1] + "," + entry.rotation[2] + "," + entry.rotation[3] + "]";
+                json += "\"initialPosition\":[" + entry.position[0] + "," + entry.position[1] + "," + entry.position[2] + "],";
+                json += "\"initialRotation\":[" + entry.rotation[0] + "," + entry.rotation[1] + "," + entry.rotation[2] + "," + entry.rotation[3] + "]";
                 json += "},";
             containsValidEntry = true;
         }
