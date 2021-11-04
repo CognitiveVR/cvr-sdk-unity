@@ -62,7 +62,10 @@ namespace CognitiveVR
                         foreach (var id in pool.Ids)
                         {
                             //TODO pools need a reference to a gameobject to aggregate data correctly
-                            manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id,new float[3] { 1, 1, 1 }));
+                            manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id,
+                                new float[3] { 1, 1, 1 },
+                                new float[3] { 0, 0, 0 },
+                                new float[4] { 0,0,0,1 }));
                         }
                     }
 
