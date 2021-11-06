@@ -879,7 +879,7 @@ namespace CognitiveVR
                             {
                                 foreach (var poolid in entry.poolReference.Ids)
                                 {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }));
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
                                 }
                             }
                         }
@@ -909,7 +909,7 @@ namespace CognitiveVR
                             {
                                 foreach (var poolid in entry.poolReference.Ids)
                                 {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }));
+                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
                                 }
                             }
                         }
@@ -1013,9 +1013,16 @@ namespace CognitiveVR
             public string mesh;
             public string id;
             public float[] scaleCustom = new float[3]{1,1,1};
-                public float[] position = new float[3] { 0, 0, 0 };
-                public float[] rotation = new float[4] { 0, 0, 0 , 1};
-                public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom, float[] _position, float[] _rotation)
+            public float[] position = new float[3] { 0, 0, 0 };
+            public float[] rotation = new float[4] { 0, 0, 0 , 1};
+            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom)
+            {
+                name = _name;
+                mesh = _mesh;
+                id = _id;
+                scaleCustom = _scaleCustom;
+            }
+            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom, float[] _position, float[] _rotation)
             {
                 name = _name;
                 mesh = _mesh;
@@ -1026,8 +1033,7 @@ namespace CognitiveVR
             }
             public override string ToString()
             {
-
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0] + "," + scaleCustom[1] + "," + scaleCustom[2] + ",\"initialPosition\":\"" + position[0] + "," + position[1] + "," + position[2] + ",\"initialRotation\":\"" + rotation[0] + "," + rotation[1] + "," + rotation[2] + "," + rotation[3] + "\"}";
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"scaleCustom\":\"" + scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "\"}";
             }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
@@ -1109,9 +1115,7 @@ namespace CognitiveVR
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
-            json += "\"scaleCustom\":[" + entry.scaleCustom[0] + "," + entry.scaleCustom[1] + "," + entry.scaleCustom[2] + "],";
-                json += "\"initialPosition\":[" + entry.position[0] + "," + entry.position[1] + "," + entry.position[2] + "],";
-                json += "\"initialRotation\":[" + entry.rotation[0] + "," + entry.rotation[1] + "," + entry.rotation[2] + "," + entry.rotation[3] + "]";
+            json += "\"scaleCustom\":[" + entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]";
                 json += "},";
             containsValidEntry = true;
         }

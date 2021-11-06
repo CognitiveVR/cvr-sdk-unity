@@ -330,19 +330,19 @@ namespace CognitiveVR
         double pupillometryTimestamp;
 
         //update every 100MS
-        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyePupillometry data)
+        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyeTracking data)
         {
             double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
             if (pupillometryTimestamp < timestampMS)
             {
                 pupillometryTimestamp = timestampMS + 0.1;
-                if (data.LeftPupilDiameter.Confidence > 0.5f && data.LeftPupilDiameter.Size > 1.5f)
+                if (data.LeftEye.PupilDilationConfidence > 0.5f && data.LeftEye.PupilDilation > 1.5f)
                 {
-                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftPupilDiameter.Size, timestampMS);
+                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftEye.PupilDilation, timestampMS);
                 }
-                if (data.RightPupilDiameter.Confidence > 0.5f && data.RightPupilDiameter.Size > 1.5f)
+                if (data.RightEye.PupilDilationConfidence > 0.5f && data.RightEye.PupilDilation > 1.5f)
                 {
-                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightPupilDiameter.Size, timestampMS);
+                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightEye.PupilDilation, timestampMS);
                 }
             }
         }
