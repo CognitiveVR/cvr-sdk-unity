@@ -1118,8 +1118,8 @@ namespace CognitiveVR
             json += "\"id\":\"" + entry.id + "\",";
             json += "\"mesh\":\"" + entry.mesh + "\",";
             json += "\"name\":\"" + entry.name + "\",";
-            json += "\"scaleCustom\":[" + entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]";
-            json += "\"initialPosition\":[" + entry.position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]";
+            json += "\"scaleCustom\":[" + entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "],";
+            json += "\"initialPosition\":[" + entry.position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "],";
             json += "\"initialRotation\":[" + entry.rotation[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[3].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]";
             json += "},";
             containsValidEntry = true;
