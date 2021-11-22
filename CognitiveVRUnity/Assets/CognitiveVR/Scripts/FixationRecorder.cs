@@ -794,6 +794,9 @@ namespace CognitiveVR
                     var worldGazeDirection = (convergancePoint - centerPos).normalized;
                     //screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldGazeDirection);
 
+                    if (GameplayReferences.HMD.parent != null)
+                        worldGazeDirection = GameplayReferences.HMD.parent.TransformDirection(worldGazeDirection);
+
                     ray = new Ray(centerPos, worldGazeDirection);
 
                     return true;
@@ -872,7 +875,7 @@ namespace CognitiveVR
         }
 #endif
 
-        #endregion
+#endregion
 
         //if active fixation is world space, in world space, this indicates the last several positions for the average fixation position
         //if active fixation is local space, these are in local space

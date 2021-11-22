@@ -254,13 +254,13 @@ namespace CognitiveVR
             }
         }
 #endif
+        Vector3 gazeDirection = Vector3.forward;
 
         /// <summary>
-        /// get the raw gaze direction in world space. includes fove/pupil labs eye tracking
+        /// get the raw gaze direction in world space. includes eye tracking. returns previous direction if currently invalid
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-            Vector3 gazeDirection = GameplayReferences.HMD.forward;
 #if CVR_FOVE //direction
             var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
@@ -314,6 +314,9 @@ namespace CognitiveVR
                     Vector3 centerPos = (rightPos + leftPos) / 2f;
 
                     gazeDirection = (convergancePoint - centerPos).normalized;
+                    //openxr implementation returns a direction adjusted by the HMD's transform, but not by the parent transformations
+                    if (GameplayReferences.HMD.parent != null)
+                        gazeDirection = GameplayReferences.HMD.parent.TransformDirection(gazeDirection);
                 }
             }
 #endif

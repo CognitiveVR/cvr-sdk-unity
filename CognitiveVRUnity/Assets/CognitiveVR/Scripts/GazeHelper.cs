@@ -249,7 +249,9 @@ namespace CognitiveVR
                     Vector3 centerPos = (rightPos + leftPos) / 2f;
 
                     var worldGazeDirection = (convergancePoint - centerPos).normalized;
-
+                    //openxr implementation returns a direction adjusted by the HMD's transform, but not by the parent transformations
+                    if (GameplayReferences.HMD.parent != null)
+                        worldGazeDirection = GameplayReferences.HMD.parent.TransformDirection(worldGazeDirection);
                     lastDirection = worldGazeDirection;
                     return worldGazeDirection;
                 }
