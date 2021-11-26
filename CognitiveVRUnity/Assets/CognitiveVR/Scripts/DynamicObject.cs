@@ -148,7 +148,11 @@ namespace CognitiveVR
                     registerid = CustomId;
                 }
 
-                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, ControllerType.ToString(),IsRight);
+                string controllerName = string.Empty;
+                if (IsController)
+                    controllerName = ControllerType.ToString();
+
+                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerName ,IsRight);
 
                 DataId = Data.Id;
 

@@ -155,7 +155,7 @@ namespace CognitiveVR
         {
             if (responsecode == 200)
             {
-                if (runtimeCache == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
+                if (runtimeCache == null) { return; }
                 if (isuploadingfromcache) { return; }
                 if (runtimeCache.HasContent())
                 {
@@ -178,7 +178,7 @@ namespace CognitiveVR
                     CacheRequest = null;
                 }
 
-                if (runtimeCache == null) { Util.logWarning("Network Post Data Error. LocalCache null"); return; }
+                if (runtimeCache == null) { return; }
 
                 if (runtimeCache.CanWrite(url, content))
                 {
