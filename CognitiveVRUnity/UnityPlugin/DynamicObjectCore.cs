@@ -14,6 +14,8 @@ namespace CognitiveVR
     internal static class DynamicObjectCore
     {
         private static int FrameCount;
+
+        //marks the looping coroutine as 'ready' to pull data from the queue on a separate thread
         private static bool ReadyToWriteJson = false;
 
         private static int jsonPart = 1;
@@ -27,7 +29,7 @@ namespace CognitiveVR
 
         internal static void Initialize()
         {
-            Core.NetworkManager.StartCoroutine(WriteJson());
+            Core.NetworkManager.StartCoroutine(CheckWriteJson());
             for (int i = 0; i < CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
@@ -164,7 +166,7 @@ namespace CognitiveVR
                     NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
-                    ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
+                    ReadyToWriteJson = true;
                 }
             }
         }
@@ -250,42 +252,51 @@ namespace CognitiveVR
         }
 
         //if WriteImmediate don't start threads 
-        static bool WriteImmediate = false;
-        static bool CopyDataToCache = false;
+        //static bool CopyDataToCache = false;
+
         internal static void FlushData(bool copyDataToCache)
         {
             if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { return; }
-            CopyDataToCache = copyDataToCache;
-            ReadyToWriteJson = true;
-            WriteImmediate = true;
+            //CopyDataToCache = copyDataToCache;
+            //ReadyToWriteJson = true;
+            //WriteImmediate = true;
 
-            while (ReadyToWriteJson == true)
-                WriteJson().MoveNext();
+            InterruptThead = true;
 
-            WriteImmediate = false;
-            CopyDataToCache = false;
+            //if (WriteJsonRoutine != null)
+                //Core.NetworkManager.StopCoroutine(WriteJsonRoutine);
+
+            while (queuedSnapshots.Count > 0 && queuedManifest.Count > 0)
+                WriteJsonImmediate(copyDataToCache);
         }
 
-        static IEnumerator WriteJson()
+        //this limits the amount of data that can be sent in a single batch
+        //should drop work done on thread if writing json immediately (like on session end)
+        //static bool FlushDataInterruptThread = false;
+
+        //static IEnumerator WriteJsonRoutine;
+        static bool InterruptThead = false;
+
+        //loops and calls 'writeJson' until
+        static IEnumerator CheckWriteJson()
         {
-            while (true)
+            while(true)
             {
-                if (!ReadyToWriteJson) { yield return null; }
-                else
+                if (ReadyToWriteJson) //threading and waiting
                 {
+                    InterruptThead = false;
                     int totalDataToWrite = queuedManifest.Count + queuedSnapshots.Count;
                     totalDataToWrite = Mathf.Min(totalDataToWrite, CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount);
-                    
-                    var builder = new System.Text.StringBuilder(200 + 128* totalDataToWrite);
+
+                    //TODO CONSIDER can i do all json building on a new thread and just the network request error handling after its complete?
+                    //garbage collection on this string builder is painful
+
+                    var builder = new System.Text.StringBuilder(200 + 128 * totalDataToWrite);
                     int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);
                     int count = Mathf.Min(queuedSnapshots.Count, totalDataToWrite - manifestCount);
 
-                    if (queuedSnapshots.Count - count == 0 && queuedManifest.Count - manifestCount == 0)
-                    {
-                        ReadyToWriteJson = false;
-                    }
-
                     bool threadDone = true;
+                    bool encounteredError = false;
 
                     builder.Append("{");
 
@@ -307,111 +318,211 @@ namespace CognitiveVR
                     builder.Append(",");
                     jsonPart++;
                     JsonUtil.SetString("formatversion", "1.0", builder);
-                    builder.Append(",");
 
                     //manifest entries
                     if (manifestCount > 0)
                     {
-                        builder.Append("\"manifest\":{");
+                        builder.Append(",\"manifest\":{");
                         threadDone = false;
+                        Queue<DynamicObjectManifestEntry> copyQueue = new Queue<DynamicObjectManifestEntry>(queuedManifest);
 
-                        if (WriteImmediate)
+                        new Thread(() =>
                         {
-                            for (int i = 0; i < manifestCount; i++)
-                            {
-                                if (i != 0)
-                                    builder.Append(',');
-                                var manifestentry = queuedManifest.Dequeue();
-                                SetManifestEntry(manifestentry, builder);
-                            }
-                            threadDone = true;
-                        }
-                        else
-                        {
-                            new System.Threading.Thread(() =>
+                            try
                             {
                                 for (int i = 0; i < manifestCount; i++)
                                 {
                                     if (i != 0)
                                         builder.Append(',');
-                                    var manifestentry = queuedManifest.Dequeue();
+                                    //var manifestentry = queuedManifest.Dequeue();
+                                    var manifestentry = copyQueue.Dequeue();
                                     SetManifestEntry(manifestentry, builder);
+                                    //numberOfEntriesCopied++;
                                 }
-                                threadDone = true;
-                            }).Start();
-
-                            while (!threadDone)
-                            {
-                                yield return null;
                             }
-                        }
-
-                        if (count>0)
-                        {
-                            builder.Append("},");
-                        }
-                        else
-                        {
-                            builder.Append("}");
-                        }
-                    }
-
-                    //snapshots
-                    if (count > 0)
-                    {
-                        builder.Append("\"data\":[");
-                        threadDone = false;
-                        if (WriteImmediate)
-                        {
-                            for (int i = 0; i < count; i++)
+                            catch
                             {
-                                if (i != 0)
-                                    builder.Append(',');
-                                var snap = queuedSnapshots.Dequeue();
-                                SetSnapshot(snap, builder);
-                                snap.ReturnToPool();
+                                encounteredError = true;
                             }
                             threadDone = true;
-                        }
-                        else
+                        }).Start();
+
+                        while (!threadDone && !encounteredError)
                         {
-                            new System.Threading.Thread(() =>
+                            yield return null;
+                        }
+
+                        //compare 
+                        builder.Append("}");
+                    }
+
+                    //check if this logic can be skipped because it will be invalidated
+                    if (!InterruptThead && !encounteredError)
+                    {
+                        //snapshots
+                        if (count > 0)
+                        {
+                            builder.Append(",\"data\":[");
+                            threadDone = false;
+
+                            Queue<DynamicObjectSnapshot> copyQueue = new Queue<DynamicObjectSnapshot>(queuedSnapshots);
+                            new Thread(() =>
                             {
-                                for (int i = 0; i < count; i++)
+                                try
                                 {
-                                    if (i != 0)
-                                        builder.Append(',');
-                                    var snap = queuedSnapshots.Dequeue();
-                                    SetSnapshot(snap, builder);
-                                    snap.ReturnToPool();
+                                    for (int i = 0; i < count; i++)
+                                    {
+                                        if (i != 0)
+                                            builder.Append(',');
+                                        var snap = copyQueue.Dequeue();
+                                        SetSnapshot(snap, builder);
+                                    //snap.ReturnToPool();
+                                }
+                                }
+                                catch
+                                {
+                                    encounteredError = true;
                                 }
                                 threadDone = true;
                             }).Start();
 
-                            while (!threadDone)
+                            while (!threadDone && !encounteredError)
                             {
                                 yield return null;
                             }
+                            builder.Append("]");
                         }
-                        builder.Append("]");
+                        builder.Append("}");
                     }
-                    builder.Append("}");
 
-                    string s = builder.ToString();
-                    string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
-
-                    if (CopyDataToCache)
+                    if (!InterruptThead && !encounteredError)
                     {
-                        if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, s))
+                        //if this coroutine reached here and the thread hasn't been interrupted (from flushdata) and encounter no errors
+                        //then remove entries and snapshots from real queues
+                        try
                         {
-                            Core.NetworkManager.runtimeCache.WriteContent(url, s);
+                            for (int i = 0; i < manifestCount; i++)
+                            {
+                                queuedManifest.Dequeue();
+                            }
+                            for (int i = 0; i < count; i++)
+                            {
+                                var snap = queuedSnapshots.Dequeue();
+                                snap.ReturnToPool();
+                            }
                         }
-                    }
+                        catch (System.Exception e)
+                        {
+                            Debug.LogException(e);
+                        }
 
-                    Core.NetworkManager.Post(url, s);
-                    DynamicManager.DynamicObjectSendEvent();
+
+                        if (queuedSnapshots.Count == 0 && queuedManifest.Count == 0)
+                        {
+                            ReadyToWriteJson = false;
+                        }
+
+                        string s = builder.ToString();
+                        string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+
+                        /*if (CopyDataToCache)
+                        {
+                            if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, s))
+                            {
+                                Core.NetworkManager.runtimeCache.WriteContent(url, s);
+                            }
+                        }*/
+
+                        Core.NetworkManager.Post(url, s);
+                        DynamicManager.DynamicObjectSendEvent();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("THREAD INTERRUPTED");
+                    }
+                }
+                else //wait to write data
+                {
+                    yield return null;
                 }
             }
+        }
+
+        //writes a batch of data on main thread
+        static void WriteJsonImmediate(bool copyDataToCache)
+        {
+            int totalDataToWrite = queuedManifest.Count + queuedSnapshots.Count;
+            totalDataToWrite = Mathf.Min(totalDataToWrite, CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount);
+
+            var builder = new System.Text.StringBuilder(200 + 128 * totalDataToWrite);
+            int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);
+            int count = Mathf.Min(queuedSnapshots.Count, totalDataToWrite - manifestCount);
+
+            builder.Append("{");
+
+            //header
+            JsonUtil.SetString("userid", Core.DeviceId, builder);
+            builder.Append(",");
+
+            if (!string.IsNullOrEmpty(Core.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
+                builder.Append(",");
+            }
+
+            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
+            builder.Append(",");
+            JsonUtil.SetString("sessionid", Core.SessionID, builder);
+            builder.Append(",");
+            JsonUtil.SetInt("part", jsonPart, builder);
+            builder.Append(",");
+            jsonPart++;
+            JsonUtil.SetString("formatversion", "1.0", builder);
+
+            //manifest entries
+            if (manifestCount > 0)
+            {
+                builder.Append(",\"manifest\":{");
+                for (int i = 0; i < manifestCount; i++)
+                {
+                    if (i != 0)
+                        builder.Append(',');
+                    var manifestentry = queuedManifest.Dequeue();
+                    SetManifestEntry(manifestentry, builder);
+                }
+                builder.Append("}");
+            }
+
+            //snapshots
+            if (count > 0)
+            {
+                builder.Append(",\"data\":[");
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != 0)
+                        builder.Append(',');
+                    var snap = queuedSnapshots.Dequeue();
+                    SetSnapshot(snap, builder);
+                    snap.ReturnToPool();
+                }
+                builder.Append("]");
+            }
+            builder.Append("}");
+
+            //Debug.Log("DYNAMICS - SENT");
+            string s = builder.ToString();
+            string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+
+            if (copyDataToCache)
+            {
+                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, s))
+                {
+                    Core.NetworkManager.runtimeCache.WriteContent(url, s);
+                }
+            }
+
+            Core.NetworkManager.Post(url, s);
+            DynamicManager.DynamicObjectSendEvent();
         }
 
         static void SetManifestEntry(DynamicObjectManifestEntry entry, StringBuilder builder)
