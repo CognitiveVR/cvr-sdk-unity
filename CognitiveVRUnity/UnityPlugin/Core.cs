@@ -275,6 +275,9 @@ namespace CognitiveVR
             }
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
+
+            CognitiveStatics.Reset();
+            DynamicManager.Reset();
         }
 
         internal static Error InitError;
@@ -315,7 +318,8 @@ namespace CognitiveVR
                 SetSessionProperty("c3d.deviceid", DeviceId);
                 
                 ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
-                DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                if (CognitiveVR_Preferences.Instance.LocalStorage)
+                    DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 GameObject networkGo = new GameObject("Cognitive Network");
                 networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
                 NetworkManager = networkGo.AddComponent<NetworkManager>();

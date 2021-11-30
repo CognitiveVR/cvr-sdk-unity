@@ -264,10 +264,13 @@ namespace CognitiveVR
             InterruptThead = true;
 
             //if (WriteJsonRoutine != null)
-                //Core.NetworkManager.StopCoroutine(WriteJsonRoutine);
+            //Core.NetworkManager.StopCoroutine(WriteJsonRoutine);
 
-            while (queuedSnapshots.Count > 0 && queuedManifest.Count > 0)
+            while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
+            {
                 WriteJsonImmediate(copyDataToCache);
+            }
+            tempsnapshots = 0;
         }
 
         //this limits the amount of data that can be sent in a single batch
@@ -436,10 +439,6 @@ namespace CognitiveVR
                         Core.NetworkManager.Post(url, s);
                         DynamicManager.DynamicObjectSendEvent();
                     }
-                    else
-                    {
-                        Debug.LogWarning("THREAD INTERRUPTED");
-                    }
                 }
                 else //wait to write data
                 {
@@ -509,7 +508,6 @@ namespace CognitiveVR
             }
             builder.Append("}");
 
-            //Debug.Log("DYNAMICS - SENT");
             string s = builder.ToString();
             string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
 

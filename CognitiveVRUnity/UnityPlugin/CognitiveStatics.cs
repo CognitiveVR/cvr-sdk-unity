@@ -84,6 +84,11 @@ namespace CognitiveVR
         internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
         
+        internal static void Reset()
+        {
+            ApplicationKey = string.Empty;
+        }
+
         internal static string POSTDYNAMICDATA (string sceneid, int versionnumber)
         {
             return string.Concat(dynamicUrl, sceneid, "?version=",versionnumber.ToString());

@@ -180,10 +180,11 @@ namespace CognitiveVR
                     CognitiveVR.Core.TickEvent += Core_TickEvent;
                 }
             }
-            else
-            {
-                CognitiveVR.Core.InitEvent += OnCoreInitialize;
-            }
+        }
+
+        void Start()
+        {
+            Core.InitEvent += OnCoreInitialize;
         }
 
         private void Core_TickEvent()
@@ -193,8 +194,8 @@ namespace CognitiveVR
 
         private void OnCoreInitialize(CognitiveVR.Error error)
         {
-            CognitiveVR.Core.InitEvent -= OnCoreInitialize;
-            OnEnable();
+            if (error == Error.None)
+                OnEnable();
         }
 
         /// <summary>
@@ -260,14 +261,12 @@ namespace CognitiveVR
 
         private void OnDisable()
         {
-            CognitiveVR.Core.InitEvent -= OnCoreInitialize;
             CognitiveVR.Core.TickEvent -= Core_TickEvent;
 
             DynamicManager.SetTransform(DataId, transform);
 
             CognitiveVR.DynamicManager.RemoveDynamicObject(DataId);
         }
-
 
 #if UNITY_EDITOR
     private void Reset()

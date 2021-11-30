@@ -155,7 +155,7 @@ namespace CognitiveVR
         {
             if (responsecode == 200)
             {
-                if (runtimeCache == null) { Util.logError("Network Post Data 200 LocalCache null"); return; }
+                if (runtimeCache == null) { return; }
                 if (isuploadingfromcache) { return; }
                 if (runtimeCache.HasContent())
                 {
@@ -178,7 +178,7 @@ namespace CognitiveVR
                     CacheRequest = null;
                 }
 
-                if (runtimeCache == null) { Util.logWarning("Network Post Data Error. LocalCache null"); return; }
+                if (runtimeCache == null) { return; }
 
                 if (runtimeCache.CanWrite(url, content))
                 {
@@ -236,13 +236,7 @@ namespace CognitiveVR
                 //upload from local storage
                 if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
 
-                if (instance.runtimeCache == null)
-                {
-                    Debug.LogError("local cache doesn't exist!");
-                    return;
-                    //need to know EOL character or this could cause cache reading errors on unix systems
-                    //lc = new LocalCache(null);
-                }
+                if (instance.runtimeCache == null){return;}
 
                 cacheCompletedAction = completedCallback;
                 cacheFailedAction = failedCallback;

@@ -35,6 +35,17 @@ namespace CognitiveVR
             CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
         }
 
+        internal static void Reset()
+        {
+            for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
+            {
+                ActiveDynamicObjectsArray[i].active = false;
+            }
+            for(int i = 0; i<DynamicObjectIdArray.Length;i++)
+            {
+                DynamicObjectIdArray[i].Used = false;
+            }
+        }
 
         //happens after the network has sent the request, before any response
         public static event Core.onDataSend OnDynamicObjectSend;
@@ -746,11 +757,24 @@ namespace CognitiveVR
         /// </summary>
         public static void SendData(bool copyDataToCache)
         {
+            if (!Core.IsInitialized) { return; }
+
+            int dirtycount = 0;
+            //set all active dynamics as dirty
+            for (int i = 0; i<ActiveDynamicObjectsArray.Length;i++)
+            {
+                if (!ActiveDynamicObjectsArray[i].active) { continue; }
+                ActiveDynamicObjectsArray[i].dirty = true;
+                dirtycount++;
+            }
+
+            //set loop index to start
             index = 0;
             do
             {
-                //call update on everything
-                OnUpdate(60);
+                //call update until the loop completes (which sets index = 0 and returns)
+                //this adds all snapshots to queuedSnapshot queue
+                OnUpdate(0);
             }
             while (index != 0);
 
