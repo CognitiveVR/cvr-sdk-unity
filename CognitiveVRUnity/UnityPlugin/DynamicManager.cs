@@ -75,7 +75,7 @@ namespace CognitiveVR
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
-                if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
+                if (ActiveDynamicObjectsArray[i].active && string.CompareOrdinal(data.Id, ActiveDynamicObjectsArray[i].Id) == 0)
                 {
                     //id is already used. don't add to list again
                     if (data.UseCustomId)

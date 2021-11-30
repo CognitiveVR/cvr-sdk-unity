@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace CognitiveVR 
@@ -8,7 +8,7 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        public const string SDK_VERSION = "0.26.9";
+        public const string SDK_VERSION = "0.26.10";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
@@ -318,6 +318,7 @@ namespace CognitiveVR
                 SetSessionProperty("c3d.deviceid", DeviceId);
                 
                 ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
+
                 if (CognitiveVR_Preferences.Instance.LocalStorage)
                     DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 GameObject networkGo = new GameObject("Cognitive Network");
