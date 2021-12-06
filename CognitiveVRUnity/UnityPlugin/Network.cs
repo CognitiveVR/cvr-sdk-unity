@@ -31,6 +31,7 @@ namespace CognitiveVR
 
         internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
         {
+            DontDestroyOnLoad(gameObject);
             instance = this;
             this.runtimeCache = runtimeCache;
             this.exitpollCache = exitpollCache;
