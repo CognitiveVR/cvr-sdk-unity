@@ -498,6 +498,11 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif CVR_WINDOWSMR
             Core.SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
+#elif CVR_OPENXR
+            //Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
+            Core.SetSessionProperty("c3d.app.sdktype", "OpenXR");
 #endif
             Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
