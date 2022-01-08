@@ -312,7 +312,7 @@ namespace CognitiveVR
                 SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
                 SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
                 SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
-                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt(SystemInfo.systemMemorySize/1024));
+                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize/1024));
                 
                 DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
                 SetSessionProperty("c3d.deviceid", DeviceId);
