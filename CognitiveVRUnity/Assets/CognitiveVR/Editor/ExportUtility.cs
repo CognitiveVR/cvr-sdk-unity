@@ -123,7 +123,8 @@ namespace CognitiveVR
             List<Transform> t = new List<Transform>();
             foreach (var v in allRootObjects)
             {
-                if (v.GetComponent<MeshFilter>() != null && v.GetComponent<MeshFilter>().sharedMesh == null) { continue; }
+                if (v.GetComponent<MeshFilter>() != null && v.GetComponent<MeshFilter>().sharedMesh == null) { continue; } //skip procedural meshes
+                if (v.GetComponent<CustomRenderExporter>() != null) { continue; } //skip mesh that uses custom render
                 if (v.activeInHierarchy) { t.Add(v.transform); }
                 //check for mesh renderers here, before nodes are constructed for invalid objects?
             }
@@ -159,6 +160,11 @@ namespace CognitiveVR
                     UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
                     if (temp[i].tempGo != null)
                         UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
+                }
+
+                foreach (var tempgameobject in deleteCustomRenders)
+                {
+                    UnityEngine.Object.DestroyImmediate(tempgameobject);
                 }
             }
         }
@@ -412,6 +418,8 @@ namespace CognitiveVR
 
         #region Bake Renderers
 
+        static List<GameObject> deleteCustomRenders;
+
         /// <summary>
         /// find all skeletal meshes, terrain and canvases in scene
         /// </summary>
@@ -424,6 +432,9 @@ namespace CognitiveVR
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
+
+            CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
+            deleteCustomRenders = new List<GameObject>();
 
             if (rootDynamic != null)
             {
@@ -447,6 +458,29 @@ namespace CognitiveVR
                         ProceduralMeshFilters.Add(mf);
                     }
                 }
+            }
+
+            foreach (var customRender in CustomRenders)
+            {
+                if (!customRender.gameObject.activeInHierarchy) { continue; }
+                var data = customRender.RenderMeshCustom();
+                if (data == null) { continue; }
+
+                BakeableMesh bm = new BakeableMesh();
+                bm.tempGo = new GameObject(data.name);
+                bm.tempGo.transform.parent = data.transform;
+                bm.tempGo.transform.localRotation = Quaternion.identity;
+                bm.tempGo.transform.localPosition = Vector3.zero;
+                bm.tempGo.transform.localScale = Vector3.one;
+
+                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = data.material;
+                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+
+                bm.meshFilter.sharedMesh = data.meshdata;
+                meshes.Add(bm);
+                ProceduralMeshFilters.Add(data.tempGameObject.GetComponent<MeshFilter>());
+                deleteCustomRenders.Add(data.tempGameObject);
             }
 
             foreach (var skinnedMeshRenderer in SkinnedMeshes)
