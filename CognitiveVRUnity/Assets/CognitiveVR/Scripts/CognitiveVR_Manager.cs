@@ -116,6 +116,13 @@ namespace CognitiveVR
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool InitializeOnStart = true;
 
+#if CVR_OCULUS
+        [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
+        public bool AssignOculusProfileToParticipant = true;
+        [Tooltip("Required to initialize the Oculus platform and request the Oculus profile")]
+        public string Oculus_Appid;
+#endif
+
 #if CVR_AH || CVR_PUPIL
         [Tooltip("Start recording analytics after calibration is successfully completed")]
         public bool InitializeAfterCalibration = true;
@@ -148,6 +155,25 @@ namespace CognitiveVR
             }
             if (InitializeOnStart)
                 Initialize("");
+
+#if CVR_OCULUS
+            if (AssignOculusProfileToParticipant && Oculus_Appid != string.Empty && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            {
+                Oculus.Platform.Core.Initialize(Oculus_Appid);
+
+                Users.GetLoggedInUser().OnComplete(delegate (Message<User> message)
+                {
+                    if (message.IsError)
+                    {
+                        Debug.LogError(message.GetError().Message);
+                    }
+                    else
+                    {
+                        Core.SetParticipantId(message.Data.OculusID.ToString());
+                    }
+                });
+            }
+#endif
 
 #if CVR_AH
             if (InitializeAfterCalibration)
