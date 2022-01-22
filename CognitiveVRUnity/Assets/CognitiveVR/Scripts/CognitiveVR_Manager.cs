@@ -161,7 +161,7 @@ namespace CognitiveVR
             {
                 Oculus.Platform.Core.Initialize(Oculus_Appid);
 
-                Users.GetLoggedInUser().OnComplete(delegate (Message<User> message)
+                Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
                 {
                     if (message.IsError)
                     {

@@ -196,9 +196,11 @@ namespace CognitiveVR.Components
             int samples = 0;
             float maxSqrDistance = 0;
 
+            var wait = new WaitForSeconds(Interval);
+
             while (samples < SampleCount)
             {
-                yield return new WaitForSeconds(Interval);
+                yield return wait;
                 
                 //if left controller is active, record max distance
                 if (leftControllerTracking && GameplayReferences.GetControllerInfo(false, out tempInfo))
