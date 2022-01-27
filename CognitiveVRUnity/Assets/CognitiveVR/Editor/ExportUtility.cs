@@ -451,7 +451,8 @@ namespace CognitiveVR
             }
             else
             {
-                foreach (var mf in UnityEngine.Object.FindObjectsOfType<MeshFilter>())
+                var meshfilters = UnityEngine.Object.FindObjectsOfType<MeshFilter>();
+                foreach (var mf in meshfilters)
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
                     {

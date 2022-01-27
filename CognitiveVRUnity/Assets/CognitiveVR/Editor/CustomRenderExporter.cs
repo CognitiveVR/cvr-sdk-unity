@@ -86,13 +86,13 @@ namespace CognitiveVR
 
             int resolution = 512;
             var magnitude = bounds.size.magnitude;
-            if (magnitude < 5)
+            /*if (magnitude < 5)
                 resolution = 128;
             else if (magnitude < 10)
                 resolution = 256;
             else if (magnitude < 20)
                 resolution = 512;
-            else resolution = 1024;
+            else resolution = 1024;*/
 
             float XOrthoScale = Mathf.Max(bounds.extents.y, bounds.extents.z);
             float YOrthoScale = Mathf.Max(bounds.extents.x, bounds.extents.z);
@@ -104,7 +104,6 @@ namespace CognitiveVR
 
             //position cameras from bounding box
             //set depth to bounds
-
 
             generatedUV2Texture = new Texture2D(resolution, resolution);
             generatedUV2Texture.name = target.name + target.GetInstanceID();
@@ -128,14 +127,15 @@ namespace CognitiveVR
             Color[] pixels = generatedUV2Texture.GetPixels();
             for (int i = 0; i < pixels.Length; i++)
             {
-                pixels[i] = new Color(pixels[i].r, pixels[i].g, pixels[i].b, 0);
+                pixels[i] = new Color(pixels[i].r, pixels[i].g, pixels[i].b, 1);
             }
             generatedUV2Texture.SetPixels(pixels);
 
             generatedUV2Texture.Apply();
             //save
 
-            //System.IO.File.WriteAllBytes(Application.dataPath + "/generatedUV2Texture.png", generatedUV2Texture.EncodeToPNG());
+            //System.IO.File.WriteAllBytes(Application.dataPath + "/"+ target.name + "generatedUV2Texture.png", generatedUV2Texture.EncodeToPNG());
+            //generatedUV2Texture
             //AssetDatabase.Refresh();
             return generatedUV2Texture;
         }
@@ -176,7 +176,7 @@ namespace CognitiveVR
             renderCam.clearFlags = CameraClearFlags.Color;
             renderCam.backgroundColor = Color.black;
             renderCam.nearClipPlane = 0.01f;
-            renderCam.farClipPlane = farClipDistance;
+            renderCam.farClipPlane = 100;// farClipDistance;
             renderCam.orthographic = true;
             renderCam.orthographicSize = orthographicsize;
             if (layer != -1)
@@ -217,16 +217,11 @@ namespace CognitiveVR
             {
                 Debug.LogException(e);
             }
-            if (layer != -1)
-            {
-                //reset dynamic object layers
-                foreach (var v in originallayers)
-                {
-                    v.Key.layer = v.Value;
-                }
-            }
 
-            //System.IO.File.WriteAllBytes(Application.dataPath + "/"+saveTextureName+".png", tex.EncodeToPNG());
+            //Debug.Log("unused layer " + layer);
+
+            //if (target.name == "city__Build0Small(Clone).005")
+            //System.IO.File.WriteAllBytes(Application.dataPath + "/"+ target.name+saveTextureName+".png", tex.EncodeToPNG());
 
             //write to texture or whatever
 
@@ -238,16 +233,16 @@ namespace CognitiveVR
                 {
                     Ray ray = renderCam.ViewportPointToRay(new Vector3(x / 100f, y / 100f, 0));
                     RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit)) //TODO hit only selected object
+                    if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask(LayerMask.LayerToName(layer))))
                     {
                         Vector2 uvHitPoint = hit.textureCoord; //where to write to
                         Color renderedColor = tex.GetPixel((int)(uvHitPoint.x * tex.width), (int)(uvHitPoint.y * tex.height));
                         //Debug.DrawRay(ray.origin, ray.direction * 0.01f, new Color(hit.textureCoord.x, hit.textureCoord.y, 0), 5);
-                        Debug.DrawRay(ray.origin, ray.direction * 0.1f, renderedColor, 5);
+                        Debug.DrawRay(ray.origin, ray.direction * 0.1f, renderedColor, 10);
                     }
                     else
                     {
-                        //Debug.DrawRay(ray.origin, ray.direction * 0.01f, Color.red, 5);
+                        Debug.DrawRay(ray.origin, ray.direction * 0.01f, Color.red, 10);
                     }
                 }
             }*/
@@ -264,7 +259,9 @@ namespace CognitiveVR
                     {
                         Ray ray = renderCam.ViewportPointToRay(new Vector3((float)x / finalSampleDensity, (float)y / finalSampleDensity, 0));
                         RaycastHit hit = new RaycastHit();
-                        if (Physics.Raycast(ray, out hit)) //TODO hit only selected object
+                        //if (Physics.Raycast(ray, out hit))
+                        //if (Physics.Raycast(ray, out hit,100, LayerMask.GetMask(LayerMask.LayerToName(layer)))) 
+                        if (Physics.Raycast(ray, out hit, 100f, 1 << layer))
                         {
                             Color renderedColor = tex.GetPixel(x, y);
 
@@ -272,7 +269,7 @@ namespace CognitiveVR
                             {
                                 Color c = renderedColor;
                                 c.a = 1;
-                                //Debug.DrawRay(ray.origin, ray.direction * 0.1f, c, 5);
+                                //Debug.DrawRay(ray.origin, ray.direction * hit.distance, c, 5);
                             }
 
                             //what the current color is at uv2
@@ -286,11 +283,11 @@ namespace CognitiveVR
                                 generatedUV2Texture.SetPixel((int)(uv2HitPoint.x * generatedUV2Texture.width), (int)(uv2HitPoint.y * generatedUV2Texture.height), writeColor);
                             }
                         }
-                        else
+                        //else
                         {
                             if (x % 10 == 0 && y % 10 == 0)
                             {
-                                //Debug.DrawRay(ray.origin, ray.direction * 0.1f, Color.red, 5);
+                                //Debug.DrawRay(ray.origin, ray.direction * 0.1f, Color.red, 50);
                             }
                         }
                     }
@@ -299,6 +296,15 @@ namespace CognitiveVR
             catch (System.Exception e)
             {
                 Debug.LogException(e);
+            }
+
+            if (layer != -1)
+            {
+                //reset dynamic object layers
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
             }
 
             //remove camera
