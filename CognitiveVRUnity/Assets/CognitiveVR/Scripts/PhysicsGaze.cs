@@ -21,7 +21,7 @@ namespace CognitiveVR
     {
         if (initError == Error.None)
         {
-            if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Physics Gaze will not function"); return; }
+            if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Physics Gaze needs a camera to function"); }
             Core.TickEvent += CognitiveVR_Manager_TickEvent;
             Core.EndSessionEvent += OnEndSessionEvent;
         }
