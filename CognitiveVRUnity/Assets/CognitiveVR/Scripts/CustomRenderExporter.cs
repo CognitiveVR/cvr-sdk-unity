@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.UIElements;
 
+//TODO mesh combine?
+
+#if UNITY_EDITOR
 namespace CognitiveVR
 {
     public class CustomRenderExporter : MonoBehaviour
@@ -53,10 +57,9 @@ namespace CognitiveVR
             tempMeshCollider.sharedMesh = cr.meshdata;
 
             //render texture
-            var textureOut = RenderCameraToTexture(uv2copy);
+            var textureOut = RenderCameraToTexture(uv2copy, PixelSamplesPerMeter, OutputResolution, GetInstanceID());
 
             //apply texture and material to meshrenderer
-            //var mr = cr.tempGo.GetComponent<MeshRenderer>();
             cr.material = new Material(Shader.Find("Standard"));
             cr.material.mainTexture = textureOut;
 
@@ -67,7 +70,6 @@ namespace CognitiveVR
             cr.name = gameObject.name;
             cr.transform = transform;
 
-            //DestroyImmediate(uv2copy);
             var mr = uv2copy.GetComponent<MeshRenderer>();
             mr.material = cr.material;
             cr.tempGameObject = uv2copy;
@@ -75,8 +77,30 @@ namespace CognitiveVR
             return cr;
         }
 
+        private void Reset()
+        {
+            var meshRenderer = GetComponent<MeshRenderer>();
+            if (meshRenderer == null) { return; }
+
+            var bounds = meshRenderer.bounds;
+            var magnitude = bounds.size.magnitude;
+            if (magnitude < 10)
+                OutputResolution = 256;
+            else if (magnitude < 20)
+                OutputResolution = 512;
+            else if (magnitude < 30)
+                OutputResolution = 1024;
+            else OutputResolution = 2048;
+        }
+
+        //if output resolution is > camera resolution, will see black stripes? ADD WARNING
+        public int OutputResolution = 256;
+
+        //higher number = higher resolution
+        public int PixelSamplesPerMeter = 20; //10, 20
+
         //generate a texture from orthographic cameras
-        static Texture2D RenderCameraToTexture(GameObject target)
+        static Texture2D RenderCameraToTexture(GameObject target, int pixelSamplesPerMeter, int outputResolution, int sourceInstanceId)
         {
             float sampleDensity = 1;
             Texture2D generatedUV2Texture;
@@ -84,45 +108,42 @@ namespace CognitiveVR
 
             var bounds = target.GetComponent<MeshRenderer>().bounds;
 
-            int resolution = 512;
-            var magnitude = bounds.size.magnitude;
-            /*if (magnitude < 5)
-                resolution = 128;
-            else if (magnitude < 10)
-                resolution = 256;
-            else if (magnitude < 20)
-                resolution = 512;
-            else resolution = 1024;*/
+            float XcameraResolution = Mathf.Max(bounds.extents.y, bounds.extents.z) * pixelSamplesPerMeter;
+            float YcameraResolution = Mathf.Max(bounds.extents.x, bounds.extents.z) * pixelSamplesPerMeter;
+            float ZcameraResolution = Mathf.Max(bounds.extents.x, bounds.extents.y) * pixelSamplesPerMeter;
+
+            //Debug.Log("x camera resolution " + bounds.extents.y * pixelSamplesPerMeter + " x " + bounds.extents.z * pixelSamplesPerMeter);
+            //Debug.Log("y camera resolution " + bounds.extents.x * pixelSamplesPerMeter + " x " + bounds.extents.z * pixelSamplesPerMeter);
+            //Debug.Log("z camera resolution " + bounds.extents.x * pixelSamplesPerMeter + " x " + bounds.extents.y * pixelSamplesPerMeter);
 
             float XOrthoScale = Mathf.Max(bounds.extents.y, bounds.extents.z);
             float YOrthoScale = Mathf.Max(bounds.extents.x, bounds.extents.z);
             float ZOrthoScale = Mathf.Max(bounds.extents.x, bounds.extents.y);
 
-            XOrthoScale *= 1.1f;
-            YOrthoScale *= 1.1f;
-            ZOrthoScale *= 1.1f;
+            XOrthoScale *= 1.05f;
+            YOrthoScale *= 1.05f;
+            ZOrthoScale *= 1.05f;
 
             //position cameras from bounding box
-            //set depth to bounds
 
-            generatedUV2Texture = new Texture2D(resolution, resolution);
-            generatedUV2Texture.name = target.name + target.GetInstanceID();
+            generatedUV2Texture = new Texture2D(outputResolution, outputResolution);
+            generatedUV2Texture.name = target.name + sourceInstanceId;
             Color[] black = new Color[generatedUV2Texture.width * generatedUV2Texture.height];
             generatedUV2Texture.SetPixels(black);
 
             Vector3 position = bounds.center;
-            float xoffset = Mathf.Max(YOrthoScale, ZOrthoScale);
-            float yoffset = Mathf.Max(XOrthoScale, ZOrthoScale);
-            float zoffset = Mathf.Max(YOrthoScale, XOrthoScale);
+            float xoffset = bounds.extents.x + 1;
+            float yoffset = bounds.extents.y + 1;
+            float zoffset = bounds.extents.z + 1;
 
-            float farClipDistance = 10;
+            float farClipDistance = bounds.size.magnitude;
 
-            SaveDynamicThumbnail(target, position + Vector3.back * zoffset, Quaternion.Euler(0, 0, 180), farClipDistance, ZOrthoScale, "z+", resolution, sampleDensity, generatedUV2Texture); //forward
-            SaveDynamicThumbnail(target, position + Vector3.forward * zoffset, Quaternion.Euler(0, 180, 0), farClipDistance, ZOrthoScale, "z-", resolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.right * xoffset, Quaternion.Euler(0, -90, 0), farClipDistance, XOrthoScale, "x+", resolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.left * xoffset, Quaternion.Euler(0, 90, 0), farClipDistance, XOrthoScale, "x-", resolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.up * yoffset, Quaternion.Euler(90, 0, 180), farClipDistance, YOrthoScale, "y+", resolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.down * yoffset, Quaternion.Euler(-90, 0, 180), farClipDistance, YOrthoScale, "y-", resolution, sampleDensity, generatedUV2Texture);
+            SaveDynamicThumbnail(target, position + Vector3.back * zoffset, Quaternion.Euler(0, 0, 180), farClipDistance, ZOrthoScale, "z+", (int)ZcameraResolution, sampleDensity, generatedUV2Texture); //forward
+            SaveDynamicThumbnail(target, position + Vector3.forward * zoffset, Quaternion.Euler(0, 180, 0), farClipDistance, ZOrthoScale, "z-", (int)ZcameraResolution, sampleDensity, generatedUV2Texture);
+            SaveDynamicThumbnail(target, position + Vector3.right * xoffset, Quaternion.Euler(0, -90, 0), farClipDistance, XOrthoScale, "x+", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
+            SaveDynamicThumbnail(target, position + Vector3.left * xoffset, Quaternion.Euler(0, 90, 0), farClipDistance, XOrthoScale, "x-", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
+            SaveDynamicThumbnail(target, position + Vector3.up * yoffset, Quaternion.Euler(90, 0, 180), farClipDistance, YOrthoScale, "y+", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
+            SaveDynamicThumbnail(target, position + Vector3.down * yoffset, Quaternion.Euler(-90, 0, 180), farClipDistance, YOrthoScale, "y-", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
 
             Color[] pixels = generatedUV2Texture.GetPixels();
             for (int i = 0; i < pixels.Length; i++)
@@ -130,12 +151,10 @@ namespace CognitiveVR
                 pixels[i] = new Color(pixels[i].r, pixels[i].g, pixels[i].b, 1);
             }
             generatedUV2Texture.SetPixels(pixels);
-
             generatedUV2Texture.Apply();
             //save
 
             //System.IO.File.WriteAllBytes(Application.dataPath + "/"+ target.name + "generatedUV2Texture.png", generatedUV2Texture.EncodeToPNG());
-            //generatedUV2Texture
             //AssetDatabase.Refresh();
             return generatedUV2Texture;
         }
@@ -161,10 +180,9 @@ namespace CognitiveVR
             }
         }
 
-        static void SaveDynamicThumbnail(GameObject target, Vector3 position, Quaternion rotation, float farClipDistance, float orthographicsize, string saveTextureName, int resolution, float sampleDensity, Texture2D generatedUV2Texture)
+        static void SaveDynamicThumbnail(GameObject target, Vector3 position, Quaternion rotation, float farClipDistance, float orthographicsize, string saveTextureName, int cameraResolution, float sampleDensity, Texture2D generatedUV2Texture)
         {
             Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
-            //var dynamic = target.GetComponent<CognitiveVR.DynamicObject>();
 
             //choose layer
             int layer = FindUnusedLayer();
@@ -176,21 +194,23 @@ namespace CognitiveVR
             renderCam.clearFlags = CameraClearFlags.Color;
             renderCam.backgroundColor = Color.black;
             renderCam.nearClipPlane = 0.01f;
-            renderCam.farClipPlane = 100;// farClipDistance;
+            renderCam.farClipPlane = farClipDistance;
             renderCam.orthographic = true;
             renderCam.orthographicSize = orthographicsize;
             if (layer != -1)
             {
                 renderCam.cullingMask = 1 << layer;
             }
-            var rt = new RenderTexture(512, 512, 16);
+            var rt = RenderTexture.GetTemporary(cameraResolution, cameraResolution);
             renderCam.targetTexture = rt;
-            Texture2D tex = new Texture2D(rt.width, rt.height);
+            Texture2D cameraRenderTexture = new Texture2D(rt.width, rt.height);
 
             //position camera
             go.transform.position = position;
             go.transform.rotation = rotation;
-            Debug.DrawRay(go.transform.position, go.transform.forward, Color.green, 5);
+            //Debug.DrawRay(go.transform.position, go.transform.forward * 10, Color.blue, 50);
+            //Debug.DrawRay(go.transform.position, go.transform.up, Color.green, 50);
+            //Debug.DrawRay(go.transform.position, go.transform.right, Color.red, 50);
 
             //do this recursively, skipping nested dynamic objects
             List<Transform> relayeredTransforms = new List<Transform>();
@@ -209,8 +229,8 @@ namespace CognitiveVR
                 //render to texture
                 renderCam.Render();
                 RenderTexture.active = rt;
-                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-                tex.Apply();
+                cameraRenderTexture.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+                cameraRenderTexture.Apply();
                 RenderTexture.active = null;
             }
             catch (System.Exception e)
@@ -218,62 +238,23 @@ namespace CognitiveVR
                 Debug.LogException(e);
             }
 
-            //Debug.Log("unused layer " + layer);
-
-            //if (target.name == "city__Build0Small(Clone).005")
-            //System.IO.File.WriteAllBytes(Application.dataPath + "/"+ target.name+saveTextureName+".png", tex.EncodeToPNG());
-
-            //write to texture or whatever
-
-            //x_positive = tex;
-
-            /*for (int x = 0; x < 100; x++)
-            {
-                for (int y = 0; y < 100; y++)
-                {
-                    Ray ray = renderCam.ViewportPointToRay(new Vector3(x / 100f, y / 100f, 0));
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask(LayerMask.LayerToName(layer))))
-                    {
-                        Vector2 uvHitPoint = hit.textureCoord; //where to write to
-                        Color renderedColor = tex.GetPixel((int)(uvHitPoint.x * tex.width), (int)(uvHitPoint.y * tex.height));
-                        //Debug.DrawRay(ray.origin, ray.direction * 0.01f, new Color(hit.textureCoord.x, hit.textureCoord.y, 0), 5);
-                        Debug.DrawRay(ray.origin, ray.direction * 0.1f, renderedColor, 10);
-                    }
-                    else
-                    {
-                        Debug.DrawRay(ray.origin, ray.direction * 0.01f, Color.red, 10);
-                    }
-                }
-            }*/
-
-            //textureBuilder.SetPixels()
+            //System.IO.File.WriteAllBytes(Application.dataPath + "/"+ target.name+saveTextureName+".png", cameraRenderTexture.EncodeToPNG());
 
             try
             {
-                //raycast grid from camera. get uv2s and color from image
-                int finalSampleDensity = (int)(resolution * sampleDensity);
-                for (int x = 0; x < finalSampleDensity; x++)
+                for (int x = 0; x < cameraResolution; x++)
                 {
-                    for (int y = 0; y < finalSampleDensity; y++)
+                    for (int y = 0; y < cameraResolution; y++)
                     {
-                        Ray ray = renderCam.ViewportPointToRay(new Vector3((float)x / finalSampleDensity, (float)y / finalSampleDensity, 0));
+                        Color renderedColor = cameraRenderTexture.GetPixel(x, y);
+                        if (Mathf.Approximately(renderedColor.r + renderedColor.g + renderedColor.b, 0)) { continue; }
+
+                        Ray ray = renderCam.ViewportPointToRay(new Vector3((float)x / cameraResolution, (float)y / cameraResolution, 0));
                         RaycastHit hit = new RaycastHit();
-                        //if (Physics.Raycast(ray, out hit))
-                        //if (Physics.Raycast(ray, out hit,100, LayerMask.GetMask(LayerMask.LayerToName(layer)))) 
-                        if (Physics.Raycast(ray, out hit, 100f, 1 << layer))
+                        if (Physics.Raycast(ray, out hit, farClipDistance, 1 << layer))
                         {
-                            Color renderedColor = tex.GetPixel(x, y);
-
-                            if (x % 10 == 0 && y % 10 == 0)
-                            {
-                                Color c = renderedColor;
-                                c.a = 1;
-                                //Debug.DrawRay(ray.origin, ray.direction * hit.distance, c, 5);
-                            }
-
                             //what the current color is at uv2
-                            Vector2 uv2HitPoint = hit.textureCoord2; //UGH THIS FALLS BACK TO TEXTURECOORD1 silently if MeshCollider.mesh doesn't have uv2 coords
+                            Vector2 uv2HitPoint = hit.textureCoord2;
                             Color currentUV2Color = generatedUV2Texture.GetPixel((int)(uv2HitPoint.x * generatedUV2Texture.width), (int)(uv2HitPoint.y * generatedUV2Texture.height));
                             float hitDot = Vector3.Dot(ray.direction, -hit.normal);
                             if (hitDot >= currentUV2Color.a)
@@ -281,13 +262,6 @@ namespace CognitiveVR
                                 Color writeColor = renderedColor;
                                 writeColor.a = hitDot;
                                 generatedUV2Texture.SetPixel((int)(uv2HitPoint.x * generatedUV2Texture.width), (int)(uv2HitPoint.y * generatedUV2Texture.height), writeColor);
-                            }
-                        }
-                        //else
-                        {
-                            if (x % 10 == 0 && y % 10 == 0)
-                            {
-                                //Debug.DrawRay(ray.origin, ray.direction * 0.1f, Color.red, 50);
                             }
                         }
                     }
@@ -311,4 +285,40 @@ namespace CognitiveVR
             GameObject.DestroyImmediate(renderCam.gameObject);
         }
     }
+} //namespace
+
+namespace CognitiveVR
+{
+    [CustomEditor(typeof(CustomRenderExporter))]
+    [CanEditMultipleObjects]
+    public class CustomRenderExporterEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+
+            var t = (CustomRenderExporter)target;
+            var meshRenderer = t.GetComponent<MeshRenderer>();
+            if (meshRenderer == null) { return; }
+
+            //get mesh renderer bounds
+            var bounds = meshRenderer.bounds;
+            var magnitude = bounds.size.magnitude;
+
+            GUILayout.Label((t.PixelSamplesPerMeter * magnitude).ToString());
+
+            if (t.OutputResolution * 1.5f > t.PixelSamplesPerMeter * magnitude)
+            {
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox("Some artifacting may occur\nIncrease Pixel Samples or decrease Output Resolution", MessageType.Warning);
+                if (GUILayout.Button("Fix"))
+                {
+                    t.PixelSamplesPerMeter = Mathf.CeilToInt((t.OutputResolution * 1.5f)/magnitude);
+                }
+                GUILayout.EndHorizontal();
+            }
+        }
+    }
 }
+
+#endif
