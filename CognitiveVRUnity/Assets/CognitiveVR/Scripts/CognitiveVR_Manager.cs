@@ -339,6 +339,7 @@ namespace CognitiveVR
                 Core.SetSessionProperties(participantProperties);
 
             Core.EndSessionEvent += Core_EndSessionEvent;
+            Core.InvokeSendDataEvent(false);
 #if CVR_OMNICEPT
             var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
 
