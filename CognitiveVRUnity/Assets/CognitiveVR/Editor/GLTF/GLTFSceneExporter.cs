@@ -623,6 +623,7 @@ namespace UnityGLTF
 				if ((Dynamic == null && dyn != null) //export scene and skip all dynamics
 					|| (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
 				if (!transform.gameObject.activeInHierarchy) continue;
+				if (transform.GetComponent<CognitiveVR.CustomRenderExporter>()) { continue; }
 				scene.Nodes.Add(ExportNode(transform));
 			}
 
@@ -765,7 +766,8 @@ namespace UnityGLTF
 					if ((Dynamic == null && dyn != null) //exporting scene and found dynamic in non-root
 						|| (Dynamic != null && (dyn != null && dyn != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
 					{ continue; }
-					if (!child.gameObject.activeInHierarchy) continue;
+					if (!child.activeInHierarchy) continue;
+					if (child.GetComponent<CognitiveVR.CustomRenderExporter>()) { continue; }
 					node.Children.Add(ExportNode(child.transform));
 				}
 			}

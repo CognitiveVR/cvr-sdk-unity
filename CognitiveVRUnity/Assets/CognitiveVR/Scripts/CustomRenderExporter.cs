@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.UIElements;
 
 //TODO mesh combine?
 
@@ -38,16 +37,20 @@ namespace CognitiveVR
             }
 
             var cr = new CustomRender();
-            //duplicate object
-            var uv2copy = Instantiate(gameObject);
-            DestroyImmediate(uv2copy.GetComponent<CustomRenderExporter>());
-            //remove existing colliders
-            var colliders = uv2copy.GetComponentsInChildren<Collider>();
-            foreach (var c in colliders)
-                DestroyImmediate(c);
+            //duplicate object. NOPE! MIGHT HAVE ISSUES WITH COMPONENTS
+            var uv2copy = new GameObject();// Instantiate(gameObject);
+            //copy meshrenderer, mesh filter, materials from source
+            uv2copy.name = gameObject.name;
+            uv2copy.transform.SetParent(gameObject.transform.parent);
+            uv2copy.transform.localPosition = gameObject.transform.localPosition;
+            uv2copy.transform.localRotation = gameObject.transform.localRotation;
+            uv2copy.transform.localScale = gameObject.transform.localScale;
+            var mr = uv2copy.AddComponent<MeshRenderer>();
+            mr.sharedMaterials = gameObject.GetComponent<MeshRenderer>().sharedMaterials;
+            var mf = uv2copy.AddComponent<MeshFilter>();
+            mf.sharedMesh = gameObject.GetComponent<MeshFilter>().sharedMesh;
             //instance current render mesh
-            var tempMeshFilter = uv2copy.GetComponent<MeshFilter>();
-            cr.meshdata = tempMeshFilter.mesh;
+            cr.meshdata = mf.mesh;
             //unwrap uv2 for instance mesh
             if (cr.meshdata.triangles.Length > 0)
                 Unwrapping.GenerateSecondaryUVSet(cr.meshdata);
@@ -65,12 +68,11 @@ namespace CognitiveVR
 
             //copy uv2 to uv
             cr.meshdata.uv = cr.meshdata.uv2;
-            tempMeshFilter.sharedMesh = cr.meshdata;
+            mf.sharedMesh = cr.meshdata;
 
             cr.name = gameObject.name;
             cr.transform = transform;
 
-            var mr = uv2copy.GetComponent<MeshRenderer>();
             mr.material = cr.material;
             cr.tempGameObject = uv2copy;
 
@@ -91,6 +93,8 @@ namespace CognitiveVR
             else if (magnitude < 30)
                 OutputResolution = 1024;
             else OutputResolution = 2048;
+
+            PixelSamplesPerMeter = Mathf.CeilToInt((OutputResolution * 1.5f) / magnitude);
         }
 
         //if output resolution is > camera resolution, will see black stripes? ADD WARNING
@@ -314,6 +318,7 @@ namespace CognitiveVR
                 if (GUILayout.Button("Fix"))
                 {
                     t.PixelSamplesPerMeter = Mathf.CeilToInt((t.OutputResolution * 1.5f)/magnitude);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                 }
                 GUILayout.EndHorizontal();
             }
