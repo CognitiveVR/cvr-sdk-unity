@@ -285,6 +285,7 @@ namespace CognitiveVR
                 }
             }
 
+            DestroyImmediate(cameraRenderTexture);
             //remove camera
             GameObject.DestroyImmediate(renderCam.gameObject);
         }

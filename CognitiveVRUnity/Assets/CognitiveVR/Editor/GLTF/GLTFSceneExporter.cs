@@ -248,7 +248,7 @@ namespace UnityGLTF
 
 		static Dictionary<string, ShaderPropertyCollection> MaterialExportPropertyCollection;
 
-		public delegate string RetrieveTexturePathDelegate(Texture texture);
+		//public delegate string RetrieveTexturePathDelegate(Texture texture);
 
 		private enum IMAGETYPE
 		{
@@ -270,7 +270,7 @@ namespace UnityGLTF
 		private List<TextureImageCache> _textures;
 		private List<Material> _materials;
 
-		private RetrieveTexturePathDelegate _retrieveTexturePathDelegate;
+		//private RetrieveTexturePathDelegate _retrieveTexturePathDelegate;
 
 		private const uint MagicGLTF = 0x46546C67;
 		private const uint Version = 2;
@@ -297,7 +297,7 @@ namespace UnityGLTF
 		/// Create a GLTFExporter that exports out a transform. if dynamic is NOT set, skip any dynamic objects in nodes. if dynamic IS set, skip any dynamics that are not equal to this object
 		/// </summary>
 		/// <param name="rootTransforms">Root transform of object to export</param>
-		public GLTFSceneExporter(Transform[] rootTransforms, RetrieveTexturePathDelegate retrieveTexturePathDelegate, CognitiveVR.DynamicObject dynamic = null)
+		public GLTFSceneExporter(Transform[] rootTransforms, CognitiveVR.DynamicObject dynamic = null)
 		{
 			if (MaterialExportPropertyCollection == null)
 			{
@@ -320,7 +320,7 @@ namespace UnityGLTF
 			}
 
 			Dynamic = dynamic;
-			_retrieveTexturePathDelegate = retrieveTexturePathDelegate;
+			//_retrieveTexturePathDelegate = retrieveTexturePathDelegate;
 
 			_rootTransforms = rootTransforms;
 			_root = new GLTFRoot
@@ -432,7 +432,7 @@ namespace UnityGLTF
 				writer.Flush();
 			}
 
-			ExportImages(path);
+			ExportImages(path, new List<string>());
 		}
 
 		/// <summary>
@@ -489,7 +489,7 @@ namespace UnityGLTF
 		/// </summary>
 		/// <param name="path">File path for saving the GLTF and binary files</param>
 		/// <param name="fileName">The name of the GLTF file</param>
-		public void SaveGLTFandBin(string path, string fileName)
+		public void SaveGLTFandBin(string path, string fileName, List<string> preExxportedTextures)
 		{
 			var binFile = File.Create(Path.Combine(path, fileName + ".bin"));
 			_bufferWriter = new BinaryWriter(binFile);
@@ -512,7 +512,7 @@ namespace UnityGLTF
 				gltfFile.Close();
 				binFile.Close();
 #endif
-				ExportImages(path);
+				ExportImages(path, preExxportedTextures);
 			}
 			catch (System.Exception e)
 			{
@@ -529,7 +529,7 @@ namespace UnityGLTF
 			}
 		}
 
-		private void ExportImages(string outputPath)
+		private void ExportImages(string outputPath, List<string> preExportedTextures)
 		{
 			for (int t = 0; t < _imageInfos.Count; ++t)
 			{
@@ -537,12 +537,20 @@ namespace UnityGLTF
 				//int height = image.height;
 				//int width = image.width;
 
-				ExportTexture(_imageInfos[t].texture, outputPath, _imageInfos[t].Linear, _imageInfos[t].ShaderOverrideName, _imageInfos[t].textureMapType);
+				ExportTexture(_imageInfos[t].texture, outputPath, _imageInfos[t].Linear, _imageInfos[t].ShaderOverrideName, _imageInfos[t].textureMapType, preExportedTextures);
 			}
 		}
 
-		private void ExportTexture(Texture2D texture, string outputPath, bool linear, string ShaderOverride, TextureMapType textureMapType)
+		private void ExportTexture(Texture2D texture, string outputPath, bool linear, string ShaderOverride, TextureMapType textureMapType, List<string> preExportedTextures)
 		{
+			var finalFilenamePath = ConstructImageFilenamePath(texture, textureMapType, outputPath);
+
+			if (preExportedTextures.Contains(finalFilenamePath))
+            {
+				//Debug.Log("Skip export of " + finalFilenamePath);
+				return;
+            }
+
 			RenderTextureReadWrite textureType = RenderTextureReadWrite.sRGB;
 			if (linear)
 				textureType = RenderTextureReadWrite.Linear;
@@ -571,7 +579,6 @@ namespace UnityGLTF
 			exportTexture.ReadPixels(new Rect(0, 0, destRenderTexture.width, destRenderTexture.height), 0, 0);
 			exportTexture.Apply();
 
-			var finalFilenamePath = ConstructImageFilenamePath(texture, textureMapType, outputPath);
 			File.WriteAllBytes(finalFilenamePath, exportTexture.EncodeToPNG());
 
 			RenderTexture.active = null;
@@ -586,10 +593,10 @@ namespace UnityGLTF
 			}
 		}
 
-		private string ConstructImageFilenamePath(Texture2D texture, TextureMapType textureMapType, string outputPath)
+		public static string ConstructImageFilenamePath(Texture2D texture, TextureMapType textureMapType, string outputPath)
 		{
-			var imagePath = _retrieveTexturePathDelegate(texture);
-			var filenamePath = Path.Combine(outputPath, imagePath);
+			var imagePath = UnityEditor.AssetDatabase.GetAssetPath(texture);
+			string filenamePath;
 			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
 			{
 				string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
@@ -1329,7 +1336,7 @@ namespace UnityGLTF
 				return id;
 			}
 
-			var imagePath = _retrieveTexturePathDelegate(textureObj);
+			var imagePath = UnityEditor.AssetDatabase.GetAssetPath(textureObj);
 			if (textureObj.name != Uri.EscapeUriString(textureObj.name).Replace('#', '_'))
 			{
 				texture.Name = Mathf.Abs(imagePath.GetHashCode()) + Mathf.Abs(textureObj.name.GetHashCode()).ToString() + textureMapType;
@@ -1408,7 +1415,7 @@ namespace UnityGLTF
 				ShaderOverrideName = shaderOverrideName
 			}); ;
 
-			var imagePath = _retrieveTexturePathDelegate(texture);
+			var imagePath = UnityEditor.AssetDatabase.GetAssetPath(texture);
 
 			string texturenamehash = "";
 

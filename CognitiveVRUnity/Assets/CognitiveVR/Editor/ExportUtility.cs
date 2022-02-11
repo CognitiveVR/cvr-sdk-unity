@@ -99,6 +99,8 @@ namespace CognitiveVR
             File.WriteAllText(objPath + "debug.log", debugContent);
         }
 
+        static List<string> customTextureExports;
+
         /// <summary>
         /// export all geometry for the active scene. will NOT delete existing files in this directory
         /// </summary>
@@ -110,6 +112,7 @@ namespace CognitiveVR
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
 
             EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
+            customTextureExports = new List<string>();
             BakeNonstandardRenderers(null, temp, path); //needs to happen before scene root transforms are grabbed - terrain spawns tree prefabs
             for (int i = 0; i < UnityEditor.SceneManagement.EditorSceneManager.sceneCount; i++)
             {
@@ -130,12 +133,12 @@ namespace CognitiveVR
             }
             try
             {
-                var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), RetrieveTexturePath, null);
+                var exporter = new UnityGLTF.GLTFSceneExporter(t.ToArray(), null);
                 exporter.SetNonStandardOverrides(temp);
                 Directory.CreateDirectory(path);
 
                 EditorUtility.DisplayProgressBar("Export GLTF", "Save GLTF and Bin", 0.50f); //export all all mesh renderers to gltf
-                exporter.SaveGLTFandBin(path, "scene");
+                exporter.SaveGLTFandBin(path, "scene", customTextureExports);
 
                 EditorUtility.DisplayProgressBar("Export GLTF", "Resize Textures", 0.75f); //resize each texture from export directory
                 ResizeQueue.Enqueue(path);
@@ -461,14 +464,30 @@ namespace CognitiveVR
                 }
             }
 
+            //count custom render and terrain separately - much heavier
+            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases);
+            float progressPerSmallTask = 0.1f / numberOfSmallTasks;
+
+            int numberOfLargeTasks = CountValidLargeTasks(CustomRenders, Terrains);
+            float progressPerLargeTask = 0.3f / numberOfLargeTasks;
+
+            int numberOfTasks = numberOfSmallTasks + numberOfLargeTasks;
+
+            float currentProgress = 0.1f;
+            int currentTask = 0;
+
             foreach (var customRender in CustomRenders)
             {
+                currentProgress += progressPerLargeTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Custom Render Exporters " + currentTask + "/" + CustomRenders.Length, currentProgress);
+
                 if (!customRender.gameObject.activeInHierarchy) { continue; }
                 var data = customRender.RenderMeshCustom();
                 if (data == null) { continue; }
 
                 BakeableMesh bm = new BakeableMesh();
-                bm.tempGo = new GameObject(data.name);
+                bm.tempGo = new GameObject(data.name + "BAKEABLE MESH");
                 bm.tempGo.transform.parent = data.transform;
                 bm.tempGo.transform.localRotation = Quaternion.identity;
                 bm.tempGo.transform.localPosition = Vector3.zero;
@@ -480,12 +499,25 @@ namespace CognitiveVR
 
                 bm.meshFilter.sharedMesh = data.meshdata;
                 meshes.Add(bm);
+                //ProceduralMeshFilters.Add(bm.meshFilter);
                 ProceduralMeshFilters.Add(data.tempGameObject.GetComponent<MeshFilter>());
                 deleteCustomRenders.Add(data.tempGameObject);
+
+                string finalPath = UnityGLTF.GLTFSceneExporter.ConstructImageFilenamePath((Texture2D)data.material.mainTexture, UnityGLTF.GLTFSceneExporter.TextureMapType.Main, path);
+
+                //put together a list of textures to be skipped based on path
+                customTextureExports.Add(finalPath);
+
+                //save out the texture here, instead of keeping it in memory
+                System.IO.File.WriteAllBytes(finalPath, ((Texture2D)data.material.mainTexture).EncodeToPNG());
             }
 
+            currentTask = 0;
             foreach (var skinnedMeshRenderer in SkinnedMeshes)
             {
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Skinned Meshes " + currentTask + "/" + SkinnedMeshes.Length, currentProgress);
                 if (!skinnedMeshRenderer.gameObject.activeInHierarchy) { continue; }
                 if (rootDynamic == null && skinnedMeshRenderer.GetComponentInParent<DynamicObject>() != null)
                 {
@@ -518,8 +550,13 @@ namespace CognitiveVR
                 meshes.Add(bm);
             }
 
+            currentTask = 0;
             foreach (var meshFilter in ProceduralMeshFilters)
             {
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Procedural Meshes " + currentTask + "/" + ProceduralMeshFilters.Count, currentProgress);
+                if (meshFilter.gameObject == null) { continue; }
                 if (!meshFilter.gameObject.activeInHierarchy) { continue; }
                 var mr = meshFilter.GetComponent<MeshRenderer>();
                 if (mr == null) { continue; }
@@ -553,9 +590,13 @@ namespace CognitiveVR
                 meshes.Add(bm);
             }
 
+            currentTask = 0;
             //TODO ignore parent rotation and scale
             foreach (var v in Terrains)
             {
+                currentProgress += progressPerLargeTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Terrains " + currentTask + "/" + Terrains.Length, currentProgress);
                 if (!v.isActiveAndEnabled) { continue; }
                 if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
                 {
@@ -612,8 +653,12 @@ namespace CognitiveVR
                 }
             }
 
+            currentTask = 0;
             foreach (var v in Canvases)
             {
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Canvases " + currentTask + "/" + Canvases.Length, currentProgress);
                 if (!v.isActiveAndEnabled) { continue; }
                 if (v.renderMode != RenderMode.WorldSpace) { continue; }
                 if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
@@ -653,6 +698,58 @@ namespace CognitiveVR
             }
         }
 
+        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases)
+        {
+            int number = 0;
+
+            foreach (var skinnedMeshRenderer in skinnedMeshes)
+            {
+                if (!skinnedMeshRenderer.gameObject.activeInHierarchy) { continue; }
+                if (skinnedMeshRenderer.sharedMesh == null)
+                {
+                    continue;
+                }
+                number++;
+            }
+
+            foreach (var meshFilter in proceduralMeshFilters)
+            {
+                if (meshFilter.gameObject == null) { continue; }
+                if (!meshFilter.gameObject.activeInHierarchy) { continue; }
+                var mr = meshFilter.GetComponent<MeshRenderer>();
+                if (mr == null) { continue; }
+                if (!mr.enabled) { continue; }
+                number++;
+            }
+
+            foreach (var v in canvases)
+            {
+                if (!v.isActiveAndEnabled) { continue; }
+                if (v.renderMode != RenderMode.WorldSpace) { continue; }
+                number++;
+            }
+            return number;
+        }
+
+        private static int CountValidLargeTasks(CustomRenderExporter[] customRenderExporters, Terrain[] terrains)
+        {
+            int number = 0;
+
+            foreach (var v in customRenderExporters)
+            {
+                if (!v.gameObject.activeInHierarchy) { continue; }
+                number++;
+            }
+
+            foreach (var v in terrains)
+            {
+                if (!v.isActiveAndEnabled) { continue; }
+                number++;
+            }
+
+            return number;
+        }
+
         /// <summary>
         /// returns a low resolution mesh based on the heightmap of a terrain
         /// </summary>
@@ -665,8 +762,8 @@ namespace CognitiveVR
             Mesh mesh = new Mesh();
             mesh.name = "temp";
 
-            var w = (int)(terrain.terrainData.heightmapWidth / downsample);
-            var h = (int)(terrain.terrainData.heightmapHeight / downsample);
+            var w = (int)(terrain.terrainData.heightmapResolution / downsample);
+            var h = (int)(terrain.terrainData.heightmapResolution / downsample);
             Vector3[] vertices = new Vector3[w * h];
             Vector2[] uv = new Vector2[w * h];
             Vector4[] tangents = new Vector4[w * h];
@@ -1002,14 +1099,6 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// return path to texture. used by gltf export
-        /// </summary>
-        public static string RetrieveTexturePath(UnityEngine.Texture texture)
-        {
-            return AssetDatabase.GetAssetPath(texture);
-        }
-
-        /// <summary>
         /// return a mesh quad with certain dimensions. used to bake canvases
         /// </summary>
         /// <param name="meshName"></param>
@@ -1276,6 +1365,7 @@ namespace CognitiveVR
             Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
             List<BakeableMesh> temp = new List<BakeableMesh>();
+            customTextureExports = new List<string>();
             BakeNonstandardRenderers(dynamicObject, temp, path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
 
             //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
@@ -1294,9 +1384,9 @@ namespace CognitiveVR
             //}
             try
             {
-                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamicObject.transform }, RetrieveTexturePath, dynamicObject);
+                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamicObject.transform }, dynamicObject);
                 exporter.SetNonStandardOverrides(temp);
-                exporter.SaveGLTFandBin(path + dynamicObject.MeshName + Path.DirectorySeparatorChar, dynamicObject.MeshName);
+                exporter.SaveGLTFandBin(path + dynamicObject.MeshName + Path.DirectorySeparatorChar, dynamicObject.MeshName,customTextureExports);
             }
             catch (Exception e)
             {
