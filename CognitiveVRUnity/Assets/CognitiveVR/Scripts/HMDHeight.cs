@@ -54,12 +54,14 @@ namespace CognitiveVR.Components
                 yield break;
             }
 #elif CVR_PICOXR
-            var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
+            //TODO this should use XR Rig Tracking Origin Mode instead of pxr
+            yield break;
+            /*var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
             if (sdkmanager == null || sdkmanager.TrackingOrigin != Pvr_UnitySDKAPI.TrackingOrigin.FloorLevel)
             {
                 CognitiveVR.Util.logError("Pvr_UnitySDKManager.TrackingOrigin MUST be set to FloorLevel to track HMD height correctly!");
                 yield break;
-            }
+            }*/
 #endif
 
             //median

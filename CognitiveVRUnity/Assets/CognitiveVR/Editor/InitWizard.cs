@@ -574,7 +574,9 @@ public class InitWizard : EditorWindow
                 if (Camera.main != null)
                     cameraBase = Camera.main.gameObject;
 
-                var tracked = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
+                //spatial tracking api moved to xr legacy input package in ~2019. that package gone in 2021?
+                //can use XR.InputDevices.GetDevicesWithCharacteristics but can't get gameobject from the results
+                /*var tracked = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
                 foreach (var v in tracked)
                 {
                     if (v.deviceType == UnityEngine.SpatialTracking.TrackedPoseDriver.DeviceType.GenericXRController)
@@ -588,7 +590,7 @@ public class InitWizard : EditorWindow
                             rightcontroller = v.gameObject;
                         }
                     }
-                }
+                }*/
             }
 
             leftSetupComplete = leftcontroller != null;

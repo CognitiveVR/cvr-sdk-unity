@@ -12,8 +12,10 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICOVR || CVR_PICOXR || CVR_XR || CVR_OMNICEPT
+#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICOVR || CVR_XR || CVR_OMNICEPT
                 return true;
+#elif CVR_PICOXR
+                return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
 #else
                 return false;
 #endif

@@ -116,6 +116,13 @@ namespace CognitiveVR
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool InitializeOnStart = true;
 
+#if CVR_OCULUS
+        [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
+        public bool AssignOculusProfileToParticipant = true;
+        [Tooltip("Required to initialize the Oculus platform and request the Oculus profile")]
+        public string Oculus_Appid;
+#endif
+
 #if CVR_AH || CVR_PUPIL
         [Tooltip("Start recording analytics after calibration is successfully completed")]
         public bool InitializeAfterCalibration = true;
@@ -148,6 +155,25 @@ namespace CognitiveVR
             }
             if (InitializeOnStart)
                 Initialize("");
+
+#if CVR_OCULUS
+            if (AssignOculusProfileToParticipant && Oculus_Appid != string.Empty && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            {
+                Oculus.Platform.Core.Initialize(Oculus_Appid);
+
+                Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
+                {
+                    if (message.IsError)
+                    {
+                        Debug.LogError(message.GetError().Message);
+                    }
+                    else
+                    {
+                        Core.SetParticipantId(message.Data.OculusID.ToString());
+                    }
+                });
+            }
+#endif
 
 #if CVR_AH
             if (InitializeAfterCalibration)
@@ -313,15 +339,16 @@ namespace CognitiveVR
                 Core.SetSessionProperties(participantProperties);
 
             Core.EndSessionEvent += Core_EndSessionEvent;
+            Core.InvokeSendDataEvent(false);
 #if CVR_OMNICEPT
             var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
 
             if (gliaBehaviour != null)
             {
-                //TODO latest SDK renamed or removed Pupillometry callback
-                //gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
+                gliaBehaviour.OnEyeTracking.AddListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
+                gliaBehaviour.OnHeartRateVariability.AddListener(RecordHeartRateVariability);
             }
 #endif
         }
@@ -347,17 +374,24 @@ namespace CognitiveVR
             }
         }
 
-        //every 1000MS
+        //every 5000 ms
         void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
         {
             double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
             SensorRecorder.RecordDataPoint("HP.HeartRate", data.Rate, timestampMS);
         }
-        
+
+        //every 60 000ms
+        void RecordHeartRateVariability(HP.Omnicept.Messaging.Messages.HeartRateVariability data)
+        {
+            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            SensorRecorder.RecordDataPoint("HP.HeartRate.Variability", data.Sdnn, timestampMS);
+        }
+
         //every 1000MS
         void RecordCognitiveLoad(HP.Omnicept.Messaging.Messages.CognitiveLoad data)
         {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            double timestampMS = (double)data.Timestamp.OmniceptTimeMicroSeconds / 1000000.0;
             SensorRecorder.RecordDataPoint("HP.CognitiveLoad", data.CognitiveLoadValue, timestampMS);
             SensorRecorder.RecordDataPoint("HP.CognitiveLoad.Confidence", data.StandardDeviation, timestampMS);
         }

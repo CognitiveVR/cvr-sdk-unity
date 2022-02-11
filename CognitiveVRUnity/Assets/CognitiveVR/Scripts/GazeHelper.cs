@@ -169,7 +169,7 @@ namespace CognitiveVR
 
             if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
             {
-                Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
+                //Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
                 return lastDirection;
             }
 
