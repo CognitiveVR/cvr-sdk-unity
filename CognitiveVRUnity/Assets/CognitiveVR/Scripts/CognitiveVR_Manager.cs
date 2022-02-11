@@ -345,10 +345,10 @@ namespace CognitiveVR
 
             if (gliaBehaviour != null)
             {
-                //TODO latest SDK renamed or removed Pupillometry callback
-                //gliaBehaviour.OnEyePupillometry.AddListener(RecordEyePupillometry);
+                gliaBehaviour.OnEyeTracking.AddListener(RecordEyePupillometry);
                 gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
                 gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
+                gliaBehaviour.OnHeartRateVariability.AddListener(RecordHeartRateVariability);
             }
 #endif
         }
@@ -374,17 +374,24 @@ namespace CognitiveVR
             }
         }
 
-        //every 1000MS
+        //every 5000 ms
         void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
         {
             double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
             SensorRecorder.RecordDataPoint("HP.HeartRate", data.Rate, timestampMS);
         }
-        
+
+        //every 60 000ms
+        void RecordHeartRateVariability(HP.Omnicept.Messaging.Messages.HeartRateVariability data)
+        {
+            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            SensorRecorder.RecordDataPoint("HP.HeartRate.Variability", data.Sdnn, timestampMS);
+        }
+
         //every 1000MS
         void RecordCognitiveLoad(HP.Omnicept.Messaging.Messages.CognitiveLoad data)
         {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
+            double timestampMS = (double)data.Timestamp.OmniceptTimeMicroSeconds / 1000000.0;
             SensorRecorder.RecordDataPoint("HP.CognitiveLoad", data.CognitiveLoadValue, timestampMS);
             SensorRecorder.RecordDataPoint("HP.CognitiveLoad.Confidence", data.StandardDeviation, timestampMS);
         }
