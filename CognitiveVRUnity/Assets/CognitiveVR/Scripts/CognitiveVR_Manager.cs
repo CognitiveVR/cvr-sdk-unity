@@ -506,6 +506,14 @@ namespace CognitiveVR
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","HP Omnicept");
             Core.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+#elif CVR_PICOVR
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Pico");
+            Core.SetSessionProperty("c3d.app.sdktype", "PicoVR");
+#elif CVR_PICOXR
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Pico");
+            Core.SetSessionProperty("c3d.app.sdktype", "PicoXR");
 #endif
             //TODO add XR inputdevice name
 
