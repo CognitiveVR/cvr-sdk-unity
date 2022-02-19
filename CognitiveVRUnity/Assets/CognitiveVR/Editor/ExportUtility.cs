@@ -478,6 +478,12 @@ namespace CognitiveVR
 
             foreach (var customRender in CustomRenders)
             {
+                if (rootDynamic == null && customRender.GetComponentInParent<DynamicObject>() != null) { continue; }
+                else if (rootDynamic != null && customRender.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found skinned mesh in some other dynamic
+                    continue;
+                }
                 currentProgress += progressPerLargeTask;
                 currentTask++;
                 EditorUtility.DisplayProgressBar("Export GLTF", "Bake Custom Render Exporters " + currentTask + "/" + CustomRenders.Length, currentProgress);
