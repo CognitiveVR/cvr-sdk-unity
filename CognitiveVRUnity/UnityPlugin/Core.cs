@@ -8,7 +8,7 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        public const string SDK_VERSION = "0.26.13";
+        public const string SDK_VERSION = "0.26.15";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
@@ -304,19 +304,8 @@ namespace CognitiveVR
 
             if (InitError == Error.None)
             {
-                SetSessionProperty("c3d.app.name", Application.productName);
-                SetSessionProperty("c3d.app.version", Application.version);
-                SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
-                SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
-                SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
-                SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
-                SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
-                SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
-                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize/1024));
-                
                 DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
-                SetSessionProperty("c3d.deviceid", DeviceId);
-                
+
                 ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
                 if (CognitiveVR_Preferences.Instance.LocalStorage)

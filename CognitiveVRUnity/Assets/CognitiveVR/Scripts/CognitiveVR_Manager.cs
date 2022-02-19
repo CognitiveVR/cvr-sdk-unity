@@ -402,6 +402,18 @@ namespace CognitiveVR
         /// </summary>
         private void SetSessionProperties()
         {
+            Core.SetSessionProperty("c3d.app.name", Application.productName);
+            Core.SetSessionProperty("c3d.app.version", Application.version);
+            Core.SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+            Core.SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+            Core.SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+            Core.SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+            Core.SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+            Core.SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+            Core.SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
+
+            Core.SetSessionProperty("c3d.deviceid", Core.DeviceId);
+
 #if CVR_META
             string serialnumber;
             string xml;
@@ -446,107 +458,92 @@ namespace CognitiveVR
 
 #if CVR_STEAMVR2 || CVR_STEAMVR
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
 #if CVR_FOVE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Fove");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Fove");
             Core.SetSessionProperty("c3d.app.sdktype", "Fove");
 #elif CVR_SNAPDRAGON
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Qualcomm");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Snapdragon");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Snapdragon");
 #elif CVR_OCULUS
             Core.SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Oculus");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type", "None");
             Core.SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif CVR_NEURABLE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Neurable");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Neurable");
 #elif CVR_ARKIT
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Apple");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARKit");
 #elif CVR_ARCORE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARCore");
 #elif CVR_GOOGLEVR
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Google VR");
 #elif CVR_HOLOLENS
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Microsoft");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Hololens");
 #elif CVR_META
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Meta");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Meta");
 #elif CVR_VARJO
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Varjo");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
             Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
 #elif CVR_OMNICEPT
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","HP Omnicept");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #elif CVR_PICOVR
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Pico");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "PicoVR");
+            Core.SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #elif CVR_PICOXR
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Pico");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "PicoXR");
+            Core.SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #endif
             //TODO add XR inputdevice name
 
             //eye tracker addons
 #if CVR_TOBIIVR
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer","HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Tobii");
 #elif CVR_PUPIL
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Pupil");
             Core.SetSessionProperty("c3d.app.sdktype", "Pupil");
 #elif CVR_AH
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Google");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             Core.SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #elif CVR_VIVEPROEYE
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Vive Pro Eye");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif CVR_WINDOWSMR
             Core.SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #elif CVR_OPENXR
-            //Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
-            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
+            //Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            //Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
             Core.SetSessionProperty("c3d.app.sdktype", "OpenXR");
 #endif
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
             Core.SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");

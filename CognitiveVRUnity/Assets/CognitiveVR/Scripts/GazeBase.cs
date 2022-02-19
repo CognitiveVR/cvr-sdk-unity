@@ -39,42 +39,18 @@ namespace CognitiveVR
         {
 #if CVR_STEAMVR
             CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent; //1.2
-#endif
-#if CVR_OCULUS
+#elif CVR_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-#endif
-            string hmdname = "none";
-#if CVR_FOVE
-                    hmdname = "fove";
-#elif CVR_ARKIT
-                    hmdname = "arkit";
-#elif CVR_ARCORE
-                    hmdname = "arcore";
-#elif CVR_META
-                    hmdname = "meta";
-#elif UNITY_2019_1_OR_NEWER
-            string rawHMDName = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name;
-            //string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
-            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
-#elif UNITY_2017_2_OR_NEWER
-            string rawHMDName = UnityEngine.XR.XRDevice.model.ToLower();
-            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
-#else
-            string rawHMDName = UnityEngine.VR.VRDevice.model.ToLower();
-            hmdname = CognitiveVR.Util.GetSimpleHMDName(rawHMDName);
-#endif
-#if CVR_AH
+#elif CVR_AH
             ah_calibrator = Calibrator.Instance;
-#endif
-#if CVR_PUPIL
+#elif CVR_PUPIL
             gazeController = FindObjectOfType<PupilLabs.GazeController>();
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
-#endif
-#if CVR_OMNICEPT
+#elif CVR_OMNICEPT
             if (gb == null)
             {
                 gb = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
@@ -82,7 +58,6 @@ namespace CognitiveVR
                     gb.OnEyeTracking.AddListener(DoEyeTracking);
             }
 #endif
-            GazeCore.SetHMDType(hmdname);
             cameraRoot = GameplayReferences.HMD.root;
         }
 

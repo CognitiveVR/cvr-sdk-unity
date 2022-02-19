@@ -65,27 +65,6 @@ namespace CognitiveVR
             return uniqueId++.ToString();
         }
 
-        static string _hmdname;
-        //returns vive/rift/gear/unknown based on hmd model name. used to display hmd mesh on scene viewer
-        public static string GetSimpleHMDName(string rawHMDName)
-        {
-            if (_hmdname != null)
-            {
-                return _hmdname;
-            }
-            if (string.IsNullOrEmpty(rawHMDName))
-            {
-                _hmdname = "unknown";
-                return _hmdname;
-            }
-            if (rawHMDName.Contains("vive mv") || rawHMDName.Contains("vive. mv") || rawHMDName.Contains("vive dvt")){ _hmdname = "vive"; return _hmdname; }
-            if (rawHMDName.Contains("rift cv1")) { _hmdname = "rift"; return _hmdname; }
-            if (rawHMDName.Contains("galaxy note 4") || rawHMDName.Contains("galaxy note 5") || rawHMDName.Contains("galaxy s6")) { _hmdname = "gear"; return _hmdname; }
-
-            _hmdname = "unknown";
-            return _hmdname;
-        }
-
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static double lastTime;
         static int lastFrame = -1;
