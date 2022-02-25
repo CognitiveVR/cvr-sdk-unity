@@ -13,8 +13,8 @@ namespace CognitiveVR
 {
     public override void Initialize()
     {
-        base.Initialize();
         Core.InitEvent += CognitiveVR_Manager_InitEvent;
+        base.Initialize();
     }
 
     private void CognitiveVR_Manager_InitEvent(Error initError)
@@ -29,6 +29,7 @@ namespace CognitiveVR
 
     private void CognitiveVR_Manager_TickEvent()
     {
+        if (CognitiveVR_Preferences.Instance.EnableGaze == false) { return; }
         if (GameplayReferences.HMD == null) { return; }
 
         RaycastHit hit = new RaycastHit();

@@ -107,6 +107,7 @@ namespace CognitiveVR
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
+            p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Enable Gaze", "Records HMD position and rotation over time"), p.EnableGaze);
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
 
             //transactions

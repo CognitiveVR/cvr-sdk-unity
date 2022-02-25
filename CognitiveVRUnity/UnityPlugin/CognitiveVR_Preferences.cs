@@ -77,6 +77,7 @@ namespace CognitiveVR
         [Header("Player Tracking")]
         //player tracking
 
+        public bool EnableGaze = true;
         float snapshotInterval = 0.1f;
         public float SnapshotInterval
         {
@@ -214,9 +215,9 @@ namespace CognitiveVR
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";
-            public long LastRevision;
-            public int VersionNumber = 1;
-            public int VersionId;
+            public long LastRevision; //utc timestamp on upload
+            public int VersionNumber = 1; //post session data
+            public int VersionId; //attribution
 
             public SceneSettings(string name, string path)
             {

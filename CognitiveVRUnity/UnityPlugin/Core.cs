@@ -8,7 +8,7 @@ namespace CognitiveVR
     /// </summary>
     public static class Core
     {
-        public const string SDK_VERSION = "0.26.15";
+        public const string SDK_VERSION = "0.26.16";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
@@ -328,6 +328,8 @@ namespace CognitiveVR
                 }
 
                 IsInitialized = true;
+                if (CognitiveVR_Preferences.Instance.EnableGaze == false)
+                    GazeCore.SendSessionProperties(false);
             }
 
             return InitError;
