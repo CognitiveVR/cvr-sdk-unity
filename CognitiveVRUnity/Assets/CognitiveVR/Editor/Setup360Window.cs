@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using CognitiveVR;
-using UnityEngine.Video;
 
 namespace CognitiveVR
 {
 public class Setup360Window : EditorWindow
 {
-    VideoClip selectedClip;
+    UnityEngine.Video.VideoClip selectedClip;
     bool latlong = true;
 
     public static void Init()
@@ -34,7 +33,7 @@ public class Setup360Window : EditorWindow
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-        selectedClip = (VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip),true);
+        selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip),true);
 
         if (EditorCore.MediaSources.Length == 0)
         {
@@ -132,10 +131,10 @@ public class Setup360Window : EditorWindow
             sphere = (GameObject)Instantiate(Resources.Load("invertedspherecube"));
         }
 
-        //setup video source to write to render texture
-        VideoPlayer vp = new GameObject("Video Player").AddComponent<VideoPlayer>();
+            //setup video source to write to render texture
+        UnityEngine.Video.VideoPlayer vp = new GameObject("Video Player").AddComponent<UnityEngine.Video.VideoPlayer>();
         vp.clip = selectedClip;
-        vp.source = VideoSource.VideoClip;
+        vp.source = UnityEngine.Video.VideoSource.VideoClip;
         vp.targetTexture = rt;
 
         //attach media component to sphere
