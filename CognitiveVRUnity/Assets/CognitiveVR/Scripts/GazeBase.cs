@@ -45,7 +45,7 @@ namespace CognitiveVR
 #elif CVR_AH
             ah_calibrator = Calibrator.Instance;
 #elif CVR_PUPIL
-            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
@@ -53,7 +53,7 @@ namespace CognitiveVR
 #elif CVR_OMNICEPT
             if (gb == null)
             {
-                gb = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                gb = GameplayReferences.GliaBehaviour;
                 if (gb != null)
                     gb.OnEyeTracking.AddListener(DoEyeTracking);
             }

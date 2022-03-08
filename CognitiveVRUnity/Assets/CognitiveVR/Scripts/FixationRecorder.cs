@@ -764,7 +764,7 @@ namespace CognitiveVR
         void OnDestroy()
         {
             //should be on destroy or on session end
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {
@@ -970,14 +970,14 @@ namespace CognitiveVR
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
 #elif CVR_PUPIL
-            gazeController = FindObjectOfType<PupilLabs.GazeController>();
+            gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
 #elif CVR_OMNICEPT
 
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {

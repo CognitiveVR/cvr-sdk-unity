@@ -193,7 +193,7 @@ namespace CognitiveVR
             if (InitializeAfterCalibration)
             {
                 if (calibrationController == null)
-                    calibrationController = FindObjectOfType<PupilLabs.CalibrationController>();
+                    calibrationController = GameplayReferences.CalibrationController;
                 if (calibrationController != null)
                     calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
                 else
@@ -212,6 +212,8 @@ namespace CognitiveVR
         }
 #endif
 
+        [System.NonSerialized]
+        public GazeBase gazeBase;
 
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
@@ -315,8 +317,8 @@ namespace CognitiveVR
 
             switch (CognitiveVR_Preferences.Instance.GazeType)
             {
-                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
-                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
+                case GazeType.Physics: gazeBase = gameObject.AddComponent<PhysicsGaze>(); gazeBase.Initialize(); break;
+                case GazeType.Command: gazeBase = gameObject.AddComponent<CommandGaze>(); gazeBase.Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
             if (GameplayReferences.SDKSupportsEyeTracking)
@@ -341,7 +343,7 @@ namespace CognitiveVR
             Core.EndSessionEvent += Core_EndSessionEvent;
             Core.InvokeSendDataEvent(false);
 #if CVR_OMNICEPT
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {
@@ -682,6 +684,8 @@ namespace CognitiveVR
             Core.InvokeUpdateEvent(Time.deltaTime);
             UpdateSendHotkeyCheck();
 
+            //this should only update if components that use these values are found (controller visibility, arm length?)
+
 #if CVR_STEAMVR || CVR_STEAMVR2
             var system = Valve.VR.OpenVR.System;
             if (system != null)
@@ -698,7 +702,6 @@ namespace CognitiveVR
 #endif
 
 #if CVR_OCULUS
-
             if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
             {
                 tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
@@ -785,7 +788,7 @@ namespace CognitiveVR
         {
             Core.EndSessionEvent -= Core_EndSessionEvent;
 #if CVR_OMNICEPT
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {

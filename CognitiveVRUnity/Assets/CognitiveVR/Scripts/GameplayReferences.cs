@@ -80,6 +80,112 @@ namespace CognitiveVR
             }
         }
 #endif
+#if CVR_PICOVR
+        static Pvr_UnitySDKManager pvr_UnitySDKManager;
+        public static Pvr_UnitySDKManager Pvr_UnitySDKManager
+        {
+            get
+            {
+                if (pvr_UnitySDKManager == null)
+                {
+                    pvr_UnitySDKManager = GameObject.FindObjectOfType<Pvr_UnitySDKManager>();
+                }
+                return pvr_UnitySDKManager;
+            }
+        }
+#endif
+#if CVR_OMNICEPT
+        static HP.Omnicept.Unity.GliaBehaviour gliaBehaviour;
+        public static HP.Omnicept.Unity.GliaBehaviour GliaBehaviour
+        {
+            get
+            {
+                if (gliaBehaviour == null)
+                {
+                    gliaBehaviour = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                }
+                return gliaBehaviour;
+            }
+        }
+#endif
+#if CVR_PUPIL
+        static PupilLabs.GazeController gazeController;
+        public static PupilLabs.GazeController GazeController
+        {
+            get
+            {
+                if (gazeController == null)
+                {
+                    gazeController = GameObject.FindObjectOfType<PupilLabs.GazeController>();
+                }
+                return gazeController;
+            }
+        }
+        static PupilLabs.CalibrationController calibrationController;
+        public static PupilLabs.CalibrationController CalibrationController
+        {
+            get
+            {
+                if (calibrationController == null)
+                {
+                    calibrationController = GameObject.FindObjectOfType<PupilLabs.CalibrationController>();
+                }
+                return calibrationController;
+            }
+        }
+#endif
+#if CVR_VARJO
+        static Varjo.VarjoManager varjoManager;
+        public static Varjo.VarjoManager VarjoManager
+        {
+            get
+            {
+                if (varjoManager == null)
+                {
+                    varjoManager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
+                }
+                return varjoManager;
+            }
+        }
+#endif
+#if CVR_STEAMVR
+        static SteamVR_Camera steamVR_Camera;
+        public static SteamVR_Camera SteamVR_Camera
+        {
+            get
+            {
+                if (steamVR_Camera == null)
+                {
+                    steamVR_Camera = GameObject.FindObjectOfType<SteamVR_Camera>();
+                }
+                return steamVR_Camera;
+            }
+        }
+        static Valve.VR.InteractionSystem.Player player;
+        public static Valve.VR.InteractionSystem.Player Player
+        {
+            get
+            {
+                if (player == null)
+                {
+                    player = GameObject.FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                }
+                return player;
+            }
+        }
+                static SteamVR_ControllerManager controllerManager;
+        public static SteamVR_ControllerManager ControllerManager
+        {
+            get
+            {
+                if (controllerManager == null)
+                {
+                    controllerManager = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
+                }
+                return controllerManager;
+            }
+        }
+#endif
 
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
@@ -90,21 +196,14 @@ namespace CognitiveVR
                 if (_hmd == null)
                 {
 #if CVR_STEAMVR
-                    SteamVR_Camera cam = GameObject.FindObjectOfType<SteamVR_Camera>();
+                    SteamVR_Camera cam = GameplayReferences.SteamVR_Camera;
                     if (cam != null){ _hmd = cam.transform; }
 #elif CVR_OCULUS
-                    OVRCameraRig rig = GameObject.FindObjectOfType<OVRCameraRig>();
+                    OVRCameraRig rig = CameraRig;
                     if (rig != null)
                     {
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
-                    }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main != null)
-                        {
-                            _hmd = Camera.main.transform;
-                        }
                     }
 #elif CVR_FOVE
                     var fi = FoveInstance;
@@ -112,33 +211,27 @@ namespace CognitiveVR
                     {
                         _hmd = fi.transform;
                     }
-                    else if (Camera.main != null)
-                    {
-                        _hmd = Camera.main.transform;
-                    }
 #elif CVR_VIVEWAVE
-                    if (Camera.main == null)
+                    var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
+                    for (int i = 0; i < cameras.Length; i++)
                     {
-                        var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
-                        for (int i = 0; i < cameras.Length; i++)
+                        if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
                         {
-                            if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
-                            {
-                                _hmd = cameras[i].transform;
-                                break;
-                            }
+                            _hmd = cameras[i].transform;
+                            break;
                         }
                     }
-                    else
-                        _hmd = Camera.main.transform;
 #elif CVR_VARJO
-                    Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
+                    Varjo.VarjoManager manager = GameplayReferences.VarjoManager;
                     if (manager != null){ _hmd = manager.varjoCamera.transform; }
 #else
 #endif
-                    if (Camera.main != null)
+                    if (_hmd == null)
                     {
-                        _hmd = Camera.main.transform;
+                        if (Camera.main != null)
+                        {
+                            _hmd = Camera.main.transform;
+                        }
                     }
 
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
@@ -154,6 +247,8 @@ namespace CognitiveVR
         //records controller transforms from either interaction player or behaviour poses
         static void InitializeControllers()
         {
+            if (CameraRig == null) { return; } //TODO IMPROVE could be calling FindObjectOfType every frame
+
             if (controllers == null)
             {
                 controllers = new ControllerInfo[2];
@@ -237,7 +332,7 @@ namespace CognitiveVR
             //otherwise try to initialize with player.hands
             if (cm == null)
             {
-                cm = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
+                cm = GameplayReferences.SteamVR_ControllerManager;
             }
             if (cm != null)
             {
@@ -275,7 +370,7 @@ namespace CognitiveVR
             {
                 if (player == null)
                 {
-                    player = GameObject.FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                    player = GameplayReferences.Player;
                 }
                 if (player != null)
                 {

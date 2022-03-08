@@ -66,7 +66,8 @@ namespace CognitiveVR.ActiveSession
             TargetCameraTransform = followCamera.transform;
             FixationCamera = GetComponent<Camera>();
             fixationRecorder = FixationRecorder.Instance;
-            gazeBase = FindObjectOfType<GazeBase>();
+
+            gazeBase = CognitiveVR_Manager.Instance.gazeBase;
             FixationMaterial.color = FixationColor;
             SaccadeMaterial.color = SaccadeColor;
 
@@ -107,7 +108,7 @@ namespace CognitiveVR.ActiveSession
 
             fixationRecorder = FixationRecorder.Instance;
             if (gazeBase == null)
-                gazeBase = FindObjectOfType<GazeBase>();
+                gazeBase = CognitiveVR_Manager.Instance.gazeBase;
 
             if (initError == Error.None && fixationRecorder != null)
             {

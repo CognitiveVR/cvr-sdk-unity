@@ -47,7 +47,7 @@ namespace CognitiveVR.Components
             YieldInstruction wait = new WaitForSeconds(Interval);
 
 #if CVR_PICOVR
-            var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
+            var sdkmanager = GameplayReferences.Pvr_UnitySDKManager;
             if (sdkmanager == null || sdkmanager.TrackingOrigin != Pvr_UnitySDKAPI.TrackingOrigin.FloorLevel)
             {
                 CognitiveVR.Util.logError("Pvr_UnitySDKManager.TrackingOrigin MUST be set to FloorLevel to track HMD height correctly!");

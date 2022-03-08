@@ -33,7 +33,7 @@ namespace CognitiveVR
         {
             if (gazeController != null){return;}
 
-            gazeController = UnityEngine.Object.FindObjectOfType<PupilLabs.GazeController>();
+            gazeController = gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
@@ -218,7 +218,7 @@ namespace CognitiveVR
         {
             if (gb == null)
             {
-                gb = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                gb = GameplayReferences.GliaBehaviour;
                 if (gb != null)
                     gb.OnEyeTracking.AddListener(DoEyeTracking);
             }
