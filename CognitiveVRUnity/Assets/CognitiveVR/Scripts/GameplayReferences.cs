@@ -36,7 +36,7 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_XR
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_XR || CVR_PICOVR || CVR_PICOXR
                 return true;
 #else
                 return false;
@@ -86,8 +86,6 @@ namespace CognitiveVR
                 return true;
             }
 #elif CVR_XR
-            //IMPROVEMENT support non-rectangular boundaries
-            //IMPROVEMENT support rotated rectangular boundaries
             List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
             UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
             if (inputDevices.Count > 0)
@@ -97,30 +95,32 @@ namespace CognitiveVR
                 List<Vector3> boundaryPoints = new List<Vector3>();
                 if (XRIS.TryGetBoundaryPoints(boundaryPoints))
                 {
-                    //compare the most extreme values to find the range
-                    float minX = 0;
-                    float maxX = 0;
-                    float minZ = 0;
-                    float maxZ = 0;
-                    foreach(var v in boundaryPoints)
-                    {
-                        if (v.x < minX)
-                            minX = v.x;
-                        if (v.x > maxX)
-                            maxX = v.x;
-                        if (v.z < minZ)
-                            maxZ = v.z;
-                        if (v.z > maxZ)
-                            minZ = v.z;
-                    }
-                    roomSize = new Vector3(maxX - minX, 0, maxZ - minZ);
+                    roomSize = GetArea(boundaryPoints.ToArray());
                     return true;
                 }
             }
             return false;
+#elif CVR_PICOXR
+            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
+            {
+                roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif CVR_PICOVR
+            if (Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetEnabled())
+            {
+                roomSize = Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetDimensions(Pvr_UnitySDKAPI.BoundarySystem.BoundaryType.PlayArea);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
 #else
-            //TODO picovr and picoxr boundaries
-
             return false;
 #endif
         }
@@ -260,6 +260,29 @@ namespace CognitiveVR
             }
         }
 #endif
+
+        //really simple function to a rect from a collection of points
+        //IMPROVEMENT support non-rectangular boundaries
+        //IMPROVEMENT support rotated rectangular boundaries
+        static Vector3 GetArea(Vector3[] points)
+        {
+            float minX = 0;
+            float maxX = 0;
+            float minZ = 0;
+            float maxZ = 0;
+            foreach (var v in points)
+            {
+                if (v.x < minX)
+                    minX = v.x;
+                if (v.x > maxX)
+                    maxX = v.x;
+                if (v.z < minZ)
+                    maxZ = v.z;
+                if (v.z > maxZ)
+                    minZ = v.z;
+            }
+            return new Vector3(maxX - minX, 0, maxZ - minZ);
+        }
 
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
