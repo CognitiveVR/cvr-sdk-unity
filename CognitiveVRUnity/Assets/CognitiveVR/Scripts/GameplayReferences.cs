@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//static access point to get references to main cameras and controllers
+//static access point to get references to main cameras, controllers, room data
 
 namespace CognitiveVR
 {
@@ -32,6 +32,17 @@ namespace CognitiveVR
 #endif
             }
         }
+        public static bool SDKSupportsRoomSize
+        {
+            get
+            {
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_XR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
 
         #region HMD and Controllers
 
@@ -49,6 +60,69 @@ namespace CognitiveVR
                 }
                 return cam;
             }
+        }
+
+        ///x,y,z is width, height, depth
+        ///return value is in meters
+        public static bool GetRoomSize(ref Vector3 roomSize)
+        {
+#if CVR_STEAMVR || CVR_STEAMVR2
+            float roomX = 0;
+            float roomY = 0;
+            if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+            {
+                roomSize = new Vector3(roomX,0,roomZ);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif CVR_OCULUS
+            if (OVRManager.boundary == null) { return false; }
+            if (OVRManager.boundary.GetConfigured())
+            {
+                roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
+                return true;
+            }
+#elif CVR_XR
+            //IMPROVEMENT support non-rectangular boundaries
+            //IMPROVEMENT support rotated rectangular boundaries
+            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
+            if (inputDevices.Count > 0)
+            {
+                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
+                UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
+                List<Vector3> boundaryPoints = new List<Vector3>();
+                if (XRIS.TryGetBoundaryPoints(boundaryPoints))
+                {
+                    //compare the most extreme values to find the range
+                    float minX = 0;
+                    float maxX = 0;
+                    float minZ = 0;
+                    float maxZ = 0;
+                    foreach(var v in boundaryPoints)
+                    {
+                        if (v.x < minX)
+                            minX = v.x;
+                        if (v.x > maxX)
+                            maxX = v.x;
+                        if (v.z < minZ)
+                            maxZ = v.z;
+                        if (v.z > maxZ)
+                            minZ = v.z;
+                    }
+                    roomSize = new Vector3(maxX - minX, 0, maxZ - minZ);
+                    return true;
+                }
+            }
+            return false;
+#else
+            //TODO picovr and picoxr boundaries
+
+            return false;
+#endif
         }
 
 #if CVR_OCULUS
@@ -691,6 +765,6 @@ namespace CognitiveVR
             }
         }
 
-        #endregion
+#endregion
     }
 }

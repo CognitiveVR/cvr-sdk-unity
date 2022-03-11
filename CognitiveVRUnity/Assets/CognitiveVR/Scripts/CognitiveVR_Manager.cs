@@ -119,8 +119,6 @@ namespace CognitiveVR
 #if CVR_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         public bool AssignOculusProfileToParticipant = true;
-        [Tooltip("Required to initialize the Oculus platform and request the Oculus profile")]
-        public string Oculus_Appid;
 #endif
 
 #if CVR_AH || CVR_PUPIL
@@ -157,9 +155,10 @@ namespace CognitiveVR
                 Initialize("");
 
 #if CVR_OCULUS
-            if (AssignOculusProfileToParticipant && Oculus_Appid != string.Empty && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            if (AssignOculusProfileToParticipant && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
             {
-                Oculus.Platform.Core.Initialize(Oculus_Appid);
+                if (!Oculus.Platform.Core.IsInitialized())
+                    Oculus.Platform.Core.Initialize();
 
                 Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
                 {
