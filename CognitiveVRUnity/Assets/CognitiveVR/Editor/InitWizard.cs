@@ -276,8 +276,8 @@ public class InitWizard : EditorWindow
                 Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
             }
 
-            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4 (eye tracking)", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12 (eye tracking)", "Pico Unity XR Platform 1.2.3 (eye tracking)", "Tobii XR 1.8.0.168 (eye tracking)", "Fove SDK 3.1.2 (eye tracking)", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Varjo XR 3.0.0", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR", "CVR_VARJO", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
             Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);

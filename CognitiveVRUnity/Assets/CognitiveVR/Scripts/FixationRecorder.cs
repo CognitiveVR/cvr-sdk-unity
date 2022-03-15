@@ -497,7 +497,7 @@ namespace CognitiveVR
 #elif CVR_VARJO
         const int CachedEyeCaptures = 100; //VARJO
 
-        Varjo.VarjoPlugin.GazeData currentData;
+        Varjo.XR.VarjoEyeTracking.GazeData currentData;
         static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
 
         //raw time since computer restarted. in nanoseconds
@@ -510,9 +510,9 @@ namespace CognitiveVR
         {
             while (true)
             {
-                if (Varjo.VarjoPlugin.InitGaze())
+                if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
                 {
-                    startTimestamp = Varjo.VarjoPlugin.GetGaze().captureTime;
+                    startTimestamp = Varjo.XR.VarjoEyeTracking.GetGaze().captureTime;
                     if (startTimestamp > 0)
                     {
                         System.TimeSpan span = System.DateTime.UtcNow - epoch;
@@ -527,13 +527,13 @@ namespace CognitiveVR
         public bool CombinedWorldGazeRay(out Ray ray)
         {
             ray = new Ray();
-            if (Varjo.VarjoPlugin.InitGaze())
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
                 // Check if gaze data is valid and calibrated
-                if (currentData.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                if (currentData.status != Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid)
                 {
                     ray.direction = GameplayReferences.HMD.TransformDirection(new Vector3((float)currentData.gaze.forward[0], (float)currentData.gaze.forward[1], (float)currentData.gaze.forward[2]));
-                    ray.origin = GameplayReferences.HMD.TransformPoint(new Vector3((float)currentData.gaze.position[0], (float)currentData.gaze.position[1], (float)currentData.gaze.position[2]));
+                    ray.origin = GameplayReferences.HMD.TransformPoint(new Vector3((float)currentData.gaze.origin[0], (float)currentData.gaze.origin[1], (float)currentData.gaze.origin[2]));
                     return true;
                 }
             }
@@ -542,14 +542,14 @@ namespace CognitiveVR
 
         public bool LeftEyeOpen()
         {
-            if (Varjo.VarjoPlugin.InitGaze())
-                return currentData.leftStatus != Varjo.VarjoPlugin.GazeEyeStatus.EYE_INVALID;
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
+                return currentData.leftStatus != Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
             return false;
         }
         public bool RightEyeOpen()
         {
-            if (Varjo.VarjoPlugin.InitGaze())
-                return currentData.rightStatus != Varjo.VarjoPlugin.GazeEyeStatus.EYE_INVALID;
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
+                return currentData.rightStatus != Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
             return false;
         }
 
@@ -562,17 +562,36 @@ namespace CognitiveVR
             return (long)final;
         }
         
+        int lastQueueFrame = 0;
+        Queue<Varjo.XR.VarjoEyeTracking.GazeData> queuedData = new Queue<Varjo.XR.VarjoEyeTracking.GazeData>();
+
         //returns true if there is another data point to work on
         public bool GetNextData()
         {
-            if (Varjo.VarjoPlugin.InitGaze())
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
-                if (Varjo.VarjoPlugin.GetOldestGazeIfAvailable(ref currentData))
+                //once a frame if queuedData is empty, get latest gaze data
+                if (lastQueueFrame != Time.frameCount && queuedData.Count == 0)
                 {
+                    List<Varjo.XR.VarjoEyeTracking.GazeData> latestData;
+                    Varjo.XR.VarjoEyeTracking.GetGazeList(out latestData);
+                    foreach(var v in latestData)
+                    {
+                        queuedData.Enqueue(v);
+                    }
+                    lastQueueFrame = Time.frameCount;
+                }
+
+                if (queuedData.Count > 0)
+                {
+                    currentData = queuedData.Dequeue();
                     return true;
                 }
+                else
+                {
+                    return false;
+                }
             }
-
             return false;
         }
 #elif CVR_NEURABLE

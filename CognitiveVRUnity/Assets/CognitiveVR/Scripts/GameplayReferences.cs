@@ -85,7 +85,7 @@ namespace CognitiveVR
                 roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
                 return true;
             }
-#elif CVR_XR
+#elif CVR_XR || CVR_WINDOWSMR || CVR_VARJO
             List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
             UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
             if (inputDevices.Count > 0)
@@ -208,20 +208,6 @@ namespace CognitiveVR
             }
         }
 #endif
-#if CVR_VARJO
-        static Varjo.VarjoManager varjoManager;
-        public static Varjo.VarjoManager VarjoManager
-        {
-            get
-            {
-                if (varjoManager == null)
-                {
-                    varjoManager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
-                }
-                return varjoManager;
-            }
-        }
-#endif
 #if CVR_STEAMVR
         static SteamVR_Camera steamVR_Camera;
         public static SteamVR_Camera SteamVR_Camera
@@ -318,10 +304,6 @@ namespace CognitiveVR
                             break;
                         }
                     }
-#elif CVR_VARJO
-                    Varjo.VarjoManager manager = GameplayReferences.VarjoManager;
-                    if (manager != null){ _hmd = manager.varjoCamera.transform; }
-#else
 #endif
                     if (_hmd == null)
                     {

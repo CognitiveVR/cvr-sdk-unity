@@ -118,7 +118,7 @@ namespace CognitiveVR.ActiveSession
                 WarningText.enabled = false;
             }
 #elif CVR_VARJO
-            if (Varjo.VarjoPlugin.GetGaze().status == Varjo.VarjoPlugin.GazeStatus.VALID)
+            if (Varjo.XR.VarjoEyeTracking.GetGaze().status == Varjo.XR.VarjoEyeTracking.GazeStatus.Valid)
             {
                 WarningText.text = "Eye Tracking Calibrated";
                 yield return new WaitForSeconds(2);

@@ -256,10 +256,10 @@ namespace CognitiveVR
                 gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);
             }
 #elif CVR_VARJO
-            if (Varjo.VarjoPlugin.InitGaze())
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
-                var data = Varjo.VarjoPlugin.GetGaze();
-                if (data.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                var data = Varjo.XR.VarjoEyeTracking.GetGaze();
+                if (data.status != Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid)
                 {
                     var ray = data.gaze;
                     gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
