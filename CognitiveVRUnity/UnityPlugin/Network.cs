@@ -279,7 +279,7 @@ namespace CognitiveVR
                 CacheRequest.SetRequestHeader("Content-Type", "application/json");
                 CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
                 CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                CacheRequest.Send();
+                CacheRequest.SendWebRequest();
 
                 if (CognitiveVR_Preferences.Instance.EnableDevLogging)
                     Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
@@ -309,7 +309,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             instance.StartCoroutine(instance.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
@@ -324,7 +324,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true));
@@ -341,7 +341,7 @@ namespace CognitiveVR
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));

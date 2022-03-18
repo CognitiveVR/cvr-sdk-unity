@@ -314,7 +314,7 @@ namespace CognitiveVR
                     }
 
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
-                        Util.logWarning("HMD set to " + _hmd);
+                        Util.logDebug("HMD set to " + _hmd);
                     if (_hmd == null)
                         Util.logError("No HMD camera found. Is it tagged as 'MainCamera'?");
                 }

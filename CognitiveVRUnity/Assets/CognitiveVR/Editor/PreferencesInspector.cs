@@ -50,19 +50,16 @@ namespace CognitiveVR
             p.EnableDevLogging = EditorGUILayout.Toggle("Enable Development Logging", p.EnableDevLogging);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("3D Player Tracking",EditorStyles.boldLabel);
-            //TODO change tooltip based on selected gaze type
-            p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
-            if (GUI.changed)
-            {
-                CheckGazeRenderType(p);
-            }
+            EditorGUILayout.LabelField("Player Tracking",EditorStyles.boldLabel);
+            //TODO update command buffer gaze for latest versions of unity. but still need to raycast to hit dynamic objects. useful for complex surfaces without accurate colliders
+            //TODO support command buffer gaze with eye tracking
+            //p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
+            //if (GUI.changed) CheckGazeRenderType(p);
+            p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Record Gaze", "Use a raycast to find the gaze point in world space.\nDisabling this will still record HMD position and rotation"), p.EnableGaze);
             p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
-            bool eyetracking = GameplayReferences.SDKSupportsEyeTracking;
-
-            if (p.GazeType == GazeType.Physics || eyetracking)
+            if (p.GazeType == GazeType.Physics)
             {
                 LayerMask gazeMask = new LayerMask();
                 gazeMask.value = p.GazeLayerMask;
@@ -96,18 +93,12 @@ namespace CognitiveVR
             p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("360 Player Tracking", EditorStyles.boldLabel);
-            p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
-            p.SnapshotInterval = Mathf.Clamp(p.SnapshotInterval, 0.1f, 10);
-
-            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);
             
             //gaze
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Enable Gaze", "Records HMD position and rotation over time"), p.EnableGaze);
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
 
             //transactions

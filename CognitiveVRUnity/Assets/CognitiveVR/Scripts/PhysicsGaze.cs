@@ -29,11 +29,9 @@ namespace CognitiveVR
 
     private void CognitiveVR_Manager_TickEvent()
     {
-        if (CognitiveVR_Preferences.Instance.EnableGaze == false) { return; }
         if (GameplayReferences.HMD == null) { return; }
 
-        RaycastHit hit = new RaycastHit();
-        //Ray ray = new Ray(GameplayReferences.HMD.position, GetWorldGazeDirection());
+        RaycastHit hit;
         Ray ray = GazeHelper.GetCurrentWorldGazeRay();
 
         Vector3 gpsloc = new Vector3();
@@ -47,7 +45,7 @@ namespace CognitiveVR
         Vector3 hitWorld;
         Vector3 hitLocal;
         Vector2 hitcoord;
-        if (DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
+        if (CognitiveVR_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
             string ObjectId = hitDynamic.DataId;
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -77,7 +75,7 @@ namespace CognitiveVR
             return;
         }
 
-        if (Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask))
+        if (CognitiveVR_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask))
         {
             Vector3 pos = GameplayReferences.HMD.position;
             Vector3 gazepoint = hit.point;
@@ -99,7 +97,7 @@ namespace CognitiveVR
             DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
             DisplayGazePoints.Update();
         }
-        else //hit sky / farclip
+        else //hit sky / farclip / gaze disabled. record HMD position and rotation
         {
             Vector3 pos = GameplayReferences.HMD.position;
             Quaternion rot = GameplayReferences.HMD.rotation;
