@@ -42,50 +42,16 @@ namespace CognitiveVR.Components
         {
             yield return new WaitForSeconds(StartDelay);
 
-
             float hmdAccumHeight = 0;
             YieldInstruction wait = new WaitForSeconds(Interval);
-
-#if CVR_PICOVR
-            var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
-            if (sdkmanager == null || sdkmanager.TrackingOrigin != Pvr_UnitySDKAPI.TrackingOrigin.FloorLevel)
-            {
-                CognitiveVR.Util.logError("Pvr_UnitySDKManager.TrackingOrigin MUST be set to FloorLevel to track HMD height correctly!");
-                yield break;
-            }
-#elif CVR_PICOXR
-            //TODO this should use XR Rig Tracking Origin Mode instead of pxr
-            yield break;
-            /*var sdkmanager = FindObjectOfType<Pvr_UnitySDKManager>();
-            if (sdkmanager == null || sdkmanager.TrackingOrigin != Pvr_UnitySDKAPI.TrackingOrigin.FloorLevel)
-            {
-                CognitiveVR.Util.logError("Pvr_UnitySDKManager.TrackingOrigin MUST be set to FloorLevel to track HMD height correctly!");
-                yield break;
-            }*/
-#endif
 
             //median
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-#if CVR_PICOVR
-                heights[i] = Pvr_UnitySDKEyeManager.Instance.transform.localPosition.y;
-                hmdAccumHeight += heights[i];
-#elif CVR_PICOXR
-                UnityEngine.XR.InputDevice device;
-                if (GameplayReferences.GetEyeTrackingDevice(out device))
-                {
-                    Vector3 headPos;
-                    if (device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
-                    {
-                        heights[i] = headPos.y;
-                    }
-                }
-                hmdAccumHeight += heights[i];
-#else
+
                 hmdAccumHeight += GameplayReferences.HMD.localPosition.y;
                 heights[i] = GameplayReferences.HMD.localPosition.y;
-#endif
             }
 
             float medianHeight = Median(heights);
@@ -105,7 +71,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_PICOVR || CVR_PICOXR
+#if CVR_PICOVR
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nPvr_UnitySDKManager.TrackingOrigin MUST be set as FloorLevel!";
 #else
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
@@ -114,11 +80,17 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_NEURABLE || CVR_VARJO || CVR_TOBIIVR || CVR_PUPIL
-            return false;
-#else
-            return true;
+#if CVR_PICOVR
+            var pvrManager = GameplayReferences.Pvr_UnitySDKManager;
+            if (pvrManager != null)
+            {
+                if (pvrManager.TrackingOrigin == Pvr_UnitySDKAPI.TrackingOrigin.EyeLevel)
+                {
+                    return true;
+                }
+            }
 #endif
+            return false;
         }
     }
 }

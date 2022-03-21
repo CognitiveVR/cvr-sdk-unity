@@ -33,7 +33,7 @@ namespace CognitiveVR
         {
             if (gazeController != null){return;}
 
-            gazeController = UnityEngine.Object.FindObjectOfType<PupilLabs.GazeController>();
+            gazeController = gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
@@ -133,10 +133,10 @@ namespace CognitiveVR
         static Vector3 lastDir = Vector3.forward;
         static Vector3 GetLookDirection()
         {
-            if (Varjo.VarjoPlugin.InitGaze())
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
-                var data = Varjo.VarjoPlugin.GetGaze();
-                if (data.status != Varjo.VarjoPlugin.GazeStatus.INVALID)
+                var data = Varjo.XR.VarjoEyeTracking.GetGaze();
+                if (data.status != Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid)
                 {
                     var ray = data.gaze;
                     lastDir = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
@@ -150,7 +150,6 @@ namespace CognitiveVR
         static Vector3 GetLookDirection()
         {
             Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
-            var t = Pvr_UnitySDKManager.SDK.HeadPose.Matrix;
             if (Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingGazeRayWorld(ref gazeRay))
             {
                 if (gazeRay.IsValid && gazeRay.Direction.sqrMagnitude > 0.1f)
@@ -218,7 +217,7 @@ namespace CognitiveVR
         {
             if (gb == null)
             {
-                gb = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                gb = GameplayReferences.GliaBehaviour;
                 if (gb != null)
                     gb.OnEyeTracking.AddListener(DoEyeTracking);
             }

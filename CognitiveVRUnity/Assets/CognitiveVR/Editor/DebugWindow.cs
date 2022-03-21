@@ -226,7 +226,7 @@ namespace CognitiveVR
             }
 
             var mainCamera = Camera.main;
-            if (mainCamera != null)
+            if (mainCamera != null && mainCamera.gameObject != null)
             {
                 sb.AppendLine("Main Camera GameObject: " + mainCamera.gameObject.name);
             }

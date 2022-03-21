@@ -248,6 +248,12 @@ namespace CognitiveVR
 
         private static void SendGazeData(bool copyDataToCache)
         {
+            if (CognitiveVR_Preferences.Instance.EnableGaze == false)
+            {
+                SendSessionProperties(copyDataToCache);
+                return;
+            }
+
             if (gazeCount == 0) { return; }
 
             if (!Core.IsInitialized)
@@ -369,6 +375,129 @@ namespace CognitiveVR
             //gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
             gazebuilder.Length = 9;
             //gazebuilder.Append("{\"data\":[");
+        }
+
+        public static void SendSessionProperties(bool copyDataToCache)
+        {
+            if (!Core.IsInitialized)
+            {
+                return;
+            }
+
+            if (!Core.ForceWriteSessionMetadata) //if scene has not changed
+            {
+                if (Core.GetNewSessionProperties(false).Count == 0) //and there are no new properties
+                {
+                    return;
+                }
+            }
+            //if the scene has changed, send
+
+            if (string.IsNullOrEmpty(Core.TrackingSceneId))
+            {
+                Util.logDebug("Cognitive GazeCore.SendData could not find scene settings for scene! do not upload gaze to sceneexplorer");
+                //dump gaze data
+                gazebuilder.Length = 9;
+                gazeCount = 0;
+                return;
+            }
+
+            StringBuilder propertyBuilder = new StringBuilder();
+
+            propertyBuilder.Append("{");
+
+            //header
+            JsonUtil.SetString("userid", Core.DeviceId, propertyBuilder);
+            propertyBuilder.Append(",");
+
+            if (!string.IsNullOrEmpty(Core.LobbyId))
+            {
+                JsonUtil.SetString("lobbyId", Core.LobbyId, propertyBuilder);
+                propertyBuilder.Append(",");
+            }
+
+            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, propertyBuilder);
+            propertyBuilder.Append(",");
+            JsonUtil.SetString("sessionid", Core.SessionID, propertyBuilder);
+            propertyBuilder.Append(",");
+            JsonUtil.SetInt("part", jsonPart, propertyBuilder);
+            jsonPart++;
+            propertyBuilder.Append(",");
+
+            JsonUtil.SetString("hmdtype", HMDName, propertyBuilder);
+
+            propertyBuilder.Append(",");
+            JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, propertyBuilder);
+            propertyBuilder.Append(",");
+
+            JsonUtil.SetString("formatversion", "1.0", propertyBuilder);
+
+            if (Core.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
+            {
+                Core.ForceWriteSessionMetadata = false;
+                propertyBuilder.Append(",");
+                propertyBuilder.Append("\"properties\":{");
+                foreach (var kvp in Core.GetAllSessionProperties(true))
+                {
+                    if (kvp.Value == null) { Util.logDevelopment("Session Property " + kvp.Key + " is NULL "); continue; }
+                    if (kvp.Value.GetType() == typeof(string))
+                    {
+                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, propertyBuilder);
+                    }
+                    else if (kvp.Value.GetType() == typeof(float))
+                    {
+                        JsonUtil.SetFloat(kvp.Key, (float)kvp.Value, propertyBuilder);
+                    }
+                    else
+                    {
+                        JsonUtil.SetObject(kvp.Key, kvp.Value, propertyBuilder);
+                    }
+                    propertyBuilder.Append(",");
+                }
+                propertyBuilder.Remove(propertyBuilder.Length - 1, 1); //remove comma
+                propertyBuilder.Append("}");
+            }
+            else if (Core.GetNewSessionProperties(false).Count > 0) //if a session property has changed
+            {
+                propertyBuilder.Append(",");
+                propertyBuilder.Append("\"properties\":{");
+                foreach (var kvp in Core.GetNewSessionProperties(true))
+                {
+                    if (kvp.Value.GetType() == typeof(string))
+                    {
+                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, propertyBuilder);
+                    }
+                    else if (kvp.Value.GetType() == typeof(float))
+                    {
+                        JsonUtil.SetFloat(kvp.Key, (float)kvp.Value, propertyBuilder);
+                    }
+                    else
+                    {
+                        JsonUtil.SetObject(kvp.Key, kvp.Value, propertyBuilder);
+                    }
+                    propertyBuilder.Append(",");
+                }
+                propertyBuilder.Remove(propertyBuilder.Length - 1, 1); //remove comma
+                propertyBuilder.Append("}");
+            }
+
+            propertyBuilder.Append("}");
+
+            var sceneSettings = Core.TrackingScene;
+            string url = CognitiveStatics.POSTGAZEDATA(sceneSettings.SceneId, sceneSettings.VersionNumber);
+            string content = propertyBuilder.ToString();
+
+            if (copyDataToCache)
+            {
+                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, content))
+                {
+                    Core.NetworkManager.runtimeCache.WriteContent(url, content);
+                }
+            }
+
+            Core.NetworkManager.Post(url, content);
+            if (OnGazeSend != null)
+                OnGazeSend.Invoke();
         }
     }
 }

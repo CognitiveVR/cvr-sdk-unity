@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//static access point to get references to main cameras and controllers
+//static access point to get references to main cameras, controllers, room data
 
 namespace CognitiveVR
 {
@@ -32,6 +32,17 @@ namespace CognitiveVR
 #endif
             }
         }
+        public static bool SDKSupportsRoomSize
+        {
+            get
+            {
+#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_XR || CVR_PICOVR || CVR_PICOXR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
 
         #region HMD and Controllers
 
@@ -49,6 +60,69 @@ namespace CognitiveVR
                 }
                 return cam;
             }
+        }
+
+        ///x,y,z is width, height, depth
+        ///return value is in meters
+        public static bool GetRoomSize(ref Vector3 roomSize)
+        {
+#if CVR_STEAMVR || CVR_STEAMVR2
+            float roomX = 0;
+            float roomY = 0;
+            if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+            {
+                roomSize = new Vector3(roomX,0,roomZ);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif CVR_OCULUS
+            if (OVRManager.boundary == null) { return false; }
+            if (OVRManager.boundary.GetConfigured())
+            {
+                roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
+                return true;
+            }
+#elif CVR_XR || CVR_WINDOWSMR || CVR_VARJO
+            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
+            if (inputDevices.Count > 0)
+            {
+                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
+                UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
+                List<Vector3> boundaryPoints = new List<Vector3>();
+                if (XRIS.TryGetBoundaryPoints(boundaryPoints))
+                {
+                    roomSize = GetArea(boundaryPoints.ToArray());
+                    return true;
+                }
+            }
+            return false;
+#elif CVR_PICOXR
+            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
+            {
+                roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif CVR_PICOVR
+            if (Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetEnabled())
+            {
+                roomSize = Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetDimensions(Pvr_UnitySDKAPI.BoundarySystem.BoundaryType.PlayArea);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#else
+            return false;
+#endif
         }
 
 #if CVR_OCULUS
@@ -80,6 +154,121 @@ namespace CognitiveVR
             }
         }
 #endif
+#if CVR_PICOVR
+        static Pvr_UnitySDKManager pvr_UnitySDKManager;
+        public static Pvr_UnitySDKManager Pvr_UnitySDKManager
+        {
+            get
+            {
+                if (pvr_UnitySDKManager == null)
+                {
+                    pvr_UnitySDKManager = GameObject.FindObjectOfType<Pvr_UnitySDKManager>();
+                }
+                return pvr_UnitySDKManager;
+            }
+        }
+#endif
+#if CVR_OMNICEPT
+        static HP.Omnicept.Unity.GliaBehaviour gliaBehaviour;
+        public static HP.Omnicept.Unity.GliaBehaviour GliaBehaviour
+        {
+            get
+            {
+                if (gliaBehaviour == null)
+                {
+                    gliaBehaviour = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+                }
+                return gliaBehaviour;
+            }
+        }
+#endif
+#if CVR_PUPIL
+        static PupilLabs.GazeController gazeController;
+        public static PupilLabs.GazeController GazeController
+        {
+            get
+            {
+                if (gazeController == null)
+                {
+                    gazeController = GameObject.FindObjectOfType<PupilLabs.GazeController>();
+                }
+                return gazeController;
+            }
+        }
+        static PupilLabs.CalibrationController calibrationController;
+        public static PupilLabs.CalibrationController CalibrationController
+        {
+            get
+            {
+                if (calibrationController == null)
+                {
+                    calibrationController = GameObject.FindObjectOfType<PupilLabs.CalibrationController>();
+                }
+                return calibrationController;
+            }
+        }
+#endif
+#if CVR_STEAMVR
+        static SteamVR_Camera steamVR_Camera;
+        public static SteamVR_Camera SteamVR_Camera
+        {
+            get
+            {
+                if (steamVR_Camera == null)
+                {
+                    steamVR_Camera = GameObject.FindObjectOfType<SteamVR_Camera>();
+                }
+                return steamVR_Camera;
+            }
+        }
+        static Valve.VR.InteractionSystem.Player player;
+        public static Valve.VR.InteractionSystem.Player Player
+        {
+            get
+            {
+                if (player == null)
+                {
+                    player = GameObject.FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                }
+                return player;
+            }
+        }
+                static SteamVR_ControllerManager controllerManager;
+        public static SteamVR_ControllerManager ControllerManager
+        {
+            get
+            {
+                if (controllerManager == null)
+                {
+                    controllerManager = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
+                }
+                return controllerManager;
+            }
+        }
+#endif
+
+        //really simple function to a rect from a collection of points
+        //IMPROVEMENT support non-rectangular boundaries
+        //IMPROVEMENT support rotated rectangular boundaries
+        static Vector3 GetArea(Vector3[] points)
+        {
+            float minX = 0;
+            float maxX = 0;
+            float minZ = 0;
+            float maxZ = 0;
+            foreach (var v in points)
+            {
+                if (v.x < minX)
+                    minX = v.x;
+                if (v.x > maxX)
+                    maxX = v.x;
+                if (v.z < minZ)
+                    maxZ = v.z;
+                if (v.z > maxZ)
+                    minZ = v.z;
+            }
+            return new Vector3(maxX - minX, 0, maxZ - minZ);
+        }
 
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
@@ -90,21 +279,14 @@ namespace CognitiveVR
                 if (_hmd == null)
                 {
 #if CVR_STEAMVR
-                    SteamVR_Camera cam = GameObject.FindObjectOfType<SteamVR_Camera>();
+                    SteamVR_Camera cam = GameplayReferences.SteamVR_Camera;
                     if (cam != null){ _hmd = cam.transform; }
 #elif CVR_OCULUS
-                    OVRCameraRig rig = GameObject.FindObjectOfType<OVRCameraRig>();
+                    OVRCameraRig rig = CameraRig;
                     if (rig != null)
                     {
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
-                    }
-                    if (_hmd == null)
-                    {
-                        if (Camera.main != null)
-                        {
-                            _hmd = Camera.main.transform;
-                        }
                     }
 #elif CVR_FOVE
                     var fi = FoveInstance;
@@ -112,37 +294,27 @@ namespace CognitiveVR
                     {
                         _hmd = fi.transform;
                     }
-                    else if (Camera.main != null)
-                    {
-                        _hmd = Camera.main.transform;
-                    }
 #elif CVR_VIVEWAVE
-                    if (Camera.main == null)
+                    var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
+                    for (int i = 0; i < cameras.Length; i++)
                     {
-                        var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
-                        for (int i = 0; i < cameras.Length; i++)
+                        if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
                         {
-                            if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
-                            {
-                                _hmd = cameras[i].transform;
-                                break;
-                            }
+                            _hmd = cameras[i].transform;
+                            break;
                         }
                     }
-                    else
-                        _hmd = Camera.main.transform;
-#elif CVR_VARJO
-                    Varjo.VarjoManager manager = GameObject.FindObjectOfType<Varjo.VarjoManager>();
-                    if (manager != null){ _hmd = manager.varjoCamera.transform; }
-#else
 #endif
-                    if (Camera.main != null)
+                    if (_hmd == null)
                     {
-                        _hmd = Camera.main.transform;
+                        if (Camera.main != null)
+                        {
+                            _hmd = Camera.main.transform;
+                        }
                     }
 
                     if (CognitiveVR_Preferences.Instance.EnableLogging)
-                        Util.logWarning("HMD set to " + _hmd);
+                        Util.logDebug("HMD set to " + _hmd);
                     if (_hmd == null)
                         Util.logError("No HMD camera found. Is it tagged as 'MainCamera'?");
                 }
@@ -154,6 +326,8 @@ namespace CognitiveVR
         //records controller transforms from either interaction player or behaviour poses
         static void InitializeControllers()
         {
+            if (CameraRig == null) { return; } //TODO IMPROVE could be calling FindObjectOfType every frame
+
             if (controllers == null)
             {
                 controllers = new ControllerInfo[2];
@@ -237,7 +411,7 @@ namespace CognitiveVR
             //otherwise try to initialize with player.hands
             if (cm == null)
             {
-                cm = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
+                cm = GameplayReferences.SteamVR_ControllerManager;
             }
             if (cm != null)
             {
@@ -275,7 +449,7 @@ namespace CognitiveVR
             {
                 if (player == null)
                 {
-                    player = GameObject.FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+                    player = GameplayReferences.Player;
                 }
                 if (player != null)
                 {
@@ -596,6 +770,6 @@ namespace CognitiveVR
             }
         }
 
-        #endregion
+#endregion
     }
 }

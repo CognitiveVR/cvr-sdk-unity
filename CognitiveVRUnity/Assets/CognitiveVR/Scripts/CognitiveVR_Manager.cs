@@ -119,8 +119,6 @@ namespace CognitiveVR
 #if CVR_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         public bool AssignOculusProfileToParticipant = true;
-        [Tooltip("Required to initialize the Oculus platform and request the Oculus profile")]
-        public string Oculus_Appid;
 #endif
 
 #if CVR_AH || CVR_PUPIL
@@ -157,9 +155,10 @@ namespace CognitiveVR
                 Initialize("");
 
 #if CVR_OCULUS
-            if (AssignOculusProfileToParticipant && Oculus_Appid != string.Empty && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            if (AssignOculusProfileToParticipant && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
             {
-                Oculus.Platform.Core.Initialize(Oculus_Appid);
+                if (!Oculus.Platform.Core.IsInitialized())
+                    Oculus.Platform.Core.Initialize();
 
                 Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
                 {
@@ -193,7 +192,7 @@ namespace CognitiveVR
             if (InitializeAfterCalibration)
             {
                 if (calibrationController == null)
-                    calibrationController = FindObjectOfType<PupilLabs.CalibrationController>();
+                    calibrationController = GameplayReferences.CalibrationController;
                 if (calibrationController != null)
                     calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
                 else
@@ -212,6 +211,8 @@ namespace CognitiveVR
         }
 #endif
 
+        [System.NonSerialized]
+        public GazeBase gazeBase;
 
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
@@ -315,8 +316,8 @@ namespace CognitiveVR
 
             switch (CognitiveVR_Preferences.Instance.GazeType)
             {
-                case GazeType.Physics: gameObject.AddComponent<PhysicsGaze>().Initialize(); break;
-                case GazeType.Command: gameObject.AddComponent<CommandGaze>().Initialize(); break;
+                case GazeType.Physics: gazeBase = gameObject.AddComponent<PhysicsGaze>(); gazeBase.Initialize(); break;
+                case GazeType.Command: gazeBase = gameObject.AddComponent<CommandGaze>(); gazeBase.Initialize(); break;
                     //case GazeType.Sphere: gameObject.AddComponent<SphereGaze>().Initialize(); break;
             }
             if (GameplayReferences.SDKSupportsEyeTracking)
@@ -341,7 +342,7 @@ namespace CognitiveVR
             Core.EndSessionEvent += Core_EndSessionEvent;
             Core.InvokeSendDataEvent(false);
 #if CVR_OMNICEPT
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {
@@ -402,6 +403,18 @@ namespace CognitiveVR
         /// </summary>
         private void SetSessionProperties()
         {
+            Core.SetSessionProperty("c3d.app.name", Application.productName);
+            Core.SetSessionProperty("c3d.app.version", Application.version);
+            Core.SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+            Core.SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+            Core.SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+            Core.SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+            Core.SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+            Core.SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+            Core.SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
+
+            Core.SetSessionProperty("c3d.deviceid", Core.DeviceId);
+
 #if CVR_META
             string serialnumber;
             string xml;
@@ -446,99 +459,92 @@ namespace CognitiveVR
 
 #if CVR_STEAMVR2 || CVR_STEAMVR
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
 #if CVR_FOVE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Fove");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Fove");
             Core.SetSessionProperty("c3d.app.sdktype", "Fove");
 #elif CVR_SNAPDRAGON
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Qualcomm");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Snapdragon");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Snapdragon");
 #elif CVR_OCULUS
             Core.SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Oculus");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type", "None");
             Core.SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif CVR_NEURABLE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Neurable");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Neurable");
 #elif CVR_ARKIT
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Apple");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARKit");
 #elif CVR_ARCORE
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "ARCore");
 #elif CVR_GOOGLEVR
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Android");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Google VR");
 #elif CVR_HOLOLENS
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Microsoft");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Hololens");
 #elif CVR_META
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Meta");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionProperty("c3d.device.eyetracking.type","None");
             Core.SetSessionProperty("c3d.app.sdktype", "Meta");
 #elif CVR_VARJO
-            Core.SetSessionProperty("c3d.device.hmd.manufacturer", "Varjo");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Varjo");
             Core.SetSessionProperty("c3d.app.sdktype", "Varjo");
 #elif CVR_OMNICEPT
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","HP Omnicept");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+#elif CVR_PICOVR
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+            Core.SetSessionProperty("c3d.app.sdktype", "PicoVR");
+            Core.SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+#elif CVR_PICOXR
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+            Core.SetSessionProperty("c3d.app.sdktype", "PicoXR");
+            Core.SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #endif
             //TODO add XR inputdevice name
 
             //eye tracker addons
 #if CVR_TOBIIVR
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer","HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Tobii");
 #elif CVR_PUPIL
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Pupil");
             Core.SetSessionProperty("c3d.app.sdktype", "Pupil");
 #elif CVR_AH
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Google");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             Core.SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             Core.SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #elif CVR_VIVEPROEYE
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "HTC");
             Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","Vive Pro Eye");
+            Core.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             Core.SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif CVR_WINDOWSMR
             Core.SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #elif CVR_OPENXR
-            //Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
-            Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
+            //Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            //Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
             Core.SetSessionProperty("c3d.app.sdktype", "OpenXR");
 #endif
-            Core.SetSessionPropertyIfEmpty("c3d.device.hmd.manufacturer", "Unknown");
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
             Core.SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
@@ -677,6 +683,8 @@ namespace CognitiveVR
             Core.InvokeUpdateEvent(Time.deltaTime);
             UpdateSendHotkeyCheck();
 
+            //this should only update if components that use these values are found (controller visibility, arm length?)
+
 #if CVR_STEAMVR || CVR_STEAMVR2
             var system = Valve.VR.OpenVR.System;
             if (system != null)
@@ -693,7 +701,6 @@ namespace CognitiveVR
 #endif
 
 #if CVR_OCULUS
-
             if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
             {
                 tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
@@ -780,7 +787,7 @@ namespace CognitiveVR
         {
             Core.EndSessionEvent -= Core_EndSessionEvent;
 #if CVR_OMNICEPT
-            var gliaBehaviour = FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
             if (gliaBehaviour != null)
             {
