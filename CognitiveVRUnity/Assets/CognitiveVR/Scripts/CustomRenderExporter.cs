@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 
 //TODO mesh combine?
+//TODO submeshes
+//TODO URP support
 
 #if UNITY_EDITOR
 namespace CognitiveVR
