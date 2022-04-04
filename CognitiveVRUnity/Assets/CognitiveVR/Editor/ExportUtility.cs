@@ -3,7 +3,6 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Debug = UnityEngine.Debug;
 using System;
 using UnityEngine.Networking;
 
@@ -11,6 +10,8 @@ using UnityEngine.Networking;
 
 namespace CognitiveVR
 {
+    using Debug = UnityEngine.Debug;
+    using Path = System.IO.Path;
     //temporary data about a skinned mesh/canvas/terrain to be baked to mesh and exported in GLTF
     public class BakeableMesh
     {

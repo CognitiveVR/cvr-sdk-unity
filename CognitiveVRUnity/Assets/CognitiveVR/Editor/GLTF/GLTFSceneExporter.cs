@@ -6,11 +6,12 @@ using GLTF.Schema;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityGLTF.Extensions;
-using CameraType = GLTF.Schema.CameraType;
-using WrapMode = GLTF.Schema.WrapMode;
 
 namespace UnityGLTF
 {
+	using CameraType = GLTF.Schema.CameraType;
+	using WrapMode = GLTF.Schema.WrapMode;
+	using Path = System.IO.Path;
 	public class GLTFSceneExporter
 	{
 		//shaders may have custom implementations for values (such as using roughness for roughness) unlike unity standard shader

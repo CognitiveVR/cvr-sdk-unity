@@ -15,6 +15,7 @@ using System.IO;
 
 namespace CognitiveVR
 {
+    using Path = System.IO.Path;
     public enum DisplayKey
     {
         FullName,
