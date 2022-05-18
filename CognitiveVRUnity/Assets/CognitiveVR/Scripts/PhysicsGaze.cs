@@ -75,7 +75,7 @@ namespace CognitiveVR
             return;
         }
 
-        if (CognitiveVR_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask))
+        if (CognitiveVR_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
         {
             Vector3 pos = GameplayReferences.HMD.position;
             Vector3 gazepoint = hit.point;

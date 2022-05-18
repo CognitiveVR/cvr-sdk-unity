@@ -251,6 +251,7 @@ namespace CognitiveVR
 #endif
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
 
             if (!string.IsNullOrEmpty(participantName))
                 Core.SetParticipantFullName(participantName);
@@ -633,7 +634,13 @@ namespace CognitiveVR
             Core.InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-#region Updates and Loops
+        private void SceneManager_SceneUnloaded(UnityEngine.SceneManagement.Scene scene)
+        {
+            //TODO for unload scene async, may need to change tracking scene id
+            //a situation where a scene without an ID is loaded additively, then a scene with an id is unloaded, the sceneid will persist
+        }
+
+        #region Updates and Loops
 
 #if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS
         GameplayReferences.ControllerInfo tempControllerInfo = null;
@@ -811,6 +818,7 @@ namespace CognitiveVR
             }
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
             initResponse = Error.NotInitialized;
         }
 
