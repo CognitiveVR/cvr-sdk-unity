@@ -10,6 +10,9 @@ using CognitiveVR;
 /// on unsupported platforms (pc, laptop, vive, iOS) does not send battery level
 /// </summary>
 
+//TODO add picovr sdk Pvr_UnitySDKAPI.System.UPvr_GetHmdBatteryStatus()
+//SystemInfo.batteryLevel works. returns -1 for invalid systems
+
 namespace CognitiveVR.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]

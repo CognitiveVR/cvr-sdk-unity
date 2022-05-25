@@ -8,6 +8,8 @@ using Valve.VR;
 /// sends transactions when SteamVR Chaperone is visible
 /// </summary>
 
+//TODO add picovr sdk Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetVisible();
+
 namespace CognitiveVR.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]

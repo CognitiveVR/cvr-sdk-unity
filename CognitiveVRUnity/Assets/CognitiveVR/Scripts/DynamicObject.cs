@@ -18,23 +18,25 @@ namespace CognitiveVR
     {
         public enum CommonDynamicMesh
         {
-            ViveController,
-            OculusRiftTouchLeft,
-            OculusRiftTouchRight,
-            ViveTracker,
-            ExitPoll,
-            LeapMotionHandLeft,
-            LeapMotionHandRight,
-            WindowsMixedRealityLeft,
-            WindowsMixedRealityRight,
-            VideoSphereLatitude,
-            VideoSphereCubemap,
-            SnapdragonVRController,
-            ViveFocusController, //the 6dof controller
-            OculusQuestTouchLeft,
-            OculusQuestTouchRight,
-            PicoNeoControllerLeft,
-            PicoNeoControllerRight
+            ViveController = 0,
+            OculusRiftTouchLeft = 1,
+            OculusRiftTouchRight = 2,
+            ViveTracker = 3,
+            ExitPoll = 4, //used internally
+            LeapMotionHandLeft = 5,
+            LeapMotionHandRight = 6,
+            WindowsMixedRealityLeft = 7,
+            WindowsMixedRealityRight = 8,
+            VideoSphereLatitude = 9,
+            VideoSphereCubemap = 10,
+            SnapdragonVRController = 11,
+            ViveFocusController = 12, //the 6dof controller
+            OculusQuestTouchLeft = 13,
+            OculusQuestTouchRight = 14,
+            PicoNeoControllerLeft = 15,
+            PicoNeoControllerRight = 16,
+            PicoNeo3ControllerLeft = 17,
+            PicoNeo3ControllerRight = 18
         }
 
 
@@ -78,7 +80,7 @@ namespace CognitiveVR
         public float RotationThreshold = 0.1f;
         public float ScaleThreshold = 0.1f;
 
-
+        //used to select svg on SE to display button inputs
         public bool IsController;
         public bool IsRight;
         public enum ControllerDisplayType
@@ -93,6 +95,8 @@ namespace CognitiveVR
             windows_mixed_reality_controller_right,
             pico_neo_2_eye_controller_left,
             pico_neo_2_eye_controller_right,
+            pico_neo_3_eye_controller_left,
+            pico_neo_3_eye_controller_right,
         }
         public ControllerDisplayType ControllerType;
 

@@ -840,7 +840,7 @@ namespace CognitiveVR
             if (InitResponse != Error.None) { return; }
 
             double playtime = Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp;
-            CognitiveVR.Util.logDebug("session length " + playtime);
+            CognitiveVR.Util.logDebug("Session End. Duration: " + playtime);
             if (Core.IsQuitEventBound())
             {
                 new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();

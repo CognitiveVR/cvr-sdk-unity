@@ -295,18 +295,22 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            //if using unsupported HMD, default to center of screen
+            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            if (framework != null)
+                framework.StartFramework();
+
+            //if framework status is not working, registering callbacks will not work
             if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
             {
                 Util.logWarning("FixationRecorder found SRanipal_Eye_Framework not in working status");
                 return;
             }
 
-            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 //unregister existing callbacks
                 OnDisable();
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
                 {
