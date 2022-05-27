@@ -69,6 +69,7 @@ namespace CognitiveVR
         static double lastTime;
         static int lastFrame = -1;
 
+        //timestamp can be cached per frame, reducing number of timespan calculations
         public static double Timestamp(int frame)
         {
             if (frame == lastFrame)

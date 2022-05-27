@@ -5,16 +5,36 @@ using CognitiveVR;
 using System.Text;
 using CognitiveVR.External;
 
+//TODO merge record sensor overrides together
+
 namespace CognitiveVR
 {
     public static class SensorRecorder
     {
+        public class SensorData
+        {
+            public string Name;
+            public string Rate;
+            public float NextRecordTime;
+            public float UpdateInterval;
+
+            public SensorData(string name, float rate)
+            {
+                Name = name;
+                Rate = rate.ToString("{0:0.000}");
+                UpdateInterval = 1 / rate;
+            }
+        }
+
+        static Dictionary<string, SensorData> sensorData = new Dictionary<string, SensorData>();
+
         private static int jsonPart = 1;
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
         public static int CachedSensors { get { return currentSensorSnapshots; } }
 
         //holds the latest value of each sensor type. can be appended to custom events
+        //TODO merge LastSensorValues into sensorData collection
         public static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
 
         static SensorRecorder()
@@ -32,6 +52,25 @@ namespace CognitiveVR
                 automaticTimerActive = true;
                 Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
             }
+        }
+
+        /// <summary>
+        /// optional method to declare a sensor with a custom rate
+        /// </summary>
+        /// <param name="sensorName"></param>
+        /// <param name="HzRate"></param>
+        /// <param name="initialValue"></param>
+        public static void InitializeSensor(string sensorName, float HzRate = 10, float initialValue = 0)
+        {
+            if (sensorData.ContainsKey(sensorName))
+            {
+                return;
+            }
+            sensorData.Add(sensorName, new SensorData(sensorName, HzRate));
+            CachedSnapshots.Add(sensorName, new List<string>(512));
+            LastSensorValues.Add(sensorName, initialValue);
+            if (OnNewSensorRecorded != null)
+                OnNewSensorRecorded(sensorName, initialValue);
         }
 
         static bool automaticTimerActive = false;
@@ -64,26 +103,24 @@ namespace CognitiveVR
             }
             if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
-            if (CachedSnapshots.ContainsKey(category))
+            //check next valid write time
+            if (sensorData.ContainsKey(category))
             {
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+                if (Time.realtimeSinceStartup < sensorData[category].NextRecordTime)
+                {
+                    //recording too fast!
+                    return;
+                }
             }
             else
             {
-                CachedSnapshots.Add(category, new List<string>(512));
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+                InitializeSensor(category, 10, value);
             }
 
-            if (LastSensorValues.ContainsKey(category))
-            {
-                LastSensorValues[category] = value;
-            }
-            else
-            {
-                LastSensorValues.Add(category, value);
-                if (OnNewSensorRecorded != null)
-                    OnNewSensorRecorded(category, value);
-            }
+            //update internal values and record data
+            sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
+            CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            LastSensorValues[category] = value;
 
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -102,26 +139,24 @@ namespace CognitiveVR
             }
             if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
-            if (CachedSnapshots.ContainsKey(category))
+            //check next valid write time
+            if (sensorData.ContainsKey(category))
             {
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+                if (Time.realtimeSinceStartup < sensorData[category].NextRecordTime)
+                {
+                    //recording too fast!
+                    return;
+                }
             }
             else
             {
-                CachedSnapshots.Add(category, new List<string>(512));
-                CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+                InitializeSensor(category, 10, (float)value);
             }
 
-            if (LastSensorValues.ContainsKey(category))
-            {
-                LastSensorValues[category] = (float)value;
-            }
-            else
-            {
-                LastSensorValues.Add(category, (float)value);
-                if (OnNewSensorRecorded != null)
-                    OnNewSensorRecorded(category, (float)value);
-            }
+            //update internal values and record data
+            sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
+            CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            LastSensorValues[category] = (float)value;
 
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -130,7 +165,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void RecordDataPoint(string category, float value, double timestamp)
+        public static void RecordDataPoint(string category, float value, double unixTimestamp)
         {
             if (Core.IsInitialized == false)
             {
@@ -139,26 +174,24 @@ namespace CognitiveVR
             }
             if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
-            if (CachedSnapshots.ContainsKey(category))
+            //check next valid write time
+            if (sensorData.ContainsKey(category))
             {
-                CachedSnapshots[category].Add(GetSensorDataToString(timestamp, value));
+                if (unixTimestamp < sensorData[category].NextRecordTime)
+                {
+                    //recording too fast!
+                    return;
+                }
             }
             else
             {
-                CachedSnapshots.Add(category, new List<string>(512));
-                CachedSnapshots[category].Add(GetSensorDataToString(timestamp, value));
+                InitializeSensor(category, 10, value);
             }
 
-            if (LastSensorValues.ContainsKey(category))
-            {
-                LastSensorValues[category] = value;
-            }
-            else
-            {
-                LastSensorValues.Add(category, value);
-                if (OnNewSensorRecorded != null)
-                    OnNewSensorRecorded(category, value);
-            }
+            //update internal values and record data
+            sensorData[category].NextRecordTime = (float)(unixTimestamp + sensorData[category].UpdateInterval);
+            CachedSnapshots[category].Add(GetSensorDataToString(unixTimestamp, value));
+            LastSensorValues[category] = value;
 
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -228,7 +261,7 @@ namespace CognitiveVR
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
             jsonPart++;
-            JsonUtil.SetString("formatversion", "1.0", sb);
+            JsonUtil.SetString("formatversion", "2.0", sb);
             sb.Append(",");
 
 
@@ -238,6 +271,16 @@ namespace CognitiveVR
                 sb.Append("{");
                 JsonUtil.SetString("name", k, sb);
                 sb.Append(",");
+                if (sensorData.ContainsKey(k))
+                {
+                    JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
+                    sb.Append(",");
+                    if (sensorData[k].UpdateInterval <= 0.1f)
+                    {
+                        JsonUtil.SetString("sensorHzLimited", "true", sb);
+                        sb.Append(",");
+                    }
+                }
                 sb.Append("\"data\":[");
                 foreach (var v in CachedSnapshots[k])
                 {
