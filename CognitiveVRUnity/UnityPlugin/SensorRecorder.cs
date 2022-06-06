@@ -21,7 +21,7 @@ namespace CognitiveVR
             public SensorData(string name, float rate)
             {
                 Name = name;
-                Rate = rate.ToString("{0:0.000}");
+                Rate = string.Format("{0:0.00}", rate);
                 UpdateInterval = 1 / rate;
             }
         }
@@ -42,8 +42,10 @@ namespace CognitiveVR
 
         }
 
+        //called each time a session starts
         internal static void Initialize()
         {
+            Core.OnPostSessionEnd += Core_OnPostSessionEnd;
             Core.OnSendData -= Core_OnSendData;
             Core.OnSendData += Core_OnSendData;
             nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
@@ -77,7 +79,7 @@ namespace CognitiveVR
         static float nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
-            while (true)
+            while (Core.IsInitialized)
             {
                 while (nextSendTime > Time.realtimeSinceStartup)
                 {
@@ -122,6 +124,9 @@ namespace CognitiveVR
             CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             LastSensorValues[category] = value;
 
+            if (OnNewSensorRecorded != null)
+                OnNewSensorRecorded(category, value);
+
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
             {
@@ -157,6 +162,8 @@ namespace CognitiveVR
             sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
             CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             LastSensorValues[category] = (float)value;
+            if (OnNewSensorRecorded != null)
+                OnNewSensorRecorded(category, (float)value);
 
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -192,6 +199,8 @@ namespace CognitiveVR
             sensorData[category].NextRecordTime = (float)(unixTimestamp + sensorData[category].UpdateInterval);
             CachedSnapshots[category].Add(GetSensorDataToString(unixTimestamp, value));
             LastSensorValues[category] = value;
+            if (OnNewSensorRecorded != null)
+                OnNewSensorRecorded(category, value);
 
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
@@ -228,7 +237,10 @@ namespace CognitiveVR
             if (Core.TrackingScene == null)
             {
                 CognitiveVR.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
-                CachedSnapshots.Clear();
+                foreach(var k in CachedSnapshots)
+                {
+                    k.Value.Clear();
+                }
                 currentSensorSnapshots = 0;
                 return;
             }
@@ -275,7 +287,7 @@ namespace CognitiveVR
                 {
                     JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
                     sb.Append(",");
-                    if (sensorData[k].UpdateInterval <= 0.1f)
+                    if (sensorData[k].UpdateInterval >= 0.1f)
                     {
                         JsonUtil.SetString("sensorHzLimited", "true", sb);
                         sb.Append(",");
@@ -299,7 +311,10 @@ namespace CognitiveVR
             }
             sb.Append("]}");
 
-            CachedSnapshots.Clear();
+            foreach (var k in CachedSnapshots)
+            {
+                k.Value.Clear();
+            }
             currentSensorSnapshots = 0;
 
             string url = CognitiveStatics.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
@@ -318,6 +333,16 @@ namespace CognitiveVR
             {
                 OnSensorSend.Invoke();
             }
+        }
+
+        private static void Core_OnPostSessionEnd()
+        {
+            Core.OnPostSessionEnd -= Core_OnPostSessionEnd;
+            LastSensorValues.Clear();
+            sensorData.Clear();
+            CachedSnapshots.Clear();
+            jsonPart = 1;
+            lastSendTime = -60;
         }
 
         #region json

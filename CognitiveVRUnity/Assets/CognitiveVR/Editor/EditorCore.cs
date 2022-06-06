@@ -524,8 +524,10 @@ namespace CognitiveVR
             if (textFieldID == 0)
                 return value;
 
-            // Handle custom copy-paste
+#if !UNITY_2019_OR_NEWER
+            //enables copy/paste from text fields in old versions of unity
             value = HandleCopyPaste(textFieldID) ?? value;
+#endif
             if (styleOverride == null)
             {
                 return GUI.TextField(rect, value, maxlength, GUI.skin.textField);

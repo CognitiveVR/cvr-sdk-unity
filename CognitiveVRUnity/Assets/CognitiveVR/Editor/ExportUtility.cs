@@ -1221,7 +1221,7 @@ namespace CognitiveVR
 
             //set camera to render unassigned layer
             int layer = EditorCore.FindUnusedLayer();
-            if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); }
+            if (layer == -1) { Debug.LogWarning("CanvasTextureBake couldn't find unused layer, texture generation might be incorrect"); }
 
             if (layer != -1)
             {
@@ -1325,127 +1325,104 @@ namespace CognitiveVR
         /// <summary>
         /// export a gameobject, temporarily spawn them in the scene if they are prefabs selected in the project window
         /// </summary>
-        /// <returns>true if exported successfully</returns>
-        public static bool ExportDynamicObject(DynamicObject dynamicObject, bool displayPopup = false)
+        public static void ExportDynamicObjects(List<DynamicObject> dynamicObjects, bool displayPopup = false)
         {
-            //setup
-            if (dynamicObject == null) { return false; }
-            GameObject prefabInScene = null;
-            if (!dynamicObject.gameObject.scene.IsValid())
+            //export as a list. skip dynamics already exported in this collection
+
+            HashSet<string> exportedMeshNames = new HashSet<string>();
+
+            foreach (var dynamicObject in dynamicObjects)
             {
-                prefabInScene = GameObject.Instantiate(dynamicObject.gameObject);
-                dynamicObject = prefabInScene.GetComponent<DynamicObject>();
-            }
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+                if (exportedMeshNames.Contains(dynamicObject.MeshName)) { continue; }
 
-            //export. this should skip nested dynamics
-            if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); return false; }
+                //setup
+                //if (dynamicObject == null) { return false; }
+                if (dynamicObject == null) { continue; }
 
-            foreach (var common in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
-            {
-                if (common.ToLower() == dynamicObject.MeshName.ToLower())
-                    continue; //don't export common meshes!
-            }
+                //skip exporting common meshes
+                if (!dynamicObject.UseCustomMesh) { continue; }
+                //skip empty mesh names
+                if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); continue; }
 
-            if (!dynamicObject.UseCustomMesh)
-            {
-                //skip exporting a mesh with no name
-                return false;
-            }
+                GameObject prefabInScene = null;
+                DynamicObject temporaryDynamic = dynamicObject;
+                if (!dynamicObject.gameObject.scene.IsValid())
+                {
+                    prefabInScene = GameObject.Instantiate(dynamicObject.gameObject);
+                    temporaryDynamic = prefabInScene.GetComponent<DynamicObject>();
+                }
 
-            Vector3 originalOffset = dynamicObject.transform.localPosition;
-            dynamicObject.transform.localPosition = Vector3.zero;
-            Quaternion originalRot = dynamicObject.transform.localRotation;
-            dynamicObject.transform.localRotation = Quaternion.identity;
+                exportedMeshNames.Add(temporaryDynamic.MeshName);
+                string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+                Directory.CreateDirectory(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
 
-            //Vector4 originalScale = dynamicObject.transform.localScale;
-            //dynamicObject.transform.localScale = Vector3.one;
-            //normalize the dynamic object (and all it's parents) so scale is not doubly applied in OE/SE since manifest data / session data also holds LOSSYscale
-            var list = new List<TransformHolder>();
-            list.Add(new TransformHolder() { target = dynamicObject.transform, localScale = dynamicObject.transform.localScale });
-            GetParentTransformList(list, dynamicObject.transform);
-            foreach (var v in list)
-            {
-                v.target.transform.localScale = Vector3.one;
-            }
+                //normalize the dynamic object (and all it's parents) so scale is not doubly applied in OE/SE since manifest data / session data also holds LOSSYscale
+                Vector3 originalOffset = temporaryDynamic.transform.localPosition;
+                temporaryDynamic.transform.localPosition = Vector3.zero;
+                Quaternion originalRot = temporaryDynamic.transform.localRotation;
+                temporaryDynamic.transform.localRotation = Quaternion.identity;
 
-            Directory.CreateDirectory(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
+                var list = new List<TransformHolder>();
+                list.Add(new TransformHolder() { target = temporaryDynamic.transform, localScale = temporaryDynamic.transform.localScale });
+                GetParentTransformList(list, temporaryDynamic.transform);
+                foreach (var v in list)
+                {
+                    v.target.transform.localScale = Vector3.one;
+                }                
 
-            List<BakeableMesh> temp = new List<BakeableMesh>();
-            customTextureExports = new List<string>();
-            BakeNonstandardRenderers(dynamicObject, temp, path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
+                List<BakeableMesh> temp = new List<BakeableMesh>();
+                customTextureExports = new List<string>();
+                BakeNonstandardRenderers(temporaryDynamic, temp, path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
 
-            //need to bake scale into dynamic, since it doesn't have context about the scene hierarchy
-            //likely no longer true? GLTF includes scales from hierarchy. needs more testing
-            //Vector3 startScale = dynamicObject.transform.localScale;
-            //dynamicObject.transform.localScale = dynamicObject.transform.lossyScale;
-            //RectTransform rt = dynamicObject.GetComponent<RectTransform>();
-            //if (rt != null)
-            //{
-            //    var width = rt.sizeDelta.x;
-            //    var height = rt.sizeDelta.y;
-            //    var min = Mathf.Min(width, height);
-            //    dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x * min,
-            //        dynamicObject.transform.localScale.y * min,
-            //        dynamicObject.transform.localScale.z);
-            //}
-            try
-            {
-                var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { dynamicObject.transform }, dynamicObject);
-                exporter.SetNonStandardOverrides(temp);
-                exporter.SaveGLTFandBin(path + dynamicObject.MeshName + Path.DirectorySeparatorChar, dynamicObject.MeshName,customTextureExports);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-            //if (rt != null)
-            //{
-            //    var width = rt.sizeDelta.x;
-            //    var height = rt.sizeDelta.y;
-            //    var min = Mathf.Min(width, height);
-            //    dynamicObject.transform.localScale = new Vector3(dynamicObject.transform.localScale.x / min,
-            //        dynamicObject.transform.localScale.y / min,
-            //        dynamicObject.transform.localScale.z);
-            //}
-            //dynamicObject.transform.localScale = startScale;
+                //export as gltf
+                try
+                {
+                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { temporaryDynamic.transform }, temporaryDynamic);
+                    exporter.SetNonStandardOverrides(temp);
+                    exporter.SaveGLTFandBin(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar, temporaryDynamic.MeshName, customTextureExports);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
 
-            //destroy bakeable meshes from non-standard renderers
-            for (int i = 0; i < temp.Count; i++)
-            {
-                if (temp[i].useOriginalscale)
-                    temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
-                UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
-                UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
-                if (temp[i].tempGo != null)
-                    UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
-            }
+                //destroy bakeable meshes from non-standard renderers
+                for (int i = 0; i < temp.Count; i++)
+                {
+                    if (temp[i].useOriginalscale)
+                        temp[i].meshRenderer.transform.localScale = temp[i].originalScale;
+                    UnityEngine.Object.DestroyImmediate(temp[i].meshFilter);
+                    UnityEngine.Object.DestroyImmediate(temp[i].meshRenderer);
+                    if (temp[i].tempGo != null)
+                        UnityEngine.Object.DestroyImmediate(temp[i].tempGo);
+                }
 
-            dynamicObject.transform.localPosition = originalOffset;
-            dynamicObject.transform.localRotation = originalRot;
-            //dynamicObject.transform.localScale = originalScale;
-            foreach (var v in list)
-            {
-                v.target.transform.localScale = v.localScale;
-            }
+                //reset transform
+                temporaryDynamic.transform.localPosition = originalOffset;
+                temporaryDynamic.transform.localRotation = originalRot;
+                foreach (var v in list)
+                {
+                    v.target.transform.localScale = v.localScale;
+                }
 
-            EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
+                EditorCore.SaveDynamicThumbnailAutomatic(temporaryDynamic.gameObject);
 
-            //queue resize texture
-            ResizeQueue.Enqueue(path + dynamicObject.MeshName + Path.DirectorySeparatorChar);
-            EditorApplication.update -= UpdateResize;
-            EditorApplication.update += UpdateResize;
+                //queue resize texture
+                ResizeQueue.Enqueue(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
+                EditorApplication.update -= UpdateResize;
+                EditorApplication.update += UpdateResize;
 
-            //clean up
-            if (prefabInScene != null)
-            {
-                GameObject.DestroyImmediate(prefabInScene);
+                //clean up
+                if (prefabInScene != null)
+                {
+                    GameObject.DestroyImmediate(prefabInScene);
+                }
             }
             if (displayPopup)
             {
                 EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
             }
-            return true;
+            //return true;
         }
 
         /// <summary>
@@ -1492,11 +1469,8 @@ namespace CognitiveVR
                 RecurseThroughChildren(selected.transform, AllDynamics);
             }
 
-            //export each
-            foreach (var dynamic in AllDynamics)
-            {
-                ExportDynamicObject(dynamic);
-            }
+            //export all
+            ExportDynamicObjects(AllDynamics);
 
             //remove spawned prefabs
             foreach (var v in temporarySpawnedPrefabs)

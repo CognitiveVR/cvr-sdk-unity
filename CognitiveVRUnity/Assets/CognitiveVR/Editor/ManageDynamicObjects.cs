@@ -437,6 +437,7 @@ namespace CognitiveVR
             EditorCore.RefreshSceneVersion(() =>
             {
                 List<GameObject> uploadList = new List<GameObject>();
+                List<DynamicObject> exportList = new List<DynamicObject>();
                 foreach(var entry in Entries)
                 {
                     var dyn = entry.objectReference;
@@ -445,7 +446,7 @@ namespace CognitiveVR
                     //check if export files exist
                     if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        ExportUtility.ExportDynamicObject(dyn);
+                        exportList.Add(dyn);                        
                     }
                     //check if thumbnail exists
                     if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
@@ -454,6 +455,8 @@ namespace CognitiveVR
                     }
                     uploadList.Add(dyn.gameObject);
                 }
+
+                ExportUtility.ExportDynamicObjects(exportList);
 
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
@@ -495,14 +498,16 @@ namespace CognitiveVR
                 Selection.objects = gos.ToArray();
 
                 List<GameObject> uploadList = new List<GameObject>();
+                List<DynamicObject> exportList = new List<DynamicObject>();
                 foreach (var entry in Entries)
                 {
                     var dyn = entry.objectReference;
                     if (dyn == null) { continue; }
+                    if (!entry.selected) { continue; }
                     //check if export files exist
                     if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
                     {
-                        ExportUtility.ExportDynamicObject(dyn);
+                        exportList.Add(dyn);
                     }
                     //check if thumbnail exists
                     if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
@@ -511,6 +516,7 @@ namespace CognitiveVR
                     }
                     uploadList.Add(dyn.gameObject);
                 }
+                ExportUtility.ExportDynamicObjects(exportList);
 
                 EditorCore.RefreshSceneVersion(delegate ()
                 {

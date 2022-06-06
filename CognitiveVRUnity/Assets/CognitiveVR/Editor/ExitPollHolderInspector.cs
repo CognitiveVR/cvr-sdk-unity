@@ -103,7 +103,7 @@ namespace CognitiveVR
                 p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
                 var rect = GUILayoutUtility.GetLastRect();
                 rect.width = 20;
-                GUI.Label(rect, new GUIContent(EditorCore.Alert, "Hook should not be empty!"));
+                GUI.Label(rect, new GUIContent(EditorCore.Error, "Hook should not be empty!"));
                 EditorGUI.indentLevel--;
             }
             else

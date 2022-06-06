@@ -44,6 +44,10 @@ namespace CognitiveVR
         private static void ThreadedScale(Texture2D tex, int newWidth, int newHeight, bool useBilinear)
         {
             texColors = tex.GetPixels();
+
+            //skip small (64x64 pixels) textures
+            if (texColors.Length < 4096 ) { return; }
+
             newColors = new Color[newWidth * newHeight];
             if (useBilinear)
             {
