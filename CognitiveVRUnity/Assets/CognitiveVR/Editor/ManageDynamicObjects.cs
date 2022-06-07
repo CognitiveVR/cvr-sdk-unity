@@ -54,6 +54,11 @@ namespace CognitiveVR
 {
     Rect steptitlerect = new Rect(30, 0, 100, 440);
         
+        //cached gui styles
+        GUIStyle dynamiclabel;
+        GUIStyle dynamicentry_odd;
+        GUIStyle dynamicentry_even;
+        GUIStyle image_centered;
 
     class Entry
     {
@@ -155,6 +160,15 @@ namespace CognitiveVR
     string searchBarString = string.Empty;
     private void OnGUI()
     {
+        //cache gui styles
+        if (dynamiclabel == null)
+        {
+            dynamiclabel = EditorCore.WizardGUISkin.GetStyle("dynamiclabel");
+            dynamicentry_odd = EditorCore.WizardGUISkin.GetStyle("dynamicentry_odd");
+            dynamicentry_even = EditorCore.WizardGUISkin.GetStyle("dynamicentry_even");
+            image_centered = EditorCore.WizardGUISkin.GetStyle("image_centered");
+        }
+
         if (needsRefreshDevKey == true)
         {
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
@@ -217,7 +231,7 @@ namespace CognitiveVR
             //generic menu
             GenericMenu gm = new GenericMenu();
             gm.AddItem(new GUIContent("Meshes"), filterMeshes, OnToggleMeshFilter);
-            gm.AddItem(new GUIContent("GameObjects"), filterGameObjects, OnToggleGameObjectFilter);
+            gm.AddItem(new GUIContent("GameObject Names"), filterGameObjects, OnToggleGameObjectFilter);
             gm.AddItem(new GUIContent("Ids"), filterIds, OnToggleIdFilter);
             gm.ShowAsContext();
         }
@@ -685,13 +699,29 @@ namespace CognitiveVR
             FilterList(searchBarString);
     }
 
+    bool CommonMeshesContainsSearch(string search)
+        {
+            foreach(var commonMesh in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+            {
+                if (commonMesh.ToLower().Contains(search))
+                    {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     public void FilterList(string inputstring)
     {
         string compareString = inputstring.ToLower();
         foreach (var entry in Entries)
         {
             entry.visible = false;
-            if (filterMeshes && entry.meshName.ToLower().Contains(compareString))
+            if (filterMeshes && entry.objectReference.UseCustomMesh && entry.meshName.ToLower().Contains(compareString))
+            {
+                entry.visible = true;
+            }
+            else if (filterMeshes && !entry.objectReference.UseCustomMesh && CommonMeshesContainsSearch(compareString))
             {
                 entry.visible = true;
             }
@@ -793,42 +823,40 @@ namespace CognitiveVR
 
         //background
         if (darkbackground)
-            GUI.Box(rect, "", "dynamicentry_even");
+            GUI.Box(rect, "", dynamicentry_even);
         else
-            GUI.Box(rect, "", "dynamicentry_odd");
+            GUI.Box(rect, "", dynamicentry_odd);
 
         Rect selectedRect = new Rect(rect.x + 0, rect.y, 30, rect.height);
         Rect gameobjectRect = new Rect(rect.x + 30, rect.y, 140, rect.height);
         Rect mesh = new Rect(rect.x + 180, rect.y, 140, rect.height);
-        Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
         Rect idRect = new Rect(rect.x + 320, rect.y, 150, rect.height);
         Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
 
         var toggleIcon = dynamic.selected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
-        dynamic.selected = GUI.Toggle(selectedRect, dynamic.selected, toggleIcon, "image_centered");
-
+        dynamic.selected = GUI.Toggle(selectedRect, dynamic.selected, toggleIcon, image_centered);
 
         //gameobject name or id pool count
-        GUI.Label(gameobjectRect, dynamic.gameobjectName, "dynamiclabel");
-        GUI.Label(mesh, dynamic.meshName, "dynamiclabel");
+        GUI.Label(gameobjectRect, dynamic.gameobjectName, dynamiclabel);
+        GUI.Label(mesh, dynamic.objectReference.UseCustomMesh?dynamic.meshName:dynamic.objectReference.CommonMesh.ToString(), dynamiclabel);
 
         if (dynamic.isIdPool)
         {
-            GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", "dynamiclabel");
+            GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", dynamiclabel);
         }
         else
         {
-            GUI.Label(idRect, dynamic.objectReference.CustomId, "dynamiclabel");
+            GUI.Label(idRect, dynamic.objectReference.CustomId, dynamiclabel);
         }
 
         //has been exported
-        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName)) //|| !dynamic.UseCustomMesh
+        if (!dynamic.objectReference.UseCustomMesh || EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName))
         {
-            GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+            GUI.Label(uploaded, EditorCore.Checkmark, image_centered);
         }
         else
         {
-            GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
+            GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
         }
     }
     
