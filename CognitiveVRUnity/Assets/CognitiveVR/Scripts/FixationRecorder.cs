@@ -242,6 +242,7 @@ namespace CognitiveVR
             return false;
         }
 #elif CVR_VIVEPROEYE
+        ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;        
         bool useDataQueue1;
         bool useDataQueue2;
         static System.Collections.Concurrent.ConcurrentQueue<ViveSR.anipal.Eye.EyeData> EyeDataQueue1;
@@ -271,7 +272,12 @@ namespace CognitiveVR
 
         private void OnDisable()
         {
-            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            UnregisterEyeCallbacks();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+        }
+
+        void UnregisterEyeCallbacks()
+        {
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
@@ -285,7 +291,6 @@ namespace CognitiveVR
                     ViveSR.anipal.Eye.SRanipal_Eye_v2.WrapperUnRegisterEyeDataCallback(functionPointer);
                 }
             }
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
         }
 
         public void SetupCallbacks()
@@ -295,12 +300,12 @@ namespace CognitiveVR
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
+            framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null)
                 framework.StartFramework();
 
             //if framework status is not working, registering callbacks will not work
-            if (ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
+            if (framework == null || ViveSR.anipal.Eye.SRanipal_Eye_Framework.Status != ViveSR.anipal.Eye.SRanipal_Eye_Framework.FrameworkStatus.WORKING)
             {
                 Util.logWarning("FixationRecorder found SRanipal_Eye_Framework not in working status");
                 return;
@@ -309,8 +314,7 @@ namespace CognitiveVR
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 //unregister existing callbacks
-                OnDisable();
-                UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+                UnregisterEyeCallbacks();
 
                 if (framework.EnableEyeVersion == ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion.version1)
                 {
@@ -341,7 +345,6 @@ namespace CognitiveVR
 
         void PostSessionEndEvent()
         {
-            var framework = ViveSR.anipal.Eye.SRanipal_Eye_Framework.Instance;
             if (framework != null && framework.EnableEyeDataCallback)
             {
                 //unregister existing callbacks

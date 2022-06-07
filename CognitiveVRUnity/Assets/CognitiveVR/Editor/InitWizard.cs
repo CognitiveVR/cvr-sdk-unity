@@ -51,7 +51,6 @@ public class InitWizard : EditorWindow
             case "setupcontrollers": ControllerUpdate(); break;
             case "listdynamics": ListDynamicUpdate(); break;
             case "uploadscene": UploadSceneUpdate(); break;
-            //case "upload": UploadUpdate(); break;
             case "uploadsummary": UploadSummaryUpdate(); break;
             case "done": DoneUpdate(); break;
         }
@@ -224,6 +223,9 @@ public class InitWizard : EditorWindow
 #if CVR_VARJO
         selectedsdks.Add("CVR_VARJO");
 #endif
+#if CVR_VARJOXR
+        selectedsdks.Add("CVR_VARJOXR");
+#endif
 #if CVR_PICOVR
         selectedsdks.Add("CVR_PICOVR");
 #endif
@@ -261,6 +263,7 @@ public class InitWizard : EditorWindow
 
         Vector2 sdkScrollPos;
         List<string> selectedsdks = new List<string>();
+
     void SelectSDKUpdate()
     {
         GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
@@ -276,8 +279,8 @@ public class InitWizard : EditorWindow
                 Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
             }
 
-            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Varjo XR 3.0.0", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR", "CVR_VARJO", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "Varjo XR 3.0.0", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
+            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_VARJO", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR",  "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
             Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
         sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -292,7 +295,7 @@ public class InitWizard : EditorWindow
             {
                     separatorOne = 32;
             }
-            if (i > 5)
+            if (i > 6)
             {
                 separatorTwo = 32;
             }
@@ -323,7 +326,7 @@ public class InitWizard : EditorWindow
                 int kerning = 4;
                 GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Eye Tracking", "boldlabel");
             }
-            if (i == 7)
+            if (i == 8)
             {
                 int kerning = 4;
                 GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Legacy Support", "boldlabel");
@@ -1695,15 +1698,6 @@ public class InitWizard : EditorWindow
                     }
                     text = "Next";
                     break;
-            case "upload":
-                onclick += () => EditorCore.RefreshSceneVersion(null);
-                if (understandRevealTime > EditorApplication.timeSinceStartup)
-                {
-                    buttonDisabled = true;
-                }
-                text = "I understand, Continue";
-                buttonrect = new Rect(290, 510, 200, 30);
-                break;
             case "uploadsummary":
 
                 System.Action completedmanifestupload = delegate ()
@@ -1837,10 +1831,6 @@ public class InitWizard : EditorWindow
             case "listdynamics":
                 text = "Back";
                 buttonrect = new Rect(260, 510, 80, 30);
-                break;
-            case "upload":
-                text = "Back";
-                buttonrect = new Rect(200, 510, 80, 30);
                 break;
             case "uploadscene":
                 text = "Back";
