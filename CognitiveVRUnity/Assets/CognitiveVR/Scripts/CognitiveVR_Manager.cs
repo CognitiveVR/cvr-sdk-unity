@@ -102,9 +102,6 @@ namespace CognitiveVR
         YieldInstruction playerSnapshotInverval;
         YieldInstruction GPSUpdateInverval;
 
-        //cached Time.frameCount to quickly get Util.Timestamp
-        public static int FrameCount { get; private set; }
-
         public static bool IsQuitting = false;
 
         static Error initResponse = Error.NotInitialized;
@@ -675,7 +672,6 @@ namespace CognitiveVR
             while (Core.IsInitialized)
             {
                 yield return playerSnapshotInverval;
-                FrameCount = Time.frameCount;
                 Core.InvokeTickEvent();
             }
         }

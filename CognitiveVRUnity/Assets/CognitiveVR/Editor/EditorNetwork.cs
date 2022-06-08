@@ -123,7 +123,7 @@ public class EditorNetwork
             try
             {
                     int responseCode = (int)EditorWebRequests[i].Request.responseCode;
-                Util.logDebug("Got Response from " + EditorWebRequests[i].Request.url + ": [CODE] " + responseCode
+                Util.logDevelopment("Got Response from " + EditorWebRequests[i].Request.url + ": [CODE] " + responseCode
                     + (!string.IsNullOrEmpty(EditorWebRequests[i].Request.downloadHandler.text) ? " [TEXT] " + EditorWebRequests[i].Request.downloadHandler.text:"")
                     + (!string.IsNullOrEmpty(EditorWebRequests[i].Request.error) ? " [ERROR] " + EditorWebRequests[i].Request.error:""));
                 if (EditorWebRequests[i].Response != null)
@@ -154,7 +154,7 @@ public class EditorNetwork
         {
             EditorUtility.ClearProgressBar();
             int responseCode = (int)ActiveQueuedWebRequest.Request.responseCode;
-            Util.logDebug("Got Response from " + ActiveQueuedWebRequest.Request.url + ": [CODE] " + responseCode
+            Util.logDevelopment("Got Response from " + ActiveQueuedWebRequest.Request.url + ": [CODE] " + responseCode
                 + (!string.IsNullOrEmpty(ActiveQueuedWebRequest.Request.downloadHandler.text) ? " [TEXT] " + ActiveQueuedWebRequest.Request.downloadHandler.text : "")
                 + (!string.IsNullOrEmpty(ActiveQueuedWebRequest.Request.error) ? " [ERROR] " + ActiveQueuedWebRequest.Request.error : ""));
             if (ActiveQueuedWebRequest.Response != null)

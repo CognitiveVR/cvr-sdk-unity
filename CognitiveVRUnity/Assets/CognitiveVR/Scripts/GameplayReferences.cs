@@ -307,6 +307,17 @@ namespace CognitiveVR
                         }
                     }
 #endif
+#if CVR_PICOVR
+//camera component is disabled, so it isn't returned with Camera.main
+                    foreach (var cam in Object.FindObjectsOfType<Camera>())
+                    {
+                        if (cam.gameObject.CompareTag("MainCamera"))
+                        {
+                            _hmd = cam.transform;
+                            break;
+                        }
+                    }
+#endif
                     if (_hmd == null)
                     {
                         if (Camera.main != null)
