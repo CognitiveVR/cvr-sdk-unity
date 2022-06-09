@@ -472,7 +472,7 @@ namespace CognitiveVR
             int numberOfLargeTasks = CountValidLargeTasks(CustomRenders, Terrains);
             float progressPerLargeTask = 0.3f / numberOfLargeTasks;
 
-            int numberOfTasks = numberOfSmallTasks + numberOfLargeTasks;
+            //int numberOfTasks = numberOfSmallTasks + numberOfLargeTasks;
 
             float currentProgress = 0.1f;
             int currentTask = 0;

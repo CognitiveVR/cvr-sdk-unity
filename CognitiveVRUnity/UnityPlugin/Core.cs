@@ -9,7 +9,7 @@ namespace CognitiveVR
     public static class Core
     {
 
-        public const string SDK_VERSION = "0.26.16";
+        public const string SDK_VERSION = "0.26.17";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
