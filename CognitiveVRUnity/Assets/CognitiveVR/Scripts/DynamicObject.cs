@@ -274,6 +274,8 @@ namespace CognitiveVR
             DynamicManager.SetTransform(DataId, transform);
 
             CognitiveVR.DynamicManager.RemoveDynamicObject(DataId);
+
+            Core.InitEvent -= OnCoreInitialize;
         }
 
 #if UNITY_EDITOR
