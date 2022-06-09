@@ -188,11 +188,10 @@ namespace CognitiveVR
                     CognitiveVR.Core.TickEvent += Core_TickEvent;
                 }
             }
-        }
-
-        void Start()
-        {
-            Core.InitEvent += OnCoreInitialize;
+            else
+            {
+                Core.InitEvent += OnCoreInitialize;
+            }
         }
 
         private void Core_TickEvent()
@@ -203,7 +202,10 @@ namespace CognitiveVR
         private void OnCoreInitialize(CognitiveVR.Error error)
         {
             if (error == Error.None)
+            {
+                Core.InitEvent -= OnCoreInitialize;
                 OnEnable();
+            }
         }
 
         /// <summary>
