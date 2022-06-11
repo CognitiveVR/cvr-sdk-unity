@@ -85,6 +85,7 @@ namespace CognitiveVR
                 roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
                 return true;
             }
+            return false;
 #elif CVR_XR || CVR_WINDOWSMR || CVR_VARJO
             List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
             UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
