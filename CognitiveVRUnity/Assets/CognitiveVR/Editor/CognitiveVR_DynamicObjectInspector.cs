@@ -161,19 +161,35 @@ namespace CognitiveVR
                 var dyn = target as DynamicObject;
                 if (dyn.IdPool == null)
                 {
-                    if (GUILayout.Button("New Dynamic Object Id Pool"))
+                    if (GUILayout.Button("New Dynamic Object Id Pool")) //this can overwrite an existing id pool with the same name. should this just find a pool?
                     {
-                        var pool = ScriptableObject.CreateInstance<DynamicObjectIdPool>();
-                        //write some values
-                        pool.Ids = new string[1] { System.Guid.NewGuid().ToString() };
-                        pool.MeshName = dyn.MeshName;
-                        pool.PrefabName = dyn.gameObject.name;
-                        //save to root assets folder
-                        AssetDatabase.CreateAsset(pool, "Assets/" + pool.MeshName + " Id Pool.asset");
-                        AssetDatabase.SaveAssets();
-                        AssetDatabase.Refresh();
-                        //get reference to file
-                        idPool.objectReferenceValue = pool;
+                        string poolMeshName = dyn.MeshName;
+                        string assetPath = "Assets/" + poolMeshName + " Id Pool.asset";
+
+                        //check if asset exists
+                        var foundPool = (DynamicObjectIdPool)AssetDatabase.LoadAssetAtPath(assetPath, typeof(DynamicObjectIdPool));
+                        if (foundPool == null)
+                        {
+                            var pool = GenerateNewIDPoolAsset(assetPath, dyn);
+                            idPool.objectReferenceValue = pool;
+                        }
+                        else
+                        {
+                            //popup - new pool asset, add to existing pool (if matching mesh name), cancel
+                            int result = EditorUtility.DisplayDialogComplex("Found Id Pool", "An existing Id Pool with the same mesh name was found. Do you want to use this Id Pool instead?", "New Asset", "Cancel", "Use Existing");
+
+                            if (result == 0)//new asset with unique name
+                            {
+                                string finalAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(assetPath);
+                                var pool = GenerateNewIDPoolAsset(finalAssetPath, dyn);
+                                idPool.objectReferenceValue = pool;
+                            }
+                            if (result == 2) //reference existing pool
+                            {
+                                idPool.objectReferenceValue = foundPool;
+                            }
+                            if (result == 1) { }//cancel
+                        }
                     }
                 }
             }
@@ -381,6 +397,18 @@ namespace CognitiveVR
             //TODO replace non-ascii characters
             string inputMod = input.Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_").Replace("#", "_").Replace("[", "_").Replace("]", "_").Replace("%", "_").Replace("^", "_").Replace("$", "_");
             return inputMod;
+        }
+
+        DynamicObjectIdPool GenerateNewIDPoolAsset(string assetPath, DynamicObject dynamic)
+        {
+            var pool = ScriptableObject.CreateInstance<DynamicObjectIdPool>();
+            pool.Ids = new string[1] { System.Guid.NewGuid().ToString() };
+            pool.MeshName = dynamic.MeshName;
+            pool.PrefabName = dynamic.gameObject.name;
+            AssetDatabase.CreateAsset(pool, assetPath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            return pool;
         }
     }
 }
