@@ -137,7 +137,7 @@ namespace CognitiveVR
                     }
                     catch
                     {
-                        Debug.LogError("exception. range is " + (y1 + xFloor + 1) + " and " + (y2 + xFloor + 1) + "/" + texColors.Length);
+                        Debug.LogError("Texture Resize Error. Range is " + (y1 + xFloor + 1) + " and " + (y2 + xFloor + 1) + "/" + texColors.Length);
                         newColors[yw + x] = Color.magenta;
                     }
                 }

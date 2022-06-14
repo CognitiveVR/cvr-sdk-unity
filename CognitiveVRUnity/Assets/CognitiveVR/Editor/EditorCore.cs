@@ -1508,12 +1508,12 @@ namespace CognitiveVR
                 }
 
                 //IMPROVEMENT include target's rotation
-                position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
+                position = TransformPointUnscaled(target.transform, new Vector3(-1, 1, -1) * largestBounds.size.magnitude * 3 / 4);
                 rotation = Quaternion.LookRotation(largestBounds.center - position, Vector3.up);
             }
             else //canvas dynamic objects
             {
-                position = target.transform.TransformPointUnscaled(new Vector3(-1, 1, -1) * 3 / 4);
+                position = TransformPointUnscaled(target.transform, new Vector3(-1, 1, -1) * 3 / 4);
                 rotation = Quaternion.LookRotation(target.transform.position - position, Vector3.up);
             }
         }
@@ -1598,5 +1598,17 @@ namespace CognitiveVR
         }
 
         #endregion
+
+        public static Vector3 TransformPointUnscaled(Transform transform, Vector3 position)
+        {
+            var localToWorldMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+            return localToWorldMatrix.MultiplyPoint3x4(position);
+        }
+
+        public static Vector3 InverseTransformPointUnscaled(Transform transform, Vector3 position)
+        {
+            var worldToLocalMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one).inverse;
+            return worldToLocalMatrix.MultiplyPoint3x4(position);
+        }
     }
 }
