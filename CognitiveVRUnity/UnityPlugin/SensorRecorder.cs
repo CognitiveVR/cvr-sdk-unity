@@ -22,7 +22,15 @@ namespace CognitiveVR
             {
                 Name = name;
                 Rate = string.Format("{0:0.00}", rate);
-                UpdateInterval = 1 / rate;
+                if (rate == 0)
+                {
+                    UpdateInterval = 1 / 10;
+                    Util.logWarning("Initializing Sensor " + name + " at 0 hz! Defaulting to 10hz");
+                }
+                else
+                {
+                    UpdateInterval = 1 / rate;
+                }
             }
         }
 

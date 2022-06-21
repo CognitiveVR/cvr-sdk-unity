@@ -31,7 +31,7 @@ namespace CognitiveVR
                 if (imagechild == null) { continue; }
                 var image = imagechild.GetComponent<UnityEngine.UI.Image>();
                 if (image == null) { continue; }
-                panel.SetIntegerButtonColor(image, i / (float)gazeButtonCount);
+                image.color = panel.IntegerGradient.Evaluate(i / (float)gazeButtonCount);
             }
             Debug.Log("Set " + gazeButtonCount + " colours on gaze buttons");
         }

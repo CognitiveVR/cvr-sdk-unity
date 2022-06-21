@@ -47,8 +47,15 @@ namespace CognitiveVR.Components
         void IntervalEnd()
         {
             // Interval ended - update GUI text and start new interval
-            float lastFps = accum / frames;
-            SensorRecorder.RecordDataPoint("FPS", lastFps);
+            if (frames != 0)
+            {
+                float lastFps = accum / frames;
+                SensorRecorder.RecordDataPoint("FPS", lastFps);
+            }
+            else
+            {
+                Util.logError("Framerate interval ended with 0 frames!");
+            }
         }
 
         public override string GetDescription()

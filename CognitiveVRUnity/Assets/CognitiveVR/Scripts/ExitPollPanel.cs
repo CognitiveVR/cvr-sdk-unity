@@ -185,7 +185,7 @@ namespace CognitiveVR
 
             for (int i = 0; i < ContentRoot.childCount; i++)
             {
-                if (minValue > i) //turn off
+                if (minValue > i) //turn off lower buttons
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(false);
                 }
@@ -197,11 +197,11 @@ namespace CognitiveVR
 
             for (int i = minValue; i< ContentRoot.childCount;i++)
             {
-                if (i > maxValue)
+                if (i > maxValue) //turn off higher buttons
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(false);
                 }
-                else
+                else //ensure valid buttons are turned on
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(true);
                     SetIntegerButtonColor(ColorableImages[i], (float)i / totalCount);
@@ -218,7 +218,7 @@ namespace CognitiveVR
             }
         }
 
-        public void SetIntegerButtonColor(Image image, float gradientValue)
+        void SetIntegerButtonColor(Image image, float gradientValue)
         {
             image.color = IntegerGradient.Evaluate(gradientValue);
         }
