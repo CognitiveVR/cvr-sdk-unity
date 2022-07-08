@@ -71,7 +71,7 @@ namespace CognitiveVR
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
-                roomSize = new Vector3(roomX,0,roomZ);
+                roomSize = new Vector3(roomX,0,roomY);
                 return true;
             }
             else
@@ -717,7 +717,7 @@ namespace CognitiveVR
             return false;
         }
 
-        public static bool GetControllerInfo(bool right, out ControllerInfo info) //TODO contorller[x].id isn't always above 0. that's only true of steamvr, maybe oculus
+        public static bool GetControllerInfo(bool right, out ControllerInfo info)
         {
             InitializeControllers();
             if (controllers[0].isRight == right && controllers[0].id >= 0 && controllers[0].transform != null) { info = controllers[0]; return true; }
