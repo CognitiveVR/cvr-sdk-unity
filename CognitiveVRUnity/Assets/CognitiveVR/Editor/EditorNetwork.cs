@@ -115,7 +115,7 @@ public class EditorNetwork
         for (int i = EditorWebRequests.Count - 1; i >= 0; i--)
         {
             if (EditorWebRequests[i].IsBlocking)
-                EditorUtility.DisplayProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress);
+                EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress);
             if (!EditorWebRequests[i].Request.isDone) { return; }
             if (EditorWebRequests[i].IsBlocking)
                 EditorUtility.ClearProgressBar();

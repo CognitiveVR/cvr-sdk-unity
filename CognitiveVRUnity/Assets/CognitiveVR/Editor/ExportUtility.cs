@@ -1678,7 +1678,7 @@ namespace CognitiveVR
                 }
             }
 
-            EditorUtility.DisplayProgressBar("Upload Dynamic Object", currentDynamicUploadName, dynamicUploadWWW.uploadProgress);
+            EditorUtility.DisplayCancelableProgressBar("Upload Dynamic Object", currentDynamicUploadName, dynamicUploadWWW.uploadProgress);
 
             if (!dynamicUploadWWW.isDone) { return; }
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
