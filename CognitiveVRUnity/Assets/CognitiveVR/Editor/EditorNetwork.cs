@@ -114,8 +114,15 @@ public class EditorNetwork
         if (EditorWebRequests.Count == 0) { EditorApplication.update -= EditorUpdate; return; }
         for (int i = EditorWebRequests.Count - 1; i >= 0; i--)
         {
-            if (EditorWebRequests[i].IsBlocking)
-                EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress);
+                if (EditorWebRequests[i].IsBlocking)
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress))
+                    {
+                        Debug.Log("Cancelled EditorWebRequest: " + EditorWebRequests[i].RequestName + "   - " + EditorWebRequests[i].RequestInfo);
+                        EditorWebRequests[i].Request.Abort();
+                        EditorUtility.ClearProgressBar();
+                    }
+                }
             if (!EditorWebRequests[i].Request.isDone) { return; }
             if (EditorWebRequests[i].IsBlocking)
                 EditorUtility.ClearProgressBar();
@@ -149,7 +156,7 @@ public class EditorNetwork
         }
 
         EditorUtility.DisplayProgressBar(ActiveQueuedWebRequest.RequestName, ActiveQueuedWebRequest.RequestInfo, ActiveQueuedWebRequest.Request.uploadProgress);
-
+        
         if (ActiveQueuedWebRequest.Request.isDone)
         {
             EditorUtility.ClearProgressBar();
