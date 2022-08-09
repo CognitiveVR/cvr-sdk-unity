@@ -118,7 +118,6 @@ public class EditorNetwork
                 {
                     if (EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress))
                     {
-                        Debug.Log("Cancelled EditorWebRequest: " + EditorWebRequests[i].RequestName + "   - " + EditorWebRequests[i].RequestInfo);
                         EditorWebRequests[i].Request.Abort();
                         EditorUtility.ClearProgressBar();
                     }

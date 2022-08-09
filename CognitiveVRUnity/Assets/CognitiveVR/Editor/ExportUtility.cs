@@ -373,7 +373,10 @@ namespace CognitiveVR
             if (responseCode != 200 && responseCode != 201)
             {
                 Debug.LogError("Scene Upload Error " + error);
-                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
+                if (responseCode != 100) //ie user cancelled upload
+                {
+                    EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
+                }
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;
