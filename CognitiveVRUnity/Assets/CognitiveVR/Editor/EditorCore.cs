@@ -80,8 +80,13 @@ namespace CognitiveVR
 
             if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
             {
+#if UNITY_2019_4_OR_NEWER
+                EditorApplication.playModeStateChanged -= ModeChanged;
+                EditorApplication.playModeStateChanged += ModeChanged;
+#else
                 EditorApplication.playmodeStateChanged -= ModeChanged;
                 EditorApplication.playmodeStateChanged += ModeChanged;
+#endif
             }
         }
 
@@ -94,14 +99,14 @@ namespace CognitiveVR
             InitWizard.Init();
         }
 
-#if UNITY_2019_OR_NEWER
+#if UNITY_2019_4_OR_NEWER
         static void ModeChanged(PlayModeStateChange playModeState)
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)
             {
                 if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
                     EditorApplication.update += DelayUploadCache;
-                EditorApplication.playmodeStateChanged -= ModeChanged;
+                EditorApplication.playModeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
             }
         }
@@ -524,7 +529,7 @@ namespace CognitiveVR
             if (textFieldID == 0)
                 return value;
 
-#if !UNITY_2019_OR_NEWER
+#if !UNITY_2019_4_OR_NEWER
             //enables copy/paste from text fields in old versions of unity
             value = HandleCopyPaste(textFieldID) ?? value;
 #endif
