@@ -477,8 +477,22 @@ namespace CognitiveVR
                     if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World)
                         spawnRotation = myparameters.OverrideRotation;
                 }
-                var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
 
+                // Skip voice response if microphone not detected
+                var currentPanelProperties = panelProperties[currentPanelIndex];
+                if (currentPanelProperties["type"].Equals("VOICE") && Microphone.devices.Length == 0)
+                {
+                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                                                  // because that is what PanelID gets set to
+                    panelCount++;
+                    new CognitiveVR.CustomEvent("Skipped Voice Response in ExitPoll. Reason: No microphone detected")
+                        .SetProperty("Panel ID", tempPanelID)
+                        .Send();
+                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    return;
+                }
+
+                var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
                 CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
 
                 if (CurrentExitPollPanel == null)
