@@ -485,7 +485,7 @@ namespace CognitiveVR
                     int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
                                                   // because that is what PanelID gets set to
                     panelCount++;
-                    new CognitiveVR.CustomEvent("Skipped Voice Response in ExitPoll. Reason: No microphone detected")
+                    new CognitiveVR.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
                     OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
@@ -545,7 +545,13 @@ namespace CognitiveVR
             {
                 exitpollEvent.SetProperty(property.Key, property.Value);
             }
-            exitpollEvent.Send(CurrentExitPollPanel.transform.position);
+
+            //use vector3.zero if CurrentExitPollPanel was never set
+            Vector3 position = Vector3.zero;
+            if (CurrentExitPollPanel != null)
+                position = CurrentExitPollPanel.transform.position;
+
+            exitpollEvent.Send(position);
             Core.InvokeSendDataEvent(false);
         }
 
