@@ -2,7 +2,7 @@ The Cognitive3D SDK for Unity
 =========
 Welcome!  This SDK allows you to integrate your Unity games with Cognitive3D, which provides analytics and insights about your Unity project.  In addition, Cognitive3D empowers you to take actions that will improve users' engagement with your experience.
 
-**This plugin requires Unity 5.6.3p2 or newer**
+**This plugin requires Unity 2019.4.40f1 or newer**
 
 Quickstart
 =========
