@@ -1,0 +1,37 @@
+{
+	"name": "com.cognitive3d.c3d-sdk",
+	"version": "1.0.0",
+	"displayName": "Cognitive3D Unity SDK",
+	"description": "This is an example package",
+	"unity": "2019.1",
+	"documentationUrl": "https://example.com/",
+	"changelogUrl": "https://example.com/changelog.html",
+	"licensesUrl": "https://example.com/licensing.html",
+	"dependencies": {
+		"com.unity.nuget.newtonsoft-json": "3.0.2"
+	},
+	"keywords": [
+		"xr",
+		"vr",
+		"c3d",
+		"analytics",
+		"cognitive"
+	],
+	"author": {
+		"name": "Cognitive3d",
+		"email": "support@example.com",
+		"url": "https://www.cognitive3d.com"
+	},
+	"samples": [
+		{
+			"displayName": "Active Session View",
+			"description": "A tool to visualize data at runtime on a second display",
+			"path": "Samples~/ActiveSessionView"
+		},
+		{
+			"displayName": "Ready Room",
+			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
+			"path": "Samples~/ReadyRoom"
+		}
+	]
+}
