@@ -5,6 +5,8 @@ using UnityEngine;
 //Instance created from assessment base on Start
 //holds ordered collection of assessments to complete in the ready room
 
+//TODO make this a monobehaviour and just iterate through a list of assessments
+
 namespace CognitiveVR
 {
     public class AssessmentManager

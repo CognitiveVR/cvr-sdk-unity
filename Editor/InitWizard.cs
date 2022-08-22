@@ -12,177 +12,177 @@ using Valve.Newtonsoft.Json;
 
 namespace CognitiveVR
 {
-public class InitWizard : EditorWindow
-{
-    Rect steptitlerect = new Rect(30, 0, 100, 440);
-    Rect boldlabelrect = new Rect(30, 100, 440, 440);
-
-    public static void Init()
+    public class InitWizard : EditorWindow
     {
-        InitWizard window = (InitWizard)EditorWindow.GetWindow(typeof(InitWizard), true, "");
-        window.minSize = new Vector2(500, 550);
-        window.maxSize = new Vector2(500, 550);
-        window.Show();
+        Rect steptitlerect = new Rect(30, 0, 100, 440);
+        Rect boldlabelrect = new Rect(30, 100, 440, 440);
 
-        window.LoadKeys();
-        window.GetSelectedSDKs();
-
-        ExportUtility.ClearUploadSceneSettings();
-    }
-    
-    List<string> pageids = new List<string>() { "welcome", "authenticate","selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
-    public int currentPage;
-
-    static int lastDevKeyResponseCode = 0;
-    private void OnGUI()
-    {
-        GUI.skin = EditorCore.WizardGUISkin;
-        GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
-        
-        //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-        //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
-        switch (pageids[currentPage])
+        public static void Init()
         {
-            case "welcome":WelcomeUpdate(); break;
-            case "authenticate": AuthenticateUpdate(); break;
-            case "selectsdk": SelectSDKUpdate(); break;
-            case "explainscene": SceneExplainUpdate(); break;
-            case "explaindynamic": DynamicExplainUpdate(); break;
-            case "setupcontrollers": ControllerUpdate(); break;
-            case "listdynamics": ListDynamicUpdate(); break;
-            case "uploadscene": UploadSceneUpdate(); break;
-            case "uploadsummary": UploadSummaryUpdate(); break;
-            case "done": DoneUpdate(); break;
+            InitWizard window = (InitWizard)EditorWindow.GetWindow(typeof(InitWizard), true, "");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+
+            window.LoadKeys();
+            window.GetSelectedSDKs();
+
+            ExportUtility.ClearUploadSceneSettings();
         }
 
-        DrawFooter();
-        Repaint(); //manually repaint gui each frame to make sure it's responsive
-    }
+        List<string> pageids = new List<string>() { "welcome", "authenticate", "selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
+        public int currentPage;
 
-    void WelcomeUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Core.SDK_VERSION + ")", "steptitle");
-
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+        static int lastDevKeyResponseCode = 0;
+        private void OnGUI()
         {
-            //upload new version
-            GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
-            GUI.Label(new Rect(0, 140, 475, 130), EditorCore.Alert, "image_centered");
-            GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.\n\n\n\n"+
-                "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again.\n\n" +
-                "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
+            GUI.skin = EditorCore.WizardGUISkin;
+            GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
+
+            //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
+            //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+            switch (pageids[currentPage])
+            {
+                case "welcome": WelcomeUpdate(); break;
+                case "authenticate": AuthenticateUpdate(); break;
+                case "selectsdk": SelectSDKUpdate(); break;
+                case "explainscene": SceneExplainUpdate(); break;
+                case "explaindynamic": DynamicExplainUpdate(); break;
+                case "setupcontrollers": ControllerUpdate(); break;
+                case "listdynamics": ListDynamicUpdate(); break;
+                case "uploadscene": UploadSceneUpdate(); break;
+                case "uploadsummary": UploadSummaryUpdate(); break;
+                case "done": DoneUpdate(); break;
+            }
+
+            DrawFooter();
+            Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
-        else
+
+        void WelcomeUpdate()
         {
-            GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.", "normallabel");
+            GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Core.SDK_VERSION + ")", "steptitle");
+
+            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+            {
+                //upload new version
+                GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
+                GUI.Label(new Rect(0, 140, 475, 130), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.\n\n\n\n" +
+                    "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again.\n\n" +
+                    "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
+            }
+            else
+            {
+                GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.", "normallabel");
+            }
         }
-    }
 
-#region Auth Keys
+        #region Auth Keys
 
-    string apikey ="";
-    string developerkey = "";
-    void AuthenticateUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 2 - AUTHENTICATION", "steptitle");
-        GUI.Label(boldlabelrect, "Please add your "+EditorCore.DisplayValue(DisplayKey.ShortName)+" authorization keys below to continue.\n\nThese are available on the Project Dashboard.", "boldlabel");
-
-        //dev key
-        GUI.Label(new Rect(30, 250, 100, 30), "Developer Key", "miniheader");
-        if (string.IsNullOrEmpty(developerkey)) //empty
+        string apikey = "";
+        string developerkey = "";
+        void AuthenticateUpdate()
         {
-            GUI.Label(new Rect(30, 280, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-            GUI.Label(new Rect(440, 280, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
-            lastDevKeyResponseCode = 0;
-            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
-        }
-        else if (lastDevKeyResponseCode == 200) //valid key
-        {
-            GUI.Label(new Rect(440, 280, 24, 40), EditorCore.Checkmark, "image_centered");
-            string previous = developerkey;
-            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
-            if (previous != developerkey)
+            GUI.Label(steptitlerect, "STEP 2 - AUTHENTICATION", "steptitle");
+            GUI.Label(boldlabelrect, "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys below to continue.\n\nThese are available on the Project Dashboard.", "boldlabel");
+
+            //dev key
+            GUI.Label(new Rect(30, 250, 100, 30), "Developer Key", "miniheader");
+            if (string.IsNullOrEmpty(developerkey)) //empty
+            {
+                GUI.Label(new Rect(30, 280, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+                GUI.Label(new Rect(440, 280, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
                 lastDevKeyResponseCode = 0;
-        }
-        else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
-        {
-            GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
-            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
-        }
-        else //invalid key
-        {
-            GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
-            string previous = developerkey;
-            developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32, "textfield_warning");
-            if (previous != developerkey)
-                lastDevKeyResponseCode = 0;
+                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+            }
+            else if (lastDevKeyResponseCode == 200) //valid key
+            {
+                GUI.Label(new Rect(440, 280, 24, 40), EditorCore.Checkmark, "image_centered");
+                string previous = developerkey;
+                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+                if (previous != developerkey)
+                    lastDevKeyResponseCode = 0;
+            }
+            else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
+            {
+                GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
+                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+            }
+            else //invalid key
+            {
+                GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
+                string previous = developerkey;
+                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32, "textfield_warning");
+                if (previous != developerkey)
+                    lastDevKeyResponseCode = 0;
+            }
+
+            if (lastDevKeyResponseCode != 200 && lastDevKeyResponseCode != 0)
+            {
+                GUI.Label(new Rect(30, 325, 400, 30), "This Developer Key is invalid or expired. Please visit this project on our dashboard and " +
+                    "ensure you have a valid Developer Key. This is a requirement to upload or update any Scene or Dynamic Object. Developer Keys expire " +
+                    "automatically after 90 days.", "miniwarning");
+            }
+
+            //api key
+            GUI.Label(new Rect(30, 360, 100, 30), "Application Key", "miniheader");
+            apikey = EditorCore.TextField(new Rect(30, 390, 400, 40), apikey, 32);
+            if (string.IsNullOrEmpty(apikey))
+            {
+                GUI.Label(new Rect(30, 390, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+                GUI.Label(new Rect(440, 390, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(440, 390, 24, 40), EditorCore.Checkmark, "image_centered");
+            }
+
         }
 
-        if (lastDevKeyResponseCode != 200 && lastDevKeyResponseCode != 0)
+        void SaveKeys()
         {
-            GUI.Label(new Rect(30, 325, 400, 30), "This Developer Key is invalid or expired. Please visit this project on our dashboard and " +
-                "ensure you have a valid Developer Key. This is a requirement to upload or update any Scene or Dynamic Object. Developer Keys expire " +
-                "automatically after 90 days.", "miniwarning");
+            EditorPrefs.SetString("developerkey", developerkey);
+            EditorCore.GetPreferences().ApplicationKey = apikey;
+
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
+            AssetDatabase.SaveAssets();
         }
 
-        //api key
-        GUI.Label(new Rect(30, 360, 100, 30), "Application Key", "miniheader");
-        apikey = EditorCore.TextField(new Rect(30, 390, 400, 40), apikey, 32);
-        if (string.IsNullOrEmpty(apikey))
+        //write gateway/dashboard/viewer urls to preferences
+        void ApplyBrandingUrls()
         {
-            GUI.Label(new Rect(30, 390, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-            GUI.Label(new Rect(440, 390, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
-        }
-        else
-        {
-            GUI.Label(new Rect(440, 390, 24, 40), EditorCore.Checkmark, "image_centered");
+            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.GatewayURL)))
+            {
+                EditorCore.GetPreferences().Gateway = EditorCore.DisplayValue(DisplayKey.GatewayURL);
+            }
+            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DashboardURL)))
+            {
+                EditorCore.GetPreferences().Dashboard = EditorCore.DisplayValue(DisplayKey.DashboardURL);
+            }
+            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.ViewerURL)))
+            {
+                EditorCore.GetPreferences().Viewer = EditorCore.DisplayValue(DisplayKey.ViewerURL);
+            }
+            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DocumentationURL)))
+            {
+                EditorCore.GetPreferences().Documentation = EditorCore.DisplayValue(DisplayKey.DocumentationURL);
+            }
         }
 
-    }
-
-    void SaveKeys()
-    {
-        EditorPrefs.SetString("developerkey", developerkey);
-        EditorCore.GetPreferences().ApplicationKey = apikey;
-
-        EditorUtility.SetDirty(EditorCore.GetPreferences());
-        AssetDatabase.SaveAssets();
-    }
-
-    //write gateway/dashboard/viewer urls to preferences
-    void ApplyBrandingUrls()
-    {
-        if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.GatewayURL)))
+        void LoadKeys()
         {
-            EditorCore.GetPreferences().Gateway = EditorCore.DisplayValue(DisplayKey.GatewayURL);
+            developerkey = EditorPrefs.GetString("developerkey");
+            apikey = EditorCore.GetPreferences().ApplicationKey;
+            if (apikey == null)
+            {
+                apikey = "";
+            }
         }
-        if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DashboardURL)))
-        {
-            EditorCore.GetPreferences().Dashboard = EditorCore.DisplayValue(DisplayKey.DashboardURL);
-        }
-        if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.ViewerURL)))
-        {
-            EditorCore.GetPreferences().Viewer = EditorCore.DisplayValue(DisplayKey.ViewerURL);
-        }
-        if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DocumentationURL)))
-        {
-            EditorCore.GetPreferences().Documentation = EditorCore.DisplayValue(DisplayKey.DocumentationURL);
-        }
-    }
 
-    void LoadKeys()
-    {
-        developerkey = EditorPrefs.GetString("developerkey");
-        apikey = EditorCore.GetPreferences().ApplicationKey;
-        if (apikey == null)
-        {
-            apikey = "";
-        }
-    }
-
-#endregion
+        #endregion
 
         void GetSelectedSDKs()
         {
@@ -264,11 +264,11 @@ public class InitWizard : EditorWindow
         Vector2 sdkScrollPos;
         List<string> selectedsdks = new List<string>();
 
-    void SelectSDKUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
+        void SelectSDKUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
 
-            
+
 
             GUI.Label(new Rect(30, 45, 440, 440), "Please select the Runtime API you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
 
@@ -280,106 +280,106 @@ public class InitWizard : EditorWindow
             }
 
             List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "Varjo XR 3.0.0", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_VARJO", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR",  "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_VARJO", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
 
             Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
-        sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
 
-        for (int i = 0;i <sdknames.Count;i++)
-        {
-            bool selected = selectedsdks.Contains(sdkdefines[i]);
-            GUIContent content = new GUIContent(sdknames[i]);
-            float separatorOne = 0;
-            float separatorTwo = 0;
-            if (i > 3)
+            for (int i = 0; i < sdknames.Count; i++)
             {
+                bool selected = selectedsdks.Contains(sdkdefines[i]);
+                GUIContent content = new GUIContent(sdknames[i]);
+                float separatorOne = 0;
+                float separatorTwo = 0;
+                if (i > 3)
+                {
                     separatorOne = 32;
-            }
-            if (i > 6)
-            {
-                separatorTwo = 32;
-            }
-
-            //if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
-            if (GUI.Button(new Rect(30, i * 32 + separatorOne + separatorTwo, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
-            {
-                if (selected)
-                {
-                    selectedsdks.Remove(sdkdefines[i]);
                 }
-                else
+                if (i > 6)
                 {
-                    if (Event.current.shift) //add
+                    separatorTwo = 32;
+                }
+
+                //if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
+                if (GUI.Button(new Rect(30, i * 32 + separatorOne + separatorTwo, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+                {
+                    if (selected)
                     {
-                        selectedsdks.Add(sdkdefines[i]);
+                        selectedsdks.Remove(sdkdefines[i]);
                     }
-                    else //set
+                    else
                     {
-                        selectedsdks.Clear();
-                        selectedsdks.Add(sdkdefines[i]);
+                        if (Event.current.shift) //add
+                        {
+                            selectedsdks.Add(sdkdefines[i]);
+                        }
+                        else //set
+                        {
+                            selectedsdks.Clear();
+                            selectedsdks.Add(sdkdefines[i]);
+                        }
                     }
                 }
+                GUI.Label(new Rect(420, i * 32 + separatorOne + separatorTwo, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+                if (i == 4)
+                {
+                    int kerning = 4;
+                    GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Eye Tracking", "boldlabel");
+                }
+                if (i == 8)
+                {
+                    int kerning = 4;
+                    GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
+                }
             }
-            GUI.Label(new Rect(420, i * 32 + separatorOne+separatorTwo, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-            if (i == 4)
-            {
-                int kerning = 4;
-                GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Eye Tracking", "boldlabel");
-            }
-            if (i == 8)
-            {
-                int kerning = 4;
-                GUI.Label(new Rect(30, i * 32+kerning, 420, 30), "Legacy Support", "boldlabel");
-            }
-            }
 
-        GUI.EndScrollView();
-    }
-
-#region Terminology
-
-    void DynamicExplainUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 4b - WHAT IS A DYNAMIC OBJECT?", "steptitle");
-
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during an experience which you wish to track.", "boldlabel");
-
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
-
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
-
-        GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsHightlight, "image_centered");
-
-        GUI.color = Color.white;
-
-        GUI.Label(new Rect(30, 350, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. These objects must also have colliders attached so we can track user gaze.", "normallabel");
+            GUI.EndScrollView();
         }
 
-    void SceneExplainUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 4a - WHAT IS A SCENE?", "steptitle");
+        #region Terminology
 
-        //GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not require colliders on it to detect user gaze.", "boldlabel");
-        GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
-        
+        void DynamicExplainUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 4b - WHAT IS A DYNAMIC OBJECT?", "steptitle");
 
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
+            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during an experience which you wish to track.", "boldlabel");
 
-        GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneHighlight, "image_centered");
-        GUI.color = Color.white;
-        
-        GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
 
-        //GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one large step, and can be updated at a later date, resulting in a new Scene Version.", "normallabel");
-        GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
-    }
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-#endregion
+            GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
 
-#region Controllers
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsHightlight, "image_centered");
+
+            GUI.color = Color.white;
+
+            GUI.Label(new Rect(30, 350, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. These objects must also have colliders attached so we can track user gaze.", "normallabel");
+        }
+
+        void SceneExplainUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 4a - WHAT IS A SCENE?", "steptitle");
+
+            //GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not require colliders on it to detect user gaze.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
+
+
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
+
+            GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneHighlight, "image_centered");
+            GUI.color = Color.white;
+
+            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
+
+            //GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one large step, and can be updated at a later date, resulting in a new Scene Version.", "normallabel");
+            GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
+        }
+
+        #endregion
+
+        #region Controllers
 
         static GameObject cameraBase;
         static GameObject leftcontroller;
@@ -658,7 +658,7 @@ public class InitWizard : EditorWindow
             string leftname = "null";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
-            if(GUI.Button(new Rect(80, 245 + offset, 290, 30), leftname, "button_blueoutline"))
+            if (GUI.Button(new Rect(80, 245 + offset, 290, 30), leftname, "button_blueoutline"))
             {
                 Selection.activeGameObject = leftcontroller;
             }
@@ -1175,474 +1175,474 @@ public class InitWizard : EditorWindow
 
         Vector2 dynamicScrollPosition;
 
-    DynamicObject[] _cachedDynamics;
-    DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
+        DynamicObject[] _cachedDynamics;
+        DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
 
-    private void OnFocus()
-    {
-        RefreshSceneDynamics();
-        EditorCore.ExportedDynamicObjects = null; //force refresh
-        GetSelectedSDKs();
-    }
-    
-    void RefreshSceneDynamics()
-    {
-        _cachedDynamics = FindObjectsOfType<DynamicObject>();
-    }
-
-    int delayDisplayUploading = -1;
-    void ListDynamicUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 6 - PREPARE DYNAMIC OBJECTS", "steptitle");
-
-        GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
-
-        Rect gameobject = new Rect(30, 95, 120, 30);
-        GUI.Label(gameobject, "GameObject", "dynamicheader");
-        Rect mesh = new Rect(190, 95, 120, 30);
-        GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
-        Rect uploaded = new Rect(380, 95, 120, 30);
-        GUI.Label(uploaded, "Uploaded", "dynamicheader");
-
-        DynamicObject[] tempdynamics = GetDynamicObjects;
-
-
-        if (tempdynamics.Length == 0)
+        private void OnFocus()
         {
-            GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?","button_disabledtext");
-        }
-
-        Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
-        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 280), dynamicScrollPosition, innerScrollSize,false,true);
-
-        Rect dynamicrect;
-        for (int i = 0; i< tempdynamics.Length;i++)
-        {
-            if (tempdynamics[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
-            dynamicrect = new Rect(30, i*30, 460, 30);
-            DrawDynamicObject(tempdynamics[i], dynamicrect, i % 2 == 0);
-        }
-
-        GUI.EndScrollView();
-
-        GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
-
-        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
-
-        //resolution settings here
-
-        if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 4;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
-        {
-            GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
-        }
-
-        if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 2;
-            //selectedExportQuality = ExportSettings.DefaultSettings;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
-        {
-            GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
-        }
-
-        if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 1;
-            //selectedExportQuality = ExportSettings.HighSettings;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
-        {
-            GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
-        }
-        
-        
-        if (delayDisplayUploading>0)
-        {
-            GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
-            delayDisplayUploading--;
-        }
-        else if (delayDisplayUploading == 0)
-        {
-            GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
-            Selection.objects = GameObject.FindObjectsOfType<GameObject>();
-            ExportUtility.ExportAllDynamicsInScene();
-            delayDisplayUploading--;
+            RefreshSceneDynamics();
             EditorCore.ExportedDynamicObjects = null; //force refresh
+            GetSelectedSDKs();
         }
-        else
+
+        void RefreshSceneDynamics()
         {
-            //GUI.Label(new Rect(180, 450, 140, 40), "", "button_blueoutline");
-            if (GUI.Button(new Rect(180, 455, 140, 35), "Prepare All"))
+            _cachedDynamics = FindObjectsOfType<DynamicObject>();
+        }
+
+        int delayDisplayUploading = -1;
+        void ListDynamicUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 6 - PREPARE DYNAMIC OBJECTS", "steptitle");
+
+            GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
+
+            Rect gameobject = new Rect(30, 95, 120, 30);
+            GUI.Label(gameobject, "GameObject", "dynamicheader");
+            Rect mesh = new Rect(190, 95, 120, 30);
+            GUI.Label(mesh, "Dynamic Mesh Name", "dynamicheader");
+            Rect uploaded = new Rect(380, 95, 120, 30);
+            GUI.Label(uploaded, "Uploaded", "dynamicheader");
+
+            DynamicObject[] tempdynamics = GetDynamicObjects;
+
+
+            if (tempdynamics.Length == 0)
             {
-                delayDisplayUploading = 2;
+                GUI.Label(new Rect(30, 120, 420, 270), "No objects found.\n\nHave you attached any Dynamic Object components to objects?\n\nAre they active in your hierarchy?", "button_disabledtext");
             }
-        }
-    }
 
-    //each row is 30 pixels
-    void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground)
-    {
-        Event e = Event.current;
-        if (e.isMouse && e.type == EventType.MouseDown)
-        {
-            if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
+            Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
+            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 280), dynamicScrollPosition, innerScrollSize, false, true);
+
+            Rect dynamicrect;
+            for (int i = 0; i < tempdynamics.Length; i++)
             {
+                if (tempdynamics[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
+                dynamicrect = new Rect(30, i * 30, 460, 30);
+                DrawDynamicObject(tempdynamics[i], dynamicrect, i % 2 == 0);
             }
-            else
+
+            GUI.EndScrollView();
+
+            GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
+
+            if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+
+            //resolution settings here
+
+            if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
             {
-                if (e.shift) //add to selection
-                {
-                    GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
-                    Selection.gameObjects.CopyTo(gos, 0);
-                    gos[gos.Length - 1] = dynamic.gameObject;
-                    Selection.objects = gos;
-                }
-                else
-                {
-                    Selection.activeTransform = dynamic.transform;
-                }
+                CognitiveVR_Preferences.Instance.TextureResize = 4;
             }
-        }
-
-        if (darkbackground)
-            GUI.Box(rect, "", "dynamicentry_even");
-        else
-            GUI.Box(rect, "", "dynamicentry_odd");
-        Rect mesh = new Rect(rect.x + 160, rect.y, 120, rect.height);
-        Rect gameobject = new Rect(rect.x + 10, rect.y, 120, rect.height);
-
-        Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
-        Rect uploaded = new Rect(rect.x + 360, rect.y, 24, rect.height);
-
-        if (dynamic.UseCustomMesh)
-            GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
-        else
-            GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
-        GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
-        if (!dynamic.HasCollider())
-        {
-            GUI.Label(collider, new GUIContent(EditorCore.Alert,"Tracking Gaze requires a collider"), "image_centered");
-        }
-
-        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName) || !dynamic.UseCustomMesh)
-        {
-            GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
-        }
-        else
-        {
-            GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
-        }        
-    }
-
-#endregion
-
-    void UploadSceneUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
-        GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
-
-        GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
-        
-        //texture resolution settings
-
-        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
-
-        //resolution settings here
-
-        if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 4;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
-        {
-            GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
-        }
-        else
-        {
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
-        }
-
-        if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 2;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
-        {
-            GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
-        }
-        else
-        {
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
-        }
-
-        if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution","Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
-        {
-            CognitiveVR_Preferences.Instance.TextureResize = 1;
-        }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
-        {
-            GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
-        }
-        else
-        {
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
-        }
-
-        if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
-        {
-            float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
-            string displayString = "";
-            if (sceneSize < 1)
+            if (CognitiveVR_Preferences.Instance.TextureResize != 4)
             {
-                displayString = "Exported File Size: <1 MB";
+                GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
             }
-            else if (sceneSize > 500)
+
+            if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
             {
-                displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((CognitiveVR_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>": "</color>");
+                CognitiveVR_Preferences.Instance.TextureResize = 2;
+                //selectedExportQuality = ExportSettings.DefaultSettings;
+            }
+            if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+            {
+                GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
+            }
+
+            if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+            {
+                CognitiveVR_Preferences.Instance.TextureResize = 1;
+                //selectedExportQuality = ExportSettings.HighSettings;
+            }
+            if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+            {
+                GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
+            }
+
+
+            if (delayDisplayUploading > 0)
+            {
+                GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
+                delayDisplayUploading--;
+            }
+            else if (delayDisplayUploading == 0)
+            {
+                GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
+                Selection.objects = GameObject.FindObjectsOfType<GameObject>();
+                ExportUtility.ExportAllDynamicsInScene();
+                delayDisplayUploading--;
+                EditorCore.ExportedDynamicObjects = null; //force refresh
             }
             else
             {
-                displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
-            }
-            if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
-            {
-                EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
+                //GUI.Label(new Rect(180, 450, 140, 40), "", "button_blueoutline");
+                if (GUI.Button(new Rect(180, 455, 140, 35), "Prepare All"))
+                {
+                    delayDisplayUploading = 2;
+                }
             }
         }
 
-        if (numberOfLights > 50)
-            GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
-
-        if (GUI.Button(new Rect(0, 430, 500, 15), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
+        //each row is 30 pixels
+        void DrawDynamicObject(DynamicObject dynamic, Rect rect, bool darkbackground)
+        {
+            Event e = Event.current;
+            if (e.isMouse && e.type == EventType.MouseDown)
             {
-            if  (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
-            {
-                if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save","Cancel"))
+                if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
                 {
-                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                }
+                else
+                {
+                    if (e.shift) //add to selection
                     {
+                        GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
+                        Selection.gameObjects.CopyTo(gos, 0);
+                        gos[gos.Length - 1] = dynamic.gameObject;
+                        Selection.objects = gos;
                     }
                     else
                     {
-                        return;//cancel from save scene window
+                        Selection.activeTransform = dynamic.transform;
                     }
+                }
+            }
+
+            if (darkbackground)
+                GUI.Box(rect, "", "dynamicentry_even");
+            else
+                GUI.Box(rect, "", "dynamicentry_odd");
+            Rect mesh = new Rect(rect.x + 160, rect.y, 120, rect.height);
+            Rect gameobject = new Rect(rect.x + 10, rect.y, 120, rect.height);
+
+            Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
+            Rect uploaded = new Rect(rect.x + 360, rect.y, 24, rect.height);
+
+            if (dynamic.UseCustomMesh)
+                GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
+            else
+                GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
+            GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
+            if (!dynamic.HasCollider())
+            {
+                GUI.Label(collider, new GUIContent(EditorCore.Alert, "Tracking Gaze requires a collider"), "image_centered");
+            }
+
+            if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName) || !dynamic.UseCustomMesh)
+            {
+                GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(uploaded, EditorCore.EmptyCheckmark, "image_centered");
+            }
+        }
+
+        #endregion
+
+        void UploadSceneUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
+
+            GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
+
+            //texture resolution settings
+
+            if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+
+            //resolution settings here
+
+            if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+            {
+                CognitiveVR_Preferences.Instance.TextureResize = 4;
+            }
+            if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+            {
+                GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
+            }
+            else
+            {
+                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
+            }
+
+            if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+            {
+                CognitiveVR_Preferences.Instance.TextureResize = 2;
+            }
+            if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+            {
+                GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
+            }
+            else
+            {
+                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
+            }
+
+            if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+            {
+                CognitiveVR_Preferences.Instance.TextureResize = 1;
+            }
+            if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+            {
+                GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
+            }
+            else
+            {
+                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
+            }
+
+            if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
+            {
+                float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
+                string displayString = "";
+                if (sceneSize < 1)
+                {
+                    displayString = "Exported File Size: <1 MB";
+                }
+                else if (sceneSize > 500)
+                {
+                    displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((CognitiveVR_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>" : "</color>");
                 }
                 else
                 {
-                    return;//cancel from 'do you want to save' popup
+                    displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
+                }
+                if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
+                {
+                    EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
                 }
             }
-            ExportUtility.ExportSceneAR();
-            CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-            EditorUtility.SetDirty(EditorCore.GetPreferences());
 
-            UnityEditor.AssetDatabase.SaveAssets();
-            currentPage++;
-        }
+            if (numberOfLights > 50)
+                GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
 
-        if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
-        {
-            if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            if (GUI.Button(new Rect(0, 430, 500, 15), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
             {
-                if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
-                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
                     {
+                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                        {
+                        }
+                        else
+                        {
+                            return;//cancel from save scene window
+                        }
                     }
                     else
                     {
-                        return;//cancel from save scene window
+                        return;//cancel from 'do you want to save' popup
                     }
                 }
-                else
-                {
-                    return;//cancel from 'do you want to save' popup
-                }
+                ExportUtility.ExportSceneAR();
+                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+                UnityEditor.AssetDatabase.SaveAssets();
+                currentPage++;
             }
-            ExportUtility.ExportGLTFScene();
 
-            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            string objPath = EditorCore.GetSubDirectoryPath(fullName);
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
-            System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-            DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
-
-            CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-            EditorUtility.SetDirty(EditorCore.GetPreferences());
-
-            UnityEditor.AssetDatabase.SaveAssets();
-            EditorCore.RefreshSceneVersion(null);
-        }
-
-    }
-
-    int numberOfLights = 0;
-    bool delayUnderstandButton = true;
-    double understandRevealTime;
-
-    void UploadSummaryUpdate()
-    {
-        if (delayUnderstandButton)
-        {
-            delayUnderstandButton = false;
-            understandRevealTime = EditorApplication.timeSinceStartup + 3;
-        }
-
-        GUI.Label(steptitlerect, "STEP 9 - UPLOAD", "steptitle");
-        GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
-
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
-        if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
-        {
-            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-            string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (string.IsNullOrEmpty(scenename))
+            if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
             {
-                scenename = "SCENE NOT SAVED";
-            }
-            string settingsname = "1/1 Resolution";
-            if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-            if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
-            GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. "+
-            "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
+                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+                {
+                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                    {
+                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                        {
+                        }
+                        else
+                        {
+                            return;//cancel from save scene window
+                        }
+                    }
+                    else
+                    {
+                        return;//cancel from 'do you want to save' popup
+                    }
+                }
+                ExportUtility.ExportGLTFScene();
 
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
+                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                string objPath = EditorCore.GetSubDirectoryPath(fullName);
+                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
+
+                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+                UnityEditor.AssetDatabase.SaveAssets();
+                EditorCore.RefreshSceneVersion(null);
+            }
+
         }
-        else
+
+        int numberOfLights = 0;
+        bool delayUnderstandButton = true;
+        double understandRevealTime;
+
+        void UploadSummaryUpdate()
         {
-            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count; ;
-            string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (string.IsNullOrEmpty(scenename))
+            if (delayUnderstandButton)
             {
-                scenename = "SCENE NOT SAVED";
+                delayUnderstandButton = false;
+                understandRevealTime = EditorApplication.timeSinceStartup + 3;
             }
-            string settingsname = "1/1 Resolution";
-            if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-            if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
-            GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
-            
-            GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
-        }
-        GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
 
+            GUI.Label(steptitlerect, "STEP 9 - UPLOAD", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
-        var sceneRT = EditorCore.GetSceneRenderTexture();
-        if (sceneRT != null)
-            GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-    }
-
-    void DoneUpdate()
-    {
-        GUI.Label(steptitlerect, "STEP 10 - DONE", "steptitle");
-        GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>"+EditorCore.DisplayValue(DisplayKey.ManagerName)+"</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
-        if (GUI.Button(new Rect(150,150,200,40),"Open Dashboard","button_bluetext"))
-        {
-            Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
-        }
-
-        GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
-        if (GUI.Button(new Rect(150, 320,200,40),"Open Documentation","button_bluetext"))
-        {
-            Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Documentation);
-        }
-
-        GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene.", "boldlabel");
-        if (GUI.Button(new Rect(150,440,200,40),"Ready Room Setup", "button_bluetext"))
-        {
-            var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
-            if (readyRoomScenes.Length == 1)
+            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
             {
-                //ask if want save
-                if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
+                string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (string.IsNullOrEmpty(scenename))
                 {
-                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
-                    Close();
-                    ReadyRoomSetupWindow.Init();
+                    scenename = "SCENE NOT SAVED";
+                }
+                string settingsname = "1/1 Resolution";
+                if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+                if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
+                GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
+                "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
+
+                GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
+            }
+            else
+            {
+                int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count; ;
+                string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (string.IsNullOrEmpty(scenename))
+                {
+                    scenename = "SCENE NOT SAVED";
+                }
+                string settingsname = "1/1 Resolution";
+                if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+                if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
+                GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
+
+                GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
+            }
+            GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
+
+
+            var sceneRT = EditorCore.GetSceneRenderTexture();
+            if (sceneRT != null)
+                GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
+        }
+
+        void DoneUpdate()
+        {
+            GUI.Label(steptitlerect, "STEP 10 - DONE", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ManagerName) + "</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
+            if (GUI.Button(new Rect(150, 150, 200, 40), "Open Dashboard", "button_bluetext"))
+            {
+                Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
+            }
+
+            GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
+            if (GUI.Button(new Rect(150, 320, 200, 40), "Open Documentation", "button_bluetext"))
+            {
+                Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Documentation);
+            }
+
+            GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene.", "boldlabel");
+            if (GUI.Button(new Rect(150, 440, 200, 40), "Ready Room Setup", "button_bluetext"))
+            {
+                var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
+                if (readyRoomScenes.Length == 1)
+                {
+                    //ask if want save
+                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                    {
+                        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
+                        Close();
+                        ReadyRoomSetupWindow.Init();
+                    }
                 }
             }
         }
-    }
 
-    void DrawFooter()
-    {
-        GUI.color = EditorCore.BlueishGrey;
-        GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
-        GUI.color = Color.white;
-
-        DrawBackButton();
-
-        DrawNextButton();
-    }
-
-    void GetDevKeyResponse(int responseCode, string error, string text)
-    {
-        lastDevKeyResponseCode = responseCode;
-        if (responseCode == 200)
+        void DrawFooter()
         {
-            //dev key is fine
-            currentPage++;
-            SaveKeys();
+            GUI.color = EditorCore.BlueishGrey;
+            GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
+            GUI.color = Color.white;
+
+            DrawBackButton();
+
+            DrawNextButton();
         }
-        else
+
+        void GetDevKeyResponse(int responseCode, string error, string text)
         {
-            //EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
-            Debug.LogError("Developer Key invalid or expired");
+            lastDevKeyResponseCode = responseCode;
+            if (responseCode == 200)
+            {
+                //dev key is fine
+                currentPage++;
+                SaveKeys();
+            }
+            else
+            {
+                //EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
+                Debug.LogError("Developer Key invalid or expired");
+            }
         }
-    }
 
-    void DrawNextButton()
-    {
-        bool buttonDisabled = false;
-        bool appearDisabled = false; //used on dynamic upload page to skip step
-        string text = "Next";
-        System.Action onclick = () => currentPage++;
-        Rect buttonrect = new Rect(410, 510, 80, 30);
-
-        switch (pageids[currentPage])
+        void DrawNextButton()
         {
-            case "welcome":
-                break;
-            case "authenticate":
-                buttonrect = new Rect(350, 510, 140, 30);
-                if (lastDevKeyResponseCode == 200)
-                {
-                    //next. use default action
-                    onclick += () => SaveKeys();
-                }
-                else
-                {
-                    //check and wait for response
-                    onclick = () => SaveKeys();
-                    onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-                }
-                
-                //onclick += () => ApplyBrandingUrls();
-                buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
-                if (buttonDisabled)
-                {
-                    text = "Keys Required";
-                }
+            bool buttonDisabled = false;
+            bool appearDisabled = false; //used on dynamic upload page to skip step
+            string text = "Next";
+            System.Action onclick = () => currentPage++;
+            Rect buttonrect = new Rect(410, 510, 80, 30);
 
-                if (buttonDisabled == false && lastDevKeyResponseCode != 200)
-                {
-                    text = "Validate";
-                    //MuteDevKeyPopupWindow = true;
-                }
+            switch (pageids[currentPage])
+            {
+                case "welcome":
+                    break;
+                case "authenticate":
+                    buttonrect = new Rect(350, 510, 140, 30);
+                    if (lastDevKeyResponseCode == 200)
+                    {
+                        //next. use default action
+                        onclick += () => SaveKeys();
+                    }
+                    else
+                    {
+                        //check and wait for response
+                        onclick = () => SaveKeys();
+                        onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+                    }
 
-                if (buttonDisabled == false && lastDevKeyResponseCode == 200)
-                {
-                    text = "Next";
-                }
-                break;
-            case "tagdynamics":
-                break;
-            case "selectsdk":
+                    //onclick += () => ApplyBrandingUrls();
+                    buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
+                    if (buttonDisabled)
+                    {
+                        text = "Keys Required";
+                    }
+
+                    if (buttonDisabled == false && lastDevKeyResponseCode != 200)
+                    {
+                        text = "Validate";
+                        //MuteDevKeyPopupWindow = true;
+                    }
+
+                    if (buttonDisabled == false && lastDevKeyResponseCode == 200)
+                    {
+                        text = "Next";
+                    }
+                    break;
+                case "tagdynamics":
+                    break;
+                case "selectsdk":
                     onclick += () =>
                     {
                         EditorCore.SetPlayerDefine(selectedsdks);
@@ -1652,44 +1652,44 @@ public class InitWizard : EditorWindow
                             CognitiveVR_Preferences.Instance.GazeType = GazeType.Physics;
                         }
                     };
-                onclick += () =>
-                {
-                    var found = Object.FindObjectOfType<CognitiveVR_Manager>();
-                    if (found == null) //add cognitivevr_manager
+                    onclick += () =>
                     {
-                        EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
-                    }
-                };
-                break;
-            case "listdynamics":
+                        var found = Object.FindObjectOfType<CognitiveVR_Manager>();
+                        if (found == null) //add cognitivevr_manager
+                        {
+                            EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
+                        }
+                    };
+                    break;
+                case "listdynamics":
 
-                var dynamics = GetDynamicObjects;
-                int dynamicsFromSceneExported=0;
-                
-                for(int i = 0;i <dynamics.Length;i++)
-                {
-                    if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamics[i].MeshName) || !dynamics[i].UseCustomMesh)
+                    var dynamics = GetDynamicObjects;
+                    int dynamicsFromSceneExported = 0;
+
+                    for (int i = 0; i < dynamics.Length; i++)
                     {
-                        dynamicsFromSceneExported++;
+                        if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamics[i].MeshName) || !dynamics[i].UseCustomMesh)
+                        {
+                            dynamicsFromSceneExported++;
+                        }
                     }
-                }
-                appearDisabled = dynamicsFromSceneExported != dynamics.Length;
-                if (appearDisabled)
-                {
-                    onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all Dynamic Objects?", "Yes", "No")) { currentPage++; } };
-                }
-                if (dynamics.Length == 0 && dynamicsFromSceneExported == 0)
-                {
-                    text = "Skip Dynamics";
-                }
-                else
-                {
-                    text = dynamicsFromSceneExported + "/" + dynamics.Length + " Prepared";
-                }
-                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
-                buttonrect = new Rect(350, 510, 140, 30);
-                break;
-            case "uploadscene":
+                    appearDisabled = dynamicsFromSceneExported != dynamics.Length;
+                    if (appearDisabled)
+                    {
+                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all Dynamic Objects?", "Yes", "No")) { currentPage++; } };
+                    }
+                    if (dynamics.Length == 0 && dynamicsFromSceneExported == 0)
+                    {
+                        text = "Skip Dynamics";
+                    }
+                    else
+                    {
+                        text = dynamicsFromSceneExported + "/" + dynamics.Length + " Prepared";
+                    }
+                    onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
+                    buttonrect = new Rect(350, 510, 140, 30);
+                    break;
+                case "uploadscene":
                     appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
 
                     if (appearDisabled)
@@ -1698,164 +1698,164 @@ public class InitWizard : EditorWindow
                     }
                     text = "Next";
                     break;
-            case "uploadsummary":
+                case "uploadsummary":
 
-                System.Action completedmanifestupload = delegate ()
-                {
-                    ExportUtility.UploadAllDynamicObjectMeshes(true);
-                    currentPage++;
-                };
-
-                //fifth upload manifest
-                System.Action completedRefreshSceneVersion = delegate ()
-                {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                    ManageDynamicObjects.AddOrReplaceDynamic(manifest, ManageDynamicObjects.GetDynamicObjectsInScene());
-                    ManageDynamicObjects.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
-                };
-
-                //fourth upload dynamics
-                System.Action completeSceneUpload = delegate () {
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
-                };
-
-                //third upload scene
-                System.Action completeScreenshot = delegate(){
-
-                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
-
-                    if (current == null || string.IsNullOrEmpty(current.SceneId))
+                    System.Action completedmanifestupload = delegate ()
                     {
-                        if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
-                        {
-                            //new scene
-                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
-                        }
-                    }
-                    else
-                    {
-                        //new version
-                        if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok","Cancel"))
-                        {
-                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
-                        }
-                    }
-                };
+                        ExportUtility.UploadAllDynamicObjectMeshes(true);
+                        currentPage++;
+                    };
 
-                //second save screenshot
-                System.Action completedRefreshSceneVersion1 = delegate ()
-                {
-#if UNITY_2018_3_OR_NEWER
-                    //EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-                    EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-#else
-                    EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-#endif
-                };
-
-                //first refresh scene version
-                onclick = () =>
-                {
-                    if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) //scene not saved. "do want save?" popup
+                    //fifth upload manifest
+                    System.Action completedRefreshSceneVersion = delegate ()
                     {
-                        if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                        ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                        ManageDynamicObjects.AddOrReplaceDynamic(manifest, ManageDynamicObjects.GetDynamicObjectsInScene());
+                        ManageDynamicObjects.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                    };
+
+                    //fourth upload dynamics
+                    System.Action completeSceneUpload = delegate () {
+                        EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
+                    };
+
+                    //third upload scene
+                    System.Action completeScreenshot = delegate () {
+
+                        CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+
+                        if (current == null || string.IsNullOrEmpty(current.SceneId))
                         {
-                            if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                            if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
                             {
-                                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
-                            }
-                            else
-                            {
-                                return;//cancel from save scene window
+                                //new scene
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
                             }
                         }
                         else
                         {
-                            return;//cancel from 'do you want to save' popup
+                            //new version
+                            if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
+                            {
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
+                            }
                         }
-                    }
-                    else
+                    };
+
+                    //second save screenshot
+                    System.Action completedRefreshSceneVersion1 = delegate ()
                     {
-                        EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+#if UNITY_2018_3_OR_NEWER
+                        //EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                        EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+#else
+                    EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+#endif
+                    };
+
+                    //first refresh scene version
+                    onclick = () =>
+                    {
+                        if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) //scene not saved. "do want save?" popup
+                        {
+                            if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                            {
+                                if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
+                                {
+                                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                                }
+                                else
+                                {
+                                    return;//cancel from save scene window
+                                }
+                            }
+                            else
+                            {
+                                return;//cancel from 'do you want to save' popup
+                            }
+                        }
+                        else
+                        {
+                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                        }
+                    };
+
+                    buttonDisabled = !EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
+                    if (understandRevealTime > EditorApplication.timeSinceStartup && !buttonDisabled)
+                    {
+                        buttonDisabled = true;
                     }
-                };
+                    text = "Upload";
+                    break;
+                case "done":
+                    onclick = () => Close();
+                    text = "Close";
+                    break;
+            }
 
-                buttonDisabled = !EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
-                if (understandRevealTime > EditorApplication.timeSinceStartup && !buttonDisabled)
+            if (appearDisabled)
+            {
+                if (GUI.Button(buttonrect, text, "button_disabled"))
                 {
-                    buttonDisabled = true;
+                    onclick.Invoke();
                 }
-                text = "Upload";
-                break;
-            case "done":
-                onclick = () => Close();
-                text = "Close";
-                break;
-        }
-
-        if (appearDisabled)
-        {
-            if (GUI.Button(buttonrect, text, "button_disabled"))
+            }
+            else if (buttonDisabled)
             {
-                onclick.Invoke();
+                GUI.Button(buttonrect, text, "button_disabled");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
             }
         }
-        else if (buttonDisabled)
+
+        void DrawBackButton()
         {
-            GUI.Button(buttonrect, text, "button_disabled");
-        }
-        else
-        {
-            if (GUI.Button(buttonrect, text))
+            bool buttonDisabled = false;
+            string text = "Back";
+            System.Action onclick = () => currentPage--;
+            Rect buttonrect = new Rect(320, 510, 80, 30);
+
+            switch (pageids[currentPage])
             {
-                if (onclick != null)
-                    onclick.Invoke();
+                case "welcome": buttonDisabled = true; break;
+                case "authenticate":
+                    text = "Back";
+                    buttonrect = new Rect(260, 510, 80, 30);
+                    break;
+                case "listdynamics":
+                    text = "Back";
+                    buttonrect = new Rect(260, 510, 80, 30);
+                    break;
+                case "uploadscene":
+                    text = "Back";
+                    break;
+                case "uploadsummary":
+                    onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
+                    break;
+                case "done":
+                    onclick = null;
+                    break;
+            }
+
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text, "button_disabled"))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
             }
         }
-    }
-
-    void DrawBackButton()
-    {
-        bool buttonDisabled = false;
-        string text = "Back";
-        System.Action onclick = () => currentPage--;
-        Rect buttonrect = new Rect(320, 510, 80, 30);
-
-        switch (pageids[currentPage])
-        {
-            case "welcome": buttonDisabled = true; break;
-            case "authenticate":
-                text = "Back";
-                buttonrect = new Rect(260, 510, 80, 30);
-                break;
-            case "listdynamics":
-                text = "Back";
-                buttonrect = new Rect(260, 510, 80, 30);
-                break;
-            case "uploadscene":
-                text = "Back";
-                break;
-            case "uploadsummary":
-                onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
-                break;
-            case "done":
-                onclick = null;
-                break;
-        }
-
-        if (buttonDisabled)
-        {
-            GUI.Button(buttonrect, text, "button_disabledtext");
-        }
-        else
-        {
-            if (GUI.Button(buttonrect, text, "button_disabled"))
-            {
-                if (onclick != null)
-                    onclick.Invoke();
-            }
-        }
-    }
 
 #if CVR_STEAMVR2
         public static void AppendSteamVRActionSet()
