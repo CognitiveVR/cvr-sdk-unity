@@ -6,7 +6,7 @@ using System.Reflection;
 namespace Cognitive3D
 {
     [CustomEditor(typeof(Cognitive3D_Manager))]
-    public class Cognitive3D_ManagerInspector : Editor
+    public class ManagerInspector : Editor
     {
         public override void OnInspectorGUI()
         {

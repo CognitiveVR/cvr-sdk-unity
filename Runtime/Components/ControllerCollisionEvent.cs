@@ -9,7 +9,7 @@ using System.Collections;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Controller Collision Event")]
-    public class ControllerCollisionEvent : Cognitive3DAnalyticsComponent
+    public class ControllerCollisionEvent : AnalyticsComponentBase
     {
         bool LeftControllerColliding;
         bool RightControllerColliding;

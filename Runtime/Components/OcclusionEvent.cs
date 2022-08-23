@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Occlusion Event")]
-    public class OcclusionEvent : Cognitive3DAnalyticsComponent
+    public class OcclusionEvent : AnalyticsComponentBase
     {
 
 #if C3D_OCULUS

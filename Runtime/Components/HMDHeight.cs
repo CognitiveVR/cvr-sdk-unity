@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
-    public class HMDHeight : Cognitive3DAnalyticsComponent
+    public class HMDHeight : AnalyticsComponentBase
     {
         [ClampSetting(5, 100)]
         [Tooltip("Number of samples taken. The median is assumed to be HMD height")]

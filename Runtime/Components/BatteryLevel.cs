@@ -16,7 +16,7 @@ using Cognitive3D;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
-    public class BatteryLevel : Cognitive3DAnalyticsComponent
+    public class BatteryLevel : AnalyticsComponentBase
     {
 #if !C3D_OCULUS
         float batteryLevel; //0-100 battery level

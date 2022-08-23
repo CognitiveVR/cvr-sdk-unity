@@ -8,7 +8,7 @@ using System.Collections;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Recenter Event")]
-    public class RecenterEvent : Cognitive3DAnalyticsComponent
+    public class RecenterEvent : AnalyticsComponentBase
     {
 #if C3D_OCULUS
         public override void Cognitive3D_Init(Error initError)

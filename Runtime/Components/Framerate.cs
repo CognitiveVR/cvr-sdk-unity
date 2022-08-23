@@ -9,7 +9,7 @@ using Cognitive3D;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
-    public class Framerate : Cognitive3DAnalyticsComponent
+    public class Framerate : AnalyticsComponentBase
     {
         [ClampSetting(0.1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]

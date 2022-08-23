@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Headphone State")]
-    public class HeadphoneState : Cognitive3DAnalyticsComponent
+    public class HeadphoneState : AnalyticsComponentBase
     {
         public override void Cognitive3D_Init(Error initError)
         {

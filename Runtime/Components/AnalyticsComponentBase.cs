@@ -11,7 +11,7 @@ using UnityEditor;
 
 namespace Cognitive3D.Components
 {
-    public abstract class Cognitive3DAnalyticsComponent : MonoBehaviour
+    public abstract class AnalyticsComponentBase : MonoBehaviour
     {
         public virtual void Cognitive3D_Init(Error initError)
         {
@@ -25,14 +25,14 @@ namespace Cognitive3D.Components
     }
 
 #if UNITY_EDITOR
-    [CustomEditor(typeof(Cognitive3DAnalyticsComponent), true)]
+    [CustomEditor(typeof(AnalyticsComponentBase), true)]
     public class ComponentInspector : Editor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
 
-            var component = target as Cognitive3DAnalyticsComponent;
+            var component = target as AnalyticsComponentBase;
 
             MessageType messageType = MessageType.Info;
 

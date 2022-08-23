@@ -947,7 +947,7 @@ namespace Cognitive3D
                             System.Version githubVersion = new Version(version);
                             if (githubVersion > installedVersion)
                             {
-                                Cognitive3D_UpdateSDKWindow.Init(version, summary);
+                                UpdateSDKWindow.Init(version, summary);
                             }
                             else
                             {

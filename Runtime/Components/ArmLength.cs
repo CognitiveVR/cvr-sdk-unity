@@ -13,7 +13,7 @@ using Valve.VR;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
-    public class ArmLength : Cognitive3DAnalyticsComponent
+    public class ArmLength : AnalyticsComponentBase
     {
         [ClampSetting(5, 100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
-    public class RoomSize : Cognitive3DAnalyticsComponent
+    public class RoomSize : AnalyticsComponentBase
     {
         public override void Cognitive3D_Init(Error initError)
         {

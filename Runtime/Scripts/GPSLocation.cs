@@ -10,7 +10,7 @@ using Cognitive3D;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/GPS Location")]
-    public class GPSLocation: Cognitive3DAnalyticsComponent
+    public class GPSLocation: AnalyticsComponentBase
     {
         public override void Cognitive3D_Init(Error initError)
         {

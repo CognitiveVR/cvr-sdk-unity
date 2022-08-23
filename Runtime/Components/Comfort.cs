@@ -13,7 +13,7 @@ namespace Cognitive3D.Components
     /// PowerSaving? The CPU and GPU are currently throttled to save power and/or reduce the temperature.
 
     [AddComponentMenu("Cognitive3D/Components/Comfort")]
-    public class Comfort : Cognitive3DAnalyticsComponent
+    public class Comfort : AnalyticsComponentBase
     {
         [ClampSetting(5f,60f)]
         [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]

@@ -7,7 +7,7 @@ using UnityEditor;
 
 namespace Cognitive3D
 {
-    public class Cognitive3D_UpdateSDKWindow : EditorWindow
+    public class UpdateSDKWindow : EditorWindow
     {
         static string newVersion;
         bool reminderSet = false;
@@ -16,7 +16,7 @@ namespace Cognitive3D
         public static void Init(string version, string summary)
         {
             newVersion = version;
-            Cognitive3D_UpdateSDKWindow window = (Cognitive3D_UpdateSDKWindow)EditorWindow.GetWindow(typeof(Cognitive3D_UpdateSDKWindow),true,"Cognitive3D Update");
+            UpdateSDKWindow window = (UpdateSDKWindow)EditorWindow.GetWindow(typeof(UpdateSDKWindow),true,"Cognitive3D Update");
             window.sdkSummary = summary;
             window.Show();
         }

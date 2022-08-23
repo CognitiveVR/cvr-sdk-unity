@@ -306,7 +306,7 @@ namespace Cognitive3D
                 Util.logDebug("Cognitive3D Error" + initResponse.ToString());
             }
 
-            var components = GetComponentsInChildren<Cognitive3D.Components.Cognitive3DAnalyticsComponent>();
+            var components = GetComponentsInChildren<Cognitive3D.Components.AnalyticsComponentBase>();
             for (int i = 0; i < components.Length; i++)
             {
                 components[i].Cognitive3D_Init(initResponse);

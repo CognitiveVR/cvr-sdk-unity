@@ -12,7 +12,7 @@ using Valve.VR;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
-    public class HMDPresentEvent : Cognitive3DAnalyticsComponent
+    public class HMDPresentEvent : AnalyticsComponentBase
     {
 #if C3D_OCULUS
 

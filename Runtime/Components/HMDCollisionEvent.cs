@@ -9,7 +9,7 @@ using System.Collections;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Collision Event")]
-    public class HMDCollisionEvent : Cognitive3DAnalyticsComponent
+    public class HMDCollisionEvent : AnalyticsComponentBase
     {
         public LayerMask CollisionLayerMask = 1;
 

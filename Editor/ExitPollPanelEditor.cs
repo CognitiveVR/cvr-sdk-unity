@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Cognitive3D
 {
     [CustomEditor(typeof(ExitPollPanel))]
-    public class Cognitive3D_ExitPollPanelEditor : Editor
+    public class ExitPollPanelEditor : Editor
     {
         public override void OnInspectorGUI()
         {

@@ -13,7 +13,7 @@ using Valve.VR;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
-    public class BoundaryEvent : Cognitive3DAnalyticsComponent
+    public class BoundaryEvent : AnalyticsComponentBase
     {
 #if C3D_STEAMVR
         public override void Cognitive3D_Init(Error initError)

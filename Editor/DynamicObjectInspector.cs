@@ -8,7 +8,7 @@ namespace Cognitive3D
 {
     [CustomEditor(typeof(Cognitive3D.DynamicObject))]
     [CanEditMultipleObjects]
-    public class Cognitive3D_DynamicObjectInspector : Editor
+    public class DynamicObjectInspector : Editor
     {
         public void OnEnable()
         {

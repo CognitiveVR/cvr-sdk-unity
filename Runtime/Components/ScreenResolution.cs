@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Screen Resolution")]
-    public class ScreenResolution : Cognitive3DAnalyticsComponent
+    public class ScreenResolution : AnalyticsComponentBase
     {
         public override void Cognitive3D_Init(Error initError)
         {
