@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class DataBatchCanvas : MonoBehaviour
     {
@@ -58,7 +58,7 @@ namespace CognitiveVR.ActiveSession
             #region Events
             if (EventTimeSinceSend < 0)
             {
-                if (CognitiveVR.CustomEvent.CachedEvents > 0)
+                if (Cognitive3D.CustomEvent.CachedEvents > 0)
                 {
                     //has data, not sent
                     EventSendText.color = noDataColor;
@@ -81,7 +81,7 @@ namespace CognitiveVR.ActiveSession
             #region Gaze
             if (GazeTimeSinceSend < 0)
             {
-                if (CognitiveVR.GazeCore.CachedGaze > 0)
+                if (Cognitive3D.GazeCore.CachedGaze > 0)
                 {
                     GazeSendText.color = noDataColor;
                     GazeSendText.text = notYetSentString;
@@ -121,7 +121,7 @@ namespace CognitiveVR.ActiveSession
             #region Dynamics
             if (DynamicTimeSinceSend < 0)
             {
-                if (CognitiveVR.DynamicManager.CachedSnapshots > 0)
+                if (Cognitive3D.DynamicManager.CachedSnapshots > 0)
                 {
                     DynamicSendText.color = noDataColor;
                     DynamicSendText.text = notYetSentString;
@@ -141,7 +141,7 @@ namespace CognitiveVR.ActiveSession
             #region Sensors
             if (SensorTimeSinceSend < 0)
             {
-                if (CognitiveVR.SensorRecorder.CachedSensors > 0)
+                if (Cognitive3D.SensorRecorder.CachedSensors > 0)
                 {
                     SensorSendText.color = noDataColor;
                     SensorSendText.text = notYetSentString;

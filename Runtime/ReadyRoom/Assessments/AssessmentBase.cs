@@ -5,7 +5,7 @@ using UnityEngine;
 //Base class for tasks in Ready Room
 //You can directly call CompleteAssessment or create a subclass for additional logic
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class AssessmentBase : MonoBehaviour
     {
@@ -101,7 +101,7 @@ namespace CognitiveVR
                 OnAssessmentComplete.Invoke();
 
             //some VR interaction systems may need to destroy objects to make sure they correctly drop from the player's hand
-#if CVR_STEAMVR2 || CVR_STEAMVR
+#if C3D_STEAMVR2 || C3D_STEAMVR
             if (Valve.VR.InteractionSystem.Player.instance != null)
             {
                 foreach (var v in Valve.VR.InteractionSystem.Player.instance.leftHand.AttachedObjects)

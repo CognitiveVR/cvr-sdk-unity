@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 using System.Text;
-using CognitiveVR.External;
+using Cognitive3D.External;
 
 //TODO merge record sensor overrides together
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class SensorRecorder
     {
@@ -56,7 +56,7 @@ namespace CognitiveVR
             Core.OnPostSessionEnd += Core_OnPostSessionEnd;
             Core.OnSendData -= Core_OnSendData;
             Core.OnSendData += Core_OnSendData;
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
             if (automaticTimerActive == false)
             {
                 automaticTimerActive = true;
@@ -94,10 +94,10 @@ namespace CognitiveVR
                     yield return null;
                 }
                 //try to send!
-                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
+                nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
                 if (!Core.IsInitialized)
                 {
-                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send sensors");
                     Core_OnSendData(false);
                 }
@@ -108,10 +108,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -136,7 +136,7 @@ namespace CognitiveVR
                 OnNewSensorRecorded(category, value);
 
             currentSensorSnapshots++;
-            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
             {
                 TrySendData();
             }
@@ -147,10 +147,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -174,7 +174,7 @@ namespace CognitiveVR
                 OnNewSensorRecorded(category, (float)value);
 
             currentSensorSnapshots++;
-            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
             {
                 TrySendData();
             }
@@ -184,10 +184,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -211,7 +211,7 @@ namespace CognitiveVR
                 OnNewSensorRecorded(category, value);
 
             currentSensorSnapshots++;
-            if (currentSensorSnapshots >= CognitiveVR_Preferences.Instance.SensorSnapshotCount)
+            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
             {
                 TrySendData();
             }
@@ -220,8 +220,8 @@ namespace CognitiveVR
         static void TrySendData()
         {
             if (!Core.IsInitialized) { return; }
-            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = currentSensorSnapshots < CognitiveVR_Preferences.Instance.SensorExtremeSnapshotCount;
+            bool withinMinTimer = lastSendTime + Cognitive3D_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = currentSensorSnapshots < Cognitive3D_Preferences.Instance.SensorExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
             if (withinMinTimer && withinExtremeBatchSize)
@@ -244,7 +244,7 @@ namespace CognitiveVR
 
             if (Core.TrackingScene == null)
             {
-                CognitiveVR.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
+                Cognitive3D.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
                 foreach(var k in CachedSnapshots)
                 {
                     k.Value.Clear();
@@ -259,7 +259,7 @@ namespace CognitiveVR
             }
 
 
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.SensorSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
 
 

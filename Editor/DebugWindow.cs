@@ -8,7 +8,7 @@ using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
 #endif
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class DebugInformationWindow : EditorWindow
     {
@@ -70,7 +70,7 @@ namespace CognitiveVR
         static void Refresh()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder(1024);
-            CognitiveVR_Preferences p = CognitiveVR_Preferences.Instance;
+            Cognitive3D_Preferences p = Cognitive3D_Preferences.Instance;
 
             sb.AppendLine("*****************************");
             sb.AppendLine("***********SYSTEM************");
@@ -195,7 +195,7 @@ namespace CognitiveVR
             sb.AppendLine("********CURRENT SCENE********");
             sb.AppendLine("*****************************");
 
-            var currentScene = CognitiveVR_Preferences.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
+            var currentScene = Cognitive3D_Preferences.FindSceneByPath(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
             if (currentScene != null)
             {
                 sb.AppendLine("Scene Name: " + currentScene.SceneName);
@@ -235,7 +235,7 @@ namespace CognitiveVR
                 sb.AppendLine("No Main Camera in scene");
             }
 
-            var manager = FindObjectOfType<CognitiveVR_Manager>();
+            var manager = FindObjectOfType<Cognitive3D_Manager>();
             if (manager != null)
             {
                 sb.AppendLine("Manager Initialize On Start: " + manager.InitializeOnStart);

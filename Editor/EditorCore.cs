@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build;
 using System;
-using CognitiveVR;
+using Cognitive3D;
 using System.IO;
 
 //contains functions for button/label styles
@@ -13,7 +13,7 @@ using System.IO;
 //check for sdk updates
 //pre/post build inferfaces
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     using Path = System.IO.Path;
     public enum DisplayKey
@@ -44,8 +44,8 @@ namespace CognitiveVR
                 EditorPrefs.SetString("cognitive_sdk_version", Core.SDK_VERSION);
 
                 bool needToUpdateDatabase = false;
-                //remove CognitiveVR_SceneExportWindow.cs
-                string[] exportWindowsGUIDs = AssetDatabase.FindAssets("cognitivevr_sceneexportwindow");
+                //remove Cognitive3D_SceneExportWindow.cs
+                string[] exportWindowsGUIDs = AssetDatabase.FindAssets("Cognitive3D_sceneexportwindow");
                 foreach (string s in exportWindowsGUIDs)
                 {
                     string path = AssetDatabase.GUIDToAssetPath(s);
@@ -78,7 +78,7 @@ namespace CognitiveVR
             }
             EditorPrefs.SetBool("cognitive_init_popup", true);
 
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
             {
 #if UNITY_2019_4_OR_NEWER
                 EditorApplication.playModeStateChanged -= ModeChanged;
@@ -104,7 +104,7 @@ namespace CognitiveVR
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)
             {
-                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
                     EditorApplication.update += DelayUploadCache;
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
@@ -116,7 +116,7 @@ namespace CognitiveVR
             if (!EditorApplication.isPlayingOrWillChangePlaymode &&
                  EditorApplication.isPlaying)
             {
-                if (CognitiveVR.CognitiveVR_Preferences.Instance.LocalStorage && CognitiveVR_Preferences.Instance.UploadCacheOnEndPlay)
+                if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
                     EditorApplication.update += DelayUploadCache;
                 EditorApplication.playmodeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
@@ -131,9 +131,9 @@ namespace CognitiveVR
             if (uploadDelayFrames < 0)
             {
                 EditorApplication.update -= DelayUploadCache;
-                CognitiveVR.ICache ic = new CognitiveVR.DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                Cognitive3D.ICache ic = new Cognitive3D.DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
-                    new CognitiveVR.EditorDataUploader(ic);
+                    new Cognitive3D.EditorDataUploader(ic);
             }
         }
 
@@ -142,18 +142,18 @@ namespace CognitiveVR
             GameObject newManager = new GameObject(gameobjectName);
             Selection.activeGameObject = newManager;
             Undo.RegisterCreatedObjectUndo(newManager, "Create " + gameobjectName);
-            newManager.AddComponent<CognitiveVR_Manager>();
-            newManager.AddComponent<CognitiveVR.Components.HMDHeight>();
-            newManager.AddComponent<CognitiveVR.Components.RoomSize>();
-            newManager.AddComponent<CognitiveVR.Components.ArmLength>();
+            newManager.AddComponent<Cognitive3D_Manager>();
+            newManager.AddComponent<Cognitive3D.Components.HMDHeight>();
+            newManager.AddComponent<Cognitive3D.Components.RoomSize>();
+            newManager.AddComponent<Cognitive3D.Components.ArmLength>();
 
-#if CVR_VIVEPROEYE
+#if C3D_VIVEPROEYE
             var framework = GameObject.FindObjectOfType<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
             if (framework == null)
                 newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
 #endif
 
-#if CVR_NEURABLE
+#if C3D_NEURABLE
             Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif
         }
@@ -203,12 +203,13 @@ namespace CognitiveVR
             return UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name.Contains(assetTypeHDRP);
         }
 
-        public static void SetPlayerDefine(List<string> CVRSymbols)
+        public static void SetPlayerDefine(List<string> C3DSymbols)
         {
-            //check for Unity HDRP. add to CVRSymbols if so
+            //check for Unity HDRP. add to C3DSymbols if so
             if (IsHDRP())
             {
-                CVRSymbols.Add("CVR_HDRP");
+                //TODO package can define this in assembly definition
+                C3DSymbols.Add("C3D_HDRP");
             }
 
             //get all scripting define symbols
@@ -216,25 +217,25 @@ namespace CognitiveVR
             string[] ExistingSymbols = s.Split(';');
 
             //categorizing definition symbols
-            List<string> ExistingNonCVRSymbols = new List<string>();
+            List<string> ExistingNonC3DSymbols = new List<string>();
             foreach (var v in ExistingSymbols)
             {
-                if (!v.StartsWith("CVR_"))
+                if (!v.StartsWith("C3D_"))
                 {
-                    ExistingNonCVRSymbols.Add(v);
+                    ExistingNonC3DSymbols.Add(v);
                 }
             }
             //foreach (var v in ExistingSymbols) Debug.Log("existing defines " + v);
-            //foreach (var v in CVRSymbols) Debug.Log("CVR defines " + v);
-            //foreach (var v in ExistingNonCVRSymbols) Debug.Log("existing non cvr defines " + v);
+            //foreach (var v in C3DSymbols) Debug.Log("C3D defines " + v);
+            //foreach (var v in ExistingNonC3DSymbols) Debug.Log("existing non cvr defines " + v);
 
-            //IMPROVEMENT check if ExistingSymbols == (CVRSymbols + ExistingNonCVRSymbols) regardless of order
+            //IMPROVEMENT check if ExistingSymbols == (C3DSymbols + ExistingNonC3DSymbols) regardless of order
 
             //combine symbols
             List<string> finalDefines = new List<string>();
-            foreach (var v in ExistingNonCVRSymbols)
+            foreach (var v in ExistingNonC3DSymbols)
                 finalDefines.Add(v);
-            foreach (var v in CVRSymbols)
+            foreach (var v in C3DSymbols)
                 finalDefines.Add(v);
 
             //rebuild symbols
@@ -249,18 +250,18 @@ namespace CognitiveVR
             PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, alldefines);
         }
 
-        static CognitiveVR_Preferences _prefs;
+        static Cognitive3D_Preferences _prefs;
         /// <summary>
-        /// Gets the cognitivevr_preferences or creates and returns new default preferences
+        /// Gets the Cognitive3D_preferences or creates and returns new default preferences
         /// </summary>
-        public static CognitiveVR_Preferences GetPreferences()
+        public static Cognitive3D_Preferences GetPreferences()
         {
             if (_prefs == null)
             {
-                _prefs = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
+                _prefs = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
                 if (_prefs == null)
                 {
-                    _prefs = ScriptableObject.CreateInstance<CognitiveVR_Preferences>();
+                    _prefs = ScriptableObject.CreateInstance<Cognitive3D_Preferences>();
                     string filepath = "Assets/Resources/";
 
                     if (!AssetDatabase.IsValidFolder(filepath))
@@ -269,19 +270,19 @@ namespace CognitiveVR
                     }
 
                     //go with the base resource folder if it exists
-                    //if (!RecursiveDirectorySearch("", out filepath, "CognitiveVR" + System.IO.Path.DirectorySeparatorChar + "Resources"))
-                    //{ Debug.LogError("couldn't find CognitiveVR/Resources folder"); }
+                    //if (!RecursiveDirectorySearch("", out filepath, "Cognitive3D" + System.IO.Path.DirectorySeparatorChar + "Resources"))
+                    //{ Debug.LogError("couldn't find Cognitive3D/Resources folder"); }
 
 
 
-                    AssetDatabase.CreateAsset(_prefs, filepath + System.IO.Path.DirectorySeparatorChar + "CognitiveVR_Preferences.asset");
+                    AssetDatabase.CreateAsset(_prefs, filepath + System.IO.Path.DirectorySeparatorChar + "Cognitive3D_Preferences.asset");
 
                     List<string> names = new List<string>();
                     List<string> paths = new List<string>();
                     GetAllScenes(names, paths);
                     for (int i = 0; i < names.Count; i++)
                     {
-                        CognitiveVR_Preferences.AddSceneSettings(_prefs, names[i], paths[i]);
+                        Cognitive3D_Preferences.AddSceneSettings(_prefs, names[i], paths[i]);
                     }
                     EditorUtility.SetDirty(EditorCore.GetPreferences());
                     AssetDatabase.SaveAssets();
@@ -338,7 +339,7 @@ namespace CognitiveVR
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
             string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
+            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -375,7 +376,7 @@ namespace CognitiveVR
                 EditorUtility.DisplayDialog("Error Getting Scene Version", "There was an error getting data about this scene from the Cognitive3D Dashboard. Response code was " + responsecode + ".\n\nSee Console for more details", "Ok");
                 return;
             }
-            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings == null)
             {
                 //this should be impossible, but might happen if changing scenes at exact time
@@ -390,7 +391,7 @@ namespace CognitiveVR
             {
                 settings.VersionId = collection.GetLatestVersion().id;
                 settings.VersionNumber = collection.GetLatestVersion().versionNumber;
-                EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 AssetDatabase.SaveAssets();
             }
             if (RefreshSceneVersionComplete != null)
@@ -761,7 +762,7 @@ namespace CognitiveVR
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
             string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = CognitiveVR_Preferences.FindScene(currentSceneName);
+            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -827,11 +828,11 @@ namespace CognitiveVR
                 //default
                 switch (key)
                 {
-                    case DisplayKey.GatewayURL: return CognitiveVR_Preferences.Instance.Gateway;
-                    case DisplayKey.DashboardURL: return CognitiveVR_Preferences.Instance.Dashboard;
+                    case DisplayKey.GatewayURL: return Cognitive3D_Preferences.Instance.Gateway;
+                    case DisplayKey.DashboardURL: return Cognitive3D_Preferences.Instance.Dashboard;
                     case DisplayKey.ViewerName: return "Scene Explorer";
-                    case DisplayKey.ViewerURL: return CognitiveVR_Preferences.Instance.Viewer;
-                    case DisplayKey.DocumentationURL: return CognitiveVR_Preferences.Instance.Documentation;
+                    case DisplayKey.ViewerURL: return Cognitive3D_Preferences.Instance.Viewer;
+                    case DisplayKey.DocumentationURL: return Cognitive3D_Preferences.Instance.Documentation;
                     case DisplayKey.FullName: return "Cognitive3D";
                     case DisplayKey.ShortName: return "Cognitive3D";
                     case DisplayKey.ManagerName: return "Cognitive3D_Manager";
@@ -871,18 +872,18 @@ namespace CognitiveVR
 
         private static void SaveEditorVersion()
         {
-            if (EditorPrefs.GetString("cvr_version") != CognitiveVR.Core.SDK_VERSION)
+            if (EditorPrefs.GetString("c3d_version") != Cognitive3D.Core.SDK_VERSION)
             {
-                EditorPrefs.SetString("cvr_version", CognitiveVR.Core.SDK_VERSION);
-                EditorPrefs.SetString("cvr_updateDate", System.DateTime.UtcNow.ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_version", Cognitive3D.Core.SDK_VERSION);
+                EditorPrefs.SetString("c3d_updateDate", System.DateTime.UtcNow.ToString("dd-MM-yyyy"));
             }
         }
 
         public static void ForceCheckUpdates()
         {
-            EditorPrefs.SetString("cvr_skipVersion", "");
+            EditorPrefs.SetString("c3d_skipVersion", "");
             EditorApplication.update -= UpdateCheckForUpdates;
-            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+            EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             SaveEditorVersion();
 
             checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
@@ -898,11 +899,11 @@ namespace CognitiveVR
             System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
             System.Globalization.DateTimeStyles styles = System.Globalization.DateTimeStyles.None;
 
-            if (System.DateTime.TryParseExact(EditorPrefs.GetString("cvr_updateRemindDate", "01/01/1971"), "dd-MM-yyyy", culture, styles, out remindDate))
+            if (System.DateTime.TryParseExact(EditorPrefs.GetString("c3d_updateRemindDate", "01/01/1971"), "dd-MM-yyyy", culture, styles, out remindDate))
             {
                 if (System.DateTime.UtcNow > remindDate)
                 {
-                    EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                    EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                     SaveEditorVersion();
 
                     checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
@@ -912,7 +913,7 @@ namespace CognitiveVR
             }
             else
             {
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             }
         }
 
@@ -926,7 +927,7 @@ namespace CognitiveVR
             {
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.error))
                 {
-                    Debug.Log("Check for cognitiveVR SDK version update error: " + checkForUpdatesRequest.error);
+                    Debug.Log("Check for Cognitive3D SDK version update error: " + checkForUpdatesRequest.error);
                 }
 
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.downloadHandler.text))
@@ -938,15 +939,15 @@ namespace CognitiveVR
 
                     if (!string.IsNullOrEmpty(version))
                     {
-                        string skipVersion = EditorPrefs.GetString("cvr_skipVersion");
+                        string skipVersion = EditorPrefs.GetString("c3d_skipVersion");
 
                         if (version != skipVersion) //new version, not the skipped one
                         {
-                            System.Version installedVersion = new Version(CognitiveVR.Core.SDK_VERSION);
+                            System.Version installedVersion = new Version(Cognitive3D.Core.SDK_VERSION);
                             System.Version githubVersion = new Version(version);
                             if (githubVersion > installedVersion)
                             {
-                                CognitiveVR_UpdateSDKWindow.Init(version, summary);
+                                Cognitive3D_UpdateSDKWindow.Init(version, summary);
                             }
                             else
                             {
@@ -955,7 +956,7 @@ namespace CognitiveVR
                         }
                         else if (skipVersion == version) //skip this version. limit this check to once a day
                         {
-                            EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                            EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                         }
                     }
                 }
@@ -969,14 +970,14 @@ namespace CognitiveVR
 
         internal static bool HasDynamicExportFiles(string meshname)
         {
-            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
+            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
             var SceneExportDirExists = Directory.Exists(dynamicExportDirectory);
             return SceneExportDirExists && Directory.GetFiles(dynamicExportDirectory).Length > 0;
         }
 
         internal static bool HasDynamicObjectThumbnail(string meshname)
         {
-            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
+            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + meshname;
             var SceneExportDirExists = Directory.Exists(dynamicExportDirectory);
 
             if (!SceneExportDirExists) return false;
@@ -994,40 +995,40 @@ namespace CognitiveVR
         {
             try
             {
-                Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
+                Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName);
             }
             catch
             {
-                EditorUtility.DisplayDialog("Error!", "Failed to create folder: CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
+                EditorUtility.DisplayDialog("Error!", "Failed to create folder: Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + fullName, "Ok");
                 return false;
             }
             return true;
         }
 
         /// <summary>
-        /// return path to CognitiveVR_SceneExplorerExport/NAME. create if it doesn't exist
+        /// return path to Cognitive3D_SceneExplorerExport/NAME. create if it doesn't exist
         /// </summary>
         public static string GetSubDirectoryPath(string directoryName)
         {
             CreateTargetFolder(directoryName);
-            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + directoryName + Path.DirectorySeparatorChar;
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + directoryName + Path.DirectorySeparatorChar;
         }
 
         /// <summary>
-        /// returns path to CognitiveVR_SceneExplorerExport
+        /// returns path to Cognitive3D_SceneExplorerExport
         /// </summary>
         public static string GetBaseDirectoryPath()
         {
-            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar;
+            return Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar;
         }
 
         /// <summary>
         /// has scene export directory AND files for scene
         /// </summary>
-        public static bool HasSceneExportFiles(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+        public static bool HasSceneExportFiles(Cognitive3D_Preferences.SceneSettings currentSceneSettings)
         {
             if (currentSceneSettings == null) { return false; }
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
             if (!SceneExportDirExists) { return false; }
 
@@ -1048,10 +1049,10 @@ namespace CognitiveVR
         /// <summary>
         /// get scene export directory. returns "" if no directory exists
         /// </summary>
-        public static string GetSceneExportDirectory(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+        public static string GetSceneExportDirectory(Cognitive3D_Preferences.SceneSettings currentSceneSettings)
         {
             if (currentSceneSettings == null) { return ""; }
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
             if (!SceneExportDirExists) { return ""; }
             return sceneExportDirectory;
@@ -1059,7 +1060,7 @@ namespace CognitiveVR
 
         public static string GetDynamicExportDirectory()
         {
-            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+            string dynamicExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
             var ExportDirExists = Directory.Exists(dynamicExportDirectory);
             if (!ExportDirExists) { return ""; }
             return dynamicExportDirectory;
@@ -1068,10 +1069,10 @@ namespace CognitiveVR
         /// <summary>
         /// has scene export directory. returns true even if there are no files in directory
         /// </summary>
-        public static bool HasSceneExportFolder(CognitiveVR_Preferences.SceneSettings currentSceneSettings)
+        public static bool HasSceneExportFolder(Cognitive3D_Preferences.SceneSettings currentSceneSettings)
         {
             if (currentSceneSettings == null) { return false; }
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + currentSceneSettings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
             return SceneExportDirExists;
@@ -1080,7 +1081,7 @@ namespace CognitiveVR
         /// <summary>
         /// returns size of scene export folder in MB
         /// </summary>
-        public static float GetSceneFileSize(CognitiveVR_Preferences.SceneSettings scene)
+        public static float GetSceneFileSize(Cognitive3D_Preferences.SceneSettings scene)
         {
             if (string.IsNullOrEmpty(GetSceneExportDirectory(scene)))
             {
@@ -1116,7 +1117,7 @@ namespace CognitiveVR
                 return ExportedDynamicObjects;
 
             //read dynamic object mesh names from directory
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             Directory.CreateDirectory(path);
             var subdirectories = Directory.GetDirectories(path);
             List<string> ObjectNames = new List<string>();
@@ -1167,7 +1168,7 @@ namespace CognitiveVR
         public static void UploadCustomScreenshot()
         {
             //check that scene has been uploaded
-            var currentScene = CognitiveVR_Preferences.FindCurrentScene();
+            var currentScene = Cognitive3D_Preferences.FindCurrentScene();
             if (currentScene == null)
             {
                 Debug.LogError("Could not find current scene");
@@ -1238,13 +1239,13 @@ namespace CognitiveVR
                 return true;
             }
             //if file exists
-            if (Directory.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
+            if (Directory.Exists("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot"))
             {
-                if (File.Exists("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
+                if (File.Exists("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"))
                 {
                     //load texture from file
                     Texture2D tex = new Texture2D(1, 1);
-                    tex.LoadImage(File.ReadAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"));
+                    tex.LoadImage(File.ReadAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png"));
                     returnTexture = tex;
                     cachedScreenshot = returnTexture;
                     return true;
@@ -1262,12 +1263,12 @@ namespace CognitiveVR
             tex.Apply();
             RenderTexture.active = null;
 
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
 
             //save file
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+            File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
             //use editor update to delay teh screenshot 1 frame?
 
             if (completeScreenshot != null)
@@ -1291,12 +1292,12 @@ namespace CognitiveVR
 
             cam.targetTexture.Release();
 
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName);
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
 
             //save file
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+            File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
             //use editor update to delay teh screenshot 1 frame?
 
             if (saveCameraScreenshot != null)
@@ -1365,12 +1366,12 @@ namespace CognitiveVR
             tempDisabledCameras.Clear();
 
             //create directory
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport");
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
-            Directory.CreateDirectory("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport");
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
+            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
 
             //save file
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
+            File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
             //use editor update to delay the screenshot 1 frame
 
             if (SaveScreenshotComplete != null)
@@ -1437,7 +1438,7 @@ namespace CognitiveVR
         static void SaveDynamicThumbnail(GameObject target, Vector3 position, Quaternion rotation)
         {
             Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
-            var dynamic = target.GetComponent<CognitiveVR.DynamicObject>();
+            var dynamic = target.GetComponent<Cognitive3D.DynamicObject>();
 
             //choose layer
             int layer = FindUnusedLayer();
@@ -1499,7 +1500,7 @@ namespace CognitiveVR
             GameObject.DestroyImmediate(renderCam.gameObject);
 
             //save
-            File.WriteAllBytes("CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", tex.EncodeToPNG());
+            File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", tex.EncodeToPNG());
         }
 
         /// <summary>

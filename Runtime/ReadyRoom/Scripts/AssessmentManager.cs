@@ -7,7 +7,7 @@ using UnityEngine;
 
 //TODO make this a monobehaviour and just iterate through a list of assessments
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class AssessmentManager
     {

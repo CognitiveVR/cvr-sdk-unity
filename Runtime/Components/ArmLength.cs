@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
 
@@ -10,10 +10,10 @@ using Valve.VR;
 /// this only starts tracking when the player has pressed a button/trigger/grip
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
-    public class ArmLength : CognitiveVRAnalyticsComponent
+    public class ArmLength : Cognitive3DAnalyticsComponent
     {
         [ClampSetting(5, 100)]
         [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
@@ -27,7 +27,7 @@ namespace CognitiveVR.Components
 
         GameplayReferences.ControllerInfo tempInfo = null;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
             StartCoroutine(Tick());

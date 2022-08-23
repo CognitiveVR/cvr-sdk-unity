@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 //dummy script to display a bunch of options on each canvas script
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class ActiveSessionView : MonoBehaviour
     {
@@ -39,7 +39,7 @@ namespace CognitiveVR.ActiveSession
             copy.Initialize(MainCameraRenderImage);
 
             WarningText.gameObject.SetActive(false);
-#if CVR_AH
+#if C3D_AH
             if (AdhawkApi.Calibrator.Instance != null)
             {
                 if (!AdhawkApi.Calibrator.Instance.Calibrated)
@@ -64,7 +64,7 @@ namespace CognitiveVR.ActiveSession
             {
                 WarningText.text = "Could not find Calibrator";
             }
-#elif CVR_PUPIL
+#elif C3D_PUPIL
             if (calibrationController == null)
                 calibrationController = FindObjectOfType<PupilLabs.CalibrationController>();
             if (calibrationController != null)
@@ -77,9 +77,9 @@ namespace CognitiveVR.ActiveSession
             {
                 WarningText.text = "Could not find Calibration Controller";
             }
-#elif CVR_TOBIIVR
+#elif C3D_TOBIIVR
             WarningText.enabled = false;
-#elif CVR_FOVE
+#elif C3D_FOVE
             if (!Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
             {
                 WarningText.text = "Eye Tracking not Calibrated";
@@ -98,7 +98,7 @@ namespace CognitiveVR.ActiveSession
                 yield return new WaitForSeconds(2);
                 WarningText.enabled = false;
             }
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
             bool needCalibration = false;
             int output = ViveSR.anipal.Eye.SRanipal_Eye_API.IsUserNeedCalibration(ref needCalibration);
             ViveSR.Error error = (ViveSR.Error)output;
@@ -117,7 +117,7 @@ namespace CognitiveVR.ActiveSession
                 yield return new WaitForSeconds(2);
                 WarningText.enabled = false;
             }
-#elif CVR_VARJO
+#elif C3D_VARJO
             if (Varjo.XR.VarjoEyeTracking.GetGaze().status == Varjo.XR.VarjoEyeTracking.GazeStatus.Valid)
             {
                 WarningText.text = "Eye Tracking Calibrated";
@@ -133,7 +133,7 @@ namespace CognitiveVR.ActiveSession
 #endif
         }
 
-#if CVR_PUPIL
+#if C3D_PUPIL
         PupilLabs.CalibrationController calibrationController;
 
         private void PupilLabs_OnCalibrationSucceeded()

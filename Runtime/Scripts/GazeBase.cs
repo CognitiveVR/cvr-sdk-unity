@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 
-#if CVR_AH
+#if C3D_AH
 using AdhawkApi;
 using AdhawkApi.Numerics.Filters;
 #endif
@@ -19,13 +19,13 @@ using AdhawkApi.Numerics.Filters;
 //5. gps + compass
 //6. floor position
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("")]
     public class GazeBase : MonoBehaviour
     {
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
-#if CVR_AH
+#if C3D_AH
         private static Calibrator ah_calibrator;
 #endif
 
@@ -37,20 +37,20 @@ namespace CognitiveVR
         //called immediately after construction
         public virtual void Initialize()
         {
-#if CVR_STEAMVR
-            CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent; //1.2
-#elif CVR_OCULUS
+#if C3D_STEAMVR
+            Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_OnPoseEvent; //1.2
+#elif C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-#elif CVR_AH
+#elif C3D_AH
             ah_calibrator = Calibrator.Instance;
-#elif CVR_PUPIL
+#elif C3D_PUPIL
             gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
-#elif CVR_OMNICEPT
+#elif C3D_OMNICEPT
             if (gb == null)
             {
                 gb = GameplayReferences.GliaBehaviour;
@@ -63,8 +63,8 @@ namespace CognitiveVR
 
         //TODO support more sdks to send when HMD removed (wave, varjo, steamvr2)
 
-#if CVR_STEAMVR
-        void CognitiveVR_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
+#if C3D_STEAMVR
+        void Cognitive3D_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
@@ -73,14 +73,14 @@ namespace CognitiveVR
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 headsetPresent = false;
-                if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
+                if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
                 {
                     Core.InvokeSendDataEvent(false);
                 }
             }
         }
 
-        void CognitiveVR_Manager_OnPoseEventOLD(Valve.VR.EVREventType evrevent)
+        void Cognitive3D_Manager_OnPoseEventOLD(Valve.VR.EVREventType evrevent)
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
@@ -89,7 +89,7 @@ namespace CognitiveVR
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
             {
                 headsetPresent = false;
-                if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
+                if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
                 {
                     Core.InvokeSendDataEvent(false);
                 }
@@ -97,7 +97,7 @@ namespace CognitiveVR
         }
 #endif
 
-#if CVR_OCULUS
+#if C3D_OCULUS
         private void OVRManager_HMDMounted()
         {
             headsetPresent = true;
@@ -106,7 +106,7 @@ namespace CognitiveVR
         private void OVRManager_HMDUnmounted()
         {
             headsetPresent = false;
-            if (CognitiveVR_Preferences.Instance.SendDataOnHMDRemove)
+            if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
             {
                 Core.InvokeSendDataEvent(false);
             }
@@ -134,9 +134,9 @@ namespace CognitiveVR
             localHitPoint = Vector3.zero;
             hitTextureCoord = Vector2.zero;
 
-            if (Physics.Raycast(pos, direction, out hit, distance, CognitiveVR_Preferences.Instance.DynamicLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
+            if (Physics.Raycast(pos, direction, out hit, distance, Cognitive3D_Preferences.Instance.DynamicLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
             {
-                if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
+                if (Cognitive3D_Preferences.S_DynamicObjectSearchInParent)
                 {
                     hitDynamic = hit.collider.GetComponentInParent<DynamicObject>();
                 }
@@ -155,9 +155,9 @@ namespace CognitiveVR
                     hitTextureCoord = hit.textureCoord;
                 }
             }
-            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, CognitiveVR_Preferences.Instance.DynamicLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
+            if (!didhitdynamic && Physics.SphereCast(pos, radius, direction, out hit, distance, Cognitive3D_Preferences.Instance.DynamicLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
             {
-                if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+                if (Cognitive3D_Preferences.Instance.DynamicObjectSearchInParent)
                 {
                     hitDynamic = hit.collider.GetComponentInParent<DynamicObject>();
                 }
@@ -182,11 +182,11 @@ namespace CognitiveVR
 
         public void GetOptionalSnapshotData(ref Vector3 gpsloc, ref float compass, ref Vector3 floorPos)
         {
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
-                CognitiveVR_Manager.Instance.GetGPSLocation(ref gpsloc, ref compass);
+                Cognitive3D_Manager.Instance.GetGPSLocation(ref gpsloc, ref compass);
             }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 if (cameraRoot == null)
                 {
@@ -200,7 +200,7 @@ namespace CognitiveVR
             }
         }
 
-#if CVR_PUPIL
+#if C3D_PUPIL
         PupilLabs.GazeController gazeController;
         Vector3 localGazeDirection;
         Vector3 pupilViewportPosition;
@@ -217,7 +217,7 @@ namespace CognitiveVR
             gazeController.OnReceive3dGaze -= ReceiveEyeData;
         }
 #endif
-#if CVR_OMNICEPT
+#if C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;
 
@@ -236,26 +236,26 @@ namespace CognitiveVR
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-#if CVR_FOVE //direction
+#if C3D_FOVE //direction
             var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
             var ray = eyeRays.left;
             gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
             gazeDirection.Normalize();
-#elif CVR_PUPIL
+#elif C3D_PUPIL
             gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
-#elif CVR_TOBIIVR
+#elif C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
             }    
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
             var ray = new Ray();
             //improvement? - if using callback, listen and use last valid data instead of calling SRanipal_Eye_API.GetEyeData
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);
             }
-#elif CVR_VARJO
+#elif C3D_VARJO
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
                 var data = Varjo.XR.VarjoEyeTracking.GetGaze();
@@ -265,15 +265,15 @@ namespace CognitiveVR
                     gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
                 }
             }
-#elif CVR_NEURABLE
+#elif C3D_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-#elif CVR_AH
+#elif C3D_AH
             gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
-#elif CVR_SNAPDRAGON
+#elif C3D_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
-#elif CVR_OMNICEPT
+#elif C3D_OMNICEPT
             gazeDirection = lastDirection;
-#elif CVR_XR
+#elif C3D_XR
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
@@ -305,7 +305,7 @@ namespace CognitiveVR
         {
             Vector2 screenGazePoint = new Vector2(0.5f,0.5f);
 
-#if CVR_FOVE //screenpoint
+#if C3D_FOVE //screenpoint
 
             //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
             var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(GameplayReferences.FoveInstance.GetGazeRays().left.GetPoint(1000));
@@ -317,15 +317,15 @@ namespace CognitiveVR
             }
 
             screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
-#elif CVR_PUPIL//screenpoint
+#elif C3D_PUPIL//screenpoint
             screenGazePoint = pupilViewportPosition;
-#elif CVR_TOBIIVR
+#elif C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
             {
                 var gazeray = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay;
                 screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(gazeray.Origin + GameplayReferences.HMD.TransformDirection(gazeray.Direction) * 1000);                
             }
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
             var leftv2 = Vector2.zero;
             var rightv2 = Vector2.zero;
 
@@ -338,16 +338,16 @@ namespace CognitiveVR
             else if (leftSet && rightSet)
                 screenGazePoint = (leftv2 + rightv2) / 2;
 
-#elif CVR_NEURABLE
+#elif C3D_NEURABLE
             screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
-#elif CVR_AH
+#elif C3D_AH
             Vector3 x = ah_calibrator.GetGazeOrigin();
             Vector3 r = ah_calibrator.GetGazeVector();
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(x + 10 * r);
-#elif CVR_SNAPDRAGON
+#elif C3D_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
-#elif CVR_XR
+#elif C3D_XR
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {

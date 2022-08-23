@@ -7,7 +7,7 @@
 using System.Threading;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class TextureScale
     {

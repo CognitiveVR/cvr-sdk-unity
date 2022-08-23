@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using CognitiveVR;
+using Cognitive3D;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class RenameDynamicWindow : EditorWindow
     {
@@ -96,7 +96,7 @@ namespace CognitiveVR
     {
         get
         {
-            var currentscene = CognitiveVR_Preferences.FindCurrentScene();
+            var currentscene = Cognitive3D_Preferences.FindCurrentScene();
             bool sceneIsNull = currentscene == null || string.IsNullOrEmpty(currentscene.SceneId);
             return !EditorCore.IsDeveloperKeyValid || sceneIsNull || lastResponseCode != 200;
         }
@@ -178,7 +178,7 @@ namespace CognitiveVR
 
         GUI.DrawTexture(new Rect(0, 0, 600, 550), EditorGUIUtility.whiteTexture);
 
-        var currentscene = CognitiveVR_Preferences.FindCurrentScene();
+        var currentscene = Cognitive3D_Preferences.FindCurrentScene();
 
         if (string.IsNullOrEmpty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name))
         {
@@ -412,33 +412,33 @@ namespace CognitiveVR
 
         //texture resolution
 
-        if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+        if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
         //resolution settings here
         EditorGUI.BeginDisabledGroup(DisableButtons);
-        if (GUI.Button(new Rect(80, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(80, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
-            CognitiveVR_Preferences.Instance.TextureResize = 4;
+            Cognitive3D_Preferences.Instance.TextureResize = 4;
         }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+        if (Cognitive3D_Preferences.Instance.TextureResize != 4)
         {
             GUI.Box(new Rect(80, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(230, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(230, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
-            CognitiveVR_Preferences.Instance.TextureResize = 2;
+            Cognitive3D_Preferences.Instance.TextureResize = 2;
         }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+        if (Cognitive3D_Preferences.Instance.TextureResize != 2)
         {
             GUI.Box(new Rect(230, 415, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(380, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(380, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
-            CognitiveVR_Preferences.Instance.TextureResize = 1;
+            Cognitive3D_Preferences.Instance.TextureResize = 1;
         }
-        if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+        if (Cognitive3D_Preferences.Instance.TextureResize != 1)
         {
             GUI.Box(new Rect(380, 415, 140, 35), "", "box_sharp_alpha");
         }
@@ -485,7 +485,7 @@ namespace CognitiveVR
                     //    if (!entry.isIdPool) { continue; }
                     //    if (!entry.selected) { continue; }
                     //
-                    //    ManageDynamicObjects.AggregationManifest poolManifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
+                    //    ManageDynamicObjects.AggregationManifest poolManifest = new Cognitive3D.ManageDynamicObjects.AggregationManifest();
                     //    foreach (var id in entry.poolReference.Ids)
                     //    {
                     //        poolManifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, id, new float[3] { 1, 1, 1 }));
@@ -868,7 +868,7 @@ namespace CognitiveVR
 
         string tooltip = "";
         
-        var currentScene = CognitiveVR_Preferences.FindCurrentScene();
+        var currentScene = Cognitive3D_Preferences.FindCurrentScene();
         if (currentScene == null || string.IsNullOrEmpty(currentScene.SceneId))
         {
             tooltip = "Upload list of all Dynamic Object IDs. Scene settings not saved";
@@ -993,7 +993,7 @@ namespace CognitiveVR
     //get dynamic object aggregation manifest for the current scene
     void GetManifest()
     {
-        var currentSceneSettings = CognitiveVR_Preferences.FindCurrentScene();
+        var currentSceneSettings = Cognitive3D_Preferences.FindCurrentScene();
         if (currentSceneSettings == null)
         {
             return;
@@ -1117,7 +1117,7 @@ namespace CognitiveVR
             if (ManifestToJson(am, out json))
             {
                 manifestCount++;
-                var currentSettings = CognitiveVR_Preferences.FindCurrentScene();
+                var currentSettings = Cognitive3D_Preferences.FindCurrentScene();
                 if (currentSettings != null && currentSettings.VersionNumber > 0)
                     SendManifest(json, currentSettings.VersionNumber, callback);
                 else
@@ -1168,7 +1168,7 @@ namespace CognitiveVR
     static System.Action PostManifestResponseAction;
     static void SendManifest(string json, int versionNumber, System.Action callback)
     {
-        var settings = CognitiveVR_Preferences.FindCurrentScene();
+        var settings = Cognitive3D_Preferences.FindCurrentScene();
         if (settings == null)
         {
             Debug.LogWarning("Send Manifest settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);

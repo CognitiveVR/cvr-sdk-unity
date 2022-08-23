@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 
 //remaps the world position from HMD screen to what is displayed in unity on monitor
 //draw texture in OnGUI it doesn't show up in HMD
@@ -12,7 +12,7 @@ using CognitiveVR;
 //CONSIDER scaling fixation/reticle size based on screen resolution
 //TODO render saccades
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class FullscreenDisplay : MonoBehaviour
     {
@@ -21,9 +21,9 @@ namespace CognitiveVR.ActiveSession
         {
             //Asv = asv;
             HMDCamera = camera;
-#if CVR_XR //if openvr xr. windowsMR displays both eyes. CONSIDER solutions
+#if C3D_XR //if openvr xr. windowsMR displays both eyes. CONSIDER solutions
         openVROffset = new Vector2(-0.05f,-0.11f);
-#elif CVR_STEAMVR2 //if openvr desktop 2.0.5
+#elif C3D_STEAMVR2 //if openvr desktop 2.0.5
         //openVROffset = new Vector2(0.083f,0.11f);
         openVROffset = new Vector2(0f,0f);
 #endif
@@ -88,7 +88,7 @@ namespace CognitiveVR.ActiveSession
             output.x = Remap(input.x, 820 - 580, 820 + 580, 0, Screen.width);
             output.y = Remap(input.y, 950 - 300, 950 + 300, 0, Screen.height);
 
-#if CVR_STEAMVR2 || CVR_XR
+#if C3D_STEAMVR2 || C3D_XR
         output.x += openVROffset.x * Screen.width;
         output.y += openVROffset.y * Screen.height;
 #endif
@@ -125,7 +125,7 @@ namespace CognitiveVR.ActiveSession
 
         void Reticle_OnGUI()
         {
-            var gazeRay = CognitiveVR.GazeHelper.GetCurrentWorldGazeRay();
+            var gazeRay = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
             var point = gazeRay.GetPoint(10);
             var screenPoint = WorldToRemapScreen(point);
 
@@ -205,7 +205,7 @@ namespace CognitiveVR.ActiveSession
 
         private void UpdateSaccades()
         {
-            hmdforward = CognitiveVR.GameplayReferences.HMD.forward;
+            hmdforward = Cognitive3D.GameplayReferences.HMD.forward;
             m4proj = HMDCamera.projectionMatrix;
             m4world = HMDCamera.worldToCameraMatrix;
             pixelwidth = HMDCamera.pixelWidth;

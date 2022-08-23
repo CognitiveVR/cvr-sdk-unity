@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(GrabComponentsRequired))]
     [CanEditMultipleObjects]
@@ -48,13 +48,13 @@ namespace CognitiveVR
 
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("1. Add your interaction script(s) to this object, to make it grabbable.", BodyStyle);
-#if CVR_OCULUS
+#if C3D_OCULUS
         EditorGUILayout.HelpBox("Oculus: You likely need to add the \"Grabbable\" component", MessageType.Info);
-#elif CVR_STEAMVR
+#elif C3D_STEAMVR
         EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
         EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
-#elif CVR_UNITYXR
+#elif C3D_UNITYXR
         EditorGUILayout.HelpBox("UnityXR: You likely need to add the \"XR Grab Interactable\" component", MessageType.Info);
 #endif
             EditorGUILayout.LabelField("2. Add a collider if necessary", BodyStyle);

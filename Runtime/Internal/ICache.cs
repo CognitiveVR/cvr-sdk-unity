@@ -8,7 +8,7 @@ using System.IO;
 //CONSIDER 2 files? a 'writeable' file and a 'readable' file. move writeable to readable when 'idle'?
 //OR queue caches instead of stacking them? if failed, put on end instead of back in position
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
 	public interface ICache
 	{

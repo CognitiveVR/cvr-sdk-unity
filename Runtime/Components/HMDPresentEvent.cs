@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
 
@@ -9,17 +9,17 @@ using Valve.VR;
 /// NOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
-    public class HMDPresentEvent : CognitiveVRAnalyticsComponent
+    public class HMDPresentEvent : Cognitive3DAnalyticsComponent
     {
-#if CVR_OCULUS
+#if C3D_OCULUS
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
         }
@@ -41,14 +41,14 @@ namespace CognitiveVR.Components
         }
 #endif
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
-            //CognitiveVR_Manager.PoseEvent += CognitiveVR_Manager_OnPoseEvent;
+            //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_OnPoseEvent;
             //SteamVR_Events.System(Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted).AddListener(OnDeviceActivated);
             //SteamVR_Events.System(Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded).AddListener(OnDeviceActivated);
         }
@@ -59,7 +59,7 @@ namespace CognitiveVR.Components
             Debug.Log(activity);
         }
 
-        void CognitiveVR_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
+        void Cognitive3D_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
         {
             if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
             {
@@ -73,13 +73,13 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            //CognitiveVR_Manager.PoseEvent -= CognitiveVR_Manager_OnPoseEvent;
+            //Cognitive3D_Manager.PoseEvent -= Cognitive3D_Manager_OnPoseEvent;
         }
 #endif
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS || CVR_STEAMVR
+#if C3D_OCULUS || C3D_STEAMVR
             return false;
 #else
             return true;
@@ -88,7 +88,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_STEAMVR
+#if C3D_STEAMVR
             return "Sends transactions when a player removes or wears HMD. SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD!";
 #else
             return "Sends transactions when a player removes or wears HMD";

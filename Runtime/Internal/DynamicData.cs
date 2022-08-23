@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //instance data about how this specific dynamic thing should work
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public struct DynamicData
     {
@@ -65,7 +65,7 @@ namespace CognitiveVR
         {
             if (string.IsNullOrEmpty(customid))
             {
-                Id = CognitiveVR.DynamicManager.GetUniqueObjectId(meshname);
+                Id = Cognitive3D.DynamicManager.GetUniqueObjectId(meshname);
                 UseCustomId = false;
             }
             else

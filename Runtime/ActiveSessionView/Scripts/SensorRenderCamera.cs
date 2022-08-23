@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 
 //rendering is controlled by sensorcanvas
 //manually rendering allows for no cost while 10 frame delay in sensorcanvas is active
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class SensorRenderCamera : MonoBehaviour
     {

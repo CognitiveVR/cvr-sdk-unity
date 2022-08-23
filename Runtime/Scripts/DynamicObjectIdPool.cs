@@ -7,7 +7,7 @@ using UnityEngine;
 //dynamic objects get a new id when spawned, if they have a reference to this pool
 //if getid runs out of free ids, return runtime id (1,2,3, etc). unique
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CreateAssetMenu(fileName = "New Dynamic Object Id Pool", menuName = "Cognitive3D/Dynamic Object Id Pool")]
     public class DynamicObjectIdPool : ScriptableObject
@@ -28,7 +28,7 @@ namespace CognitiveVR
         {
             if (freeId >= Ids.Length) //beyond list size, generate unique ids
             {
-                return CognitiveVR.DynamicManager.GetUniqueObjectId(MeshName);
+                return Cognitive3D.DynamicManager.GetUniqueObjectId(MeshName);
             }
 
             string newId = Ids[freeId];

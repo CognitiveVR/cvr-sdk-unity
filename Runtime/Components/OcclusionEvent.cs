@@ -6,18 +6,18 @@ using System.Collections.Generic;
 /// sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (isvalid) or is disconnected/loses power (disconnected)
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Occlusion Event")]
-    public class OcclusionEvent : CognitiveVRAnalyticsComponent
+    public class OcclusionEvent : Cognitive3DAnalyticsComponent
     {
 
-#if CVR_OCULUS
+#if C3D_OCULUS
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
@@ -28,7 +28,7 @@ namespace CognitiveVR.Components
 
         void Update()
         {
-            //TODO move this stuff into cognitivevr_manager and get states from there
+            //TODO move this stuff into Cognitive3D_manager and get states from there
             if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && RightControllerVisible)
             {
                 RightControllerVisible = false;
@@ -69,12 +69,12 @@ namespace CognitiveVR.Components
         }
 #endif
 
-#if CVR_PICOVR
+#if C3D_PICOVR
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
             Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
             Pvr_UnitySDKSensor.Enter3DofModelEvent += TrackingLost;
@@ -98,12 +98,12 @@ namespace CognitiveVR.Components
             //OcclusionChanged();
         }
 #endif
-#if CVR_PICOXR
+#if C3D_PICOXR
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
             //there's no obvious substitute in Pico Unity XR 1.2.3
             //Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
@@ -130,18 +130,18 @@ namespace CognitiveVR.Components
 #endif
 
         //known bug - steamvr1.2 occlusion events will not be correctly reported if only 1 controller is enabled. need to test steamvr2
-#if CVR_STEAMVR2 || CVR_STEAMVR
-        public override void CognitiveVR_Init(Error initError)
+#if C3D_STEAMVR2 || C3D_STEAMVR
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
             
-            CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateHandler; //1.2
-            //CognitiveVR_Manager.PoseUpdateEvent += CognitiveVR_Manager_PoseUpdateEvent; //1.1
+            Cognitive3D_Manager.PoseUpdateEvent += Cognitive3D_Manager_PoseUpdateHandler; //1.2
+            //Cognitive3D_Manager.PoseUpdateEvent += Cognitive3D_Manager_PoseUpdateEvent; //1.1
         }
 
         //steam 1.2
-        private void CognitiveVR_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
+        private void Cognitive3D_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
         {
             OcclusionChanged();
         }
@@ -190,7 +190,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_PICOVR
+#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_PICOVR
             return false;
 #else
             return true;

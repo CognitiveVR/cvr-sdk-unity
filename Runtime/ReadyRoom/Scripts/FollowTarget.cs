@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class FollowTarget : MonoBehaviour
     {

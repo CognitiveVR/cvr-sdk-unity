@@ -6,13 +6,13 @@ using UnityEngine;
 //or the SDK room size is not configured to be Room Scale
 //then this gameobject will be disabled immediately
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class DisableIfNotRoomscale : MonoBehaviour
     {
         void Awake()
         {
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if C3D_STEAMVR || C3D_STEAMVR2
             float roomX = 0;
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
@@ -23,7 +23,7 @@ namespace CognitiveVR
             {
                 gameObject.SetActive(false);
             }
-#elif CVR_OCULUS
+#elif C3D_OCULUS
         if (!OVRPlugin.GetBoundaryConfigured() || OVRPlugin.GetBoundaryDimensions(OVRPlugin.BoundaryType.PlayArea).FromVector3f().magnitude < 1)
         {
             gameObject.SetActive(false);

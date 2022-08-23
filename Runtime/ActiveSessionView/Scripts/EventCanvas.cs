@@ -6,7 +6,7 @@ using UnityEngine.UI;
 //spawns and updates a 'feed' of events
 //optimized to avoid enabling/disabling gameobjects since this causes lots of UI updates
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class EventCanvas : MonoBehaviour
     {
@@ -21,7 +21,7 @@ namespace CognitiveVR.ActiveSession
 
         void Start()
         {
-            CognitiveVR.CustomEvent.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
+            Cognitive3D.CustomEvent.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
             for (int i = 0; i < EventEntryPool.Length; i++)
             {
                 var go = Instantiate(EventFeedPrefab, EventFeedRoot);
@@ -61,7 +61,7 @@ namespace CognitiveVR.ActiveSession
 
         private void OnDestroy()
         {
-            CognitiveVR.CustomEvent.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
+            Cognitive3D.CustomEvent.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
         }
 
         public GameObject GetPrefab(Transform parent)

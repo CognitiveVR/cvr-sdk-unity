@@ -3,7 +3,7 @@ using UnityEngine;
 
 
 //used to identify which fields/methods should be displayed in the component window
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     //add max and min values to this
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]

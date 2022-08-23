@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [CustomPropertyDrawer(typeof(ClampSettingAttribute))]
     public class ClampSettingsDrawer : PropertyDrawer

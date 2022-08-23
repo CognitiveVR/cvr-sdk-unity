@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 //this renders the scene in VR. also adds a command buffer to blit to rendertarget and display on canvas
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class CopyVRViewToRenderTexture : MonoBehaviour
     {

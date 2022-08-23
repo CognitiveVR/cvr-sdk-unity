@@ -5,10 +5,10 @@ using System.Collections;
 /// sends a transaction when a player's HMD root transform changes positions. likely a teleport
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Teleport Event")]
-    public class TeleportEvent : CognitiveVRAnalyticsComponent
+    public class TeleportEvent : Cognitive3DAnalyticsComponent
     {
         Transform _root;
         Transform root
@@ -24,15 +24,15 @@ namespace CognitiveVR.Components
 
         Vector3 lastRootPosition;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
-            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            base.Cognitive3D_Init(initError);
+            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
 
-        void CognitiveVR_Manager_OnUpdate(float deltaTime)
+        void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
             {
@@ -52,7 +52,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 //spawns button prefabs in a semi-circle around the player
 //swap out button for different fill/activate actions, including different methods of loading scenes
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class SceneSelectMenu : AssessmentBase
     {
@@ -72,7 +72,7 @@ namespace CognitiveVR
                     Destroy(go);
             }
             if (StartSessionOnSceneChange)
-                CognitiveVR_Manager.Instance.Initialize();
+                Cognitive3D_Manager.Instance.Initialize();
             SceneManager.LoadScene(info.ScenePath);
         }
 

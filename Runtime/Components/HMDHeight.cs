@@ -6,10 +6,10 @@ using System.Collections.Generic;
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
-    public class HMDHeight : CognitiveVRAnalyticsComponent
+    public class HMDHeight : Cognitive3DAnalyticsComponent
     {
         [ClampSetting(5, 100)]
         [Tooltip("Number of samples taken. The median is assumed to be HMD height")]
@@ -28,10 +28,10 @@ namespace CognitiveVR.Components
 
         float[] heights;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
             heights = new float[SampleCount];
 
@@ -71,7 +71,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_PICOVR
+#if C3D_PICOVR
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height\nPvr_UnitySDKManager.TrackingOrigin MUST be set as FloorLevel!";
 #else
             return "Samples the height of a player's HMD. Average is assumed to be player's eye height";
@@ -80,7 +80,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_PICOVR
+#if C3D_PICOVR
             var pvrManager = GameplayReferences.Pvr_UnitySDKManager;
             if (pvrManager != null)
             {

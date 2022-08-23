@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Command Buffer Helper")]
     public class CommandBufferHelper : MonoBehaviour
@@ -37,21 +37,16 @@ namespace CognitiveVR
             temp = new RenderTexture(rt.width, rt.height, 0, RenderTextureFormat.ARGBFloat);
             enabled = false;
 
-#if CVR_FOVE
+#if C3D_FOVE
         //fove does it's own rendering stuff and doesn't render singlepass side by side to a texture
         rect = new Rect(0, 0, rt.width, rt.height);
 #else
-#if UNITY_2017_2_OR_NEWER
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
             {
-#else
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
-            {
-#endif
-#if CVR_OCULUS
+#if C3D_OCULUS
                 //oculus renders side by side without a mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
-#elif CVR_DEFAULT || CVR_STEAMVR || CVR_STEAMVR2 //eye tracking should use physics gaze!
+#elif C3D_DEFAULT || C3D_STEAMVR || C3D_STEAMVR2 //eye tracking should use physics gaze!
                 //steam renders this side by side with mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
 #else //adhawk, tobii, fove, pupil, neurable, vive pro eye
@@ -64,11 +59,8 @@ namespace CognitiveVR
             }
 #endif
 
-#if UNITY_2018_2_OR_NEWER
             if (SystemInfo.supportsAsyncGPUReadback)
                 supportsAsyncGPUReadback = true;
-#endif
-
 
         }
 
@@ -86,9 +78,9 @@ namespace CognitiveVR
 
             Matrix4x4 matrix = Matrix4x4.identity;
 #if UNITY_2017_2_OR_NEWER
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.RenderPassType == 1 && UnityEngine.XR.XRSettings.enabled) //ie singlepass
 #else
-            if (CognitiveVR.CognitiveVR_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.RenderPassType == 1 && UnityEngine.VR.VRSettings.enabled) //ie singlepass
 #endif
                 matrix = cam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
             else //multipass

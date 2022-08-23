@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(ExitPollHolder))]
     public class ExitPollHolderInspector : Editor

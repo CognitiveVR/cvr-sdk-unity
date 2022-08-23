@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     /// <summary>
     /// holds category and properties of events
@@ -22,7 +22,7 @@ namespace CognitiveVR
             startTime = Time.realtimeSinceStartup;
 
             //checks that custom events aren't being created each frame (likely in update)
-            if (CognitiveVR_Preferences.Instance.EnableLogging)
+            if (Cognitive3D_Preferences.Instance.EnableLogging)
             {
                 if (lastFrameCount >= Time.frameCount - 1)
                 {
@@ -32,7 +32,7 @@ namespace CognitiveVR
                         consecutiveEvents++;
                         if (consecutiveEvents > 200)
                         {
-                            CognitiveVR.Util.logError("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unity/customevents");
+                            Cognitive3D.Util.logError("Cognitive3D receiving Custom Events every frame. This is not a recommended method for implementation!\nPlease see docs.cognitive3d.com/unity/customevents");
                         }
                     }
                 }
@@ -159,7 +159,7 @@ namespace CognitiveVR
         /// <returns></returns>
         public CustomEvent AppendSensors()
         {
-            if (SensorRecorder.LastSensorValues.Count == 0) { CognitiveVR.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
+            if (SensorRecorder.LastSensorValues.Count == 0) { Cognitive3D.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
             if (_properties == null)
             {
                 _properties = new List<KeyValuePair<string, object>>();
@@ -292,7 +292,7 @@ namespace CognitiveVR
         {
             Core.OnSendData -= Core_OnSendData;
             Core.OnSendData += Core_OnSendData;
-            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
 
             if (automaticTimerActive == false)
             {
@@ -326,10 +326,10 @@ namespace CognitiveVR
                 {
                     yield return null;
                 }
-                autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.TransactionSnapshotMaxTimer;
+                autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
                 if (Core.IsInitialized)
                 {
-                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");
                     SendTransactions(false);
                 }
@@ -339,8 +339,8 @@ namespace CognitiveVR
         //checks for min send time and extreme batch size before calling send
         static void TrySendTransactions()
         {
-            bool withinMinTimer = minTimer_lastSendTime + CognitiveVR_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = cachedEvents < CognitiveVR_Preferences.Instance.TransactionExtremeSnapshotCount;
+            bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
             if (withinMinTimer && withinExtremeBatchSize)
@@ -366,13 +366,13 @@ namespace CognitiveVR
 
             if (Core.TrackingScene == null)
             {
-                Util.logDebug("CustomEvent.SendTransactions could not find CurrentSceneId! has scene been uploaded and CognitiveVR_Manager.Initialize been called?");
+                Util.logDebug("CustomEvent.SendTransactions could not find CurrentSceneId! has scene been uploaded and Cognitive3D_Manager.Initialize been called?");
                 cachedEvents = 0;
                 eventBuilder.Length = 0;
                 return;
             }
 
-            autoTimer_nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
             minTimer_lastSendTime = Time.realtimeSinceStartup;
 
             cachedEvents = 0;
@@ -381,7 +381,7 @@ namespace CognitiveVR
             //clear the transaction builder
             builder.Length = 0;
 
-            //CognitiveVR.Util.logDebug("package transaction event data " + partCount);
+            //Cognitive3D.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
 
             builder.Append("{");
@@ -446,10 +446,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -467,7 +467,7 @@ namespace CognitiveVR
 
             CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), null, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
-            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
+            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
             }
@@ -490,10 +490,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -512,7 +512,7 @@ namespace CognitiveVR
 
             CustomEventRecordedEvent(category, position, null, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
-            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
+            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
             }
@@ -528,10 +528,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -589,7 +589,7 @@ namespace CognitiveVR
 
             CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), properties, dynamicObjectId, Util.Timestamp(Time.frameCount));
             cachedEvents++;
-            if (cachedEvents >= CognitiveVR_Preferences.Instance.TransactionSnapshotCount)
+            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
             }

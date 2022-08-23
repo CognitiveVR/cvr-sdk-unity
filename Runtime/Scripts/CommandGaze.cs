@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 using UnityEngine.Rendering;
 
 //use command buffer
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Command Gaze")]
     public class CommandGaze : GazeBase
@@ -20,19 +20,19 @@ namespace CognitiveVR
         public override void Initialize()
         {
             base.Initialize();
-            Core.InitEvent += CognitiveVR_Manager_InitEvent;
+            Core.InitEvent += Cognitive3D_Manager_InitEvent;
             if (!GameplayReferences.SDKSupportsEyeTracking)
                 Debug.LogError("Cognitive3D does not support eye tracking using Command Gaze. From 'Advanced Options' in the cognitive3D menu, please change 'Gaze Type' to 'Physics'");
         }
 
-        private void CognitiveVR_Manager_InitEvent(Error initError)
+        private void Cognitive3D_Manager_InitEvent(Error initError)
         {
             if (initError == Error.None)
             {
                 var buf = new CommandBuffer();
                 buf.name = "cognitive depth";
 
-                if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Command Gaze will not function"); return; }
+                if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Command Gaze will not function"); return; }
 
                 GameplayReferences.HMDCameraComponent.depthTextureMode = DepthTextureMode.Depth;
                 GameplayReferences.HMDCameraComponent.AddCommandBuffer(camevent, buf);
@@ -51,7 +51,7 @@ namespace CognitiveVR
 
                 //buf.Blit(blitTo, rt);
 
-                Core.TickEvent += CognitiveVR_Manager_TickEvent;
+                Core.TickEvent += Cognitive3D_Manager_TickEvent;
 
                 helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();
                 helper.Initialize(rt, GameplayReferences.HMDCameraComponent, OnHelperPostRender, this);
@@ -59,7 +59,7 @@ namespace CognitiveVR
             }
         }
 
-        private void CognitiveVR_Manager_TickEvent()
+        private void Cognitive3D_Manager_TickEvent()
         {
             if (GameplayReferences.HMD == null) { return; }
 
@@ -134,7 +134,7 @@ namespace CognitiveVR
                 Quaternion rot = GameplayReferences.HMD.rotation;
                 Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-                Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
+                Debug.DrawRay(pos, displayPosition, Color.cyan, Cognitive3D_Preferences.Instance.SnapshotInterval);
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                     DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
 
@@ -176,8 +176,8 @@ namespace CognitiveVR
             {
                 Destroy(helper);
             }
-            Core.InitEvent -= CognitiveVR_Manager_InitEvent;
-            Core.TickEvent -= CognitiveVR_Manager_TickEvent;
+            Core.InitEvent -= Cognitive3D_Manager_InitEvent;
+            Core.TickEvent -= Cognitive3D_Manager_TickEvent;
         }
 
         private void OnEndSessionEvent()

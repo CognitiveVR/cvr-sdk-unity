@@ -1,4 +1,4 @@
-Shader "Hidden/CognitiveVRSceneDepth" {
+Shader "Hidden/Cognitive3DSceneDepth" {
 	Properties {}
 
 	SubShader {

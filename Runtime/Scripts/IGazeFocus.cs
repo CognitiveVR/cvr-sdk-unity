@@ -5,7 +5,7 @@ using UnityEngine;
 //indicates the implementor can be 'focused' by HMD gaze
 //used to react to eye tracking
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public interface IGazeFocus
     {

@@ -10,7 +10,7 @@ using UnityEditor;
 //TODO URP support
 
 #if UNITY_EDITOR
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class CustomRenderExporter : MonoBehaviour
     {
@@ -296,7 +296,7 @@ namespace CognitiveVR
     }
 } //namespace
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(CustomRenderExporter))]
     [CanEditMultipleObjects]

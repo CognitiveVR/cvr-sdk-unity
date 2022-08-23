@@ -1,14 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
-#if CVR_MAGICLEAP
+using Cognitive3D;
+#if C3D_MAGICLEAP
 using UnityEngine.XR.MagicLeap;
 #endif
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
-#if CVR_XR || CVR_PICOXR
+#if C3D_XR || C3D_PICOXR
 using UnityEngine.XR;
 #endif
 
@@ -21,15 +21,15 @@ using UnityEngine.XR;
 //oculus buttons, trigger, joytstick, grip
 //leapmotion hand events
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
 [RequireComponent(typeof(DynamicObject))]
 #endif
     public class ControllerInputTracker : MonoBehaviour
     {
-        [CognitiveVR.Components.ClampSetting(0.1f)]
+        [Cognitive3D.Components.ClampSetting(0.1f)]
         public float UpdateRate = 0.1f;
         float nextUpdateTime;
         //records analogue inputs at this interval
@@ -39,7 +39,7 @@ namespace CognitiveVR
             Init();
         }
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
     
         List<ButtonState> CurrentButtonStates = new List<ButtonState>();
 
@@ -265,7 +265,7 @@ namespace CognitiveVR
             }
         }
 
-#elif CVR_OCULUS
+#elif C3D_OCULUS
 
         enum OculusControllerType
         {
@@ -295,11 +295,11 @@ namespace CognitiveVR
             var avatar = GetComponent<OVRCameraRig>();
             LeftHand = avatar.leftHandAnchor.GetComponent<DynamicObject>();
             RightHand = avatar.rightHandAnchor.GetComponent<DynamicObject>();
-    #if UNITY_ANDROID
+#if UNITY_ANDROID
             controllerType = OculusControllerType.QuestTouch;
-    #else
+#else
             controllerType = OculusControllerType.RiftTouch;
-    #endif
+#endif
         }
 
         //have to do polling every frame to capture inputs
@@ -725,7 +725,7 @@ namespace CognitiveVR
             }
         }
 
-#elif CVR_MAGICLEAP
+#elif C3D_MAGICLEAP
     
         List<ButtonState> CurrentButtonStates = new List<ButtonState>();
         private ControllerConnectionHandler _controllerConnectionHandler;
@@ -782,7 +782,7 @@ namespace CognitiveVR
             MLInput.OnControllerButtonDown -= HandleOnButtonDown;
             MLInput.OnControllerButtonUp -= HandleOnButtonUp;
         }
-#elif CVR_SNAPDRAGON
+#elif C3D_SNAPDRAGON
 
         List<ButtonState> CurrentButtonStates = new List<ButtonState>();
         DynamicObject controllerDynamic;
@@ -845,7 +845,7 @@ namespace CognitiveVR
                 }
         }
 
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
 
         List<ButtonState> CurrentButtonStates = new List<ButtonState>();
         
@@ -853,13 +853,13 @@ namespace CognitiveVR
 
         public SteamVR_Input_Sources Hand_InputSource;
 
-        public SteamVR_Action_Boolean gripAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "grip");
-        public SteamVR_Action_Single triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Single>("cvr_input", "trigger");
-        public SteamVR_Action_Boolean menuAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "menu");
-        public SteamVR_Action_Vector2 touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("cvr_input", "touchpad");
-        public SteamVR_Action_Boolean touchAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_touch");
-        public SteamVR_Action_Boolean pressAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("cvr_input", "touchpad_press");
-        public SteamVR_ActionSet CVR_ActionSet = SteamVR_Input.GetActionSet("CVR_Input");
+        public SteamVR_Action_Boolean gripAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("c3d_input", "grip");
+        public SteamVR_Action_Single triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Single>("c3d_input", "trigger");
+        public SteamVR_Action_Boolean menuAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("c3d_input", "menu");
+        public SteamVR_Action_Vector2 touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("c3d_input", "touchpad");
+        public SteamVR_Action_Boolean touchAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("c3d_input", "touchpad_touch");
+        public SteamVR_Action_Boolean pressAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("c3d_input", "touchpad_press");
+        public SteamVR_ActionSet C3D_ActionSet = SteamVR_Input.GetActionSet("C3D_Input");
 
         int Trigger;
         int TouchForce;
@@ -877,8 +877,8 @@ namespace CognitiveVR
                 pressAction.AddOnChangeListener(OnPressActionChange, Hand_InputSource);
             if (menuAction != null)
                 menuAction.AddOnChangeListener(OnMenuActionChange, Hand_InputSource);
-            if (CVR_ActionSet != null)
-                CVR_ActionSet.Activate(Hand_InputSource);
+            if (C3D_ActionSet != null)
+                C3D_ActionSet.Activate(Hand_InputSource);
         }
 
         private void OnGripActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
@@ -960,8 +960,8 @@ namespace CognitiveVR
                 pressAction.RemoveOnChangeListener(OnPressActionChange, Hand_InputSource);
             if (menuAction != null)
                 menuAction.RemoveOnChangeListener(OnMenuActionChange, Hand_InputSource);
-            if (CVR_ActionSet != null)
-                CVR_ActionSet.Deactivate(Hand_InputSource);
+            if (C3D_ActionSet != null)
+                C3D_ActionSet.Deactivate(Hand_InputSource);
         }
 
         void Init()
@@ -1030,7 +1030,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_VIVEWAVE
+#elif C3D_VIVEWAVE
     
         //this should go on the adaptive controller prefab, the controllers in the scene or whatever the player spawns
         //add all inputs to wave button list
@@ -1251,7 +1251,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_WINDOWSMR
+#elif C3D_WINDOWSMR
 
         //one input tracker for both controllers??
         //yes
@@ -1576,7 +1576,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
 
         //one input tracker for both controllers??
         //yes
@@ -1823,7 +1823,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_PICOXR
+#elif C3D_PICOXR
 
         public DynamicObject LeftHand;
         public DynamicObject RightHand;
@@ -2191,7 +2191,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_XR
+#elif C3D_XR
         public DynamicObject LeftHand;
         public DynamicObject RightHand;
 

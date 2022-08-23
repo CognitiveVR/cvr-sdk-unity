@@ -2,11 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using CognitiveVR;
-using CognitiveVR.Json;
+using Cognitive3D;
+using Cognitive3D.Json;
 
 //component for displaying the gui panel and returning the response to the exitpoll question set
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Exit Poll Panel")]
     public class ExitPollPanel : MonoBehaviour
@@ -123,7 +123,7 @@ namespace CognitiveVR
                 int.TryParse(properties["end"], out resultend);
                 if (resultend == 0)
                 {
-                    CognitiveVR.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
+                    Cognitive3D.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
                     QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
                     Destroy(gameObject);
                     return;

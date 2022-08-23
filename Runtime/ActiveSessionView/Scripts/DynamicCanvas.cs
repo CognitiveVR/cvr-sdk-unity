@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     [AddComponentMenu("")]
     public class DynamicCanvas : MonoBehaviour
@@ -105,7 +105,7 @@ namespace CognitiveVR.ActiveSession
             }
 
             //ms
-            int gazeInterval = (int)(CognitiveVR_Preferences.Instance.SnapshotInterval * 1000f);
+            int gazeInterval = (int)(Cognitive3D_Preferences.Instance.SnapshotInterval * 1000f);
 
             var DynamicSequenceDisplay = DynamicSeqenceList.Find(delegate (DynamicSortable obj) { return obj.Id == objectid; });
             if (DynamicSequenceDisplay != null)

@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 //IMPROVEMENT shouldn't be a monobehaviour. shouldn't be static. instance should live on Core
 //IMPROVEMENT should use an interface. what would this include? implementation handles writing to cache (if it exists)
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("")]
     public class NetworkManager : MonoBehaviour
@@ -65,7 +65,7 @@ namespace CognitiveVR
 
             if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
             {
-                if (CognitiveVR_Preferences.Instance.LocalStorage)
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
                     string text;
                     if (Core.ExitpollHandler.GetExitpoll(hookname,out text))
@@ -97,7 +97,7 @@ namespace CognitiveVR
                 {
                     callback.Invoke(responsecode, www.error, www.downloadHandler.text);
                 }
-                if (CognitiveVR_Preferences.Instance.LocalStorage)
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
                     Core.ExitpollHandler.WriteExitpoll(hookname, www.downloadHandler.text);
                     //LocalCache.WriteExitpoll(hookname, www.downloadHandler.text);
@@ -127,7 +127,7 @@ namespace CognitiveVR
             }
 
 
-            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
@@ -139,7 +139,7 @@ namespace CognitiveVR
                     //check cvr header to make sure not blocked by capture portal
                     if (!headers.ContainsKey("cvr-request-time"))
                     {
-                        if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                        if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                             Util.logDevelopment("capture portal error! " + www.url);
                         responsecode = 307;
                         lastDataResponse = responsecode;
@@ -235,7 +235,7 @@ namespace CognitiveVR
                 CognitiveStatics.Initialize();
 
                 //upload from local storage
-                if (!CognitiveVR_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
+                if (!Cognitive3D_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
 
                 if (instance.runtimeCache == null){return;}
 
@@ -281,7 +281,7 @@ namespace CognitiveVR
                 CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
                 CacheRequest.Send();
 
-                if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                     Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
 
                 CacheResponseAction = instance.CACHEDResponseCallback;
@@ -329,7 +329,7 @@ namespace CognitiveVR
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true));
 
-            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
@@ -346,7 +346,7 @@ namespace CognitiveVR
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));
 
-            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
@@ -376,7 +376,7 @@ namespace CognitiveVR
             StopAllCoroutines();
 
             //write all active webrequests to cache
-            if (CognitiveVR_Preferences.Instance.LocalStorage)
+            if (Cognitive3D_Preferences.Instance.LocalStorage)
             {
                 if (lastDataResponse != 200)
                 {

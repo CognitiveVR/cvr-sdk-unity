@@ -2,10 +2,10 @@
 using UnityEditor;
 using System.Collections.Generic;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(ExitPollPanel))]
-    public class CognitiveVR_ExitPollPanelEditor : Editor
+    public class Cognitive3D_ExitPollPanelEditor : Editor
     {
         public override void OnInspectorGUI()
         {

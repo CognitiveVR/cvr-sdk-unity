@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
-    [CustomEditor(typeof(CognitiveVR.DynamicObject))]
+    [CustomEditor(typeof(Cognitive3D.DynamicObject))]
     [CanEditMultipleObjects]
-    public class CognitiveVR_DynamicObjectInspector : Editor
+    public class Cognitive3D_DynamicObjectInspector : Editor
     {
         public void OnEnable()
         {
@@ -229,7 +229,7 @@ namespace CognitiveVR
                     GUILayout.EndHorizontal();
                     GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
                     int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64*/ };
-                    CognitiveVR_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), CognitiveVR_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
+                    Cognitive3D_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), Cognitive3D_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
                     GUILayout.Space(5);
 
                     //ID upload

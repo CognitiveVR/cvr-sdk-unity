@@ -2,13 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using CognitiveVR;
+using Cognitive3D;
 using System.IO;
 
 //used in ExitPoll to record participant's voice
 //on completion, will encode the audio to a wav and pass a base64 string of the data to the ExitPoll
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Microphone Button")]
     public class MicrophoneButton : VirtualButton
@@ -59,7 +59,7 @@ namespace CognitiveVR
                 {
                     Microphone.End(null);
                     byte[] bytes;
-                    CognitiveVR.MicrophoneUtility.Save(clip, out bytes);
+                    Cognitive3D.MicrophoneUtility.Save(clip, out bytes);
                     string encodedWav = MicrophoneUtility.EncodeWav(bytes);
                     questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
                     _finishedRecording = true;

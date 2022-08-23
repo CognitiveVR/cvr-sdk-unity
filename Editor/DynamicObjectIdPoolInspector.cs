@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(DynamicObjectIdPool))]
     [CanEditMultipleObjects]
@@ -55,7 +55,7 @@ namespace CognitiveVR
             {
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new CognitiveVR.ManageDynamicObjects.AggregationManifest();
+                    ManageDynamicObjects.AggregationManifest manifest = new Cognitive3D.ManageDynamicObjects.AggregationManifest();
                     foreach (Object opool in idpools)
                     {
                         var pool = (DynamicObjectIdPool)opool;

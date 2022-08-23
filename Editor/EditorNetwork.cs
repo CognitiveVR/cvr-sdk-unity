@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using CognitiveVR;
+using Cognitive3D;
 using UnityEngine.Networking;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class EditorNetwork
     {

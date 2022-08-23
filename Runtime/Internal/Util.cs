@@ -2,9 +2,9 @@ using UnityEngine;
 using System;
 using System.Text;
 using System.Collections.Generic;
-using CognitiveVR.External;
+using Cognitive3D.External;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
 	public static class Util
 	{
@@ -12,7 +12,7 @@ namespace CognitiveVR
 
         public static void logWarning(string msg, UnityEngine.Object context = null)
         {
-            if (CognitiveVR_Preferences.Instance.EnableLogging)
+            if (Cognitive3D_Preferences.Instance.EnableLogging)
             {
                 if (context != null)
                     Debug.LogWarning(LOG_TAG + msg, context);
@@ -24,7 +24,7 @@ namespace CognitiveVR
         // Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
         public static void logDebug(string msg)
 		{
-			if (CognitiveVR_Preferences.Instance.EnableLogging)
+			if (Cognitive3D_Preferences.Instance.EnableLogging)
 			{
 				Debug.Log(LOG_TAG + msg);
 			}
@@ -33,7 +33,7 @@ namespace CognitiveVR
         // Internal logging.  These can be enabled by calling Util.setLogEnabled(true)
         public static void logDevelopment(string msg)
         {
-            if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
             {
                 Debug.Log("[COGNITIVE3D DEV] "+ msg);
             }
@@ -41,7 +41,7 @@ namespace CognitiveVR
 
         public static void logError(Exception e)
 		{
-			if (CognitiveVR_Preferences.Instance.EnableLogging)
+			if (Cognitive3D_Preferences.Instance.EnableLogging)
 			{
 				Debug.LogException(e);
 			}
@@ -49,7 +49,7 @@ namespace CognitiveVR
 		
 		public static void logError(string msg)
 		{
-			if (CognitiveVR_Preferences.Instance.EnableLogging)
+			if (Cognitive3D_Preferences.Instance.EnableLogging)
 			{
 				Debug.LogError(LOG_TAG + msg);
 			}

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     [CustomEditor(typeof(ActiveSessionView))]
     public class ActiveSessionViewEditor : Editor
@@ -37,11 +37,11 @@ namespace CognitiveVR.ActiveSession
 
                 string tooltip = "VR Camera should be Main Camera";
 
-#if CVR_FOVE
+#if C3D_FOVE
                 tooltip = "VR Camera should be 'Fove Interface'"
-#elif CVR_STEAMVR
+#elif C3D_STEAMVR
                 tooltip = "VR Camera should be 'Camera (eye)'";
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
                 tooltip = "VR Camera should be 'Camera'";
 #endif
                 if (asv.VRSceneCamera == null)
@@ -230,15 +230,15 @@ namespace CognitiveVR.ActiveSession
         public static void SetCameraTarget(ActiveSessionView activeSessionView)
         {
             if (activeSessionView == null) { return; }
-#if CVR_TOBIIVR
+#if C3D_TOBIIVR
             activeSessionView.VRSceneCamera = Camera.main;
-#elif CVR_FOVE
+#elif C3D_FOVE
             var fove = FindObjectOfType<Fove.Unity.FoveInterface>();
             if (fove != null)
             {
                 activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();
             }
-#elif CVR_STEAMVR
+#elif C3D_STEAMVR
             var cam = FindObjectOfType<SteamVR_Camera>();
             if (cam != null)
             {
@@ -248,7 +248,7 @@ namespace CognitiveVR.ActiveSession
             {
                 Debug.LogError("Couldn't find Camera (eye)!");
             }
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
             
             var playarea = FindObjectOfType<Valve.VR.SteamVR_PlayArea>();
             if (playarea != null)

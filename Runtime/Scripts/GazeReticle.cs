@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
-using CognitiveVR;
+using Cognitive3D;
 
 //debug helper for gaze tracking with Fove, Pupil, Tobii, Vive Pro Eye, Adhawk, Varjo
 //does not need to have a 'Cognitive3D session' active to work
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Testing/Gaze Reticle")]
     public class GazeReticle : MonoBehaviour

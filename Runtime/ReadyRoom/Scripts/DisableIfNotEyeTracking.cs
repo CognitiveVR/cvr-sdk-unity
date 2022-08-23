@@ -5,7 +5,7 @@ using UnityEngine;
 //if the SDK selected in Scene Setup does not support Eye Tracking
 //then this gameobject will be disabled immediately
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class DisableIfNotEyeTracking : MonoBehaviour
     {

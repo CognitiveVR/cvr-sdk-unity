@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(SceneSelectMenu))]
     public class SceneSelectMenuEditor : Editor

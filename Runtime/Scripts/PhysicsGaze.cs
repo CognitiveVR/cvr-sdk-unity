@@ -1,33 +1,33 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 
 //physics raycast from camera
 //adds gazepoint at hit.point
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
     public class PhysicsGaze : GazeBase
 {
     public override void Initialize()
     {
-        Core.InitEvent += CognitiveVR_Manager_InitEvent;
+        Core.InitEvent += Cognitive3D_Manager_InitEvent;
         base.Initialize();
     }
 
-    private void CognitiveVR_Manager_InitEvent(Error initError)
+    private void Cognitive3D_Manager_InitEvent(Error initError)
     {
         if (initError == Error.None)
         {
-            if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Physics Gaze needs a camera to function"); }
-            Core.TickEvent += CognitiveVR_Manager_TickEvent;
+            if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Physics Gaze needs a camera to function"); }
+            Core.TickEvent += Cognitive3D_Manager_TickEvent;
             Core.EndSessionEvent += OnEndSessionEvent;
         }
     }
 
-    private void CognitiveVR_Manager_TickEvent()
+    private void Cognitive3D_Manager_TickEvent()
     {
         if (GameplayReferences.HMD == null) { return; }
 
@@ -45,7 +45,7 @@ namespace CognitiveVR
         Vector3 hitWorld;
         Vector3 hitLocal;
         Vector2 hitcoord;
-        if (CognitiveVR_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
+        if (Cognitive3D_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin,ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane,0.05f,out hitDistance,out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
         {
             string ObjectId = hitDynamic.DataId;
             var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -60,7 +60,7 @@ namespace CognitiveVR
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, ray.origin, GameplayReferences.HMD.rotation, gpsloc, compass, floorPos);
             }
 
-            Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1,0,1,0.5f), CognitiveVR_Preferences.Instance.SnapshotInterval);
+            Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1,0,1,0.5f), Cognitive3D_Preferences.Instance.SnapshotInterval);
             //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
             //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
             //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
@@ -75,7 +75,7 @@ namespace CognitiveVR
             return;
         }
 
-        if (CognitiveVR_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, CognitiveVR_Preferences.Instance.GazeLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
+        if (Cognitive3D_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
         {
             Vector3 pos = GameplayReferences.HMD.position;
             Vector3 gazepoint = hit.point;
@@ -83,7 +83,7 @@ namespace CognitiveVR
 
             //hit world
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
-            Debug.DrawLine(pos, gazepoint, Color.red, CognitiveVR_Preferences.Instance.SnapshotInterval);
+            Debug.DrawLine(pos, gazepoint, Color.red, Cognitive3D_Preferences.Instance.SnapshotInterval);
 
             //Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
             //Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
@@ -103,7 +103,7 @@ namespace CognitiveVR
             Quaternion rot = GameplayReferences.HMD.rotation;
             Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
             GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
-            //Debug.DrawRay(pos, displayPosition, Color.cyan, CognitiveVR_Preferences.Instance.SnapshotInterval);
+            //Debug.DrawRay(pos, displayPosition, Color.cyan, Cognitive3D_Preferences.Instance.SnapshotInterval);
             if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                 DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
 
@@ -117,8 +117,8 @@ namespace CognitiveVR
 
     private void OnDestroy()
     {
-        Core.InitEvent -= CognitiveVR_Manager_InitEvent;
-        Core.TickEvent -= CognitiveVR_Manager_TickEvent;
+        Core.InitEvent -= Cognitive3D_Manager_InitEvent;
+        Core.TickEvent -= Cognitive3D_Manager_TickEvent;
     }
     private void OnEndSessionEvent()
     {

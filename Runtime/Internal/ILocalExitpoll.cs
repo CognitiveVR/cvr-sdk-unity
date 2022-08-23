@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     interface ILocalExitpoll
     {

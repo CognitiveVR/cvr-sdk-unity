@@ -5,9 +5,9 @@ using UnityEditor;
 
 //this window pops up when there is a new version, this new version is not skipped and the remind date is valid (or manually checked)
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
-    public class CognitiveVR_UpdateSDKWindow : EditorWindow
+    public class Cognitive3D_UpdateSDKWindow : EditorWindow
     {
         static string newVersion;
         bool reminderSet = false;
@@ -16,7 +16,7 @@ namespace CognitiveVR
         public static void Init(string version, string summary)
         {
             newVersion = version;
-            CognitiveVR_UpdateSDKWindow window = (CognitiveVR_UpdateSDKWindow)EditorWindow.GetWindow(typeof(CognitiveVR_UpdateSDKWindow),true,"cognitiveVR Update");
+            Cognitive3D_UpdateSDKWindow window = (Cognitive3D_UpdateSDKWindow)EditorWindow.GetWindow(typeof(Cognitive3D_UpdateSDKWindow),true,"Cognitive3D Update");
             window.sdkSummary = summary;
             window.Show();
         }
@@ -24,7 +24,7 @@ namespace CognitiveVR
         void OnGUI()
         {
             GUI.skin.label.richText = true;
-            GUILayout.Label("cognitiveVR SDK - New Version", EditorCore.HeaderStyle);
+            GUILayout.Label("Cognitive3D SDK - New Version", EditorCore.HeaderStyle);
             GUILayout.Label("Current Version:<b>" + Core.SDK_VERSION + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
 
@@ -67,14 +67,14 @@ namespace CognitiveVR
 
             if (GUILayout.Button("Skip this version", GUILayout.MaxWidth(200)))
             {
-                EditorPrefs.SetString("cvr_skipVersion", newVersion);
+                EditorPrefs.SetString("c3d_skipVersion", newVersion);
                 Close();
             }
 
             if (GUILayout.Button("Remind me next week", GUILayout.MaxWidth(300)))
             {
                 reminderSet = true;
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString("dd-MM-yyyy"));
 
                 Close();
             }
@@ -88,7 +88,7 @@ namespace CognitiveVR
         {
             if (!reminderSet)
             {
-                EditorPrefs.SetString("cvr_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             }
         }
     }

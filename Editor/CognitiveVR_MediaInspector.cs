@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(MediaComponent))]
     public class MediaComponentInspector : Editor

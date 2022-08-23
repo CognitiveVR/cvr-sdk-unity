@@ -1,21 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 
 /// <summary>
 /// Adds the starting GPS location to session properties at the start of the session
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/GPS Location")]
-    public class GPSLocation: CognitiveVRAnalyticsComponent
+    public class GPSLocation: Cognitive3DAnalyticsComponent
     {
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
             if (!Input.location.isEnabledByUser)
             {
@@ -51,7 +51,7 @@ namespace CognitiveVR.Components
             Core.SetSessionProperty("c3d.geo.longitude", Input.location.lastData.longitude);
             Core.SetSessionProperty("c3d.geo.altitude", Input.location.lastData.altitude);
 
-            if (!CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (!Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
                 Input.location.Stop();
             }
@@ -64,7 +64,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if UNITY_ANDROID || CVR_ARKIT || CVR_ARCORE || UNITY_IOS
+#if UNITY_ANDROID || C3D_ARKIT || C3D_ARCORE || UNITY_IOS
             return true;
 #else
             return false;

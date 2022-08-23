@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 
 /// <summary>
 /// WARNING - NOT FULLY TESTED!
@@ -13,23 +13,23 @@ using CognitiveVR;
 //TODO add picovr sdk Pvr_UnitySDKAPI.System.UPvr_GetHmdBatteryStatus()
 //SystemInfo.batteryLevel works. returns -1 for invalid systems
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
-    public class BatteryLevel : CognitiveVRAnalyticsComponent
+    public class BatteryLevel : Cognitive3DAnalyticsComponent
     {
-#if !CVR_OCULUS
+#if !C3D_OCULUS
         float batteryLevel; //0-100 battery level
 #endif
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
             SendBatteryLevel();
-            Core.QuitEvent += CognitiveVR_Manager_OnQuit;
+            Core.QuitEvent += Cognitive3D_Manager_OnQuit;
         }
 
-        void CognitiveVR_Manager_OnQuit()
+        void Cognitive3D_Manager_OnQuit()
         {
             SendBatteryLevel();
         }
@@ -37,7 +37,7 @@ namespace CognitiveVR.Components
         void SendBatteryLevel()
         {
 
-#if CVR_OCULUS
+#if C3D_OCULUS
             Util.logDebug("batterylevel " + OVRPlugin.batteryLevel);
             new CustomEvent("cvr.battery")
                 .SetProperty("batterylevel", OVRPlugin.batteryLevel)
@@ -55,7 +55,7 @@ namespace CognitiveVR.Components
 #endif
         }
 
-#if !CVR_OCULUS
+#if !C3D_OCULUS
         public bool GetBatteryLevel()
         {
             if (Application.platform == RuntimePlatform.Android)
@@ -112,7 +112,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if UNITY_ANDROID && CVR_OCULUS
+#if UNITY_ANDROID && C3D_OCULUS
             return "Send the battery level of Android device after initialization and on quit\nAlso includes battery temperature and status";
 #elif UNITY_ANDROID
             return "Send the battery level of Android device after initialization and on quit";
@@ -123,7 +123,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            Core.QuitEvent -= CognitiveVR_Manager_OnQuit;
+            Core.QuitEvent -= Cognitive3D_Manager_OnQuit;
         }
     }
 }

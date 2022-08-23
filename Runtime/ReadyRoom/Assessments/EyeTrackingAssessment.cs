@@ -4,7 +4,7 @@ using UnityEngine;
 
 //complete when the user looks at each target
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class EyeTrackingAssessment : AssessmentBase
     {

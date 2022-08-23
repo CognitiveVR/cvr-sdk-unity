@@ -292,13 +292,13 @@ namespace UnityGLTF
 		public static bool ExportNames = true; //MUST BE TRUE
 		public static bool RequireExtensions = false; //PROBABLY FALSE
 
-		public CognitiveVR.DynamicObject Dynamic;
+		public Cognitive3D.DynamicObject Dynamic;
 
 		/// <summary>
 		/// Create a GLTFExporter that exports out a transform. if dynamic is NOT set, skip any dynamic objects in nodes. if dynamic IS set, skip any dynamics that are not equal to this object
 		/// </summary>
 		/// <param name="rootTransforms">Root transform of object to export</param>
-		public GLTFSceneExporter(Transform[] rootTransforms, CognitiveVR.DynamicObject dynamic = null)
+		public GLTFSceneExporter(Transform[] rootTransforms, Cognitive3D.DynamicObject dynamic = null)
 		{
 			if (MaterialExportPropertyCollection == null)
 			{
@@ -359,8 +359,8 @@ namespace UnityGLTF
 			_root.Buffers.Add(_buffer);
 		}
 
-		List<CognitiveVR.BakeableMesh> OverrideBakeables = new List<CognitiveVR.BakeableMesh>();
-		public void SetNonStandardOverrides(List<CognitiveVR.BakeableMesh> meshes)
+		List<Cognitive3D.BakeableMesh> OverrideBakeables = new List<Cognitive3D.BakeableMesh>();
+		public void SetNonStandardOverrides(List<Cognitive3D.BakeableMesh> meshes)
 		{
 			OverrideBakeables = meshes;
 		}
@@ -622,16 +622,16 @@ namespace UnityGLTF
 			}
 
 			scene.Nodes = new List<NodeId>(rootObjTransforms.Length); //skip dynamic objects here //TODO
-			CognitiveVR.DynamicObject dyn;
+			Cognitive3D.DynamicObject dyn;
 
 			foreach (var transform in rootObjTransforms)
 			{
-				dyn = transform.GetComponent<CognitiveVR.DynamicObject>();
+				dyn = transform.GetComponent<Cognitive3D.DynamicObject>();
 				//skip dynamics
 				if ((Dynamic == null && dyn != null) //export scene and skip all dynamics
 					|| (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
 				if (!transform.gameObject.activeInHierarchy) continue;
-				if (transform.GetComponent<CognitiveVR.CustomRenderExporter>()) { continue; }
+				if (transform.GetComponent<Cognitive3D.CustomRenderExporter>()) { continue; }
 				scene.Nodes.Add(ExportNode(transform));
 			}
 
@@ -662,7 +662,7 @@ namespace UnityGLTF
 				var lodCount = lodgroup.lodCount;
 				if (lods.Length > 0)
 				{
-					if (CognitiveVR.CognitiveVR_Preferences.Instance.ExportSceneLODLowest)
+					if (Cognitive3D.Cognitive3D_Preferences.Instance.ExportSceneLODLowest)
 					{
 						for (int i = 0; i < lodCount - 1; i++)
 						{
@@ -765,17 +765,17 @@ namespace UnityGLTF
 			if (nonPrimitives.Length > 0)
 			{
 				node.Children = new List<NodeId>(nonPrimitives.Length);
-				CognitiveVR.DynamicObject dyn;
+				Cognitive3D.DynamicObject dyn;
 				foreach (var child in nonPrimitives)
 				{
-					dyn = child.GetComponent<CognitiveVR.DynamicObject>();
+					dyn = child.GetComponent<Cognitive3D.DynamicObject>();
 					//skip dynamics
-					//if (child.GetComponent<CognitiveVR.DynamicObject>() != null)
+					//if (child.GetComponent<Cognitive3D.DynamicObject>() != null)
 					if ((Dynamic == null && dyn != null) //exporting scene and found dynamic in non-root
 						|| (Dynamic != null && (dyn != null && dyn != Dynamic))) //this shouldn't ever happen. if find any dynamic as child, should skip
 					{ continue; }
 					if (!child.activeInHierarchy) continue;
-					if (child.GetComponent<CognitiveVR.CustomRenderExporter>()) { continue; }
+					if (child.GetComponent<Cognitive3D.CustomRenderExporter>()) { continue; }
 					node.Children.Add(ExportNode(child.transform));
 				}
 			}
@@ -890,7 +890,7 @@ namespace UnityGLTF
 				light.color = new GLTF.Math.Color(0,0,0, 1);
 			}
 
-#if CVR_HDRP
+#if C3D_HDRP
 			var lightData = unityLight.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
 
 			//nits only used on arealights, which we don't support
@@ -959,7 +959,7 @@ namespace UnityGLTF
 				&& mr.enabled
 				&& mf.sharedMesh != null
 				&& mf.sharedMesh.vertexCount > 0
-				&& (OverrideBakeables.Find(delegate (CognitiveVR.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
+				&& (OverrideBakeables.Find(delegate (Cognitive3D.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
 				&& transform.gameObject.activeInHierarchy)
 			{
 				prims.Add(transform.gameObject);
@@ -993,7 +993,7 @@ namespace UnityGLTF
 				&& gameObject.transform.localScale == Vector3.one
 				&& mf != null
 				&& mr != null
-				&& (OverrideBakeables.Find(delegate (CognitiveVR.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
+				&& (OverrideBakeables.Find(delegate (Cognitive3D.BakeableMesh bm) { return bm.meshFilter == mf; }) != null || !string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
 				&& mr.enabled;
 		}
 

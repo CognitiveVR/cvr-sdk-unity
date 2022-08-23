@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
-using CognitiveVR;
+using Cognitive3D;
 using System;
-#if CVR_AH
+#if C3D_AH
 using AdhawkApi;
 using AdhawkApi.Numerics.Filters;
 #endif
 
 //utility code to get player's eye ray
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class GazeHelper
     {
@@ -18,7 +18,7 @@ namespace CognitiveVR
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
 
-#if CVR_PUPIL
+#if C3D_PUPIL
         
         static Vector3 GetLookDirection()
         {
@@ -47,7 +47,7 @@ namespace CognitiveVR
             gazeDirection = data.GazeDirection;
         }
 
-#elif CVR_FOVE
+#elif C3D_FOVE
     static Vector3 GetLookDirection()
     {
         Fove.Unity.FoveInterface fi = GameplayReferences.FoveInstance;
@@ -59,7 +59,7 @@ namespace CognitiveVR
         Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
         return v.normalized;
     }
-#elif CVR_TOBIIVR
+#elif C3D_TOBIIVR
     static Vector3 lastDirection = Vector3.forward;
 
     static Vector3 GetLookDirection()
@@ -77,24 +77,24 @@ namespace CognitiveVR
 
         return lastDirection;
     }
-#elif CVR_NEURABLE
+#elif C3D_NEURABLE
 
     static Vector3 GetLookDirection()
     {
         return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
     }
-#elif CVR_AH
+#elif C3D_AH
 
     static Vector3 GetLookDirection()
     {
         return Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
     }
-#elif CVR_SNAPDRAGON
+#elif C3D_SNAPDRAGON
         static Vector3 GetLookDirection()
         {
             return SvrManager.Instance.EyeDirection;
         }
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
 
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion version;
@@ -129,7 +129,7 @@ namespace CognitiveVR
             }
             return lastDir;
         }
-#elif CVR_VARJO
+#elif C3D_VARJO
         static Vector3 lastDir = Vector3.forward;
         static Vector3 GetLookDirection()
         {
@@ -144,7 +144,7 @@ namespace CognitiveVR
             }
             return lastDir;
         }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
         static Vector3 lastDirection = Vector3.forward;
 
         static Vector3 GetLookDirection()
@@ -159,7 +159,7 @@ namespace CognitiveVR
             }
             return lastDirection;
         }
-#elif CVR_PICOXR
+#elif C3D_PICOXR
         static Vector3 lastDirection = Vector3.forward;
 
         static Vector3 GetLookDirection()
@@ -168,27 +168,27 @@ namespace CognitiveVR
 
             if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
             {
-                //Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
+                //Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
                 return lastDirection;
             }
 
             UnityEngine.XR.InputDevice device;
             if (!GameplayReferences.GetEyeTrackingDevice(out device))
             {
-                Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED TRACKING DEVICE");
+                Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED TRACKING DEVICE");
                 return lastDirection;
             }
 
             Vector3 headPos;
             if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
             {
-                Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED HEAD POSITION");
+                Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED HEAD POSITION");
                 return lastDirection;
             }
             Quaternion headRot = Quaternion.identity;
             if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
             {
-                Debug.Log("CognitiveVR::GazeHelper GetLookDirection FAILED HEAD ROTATION");
+                Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED HEAD ROTATION");
                 return lastDirection;
             }
 
@@ -204,7 +204,7 @@ namespace CognitiveVR
             }
             return lastDirection;
         }
-#elif CVR_OMNICEPT
+#elif C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;
 
@@ -223,7 +223,7 @@ namespace CognitiveVR
             }
             return lastDirection;
         }
-#elif CVR_XR
+#elif C3D_XR
 
         static Vector3 lastDirection = Vector3.forward;
         static Vector3 GetLookDirection()
@@ -258,7 +258,7 @@ namespace CognitiveVR
             else //hmd doesn't have eye data (ie, eye tracking)
             {
                 //use center point of hmd
-                return CognitiveVR.GameplayReferences.HMD.forward;
+                return Cognitive3D.GameplayReferences.HMD.forward;
             }
             return lastDirection;
         }

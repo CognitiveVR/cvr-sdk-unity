@@ -19,7 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace CognitiveVR.External
+namespace Cognitive3D.External
 {
 	public static partial class StringBuilderExtensions
 	{

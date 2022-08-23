@@ -5,7 +5,7 @@ using System.Text;
 
 //static and constant strings used throughout the SDK
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class CognitiveStatics
     {
@@ -15,46 +15,46 @@ namespace CognitiveVR
         //GET dynamic object manifest
         public static string GETDYNAMICMANIFEST(int versionid)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects"); //changed api to data
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects"); //changed api to data
         }
 
         //POST dynamic object manifest
         public static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
         }
         //POST dynamic object mesh data
         public static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
         //GET scene settings and read scene version
         public static string GETSCENEVERSIONS(string sceneid)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid); //changed api to data
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid); //changed api to data
         }
 
         //POST scene screenshot
         public static string POSTSCREENSHOT(string sceneid, int versionnumber)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
         }
 
         //POST upload decimated scene
         public static string POSTNEWSCENE()
         {
-            return CognitiveVR_Preferences.Instance.Protocol + "://" + CognitiveVR_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
+            return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
         }
 
         //POST upload and replace existing scene
         public static string POSTUPDATESCENE(string sceneid)
         {
-            return String.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
         
         //GET github api to get latest release data
-        public const string GITHUB_SDKVERSION = "https://api.github.com/repos/cognitivevr/cvr-sdk-unity/releases/latest";
+        public const string GITHUB_SDKVERSION = "https://api.github.com/repos/CognitiveVR/cvr-sdk-unity/releases/latest";
 
         //UNITY where the user goes to download the sdk
         public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
@@ -62,19 +62,19 @@ namespace CognitiveVR
         //GET media source list
         public static string GETMEDIASOURCELIST()
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/media");
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/media");
         }
 
         //session urls
         internal static void Initialize()
         {
             if (!string.IsNullOrEmpty(ApplicationKey)) { return; }
-            dynamicUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/dynamics/");
-            gazeUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/gaze/");
-            eventUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/events/");
-            sensorUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/sensors/");
-            fixationUrl = string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/fixations/");
-            ApplicationKey = "APIKEY:DATA " + CognitiveVR_Preferences.Instance.ApplicationKey;
+            dynamicUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/dynamics/");
+            gazeUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/gaze/");
+            eventUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/events/");
+            sensorUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/sensors/");
+            fixationUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/fixations/");
+            ApplicationKey = "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey;
         }
         private static string dynamicUrl;
         private static string gazeUrl;
@@ -122,12 +122,12 @@ namespace CognitiveVR
         //GET request question set
         internal static string GETEXITPOLLQUESTIONSET(string hookname)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
         //POST question set responses
         internal static string POSTEXITPOLLRESPONSES(string questionsetname, int questionsetversion)
         {
-            return string.Concat(CognitiveVR_Preferences.Instance.Protocol, "://", CognitiveVR_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
     }
 }

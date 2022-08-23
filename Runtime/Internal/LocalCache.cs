@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     //shouldn't have any static fields!
     public class LocalCache : ICache
@@ -31,7 +31,7 @@ namespace CognitiveVR
             localDataPath = directoryPath;// + "data/";
             //localExitPollPath = directoryPath + "exitpoll/";
 
-            //constructed from CognitiveVR_Manager enable. sets environment end of line character
+            //constructed from Cognitive3D_Manager enable. sets environment end of line character
             //if (EnvironmentEOL == null && !string.IsNullOrEmpty(EOLCharacter))
             //{
             //    EnvironmentEOL = EOLCharacter;
@@ -44,9 +44,9 @@ namespace CognitiveVR
             if (sw != null) { sw.Close(); sw = null; }
             if (fs != null) { fs.Close(); fs = null; }
 
-            //LocalStorageActive = CognitiveVR_Preferences.Instance.LocalStorage;
+            //LocalStorageActive = Cognitive3D_Preferences.Instance.LocalStorage;
 
-            if (!CognitiveVR_Preferences.Instance.LocalStorage) { return; }
+            if (!Cognitive3D_Preferences.Instance.LocalStorage) { return; }
             try
             {
                 if (!Directory.Exists(localDataPath))
@@ -81,7 +81,7 @@ namespace CognitiveVR
         /// <returns></returns>
         public bool CanWrite(string url, string content)
         {
-            if (!CognitiveVR_Preferences.Instance.LocalStorage) { return false; }
+            if (!Cognitive3D_Preferences.Instance.LocalStorage) { return false; }
             if (sw == null)
             {
                 Util.logError("LocalCache attempting to write request after streamwriter closed");
@@ -111,7 +111,7 @@ namespace CognitiveVR
         //internal bool Append(string url, string content)
         public bool WriteContent(string url, string content)
         {
-            if (!CognitiveVR_Preferences.Instance.LocalStorage)
+            if (!Cognitive3D_Preferences.Instance.LocalStorage)
             {
                 Util.logWarning("LocalCache could not append data. Local Cache is inactive");
                 return false;
@@ -155,7 +155,7 @@ namespace CognitiveVR
         /// <returns></returns>
         private bool CheckCacheSize(int newBytes)
         {
-            if (newBytes + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
+            if (newBytes + totalBytes > Cognitive3D.Cognitive3D_Preferences.Instance.LocalDataCacheSize)
             {
                 return false;
             }
@@ -283,7 +283,7 @@ namespace CognitiveVR
                 localDataInfo.Refresh();
                 if (!localDataInfo.Exists) { return 0; }
                 int length = (int)localDataInfo.Length;
-                percent = length / (float)CognitiveVR_Preferences.Instance.LocalDataCacheSize;
+                percent = length / (float)Cognitive3D_Preferences.Instance.LocalDataCacheSize;
 
                 if (!mute)
                 {

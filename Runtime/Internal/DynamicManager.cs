@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
-using CognitiveVR;
+using Cognitive3D;
 
 
 //what is the split between dynamicCORE and dynamicMANAGER?
@@ -12,7 +12,7 @@ using CognitiveVR;
 
 //add/remove dynamics to list. passed into core for writing to json
 //run through list to check if the dynamic has moved recently
-namespace CognitiveVR
+namespace Cognitive3D
 {
     //used to update and record all dynamic object changes
     public static class DynamicManager
@@ -26,13 +26,13 @@ namespace CognitiveVR
 
         public static void Initialize()
         {
-            CognitiveVR.Core.OnSendData -= SendData;
-            CognitiveVR.Core.UpdateEvent -= OnUpdate;
-            CognitiveVR.Core.LevelLoadedEvent -= OnSceneLoaded;
+            Cognitive3D.Core.OnSendData -= SendData;
+            Cognitive3D.Core.UpdateEvent -= OnUpdate;
+            Cognitive3D.Core.LevelLoadedEvent -= OnSceneLoaded;
 
-            CognitiveVR.Core.OnSendData += SendData;
-            CognitiveVR.Core.UpdateEvent += OnUpdate;
-            CognitiveVR.Core.LevelLoadedEvent += OnSceneLoaded;
+            Cognitive3D.Core.OnSendData += SendData;
+            Cognitive3D.Core.UpdateEvent += OnUpdate;
+            Cognitive3D.Core.LevelLoadedEvent += OnSceneLoaded;
         }
 
         internal static void Reset()
@@ -112,7 +112,7 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.WriteDynamicManifestEntry(data);
+            Cognitive3D.DynamicObjectCore.WriteDynamicManifestEntry(data);
         }
 
         public static void RegisterController(DynamicData data)
@@ -147,7 +147,7 @@ namespace CognitiveVR
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            CognitiveVR.DynamicObjectCore.WriteControllerManifestEntry(data);
+            Cognitive3D.DynamicObjectCore.WriteControllerManifestEntry(data);
         }
 
         //public static void RegisterMedia(DynamicData data, string videoUrl)
@@ -173,7 +173,7 @@ namespace CognitiveVR
         //        ActiveDynamicObjectsArray[nextFreeIndex] = data;
         //    }
         //
-        //    CognitiveVR.Internal.DynamicCore.RegisterMedia(data, videoUrl);
+        //    Cognitive3D.Internal.DynamicCore.RegisterMedia(data, videoUrl);
         //}
 
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
@@ -391,7 +391,7 @@ namespace CognitiveVR
                 }
 
                 ActiveDynamicObjectsArray[i].HasProperties = false;
-                CognitiveVR.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
             }
         }
 
@@ -590,7 +590,7 @@ namespace CognitiveVR
                     }
 
                     ActiveDynamicObjectsArray[i].HasProperties = false;
-                    CognitiveVR.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
                 }
             }
         }
@@ -731,7 +731,7 @@ namespace CognitiveVR
                         }
                     }
 
-                    CognitiveVR.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
+                    Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
                 }
 
 
@@ -779,7 +779,7 @@ namespace CognitiveVR
             while (index != 0);
 
             //force dynamicCore to send all queued data as web requests
-            CognitiveVR.DynamicObjectCore.FlushData(copyDataToCache);
+            Cognitive3D.DynamicObjectCore.FlushData(copyDataToCache);
         }
 
         //this happens AFTER tracking scene is set
@@ -787,7 +787,7 @@ namespace CognitiveVR
         //each dynamic left behind in the old scene should call 'removedynamic' to remove itself from ActiveDynamicObjects list
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode, bool didChangeSceneId)
         {
-            //CognitiveVR_Manager will call Core.SendData if sceneid has changed
+            //Cognitive3D_Manager will call Core.SendData if sceneid has changed
 
             if (didChangeSceneId)
             {

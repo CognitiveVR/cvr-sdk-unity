@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     namespace Json
     {
@@ -173,7 +173,7 @@ namespace CognitiveVR
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
-            if (!CognitiveVR.Core.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
+            if (!Cognitive3D.Core.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
 
             myparameters = parameters;
 
@@ -253,17 +253,17 @@ namespace CognitiveVR
             if (string.IsNullOrEmpty(myparameters.Hook))
             {
                 Cleanup(false);
-                Util.logDebug("CognitiveVR Exit Poll. You haven't specified a question hook to request!");
+                Util.logDebug("Cognitive3D Exit Poll. You haven't specified a question hook to request!");
                 return;
             }
 
-            if (CognitiveVR_Manager.Instance != null)
+            if (Cognitive3D_Manager.Instance != null)
             {
-                CognitiveVR.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
+                Cognitive3D.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
             }
             else
             {
-                Util.logDebug("Cannot display exitpoll. cognitiveVRManager not present in scene");
+                Util.logDebug("Cannot display exitpoll. Cognitive3DManager not present in scene");
                 Cleanup(false);
             }
         }
@@ -292,7 +292,7 @@ namespace CognitiveVR
 
         Json.ExitPollSetJson questionSet;
 
-        //IMPROVEMENT this should grab a question received and cached on CognitiveVRManager Init
+        //IMPROVEMENT this should grab a question received and cached on Cognitive3DManager Init
         //build a collection of panel properties from the response
         void QuestionSetResponse(int responsecode, string error,string text)
         {
@@ -311,14 +311,14 @@ namespace CognitiveVR
             }
             catch
             {
-                CognitiveVR.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
+                Cognitive3D.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
                 Cleanup(false);
                 return;
             }
 
             if (questionSet.questions == null || questionSet.questions.Length == 0)
             {
-                CognitiveVR.Util.logDebug("Exit poll Question response empty! invoke end action");
+                Cognitive3D.Util.logDebug("Exit poll Question response empty! invoke end action");
                 Cleanup(false);
                 return;
             }
@@ -418,7 +418,7 @@ namespace CognitiveVR
             //SendQuestionResponses(responses); //for exitpoll microservice
             CurrentExitPollPanel = null;
             Cleanup(false);
-            CognitiveVR.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
+            Cognitive3D.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
         int currentPanelIndex = 0;
@@ -448,7 +448,7 @@ namespace CognitiveVR
             {
                 if (!GetSpawnPosition(out lastPanelPosition))
                 {
-                    CognitiveVR.Util.logDebug("no last position set. invoke endaction");
+                    Cognitive3D.Util.logDebug("no last position set. invoke endaction");
                     Cleanup(false);
                     return;
                 }
@@ -485,7 +485,7 @@ namespace CognitiveVR
                     int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
                                                   // because that is what PanelID gets set to
                     panelCount++;
-                    new CognitiveVR.CustomEvent("c3d.ExitPoll detected no microphones")
+                    new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
                     OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
@@ -526,10 +526,10 @@ namespace CognitiveVR
         void SendResponsesAsCustomEvents()
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
-            exitpollEvent.SetProperty("userId", CognitiveVR.Core.DeviceId);
+            exitpollEvent.SetProperty("userId", Cognitive3D.Core.DeviceId);
             if (!string.IsNullOrEmpty(Core.ParticipantId))
             {
-                exitpollEvent.SetProperty("participantId", CognitiveVR.Core.ParticipantId);
+                exitpollEvent.SetProperty("participantId", Cognitive3D.Core.ParticipantId);
             }
             exitpollEvent.SetProperty("questionSetId", QuestionSetId);
             exitpollEvent.SetProperty("hook", myparameters.Hook);
@@ -560,11 +560,11 @@ namespace CognitiveVR
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            JsonUtil.SetString("userId", CognitiveVR.Core.DeviceId, builder);
+            JsonUtil.SetString("userId", Cognitive3D.Core.DeviceId, builder);
             builder.Append(",");
             if (!string.IsNullOrEmpty(Core.ParticipantId))
             {
-                JsonUtil.SetString("participantId", CognitiveVR.Core.ParticipantId, builder);
+                JsonUtil.SetString("participantId", Cognitive3D.Core.ParticipantId, builder);
                 builder.Append(",");
             }
             if (!string.IsNullOrEmpty(Core.LobbyId))

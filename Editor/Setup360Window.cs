@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using CognitiveVR;
+using Cognitive3D;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class Setup360Window : EditorWindow
     {

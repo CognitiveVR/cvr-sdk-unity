@@ -5,7 +5,7 @@ using UnityEngine;
 //goes on a mesh collider. found during gaze
 //either on a visible surface or hidden to record the uvs for a skybox
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/media/")]
     [RequireComponent(typeof(MeshCollider))]
@@ -27,14 +27,14 @@ namespace CognitiveVR
         {
             //not every frame + only if initialization is fine. MUST HAVE VALID SCENEID
             if (!IsVideo) { return; }
-            CognitiveVR.Core.TickEvent += CognitiveVR_Manager_TickEvent;
+            Cognitive3D.Core.TickEvent += Cognitive3D_Manager_TickEvent;
         }
 
         bool wasPrepared = true;
         bool WasPlaying = false;
         long lastFrame = 0;
 
-        private void CognitiveVR_Manager_TickEvent()
+        private void Cognitive3D_Manager_TickEvent()
         {
             if (!IsVideo) { return; }
             if (WasPlaying)
@@ -86,7 +86,7 @@ namespace CognitiveVR
 
         private void OnDestroy()
         {
-            CognitiveVR.Core.TickEvent -= CognitiveVR_Manager_TickEvent;
+            Cognitive3D.Core.TickEvent -= Cognitive3D_Manager_TickEvent;
         }
     }
 }

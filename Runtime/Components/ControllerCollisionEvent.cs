@@ -3,28 +3,28 @@ using System.Collections;
 
 /// <summary>
 /// sends transactions when either the controller collides with something in the game world
-/// collision layers are set in CognitiveVR_Preferences
+/// collision layers are set in Cognitive3D_Preferences
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Controller Collision Event")]
-    public class ControllerCollisionEvent : CognitiveVRAnalyticsComponent
+    public class ControllerCollisionEvent : Cognitive3DAnalyticsComponent
     {
         bool LeftControllerColliding;
         bool RightControllerColliding;
         
         public LayerMask CollisionLayerMask = 1;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
-            Core.TickEvent += CognitiveVR_Manager_OnTick;
+            base.Cognitive3D_Init(initError);
+            Core.TickEvent += Cognitive3D_Manager_OnTick;
         }
 
         GameplayReferences.ControllerInfo tempInfo;
-        private void CognitiveVR_Manager_OnTick()
+        private void Cognitive3D_Manager_OnTick()
         {
             bool hit;
 
@@ -67,7 +67,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2|| CVR_PICOVR || CVR_PICOXR
+#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2|| C3D_PICOVR || C3D_PICOXR
             return "Sends transactions when either controller collides in the game world";
 #else
             return "Current platform does not support this component";
@@ -76,7 +76,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS || CVR_STEAMVR || CVR_STEAMVR2 || CVR_PICOVR || CVR_PICOXR
+#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2 || C3D_PICOVR || C3D_PICOXR
             return false;
 #else
             return true;
@@ -85,7 +85,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            Core.TickEvent -= CognitiveVR_Manager_OnTick;
+            Core.TickEvent -= Cognitive3D_Manager_OnTick;
         }
     }
 }

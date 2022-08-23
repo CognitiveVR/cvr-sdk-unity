@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class MenuItems
     {
-#if CVR_NEURABLE
+#if C3D_NEURABLE
         public const string Menu = "Neurable/Analytics Portal/";
 #else
         public const string Menu = "Cognitive3D/";
@@ -16,10 +16,10 @@ namespace CognitiveVR
         [MenuItem(Menu + "Select Cognitive3D Analytics Manager", priority = 0)]
         static void Cognitive3DManager()
         {
-            var found = Object.FindObjectOfType<CognitiveVR_Manager>();
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
             if (found != null)
             {
-#if CVR_NEURABLE
+#if C3D_NEURABLE
                 Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
 #endif
                 Selection.activeGameObject = found.gameObject;
@@ -55,7 +55,7 @@ namespace CognitiveVR
         [MenuItem(Menu + "Open Web Dashboard...", priority = 5)]
         static void Cognitive3DDashboard()
         {
-            Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
+            Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
         }
 
         [MenuItem(Menu + "Check for Updates...", priority = 10)]

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class DisableIfIPDConstant : MonoBehaviour
     {
         void OnEnable()
         {
-#if CVR_OCULUS
+#if C3D_OCULUS
 #if UNITY_2019_1_OR_NEWER
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name.Contains("Rift"))
                 gameObject.SetActive(false);

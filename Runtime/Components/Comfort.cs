@@ -6,14 +6,14 @@ using System.Collections;
 /// sends comfort score (fps + average hmd rotation)
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     /// CPU performance level (int 0-2). Lower performance levels save more power.
     /// GPU performance level (int 0-2). Lower performance levels save more power.
     /// PowerSaving? The CPU and GPU are currently throttled to save power and/or reduce the temperature.
 
     [AddComponentMenu("Cognitive3D/Components/Comfort")]
-    public class Comfort : CognitiveVRAnalyticsComponent
+    public class Comfort : Cognitive3DAnalyticsComponent
     {
         [ClampSetting(5f,60f)]
         [Tooltip("Number of seconds used to average to determine comfort level. Lower means more smaller samples and more detail")]
@@ -26,17 +26,17 @@ namespace CognitiveVR.Components
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
-            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            base.Cognitive3D_Init(initError);
+            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
             if (GameplayReferences.HMD != null)
                 lastRotation = GameplayReferences.HMD.rotation;
         }
 
-        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             if (GameplayReferences.HMD == null) { return; }
             UpdateFramerate();
@@ -103,7 +103,7 @@ namespace CognitiveVR.Components
             new CustomEvent("cvr.comfort")
                 .SetProperty("fps", lastFps)
                 .SetProperty("rps", lastRps)
-#if CVR_OCULUS
+#if C3D_OCULUS
                     .SetProperty("cpulevel", OVRPlugin.cpuLevel)
                     .SetProperty("gpulevel", OVRPlugin.gpuLevel)
                     .SetProperty("powersaving", OVRPlugin.powerSaving)
@@ -114,7 +114,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_OCULUS
+#if C3D_OCULUS
             return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
 #else
             return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
@@ -123,7 +123,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

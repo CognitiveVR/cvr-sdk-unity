@@ -9,9 +9,9 @@ using UnityEngine.SceneManagement;
 
 //if this is using a dynamic object id pool, will grab a new id every time 'OnEnable' is called. if this is not needed, changing that function to 'Start' should be fine
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
-#if CVR_VIVEWAVE
+#if C3D_VIVEWAVE
     [DefaultExecutionOrder(+10)] //this must run after PoseTrackerManager on controllers is enabled
 #endif
     public class DynamicObject : MonoBehaviour
@@ -46,7 +46,7 @@ namespace CognitiveVR
         public int editorInstanceId;
         public bool HasCollider()
         {
-            if (CognitiveVR_Preferences.Instance.DynamicObjectSearchInParent)
+            if (Cognitive3D_Preferences.Instance.DynamicObjectSearchInParent)
             {
                 var collider = GetComponentInChildren<Collider>();
                 if (collider == null)
@@ -108,7 +108,7 @@ namespace CognitiveVR
         //make this dynamic object record position on the same frame as physics gaze
         public bool SyncWithPlayerGazeTick;
 
-#if CVR_VIVEWAVE
+#if C3D_VIVEWAVE
         bool hasCompletedDelay = false;
         IEnumerator Start()
         {
@@ -120,16 +120,16 @@ namespace CognitiveVR
             OnEnable();
         }
 #endif
-        
+
 
         private void OnEnable()
         {
-#if CVR_VIVEWAVE
+#if C3D_VIVEWAVE
             if (IsController && !hasCompletedDelay)
                 return;
 #endif
             StartingScale = transform.lossyScale;
-            if (CognitiveVR.Core.IsInitialized)
+            if (Cognitive3D.Core.IsInitialized)
             {                
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
@@ -162,7 +162,7 @@ namespace CognitiveVR
 
                 if (IsController)
                 {
-#if CVR_VIVEWAVE
+#if C3D_VIVEWAVE
                     var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;
                     if (WaveVR_Controller.Input(devicetype).DeviceType == wvr.WVR_DeviceType.WVR_DeviceType_Controller_Left)
                     {
@@ -172,20 +172,20 @@ namespace CognitiveVR
                     {
                         Data.IsRightHand = true;
                     }
-                    CognitiveVR.GameplayReferences.SetController(gameObject, Data.IsRightHand);
+                    Cognitive3D.GameplayReferences.SetController(gameObject, Data.IsRightHand);
 #endif
-#if CVR_WINDOWSMR || CVR_XR || CVR_PICOXR
-                    CognitiveVR.GameplayReferences.SetController(gameObject, IsRight);
+#if C3D_WINDOWSMR || C3D_XR || C3D_PICOXR
+                    Cognitive3D.GameplayReferences.SetController(gameObject, IsRight);
 #endif
-                    CognitiveVR.DynamicManager.RegisterController(Data);
+                    Cognitive3D.DynamicManager.RegisterController(Data);
                 }
                 else
                 {
-                    CognitiveVR.DynamicManager.RegisterDynamicObject(Data);
+                    Cognitive3D.DynamicManager.RegisterDynamicObject(Data);
                 }
                 if (SyncWithPlayerGazeTick)
                 {
-                    CognitiveVR.Core.TickEvent += Core_TickEvent;
+                    Cognitive3D.Core.TickEvent += Core_TickEvent;
                 }
             }
             else
@@ -196,10 +196,10 @@ namespace CognitiveVR
 
         private void Core_TickEvent()
         {
-            CognitiveVR.DynamicManager.RecordDynamic(DataId,false);
+            Cognitive3D.DynamicManager.RecordDynamic(DataId,false);
         }
 
-        private void OnCoreInitialize(CognitiveVR.Error error)
+        private void OnCoreInitialize(Cognitive3D.Error error)
         {
             if (error == Error.None)
             {
@@ -271,11 +271,11 @@ namespace CognitiveVR
 
         private void OnDisable()
         {
-            CognitiveVR.Core.TickEvent -= Core_TickEvent;
+            Cognitive3D.Core.TickEvent -= Core_TickEvent;
 
             DynamicManager.SetTransform(DataId, transform);
 
-            CognitiveVR.DynamicManager.RemoveDynamicObject(DataId);
+            Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
 
             Core.InitEvent -= OnCoreInitialize;
         }

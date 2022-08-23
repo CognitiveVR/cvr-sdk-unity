@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 using System.Text;
-using CognitiveVR.External;
+using Cognitive3D.External;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class FixationCore
     {
@@ -16,7 +16,7 @@ namespace CognitiveVR
         static FixationCore()
         {
             Core.OnSendData += Core_OnSendData;
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
             Core.InitEvent += Core_InitEvent;
         }
 
@@ -39,10 +39,10 @@ namespace CognitiveVR
                     yield return null;
                 }
                 //try to send!
-                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
+                nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
                 if (Core.IsInitialized)
                 {
-                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send fixations");
                     Core_OnSendData(false);
                 }
@@ -51,8 +51,8 @@ namespace CognitiveVR
 
         static void TrySendData()
         {
-            bool withinMinTimer = lastSendTime + CognitiveVR_Preferences.Instance.FixationSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = Fixations.Count < CognitiveVR_Preferences.Instance.FixationExtremeSnapshotCount;
+            bool withinMinTimer = lastSendTime + Cognitive3D_Preferences.Instance.FixationSnapshotMinTimer > Time.realtimeSinceStartup;
+            bool withinExtremeBatchSize = Fixations.Count < Cognitive3D_Preferences.Instance.FixationExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
             if (withinMinTimer && withinExtremeBatchSize)
@@ -66,10 +66,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Fixation cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Fixation cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Fixation recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Fixation recorded without SceneId"); return; }
 
             if (newFixation.IsLocal)
             {
@@ -95,18 +95,18 @@ namespace CognitiveVR
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)
         {
-            if (Fixations.Count <= 0) { CognitiveVR.Util.logDebug("Fixations.SendData found no data"); return; }
+            if (Fixations.Count <= 0) { Cognitive3D.Util.logDebug("Fixations.SendData found no data"); return; }
 
             //TODO should hold until extreme batch size reached
             if (Core.TrackingScene == null)
             {
-                CognitiveVR.Util.logDebug("Fixations.SendData could not find scene settings for scene! do not upload fixations to sceneexplorer");
+                Cognitive3D.Util.logDebug("Fixations.SendData could not find scene settings for scene! do not upload fixations to sceneexplorer");
                 Fixations.Clear();
                 return;
             }
 
 
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.FixationSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
 
 

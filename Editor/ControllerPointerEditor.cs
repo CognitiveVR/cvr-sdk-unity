@@ -5,7 +5,7 @@ using UnityEditor;
 
 //hides options in advanced foldout
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     [CustomEditor(typeof(ControllerPointer))]
     public class ControllerPointerEditor : Editor

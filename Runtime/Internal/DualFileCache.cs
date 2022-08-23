@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 using System.IO;
 using System.Text;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class DualFileCache : ICache
     {
@@ -237,7 +237,7 @@ namespace CognitiveVR
             long totalBytes = read_filestream.Length + write_filestream.Length;
             int newBytes = System.Text.Encoding.UTF8.GetByteCount(Destination) + System.Text.Encoding.UTF8.GetByteCount(body);
 
-            if (newBytes + totalBytes > CognitiveVR.CognitiveVR_Preferences.Instance.LocalDataCacheSize)
+            if (newBytes + totalBytes > Cognitive3D.Cognitive3D_Preferences.Instance.LocalDataCacheSize)
             {
                 if (!displayedSizeWarning)
                 {

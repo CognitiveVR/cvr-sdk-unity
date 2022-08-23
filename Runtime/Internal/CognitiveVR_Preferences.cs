@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
-    public class CognitiveVR_Preferences : ScriptableObject
+    public class Cognitive3D_Preferences : ScriptableObject
     {
         static bool IsSet = false;
-        static CognitiveVR_Preferences instance;
-        public static CognitiveVR_Preferences Instance
+        static Cognitive3D_Preferences instance;
+        public static Cognitive3D_Preferences Instance
         {
             get
             {
@@ -18,11 +18,11 @@ namespace CognitiveVR
 
                 if (instance == null)
                 {
-                    instance = Resources.Load<CognitiveVR_Preferences>("CognitiveVR_Preferences");
+                    instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
                     if (instance == null)
                     {
-                        Debug.LogWarning("Could not find CognitiveVR_Preferences in Resources. Settings will be incorrect!");
-                        instance = CreateInstance<CognitiveVR_Preferences>();
+                        Debug.LogWarning("Could not find Cognitive3D_Preferences in Resources. Settings will be incorrect!");
+                        instance = CreateInstance<Cognitive3D_Preferences>();
                     }
                     IsSet = true;
                     S_SnapshotInterval = instance.SnapshotInterval;
@@ -175,7 +175,7 @@ namespace CognitiveVR
             }
         }
 
-        public static void AddSceneSettings(CognitiveVR_Preferences newInstance, string name, string path)
+        public static void AddSceneSettings(Cognitive3D_Preferences newInstance, string name, string path)
         {
             //skip. this should onyl be called automatically at the construction of preferences
             newInstance.sceneSettings.Add(new SceneSettings(name, path));

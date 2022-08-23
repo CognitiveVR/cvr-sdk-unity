@@ -6,20 +6,20 @@ using System.Collections.Generic;
 /// Check if the user has headphones connected
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Headphone State")]
-    public class HeadphoneState : CognitiveVRAnalyticsComponent
+    public class HeadphoneState : Cognitive3DAnalyticsComponent
     {
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
+            base.Cognitive3D_Init(initError);
 
-#if CVR_OCULUS
+#if C3D_OCULUS
             //TODO add oculus audio changed events
             Core.SetSessionProperty("c3d.headphonespresent", OVRPlugin.headphonesPresent);
-#elif CVR_STEAMVR
+#elif C3D_STEAMVR
             //TODO could check SteamVR_Ears if using speaker?
 #endif
 
@@ -27,7 +27,7 @@ namespace CognitiveVR.Components
 
         public override bool GetWarning()
         {
-#if CVR_OCULUS && UNITY_ANDROID
+#if C3D_OCULUS && UNITY_ANDROID
             return false;
 #else
             return true;
@@ -36,7 +36,7 @@ namespace CognitiveVR.Components
 
         public override string GetDescription()
         {
-#if CVR_OCULUS && UNITY_ANDROID
+#if C3D_OCULUS && UNITY_ANDROID
             return "Check if the user has headphones connected";
 #else
             return "Currently only works with Oculus Utilities on Android";

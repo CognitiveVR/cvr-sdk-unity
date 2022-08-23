@@ -5,7 +5,7 @@ using UnityEngine;
 //immediately activate when gazed at
 //used by eye tracking assessment
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class HMDFocusButton : MonoBehaviour, IGazeFocus
     {

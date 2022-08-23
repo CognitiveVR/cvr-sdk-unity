@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.Networking;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class EditorDataUploader
 	{
@@ -39,11 +39,11 @@ namespace CognitiveVR
 						uploadRequest.method = "POST";
 						uploadRequest.SetRequestHeader("Content-Type", "application/json");
 						uploadRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
-						uploadRequest.SetRequestHeader("Authorization", "APIKEY:DATA " + CognitiveVR_Preferences.Instance.ApplicationKey);
+						uploadRequest.SetRequestHeader("Authorization", "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey);
 						uploadRequest.Send();
 						attemptedUploads++;
 
-						if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+						if (Cognitive3D_Preferences.Instance.EnableDevLogging)
 							Util.logDevelopment("EDITOR Upload From Cache " + destination + " " + content);
 					}
 				}

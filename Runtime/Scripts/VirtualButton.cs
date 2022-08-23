@@ -7,7 +7,7 @@ using UnityEngine.UI;
 //fills an image over time
 //activates OnFill action after pointing at this button for a duration
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public enum ActivationType
     {
@@ -55,7 +55,7 @@ namespace CognitiveVR
         //this is called from update in the HMDPointer script
         public virtual void SetGazeFocus()
         {
-            if (ActivationType != ActivationType.PointerFallbackGaze || (ActivationType == ActivationType.PointerFallbackGaze && CognitiveVR.GameplayReferences.DoesPointerExistInScene() == false))
+            if (ActivationType != ActivationType.PointerFallbackGaze || (ActivationType == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
             {
                 if (ActivationType == ActivationType.Pointer) { return; }
                 if (canActivate == false)

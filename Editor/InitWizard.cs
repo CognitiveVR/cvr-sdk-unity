@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using CognitiveVR;
+using Cognitive3D;
 
-#if CVR_STEAMVR2
+#if C3D_STEAMVR2
 using Valve.VR;
 using System.IO;
 using Valve.Newtonsoft.Json;
 #endif
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class InitWizard : EditorWindow
     {
@@ -63,7 +63,7 @@ namespace CognitiveVR
         {
             GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Core.SDK_VERSION + ")", "steptitle");
 
-            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
             {
                 //upload new version
@@ -187,77 +187,77 @@ namespace CognitiveVR
         void GetSelectedSDKs()
         {
             selectedsdks.Clear();
-#if CVR_STEAMVR
-            selectedsdks.Add("CVR_STEAMVR");
+#if C3D_STEAMVR
+            selectedsdks.Add("C3D_STEAMVR");
 #endif
-#if CVR_STEAMVR2
-            selectedsdks.Add("CVR_STEAMVR2");
+#if C3D_STEAMVR2
+            selectedsdks.Add("C3D_STEAMVR2");
 #endif
-#if CVR_OCULUS
-            selectedsdks.Add("CVR_OCULUS");
+#if C3D_OCULUS
+            selectedsdks.Add("C3D_OCULUS");
 #endif
-#if CVR_GOOGLEVR
-            selectedsdks.Add("CVR_GOOGLEVR");
+#if C3D_GOOGLEVR
+            selectedsdks.Add("C3D_GOOGLEVR");
 #endif
-#if CVR_DEFAULT
-            selectedsdks.Add("CVR_DEFAULT");
+#if C3D_DEFAULT
+            selectedsdks.Add("C3D_DEFAULT");
 #endif
-#if CVR_FOVE
-            selectedsdks.Add("CVR_FOVE");
+#if C3D_FOVE
+            selectedsdks.Add("C3D_FOVE");
 #endif
-#if CVR_PUPIL
-            selectedsdks.Add("CVR_PUPIL");
+#if C3D_PUPIL
+            selectedsdks.Add("C3D_PUPIL");
 #endif
-#if CVR_TOBIIVR
-        selectedsdks.Add("CVR_TOBIIVR");
+#if C3D_TOBIIVR
+        selectedsdks.Add("C3D_TOBIIVR");
 #endif
-#if CVR_AH
-        selectedsdks.Add("CVR_AH");
+#if C3D_AH
+        selectedsdks.Add("C3D_AH");
 #endif
-#if CVR_VIVEPROEYE
-        selectedsdks.Add("CVR_VIVEPROEYE");
+#if C3D_VIVEPROEYE
+        selectedsdks.Add("C3D_VIVEPROEYE");
 #endif
-#if CVR_VIVEWAVE
-        selectedsdks.Add("CVR_VIVEWAVE");
+#if C3D_VIVEWAVE
+        selectedsdks.Add("C3D_VIVEWAVE");
 #endif
-#if CVR_VARJO
-        selectedsdks.Add("CVR_VARJO");
+#if C3D_VARJO
+        selectedsdks.Add("C3D_VARJO");
 #endif
-#if CVR_VARJOXR
-        selectedsdks.Add("CVR_VARJOXR");
+#if C3D_VARJOXR
+        selectedsdks.Add("C3D_VARJOXR");
 #endif
-#if CVR_PICOVR
-        selectedsdks.Add("CVR_PICOVR");
+#if C3D_PICOVR
+        selectedsdks.Add("C3D_PICOVR");
 #endif
-#if CVR_PICOXR
-        selectedsdks.Add("CVR_PICOXR");
+#if C3D_PICOXR
+        selectedsdks.Add("C3D_PICOXR");
 #endif
-#if CVR_ARKIT //apple
-            selectedsdks.Add("CVR_ARKIT");
+#if C3D_ARKIT //apple
+            selectedsdks.Add("C3D_ARKIT");
 #endif
-#if CVR_ARCORE //google
-            selectedsdks.Add("CVR_ARCORE");
+#if C3D_ARCORE //google
+            selectedsdks.Add("C3D_ARCORE");
 #endif
-#if CVR_META
-            selectedsdks.Add("CVR_META");
+#if C3D_META
+            selectedsdks.Add("C3D_META");
 #endif
-#if CVR_NEURABLE
-            selectedsdks.Add("CVR_NEURABLE");
+#if C3D_NEURABLE
+            selectedsdks.Add("C3D_NEURABLE");
 #endif
-#if CVR_SNAPDRAGON
-            selectedsdks.Add("CVR_SNAPDRAGON");
+#if C3D_SNAPDRAGON
+            selectedsdks.Add("C3D_SNAPDRAGON");
 #endif
-#if CVR_HOLOLENS
-            selectedsdks.Add("CVR_HOLOLENS");
+#if C3D_HOLOLENS
+            selectedsdks.Add("C3D_HOLOLENS");
 #endif
-#if CVR_WINDOWSMR
-            selectedsdks.Add("CVR_WINDOWSMR");
+#if C3D_WINDOWSMR
+            selectedsdks.Add("C3D_WINDOWSMR");
 #endif
-#if CVR_XR
-            selectedsdks.Add("CVR_XR");
+#if C3D_XR
+            selectedsdks.Add("C3D_XR");
 #endif
-#if CVR_OMNICEPT
-            selectedsdks.Add("CVR_OMNICEPT");
+#if C3D_OMNICEPT
+            selectedsdks.Add("C3D_OMNICEPT");
 #endif
         }
 
@@ -280,7 +280,7 @@ namespace CognitiveVR
             }
 
             List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "Varjo XR 3.0.0", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "CVR_XR", "CVR_WINDOWSMR", "CVR_STEAMVR2", "CVR_OCULUS", "CVR_OMNICEPT", "CVR_VIVEPROEYE", "CVR_VARJO", "CVR_DEFAULT", "CVR_STEAMVR", "CVR_PUPIL", "CVR_VIVEWAVE", "CVR_PICOVR", "CVR_PICOXR", "CVR_TOBIIVR", "CVR_FOVE", "CVR_ARCORE", "CVR_ARKIT", "CVR_HOLOLENS", "CVR_NEURABLE", "CVR_SNAPDRAGON" };
+            List<string> sdkdefines = new List<string>() { "C3D_XR", "C3D_WINDOWSMR", "C3D_STEAMVR2", "C3D_OCULUS", "C3D_OMNICEPT", "C3D_VIVEPROEYE", "C3D_VARJO", "C3D_DEFAULT", "C3D_STEAMVR", "C3D_PUPIL", "C3D_VIVEWAVE", "C3D_PICOVR", "C3D_PICOXR", "C3D_TOBIIVR", "C3D_FOVE", "C3D_ARCORE", "C3D_ARKIT", "C3D_HOLOLENS", "C3D_NEURABLE", "C3D_SNAPDRAGON" };
 
             Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
             sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
@@ -300,7 +300,7 @@ namespace CognitiveVR
                     separatorTwo = 32;
                 }
 
-                //if (sdkdefines[i] == "CVR_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
+                //if (sdkdefines[i] == "C3D_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
                 if (GUI.Button(new Rect(30, i * 32 + separatorOne + separatorTwo, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
                 {
                     if (selected)
@@ -387,7 +387,7 @@ namespace CognitiveVR
 
         static string controllerDisplayName; //used to set SE display
 
-#if CVR_STEAMVR2
+#if C3D_STEAMVR2
         bool steamvr2bindings = false;
         bool steamvr2actionset = false;
 #endif
@@ -401,7 +401,7 @@ namespace CognitiveVR
             bool leftSetupComplete = false;
             bool rightSetupComplete = false;
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
             if (cameraBase == null)
             {
                 //basic setup
@@ -439,7 +439,7 @@ namespace CognitiveVR
                     }
                 }
             }
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
             if (cameraBase == null)
             {
                 //interaction system setup
@@ -467,7 +467,7 @@ namespace CognitiveVR
                 }
             }
 
-#elif CVR_OCULUS
+#elif C3D_OCULUS
             //GUI.Label(new Rect(30, 45, 440, 440), "looks like oculus", "boldlabel");
             if (cameraBase == null)
             {
@@ -496,7 +496,7 @@ namespace CognitiveVR
                     setupComplete = true;
                 }
             }
-#elif CVR_VIVEWAVE
+#elif C3D_VIVEWAVE
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
@@ -511,7 +511,7 @@ namespace CognitiveVR
                     setupComplete = true;
                 }
             }
-#elif CVR_WINDOWSMR
+#elif C3D_WINDOWSMR
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
@@ -519,13 +519,13 @@ namespace CognitiveVR
             if (rightSetupComplete && leftSetupComplete)
             {
                 //add input tracker + left/right controllers set
-                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
                 if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
                 {
                     setupComplete = true;
                 }
             }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
             if (cameraBase == null)
             {
                 //basic setup
@@ -548,13 +548,13 @@ namespace CognitiveVR
             if (rightSetupComplete && leftSetupComplete)
             {
                 //add input tracker + left/right controllers set
-                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
                 if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
                 {
                     setupComplete = true;
                 }
             }
-#elif CVR_PICOXR
+#elif C3D_PICOXR
             
             //TODO set controller input tracker to listen for the dynamic object component on some gameobject?
             leftSetupComplete = leftcontroller != null;
@@ -564,14 +564,14 @@ namespace CognitiveVR
             if (rightSetupComplete && leftSetupComplete)
             {
                 //add input tracker + left/right controllers set
-                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
                 if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
                 {
                     setupComplete = true;
                 }
             }
 
-#elif CVR_XR
+#elif C3D_XR
             if (cameraBase == null && leftcontroller == null && rightcontroller == null)
             {
                 if (Camera.main != null)
@@ -603,7 +603,7 @@ namespace CognitiveVR
             if (rightSetupComplete && leftSetupComplete)
             {
                 //add input tracker + left/right controllers set
-                var tracker = CognitiveVR_Manager.Instance.GetComponent<ControllerInputTracker>();
+                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
                 if (tracker != null
                         && tracker.LeftHand != null
                         && tracker.LeftHand.gameObject == leftcontroller
@@ -630,7 +630,7 @@ namespace CognitiveVR
             int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
 #pragma warning restore 162
 
-#if CVR_XR
+#if C3D_XR
             offset = 80;
 
             List<string> controllerNames = new List<string>() { "Vive", "Oculus Rift", "Oculus Quest", "Windows MR","Pico Neo 2" };
@@ -650,7 +650,7 @@ namespace CognitiveVR
 
             GUI.EndScrollView();
 
-#endif //cvr_xr controller selection
+#endif //C3D_xr controller selection
 
             //left hand label
             GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
@@ -765,7 +765,7 @@ namespace CognitiveVR
                 GUI.Label(new Rect(360, 360 + offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
 
-#if CVR_STEAMVR2
+#if C3D_STEAMVR2
             GUI.Label(new Rect(135, 390, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
             if (GUI.Button(new Rect(125, 410, 250, 30), "Append Cognitive Action Set"))
             {
@@ -818,7 +818,7 @@ namespace CognitiveVR
                 right.AddComponent<DynamicObject>();
             }
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
             
             if (left != null && left.GetComponent<ControllerInputTracker>() == null)
             {
@@ -847,7 +847,7 @@ namespace CognitiveVR
                 dyn.IsController = true;
                 dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
             
             if (left != null && left.GetComponent<ControllerInputTracker>() == null)
             {
@@ -880,7 +880,7 @@ namespace CognitiveVR
                 dyn.IsController = true;
                 dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
             }
-#elif CVR_VIVEWAVE
+#elif C3D_VIVEWAVE
             var g = Resources.Load<GameObject>("AdaptiveController");
 
             if (g == null)
@@ -934,14 +934,14 @@ namespace CognitiveVR
                 dyn.IsController = true;
                 dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
             }
-#elif CVR_WINDOWSMR
+#elif C3D_WINDOWSMR
 
 
             //add component to cognitice manager
-            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
-                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
             }
 
             if (left != null)
@@ -986,11 +986,11 @@ namespace CognitiveVR
             {
                 Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
             }
-#elif CVR_PICOVR || CVR_PICOXR
-            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+#elif C3D_PICOVR || C3D_PICOXR
+            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
-                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
             }
 
             if (left != null)
@@ -1017,12 +1017,12 @@ namespace CognitiveVR
                 dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
                 inputTracker.RightHand = dyn;
             }
-#elif CVR_XR
+#elif C3D_XR
             //add component to cognitice manager
-            var inputTracker = CognitiveVR_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
-                inputTracker = CognitiveVR_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
             }
 
             if (left != null)
@@ -1097,7 +1097,7 @@ namespace CognitiveVR
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
                 }
             }
-#elif CVR_OCULUS
+#elif C3D_OCULUS
             if (left != null)
             {
                 var dyn = left.GetComponent<DynamicObject>();
@@ -1227,35 +1227,35 @@ namespace CognitiveVR
 
             GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
 
-            if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+            if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
             //resolution settings here
 
-            if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 4;
+                Cognitive3D_Preferences.Instance.TextureResize = 4;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 4)
             {
                 GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
             }
 
-            if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 2;
+                Cognitive3D_Preferences.Instance.TextureResize = 2;
                 //selectedExportQuality = ExportSettings.DefaultSettings;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 2)
             {
                 GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
             }
 
-            if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 1;
+                Cognitive3D_Preferences.Instance.TextureResize = 1;
                 //selectedExportQuality = ExportSettings.HighSettings;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 1)
             {
                 GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
             }
@@ -1350,15 +1350,15 @@ namespace CognitiveVR
 
             //texture resolution settings
 
-            if (CognitiveVR_Preferences.Instance.TextureResize > 4) { CognitiveVR_Preferences.Instance.TextureResize = 4; }
+            if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
             //resolution settings here
 
-            if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 4;
+                Cognitive3D_Preferences.Instance.TextureResize = 4;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 4)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 4)
             {
                 GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
             }
@@ -1367,11 +1367,11 @@ namespace CognitiveVR
                 GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
             }
 
-            if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 2;
+                Cognitive3D_Preferences.Instance.TextureResize = 2;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 2)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 2)
             {
                 GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
             }
@@ -1380,11 +1380,11 @@ namespace CognitiveVR
                 GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
             }
 
-            if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), CognitiveVR_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
-                CognitiveVR_Preferences.Instance.TextureResize = 1;
+                Cognitive3D_Preferences.Instance.TextureResize = 1;
             }
-            if (CognitiveVR_Preferences.Instance.TextureResize != 1)
+            if (Cognitive3D_Preferences.Instance.TextureResize != 1)
             {
                 GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
             }
@@ -1393,9 +1393,9 @@ namespace CognitiveVR
                 GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
             }
 
-            if (EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene()))
+            if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
-                float sceneSize = EditorCore.GetSceneFileSize(CognitiveVR_Preferences.FindCurrentScene());
+                float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
                 string displayString = "";
                 if (sceneSize < 1)
                 {
@@ -1403,7 +1403,7 @@ namespace CognitiveVR
                 }
                 else if (sceneSize > 500)
                 {
-                    displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((CognitiveVR_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>" : "</color>");
+                    displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((Cognitive3D_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>" : "</color>");
                 }
                 else
                 {
@@ -1411,7 +1411,7 @@ namespace CognitiveVR
                 }
                 if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
                 {
-                    EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(CognitiveVR_Preferences.FindCurrentScene()));
+                    EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(Cognitive3D_Preferences.FindCurrentScene()));
                 }
             }
 
@@ -1438,7 +1438,7 @@ namespace CognitiveVR
                     }
                 }
                 ExportUtility.ExportSceneAR();
-                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 
                 UnityEditor.AssetDatabase.SaveAssets();
@@ -1473,7 +1473,7 @@ namespace CognitiveVR
 
                 DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
 
-                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 
                 UnityEditor.AssetDatabase.SaveAssets();
@@ -1497,7 +1497,7 @@ namespace CognitiveVR
             GUI.Label(steptitlerect, "STEP 9 - UPLOAD", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
-            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
             {
                 int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
@@ -1507,8 +1507,8 @@ namespace CognitiveVR
                     scenename = "SCENE NOT SAVED";
                 }
                 string settingsname = "1/1 Resolution";
-                if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-                if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
                 GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
                 "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
 
@@ -1523,8 +1523,8 @@ namespace CognitiveVR
                     scenename = "SCENE NOT SAVED";
                 }
                 string settingsname = "1/1 Resolution";
-                if (CognitiveVR_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-                if (CognitiveVR_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
                 GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
 
                 GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
@@ -1543,13 +1543,13 @@ namespace CognitiveVR
             GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ManagerName) + "</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
             if (GUI.Button(new Rect(150, 150, 200, 40), "Open Dashboard", "button_bluetext"))
             {
-                Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Dashboard);
+                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
             }
 
             GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
             if (GUI.Button(new Rect(150, 320, 200, 40), "Open Documentation", "button_bluetext"))
             {
-                Application.OpenURL("https://" + CognitiveVR_Preferences.Instance.Documentation);
+                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Documentation);
             }
 
             GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene.", "boldlabel");
@@ -1646,16 +1646,16 @@ namespace CognitiveVR
                     onclick += () =>
                     {
                         EditorCore.SetPlayerDefine(selectedsdks);
-                        if (selectedsdks.Contains("CVR_TOBIIVR") || selectedsdks.Contains("CVR_NEURABLE") || selectedsdks.Contains("CVR_FOVE") || selectedsdks.Contains("CVR_PUPIL") || selectedsdks.Contains("CVR_AH") || selectedsdks.Contains("CVR_SNAPDRAGON") || selectedsdks.Contains("CVR_VIVEPROEYE"))
+                        if (selectedsdks.Contains("C3D_TOBIIVR") || selectedsdks.Contains("C3D_NEURABLE") || selectedsdks.Contains("C3D_FOVE") || selectedsdks.Contains("C3D_PUPIL") || selectedsdks.Contains("C3D_AH") || selectedsdks.Contains("C3D_SNAPDRAGON") || selectedsdks.Contains("C3D_VIVEPROEYE"))
                         {
                             //eye tracking
-                            CognitiveVR_Preferences.Instance.GazeType = GazeType.Physics;
+                            Cognitive3D_Preferences.Instance.GazeType = GazeType.Physics;
                         }
                     };
                     onclick += () =>
                     {
-                        var found = Object.FindObjectOfType<CognitiveVR_Manager>();
-                        if (found == null) //add cognitivevr_manager
+                        var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+                        if (found == null) //add Cognitive3D_manager
                         {
                             EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
                         }
@@ -1690,7 +1690,7 @@ namespace CognitiveVR
                     buttonrect = new Rect(350, 510, 140, 30);
                     break;
                 case "uploadscene":
-                    appearDisabled = !EditorCore.HasSceneExportFiles(CognitiveVR_Preferences.FindCurrentScene());
+                    appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
                     if (appearDisabled)
                     {
@@ -1722,7 +1722,7 @@ namespace CognitiveVR
                     //third upload scene
                     System.Action completeScreenshot = delegate () {
 
-                        CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                        Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
 
                         if (current == null || string.IsNullOrEmpty(current.SceneId))
                         {
@@ -1780,7 +1780,7 @@ namespace CognitiveVR
                         }
                     };
 
-                    buttonDisabled = !EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
+                    buttonDisabled = !EditorCore.HasSceneExportFolder(Cognitive3D_Preferences.FindCurrentScene());
                     if (understandRevealTime > EditorApplication.timeSinceStartup && !buttonDisabled)
                     {
                         buttonDisabled = true;
@@ -1857,13 +1857,13 @@ namespace CognitiveVR
             }
         }
 
-#if CVR_STEAMVR2
+#if C3D_STEAMVR2
         public static void AppendSteamVRActionSet()
         {
             SteamVR_Input_ActionFile actionfile;
             if (LoadActionFile(out actionfile))
             {
-                var cognitiveActionSet = new SteamVR_Input_ActionFile_ActionSet() { name = "/actions/CVR_Input", usage = "single" };
+                var cognitiveActionSet = new SteamVR_Input_ActionFile_ActionSet() { name = "/actions/C3D_Input", usage = "single" };
 
                 //if actions.json already contains cognitive action set
                 if (actionfile.action_sets.Contains(cognitiveActionSet))
@@ -1872,16 +1872,16 @@ namespace CognitiveVR
                     return;
                 }
 
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Grip", type = "boolean" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Trigger", type = "vector1" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad", type = "vector2" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad_Press", type = "boolean" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Touchpad_Touch", type = "boolean" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/CVR_Input/in/Menu", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Grip", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Trigger", type = "vector1" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad", type = "vector2" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad_Press", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad_Touch", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Menu", type = "boolean" });
                 actionfile.action_sets.Add(cognitiveActionSet);
 
                 SaveActionFile(actionfile);
-                Debug.Log("InitWizard::AppendSteamVRActionSet Added CognitiveVR Action Set");
+                Debug.Log("InitWizard::AppendSteamVRActionSet Added Cognitive3D Action Set");
             }
             else
             {
@@ -1911,7 +1911,7 @@ namespace CognitiveVR
 
             File.WriteAllText(actionsFilePath, newJSON);
 
-            Debug.Log("saved " + SteamVR_Settings.instance.actionsFilePath + " with CognitiveVR input action set");
+            Debug.Log("saved " + SteamVR_Settings.instance.actionsFilePath + " with Cognitive3D input action set");
 
             return true;
         }
@@ -1921,21 +1921,21 @@ namespace CognitiveVR
             SteamVR_Input_BindingFile bindingfile;
             if (LoadBindingFile(out bindingfile))
             {
-                if (bindingfile.bindings.ContainsKey("/actions/cvr_input"))
+                if (bindingfile.bindings.ContainsKey("/actions/c3d_input"))
                 {
-                    bindingfile.bindings.Remove("/actions/cvr_input");
+                    bindingfile.bindings.Remove("/actions/c3d_input");
                 }
 
                 SteamVR_Input_BindingFile_ActionList actionlist = new SteamVR_Input_BindingFile_ActionList();
 
-                actionlist.sources.Add(createSource("button", "/user/hand/left/input/grip","click", "/actions/cvr_input/in/grip"));
-                actionlist.sources.Add(createSource("button", "/user/hand/right/input/grip", "click", "/actions/cvr_input/in/grip"));
+                actionlist.sources.Add(createSource("button", "/user/hand/left/input/grip","click", "/actions/c3d_input/in/grip"));
+                actionlist.sources.Add(createSource("button", "/user/hand/right/input/grip", "click", "/actions/c3d_input/in/grip"));
 
-                actionlist.sources.Add(createSource("button", "/user/hand/left/input/menu","click", "/actions/cvr_input/in/menu"));
-                actionlist.sources.Add(createSource("button", "/user/hand/right/input/menu", "click", "/actions/cvr_input/in/menu"));
+                actionlist.sources.Add(createSource("button", "/user/hand/left/input/menu","click", "/actions/c3d_input/in/menu"));
+                actionlist.sources.Add(createSource("button", "/user/hand/right/input/menu", "click", "/actions/c3d_input/in/menu"));
 
-                actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/trigger", "pull", "/actions/cvr_input/in/trigger"));
-                actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/trigger", "pull", "/actions/cvr_input/in/trigger"));
+                actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/trigger", "pull", "/actions/c3d_input/in/trigger"));
+                actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/trigger", "pull", "/actions/c3d_input/in/trigger"));
 
                 //left touchpad
                 SteamVR_Input_BindingFile_Source bindingSource_left_pad = new SteamVR_Input_BindingFile_Source();
@@ -1943,15 +1943,15 @@ namespace CognitiveVR
                 bindingSource_left_pad.path = "/user/hand/left/input/trackpad";
                 {
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_press.Add("output", "/actions/cvr_input/in/touchpad_press");
+                    stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
                     bindingSource_left_pad.inputs.Add("click", stringDictionary_press);
 
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_touch.Add("output", "/actions/cvr_input/in/touchpad_touch");
+                    stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
                     bindingSource_left_pad.inputs.Add("touch", stringDictionary_touch);
 
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_pos.Add("output", "/actions/cvr_input/in/touchpad");
+                    stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
                     bindingSource_left_pad.inputs.Add("position", stringDictionary_pos);
                 }
                 actionlist.sources.Add(bindingSource_left_pad);
@@ -1962,21 +1962,21 @@ namespace CognitiveVR
                 bindingSource_right_pad.path = "/user/hand/right/input/trackpad";
                 {
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_press.Add("output", "/actions/cvr_input/in/touchpad_press");
+                    stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
                     bindingSource_right_pad.inputs.Add("click", stringDictionary_press);
 
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_touch.Add("output", "/actions/cvr_input/in/touchpad_touch");
+                    stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
                     bindingSource_right_pad.inputs.Add("touch", stringDictionary_touch);
 
                     SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_pos.Add("output", "/actions/cvr_input/in/touchpad");
+                    stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
                     bindingSource_right_pad.inputs.Add("position", stringDictionary_pos);
                 }
                 actionlist.sources.Add(bindingSource_right_pad);
 
-                bindingfile.bindings.Add("/actions/cvr_input", actionlist);
-                Debug.Log("InitWizard::SetDefaultBindings save CognitiveVR input bindings");
+                bindingfile.bindings.Add("/actions/c3d_input", actionlist);
+                Debug.Log("InitWizard::SetDefaultBindings save Cognitive3D input bindings");
                 SaveBindingFile(bindingfile);
             }
             else
@@ -1985,7 +1985,7 @@ namespace CognitiveVR
             }
         }
 
-        //mode = button, path = "/user/hand/left/input/grip", actiontype = "click", action = "/actions/cvr_input/in/grip"
+        //mode = button, path = "/user/hand/left/input/grip", actiontype = "click", action = "/actions/c3d_input/in/grip"
         static SteamVR_Input_BindingFile_Source createSource(string mode, string path, string actiontype, string action)
         {
             SteamVR_Input_BindingFile_Source bindingSource = new SteamVR_Input_BindingFile_Source();
@@ -2022,7 +2022,7 @@ namespace CognitiveVR
 
             File.WriteAllText(bindingFilePath, newJSON);
 
-            Debug.Log("saved default bindings for CognitiveVR inputs");
+            Debug.Log("saved default bindings for Cognitive3D inputs");
 
             return true;
         }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
 	public class DynamicSortable : MonoBehaviour
 	{

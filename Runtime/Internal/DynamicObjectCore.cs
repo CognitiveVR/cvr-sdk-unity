@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
 using System;
-using CognitiveVR.External;
+using Cognitive3D.External;
 using System.Threading;
 
 //deals with formatting dynamic object snapshots and manifest entries to json
 //deals with sending through network
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     internal static class DynamicObjectCore
     {
@@ -30,7 +30,7 @@ namespace CognitiveVR
         internal static void Initialize()
         {
             Core.NetworkManager.StartCoroutine(CheckWriteJson());
-            for (int i = 0; i < CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount; i++)
+            for (int i = 0; i < Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
             }
@@ -38,7 +38,7 @@ namespace CognitiveVR
             Core.UpdateEvent -= Core_UpdateEvent;
             Core.UpdateEvent += Core_UpdateEvent;
 
-            nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
             Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
@@ -52,10 +52,10 @@ namespace CognitiveVR
                     yield return null;
                 }
                 //try to send!
-                nextSendTime = Time.realtimeSinceStartup + CognitiveVR_Preferences.Instance.DynamicSnapshotMaxTimer;
+                nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
                 if (Core.TrackingScene != null)
                 {
-                    if (CognitiveVR_Preferences.Instance.EnableDevLogging)
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send dynamics");
                     if (queuedManifest.Count > 0 || queuedSnapshots.Count > 0)
                     {
@@ -91,11 +91,11 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -112,11 +112,11 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -135,11 +135,11 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -159,11 +159,11 @@ namespace CognitiveVR
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true;
@@ -197,11 +197,11 @@ namespace CognitiveVR
 
             queuedSnapshots.Enqueue(s);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -239,11 +239,11 @@ namespace CognitiveVR
 
             queuedSnapshots.Enqueue(s);
             tempsnapshots++;
-            if (tempsnapshots > CognitiveVR_Preferences.S_DynamicSnapshotCount)
+            if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount)
+                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + CognitiveVR_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -289,7 +289,7 @@ namespace CognitiveVR
                 {
                     InterruptThead = false;
                     int totalDataToWrite = queuedManifest.Count + queuedSnapshots.Count;
-                    totalDataToWrite = Mathf.Min(totalDataToWrite, CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount);
+                    totalDataToWrite = Mathf.Min(totalDataToWrite, Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount);
 
                     //TODO CONSIDER can i do all json building on a new thread and just the network request error handling after its complete?
                     //garbage collection on this string builder is painful
@@ -451,7 +451,7 @@ namespace CognitiveVR
         static void WriteJsonImmediate(bool copyDataToCache)
         {
             int totalDataToWrite = queuedManifest.Count + queuedSnapshots.Count;
-            totalDataToWrite = Mathf.Min(totalDataToWrite, CognitiveVR_Preferences.S_DynamicExtremeSnapshotCount);
+            totalDataToWrite = Mathf.Min(totalDataToWrite, Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount);
 
             var builder = new System.Text.StringBuilder(200 + 128 * totalDataToWrite);
             int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);

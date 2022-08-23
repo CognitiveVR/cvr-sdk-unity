@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using CognitiveVR.External;
+using Cognitive3D.External;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     namespace ActiveSession
     {

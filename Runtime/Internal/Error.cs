@@ -1,7 +1,7 @@
-namespace CognitiveVR
+namespace Cognitive3D
 {
 	/// <summary>
-	/// All of the errors the application may see from CognitiveVR
+	/// All of the errors the application may see from Cognitive3D
 	/// </summary>
 	public enum Error
 	{
@@ -11,12 +11,12 @@ namespace CognitiveVR
 		None = 0,
 		
 		/// <summary>
-		/// CognitiveVR has not been initialized
+		/// Cognitive3D has not been initialized
 		/// </summary>
 		NotInitialized,
 		
 		/// <summary>
-		/// CognitiveVR has already been initialized
+		/// Cognitive3D has already been initialized
 		/// </summary>
 		AlreadyInitialized,
 		

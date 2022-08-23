@@ -6,7 +6,7 @@ using System;
 
 //draws saccade lines and fixation spheres for target camera
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class RenderEyetracking : MonoBehaviour
     {
@@ -40,8 +40,8 @@ namespace CognitiveVR.ActiveSession
         [Space(10)]
         public int FixationRenderLayer = 3; //unnamed internal layer
         public int Mask = 8;
-        CognitiveVR.FixationRecorder fixationRecorder;
-        CognitiveVR.GazeBase gazeBase;
+        Cognitive3D.FixationRecorder fixationRecorder;
+        Cognitive3D.GazeBase gazeBase;
         Camera FixationCamera;
         Transform TargetCameraTransform;
         Camera FollowCamera;
@@ -67,7 +67,7 @@ namespace CognitiveVR.ActiveSession
             FixationCamera = GetComponent<Camera>();
             fixationRecorder = FixationRecorder.Instance;
 
-            gazeBase = CognitiveVR_Manager.Instance.gazeBase;
+            gazeBase = Cognitive3D_Manager.Instance.gazeBase;
             FixationMaterial.color = FixationColor;
             SaccadeMaterial.color = SaccadeColor;
 
@@ -95,7 +95,7 @@ namespace CognitiveVR.ActiveSession
                 Core.InitEvent += Core_InitEvent;
             }
             FixationCamera.cullingMask = Mask;
-#if CVR_FOVE
+#if C3D_FOVE
             //just fully render the camera to be drawn on canvas
             FixationCamera.clearFlags = CameraClearFlags.Skybox;
             FixationCamera.cullingMask = -1;
@@ -108,7 +108,7 @@ namespace CognitiveVR.ActiveSession
 
             fixationRecorder = FixationRecorder.Instance;
             if (gazeBase == null)
-                gazeBase = CognitiveVR_Manager.Instance.gazeBase;
+                gazeBase = Cognitive3D_Manager.Instance.gazeBase;
 
             if (initError == Error.None && fixationRecorder != null)
             {
@@ -140,7 +140,7 @@ namespace CognitiveVR.ActiveSession
             if (showReticle)
             {
                 FixationMaterial.color = ReticleColor;
-                var gazeRay = CognitiveVR.GazeHelper.GetCurrentWorldGazeRay();
+                var gazeRay = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
                 var point = gazeRay.GetPoint(20);
                 //draw a texture on screen?
                 //graphics.drawmesh in world?
@@ -152,7 +152,7 @@ namespace CognitiveVR.ActiveSession
             if (!canDisplayFixations && !canDisplayGaze) { return; }
             FixationMaterial.color = FixationColor;
 
-            hmdforward = CognitiveVR.GameplayReferences.HMD.forward;
+            hmdforward = Cognitive3D.GameplayReferences.HMD.forward;
 
             m4proj = FixationCamera.projectionMatrix;
             m4world = FixationCamera.worldToCameraMatrix;
@@ -491,12 +491,12 @@ namespace CognitiveVR.ActiveSession
         void MatchTargetCamera()
         {
             //prioritiz checking for xr - this is a specific backend as opposed to sranipal, steamvr2, etc
-            //BUT reticle and fixations don't match the projection without using CVR_VIVEPROEYE and OpenVR XR 1.1.4. what is happening?
+            //BUT reticle and fixations don't match the projection without using C3D_VIVEPROEYE and OpenVR XR 1.1.4. what is happening?
             //TODO make a combination chart of backends, sdks and headsets for testing
-//#if CVR_XR
+            //#if C3D_XR
             //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
             //uses projection matrix from openvr if developer is using a openvr-based sdk
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_TOBIIVR
+#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_TOBIIVR
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class HMDPointer : MonoBehaviour
     {
@@ -12,7 +12,7 @@ namespace CognitiveVR
 
         void Update()
         {
-            Ray ray = CognitiveVR.GazeHelper.GetCurrentWorldGazeRay();
+            Ray ray = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
             UpdateDrawLine(ray);
             Debug.DrawRay(transform.position, ray.direction * 10, Color.red);
 
@@ -20,7 +20,7 @@ namespace CognitiveVR
             {
                 var newPosition = ray.GetPoint(Distance);
                 MarkerTransform.position = Vector3.Lerp(MarkerTransform.position, newPosition, Speed);
-                MarkerTransform.LookAt(CognitiveVR.GameplayReferences.HMD.position);
+                MarkerTransform.LookAt(Cognitive3D.GameplayReferences.HMD.position);
             }
         }
 

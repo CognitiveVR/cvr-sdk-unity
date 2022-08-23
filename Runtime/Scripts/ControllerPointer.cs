@@ -6,7 +6,7 @@ using UnityEngine;
 //activates a IPointerFocus component. that component must be on the UI layer
 //line color lerps to transparent is not pointing at IPointerFocus component. this uses _TintColor
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class ControllerPointer : MonoBehaviour, IControllerPointer
     {
@@ -92,8 +92,8 @@ namespace CognitiveVR
                     bool validFocusButton = true;
                     if (RequireHMDParallel)
                     {
-                        Vector3 dir = (button.GetPosition() - CognitiveVR.GameplayReferences.HMD.position).normalized;
-                        float d = Vector3.Dot(CognitiveVR.GameplayReferences.HMD.forward, dir);
+                        Vector3 dir = (button.GetPosition() - Cognitive3D.GameplayReferences.HMD.position).normalized;
+                        float d = Vector3.Dot(Cognitive3D.GameplayReferences.HMD.forward, dir);
                         if (d < 0.87f)
                             validFocusButton = false;
                     }

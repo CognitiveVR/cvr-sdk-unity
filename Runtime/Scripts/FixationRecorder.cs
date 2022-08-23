@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-#if CVR_AH
+#if C3D_AH
 using AdhawkApi;
 using AdhawkApi.Numerics.Filters;
 #endif
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class ThreadGazePoint
     {
@@ -35,7 +35,7 @@ namespace CognitiveVR
 
         #region EyeTracker
 
-#if CVR_FOVE
+#if C3D_FOVE
         const int CachedEyeCaptures = 70; //FOVE
         Fove.Unity.FoveInterface fovebase;
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -64,7 +64,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_TOBIIVR
+#elif C3D_TOBIIVR
         const int CachedEyeCaptures = 120; //TOBII
         Tobii.XR.IEyeTrackingProvider EyeTracker;
         Tobii.XR.TobiiXR_EyeTrackingData currentData;
@@ -94,7 +94,7 @@ namespace CognitiveVR
                 EyeTracker = Tobii.XR.TobiiXR.Internal.Provider;
                 //is this fixation recorder component added immediately? or after cognitive session start?
             }
-            tobiiStartTimestamp = CognitiveVR_Manager.Instance.StartupTimestampMilliseconds;
+            tobiiStartTimestamp = Cognitive3D_Manager.Instance.StartupTimestampMilliseconds;
         }
 
         public long EyeCaptureTimestamp()
@@ -114,7 +114,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -146,7 +146,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            return (long)(CognitiveVR.Util.Timestamp() * 1000);
+            return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
@@ -160,7 +160,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_PICOXR
+#elif C3D_PICOXR
         const int CachedEyeCaptures = 120; //PICO
 
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -169,27 +169,27 @@ namespace CognitiveVR
 
             if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
             {
-                Debug.LogError("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED MANAGER NO EYE TRACKING");
+                Debug.LogError("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED MANAGER NO EYE TRACKING");
                 return false;
             }
 
             UnityEngine.XR.InputDevice device;
             if (!GameplayReferences.GetEyeTrackingDevice(out device))
             {
-                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED TRACKING DEVICE");
+                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED TRACKING DEVICE");
                 return false;
             }
 
             Vector3 headPos;
             if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
             {
-                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED HEAD POSITION");
+                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD POSITION");
                 return false;
             }
             Quaternion headRot = Quaternion.identity;
             if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
             {
-                Debug.Log("CognitiveVR::FixationRecorder CombineWorldGazeRay FAILED HEAD ROTATION");
+                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD ROTATION");
                 return false;
             }
 
@@ -227,7 +227,7 @@ namespace CognitiveVR
 
         public long EyeCaptureTimestamp()
         {
-            return (long)(CognitiveVR.Util.Timestamp() * 1000);
+            return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
@@ -241,7 +241,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
         ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;        
         bool useDataQueue1;
         bool useDataQueue2;
@@ -501,7 +501,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_VARJO
+#elif C3D_VARJO
         const int CachedEyeCaptures = 100; //VARJO
 
         Varjo.XR.VarjoEyeTracking.GazeData currentData;
@@ -601,7 +601,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_NEURABLE
+#elif C3D_NEURABLE
         const int CachedEyeCaptures = 120;
         //public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -633,7 +633,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_AH
+#elif C3D_AH
         const int CachedEyeCaptures = 120; //ADHAWK
         private static Calibrator ah_calibrator;
         AdhawkApi.EyeTracker eyetracker;
@@ -664,7 +664,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_PUPIL
+#elif C3D_PUPIL
         PupilLabs.GazeController gazeController;
 
         void ReceiveEyeData(PupilLabs.GazeData data)
@@ -723,7 +723,7 @@ namespace CognitiveVR
             }
             return false;
         }
-#elif CVR_OMNICEPT
+#elif C3D_OMNICEPT
         //TODO check if this is on a different thread
         Queue<SimpleGliaEyeData> trackingDataQueue = new Queue<SimpleGliaEyeData>();
 
@@ -797,7 +797,7 @@ namespace CognitiveVR
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
             }
         }
-#elif CVR_XR
+#elif C3D_XR
         const int CachedEyeCaptures = 120;
 
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -985,22 +985,22 @@ namespace CognitiveVR
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
-#if CVR_FOVE
+#if C3D_FOVE
             fovebase = GameplayReferences.FoveInstance;
-#elif CVR_VIVEPROEYE
+#elif C3D_VIVEPROEYE
             SetupCallbacks();
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
             epochStart = span.TotalSeconds;
-#elif CVR_AH
+#elif C3D_AH
             ah_calibrator = Calibrator.Instance;
             eyetracker = EyeTracker.Instance;
-#elif CVR_PUPIL
+#elif C3D_PUPIL
             gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
                 gazeController.OnReceive3dGaze += ReceiveEyeData;
             else
                 Debug.LogError("Pupil Labs GazeController is null!");
-#elif CVR_OMNICEPT
+#elif C3D_OMNICEPT
 
             var gliaBehaviour = GameplayReferences.GliaBehaviour;
 
@@ -1014,8 +1014,8 @@ namespace CognitiveVR
         private void Update()
         {
             if (!Core.IsInitialized) { return; }
-            if (GameplayReferences.HMD == null) { CognitiveVR.Util.logWarning("HMD is null! Fixation will not function"); return; }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
+            if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Fixation will not function"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
 
             PostGazeCallback();
         }
@@ -1117,18 +1117,6 @@ namespace CognitiveVR
 
             bool areEyesClosed = AreEyesClosed();
 
-#if CVR_PUPIL
-            // discard gaze point if confidence too low. WILL THIS CONFLICT WITH BLINKING?
-            //EyeCaptures[index].Discard = PupilTools.FloatFromDictionary(PupilTools.gazeDictionary, "confidence") < 0.5f;
-#endif
-#if CVR_TOBIIVR
-            // discard gaze point if direction from either eye is invalid. WILL THIS CONFLICT WITH BLINKING?
-            //EyeCaptures[index].Discard = currentData.Right.GazeDirectionValid && currentData.Left.GazeDirectionValid ? false : true;
-#endif
-#if CVR_AH
-            //EyeCaptures[index].Discard = eyetracker.CurrentTrackingState == EyeTracker.TrackingState.TrackingUnknown || (eyetracker.CurrentTrackingState == EyeTracker.TrackingState.TrackingLost && !areEyesClosed);
-#endif
-
             //set new current values
             EyeCaptures[index].EyesClosed = areEyesClosed;
             EyeCaptures[index].HmdPosition = GameplayReferences.HMD.position;
@@ -1217,17 +1205,17 @@ namespace CognitiveVR
         }
 
         //the position in the world/local hit. returns true if hit something
-        GazeRaycastResult GazeRaycast(out Vector3 world, out CognitiveVR.DynamicObject hitDynamic)
+        GazeRaycastResult GazeRaycast(out Vector3 world, out Cognitive3D.DynamicObject hitDynamic)
         {
             RaycastHit hit = new RaycastHit();
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
             if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
-            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, CognitiveVR_Preferences.Instance.GazeLayerMask, CognitiveVR_Preferences.Instance.TriggerInteraction))
+            if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
             {
                 world = hit.point;
 
-                if (CognitiveVR_Preferences.S_DynamicObjectSearchInParent)
+                if (Cognitive3D_Preferences.S_DynamicObjectSearchInParent)
                 {
                     hitDynamic = hit.collider.GetComponentInParent<DynamicObject>();
                 }

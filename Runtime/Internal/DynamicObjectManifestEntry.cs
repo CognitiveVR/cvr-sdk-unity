@@ -4,7 +4,7 @@ using UnityEngine;
 
 //only used internally when holding for coroutine to pull from queue and write to string
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     internal class DynamicObjectManifestEntry
     {

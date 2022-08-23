@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //marks a class as a controller pointer
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public interface IControllerPointer { }
 }

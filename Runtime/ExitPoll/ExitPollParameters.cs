@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     //temporary object for holding overrides and settings for exitpoll question set
     [System.Serializable]

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CognitiveVR.ActiveSession
+namespace Cognitive3D.ActiveSession
 {
     public class EventFeedEntry : MonoBehaviour
     {
@@ -75,7 +75,7 @@ namespace CognitiveVR.ActiveSession
             else
             {
                 string dynamicname;
-                if (CognitiveVR.DynamicManager.GetDynamicObjectName(dynamicObjectId, out dynamicname))
+                if (Cognitive3D.DynamicManager.GetDynamicObjectName(dynamicObjectId, out dynamicname))
                 {
                     ObjectText.text = dynamicname;
                 }
@@ -90,7 +90,7 @@ namespace CognitiveVR.ActiveSession
             
             LocalTimeText.text = dtDateTime.ToLocalTime().ToString("HH:mm:ss");
 
-            double sessionTimeSec = (time - CognitiveVR.Core.SessionTimeStamp);
+            double sessionTimeSec = (time - Cognitive3D.Core.SessionTimeStamp);
             System.TimeSpan ts = new System.TimeSpan(0, 0, (int)sessionTimeSec);
             string prettySessionTime = ts.Hours.ToString("00") + ":" + ts.Minutes.ToString("00") + ":" + ts.Seconds.ToString("00");
 

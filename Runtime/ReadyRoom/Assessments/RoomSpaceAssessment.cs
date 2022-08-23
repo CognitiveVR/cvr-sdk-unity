@@ -1,13 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-#if CVR_STEAMVR
+#if C3D_STEAMVR
 using Valve.VR;
 #endif
 
 //complete when the user moves to each destination in the VR Room Space
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class RoomSpaceAssessment : AssessmentBase
     {
@@ -17,7 +17,7 @@ namespace CognitiveVR
 
         //Returns the bounds of the Room as defined by the selected SDK
 
-#if CVR_STEAMVR
+#if C3D_STEAMVR
     public Bounds CalculateBounds()
     {
         var playArea = FindObjectOfType<SteamVR_PlayArea>();
@@ -33,7 +33,7 @@ namespace CognitiveVR
         bounds.SetMinMax(bounds.min + playArea.transform.position, bounds.max + playArea.transform.position);
         return bounds;
     }
-#elif CVR_OCULUS
+#elif C3D_OCULUS
     public Bounds CalculateBounds()
     {
         var bounds = new Bounds();

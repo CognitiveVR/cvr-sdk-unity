@@ -4,7 +4,7 @@ using UnityEngine;
 
 //static access point to get references to main cameras, controllers, room data
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class GameplayReferences
     {
@@ -12,9 +12,9 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_TOBIIVR || CVR_AH || CVR_FOVE || CVR_PUPIL || CVR_VIVEPROEYE || CVR_VARJO || CVR_PICOVR || CVR_XR || CVR_OMNICEPT
+#if C3D_TOBIIVR || C3D_AH || C3D_FOVE || C3D_PUPIL || C3D_VIVEPROEYE || C3D_VARJO || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
                 return true;
-#elif CVR_PICOXR
+#elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
 #else
                 return false;
@@ -25,7 +25,7 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_VIVEWAVE || CVR_PICOVR || CVR_PICOXR || CVR_XR || CVR_WINDOWSMR || CVR_VARJO || CVR_SNAPDRAGON || CVR_OMNICEPT
+#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOVR || C3D_PICOXR || C3D_XR || C3D_WINDOWSMR || C3D_VARJO || C3D_SNAPDRAGON || C3D_OMNICEPT
                 return true;
 #else
                 return false;
@@ -36,7 +36,7 @@ namespace CognitiveVR
         {
             get
             {
-#if CVR_STEAMVR || CVR_STEAMVR2 || CVR_OCULUS || CVR_XR || CVR_PICOVR || CVR_PICOXR
+#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_XR || C3D_PICOVR || C3D_PICOXR
                 return true;
 #else
                 return false;
@@ -66,7 +66,7 @@ namespace CognitiveVR
         ///return value is in meters
         public static bool GetRoomSize(ref Vector3 roomSize)
         {
-#if CVR_STEAMVR || CVR_STEAMVR2
+#if C3D_STEAMVR || C3D_STEAMVR2
             float roomX = 0;
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
@@ -78,7 +78,7 @@ namespace CognitiveVR
             {
                 return false;
             }
-#elif CVR_OCULUS
+#elif C3D_OCULUS
             if (OVRManager.boundary == null) { return false; }
             if (OVRManager.boundary.GetConfigured())
             {
@@ -86,7 +86,7 @@ namespace CognitiveVR
                 return true;
             }
             return false;
-#elif CVR_XR || CVR_WINDOWSMR || CVR_VARJO
+#elif C3D_XR || C3D_WINDOWSMR || C3D_VARJO
             List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
             UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
             if (inputDevices.Count > 0)
@@ -101,7 +101,7 @@ namespace CognitiveVR
                 }
             }
             return false;
-#elif CVR_PICOXR
+#elif C3D_PICOXR
             if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
             {
                 roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
@@ -111,7 +111,7 @@ namespace CognitiveVR
             {
                 return false;
             }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
             if (Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetEnabled())
             {
                 //api returns mm
@@ -128,7 +128,7 @@ namespace CognitiveVR
 #endif
         }
 
-#if CVR_OCULUS
+#if C3D_OCULUS
         static OVRCameraRig _cameraRig;
         static OVRCameraRig CameraRig
         {
@@ -143,7 +143,7 @@ namespace CognitiveVR
         }
 #endif
 
-#if CVR_FOVE
+#if C3D_FOVE
         static Fove.Unity.FoveInterface _foveInstance;
         public static Fove.Unity.FoveInterface FoveInstance
         {
@@ -157,7 +157,7 @@ namespace CognitiveVR
             }
         }
 #endif
-#if CVR_PICOVR
+#if C3D_PICOVR
         static Pvr_UnitySDKManager pvr_UnitySDKManager;
         public static Pvr_UnitySDKManager Pvr_UnitySDKManager
         {
@@ -171,7 +171,7 @@ namespace CognitiveVR
             }
         }
 #endif
-#if CVR_OMNICEPT
+#if C3D_OMNICEPT
         static HP.Omnicept.Unity.GliaBehaviour gliaBehaviour;
         public static HP.Omnicept.Unity.GliaBehaviour GliaBehaviour
         {
@@ -185,7 +185,7 @@ namespace CognitiveVR
             }
         }
 #endif
-#if CVR_PUPIL
+#if C3D_PUPIL
         static PupilLabs.GazeController gazeController;
         public static PupilLabs.GazeController GazeController
         {
@@ -211,7 +211,7 @@ namespace CognitiveVR
             }
         }
 #endif
-#if CVR_STEAMVR
+#if C3D_STEAMVR
         static SteamVR_Camera steamVR_Camera;
         public static SteamVR_Camera SteamVR_Camera
         {
@@ -281,23 +281,23 @@ namespace CognitiveVR
             {
                 if (_hmd == null)
                 {
-#if CVR_STEAMVR
+#if C3D_STEAMVR
                     SteamVR_Camera cam = GameplayReferences.SteamVR_Camera;
                     if (cam != null){ _hmd = cam.transform; }
-#elif CVR_OCULUS
+#elif C3D_OCULUS
                     OVRCameraRig rig = CameraRig;
                     if (rig != null)
                     {
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
                     }
-#elif CVR_FOVE
+#elif C3D_FOVE
                     var fi = FoveInstance;
                     if (fi != null)
                     {
                         _hmd = fi.transform;
                     }
-#elif CVR_VIVEWAVE
+#elif C3D_VIVEWAVE
                     var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
                     for (int i = 0; i < cameras.Length; i++)
                     {
@@ -308,7 +308,7 @@ namespace CognitiveVR
                         }
                     }
 #endif
-#if CVR_PICOVR
+#if C3D_PICOVR
 //camera component is disabled, so it isn't returned with Camera.main
                     foreach (var cam in Object.FindObjectsOfType<Camera>())
                     {
@@ -327,7 +327,7 @@ namespace CognitiveVR
                         }
                     }
 
-                    if (CognitiveVR_Preferences.Instance.EnableLogging)
+                    if (Cognitive3D_Preferences.Instance.EnableLogging)
                         Util.logDebug("HMD set to " + _hmd);
                     if (_hmd == null)
                         Util.logError("No HMD camera found. Is it tagged as 'MainCamera'?");
@@ -336,7 +336,7 @@ namespace CognitiveVR
             }
         }
 
-#if CVR_OCULUS
+#if C3D_OCULUS
         //records controller transforms from either interaction player or behaviour poses
         static void InitializeControllers()
         {
@@ -362,7 +362,7 @@ namespace CognitiveVR
                 controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
             }
         }
-#elif CVR_STEAMVR2
+#elif C3D_STEAMVR2
 
         static Valve.VR.SteamVR_Behaviour_Pose[] poses;
 
@@ -406,7 +406,7 @@ namespace CognitiveVR
             }
         }
 
-#elif CVR_STEAMVR
+#elif C3D_STEAMVR
 
         static SteamVR_ControllerManager cm;
         static Valve.VR.InteractionSystem.Player player;
@@ -490,7 +490,7 @@ namespace CognitiveVR
             }
 
         }
-#elif CVR_VIVEWAVE
+#elif C3D_VIVEWAVE
 
         //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
         public static void SetController(GameObject go, bool isRight)
@@ -523,7 +523,7 @@ namespace CognitiveVR
                 controllers[1] = new ControllerInfo();
             }
         }
-#elif CVR_WINDOWSMR
+#elif C3D_WINDOWSMR
 
         //no clear way to get controller reliably. dynamic object calls this when enabled
         public static void SetController(GameObject go, bool isRight)
@@ -556,7 +556,7 @@ namespace CognitiveVR
                 controllers[1] = new ControllerInfo();
             }
         }
-#elif CVR_PICOVR
+#elif C3D_PICOVR
         static void InitializeControllers()
         {
             if (controllers == null)
@@ -581,7 +581,7 @@ namespace CognitiveVR
                 }
             }
         }
-#elif CVR_PICOXR
+#elif C3D_PICOXR
         static void InitializeControllers()
         {
             if (controllers == null)
@@ -633,7 +633,7 @@ namespace CognitiveVR
                 Debug.Log("Failed at GetEyeTrackingDevice 1");
             return device.isValid;
         }
-#elif CVR_XR
+#elif C3D_XR
 
         //no clear way to get controller reliably. dynamic object calls this when enabled
         public static void SetController(GameObject go, bool isRight)

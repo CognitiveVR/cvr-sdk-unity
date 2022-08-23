@@ -5,7 +5,7 @@ using UnityEngine;
 //holds a set of data at a time to describe the dynamic object
 //only used internally when holding for coroutine to pull from queue and write to string
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     internal class DynamicObjectSnapshot
     {

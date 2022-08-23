@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using CognitiveVR;
+using Cognitive3D;
 using System.Text;
-using CognitiveVR.External;
+using Cognitive3D.External;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public enum GazeType
     {
@@ -24,7 +24,7 @@ namespace CognitiveVR
         static GazeCore()
         {
             Core.OnSendData += SendGazeData;
-            gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 1200);
+            gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 1200);
             gazebuilder.Append("{\"data\":[");
         }
 
@@ -60,10 +60,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
             gazebuilder.Append("{");
 
@@ -73,14 +73,14 @@ namespace CognitiveVR
             gazebuilder.Append(",");
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
 
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
                 gazebuilder.Append(",");
                 JsonUtil.SetFloat("compass", compass, gazebuilder);
             }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("f", floorPos, gazebuilder);
@@ -88,7 +88,7 @@ namespace CognitiveVR
 
             gazebuilder.Append("}");
             gazeCount++;
-            if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
             {
                 SendGazeData(false);
             }
@@ -104,10 +104,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
             gazebuilder.Append("{");
 
@@ -120,14 +120,14 @@ namespace CognitiveVR
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
                 gazebuilder.Append(",");
                 JsonUtil.SetFloat("compass", compass, gazebuilder);
             }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("f", floorPos, gazebuilder);
@@ -135,7 +135,7 @@ namespace CognitiveVR
             gazebuilder.Append("}");
 
             gazeCount++;
-            if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
             {
                 SendGazeData(false);
             }
@@ -151,10 +151,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
             gazebuilder.Append("{");
 
@@ -165,14 +165,14 @@ namespace CognitiveVR
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", gazepoint, gazebuilder);
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
                 gazebuilder.Append(",");
                 JsonUtil.SetFloat("compass", compass, gazebuilder);
             }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("f", floorPos, gazebuilder);
@@ -180,7 +180,7 @@ namespace CognitiveVR
             gazebuilder.Append("}");
 
             gazeCount++;
-            if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
             {
                 SendGazeData(false);
             }
@@ -197,10 +197,10 @@ namespace CognitiveVR
         {
             if (Core.IsInitialized == false)
             {
-                CognitiveVR.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { CognitiveVR.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
             gazebuilder.Append("{");
 
@@ -220,14 +220,14 @@ namespace CognitiveVR
             gazebuilder.Append(",");
             JsonUtil.SetVector2("uvs", uvs, gazebuilder);
 
-            if (CognitiveVR_Preferences.Instance.TrackGPSLocation)
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
                 gazebuilder.Append(",");
                 JsonUtil.SetFloat("compass", compass, gazebuilder);
             }
-            if (CognitiveVR_Preferences.Instance.RecordFloorPosition)
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 gazebuilder.Append(",");
                 JsonUtil.SetVector("f", floorPos, gazebuilder);
@@ -235,7 +235,7 @@ namespace CognitiveVR
 
             gazebuilder.Append("}");
             gazeCount++;
-            if (gazeCount >= CognitiveVR_Preferences.Instance.GazeSnapshotCount)
+            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
             {
                 SendGazeData(false);
             }
@@ -248,7 +248,7 @@ namespace CognitiveVR
 
         private static void SendGazeData(bool copyDataToCache)
         {
-            if (CognitiveVR_Preferences.Instance.EnableGaze == false)
+            if (Cognitive3D_Preferences.Instance.EnableGaze == false)
             {
                 SendSessionProperties(copyDataToCache);
                 return;
@@ -300,7 +300,7 @@ namespace CognitiveVR
             JsonUtil.SetString("hmdtype", HMDName, gazebuilder);
 
             gazebuilder.Append(",");
-            JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, gazebuilder);
+            JsonUtil.SetFloat("interval", Cognitive3D.Cognitive3D_Preferences.Instance.SnapshotInterval, gazebuilder);
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
@@ -372,7 +372,7 @@ namespace CognitiveVR
             if (OnGazeSend != null)
                 OnGazeSend.Invoke();
 
-            //gazebuilder = new StringBuilder(70 * CognitiveVR_Preferences.Instance.GazeSnapshotCount + 200);
+            //gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 200);
             gazebuilder.Length = 9;
             //gazebuilder.Append("{\"data\":[");
         }
@@ -427,7 +427,7 @@ namespace CognitiveVR
             JsonUtil.SetString("hmdtype", HMDName, propertyBuilder);
 
             propertyBuilder.Append(",");
-            JsonUtil.SetFloat("interval", CognitiveVR.CognitiveVR_Preferences.Instance.SnapshotInterval, propertyBuilder);
+            JsonUtil.SetFloat("interval", Cognitive3D.Cognitive3D_Preferences.Instance.SnapshotInterval, propertyBuilder);
             propertyBuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", propertyBuilder);

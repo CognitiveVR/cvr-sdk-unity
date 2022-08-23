@@ -1,29 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
-using CognitiveVR;
+using Cognitive3D;
 
 /// <summary>
 /// sends fps as a sensor
 /// </summary>
 
-namespace CognitiveVR.Components
+namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
-    public class Framerate : CognitiveVRAnalyticsComponent
+    public class Framerate : Cognitive3DAnalyticsComponent
     {
         [ClampSetting(0.1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
 
-        public override void CognitiveVR_Init(Error initError)
+        public override void Cognitive3D_Init(Error initError)
         {
             if (initError != Error.None) { return; }
-            base.CognitiveVR_Init(initError);
-            Core.UpdateEvent += CognitiveVR_Manager_OnUpdate;
+            base.Cognitive3D_Init(initError);
+            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
             timeleft = FramerateTrackingInterval;
         }
 
-        private void CognitiveVR_Manager_OnUpdate(float deltaTime)
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             UpdateFramerate();
 
@@ -65,7 +65,7 @@ namespace CognitiveVR.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= CognitiveVR_Manager_OnUpdate;
+            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

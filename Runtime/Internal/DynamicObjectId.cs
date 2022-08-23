@@ -5,7 +5,7 @@ using UnityEngine;
 //a reference to an ID that can be shared between similar objects
 //only used by spawned dynamic objects or objects without a customid
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     internal struct DynamicObjectId
     {

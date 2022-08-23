@@ -1,10 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace CognitiveVR 
+namespace Cognitive3D 
 {
     /// <summary>
-    /// The most central pieces of the CognitiveVR Framework.
+    /// The most central pieces of the Cognitive3D Framework.
     /// </summary>
     public static class Core
     {
@@ -13,7 +13,7 @@ namespace CognitiveVR
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
-        /// invoked when CognitiveVR_Manager.SendData is called or when the session ends
+        /// invoked when Cognitive3D_Manager.SendData is called or when the session ends
         /// </summary>
         public static event onSendData OnSendData;
 
@@ -24,14 +24,14 @@ namespace CognitiveVR
 
         public delegate void CoreInitHandler(Error initError);
         /// <summary>
-        /// CognitiveVR Core.Init callback
+        /// Cognitive3D Core.Init callback
         /// </summary>
         public static event CoreInitHandler InitEvent;
         public static void InvokeInitEvent(Error initError) { if (InitEvent != null) { InitEvent.Invoke(initError); } }
 
         public delegate void CoreEndSessionHandler();
         /// <summary>
-        /// CognitiveVR Core.Init callback
+        /// Cognitive3D Core.Init callback
         /// </summary>
         public static event CoreEndSessionHandler EndSessionEvent;
         public static void InvokeEndSessionEvent() { if (EndSessionEvent != null) { EndSessionEvent.Invoke(); } }
@@ -48,7 +48,7 @@ namespace CognitiveVR
 
         public delegate void TickHandler();
         /// <summary>
-        /// repeatedly called if the sceneid is valid. interval is CognitiveVR_Preferences.Instance.PlayerSnapshotInterval
+        /// repeatedly called if the sceneid is valid. interval is Cognitive3D_Preferences.Instance.PlayerSnapshotInterval
         /// </summary>
         public static event TickHandler TickEvent;
         public static void InvokeTickEvent() { if (TickEvent != null) { TickEvent(); } }
@@ -163,14 +163,14 @@ namespace CognitiveVR
             }
         }
 
-        public static CognitiveVR_Preferences.SceneSettings TrackingScene {get; private set;}
+        public static Cognitive3D_Preferences.SceneSettings TrackingScene {get; private set;}
 
         /// <summary>
         /// Set the SceneId for recorded data by string
         /// </summary>
         public static void SetTrackingScene(string sceneName, bool writeSceneChangeEvent)
         {
-            var scene = CognitiveVR_Preferences.FindScene(sceneName);
+            var scene = Cognitive3D_Preferences.FindScene(sceneName);
             SetTrackingScene(scene, writeSceneChangeEvent);
         }
 
@@ -181,7 +181,7 @@ namespace CognitiveVR
         /// Set the SceneId for recorded data by reference
         /// </summary>
         /// <param name="scene"></param>
-        public static void SetTrackingScene(CognitiveVR_Preferences.SceneSettings scene, bool WriteSceneChangeEvent)
+        public static void SetTrackingScene(Cognitive3D_Preferences.SceneSettings scene, bool WriteSceneChangeEvent)
         {
             if (IsInitialized)
             {
@@ -250,7 +250,7 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// has the CognitiveVR session started?
+        /// has the Cognitive3D session started?
         /// </summary>
         public static bool IsInitialized { get; private set; }
 
@@ -288,7 +288,7 @@ namespace CognitiveVR
         }
 
         /// <summary>
-        /// Starts a CognitiveVR session. Records hardware info, creates network manager
+        /// Starts a Cognitive3D session. Records hardware info, creates network manager
         /// </summary>
         public static Error Init(Transform HMDCamera)
         {
@@ -296,10 +296,10 @@ namespace CognitiveVR
             CognitiveStatics.Initialize();
 
             InitError = Error.None;
-            // Have we already initialized CognitiveVR?
+            // Have we already initialized Cognitive3D?
             if (IsInitialized)
             {
-                Util.logWarning("CognitiveVR has already been initialized, no need to re-initialize");
+                Util.logWarning("Cognitive3D has already been initialized, no need to re-initialize");
                 InitError = Error.AlreadyInitialized;
             }
 
@@ -309,7 +309,7 @@ namespace CognitiveVR
 
                 ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
-                if (CognitiveVR_Preferences.Instance.LocalStorage)
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
                     DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 GameObject networkGo = new GameObject("Cognitive Network");
                 networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
@@ -329,7 +329,7 @@ namespace CognitiveVR
                 }
 
                 IsInitialized = true;
-                if (CognitiveVR_Preferences.Instance.EnableGaze == false)
+                if (Cognitive3D_Preferences.Instance.EnableGaze == false)
                     GazeCore.SendSessionProperties(false);
             }
 
@@ -510,7 +510,7 @@ namespace CognitiveVR
         public static string GetAttributionParameters()
         {
             var ap = new AttributeParameters();
-            ap.attributionKey = CognitiveVR_Preferences.Instance.AttributionKey;
+            ap.attributionKey = Cognitive3D_Preferences.Instance.AttributionKey;
             ap.sessionId = SessionID;
             if (TrackingScene != null)
                 ap.sceneVersionId = TrackingScene.VersionId;

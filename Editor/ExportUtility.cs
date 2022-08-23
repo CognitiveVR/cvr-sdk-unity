@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 //an interface for exporting/decimating and uploading scenes and dynamic objects
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     using Debug = UnityEngine.Debug;
     using Path = System.IO.Path;
@@ -110,7 +110,7 @@ namespace CognitiveVR
             var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
             List<GameObject> allRootObjects = new List<GameObject>();
             List<BakeableMesh> temp = new List<BakeableMesh>();
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
 
             EditorUtility.DisplayProgressBar("Export GLTF", "Bake Nonstandard Renderers", 0.10f); //generate meshes from terrain/canvas/skeletal meshes
             customTextureExports = new List<string>();
@@ -195,7 +195,7 @@ namespace CognitiveVR
         /// </summary>
         static void ResizeTexturesInExportFolder(string folderpath)
         {
-            var textureDivisor = CognitiveVR_Preferences.Instance.TextureResize;
+            var textureDivisor = Cognitive3D_Preferences.Instance.TextureResize;
 
             if (textureDivisor == 1) { return; }
             Texture2D texture = new Texture2D(2, 2);
@@ -236,7 +236,7 @@ namespace CognitiveVR
         /// reads files from export directory and sends POST request to backend
         /// invokes uploadComplete if upload actually starts and PostSceneUploadResponse callback gets 200/201 responsecode
         /// </summary>
-        public static void UploadDecimatedScene(CognitiveVR_Preferences.SceneSettings settings, System.Action uploadComplete)
+        public static void UploadDecimatedScene(Cognitive3D_Preferences.SceneSettings settings, System.Action uploadComplete)
         {
             //if uploadNewScene POST
             //else PUT to sceneexplorer/sceneid
@@ -251,12 +251,12 @@ namespace CognitiveVR
             string sceneName = settings.SceneName;
             string[] filePaths = new string[] { };
 
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
             var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
 
             if (SceneExportDirExists)
             {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
             }
 
             //custom confirm upload popup windows
@@ -291,13 +291,13 @@ namespace CognitiveVR
             //after confirmation because uploading an empty scene creates a settings.json file
             if (Directory.Exists(sceneExportDirectory))
             {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
             }
 
             string[] screenshotPath = new string[0];
             if (Directory.Exists(sceneExportDirectory + "screenshot"))
             {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
             }
             else
             {
@@ -395,14 +395,14 @@ namespace CognitiveVR
             string responseText = text.Replace("\"", "");
             if (!string.IsNullOrEmpty(responseText)) //uploading a new version returns empty. uploading a new scene returns sceneid
             {
-                EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 UploadSceneSettings.SceneId = responseText;
                 AssetDatabase.SaveAssets();
             }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
             GUI.FocusControl("NULL");
-            EditorUtility.SetDirty(CognitiveVR_Preferences.Instance);
+            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
 
             if (UploadComplete != null)
@@ -412,7 +412,7 @@ namespace CognitiveVR
             Debug.Log("<color=green>Scene Upload Complete!</color>");
         }
 
-        static CognitiveVR_Preferences.SceneSettings UploadSceneSettings;
+        static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;
         /// <summary>
         /// SceneSettings for the currently uploading scene
         /// </summary>
@@ -1356,7 +1356,7 @@ namespace CognitiveVR
                 }
 
                 exportedMeshNames.Add(temporaryDynamic.MeshName);
-                string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
+                string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar;
                 Directory.CreateDirectory(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
 
                 //normalize the dynamic object (and all it's parents) so scale is not doubly applied in OE/SE since manifest data / session data also holds LOSSYscale
@@ -1511,13 +1511,13 @@ namespace CognitiveVR
         /// </summary>
         public static bool UploadAllDynamicObjectMeshes(bool ShowPopupWindow = false)
         {
-            if (!Directory.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic"))
+            if (!Directory.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic"))
             {
                 Debug.Log("Skip uploading dynamic objects, folder doesn't exist");
                 return false;
             }
             List<string> dynamicMeshNames = new List<string>();
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
             foreach (var v in subdirectories)
             {
@@ -1535,7 +1535,7 @@ namespace CognitiveVR
         {
             string fileList = "Upload Files:\n";
 
-            var settings = CognitiveVR_Preferences.FindCurrentScene();
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings == null)
             {
                 string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
@@ -1556,7 +1556,7 @@ namespace CognitiveVR
             }
 
             //get list of export full directory names
-            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "CognitiveVR_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             var subdirectories = Directory.GetDirectories(path);
             List<string> exportDirectories = new List<string>();
             foreach (var v in subdirectories)

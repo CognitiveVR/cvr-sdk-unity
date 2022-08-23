@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class ReadyRoomSetupWindow : EditorWindow
     {
@@ -88,7 +88,7 @@ namespace CognitiveVR
 
         void OnGUI()
         {
-            GUI.skin = CognitiveVR.EditorCore.WizardGUISkin;
+            GUI.skin = Cognitive3D.EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
             if (GetAllAssessments() == null || GetAllAssessments().Count == 0)
@@ -174,7 +174,7 @@ namespace CognitiveVR
                 }
                 else
                 {
-                    GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
+                    GUI.Label(new Rect(0, 200, 475, 40), Cognitive3D.EditorCore.Alert, "image_centered");
                     GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
                 }
             }
@@ -214,14 +214,14 @@ namespace CognitiveVR
             if (UseRoomScale == 1)
             {
                 //TODO editorcore.roomscale
-#if CVR_TOBIIVR || CVR_NEURABLE || CVR_PUPIL || CVR_AH || CVR_SNAPDRAGON || CVR_VIVEPROEYE
+#if C3D_TOBIIVR || C3D_NEURABLE || C3D_PUPIL || C3D_AH || C3D_SNAPDRAGON || C3D_VIVEPROEYE
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
-#elif CVR_STEAMVR || CVR_STEAMVR2
+#elif C3D_STEAMVR || C3D_STEAMVR2
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add a SteamVR_PlayArea component to a new gameobject in this scene", "normallabel_actionable");
 #else
-                GUI.Label(new Rect(0, 200, 475, 40), CognitiveVR.EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(0, 200, 475, 40), Cognitive3D.EditorCore.Alert, "image_centered");
                 GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support room scale", "normallabel");
 #endif
             }
@@ -381,7 +381,7 @@ namespace CognitiveVR
             if (sceneSelect == null)
             {
                 //display warning
-                GUI.Label(new Rect(0, 200, 475, 130), CognitiveVR.EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(0, 200, 475, 130), Cognitive3D.EditorCore.Alert, "image_centered");
                 GUI.Label(new Rect(30, 300, 440, 440), "There is no Scene Select Menu in this scene. Make sure the participant can correctly exit Ready Room when completed", "normallabel");
             }
             else
@@ -484,7 +484,7 @@ namespace CognitiveVR
                 Rect warningRect = dynamicrect;
                 warningRect.x = 30;
                 warningRect.width = 30;
-                GUI.Label(warningRect, new GUIContent(CognitiveVR.EditorCore.Alert, "Missing Scene Path"), "image_centered");
+                GUI.Label(warningRect, new GUIContent(Cognitive3D.EditorCore.Alert, "Missing Scene Path"), "image_centered");
             }
 
             if (e.mousePosition.x < dynamicrect.x || e.mousePosition.x > dynamicrect.x + dynamicrect.width || e.mousePosition.y < dynamicrect.y || e.mousePosition.y > dynamicrect.y + dynamicrect.height)
@@ -660,11 +660,11 @@ namespace CognitiveVR
 
             if (assessment.Active && !forceWarning)
             {
-                GUI.Label(isActiveRect, CognitiveVR.EditorCore.Checkmark, "image_centered");
+                GUI.Label(isActiveRect, Cognitive3D.EditorCore.Checkmark, "image_centered");
             }
             else
             {
-                GUI.Label(isActiveRect, CognitiveVR.EditorCore.Alert, "image_centered");
+                GUI.Label(isActiveRect, Cognitive3D.EditorCore.Alert, "image_centered");
             }
 
             if (needsRefresh)
@@ -711,7 +711,7 @@ namespace CognitiveVR
 
         void DrawFooter()
         {
-            GUI.color = CognitiveVR.EditorCore.BlueishGrey;
+            GUI.color = Cognitive3D.EditorCore.BlueishGrey;
             GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
 
@@ -819,7 +819,7 @@ namespace CognitiveVR
 
         public static void SetupOculus(Object[] targets)
         {
-#if CVR_OCULUS
+#if C3D_OCULUS
         foreach(var v in targets)
         {
             var grab = (v as GrabComponentsRequired);
@@ -837,13 +837,13 @@ namespace CognitiveVR
 #else
             if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "Oculus SDK was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
             {
-                CognitiveVR.InitWizard.Init();
+                Cognitive3D.InitWizard.Init();
             }
 #endif
         }
         public static void SetupSteamVR2(Object[] targets)
         {
-#if CVR_STEAMVR2
+#if C3D_STEAMVR2
         foreach(var v in targets)
         {
             var grab = (v as GrabComponentsRequired);
@@ -862,14 +862,14 @@ namespace CognitiveVR
 #else
             if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "SteamVR2 SDK was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
             {
-                CognitiveVR.InitWizard.Init();
+                Cognitive3D.InitWizard.Init();
             }
 #endif
         }
 
         public static void SetupXRInteractionToolkit(Object[] targets)
         {
-#if CVR_XRINTERACTION_TOOLKIT
+#if C3D_XRINTERACTION_TOOLKIT
 
         //add XRGrabInteractable component
 
@@ -890,7 +890,7 @@ namespace CognitiveVR
 #else
             if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "XRInteraction Toolkit package was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
             {
-                CognitiveVR.InitWizard.Init();
+                Cognitive3D.InitWizard.Init();
             }
 #endif
         }

@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using CognitiveVR;
+using Cognitive3D;
 
 //the idea is that you could set up this component with your settings, then just call 'Activate'
 //easier to visualize all the valid options, easier to override stuff
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class ExitPollHolder : MonoBehaviour
     {
@@ -17,20 +17,20 @@ namespace CognitiveVR
             if (ActivateOnEnable)
             {
                 //will wait for cognitive vr manager to have call initialize before activating
-                if (CognitiveVR.Core.IsInitialized)
+                if (Cognitive3D.Core.IsInitialized)
                 {
                     Activate();
                 }
                 else
                 {
-                    CognitiveVR.Core.InitEvent += Core_DelayInitEvent;
+                    Cognitive3D.Core.InitEvent += Core_DelayInitEvent;
                 }
             }
         }
 
         private void Core_DelayInitEvent(Error initError)
         {
-            CognitiveVR.Core.InitEvent -= Core_DelayInitEvent;
+            Cognitive3D.Core.InitEvent -= Core_DelayInitEvent;
             if (initError == Error.None)
             {
                 OnEnable();

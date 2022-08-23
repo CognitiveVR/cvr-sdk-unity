@@ -31,7 +31,7 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public static class MicrophoneUtility
     {

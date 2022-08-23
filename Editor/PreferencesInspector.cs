@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using UnityEditor;
 using System.Reflection;
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
-    [CustomEditor(typeof(CognitiveVR_Preferences))]
+    [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
     {
         bool gpsFoldout;
         bool hasCheckedRenderType = false;
 
-        public static void CheckGazeRenderType(CognitiveVR_Preferences p)
+        public static void CheckGazeRenderType(Cognitive3D_Preferences p)
         {
             if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
             {
@@ -33,7 +33,7 @@ namespace CognitiveVR
 
         public override void OnInspectorGUI()
         {
-            var p = (CognitiveVR_Preferences)target;
+            var p = (Cognitive3D_Preferences)target;
             if (!hasCheckedRenderType)
             {
                 CheckGazeRenderType(p);
@@ -229,7 +229,7 @@ namespace CognitiveVR
             EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
 
-            var v = CognitiveVR_Preferences.FindCurrentScene();
+            var v = Cognitive3D_Preferences.FindCurrentScene();
             if (v == null || string.IsNullOrEmpty(v.SceneId))
             {
                 EditorGUILayout.LabelField("Current Scene: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "     Version: not uploaded");
@@ -289,11 +289,11 @@ namespace CognitiveVR
 
                 string debugContent = DebugInformationWindow.GetDebugContents();
                 System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
-                CognitiveVR_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 UnityEditor.AssetDatabase.SaveAssets();
             }
 
-            bool hasUploadFiles = EditorCore.HasSceneExportFolder(CognitiveVR_Preferences.FindCurrentScene());
+            bool hasUploadFiles = EditorCore.HasSceneExportFolder(Cognitive3D_Preferences.FindCurrentScene());
             
             EditorGUI.BeginDisabledGroup(!hasUploadFiles);
             if (GUILayout.Button("Upload", "ButtonRight"))
@@ -317,7 +317,7 @@ namespace CognitiveVR
 
                 //upload scene
                 System.Action completedRefreshSceneVersion1 = delegate () {
-                    CognitiveVR_Preferences.SceneSettings current = CognitiveVR_Preferences.FindCurrentScene();
+                    Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
 
                     if (current == null || string.IsNullOrEmpty(current.SceneId))
                     {
@@ -402,7 +402,7 @@ namespace CognitiveVR
             var prefs = EditorCore.GetPreferences();
 
             //save these to a temp list
-            List<CognitiveVR_Preferences.SceneSettings> oldSettings = new List<CognitiveVR_Preferences.SceneSettings>();
+            List<Cognitive3D_Preferences.SceneSettings> oldSettings = new List<Cognitive3D_Preferences.SceneSettings>();
             foreach (var v in prefs.sceneSettings)
             {
                 oldSettings.Add(v);
@@ -421,7 +421,7 @@ namespace CognitiveVR
                 string name = path.Substring(path.LastIndexOf('/') + 1);
                 name = name.Substring(0, name.Length - 6);
 
-                prefs.sceneSettings.Add(new CognitiveVR_Preferences.SceneSettings(name, path));
+                prefs.sceneSettings.Add(new Cognitive3D_Preferences.SceneSettings(name, path));
             }
 
             //match up dictionary keys from temp list

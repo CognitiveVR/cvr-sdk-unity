@@ -4,7 +4,7 @@ using UnityEngine;
 
 //marks an area that should be 'visited' by the player within the room boundaries
 
-namespace CognitiveVR
+namespace Cognitive3D
 {
     public class RoomSpaceDestination : MonoBehaviour
     {
@@ -19,7 +19,7 @@ namespace CognitiveVR
         void OnEnable()
         {
             if (Target == null)
-                Target = CognitiveVR.GameplayReferences.HMD;
+                Target = Cognitive3D.GameplayReferences.HMD;
             if (hasVisited) { return; }
             StartCoroutine(CheckDistance());
         }
