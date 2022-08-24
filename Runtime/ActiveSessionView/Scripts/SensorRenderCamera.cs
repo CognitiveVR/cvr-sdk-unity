@@ -28,8 +28,8 @@ namespace Cognitive3D.ActiveSession
 
         void OnPostRender()
         {
-            double sessionTimestamp = Core.SessionTimeStamp;
-            double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp);
+            double sessionTimestamp = Cognitive3D_Manager.SessionTimeStamp;
+            double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Cognitive3D_Manager.SessionTimeStamp);
 
             GL.PushMatrix();
             GL.LoadOrtho();

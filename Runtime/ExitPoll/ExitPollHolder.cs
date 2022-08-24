@@ -17,24 +17,21 @@ namespace Cognitive3D
             if (ActivateOnEnable)
             {
                 //will wait for cognitive vr manager to have call initialize before activating
-                if (Cognitive3D.Core.IsInitialized)
+                if (Cognitive3D_Manager.IsInitialized)
                 {
                     Activate();
                 }
                 else
                 {
-                    Cognitive3D.Core.InitEvent += Core_DelayInitEvent;
+                    Cognitive3D_Manager.OnSessionBegin += Core_DelayInitEvent;
                 }
             }
         }
 
-        private void Core_DelayInitEvent(Error initError)
+        private void Core_DelayInitEvent()
         {
-            Cognitive3D.Core.InitEvent -= Core_DelayInitEvent;
-            if (initError == Error.None)
-            {
-                OnEnable();
-            }
+            Cognitive3D_Manager.OnSessionBegin -= Core_DelayInitEvent;
+            OnEnable();
         }
         
         /// <summary>

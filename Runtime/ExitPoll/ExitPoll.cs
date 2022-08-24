@@ -173,7 +173,7 @@ namespace Cognitive3D
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
-            if (!Cognitive3D.Core.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
+            if (!Cognitive3D_Manager.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
 
             myparameters = parameters;
 
@@ -526,16 +526,16 @@ namespace Cognitive3D
         void SendResponsesAsCustomEvents()
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
-            exitpollEvent.SetProperty("userId", Cognitive3D.Core.DeviceId);
-            if (!string.IsNullOrEmpty(Core.ParticipantId))
+            exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
             {
-                exitpollEvent.SetProperty("participantId", Cognitive3D.Core.ParticipantId);
+                exitpollEvent.SetProperty("participantId", Cognitive3D_Manager.ParticipantId);
             }
             exitpollEvent.SetProperty("questionSetId", QuestionSetId);
             exitpollEvent.SetProperty("hook", myparameters.Hook);
             exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
 
-            var scenesettings = Core.TrackingScene;
+            var scenesettings = Cognitive3D_Manager.TrackingScene;
             if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
             {
                 exitpollEvent.SetProperty("sceneId", scenesettings.SceneId);
@@ -552,7 +552,7 @@ namespace Cognitive3D
                 position = CurrentExitPollPanel.transform.position;
 
             exitpollEvent.Send(position);
-            Core.InvokeSendDataEvent(false);
+            Cognitive3D_Manager.InvokeSendDataEvent(false);
         }
 
         //puts responses from questions into json for exitpoll microservice
@@ -560,26 +560,26 @@ namespace Cognitive3D
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
-            JsonUtil.SetString("userId", Cognitive3D.Core.DeviceId, builder);
+            JsonUtil.SetString("userId", Cognitive3D_Manager.DeviceId, builder);
             builder.Append(",");
-            if (!string.IsNullOrEmpty(Core.ParticipantId))
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
             {
-                JsonUtil.SetString("participantId", Cognitive3D.Core.ParticipantId, builder);
+                JsonUtil.SetString("participantId", Cognitive3D_Manager.ParticipantId, builder);
                 builder.Append(",");
             }
-            if (!string.IsNullOrEmpty(Core.LobbyId))
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
+                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
                 builder.Append(",");
             }
             JsonUtil.SetString("questionSetId", QuestionSetId, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionId", Core.SessionID, builder);
+            JsonUtil.SetString("sessionId", Cognitive3D_Manager.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetString("hook", myparameters.Hook, builder);
             builder.Append(",");
 
-            var scenesettings = Core.TrackingScene;
+            var scenesettings = Cognitive3D_Manager.TrackingScene;
             if (scenesettings != null)
             {
                 JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);

@@ -11,11 +11,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Screen Resolution")]
     public class ScreenResolution : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            Core.SetSessionProperty("c3d.device.screenresolution", Screen.height + " x " + Screen.width);
+            base.Cognitive3D_Init();
+            Cognitive3D_Manager.SetSessionProperty("c3d.device.screenresolution", Screen.height + " x " + Screen.width);
         }
 
         public override string GetDescription()

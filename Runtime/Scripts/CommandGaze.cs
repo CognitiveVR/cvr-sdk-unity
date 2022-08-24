@@ -20,43 +20,40 @@ namespace Cognitive3D
         public override void Initialize()
         {
             base.Initialize();
-            Core.InitEvent += Cognitive3D_Manager_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin += Cognitive3D_Manager_InitEvent;
             if (!GameplayReferences.SDKSupportsEyeTracking)
                 Debug.LogError("Cognitive3D does not support eye tracking using Command Gaze. From 'Advanced Options' in the cognitive3D menu, please change 'Gaze Type' to 'Physics'");
         }
 
-        private void Cognitive3D_Manager_InitEvent(Error initError)
+        private void Cognitive3D_Manager_InitEvent()
         {
-            if (initError == Error.None)
-            {
-                var buf = new CommandBuffer();
-                buf.name = "cognitive depth";
+            var buf = new CommandBuffer();
+            buf.name = "cognitive depth";
 
-                if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Command Gaze will not function"); return; }
+            if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Command Gaze will not function"); return; }
 
-                GameplayReferences.HMDCameraComponent.depthTextureMode = DepthTextureMode.Depth;
-                GameplayReferences.HMDCameraComponent.AddCommandBuffer(camevent, buf);
-                var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
+            GameplayReferences.HMDCameraComponent.depthTextureMode = DepthTextureMode.Depth;
+            GameplayReferences.HMDCameraComponent.AddCommandBuffer(camevent, buf);
+            var material = new Material(Shader.Find("Hidden/Cognitive/CommandDepth"));
 
-                //buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
-                //buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
+            //buf.SetGlobalFloat(Shader.PropertyToID("_DepthScale"), 1f / 1);
+            //buf.Blit((Texture)null, BuiltinRenderTextureType.CameraTarget, material, (int)0);
 
 #if SRP_LW3_0_0
             rt = new RenderTexture(Screen.width, Screen.height,0);
 #else
-                //rt = new RenderTexture(256, 256, 0);
-                rt = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGBFloat);
+            //rt = new RenderTexture(256, 256, 0);
+            rt = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGBFloat);
 #endif
-                buf.Blit(BuiltinRenderTextureType.CurrentActive, rt, material, (int)0);
+            buf.Blit(BuiltinRenderTextureType.CurrentActive, rt, material, (int)0);
 
-                //buf.Blit(blitTo, rt);
+            //buf.Blit(blitTo, rt);
 
-                Core.TickEvent += Cognitive3D_Manager_TickEvent;
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_TickEvent;
 
-                helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();
-                helper.Initialize(rt, GameplayReferences.HMDCameraComponent, OnHelperPostRender, this);
-                Core.EndSessionEvent += OnEndSessionEvent;
-            }
+            helper = GameplayReferences.HMD.gameObject.AddComponent<CommandBufferHelper>();
+            helper.Initialize(rt, GameplayReferences.HMDCameraComponent, OnHelperPostRender, this);
+            Cognitive3D_Manager.OnPreSessionEnd += OnEndSessionEvent;
         }
 
         private void Cognitive3D_Manager_TickEvent()
@@ -176,13 +173,13 @@ namespace Cognitive3D
             {
                 Destroy(helper);
             }
-            Core.InitEvent -= Cognitive3D_Manager_InitEvent;
-            Core.TickEvent -= Cognitive3D_Manager_TickEvent;
+            Cognitive3D_Manager.OnSessionBegin -= Cognitive3D_Manager_InitEvent;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_TickEvent;
         }
 
         private void OnEndSessionEvent()
         {
-            Core.EndSessionEvent -= OnEndSessionEvent;
+            Cognitive3D_Manager.OnPreSessionEnd -= OnEndSessionEvent;
             Destroy(this);
         }
     }

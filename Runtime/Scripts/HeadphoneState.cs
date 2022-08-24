@@ -11,10 +11,9 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Headphone State")]
     public class HeadphoneState : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
 #if C3D_OCULUS
             //TODO add oculus audio changed events

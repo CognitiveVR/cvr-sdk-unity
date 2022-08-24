@@ -129,7 +129,7 @@ namespace Cognitive3D
                 return;
 #endif
             StartingScale = transform.lossyScale;
-            if (Cognitive3D.Core.IsInitialized)
+            if (Cognitive3D_Manager.IsInitialized)
             {                
                 string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
@@ -185,12 +185,12 @@ namespace Cognitive3D
                 }
                 if (SyncWithPlayerGazeTick)
                 {
-                    Cognitive3D.Core.TickEvent += Core_TickEvent;
+                    Cognitive3D_Manager.OnTick += Core_TickEvent;
                 }
             }
             else
             {
-                Core.InitEvent += OnCoreInitialize;
+                Cognitive3D_Manager.OnSessionBegin += OnCoreInitialize;
             }
         }
 
@@ -199,13 +199,10 @@ namespace Cognitive3D
             Cognitive3D.DynamicManager.RecordDynamic(DataId,false);
         }
 
-        private void OnCoreInitialize(Cognitive3D.Error error)
+        private void OnCoreInitialize()
         {
-            if (error == Error.None)
-            {
-                Core.InitEvent -= OnCoreInitialize;
-                OnEnable();
-            }
+            Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
+            OnEnable();
         }
 
         /// <summary>
@@ -271,13 +268,13 @@ namespace Cognitive3D
 
         private void OnDisable()
         {
-            Cognitive3D.Core.TickEvent -= Core_TickEvent;
+            Cognitive3D_Manager.OnTick -= Core_TickEvent;
 
             DynamicManager.SetTransform(DataId, transform);
 
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
 
-            Core.InitEvent -= OnCoreInitialize;
+            Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
         }
 
 #if UNITY_EDITOR

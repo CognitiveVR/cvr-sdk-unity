@@ -14,11 +14,10 @@ namespace Cognitive3D.Components
         public LayerMask CollisionLayerMask = 1;
 
         bool HMDColliding;
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            Core.TickEvent += Cognitive3D_Manager_OnTick;
+            base.Cognitive3D_Init();
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
         }
 
         private void Cognitive3D_Manager_OnTick()
@@ -58,7 +57,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Core.TickEvent -= Cognitive3D_Manager_OnTick;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
         }
     }
 }

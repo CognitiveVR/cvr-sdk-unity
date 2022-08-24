@@ -26,13 +26,13 @@ namespace Cognitive3D
 
         public static void Initialize()
         {
-            Cognitive3D.Core.OnSendData -= SendData;
-            Cognitive3D.Core.UpdateEvent -= OnUpdate;
-            Cognitive3D.Core.LevelLoadedEvent -= OnSceneLoaded;
+            Cognitive3D.Cognitive3D_Manager.OnSendData -= SendData;
+            Cognitive3D.Cognitive3D_Manager.OnUpdate -= OnUpdate;
+            Cognitive3D.Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
 
-            Cognitive3D.Core.OnSendData += SendData;
-            Cognitive3D.Core.UpdateEvent += OnUpdate;
-            Cognitive3D.Core.LevelLoadedEvent += OnSceneLoaded;
+            Cognitive3D.Cognitive3D_Manager.OnSendData += SendData;
+            Cognitive3D.Cognitive3D_Manager.OnUpdate += OnUpdate;
+            Cognitive3D.Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
         }
 
         internal static void Reset()
@@ -48,11 +48,11 @@ namespace Cognitive3D
         }
 
         //happens after the network has sent the request, before any response
-        public static event Core.onDataSend OnDynamicObjectSend;
+        public static event Cognitive3D_Manager.onSendData OnDynamicObjectSend;
         internal static void DynamicObjectSendEvent()
         {
             if (OnDynamicObjectSend != null)
-                OnDynamicObjectSend.Invoke();
+                OnDynamicObjectSend.Invoke(false);
         }
 
         public static bool GetDynamicObjectName(string id, out string name)
@@ -179,8 +179,8 @@ namespace Cognitive3D
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
         public static void RemoveDynamicObject(string id)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             //if application is quitting, return?
 
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
@@ -221,7 +221,7 @@ namespace Cognitive3D
         /// <param name="properties"></param>
         public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
-            if (Core.TrackingScene == null) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
             {
                 uniqueEngagementId = objectid + " " + engagementname;
@@ -249,7 +249,7 @@ namespace Cognitive3D
 
         public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
-            if (Core.TrackingScene == null) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
             {
                 uniqueEngagementId = objectid + " " + engagementname;
@@ -297,7 +297,7 @@ namespace Cognitive3D
             if (!found) { Util.logDebug("Dynamic Object ID " + id + " not found"); return; }
 
 
-            if (!Core.IsInitialized) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
             Vector3 pos = ActiveDynamicObjectsArray[i].Transform.position;
             Vector3 scale = ActiveDynamicObjectsArray[i].Transform.lossyScale;
             Quaternion rot = ActiveDynamicObjectsArray[i].Transform.rotation;
@@ -475,7 +475,7 @@ namespace Cognitive3D
         /// <param name="forceWrite">writes snapshot even if dynamic hasn't moved beyond threshold</param>
         public static void RecordDynamic(string id, bool forceWrite)
         {
-            if (!Core.IsInitialized) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
 
             int i = 0;
             bool found = false;
@@ -604,7 +604,7 @@ namespace Cognitive3D
         //alternatively, could go iterate through chunks of dynamics each frame, instead of all at once
         private static void OnUpdate(float deltaTime)
         {
-            if (!Core.IsInitialized) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
 
             //limits the number of dynamic object data that can be processed each update loop
             int numTicks = 0;
@@ -757,7 +757,7 @@ namespace Cognitive3D
         /// </summary>
         public static void SendData(bool copyDataToCache)
         {
-            if (!Core.IsInitialized) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
 
             int dirtycount = 0;
             //set all active dynamics as dirty

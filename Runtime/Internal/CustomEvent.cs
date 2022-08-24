@@ -265,13 +265,14 @@ namespace Cognitive3D
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
+            //TODO should be using gampelay references, not Cognitive3D_Manager.HMD
             float[] pos = new float[3] { 0, 0, 0 };
 
-            if (Core.HMD != null)
+            if (GameplayReferences.HMD != null)
             {
-                pos[0] = Core.HMD.position.x;
-                pos[1] = Core.HMD.position.y;
-                pos[2] = Core.HMD.position.z;
+                pos[0] = GameplayReferences.HMD.position.x;
+                pos[1] = GameplayReferences.HMD.position.y;
+                pos[2] = GameplayReferences.HMD.position.z;
             }
 
             float duration = Time.realtimeSinceStartup - startTime;
@@ -290,14 +291,14 @@ namespace Cognitive3D
 
         internal static void Initialize()
         {
-            Core.OnSendData -= Core_OnSendData;
-            Core.OnSendData += Core_OnSendData;
+            Cognitive3D_Manager.OnSendData -= Core_OnSendData;
+            Cognitive3D_Manager.OnSendData += Core_OnSendData;
             autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
 
             if (automaticTimerActive == false)
             {
                 automaticTimerActive = true;
-                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+                Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
             }
         }
 
@@ -327,7 +328,7 @@ namespace Cognitive3D
                     yield return null;
                 }
                 autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (Core.IsInitialized)
+                if (Cognitive3D_Manager.IsInitialized)
                 {
                     if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");
@@ -339,16 +340,14 @@ namespace Cognitive3D
         //checks for min send time and extreme batch size before calling send
         static void TrySendTransactions()
         {
-            bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
+            //bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
+            //bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
+            if (cachedEvents < Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
-                //Util.logDebug("instrumentation less than timer, less than extreme batch size");
-                return;
+                SendTransactions(false);
             }
-            SendTransactions(false);
         }
 
         static float minTimer_lastSendTime = -60;
@@ -359,12 +358,12 @@ namespace Cognitive3D
                 return;
             }
 
-            if (!Core.IsInitialized)
+            if (!Cognitive3D_Manager.IsInitialized)
             {
                 return;
             }
 
-            if (Core.TrackingScene == null)
+            if (Cognitive3D_Manager.TrackingScene == null)
             {
                 Util.logDebug("CustomEvent.SendTransactions could not find CurrentSceneId! has scene been uploaded and Cognitive3D_Manager.Initialize been called?");
                 cachedEvents = 0;
@@ -387,18 +386,18 @@ namespace Cognitive3D
             builder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.DeviceId, builder);
+            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, builder);
             builder.Append(",");
 
-            if (!string.IsNullOrEmpty(Core.LobbyId))
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
+                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
                 builder.Append(",");
             }
 
-            JsonUtil.SetDouble("timestamp", Core.SessionTimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", Cognitive3D_Manager.SessionTimeStamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", Core.SessionID, builder);
+            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", partCount, builder);
             partCount++;
@@ -425,31 +424,31 @@ namespace Cognitive3D
             string packagedEvents = builder.ToString();
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = CognitiveStatics.POSTEVENTDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
 
             if (copyDataToCache)
             {
-                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, packagedEvents))
+                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, packagedEvents))
                 {
-                    Core.NetworkManager.runtimeCache.WriteContent(url, packagedEvents);
+                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, packagedEvents);
                 }
             }
 
-            Core.NetworkManager.Post(url, packagedEvents);
+            Cognitive3D_Manager.NetworkManager.Post(url, packagedEvents);
             if (OnCustomEventSend != null)
             {
-                OnCustomEventSend.Invoke();
+                OnCustomEventSend.Invoke(copyDataToCache);
             }
         }
 
         public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -484,16 +483,16 @@ namespace Cognitive3D
         }
 
         //happens after the network has sent the request, before any response
-        public static event Core.onDataSend OnCustomEventSend;
+        public static event Cognitive3D_Manager.onSendData OnCustomEventSend;
 
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -526,12 +525,12 @@ namespace Cognitive3D
 
         public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);

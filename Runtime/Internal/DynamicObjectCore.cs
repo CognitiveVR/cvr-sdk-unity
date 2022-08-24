@@ -23,23 +23,25 @@ namespace Cognitive3D
         private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
         private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
 
+        //TODO loop to check if there's some outstanding dynamic data
+
         static float NextMinSendTime = 0;
 
         internal static int tempsnapshots = 0;
 
         internal static void Initialize()
         {
-            Core.NetworkManager.StartCoroutine(CheckWriteJson());
+            Cognitive3D_Manager.NetworkManager.StartCoroutine(CheckWriteJson());
             for (int i = 0; i < Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
             }
 
-            Core.UpdateEvent -= Core_UpdateEvent;
-            Core.UpdateEvent += Core_UpdateEvent;
+            Cognitive3D_Manager.OnUpdate -= Core_UpdateEvent;
+            Cognitive3D_Manager.OnUpdate += Core_UpdateEvent;
 
             nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
-            Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
         private static float nextSendTime = 0;
@@ -53,7 +55,7 @@ namespace Cognitive3D
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
-                if (Core.TrackingScene != null)
+                if (Cognitive3D_Manager.TrackingScene != null)
                 {
                     if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send dynamics");
@@ -73,8 +75,8 @@ namespace Cognitive3D
 
         internal static void WriteControllerManifestEntry(DynamicData data)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.controllerType = data.ControllerType;
@@ -93,9 +95,9 @@ namespace Cognitive3D
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -105,8 +107,8 @@ namespace Cognitive3D
 
         internal static void WriteDynamicMediaManifestEntry(DynamicData data, string videourl)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
             dome.videoURL = videourl;
 
@@ -114,9 +116,9 @@ namespace Cognitive3D
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -126,8 +128,8 @@ namespace Cognitive3D
 
         internal static void WriteDynamicManifestEntry(DynamicData data, string formattedProperties)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.HasProperties = true;
@@ -137,9 +139,9 @@ namespace Cognitive3D
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -153,17 +155,17 @@ namespace Cognitive3D
         /// <param name="data"></param>
         internal static void WriteDynamicManifestEntry(DynamicData data)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             queuedManifest.Enqueue(dome);
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true;
@@ -173,8 +175,8 @@ namespace Cognitive3D
 
         internal static void WriteDynamic(DynamicData data, string props, bool writeScale)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -199,9 +201,9 @@ namespace Cognitive3D
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -212,8 +214,8 @@ namespace Cognitive3D
         //button properties are formated as   ,"buttons":{"input":value,"input":value}
         internal static void WriteDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates)
         {
-            if (!Core.IsInitialized) { return; }
-            if (Core.TrackingScene == null) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -241,9 +243,9 @@ namespace Cognitive3D
             tempsnapshots++;
             if (tempsnapshots > Cognitive3D_Preferences.S_DynamicSnapshotCount)
             {
-                if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
+                //if (Time.time > NextMinSendTime || tempsnapshots > Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount)
                 {
-                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMinTimer;
+                    NextMinSendTime = Time.time + Cognitive3D_Preferences.S_DynamicSnapshotMaxTimer;
                     //check lastSendTimer and extreme batch size
                     tempsnapshots = 0;
                     ReadyToWriteJson = true; //mark the coroutine as ready to pull from the queue
@@ -304,18 +306,18 @@ namespace Cognitive3D
                     builder.Append("{");
 
                     //header
-                    JsonUtil.SetString("userid", Core.DeviceId, builder);
+                    JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, builder);
                     builder.Append(",");
 
-                    if (!string.IsNullOrEmpty(Core.LobbyId))
+                    if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
                     {
-                        JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
+                        JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
                         builder.Append(",");
                     }
 
-                    JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
+                    JsonUtil.SetDouble("timestamp", (int)Cognitive3D_Manager.SessionTimeStamp, builder);
                     builder.Append(",");
-                    JsonUtil.SetString("sessionid", Core.SessionID, builder);
+                    JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, builder);
                     builder.Append(",");
                     JsonUtil.SetInt("part", jsonPart, builder);
                     builder.Append(",");
@@ -426,7 +428,7 @@ namespace Cognitive3D
                         }
 
                         string s = builder.ToString();
-                        string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+                        string url = CognitiveStatics.POSTDYNAMICDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
 
                         /*if (CopyDataToCache)
                         {
@@ -436,7 +438,7 @@ namespace Cognitive3D
                             }
                         }*/
 
-                        Core.NetworkManager.Post(url, s);
+                        Cognitive3D_Manager.NetworkManager.Post(url, s);
                         DynamicManager.DynamicObjectSendEvent();
                     }
                 }
@@ -460,18 +462,18 @@ namespace Cognitive3D
             builder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Core.DeviceId, builder);
+            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, builder);
             builder.Append(",");
 
-            if (!string.IsNullOrEmpty(Core.LobbyId))
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", Core.LobbyId, builder);
+                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
                 builder.Append(",");
             }
 
-            JsonUtil.SetDouble("timestamp", (int)Core.SessionTimeStamp, builder);
+            JsonUtil.SetDouble("timestamp", (int)Cognitive3D_Manager.SessionTimeStamp, builder);
             builder.Append(",");
-            JsonUtil.SetString("sessionid", Core.SessionID, builder);
+            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, builder);
             builder.Append(",");
             JsonUtil.SetInt("part", jsonPart, builder);
             builder.Append(",");
@@ -509,17 +511,17 @@ namespace Cognitive3D
             builder.Append("}");
 
             string s = builder.ToString();
-            string url = CognitiveStatics.POSTDYNAMICDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTDYNAMICDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
 
             if (copyDataToCache)
             {
-                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, s))
+                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, s))
                 {
-                    Core.NetworkManager.runtimeCache.WriteContent(url, s);
+                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, s);
                 }
             }
 
-            Core.NetworkManager.Post(url, s);
+            Cognitive3D_Manager.NetworkManager.Post(url, s);
             DynamicManager.DynamicObjectSendEvent();
         }
 

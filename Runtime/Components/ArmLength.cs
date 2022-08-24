@@ -27,9 +27,8 @@ namespace Cognitive3D.Components
 
         GameplayReferences.ControllerInfo tempInfo = null;
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
             StartCoroutine(Tick());
         }
 
@@ -75,7 +74,7 @@ namespace Cognitive3D.Components
                 //send arm length
                 float distance = Mathf.Sqrt(maxSqrDistance);
                 //dashboard expects centimeters
-                Core.SetParticipantProperty("armlength", distance * 100);
+                Cognitive3D_Manager.SetParticipantProperty("armlength", distance * 100);
             }
         }
 

@@ -28,10 +28,9 @@ namespace Cognitive3D.Components
 
         float[] heights;
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
             heights = new float[SampleCount];
 
@@ -55,7 +54,7 @@ namespace Cognitive3D.Components
             }
 
             float medianHeight = Median(heights);
-            Core.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
+            Cognitive3D_Manager.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
         }
 
         private float Median(float[] items)

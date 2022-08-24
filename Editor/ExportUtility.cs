@@ -93,7 +93,7 @@ namespace Cognitive3D
             }
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
             File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
             string debugContent = DebugInformationWindow.GetDebugContents();
@@ -270,7 +270,7 @@ namespace Cognitive3D
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                     string debugContent = DebugInformationWindow.GetDebugContents();

@@ -15,11 +15,11 @@ namespace Cognitive3D.Components
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
+            //if (initError != Error.None) { return; }
+            base.Cognitive3D_Init();
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             timeleft = FramerateTrackingInterval;
         }
 
@@ -65,7 +65,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Cognitive3D
         {
             //not every frame + only if initialization is fine. MUST HAVE VALID SCENEID
             if (!IsVideo) { return; }
-            Cognitive3D.Core.TickEvent += Cognitive3D_Manager_TickEvent;
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_TickEvent;
         }
 
         bool wasPrepared = true;
@@ -86,7 +86,7 @@ namespace Cognitive3D
 
         private void OnDestroy()
         {
-            Cognitive3D.Core.TickEvent -= Cognitive3D_Manager_TickEvent;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_TickEvent;
         }
     }
 }

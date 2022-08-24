@@ -38,10 +38,10 @@ namespace Cognitive3D
             CheckForUpdates();
 
             string savedSDKVersion = EditorPrefs.GetString("cognitive_sdk_version", "");
-            if (string.IsNullOrEmpty(savedSDKVersion) || Core.SDK_VERSION != savedSDKVersion)
+            if (string.IsNullOrEmpty(savedSDKVersion) || Cognitive3D_Manager.SDK_VERSION != savedSDKVersion)
             {
-                Debug.Log("Cognitive3D SDK version " + Core.SDK_VERSION);
-                EditorPrefs.SetString("cognitive_sdk_version", Core.SDK_VERSION);
+                Debug.Log("Cognitive3D SDK version " + Cognitive3D_Manager.SDK_VERSION);
+                EditorPrefs.SetString("cognitive_sdk_version", Cognitive3D_Manager.SDK_VERSION);
 
                 bool needToUpdateDatabase = false;
                 //remove Cognitive3D_SceneExportWindow.cs
@@ -872,9 +872,9 @@ namespace Cognitive3D
 
         private static void SaveEditorVersion()
         {
-            if (EditorPrefs.GetString("c3d_version") != Cognitive3D.Core.SDK_VERSION)
+            if (EditorPrefs.GetString("c3d_version") != Cognitive3D.Cognitive3D_Manager.SDK_VERSION)
             {
-                EditorPrefs.SetString("c3d_version", Cognitive3D.Core.SDK_VERSION);
+                EditorPrefs.SetString("c3d_version", Cognitive3D.Cognitive3D_Manager.SDK_VERSION);
                 EditorPrefs.SetString("c3d_updateDate", System.DateTime.UtcNow.ToString("dd-MM-yyyy"));
             }
         }
@@ -943,7 +943,7 @@ namespace Cognitive3D
 
                         if (version != skipVersion) //new version, not the skipped one
                         {
-                            System.Version installedVersion = new Version(Cognitive3D.Core.SDK_VERSION);
+                            System.Version installedVersion = new Version(Cognitive3D_Manager.SDK_VERSION);
                             System.Version githubVersion = new Version(version);
                             if (githubVersion > installedVersion)
                             {

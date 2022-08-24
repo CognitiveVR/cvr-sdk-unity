@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
 
-//IMPROVEMENT? single coroutine queue waiting for network responses instead of creating many. not much improvement, major hit comes from unity web request constructor
+//TODO should use async/await for web requests instead of coroutines - less garbage and faster
 //IMPROVEMENT shouldn't be a monobehaviour. shouldn't be static. instance should live on Core
 //IMPROVEMENT should use an interface. what would this include? implementation handles writing to cache (if it exists)
 
@@ -68,7 +68,7 @@ namespace Cognitive3D
                 if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
                     string text;
-                    if (Core.ExitpollHandler.GetExitpoll(hookname,out text))
+                    if (Cognitive3D_Manager.ExitpollHandler.GetExitpoll(hookname,out text))
                     {
                         if (callback != null)
                         {
@@ -99,7 +99,7 @@ namespace Cognitive3D
                 }
                 if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
-                    Core.ExitpollHandler.WriteExitpoll(hookname, www.downloadHandler.text);
+                    Cognitive3D_Manager.ExitpollHandler.WriteExitpoll(hookname, www.downloadHandler.text);
                     //LocalCache.WriteExitpoll(hookname, www.downloadHandler.text);
                 }
             }

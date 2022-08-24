@@ -27,7 +27,7 @@ namespace Cognitive3D.ActiveSession
         //openVROffset = new Vector2(0.083f,0.11f);
         openVROffset = new Vector2(0f,0f);
 #endif
-            Core.InitEvent += Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
         }
         Camera HMDCamera;
         FixationRecorder fixationRecorder;
@@ -40,11 +40,11 @@ namespace Cognitive3D.ActiveSession
         Vector2 openVROffset = new Vector2(0.083f, 0.11f);
 #pragma warning restore 0414
 
-        private void Core_InitEvent(Error initError)
+        private void Core_InitEvent()
         {
-            if (FixationRecorder.Instance != null)
+            if (Cognitive3D_Manager.Instance.fixationRecorder != null)
             {
-                fixationRecorder = FixationRecorder.Instance;
+                fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
                 quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                 FixationCore.OnFixationRecord -= Fixation_OnFixationRecord;
                 FixationCore.OnFixationRecord += Fixation_OnFixationRecord;
@@ -434,7 +434,7 @@ namespace Cognitive3D.ActiveSession
 
         private void OnDestroy()
         {
-            Core.InitEvent -= Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
             FixationCore.OnFixationRecord -= Fixation_OnFixationRecord;
         }
     }

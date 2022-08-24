@@ -13,9 +13,16 @@ namespace Cognitive3D.Components
 {
     public abstract class AnalyticsComponentBase : MonoBehaviour
     {
-        public virtual void Cognitive3D_Init(Error initError)
+        protected void Start()
         {
-            //called after Cognitive3D initializes
+            //if this component is enabled late, run startup as if session just began
+            if (Cognitive3D_Manager.IsInitialized)
+                Cognitive3D_Init();
+        }
+
+        public virtual void Cognitive3D_Init()
+        {
+            //called as the last step of the Cognitive3D session begin process
         }
 
         //Cognitive3D Component Setup uses reflection to find these Methods. These help display each component, but are not required

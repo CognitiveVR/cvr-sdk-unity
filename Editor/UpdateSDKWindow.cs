@@ -25,7 +25,7 @@ namespace Cognitive3D
         {
             GUI.skin.label.richText = true;
             GUILayout.Label("Cognitive3D SDK - New Version", EditorCore.HeaderStyle);
-            GUILayout.Label("Current Version:<b>" + Core.SDK_VERSION + "</b>");
+            GUILayout.Label("Current Version:<b>" + Cognitive3D_Manager.SDK_VERSION + "</b>");
             GUILayout.Label("New Version:<b>" + newVersion + "</b>");
 
             GUILayout.Label("Notes", EditorCore.HeaderStyle);

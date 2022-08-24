@@ -15,22 +15,19 @@ namespace Cognitive3D.ActiveSession
 
         void Start()
         {
-            if (Core.IsInitialized) { Core_InitEvent(Core.GetInitError()); }
-            else { Core.InitEvent += Core_InitEvent; }
-            Core.EndSessionEvent += Core_EndSessionEvent;
+            if (Cognitive3D_Manager.IsInitialized) { Core_InitEvent(); }
+            else { Cognitive3D_Manager.OnSessionBegin += Core_InitEvent; }
+            Cognitive3D_Manager.OnPreSessionEnd += Core_EndSessionEvent;
         }
 
-        private void Core_InitEvent(Error initError)
+        private void Core_InitEvent()
         {
-            if (initError == Error.None)
-            {
-                Core.InitEvent -= Core_InitEvent;
-                CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
-                GazeCore.OnGazeSend += GazeCore_OnGazeSend;
-                FixationCore.OnFixationSend += FixationCore_OnFixationSend;
-                DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
-                SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
-            }
+            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
+            CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
+            GazeCore.OnGazeSend += GazeCore_OnGazeSend;
+            FixationCore.OnFixationSend += FixationCore_OnFixationSend;
+            DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
+            SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
         }
 
         float EventTimeSinceSend = -1;
@@ -189,27 +186,27 @@ namespace Cognitive3D.ActiveSession
             }
         }
 
-        private void SensorRecorder_OnSensorSend()
+        private void SensorRecorder_OnSensorSend(bool ignored)
         {
             SensorTimeSinceSend = 0;
         }
 
-        private void DynamicManager_OnDynamicObjectSend()
+        private void DynamicManager_OnDynamicObjectSend(bool ignored)
         {
             DynamicTimeSinceSend = 0;
         }
 
-        private void FixationCore_OnFixationSend()
+        private void FixationCore_OnFixationSend(bool ignored)
         {
             FixationTimeSinceSend = 0;
         }
 
-        private void GazeCore_OnGazeSend()
+        private void GazeCore_OnGazeSend(bool ignored)
         {
             GazeTimeSinceSend = 0;
         }
 
-        private void Instrumentation_OnCustomEventSend()
+        private void Instrumentation_OnCustomEventSend(bool ignored)
         {
             EventTimeSinceSend = 0;
         }
@@ -221,12 +218,12 @@ namespace Cognitive3D.ActiveSession
             FixationCore.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
-            Core.InitEvent -= Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
         }
 
         private void Core_EndSessionEvent()
         {
-            Core.InitEvent += Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
         }
     }
 }

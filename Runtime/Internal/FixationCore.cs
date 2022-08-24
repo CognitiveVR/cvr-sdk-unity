@@ -15,18 +15,15 @@ namespace Cognitive3D
 
         static FixationCore()
         {
-            Core.OnSendData += Core_OnSendData;
+            Cognitive3D_Manager.OnSendData += Core_OnSendData;
             nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
-            Core.InitEvent += Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
         }
 
-        private static void Core_InitEvent(Error initError)
+        private static void Core_InitEvent()
         {
-            if (initError == Error.None)
-            {
-                Core.InitEvent -= Core_InitEvent;
-                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
-            }
+            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
+            Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
         static float nextSendTime = 0;
@@ -40,7 +37,7 @@ namespace Cognitive3D
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
-                if (Core.IsInitialized)
+                if (Cognitive3D_Manager.IsInitialized)
                 {
                     if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send fixations");
@@ -51,25 +48,20 @@ namespace Cognitive3D
 
         static void TrySendData()
         {
-            bool withinMinTimer = lastSendTime + Cognitive3D_Preferences.Instance.FixationSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = Fixations.Count < Cognitive3D_Preferences.Instance.FixationExtremeSnapshotCount;
-
-            //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
+            if (Fixations.Count > Cognitive3D_Preferences.Instance.FixationSnapshotCount)
             {
-                return;
+                Core_OnSendData(false);
             }
-            Core_OnSendData(false);
         }
 
         public static void RecordFixation(Fixation newFixation)
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Fixation cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Fixation recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Fixation recorded without SceneId"); return; }
 
             if (newFixation.IsLocal)
             {
@@ -90,7 +82,7 @@ namespace Cognitive3D
         }
 
         //happens after the network has sent the request, before any response
-        public static event Core.onDataSend OnFixationSend;
+        public static event Cognitive3D_Manager.onSendData OnFixationSend;
 
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)
@@ -98,7 +90,7 @@ namespace Cognitive3D
             if (Fixations.Count <= 0) { Cognitive3D.Util.logDebug("Fixations.SendData found no data"); return; }
 
             //TODO should hold until extreme batch size reached
-            if (Core.TrackingScene == null)
+            if (Cognitive3D_Manager.TrackingScene == null)
             {
                 Cognitive3D.Util.logDebug("Fixations.SendData could not find scene settings for scene! do not upload fixations to sceneexplorer");
                 Fixations.Clear();
@@ -112,11 +104,11 @@ namespace Cognitive3D
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
-            JsonUtil.SetString("userid", Core.DeviceId, sb);
+            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, sb);
             sb.Append(",");
-            JsonUtil.SetString("sessionid", Core.SessionID, sb);
+            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, sb);
             sb.Append(",");
-            JsonUtil.SetInt("timestamp", (int)Core.SessionTimeStamp, sb);
+            JsonUtil.SetInt("timestamp", (int)Cognitive3D_Manager.SessionTimeStamp, sb);
             sb.Append(",");
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
@@ -154,21 +146,21 @@ namespace Cognitive3D
 
             Fixations.Clear();
 
-            string url = CognitiveStatics.POSTFIXATIONDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTFIXATIONDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
             string content = sb.ToString();
             
             if (copyDataToCache)
             {
-                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, content))
+                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, content))
                 {
-                    Core.NetworkManager.runtimeCache.WriteContent(url, content);
+                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, content);
                 }
             }
 
-            Core.NetworkManager.Post(url, content);
+            Cognitive3D_Manager.NetworkManager.Post(url, content);
             if (OnFixationSend != null)
             {
-                OnFixationSend.Invoke();
+                OnFixationSend.Invoke(copyDataToCache);
             }
         }
     }

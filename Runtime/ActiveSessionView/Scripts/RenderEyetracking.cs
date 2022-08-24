@@ -65,13 +65,13 @@ namespace Cognitive3D.ActiveSession
             FollowCamera = followCamera;
             TargetCameraTransform = followCamera.transform;
             FixationCamera = GetComponent<Camera>();
-            fixationRecorder = FixationRecorder.Instance;
+            fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
 
             gazeBase = Cognitive3D_Manager.Instance.gazeBase;
             FixationMaterial.color = FixationColor;
             SaccadeMaterial.color = SaccadeColor;
 
-            if (Core.IsInitialized)
+            if (Cognitive3D_Manager.IsInitialized)
             {
                 if (fixationRecorder != null)
                 {
@@ -92,7 +92,7 @@ namespace Cognitive3D.ActiveSession
             }
             else
             {
-                Core.InitEvent += Core_InitEvent;
+                Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
             }
             FixationCamera.cullingMask = Mask;
 #if C3D_FOVE
@@ -102,15 +102,14 @@ namespace Cognitive3D.ActiveSession
 #endif
         }
 
-        private void Core_InitEvent(Error initError)
+        private void Core_InitEvent()
         {
-            Core.InitEvent -= Core_InitEvent;
+            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
 
-            fixationRecorder = FixationRecorder.Instance;
-            if (gazeBase == null)
-                gazeBase = Cognitive3D_Manager.Instance.gazeBase;
+            fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
+            gazeBase = Cognitive3D_Manager.Instance.gazeBase;
 
-            if (initError == Error.None && fixationRecorder != null)
+            if (fixationRecorder != null)
             {
                 quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                 canDisplayFixations = true;

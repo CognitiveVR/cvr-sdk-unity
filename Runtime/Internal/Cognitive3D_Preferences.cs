@@ -29,8 +29,7 @@ namespace Cognitive3D
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicSnapshotMaxTimer = instance.DynamicSnapshotMaxTimer;
-                    S_DynamicSnapshotMinTimer = instance.DynamicSnapshotMinTimer;
-                    S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
+                    //S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
@@ -44,7 +43,6 @@ namespace Cognitive3D
         public static int S_DynamicSnapshotCount;
         public static int S_DynamicExtremeSnapshotCount;
         public static int S_DynamicSnapshotMaxTimer;
-        public static float S_DynamicSnapshotMinTimer;
 
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
@@ -105,27 +103,32 @@ namespace Cognitive3D
 
         [Header("Send Data")]
         //min batch size
+        //if number of data points reaches this value, send immediately
+
         public int GazeSnapshotCount = 64;
-        public int SensorSnapshotCount = 64;
-        public int DynamicSnapshotCount = 64;
+        public int SensorSnapshotCount = 128;
+        public int DynamicSnapshotCount = 128;
         public int TransactionSnapshotCount = 64;
         public int FixationSnapshotCount = 64;
 
         //min timer
         //public int GazeSnapshotMinTimer = 6;
-        public int SensorSnapshotMinTimer = 6;
-        public int DynamicSnapshotMinTimer = 2;
-        public int TransactionSnapshotMinTimer = 2;
-        public int FixationSnapshotMinTimer = 2;
+        //public int SensorSnapshotMinTimer = 6;
+        //public int DynamicSnapshotMinTimer = 2;
+        //public int TransactionSnapshotMinTimer = 2;
+        //public int FixationSnapshotMinTimer = 2;
 
         //extreme batch size
+
         //public int GazeExtremeSnapshotCount = 256;
-        public int SensorExtremeSnapshotCount = 256;
-        public int DynamicExtremeSnapshotCount = 256;
-        public int TransactionExtremeSnapshotCount = 256;
-        public int FixationExtremeSnapshotCount = 2;
+        //public int SensorExtremeSnapshotCount = 256;
+        //public int DynamicExtremeSnapshotCount = 256;
+        //public int TransactionExtremeSnapshotCount = 256;
+        //public int FixationExtremeSnapshotCount = 256;
 
         //max timer
+        //every X seconds, check to send any existing batched snapshots
+
         //public int GazeSnapshotMaxTimer = 10;
         public int SensorSnapshotMaxTimer = 10;
         public int DynamicSnapshotMaxTimer = 10;

@@ -11,16 +11,15 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
             Vector3 roomsize = new Vector3();
             if (GameplayReferences.GetRoomSize(ref roomsize))
             {
-                Core.SetSessionProperty("c3d.roomsize", roomsize.x * roomsize.z * 100);
-                Core.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x * 100, roomsize.z * 100));
+                Cognitive3D_Manager.SetSessionProperty("c3d.roomsize", roomsize.x * roomsize.z * 100);
+                Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x * 100, roomsize.z * 100));
             }
         }
 

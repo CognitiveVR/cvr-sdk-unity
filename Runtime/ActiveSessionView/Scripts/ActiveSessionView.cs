@@ -17,6 +17,7 @@ namespace Cognitive3D.ActiveSession
         public RenderEyetracking RenderEyetracking;
         public Text WarningText;
 
+        //waits for calibration if eye tracker is not calibrated
         IEnumerator Start()
         {
             FullscreenDisplay.Initialize(this,VRSceneCamera);

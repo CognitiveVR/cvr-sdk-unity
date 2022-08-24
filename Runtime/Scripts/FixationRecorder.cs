@@ -25,7 +25,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
-        public static FixationRecorder Instance;
+        //public static FixationRecorder Instance;
         private enum GazeRaycastResult
         {
             Invalid,
@@ -964,7 +964,7 @@ namespace Cognitive3D
             FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
-        void OnEnable()
+        /*void OnEnable()
         {
             if (Instance != null && Instance != this)
             {
@@ -972,7 +972,7 @@ namespace Cognitive3D
                 return;
             }
             Instance = this;
-        }
+        }*/
 
         public void Initialize()
         {
@@ -1013,9 +1013,9 @@ namespace Cognitive3D
 
         private void Update()
         {
-            if (!Core.IsInitialized) { return; }
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
             if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Fixation will not function"); return; }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
 
             PostGazeCallback();
         }

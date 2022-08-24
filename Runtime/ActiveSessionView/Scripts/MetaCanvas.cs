@@ -17,20 +17,19 @@ namespace Cognitive3D
 
             void Start()
             {
-                Core.InitEvent += Core_InitEvent;
-                Core.LevelLoadedEvent += Core_LevelLoadedEvent;
+                Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
+                Cognitive3D_Manager.OnLevelLoaded += Core_LevelLoadedEvent;
             }
 
             private void Core_LevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId)
             {
-                SceneId.text = Core.TrackingSceneId;
+                SceneId.text = Cognitive3D_Manager.TrackingSceneId;
             }
 
-            private void Core_InitEvent(Error initError)
+            private void Core_InitEvent()
             {
-                Core.InitEvent -= Core_InitEvent;
-                if (initError == Error.None)
-                    SessionName.text = Core.SessionID;
+                Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
+                SessionName.text = Cognitive3D_Manager.SessionID;
             }
 
             int lastSecondTime = 0;
@@ -38,9 +37,9 @@ namespace Cognitive3D
             System.Text.StringBuilder sb = new System.Text.StringBuilder(64);
             private void Update()
             {
-                if (Core.IsInitialized)
+                if (Cognitive3D_Manager.IsInitialized)
                 {
-                    double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Core.SessionTimeStamp);
+                    double sessionTimeSec = (Util.Timestamp(Time.frameCount) - Cognitive3D_Manager.SessionTimeStamp);
                     if ((int)sessionTimeSec != lastSecondTime)
                     {
                         sb.Length = 0;
@@ -55,7 +54,7 @@ namespace Cognitive3D
                     }
                 }
 
-                int currentBatchStorage = Core.GetLocalStorageBatchCount();
+                int currentBatchStorage = Cognitive3D_Manager.GetLocalStorageBatchCount();
                 if (currentBatchStorage != lastBatchStorage)
                 {
                     OfflineBatches.text = (currentBatchStorage / 2).ToString();
@@ -65,8 +64,8 @@ namespace Cognitive3D
 
             private void OnDestroy()
             {
-                Core.InitEvent -= Core_InitEvent;
-                Core.LevelLoadedEvent -= Core_LevelLoadedEvent;
+                Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
+                Cognitive3D_Manager.OnLevelLoaded -= Core_LevelLoadedEvent;
             }
         }
     }

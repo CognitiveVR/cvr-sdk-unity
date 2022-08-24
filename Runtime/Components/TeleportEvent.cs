@@ -24,11 +24,10 @@ namespace Cognitive3D.Components
 
         Vector3 lastRootPosition;
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
+            base.Cognitive3D_Init();
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
 
@@ -52,7 +51,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

@@ -61,7 +61,7 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Core.SDK_VERSION + ")", "steptitle");
+            GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
@@ -1468,7 +1468,7 @@ namespace Cognitive3D
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
                 string objPath = EditorCore.GetSubDirectoryPath(fullName);
-                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Core.SDK_VERSION + "\"}";
+                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                 DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");

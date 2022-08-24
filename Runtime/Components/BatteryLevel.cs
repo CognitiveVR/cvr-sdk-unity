@@ -21,12 +21,11 @@ namespace Cognitive3D.Components
 #if !C3D_OCULUS
         float batteryLevel; //0-100 battery level
 #endif
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
             SendBatteryLevel();
-            Core.QuitEvent += Cognitive3D_Manager_OnQuit;
+            Cognitive3D_Manager.OnQuit += Cognitive3D_Manager_OnQuit;
         }
 
         void Cognitive3D_Manager_OnQuit()
@@ -123,7 +122,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Core.QuitEvent -= Cognitive3D_Manager_OnQuit;
+            Cognitive3D_Manager.OnQuit -= Cognitive3D_Manager_OnQuit;
         }
     }
 }

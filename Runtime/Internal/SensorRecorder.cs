@@ -53,14 +53,14 @@ namespace Cognitive3D
         //called each time a session starts
         internal static void Initialize()
         {
-            Core.OnPostSessionEnd += Core_OnPostSessionEnd;
-            Core.OnSendData -= Core_OnSendData;
-            Core.OnSendData += Core_OnSendData;
+            Cognitive3D_Manager.OnPostSessionEnd += Core_OnPostSessionEnd;
+            Cognitive3D_Manager.OnSendData -= Core_OnSendData;
+            Cognitive3D_Manager.OnSendData += Core_OnSendData;
             nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
             if (automaticTimerActive == false)
             {
                 automaticTimerActive = true;
-                Core.NetworkManager.StartCoroutine(AutomaticSendTimer());
+                Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
             }
         }
 
@@ -87,7 +87,7 @@ namespace Cognitive3D
         static float nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
-            while (Core.IsInitialized)
+            while (Cognitive3D_Manager.IsInitialized)
             {
                 while (nextSendTime > Time.realtimeSinceStartup)
                 {
@@ -95,7 +95,7 @@ namespace Cognitive3D
                 }
                 //try to send!
                 nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
-                if (!Core.IsInitialized)
+                if (!Cognitive3D_Manager.IsInitialized)
                 {
                     if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send sensors");
@@ -106,12 +106,12 @@ namespace Cognitive3D
 
         public static void RecordDataPoint(string category, float value)
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -145,12 +145,12 @@ namespace Cognitive3D
         ///doubles are recorded raw, but cast to float for Active Session View
         public static void RecordDataPoint(string category, double value)
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -182,12 +182,12 @@ namespace Cognitive3D
 
         public static void RecordDataPoint(string category, float value, double unixTimestamp)
         {
-            if (Core.IsInitialized == false)
+            if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
                 return;
             }
-            if (Core.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -219,30 +219,29 @@ namespace Cognitive3D
 
         static void TrySendData()
         {
-            if (!Core.IsInitialized) { return; }
-            bool withinMinTimer = lastSendTime + Cognitive3D_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
-            bool withinExtremeBatchSize = currentSensorSnapshots < Cognitive3D_Preferences.Instance.SensorExtremeSnapshotCount;
+            //if (!Core.IsInitialized) { return; }
+            //bool withinMinTimer = lastSendTime + Cognitive3D_Preferences.Instance.SensorSnapshotMinTimer > Time.realtimeSinceStartup;
+            //bool withinExtremeBatchSize = currentSensorSnapshots < Cognitive3D_Preferences.Instance.SensorExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
-            if (withinMinTimer && withinExtremeBatchSize)
+            if (currentSensorSnapshots > Cognitive3D_Preferences.Instance.SensorSnapshotCount)
             {
-                return;
-            }
-            Core_OnSendData(false);
+                Core_OnSendData(false);
+            }            
         }
 
         public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
         public static event onNewSensorRecorded OnNewSensorRecorded;
 
         //happens after the network has sent the request, before any response
-        public static event Core.onDataSend OnSensorSend;
+        public static event Cognitive3D_Manager.onSendData OnSensorSend;
 
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)
         {
             if (CachedSnapshots.Keys.Count <= 0) { return; }
 
-            if (Core.TrackingScene == null)
+            if (Cognitive3D_Manager.TrackingScene == null)
             {
                 Cognitive3D.Util.logDebug("Sensor.SendData could not find scene settings for scene! do not upload sensors to sceneexplorer");
                 foreach(var k in CachedSnapshots)
@@ -253,7 +252,7 @@ namespace Cognitive3D
                 return;
             }
 
-            if (!Core.IsInitialized)
+            if (!Cognitive3D_Manager.IsInitialized)
             {
                 return;
             }
@@ -265,18 +264,18 @@ namespace Cognitive3D
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
-            JsonUtil.SetString("name", Core.DeviceId, sb);
+            JsonUtil.SetString("name", Cognitive3D_Manager.DeviceId, sb);
             sb.Append(",");
 
-            if (!string.IsNullOrEmpty(Core.LobbyId))
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", Core.LobbyId, sb);
+                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, sb);
                 sb.Append(",");
             }
 
-            JsonUtil.SetString("sessionid", Core.SessionID, sb);
+            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, sb);
             sb.Append(",");
-            JsonUtil.SetInt("timestamp", (int)Core.SessionTimeStamp, sb);
+            JsonUtil.SetInt("timestamp", (int)Cognitive3D_Manager.SessionTimeStamp, sb);
             sb.Append(",");
             JsonUtil.SetInt("part", jsonPart, sb);
             sb.Append(",");
@@ -325,27 +324,27 @@ namespace Cognitive3D
             }
             currentSensorSnapshots = 0;
 
-            string url = CognitiveStatics.POSTSENSORDATA(Core.TrackingSceneId, Core.TrackingSceneVersionNumber);
+            string url = CognitiveStatics.POSTSENSORDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
             string content = sb.ToString();
 
             if (copyDataToCache)
             {
-                if (Core.NetworkManager.runtimeCache != null && Core.NetworkManager.runtimeCache.CanWrite(url, content))
+                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, content))
                 {
-                    Core.NetworkManager.runtimeCache.WriteContent(url, content);
+                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, content);
                 }
             }
 
-            Core.NetworkManager.Post(url, content);
+            Cognitive3D_Manager.NetworkManager.Post(url, content);
             if (OnSensorSend != null)
             {
-                OnSensorSend.Invoke();
+                OnSensorSend.Invoke(copyDataToCache);
             }
         }
 
         private static void Core_OnPostSessionEnd()
         {
-            Core.OnPostSessionEnd -= Core_OnPostSessionEnd;
+            Cognitive3D_Manager.OnPostSessionEnd -= Core_OnPostSessionEnd;
             LastSensorValues.Clear();
             sensorData.Clear();
             CachedSnapshots.Clear();

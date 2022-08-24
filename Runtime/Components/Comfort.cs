@@ -26,11 +26,10 @@ namespace Cognitive3D.Components
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            Core.UpdateEvent += Cognitive3D_Manager_OnUpdate;
+            base.Cognitive3D_Init();
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
             if (GameplayReferences.HMD != null)
                 lastRotation = GameplayReferences.HMD.rotation;
@@ -123,7 +122,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Core.UpdateEvent -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
         }
     }
 }

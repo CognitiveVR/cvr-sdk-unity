@@ -90,7 +90,7 @@ namespace Cognitive3D.ActiveSession
             
             LocalTimeText.text = dtDateTime.ToLocalTime().ToString("HH:mm:ss");
 
-            double sessionTimeSec = (time - Cognitive3D.Core.SessionTimeStamp);
+            double sessionTimeSec = (time - Cognitive3D_Manager.SessionTimeStamp);
             System.TimeSpan ts = new System.TimeSpan(0, 0, (int)sessionTimeSec);
             string prettySessionTime = ts.Hours.ToString("00") + ":" + ts.Minutes.ToString("00") + ":" + ts.Seconds.ToString("00");
 
