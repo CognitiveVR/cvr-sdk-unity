@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Cognitive3D;
 using System.Text;
-using Cognitive3D.External;
 
 //TODO merge record sensor overrides together
 
@@ -36,10 +35,10 @@ namespace Cognitive3D
 
         static Dictionary<string, SensorData> sensorData = new Dictionary<string, SensorData>();
 
-        private static int jsonPart = 1;
-        private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
-        private static int currentSensorSnapshots = 0;
-        public static int CachedSensors { get { return currentSensorSnapshots; } }
+        //private static int jsonPart = 1;
+        //private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
+        //private static int currentSensorSnapshots = 0;
+        //public static int CachedSensors { get { return currentSensorSnapshots; } }
 
         //holds the latest value of each sensor type. can be appended to custom events
         //TODO merge LastSensorValues into sensorData collection
@@ -77,7 +76,7 @@ namespace Cognitive3D
                 return;
             }
             sensorData.Add(sensorName, new SensorData(sensorName, HzRate));
-            CachedSnapshots.Add(sensorName, new List<string>(512));
+            //CachedSnapshots.Add(sensorName, new List<string>(512));
             LastSensorValues.Add(sensorName, initialValue);
             if (OnNewSensorRecorded != null)
                 OnNewSensorRecorded(sensorName, initialValue);
@@ -129,17 +128,19 @@ namespace Cognitive3D
 
             //update internal values and record data
             sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
-            CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            //CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             LastSensorValues[category] = value;
+
+            CoreInterface.RecordSensor(category, value, Util.Timestamp(Time.frameCount));
 
             if (OnNewSensorRecorded != null)
                 OnNewSensorRecorded(category, value);
 
-            currentSensorSnapshots++;
-            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
-            {
-                TrySendData();
-            }
+            //currentSensorSnapshots++;
+            //if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
+            //{
+                //TrySendData();
+            //}
         }
 
         ///doubles are recorded raw, but cast to float for Active Session View
@@ -168,16 +169,19 @@ namespace Cognitive3D
 
             //update internal values and record data
             sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
-            CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
+            //CachedSnapshots[category].Add(GetSensorDataToString(Util.Timestamp(Time.frameCount), value));
             LastSensorValues[category] = (float)value;
+
+            CoreInterface.RecordSensor(category, (float)value, Util.Timestamp(Time.frameCount));
+
             if (OnNewSensorRecorded != null)
                 OnNewSensorRecorded(category, (float)value);
 
-            currentSensorSnapshots++;
-            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
-            {
-                TrySendData();
-            }
+            //currentSensorSnapshots++;
+            //if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
+            //{
+                //TrySendData();
+            //}
         }
 
         public static void RecordDataPoint(string category, float value, double unixTimestamp)
@@ -205,16 +209,19 @@ namespace Cognitive3D
 
             //update internal values and record data
             sensorData[category].NextRecordTime = (float)(unixTimestamp + sensorData[category].UpdateInterval);
-            CachedSnapshots[category].Add(GetSensorDataToString(unixTimestamp, value));
+            //CachedSnapshots[category].Add(GetSensorDataToString(unixTimestamp, value));
             LastSensorValues[category] = value;
+
+            CoreInterface.RecordSensor(category, (float)value, unixTimestamp);
+
             if (OnNewSensorRecorded != null)
                 OnNewSensorRecorded(category, value);
 
-            currentSensorSnapshots++;
-            if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
-            {
-                TrySendData();
-            }
+            //currentSensorSnapshots++;
+            //if (currentSensorSnapshots >= Cognitive3D_Preferences.Instance.SensorSnapshotCount)
+            //{
+            //    TrySendData();
+            //}
         }
 
         static void TrySendData()
@@ -224,10 +231,10 @@ namespace Cognitive3D
             //bool withinExtremeBatchSize = currentSensorSnapshots < Cognitive3D_Preferences.Instance.SensorExtremeSnapshotCount;
 
             //within last send interval and less than extreme count
-            if (currentSensorSnapshots > Cognitive3D_Preferences.Instance.SensorSnapshotCount)
-            {
-                Core_OnSendData(false);
-            }            
+            //if (currentSensorSnapshots > Cognitive3D_Preferences.Instance.SensorSnapshotCount)
+            //{
+            //    Core_OnSendData(false);
+            //}            
         }
 
         public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
@@ -239,6 +246,7 @@ namespace Cognitive3D
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)
         {
+            /*
             if (CachedSnapshots.Keys.Count <= 0) { return; }
 
             if (Cognitive3D_Manager.TrackingScene == null)
@@ -261,8 +269,11 @@ namespace Cognitive3D
             nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
             lastSendTime = Time.realtimeSinceStartup;
 
+            //flush data from serialization
 
-            StringBuilder sb = new StringBuilder(1024);
+*/
+
+            /*StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
             JsonUtil.SetString("name", Cognitive3D_Manager.DeviceId, sb);
             sb.Append(",");
@@ -322,24 +333,24 @@ namespace Cognitive3D
             {
                 k.Value.Clear();
             }
-            currentSensorSnapshots = 0;
+            currentSensorSnapshots = 0;*/
 
-            string url = CognitiveStatics.POSTSENSORDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
-            string content = sb.ToString();
-
-            if (copyDataToCache)
-            {
-                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, content))
-                {
-                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, content);
-                }
-            }
-
-            Cognitive3D_Manager.NetworkManager.Post(url, content);
-            if (OnSensorSend != null)
-            {
-                OnSensorSend.Invoke(copyDataToCache);
-            }
+            //string url = CognitiveStatics.POSTSENSORDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+            //string content = sb.ToString();
+            //
+            //if (copyDataToCache)
+            //{
+            //    if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, content))
+            //    {
+            //        Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, content);
+            //    }
+            //}
+            //
+            //Cognitive3D_Manager.NetworkManager.Post(url, content);
+            //if (OnSensorSend != null)
+            //{
+            //    OnSensorSend.Invoke(copyDataToCache);
+            //}
         }
 
         private static void Core_OnPostSessionEnd()
@@ -347,32 +358,9 @@ namespace Cognitive3D
             Cognitive3D_Manager.OnPostSessionEnd -= Core_OnPostSessionEnd;
             LastSensorValues.Clear();
             sensorData.Clear();
-            CachedSnapshots.Clear();
-            jsonPart = 1;
+            //CachedSnapshots.Clear();
+            //jsonPart = 1;
             lastSendTime = -60;
         }
-
-        #region json
-
-        static StringBuilder sbdatapoint = new StringBuilder(256);
-        //put this into the list of saved sensor data based on the name of the sensor
-        private static string GetSensorDataToString(double timestamp, double sensorvalue)
-        {
-            //TODO test if string concatenation is just faster/less garbage
-
-            sbdatapoint.Length = 0;
-
-            sbdatapoint.Append("[");
-            sbdatapoint.ConcatDouble(timestamp);
-            //sbdatapoint.Append(timestamp);
-            sbdatapoint.Append(",");
-            sbdatapoint.ConcatDouble(sensorvalue);
-            //sbdatapoint.Append(sensorvalue);
-            sbdatapoint.Append("]");
-
-            return sbdatapoint.ToString();
-        }
-
-        #endregion
     }
 }

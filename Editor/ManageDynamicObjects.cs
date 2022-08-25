@@ -1019,7 +1019,7 @@ namespace Cognitive3D
         if (responsecode == 200)
         {
             //BuildManifest(getRequest.text);
-            var allEntries = JsonUtil.GetJsonArray<AggregationManifest.AggregationManifestEntry>(text);
+            var allEntries = Util.GetJsonArray<AggregationManifest.AggregationManifestEntry>(text);
 
             Debug.Log("Number of Dynamic Objects in current Manifest: " + allEntries.Length);
 

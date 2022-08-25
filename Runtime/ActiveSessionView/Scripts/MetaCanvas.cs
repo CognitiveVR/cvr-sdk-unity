@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Cognitive3D.External;
 
 namespace Cognitive3D
 {

@@ -19,7 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace Cognitive3D.External
+namespace Cognitive3D.Serialization
 {
 	public static partial class StringBuilderExtensions
 	{

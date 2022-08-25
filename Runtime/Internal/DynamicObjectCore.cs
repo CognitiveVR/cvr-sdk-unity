@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
 using System;
-using Cognitive3D.External;
 using System.Threading;
 
 //deals with formatting dynamic object snapshots and manifest entries to json
@@ -31,7 +30,8 @@ namespace Cognitive3D
 
         internal static void Initialize()
         {
-            Cognitive3D_Manager.NetworkManager.StartCoroutine(CheckWriteJson());
+            //TODO start checkwritejson loop
+            //Cognitive3D_Manager.NetworkManager.StartCoroutine(CheckWriteJson());
             for (int i = 0; i < Cognitive3D_Preferences.S_DynamicExtremeSnapshotCount; i++)
             {
                 DynamicObjectSnapshot.SnapshotPool.Enqueue(new DynamicObjectSnapshot());
@@ -258,6 +258,8 @@ namespace Cognitive3D
 
         internal static void FlushData(bool copyDataToCache)
         {
+            /*
+
             if (queuedManifest.Count == 0 && queuedSnapshots.Count == 0) { return; }
             //CopyDataToCache = copyDataToCache;
             //ReadyToWriteJson = true;
@@ -270,9 +272,10 @@ namespace Cognitive3D
 
             while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
             {
-                WriteJsonImmediate(copyDataToCache);
+                //WriteJsonImmediate(copyDataToCache);
             }
             tempsnapshots = 0;
+            */
         }
 
         //this limits the amount of data that can be sent in a single batch
@@ -283,7 +286,7 @@ namespace Cognitive3D
         static bool InterruptThead = false;
 
         //loops and calls 'writeJson' until
-        static IEnumerator CheckWriteJson()
+        /*static IEnumerator CheckWriteJson()
         {
             while(true)
             {
@@ -436,7 +439,7 @@ namespace Cognitive3D
                             {
                                 Core.NetworkManager.runtimeCache.WriteContent(url, s);
                             }
-                        }*/
+                        }*//*
 
                         Cognitive3D_Manager.NetworkManager.Post(url, s);
                         DynamicManager.DynamicObjectSendEvent();
@@ -599,5 +602,6 @@ namespace Cognitive3D
 
             builder.Append("}"); //close object snapshot
         }
+        */
     }
 }
