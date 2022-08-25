@@ -248,7 +248,7 @@ namespace Cognitive3D
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
             }    
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
             var ray = new Ray();
             //improvement? - if using callback, listen and use last valid data instead of calling SRanipal_Eye_API.GetEyeData
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
@@ -325,7 +325,7 @@ namespace Cognitive3D
                 var gazeray = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay;
                 screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(gazeray.Origin + GameplayReferences.HMD.TransformDirection(gazeray.Direction) * 1000);                
             }
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
             var leftv2 = Vector2.zero;
             var rightv2 = Vector2.zero;
 

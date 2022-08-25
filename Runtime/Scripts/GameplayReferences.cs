@@ -12,7 +12,7 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_TOBIIVR || C3D_AH || C3D_FOVE || C3D_PUPIL || C3D_VIVEPROEYE || C3D_VARJO || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
+#if C3D_TOBIIVR || C3D_AH || C3D_FOVE || C3D_PUPIL || C3D_SRANIPAL || C3D_VARJO || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
                 return true;
 #elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;

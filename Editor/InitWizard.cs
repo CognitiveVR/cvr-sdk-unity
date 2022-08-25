@@ -214,8 +214,8 @@ namespace Cognitive3D
 #if C3D_AH
         selectedsdks.Add("C3D_AH");
 #endif
-#if C3D_VIVEPROEYE
-        selectedsdks.Add("C3D_VIVEPROEYE");
+#if C3D_SRANIPAL
+        selectedsdks.Add("C3D_SRANIPAL");
 #endif
 #if C3D_VIVEWAVE
         selectedsdks.Add("C3D_VIVEWAVE");
@@ -264,13 +264,39 @@ namespace Cognitive3D
         Vector2 sdkScrollPos;
         List<string> selectedsdks = new List<string>();
 
+        class SDKDefine
+        {
+            public string Name;
+            public string Define;
+            public string Tooltip;
+            public SDKDefine(string name, string define, string tooltip="")
+            {
+                Name = name;
+                Define = define;
+                Tooltip = tooltip;
+            }
+        }
+
+        List<SDKDefine> SDKNamesDefines = new List<SDKDefine>()
+        {
+            new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2" ),
+            new SDKDefine("Oculus Integration 32.0","C3D_OCULUS" ),
+            new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT" ),
+            new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Vive Pro Eye Eyetracking" ), //previously C3D_VIVEPROEYE
+            new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR"),
+            new SDKDefine("Vive Wave 3.0.1","C3D_VIVEWAVE" ),
+            new SDKDefine("Pico Unity XR Platform 1.2.3","C3D_PICOXR" ),
+            new SDKDefine("Windows Mixed Reality","C3D_WINDOWSMR" ), //legacy
+            new SDKDefine("Varjo VR","C3D_VARJOVR" ), //legacy
+            new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR" ), //legacy
+        };
+
         void SelectSDKUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 3 - SELECT SDK", "steptitle");
+            //additional SDK features
 
-
-
-            GUI.Label(new Rect(30, 45, 440, 440), "Please select the Runtime API you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
+            GUI.Label(steptitlerect, "STEP 3 - OPTIONAL SDK SUPPORT", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Please select any additional SDKs you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
 
             GUIContent help = new GUIContent(EditorCore.Info);
             help.tooltip = "docs.cognitive3d.com/unity/runtimes";
@@ -279,54 +305,44 @@ namespace Cognitive3D
                 Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
             }
 
-            List<string> sdknames = new List<string>() { "OpenXR", "Windows Mixed Reality", "SteamVR 2.7.3", "Oculus Integration 32.0", "HP Omnicept Runtime 1.12", "SRanipal Runtime", "Varjo XR 3.0.0", "None", "SteamVR SDK 1.2", "Pupil Labs SDK 1.4", "Vive Wave 3.0.1", "PicoVR Unity SDK 2.8.12", "Pico Unity XR Platform 1.2.3", "Tobii XR 1.8.0.168", "Fove SDK 3.1.2", "ARCore SDK (Android)", "ARKit SDK (iOS)", "Hololens SDK", "Neurable 1.4", "SnapdragonVR 3.0.1 SDK" };
-            List<string> sdkdefines = new List<string>() { "C3D_XR", "C3D_WINDOWSMR", "C3D_STEAMVR2", "C3D_OCULUS", "C3D_OMNICEPT", "C3D_VIVEPROEYE", "C3D_VARJO", "C3D_DEFAULT", "C3D_STEAMVR", "C3D_PUPIL", "C3D_VIVEWAVE", "C3D_PICOVR", "C3D_PICOXR", "C3D_TOBIIVR", "C3D_FOVE", "C3D_ARCORE", "C3D_ARKIT", "C3D_HOLOLENS", "C3D_NEURABLE", "C3D_SNAPDRAGON" };
+            Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 32);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 350), sdkScrollPos, innerScrollSize, false, false);
 
-            Rect innerScrollSize = new Rect(30, 0, 420, sdknames.Count * 32);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 340), sdkScrollPos, innerScrollSize, false, true);
-
-            for (int i = 0; i < sdknames.Count; i++)
+            for (int i = 0; i < SDKNamesDefines.Count; i++)
             {
-                bool selected = selectedsdks.Contains(sdkdefines[i]);
-                GUIContent content = new GUIContent(sdknames[i]);
-                float separatorOne = 0;
-                float separatorTwo = 0;
-                if (i > 3)
-                {
-                    separatorOne = 32;
-                }
+                bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
+                GUIContent content = new GUIContent(SDKNamesDefines[i].Name);
+                float separator = 0;
                 if (i > 6)
                 {
-                    separatorTwo = 32;
+                    separator = 32;
+                }
+                if (!string.IsNullOrEmpty(SDKNamesDefines[i].Tooltip))
+                {
+                    content.tooltip = SDKNamesDefines[i].Tooltip;
                 }
 
-                //if (sdkdefines[i] == "C3D_XR") content.tooltip = "requires 2019.4+\nrequires XR Legacy Input Helpers";
-                if (GUI.Button(new Rect(30, i * 32 + separatorOne + separatorTwo, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+                if (GUI.Button(new Rect(30, i * 32+ separator, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
                 {
                     if (selected)
                     {
-                        selectedsdks.Remove(sdkdefines[i]);
+                        selectedsdks.Remove(SDKNamesDefines[i].Define);
                     }
                     else
                     {
                         if (Event.current.shift) //add
                         {
-                            selectedsdks.Add(sdkdefines[i]);
+                            selectedsdks.Add(SDKNamesDefines[i].Define);
                         }
                         else //set
                         {
                             selectedsdks.Clear();
-                            selectedsdks.Add(sdkdefines[i]);
+                            selectedsdks.Add(SDKNamesDefines[i].Define);
                         }
                     }
                 }
-                GUI.Label(new Rect(420, i * 32 + separatorOne + separatorTwo, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-                if (i == 4)
-                {
-                    int kerning = 4;
-                    GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Eye Tracking", "boldlabel");
-                }
-                if (i == 8)
+                GUI.Label(new Rect(420, i * 32 + separator, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+                if (i == 7)
                 {
                     int kerning = 4;
                     GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
@@ -1646,7 +1662,7 @@ namespace Cognitive3D
                     onclick += () =>
                     {
                         EditorCore.SetPlayerDefine(selectedsdks);
-                        if (selectedsdks.Contains("C3D_TOBIIVR") || selectedsdks.Contains("C3D_NEURABLE") || selectedsdks.Contains("C3D_FOVE") || selectedsdks.Contains("C3D_PUPIL") || selectedsdks.Contains("C3D_AH") || selectedsdks.Contains("C3D_SNAPDRAGON") || selectedsdks.Contains("C3D_VIVEPROEYE"))
+                        if (selectedsdks.Contains("C3D_TOBIIVR") || selectedsdks.Contains("C3D_NEURABLE") || selectedsdks.Contains("C3D_FOVE") || selectedsdks.Contains("C3D_PUPIL") || selectedsdks.Contains("C3D_AH") || selectedsdks.Contains("C3D_SNAPDRAGON") || selectedsdks.Contains("C3D_SRANIPAL"))
                         {
                             //eye tracking
                             Cognitive3D_Preferences.Instance.GazeType = GazeType.Physics;

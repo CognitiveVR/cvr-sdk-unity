@@ -99,7 +99,7 @@ namespace Cognitive3D.ActiveSession
                 yield return new WaitForSeconds(2);
                 WarningText.enabled = false;
             }
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
             bool needCalibration = false;
             int output = ViveSR.anipal.Eye.SRanipal_Eye_API.IsUserNeedCalibration(ref needCalibration);
             ViveSR.Error error = (ViveSR.Error)output;
