@@ -3,15 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using Cognitive3D;
 using System.Text;
-using Cognitive3D.External;
 
 namespace Cognitive3D
 {
     public static class FixationCore
     {
-        private static int jsonPart = 1;
-        static List<Fixation> Fixations = new List<Fixation>();
-        public static int CachedFixations { get { return Fixations.Count; } }
+        //private static int jsonPart = 1;
+        //static List<Fixation> Fixations = new List<Fixation>();
+        //public static int CachedFixations { get { return Fixations.Count; } }
 
         static FixationCore()
         {
@@ -46,32 +45,32 @@ namespace Cognitive3D
             }
         }
 
-        static void TrySendData()
-        {
-            if (Fixations.Count > Cognitive3D_Preferences.Instance.FixationSnapshotCount)
-            {
-                Core_OnSendData(false);
-            }
-        }
+        //static void TrySendData()
+        //{
+        //    if (Fixations.Count > Cognitive3D_Preferences.Instance.FixationSnapshotCount)
+        //    {
+        //        Core_OnSendData(false);
+        //    }
+        //}
 
-        public static void RecordFixation(Fixation newFixation)
-        {
-            if (Cognitive3D_Manager.IsInitialized == false)
-            {
-                Cognitive3D.Util.logWarning("Fixation cannot be sent before Session Begin!");
-                return;
-            }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Fixation recorded without SceneId"); return; }
-
-            if (newFixation.IsLocal)
-            {
-                //apply scale to fixation
-                //newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
-            }
-			
-            Fixation f = new Fixation(newFixation);
-            Fixations.Add(f);
-        }
+        //public static void RecordFixation(Fixation newFixation)
+        //{
+        //    if (Cognitive3D_Manager.IsInitialized == false)
+        //    {
+        //        Cognitive3D.Util.logWarning("Fixation cannot be sent before Session Begin!");
+        //        return;
+        //    }
+        //    if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Fixation recorded without SceneId"); return; }
+        //
+        //    if (newFixation.IsLocal)
+        //    {
+        //        //apply scale to fixation
+        //        //newFixation.LocalPosition /= newFixation.DynamicMatrix.GetColumn(0).magnitude;
+        //    }
+		//	
+        //    //Fixation f = new Fixation(newFixation);
+        //    //Fixations.Add(f);
+        //}
 
         public delegate void onFixationRecord(Fixation fixation);
         public static event onFixationRecord OnFixationRecord;
@@ -87,6 +86,7 @@ namespace Cognitive3D
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)
         {
+            /*
             if (Fixations.Count <= 0) { Cognitive3D.Util.logDebug("Fixations.SendData found no data"); return; }
 
             //TODO should hold until extreme batch size reached
@@ -161,7 +161,7 @@ namespace Cognitive3D
             if (OnFixationSend != null)
             {
                 OnFixationSend.Invoke(copyDataToCache);
-            }
+            }*/
         }
     }
 }

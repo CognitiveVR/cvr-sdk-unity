@@ -282,8 +282,9 @@ namespace Cognitive3D
             }
 
             IsInitialized = true;
-            if (Cognitive3D_Preferences.Instance.EnableGaze == false)
-                GazeCore.SendSessionProperties(false);
+            //if (Cognitive3D_Preferences.Instance.EnableGaze == false)
+                //GazeCore.SendSessionProperties(false);
+                //TODO support skipping spatial gaze data but still recording session properties
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;

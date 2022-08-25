@@ -875,7 +875,7 @@ namespace Cognitive3D
             return false;
         }
 #else
-        const int CachedEyeCaptures = 120; //UNKNOWN
+        const int CachedEyeCaptures = 120;
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
         public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(GameplayReferences.HMD.position,GameplayReferences.HMD.forward); return true;}
 
@@ -1031,11 +1031,17 @@ namespace Cognitive3D
 
         void RecordEyeCapture()
         {
+            //this should just raycast + bring all the necessary eye data together and pass it into the CoreInterface
+
+
+
+
+
             //check for new fixation
             //else check for ending fixation
             //update eyecapture state
 
-            if (!IsFixating)
+            /*if (!IsFixating)
             {
                 //check if this is the start of a new fixation. set this and all next captures to this
                 //the 'current' fixation we're checking is 1 second behind recording eye captures
@@ -1105,7 +1111,7 @@ namespace Cognitive3D
                 WasOutOfDispersionLastFrame = IsOutOfRange;
             }
 
-            WasCaptureDiscardedLastFrame = EyeCaptures[index].Discard;
+            WasCaptureDiscardedLastFrame = EyeCaptures[index].Discard;*/
             
 
             //reset all values
@@ -1201,6 +1207,11 @@ namespace Cognitive3D
             {
                 SaccadeScreenPoints.RemoveAt(0);
             }
+
+            //submit eye data here
+            CoreInterface.RecordEyeData(EyeCaptures[index]);
+
+
             index = (index + 1) % CachedEyeCaptures;
         }
 
@@ -1284,7 +1295,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="capture"></param>
         /// <returns></returns>
-        bool IsFixatingOffTransform(EyeCapture capture)
+        /*bool IsFixatingOffTransform(EyeCapture capture)
         {
             if (ActiveFixation.IsLocal)
             {
@@ -1302,7 +1313,7 @@ namespace Cognitive3D
                 return true;
             }
             return false;
-        }
+        }*/
 
         /// <summary>
         /// returns true if gaze is NOT within active fixation
@@ -1311,7 +1322,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="capture"></param>
         /// <returns></returns>
-        bool IsGazeOutOfRange(EyeCapture capture)
+        /*bool IsGazeOutOfRange(EyeCapture capture)
         {
             if (!IsFixating) { return true; }
 
@@ -1455,14 +1466,14 @@ namespace Cognitive3D
                 ActiveFixation.LastInRange = capture.Time;
             }
             return false;
-        }
+        }*/
 
         /// <summary>
         /// returns true if the fixation should be ended. copies fixation for visualization
         /// </summary>
         /// <param name="testFixation"></param>
         /// <returns></returns>
-        bool CheckEndFixation(Fixation testFixation)
+        /*bool CheckEndFixation(Fixation testFixation)
         {
             //check for blinking too long
             if (EyeCaptures[index].Time > testFixation.LastEyesOpen + MaxBlinkMs)
@@ -1510,14 +1521,14 @@ namespace Cognitive3D
             }
 
             return false;
-        }
+        }*/
 
         /// <summary>
         /// returns true if 'active fixation' is actually active again
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        bool TryBeginLocalFixation(int index)
+        /*bool TryBeginLocalFixation(int index)
         {
             int samples = 0;
             List<string> hitDynamicIds = new List<string>();
@@ -1843,6 +1854,6 @@ namespace Cognitive3D
                 //something out of range from average world pos
                 return false;
             }
-        }
+        }*/
     }
 }
