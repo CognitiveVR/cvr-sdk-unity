@@ -147,7 +147,7 @@ namespace Cognitive3D
             newManager.AddComponent<Cognitive3D.Components.RoomSize>();
             newManager.AddComponent<Cognitive3D.Components.ArmLength>();
 
-#if C3D_VIVEPROEYE
+#if C3D_SRANIPAL
             var framework = GameObject.FindObjectOfType<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
             if (framework == null)
                 newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();

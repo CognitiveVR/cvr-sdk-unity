@@ -241,7 +241,7 @@ namespace Cognitive3D
             }
             return false;
         }
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
         ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;        
         bool useDataQueue1;
         bool useDataQueue2;
@@ -987,7 +987,7 @@ namespace Cognitive3D
             }
 #if C3D_FOVE
             fovebase = GameplayReferences.FoveInstance;
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
             SetupCallbacks();
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
             epochStart = span.TotalSeconds;

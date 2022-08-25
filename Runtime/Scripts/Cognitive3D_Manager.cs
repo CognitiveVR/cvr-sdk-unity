@@ -544,7 +544,7 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
             SetSessionProperty("c3d.app.sdktype", "Adhawk");
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");

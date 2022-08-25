@@ -214,7 +214,7 @@ namespace Cognitive3D
             if (UseRoomScale == 1)
             {
                 //TODO editorcore.roomscale
-#if C3D_TOBIIVR || C3D_NEURABLE || C3D_PUPIL || C3D_AH || C3D_SNAPDRAGON || C3D_VIVEPROEYE
+#if C3D_TOBIIVR || C3D_NEURABLE || C3D_PUPIL || C3D_AH || C3D_SNAPDRAGON || C3D_SRANIPAL
             GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
             GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
 #elif C3D_STEAMVR || C3D_STEAMVR2

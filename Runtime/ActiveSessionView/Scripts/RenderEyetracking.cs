@@ -490,7 +490,7 @@ namespace Cognitive3D.ActiveSession
         void MatchTargetCamera()
         {
             //prioritiz checking for xr - this is a specific backend as opposed to sranipal, steamvr2, etc
-            //BUT reticle and fixations don't match the projection without using C3D_VIVEPROEYE and OpenVR XR 1.1.4. what is happening?
+            //BUT reticle and fixations don't match the projection without using C3D_SRANIPAL and OpenVR XR 1.1.4. what is happening?
             //TODO make a combination chart of backends, sdks and headsets for testing
             //#if C3D_XR
             //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;

@@ -94,7 +94,7 @@ namespace Cognitive3D
         {
             return SvrManager.Instance.EyeDirection;
         }
-#elif C3D_VIVEPROEYE
+#elif C3D_SRANIPAL
 
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion version;
