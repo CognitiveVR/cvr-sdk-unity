@@ -291,15 +291,15 @@ namespace Cognitive3D
 
         internal static void Initialize()
         {
-            Cognitive3D_Manager.OnSendData -= Core_OnSendData;
-            Cognitive3D_Manager.OnSendData += Core_OnSendData;
-            autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
-
-            if (automaticTimerActive == false)
-            {
-                automaticTimerActive = true;
-                Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
-            }
+            //Cognitive3D_Manager.OnSendData -= Core_OnSendData;
+            //Cognitive3D_Manager.OnSendData += Core_OnSendData;
+            //autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
+            //
+            //if (automaticTimerActive == false)
+            //{
+            //    automaticTimerActive = true;
+            //    Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            //}
         }
 
         private static void Core_OnSendData(bool copyDataToCache)
@@ -309,34 +309,34 @@ namespace Cognitive3D
 
 
         //used for unique identifier for sceneexplorer file names
-        private static int partCount = 1;
+        //private static int partCount = 1;
 
-        static int cachedEvents = 0;
-        public static int CachedEvents { get { return cachedEvents; } }
+        //static int cachedEvents = 0;
+        //public static int CachedEvents { get { return cachedEvents; } }
 
-        private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(512);
-        private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
+        //private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(512);
+        //private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
 
-        static bool automaticTimerActive;
-        static float autoTimer_nextSendTime = 0;
-        internal static IEnumerator AutomaticSendTimer()
-        {
-            while (true)
-            {
-                while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
-                {
-                    yield return null;
-                }
-                autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (Cognitive3D_Manager.IsInitialized)
-                {
-                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                        Util.logDevelopment("check to automatically send events");
-                    //TODO setup looping automatic send timers
-                    //SendTransactions(false);
-                }
-            }
-        }
+        //static bool automaticTimerActive;
+        //static float autoTimer_nextSendTime = 0;
+        //internal static IEnumerator AutomaticSendTimer()
+        //{
+        //    while (true)
+        //    {
+        //        while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
+        //        {
+        //            yield return null;
+        //        }
+        //        autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
+        //        if (Cognitive3D_Manager.IsInitialized)
+        //        {
+        //            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+        //                Util.logDevelopment("check to automatically send events");
+        //            //TODO setup looping automatic send timers
+        //            //SendTransactions(false);
+        //        }
+        //    }
+        //}
 
         //checks for min send time and extreme batch size before calling send
         //static void TrySendTransactions()
@@ -485,6 +485,11 @@ namespace Cognitive3D
 
         //happens after the network has sent the request, before any response
         public static event Cognitive3D_Manager.onSendData OnCustomEventSend;
+        internal static void CustomEventSendEvent()
+        {
+            if (OnCustomEventSend != null)
+                OnCustomEventSend.Invoke(false);
+        }
 
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {

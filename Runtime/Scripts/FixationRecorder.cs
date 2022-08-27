@@ -985,6 +985,9 @@ namespace Cognitive3D
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
+
+            CoreInterface.FixationSettings(MaxBlinkMs, PreBlinkDiscardMs, BlinkEndWarmupMs, MinFixationMs, MaxConsecutiveDiscardMs, MaxFixationAngle, MaxConsecutiveOffDynamicMs, DynamicFixationSizeMultiplier, FocusSizeFromCenter, SaccadeFixationEndMs);
+
 #if C3D_FOVE
             fovebase = GameplayReferences.FoveInstance;
 #elif C3D_SRANIPAL

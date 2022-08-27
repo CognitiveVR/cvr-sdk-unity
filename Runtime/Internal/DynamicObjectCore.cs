@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Cognitive3D
 {
-    internal static class DynamicObjectCore
+    /*internal static class DynamicObjectCore
     {
         private static int FrameCount;
 
@@ -275,7 +275,7 @@ namespace Cognitive3D
                 //WriteJsonImmediate(copyDataToCache);
             }
             tempsnapshots = 0;
-            */
+            *//*
         }
 
         //this limits the amount of data that can be sent in a single batch
@@ -602,6 +602,6 @@ namespace Cognitive3D
 
             builder.Append("}"); //close object snapshot
         }
-        */
-    }
+        
+    }*/
 }

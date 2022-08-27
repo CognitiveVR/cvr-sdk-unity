@@ -53,14 +53,14 @@ namespace Cognitive3D
         internal static void Initialize()
         {
             Cognitive3D_Manager.OnPostSessionEnd += Core_OnPostSessionEnd;
-            Cognitive3D_Manager.OnSendData -= Core_OnSendData;
-            Cognitive3D_Manager.OnSendData += Core_OnSendData;
-            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
-            if (automaticTimerActive == false)
-            {
-                automaticTimerActive = true;
-                Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
-            }
+            //Cognitive3D_Manager.OnSendData -= Core_OnSendData;
+            //Cognitive3D_Manager.OnSendData += Core_OnSendData;
+            //nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.SensorSnapshotMaxTimer;
+            //if (automaticTimerActive == false)
+            //{
+            //    automaticTimerActive = true;
+            //    Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            //}
         }
 
         /// <summary>
@@ -242,6 +242,11 @@ namespace Cognitive3D
 
         //happens after the network has sent the request, before any response
         public static event Cognitive3D_Manager.onSendData OnSensorSend;
+        internal static void SensorSendEvent()
+        {
+            if (OnSensorSend != null)
+                OnSensorSend.Invoke(false);
+        }
 
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)

@@ -135,6 +135,8 @@ namespace Cognitive3D
         public int TransactionSnapshotMaxTimer = 10;
         public int FixationSnapshotMaxTimer = 10;
 
+        public int AutomaticSendTimer = 10;
+
 
 
         public bool SendDataOnQuit = true;
@@ -220,7 +222,7 @@ namespace Cognitive3D
             public string ScenePath = "";
             public long LastRevision; //utc timestamp on upload
             public int VersionNumber = 1; //post session data
-            public int VersionId; //attribution
+            public int VersionId; //attribution. exitpoll?
 
             public SceneSettings(string name, string path)
             {

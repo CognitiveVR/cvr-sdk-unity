@@ -180,7 +180,7 @@ namespace Cognitive3D
             return didhitdynamic;
         }
 
-        public void GetOptionalSnapshotData(ref Vector3 gpsloc, ref float compass, ref Vector3 floorPos)
+        public bool GetOptionalSnapshotData(ref Vector3 gpsloc, ref float compass, ref Vector3 floorPos)
         {
             if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
@@ -196,8 +196,10 @@ namespace Cognitive3D
                 if (Physics.Raycast(GameplayReferences.HMD.position, -cameraRoot.up, out floorhit))
                 {
                     floorPos = floorhit.point;
+                    return true;
                 }
             }
+            return false;
         }
 
 #if C3D_PUPIL

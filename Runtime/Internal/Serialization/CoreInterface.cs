@@ -34,6 +34,10 @@ namespace Cognitive3D
         {
             SharedCore.SetSessionProperty(propertyName, propertyValue);
         }
+        internal static void SetSessionPropertyIfEmpty(string propertyName, object propertyValue)
+        {
+            SharedCore.SetSessionPropertyIfEmpty(propertyName, propertyValue);
+        }
         internal static void SetLobby(string lobbyid)
         {
             SharedCore.SetLobbyId(lobbyid);
@@ -42,11 +46,6 @@ namespace Cognitive3D
         #endregion
 
         #region CustomEvent
-
-        //internal static void RecordCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
-        //{
-        //    SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), properties, position, dynamicObjectId);
-        //}
 
         internal static void RecordCustomEvent(string category, string dynamicObjectId = "")
         {
@@ -66,37 +65,54 @@ namespace Cognitive3D
         #endregion
 
         #region DynamicObject
-        internal static void RegisterDynamicObject(string id)
+        //should the engine side keep a list of dynamic object data or just pass everything through this interface?
+        //should checking for changes happen on engine side?
+
+        internal static void WriteControllerManifestEntry(DynamicData dynamicData)
         {
-            //Cognitive3D.Serialization.SharedCore.RegisterDynamicObject()
+            SharedCore.WriteControllerManifestEntry(dynamicData);
         }
 
-        internal static void RecordDynamicObject()
+        internal static void WriteDynamicManifestEntry(DynamicData dynamicData)
         {
+            SharedCore.WriteControllerManifestEntry(dynamicData);
+        }
 
+        internal static void WriteDynamic(DynamicData dynamicData, string props, bool writeScale)
+        {
+            SharedCore.WriteDynamic(dynamicData, props, writeScale);
+        }
+
+        internal static void WriteDynamicController(DynamicData dynamicData, string props, bool writeScale, string buttonStates)
+        {
+            SharedCore.WriteDynamicController(dynamicData, props, writeScale, buttonStates);
         }
         #endregion
 
         #region Gaze
 
-        internal static void RecordWorldGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, double time)
+        internal static void RecordWorldGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, double time, Vector3 floorPos, bool useFloor)
         {
             SharedCore.RecordGazeWorld(
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
-                time);
+                time,
+                new float[] { floorPos.x, floorPos.y, floorPos.z },
+                useFloor);
         }
-        internal static void RecordDynamicGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time)
+        internal static void RecordDynamicGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time, Vector3 floorPos, bool useFloor)
         {
             SharedCore.RecordGazeDynamic(
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
                 dynamicId,
-                time);
+                time,
+                new float[] { floorPos.x, floorPos.y, floorPos.z },
+                useFloor);
         }
-        internal static void RecordMediaGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv)
+        internal static void RecordMediaGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv, Vector3 floorPos, bool useFloor)
         {
             SharedCore.RecordGazeMedia(
                 new float[] { position.x, position.y, position.z },
@@ -106,12 +122,19 @@ namespace Cognitive3D
                 mediaId,
                 time,
                 mediatime,
-                new float[] {uv.x,uv.y}
+                new float[] {uv.x,uv.y},
+                new float[] {floorPos.x,floorPos.y,floorPos.z},
+                useFloor
                 );
         }
-        internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time)
+        internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor)
         {
-            SharedCore.RecordGazeSky(new float[] { position.x, position.y, position.z }, new float[] { rotation.x, rotation.y, rotation.z, rotation.w }, time);
+            SharedCore.RecordGazeSky(
+                new float[] { position.x, position.y, position.z },
+                new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
+                time,
+                new float[] { floorPos.x, floorPos.y, floorPos.z },
+                useFloor);
         }
         #endregion
 
@@ -151,14 +174,13 @@ namespace Cognitive3D
         #region Exitpoll
         public static string SerializeExitpollAnswers(List<ExitPollSet.ResponseContext> responses, string questionSetId,string hook)
         {
-            return SharedCore.FormatExitpoll(responses,questionSetId,hook);
+            return SharedCore.FormatExitpoll(responses,questionSetId,hook,Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber,Cognitive3D_Manager.TrackingSceneVersionId);
         }
         #endregion
 
-        internal static void Flush()
+        internal static void Flush(bool copyToCache)
         {
-
-            //TODO interrupt dynamic object thread and just write everything immediately
+            SharedCore.Flush(copyToCache);
         }
 
         /// <summary>
@@ -180,9 +202,34 @@ namespace Cognitive3D
             string url = string.Empty;
             switch (requestType)
             {
-                case "event": url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);break;
+                case "event":
+                    url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    CustomEvent.CustomEventSendEvent();
+                    break;
+                case "sensor":
+                    url = CognitiveStatics.POSTSENSORDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    SensorRecorder.SensorSendEvent();
+                    break;
+                case "dynamic":
+                    url = CognitiveStatics.POSTDYNAMICDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    DynamicManager.DynamicObjectSendEvent();
+                    break;
+                case "gaze":
+                    url = CognitiveStatics.POSTGAZEDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    GazeCore.GazeSendEvent();
+                    break;
+                case "fixation":
+                    url = CognitiveStatics.POSTFIXATIONDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    FixationCore.FixationSendEvent();
+                    break;
+                default: Util.logDevelopment("Invalid Web Post type"); return;
             }
 
+            //TODO CONSIDER shouldn't this be in NetworkManager?
+            if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, body))
+            {
+                Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, body);
+            }
 
             Cognitive3D_Manager.NetworkManager.Post(url, body);
         }

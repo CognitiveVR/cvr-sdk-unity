@@ -99,6 +99,7 @@ namespace Cognitive3D
             }
         }
         YieldInstruction playerSnapshotInverval;
+        YieldInstruction automaticSendInterval;
         YieldInstruction GPSUpdateInverval;
 
         public static bool IsQuitting = false;
@@ -270,7 +271,7 @@ namespace Cognitive3D
             NetworkManager.Initialize(DataCache, ExitpollHandler);
 
             DynamicManager.Initialize();
-            DynamicObjectCore.Initialize();
+            //DynamicObjectCore.Initialize();
             CustomEvent.Initialize();
             SensorRecorder.Initialize();
 
@@ -322,6 +323,7 @@ namespace Cognitive3D
             }
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D.Cognitive3D_Preferences.S_SnapshotInterval);
             GPSUpdateInverval = new WaitForSeconds(Cognitive3D_Preferences.Instance.GPSInterval);
+            automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
             StartCoroutine(Tick());
             Util.logDebug("Cognitive3D Initialized");
 
@@ -670,6 +672,19 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator AutomaticSendData()
+        {
+            while (IsInitialized)
+            {
+                yield return automaticSendInterval;
+                CoreInterface.Flush(false);
+            }
+        }
+
         void Update()
         {
             if (!IsInitialized)
@@ -983,6 +998,14 @@ namespace Cognitive3D
                 return TrackingScene.VersionNumber;
             }
         }
+        public static int TrackingSceneVersionId
+        {
+            get
+            {
+                if (TrackingScene == null) { return 0; }
+                return TrackingScene.VersionId;
+            }
+        }
         public static string TrackingSceneName
         {
             get
@@ -1124,38 +1147,7 @@ namespace Cognitive3D
             return true;
         }*/
 
-        public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
-        {
-            if (clearNewProperties)
-            {
-                if (newSessionProperties.Count > 0)
-                {
-                    List<KeyValuePair<string, object>> returndict = new List<KeyValuePair<string, object>>(newSessionProperties);
-                    newSessionProperties.Clear();
-                    return returndict;
-                }
-                else
-                {
-                    return newSessionProperties;
-                }
-            }
-            return newSessionProperties;
-        }
 
-        public static List<KeyValuePair<string, object>> GetAllSessionProperties(bool clearNewProperties)
-        {
-            if (clearNewProperties)
-            {
-                newSessionProperties.Clear();
-            }
-            return knownSessionProperties;
-        }
-
-        //any changed properties that have not been written to the session
-        static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
-
-        //all session properties, including new properties not yet sent
-        static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
 
         public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
         {
@@ -1181,54 +1173,7 @@ namespace Cognitive3D
         public static void SetSessionProperty(string key, object value)
         {
             if (value == null) { return; }
-            int foundIndex = 0;
-            bool foundKey = false;
-            for (int i = 0; i < knownSessionProperties.Count; i++)
-            {
-                if (knownSessionProperties[i].Key == key)
-                {
-                    foundKey = true;
-                    foundIndex = i;
-                    break;
-                }
-            }
-
-            if (foundKey) //update value
-            {
-                if (knownSessionProperties[foundIndex].Value == value) //skip setting property if it hasn't actually changed
-                {
-                    return;
-                }
-                else
-                {
-                    knownSessionProperties[foundIndex] = new KeyValuePair<string, object>(key, value);
-
-                    bool foundNewSessionPropKey = false;
-                    int foundNewSessionPropIndex = 0;
-                    for (int i = 0; i < newSessionProperties.Count; i++) //add/replace in 'newSessionProperty' (ie dirty value that will be sent with gaze)
-                    {
-                        if (newSessionProperties[i].Key == key)
-                        {
-                            foundNewSessionPropKey = true;
-                            foundNewSessionPropIndex = i;
-                            break;
-                        }
-                    }
-                    if (foundNewSessionPropKey)
-                    {
-                        newSessionProperties[foundNewSessionPropIndex] = new KeyValuePair<string, object>(key, value);
-                    }
-                    else
-                    {
-                        newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
-                    }
-                }
-            }
-            else
-            {
-                knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
-                newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
-            }
+            CoreInterface.SetSessionProperty(key, value);
         }
 
         /// <summary>
@@ -1240,16 +1185,9 @@ namespace Cognitive3D
         public static void SetSessionPropertyIfEmpty(string key, object value)
         {
             if (value == null) { return; }
-            for (int i = 0; i < knownSessionProperties.Count; i++)
-            {
-                if (knownSessionProperties[i].Key == key)
-                {
-                    return;
-                }
-            }
 
-            knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
-            newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+            CoreInterface.SetSessionPropertyIfEmpty(key, value);
+
         }
 
         /// <summary>
