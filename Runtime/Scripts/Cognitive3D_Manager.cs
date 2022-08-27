@@ -114,11 +114,6 @@ namespace Cognitive3D
         public bool AssignOculusProfileToParticipant = true;
 #endif
 
-#if C3D_AH || C3D_PUPIL
-        [Tooltip("Start recording analytics after calibration is successfully completed")]
-        public bool InitializeAfterCalibration = true;
-#endif
-
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
@@ -167,20 +162,6 @@ namespace Cognitive3D
             }
 #endif
 
-#if C3D_AH
-            if (InitializeAfterCalibration)
-            {
-                if (AdhawkApi.Calibrator.Instance != null)
-                {
-                    while (!AdhawkApi.Calibrator.Instance.Calibrated)
-                    {
-                        yield return new WaitForSeconds(1);
-                        if (AdhawkApi.Calibrator.Instance == null){break;}
-                    }
-                }
-                Initialize();
-            }
-#endif
 #if C3D_PUPIL
             if (InitializeAfterCalibration)
             {
@@ -541,10 +522,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Pupil");
             SetSessionProperty("c3d.app.sdktype", "Pupil");
-#elif C3D_AH
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
-            SetSessionProperty("c3d.app.sdktype", "Adhawk");
 #elif C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
