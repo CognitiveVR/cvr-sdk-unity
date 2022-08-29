@@ -2,10 +2,6 @@
 using System.Collections;
 using Cognitive3D;
 using System;
-#if C3D_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
 
 //utility code to get player's eye ray
 
@@ -82,12 +78,6 @@ namespace Cognitive3D
     static Vector3 GetLookDirection()
     {
         return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-    }
-#elif C3D_AH
-
-    static Vector3 GetLookDirection()
-    {
-        return Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
     }
 #elif C3D_SNAPDRAGON
         static Vector3 GetLookDirection()
