@@ -42,19 +42,6 @@ namespace Cognitive3D
             if (data.Confidence < 0.6f) { return; }
             gazeDirection = data.GazeDirection;
         }
-
-#elif C3D_FOVE
-    static Vector3 GetLookDirection()
-    {
-        Fove.Unity.FoveInterface fi = GameplayReferences.FoveInstance;
-        if (fi == null)
-        {
-            return GameplayReferences.HMD.forward;
-        }
-        var eyeRays = fi.GetGazeRays();
-        Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
-        return v.normalized;
-    }
 #elif C3D_TOBIIVR
     static Vector3 lastDirection = Vector3.forward;
 
