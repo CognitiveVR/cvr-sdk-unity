@@ -484,11 +484,7 @@ namespace Cognitive3D
             //TODO add XR inputdevice name
 
             //eye tracker addons
-#if C3D_TOBIIVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Tobii");
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
