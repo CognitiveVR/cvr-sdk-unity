@@ -249,8 +249,6 @@ namespace Cognitive3D
                     gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
                 }
             }
-#elif C3D_NEURABLE
-            gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
 #elif C3D_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #elif C3D_OMNICEPT
@@ -307,9 +305,6 @@ namespace Cognitive3D
                 screenGazePoint = rightv2;
             else if (leftSet && rightSet)
                 screenGazePoint = (leftv2 + rightv2) / 2;
-
-#elif C3D_NEURABLE
-            screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
 #elif C3D_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
