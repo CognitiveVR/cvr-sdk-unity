@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D;
 
-#if C3D_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
-
 //deals with most generic integration stuff
 //hmd removed - send data
 
@@ -25,10 +20,6 @@ namespace Cognitive3D
     public class GazeBase : MonoBehaviour
     {
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
-#if C3D_AH
-        private static Calibrator ah_calibrator;
-#endif
-
         public static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
@@ -42,8 +33,6 @@ namespace Cognitive3D
 #elif C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-#elif C3D_AH
-            ah_calibrator = Calibrator.Instance;
 #elif C3D_PUPIL
             gazeController = GameplayReferences.GazeController;
             if (gazeController != null)
@@ -267,8 +256,6 @@ namespace Cognitive3D
             }
 #elif C3D_NEURABLE
             gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-#elif C3D_AH
-            gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif C3D_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #elif C3D_OMNICEPT
@@ -340,10 +327,6 @@ namespace Cognitive3D
 
 #elif C3D_NEURABLE
             screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
-#elif C3D_AH
-            Vector3 x = ah_calibrator.GetGazeOrigin();
-            Vector3 r = ah_calibrator.GetGazeVector();
-            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(x + 10 * r);
 #elif C3D_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
