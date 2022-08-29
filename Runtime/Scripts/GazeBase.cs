@@ -225,12 +225,7 @@ namespace Cognitive3D
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-#if C3D_FOVE //direction
-            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
-            var ray = eyeRays.left;
-            gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-            gazeDirection.Normalize();
-#elif C3D_PUPIL
+#if C3D_PUPIL
             gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
 #elif C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
@@ -292,19 +287,7 @@ namespace Cognitive3D
         {
             Vector2 screenGazePoint = new Vector2(0.5f,0.5f);
 
-#if C3D_FOVE //screenpoint
-
-            //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(GameplayReferences.FoveInstance.GetGazeRays().left.GetPoint(1000));
-
-            //Vector2 gazePoint = hmd.GetGazePoint();
-            if (float.IsNaN(normalizedPoint.x))
-            {
-                return screenGazePoint;
-            }
-
-            screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
-#elif C3D_PUPIL//screenpoint
+#if C3D_PUPIL//screenpoint
             screenGazePoint = pupilViewportPosition;
 #elif C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
