@@ -464,10 +464,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type", "None");
             SetSessionProperty("c3d.app.sdktype", "Oculus");
-#elif C3D_NEURABLE
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Neurable");
 #elif C3D_ARKIT
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
