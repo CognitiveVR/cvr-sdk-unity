@@ -161,29 +161,7 @@ namespace Cognitive3D
                 });
             }
 #endif
-
-#if C3D_PUPIL
-            if (InitializeAfterCalibration)
-            {
-                if (calibrationController == null)
-                    calibrationController = GameplayReferences.CalibrationController;
-                if (calibrationController != null)
-                    calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
-                else
-                    Util.logWarning("Cognitive Manager could not find PupilLabs.CalibrationController in scene. Initialize After Calibration will not work as expected!");
-            }
-#endif
         }
-
-#if C3D_PUPIL
-        PupilLabs.CalibrationController calibrationController;
-
-        private void PupilLabs_OnCalibrationSucceeded()
-        {
-            calibrationController.OnCalibrationSucceeded -= PupilLabs_OnCalibrationSucceeded;
-            Initialize();
-        }
-#endif
 
         [System.NonSerialized]
         public GazeBase gazeBase;
@@ -510,10 +488,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Tobii");
-#elif C3D_PUPIL
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Pupil");
-            SetSessionProperty("c3d.app.sdktype", "Pupil");
 #elif C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
