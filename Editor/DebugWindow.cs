@@ -115,7 +115,7 @@ namespace Cognitive3D
             sb.AppendLine("Enable Logging: " + p.EnableLogging);
             sb.AppendLine("Enable Development Logging: " + p.EnableDevLogging);
             sb.AppendLine("Gaze Type: " + p.GazeType.ToString());
-            sb.AppendLine("Snapshot Interval: " + p.SnapshotInterval);
+            sb.AppendLine("Snapshot Interval: " + Cognitive3D_Preferences.SnapshotInterval);
             sb.AppendLine("Dynamic Object Search in Parent: " + p.DynamicObjectSearchInParent);
             sb.AppendLine("Dynamic Object Layer Mask: " + p.DynamicLayerMask);
             sb.AppendLine("Track GPS Location: " + p.TrackGPSLocation);

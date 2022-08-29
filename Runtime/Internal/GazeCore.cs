@@ -8,9 +8,9 @@ namespace Cognitive3D
 {
     public enum GazeType
     {
-        //TODO add skysphere 360 video recorder
-        Physics, //raycast
-        Command //command buffer
+        Physics = 0, //raycast
+        Command = 1, //command buffer
+        SkySphere = 2 //for 360 media rendered on the sky
     }
 
     public static class GazeCore
@@ -47,8 +47,27 @@ namespace Cognitive3D
         //    HMDName = hmdname;
         //}
 
+        static Transform cameraRoot;
+        public static bool GetFloorPosition(ref Vector3 floorPos)
+        {
+            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
+            {
+                if (cameraRoot == null)
+                {
+                    cameraRoot = GameplayReferences.HMD.root;
+                }
+                RaycastHit floorhit = new RaycastHit();
+                if (Physics.Raycast(GameplayReferences.HMD.position, -cameraRoot.up, out floorhit))
+                {
+                    floorPos = floorhit.point;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         ///sky position
-        public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos, bool validFloor) //looking at the camera far plane
+        public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -57,13 +76,25 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp, floorPos,validFloor);
+            Vector3 floorPos = new Vector3();
+            //if floor position is enabled and if the hmd is over a surface
+            bool validFloor = GetFloorPosition(ref floorPos);
+
+            Vector4 geo = new Vector4();
+            bool useGeo = false;
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
+                useGeo = true;
+            }
+
+            CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp, floorPos, validFloor, geo, useGeo);
 
             SkyGazeRecordEvent(timestamp, string.Empty, Vector3.zero, hmdpoint, hmdrotation);
         }
 
         //gaze on dynamic object
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos, bool validFloor) //looking at a dynamic object
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -72,13 +103,25 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor);
-            
+            Vector3 floorPos = new Vector3();
+            //if floor position is enabled and if the hmd is over a surface
+            bool validFloor = GetFloorPosition(ref floorPos);
+
+            Vector4 geo = new Vector4();
+            bool useGeo = false;
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
+                useGeo = true;
+            }
+
+            CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor, geo, useGeo);
+
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
         //world position
-        public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, Vector3 floorPos, bool validFloor) //looking at world
+        public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -87,14 +130,26 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor);
-            
+            Vector3 floorPos = new Vector3();
+            //if floor position is enabled and if the hmd is over a surface
+            bool validFloor = GetFloorPosition(ref floorPos);
+
+            Vector4 geo = new Vector4();
+            bool useGeo = false;
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
+                useGeo = true;
+            }
+
+            CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor, geo, useGeo);
+
             WorldGazeRecordEvent(timestamp, string.Empty, gazepoint, hmdpoint, hmdrotation);
         }
 
         //looking at a media dynamic object
         //mediatime is milliseconds since the start of the video
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, Vector3 gpsloc, float compass, string mediasource, int mediatimeMs, Vector2 uvs, Vector3 floorPos, bool validFloor)
+        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, string mediasource, int mediatimeMs, Vector2 uvs)
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -103,8 +158,20 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor);
-            
+            Vector3 floorPos = new Vector3();
+            //if floor position is enabled and if the hmd is over a surface
+            bool validFloor = GetFloorPosition(ref floorPos);
+
+            Vector4 geo = new Vector4();
+            bool useGeo = false;
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
+                useGeo = true;
+            }
+
+            CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor, geo, useGeo);
+
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
     }

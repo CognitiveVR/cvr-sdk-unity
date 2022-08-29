@@ -280,7 +280,7 @@ namespace Cognitive3D
                     StartCoroutine(GPSTick());
                 }
             }
-            playerSnapshotInverval = new WaitForSeconds(Cognitive3D.Cognitive3D_Preferences.S_SnapshotInterval);
+            playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
             GPSUpdateInverval = new WaitForSeconds(Cognitive3D_Preferences.Instance.GPSInterval);
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
             StartCoroutine(Tick());
@@ -684,19 +684,19 @@ namespace Cognitive3D
 #endregion
 
 #region GPS
-        public void GetGPSLocation(ref Vector3 loc, ref float bearing)
+        public void GetGPSLocation(ref Vector4 geo)
         {
             if (Cognitive3D_Preferences.Instance.SyncGPSWithGaze)
             {
-                loc.x = Input.location.lastData.latitude;
-                loc.y = Input.location.lastData.longitude;
-                loc.z = Input.location.lastData.altitude;
-                bearing = 360 - Input.compass.magneticHeading;
+                geo.x = Input.location.lastData.latitude;
+                geo.y = Input.location.lastData.longitude;
+                geo.z = Input.location.lastData.altitude;
+                geo.w = 360 - Input.compass.magneticHeading;
             }
             else
             {
-                loc = GPSLocation;
-                bearing = CompassOrientation;
+                geo = GPSLocation;
+                geo.w = CompassOrientation;
             }
         }
 

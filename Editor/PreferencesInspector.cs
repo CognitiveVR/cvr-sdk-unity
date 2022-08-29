@@ -56,7 +56,6 @@ namespace Cognitive3D
             //p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
             //if (GUI.changed) CheckGazeRenderType(p);
             p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Record Gaze", "Use a raycast to find the gaze point in world space.\nDisabling this will still record HMD position and rotation"), p.EnableGaze);
-            p.SnapshotInterval = EditorGUILayout.FloatField("Snapshot Interval", p.SnapshotInterval);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
             if (p.GazeType == GazeType.Physics)

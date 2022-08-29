@@ -1,7 +1,11 @@
 {
     "name": "Cognitive3D",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "SteamVR",
+        "Unity.XR.OpenVR",
+        "Varjo.XR"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

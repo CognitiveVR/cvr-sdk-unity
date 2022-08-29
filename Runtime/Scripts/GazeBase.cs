@@ -163,28 +163,6 @@ namespace Cognitive3D
             return didhitdynamic;
         }
 
-        public bool GetOptionalSnapshotData(ref Vector3 gpsloc, ref float compass, ref Vector3 floorPos)
-        {
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                Cognitive3D_Manager.Instance.GetGPSLocation(ref gpsloc, ref compass);
-            }
-            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
-            {
-                if (cameraRoot == null)
-                {
-                    cameraRoot = GameplayReferences.HMD.root;
-                }
-                RaycastHit floorhit = new RaycastHit();
-                if (Physics.Raycast(GameplayReferences.HMD.position, -cameraRoot.up, out floorhit))
-                {
-                    floorPos = floorhit.point;
-                    return true;
-                }
-            }
-            return false;
-        }
-
 #if C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;

@@ -2,7 +2,9 @@
     "name": "Cognitive3DEditor",
     "rootNamespace": "",
     "references": [
-        "GUID:956b6f76d123b8e4bb708cfcbffee10c"
+        "Cognitive3D",
+        "Unity.XR.OpenVR",
+        "SteamVR"
     ],
     "includePlatforms": [
         "Editor"

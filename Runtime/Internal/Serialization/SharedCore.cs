@@ -1083,7 +1083,7 @@ namespace Cognitive3D.Serialization
         static int gazeCount;
         static int gazeJsonPart;
 
-        internal static void RecordGazeSky(float[] hmdposition, float[] hmdrotation, double timestamp, float[] floorPos, bool includeFloor)
+        internal static void RecordGazeSky(float[] hmdposition, float[] hmdrotation, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
 
             gazebuilder.Append("{");
@@ -1093,14 +1093,13 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetVector("p", hmdposition, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-
-            //if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            //{
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetFloat("compass", compass, gazebuilder);
-            //}
+            if (useGeo)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+            }
             if (includeFloor)
             {
                 gazebuilder.Append(",");
@@ -1121,7 +1120,7 @@ namespace Cognitive3D.Serialization
         }
 
 
-        internal static void RecordGazeMedia(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, string mediaId, double timestamp, int mediaTimeMs, float[] uvs, float[] floorPos, bool includeFloor)
+        internal static void RecordGazeMedia(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, string mediaId, double timestamp, int mediaTimeMs, float[] uvs, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             gazebuilder.Append("{");
 
@@ -1140,14 +1139,13 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetInt("mediatime", mediaTimeMs, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector2("uvs", uvs, gazebuilder);
-
-            //if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            //{
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetFloat("compass", compass, gazebuilder);
-            //}
+            if (useGeo)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+            }
             if (includeFloor)
             {
                 gazebuilder.Append(",");
@@ -1167,7 +1165,7 @@ namespace Cognitive3D.Serialization
             }
         }
 
-        internal static void RecordGazeWorld(float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor)
+        internal static void RecordGazeWorld(float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             gazebuilder.Append("{");
 
@@ -1178,13 +1176,13 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", gazepoint, gazebuilder);
-            //if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            //{
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetFloat("compass", compass, gazebuilder);
-            //}
+            if (useGeo)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+            }
             if (includeFloor)
             {
                 gazebuilder.Append(",");
@@ -1203,7 +1201,7 @@ namespace Cognitive3D.Serialization
             }
         }
 
-        internal static void RecordGazeDynamic(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, double timestamp, float[] floorPos, bool includeFloor)
+        internal static void RecordGazeDynamic(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             gazebuilder.Append("{");
 
@@ -1216,13 +1214,13 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-            //if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            //{
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-            //    gazebuilder.Append(",");
-            //    JsonUtil.SetFloat("compass", compass, gazebuilder);
-            //}
+            if (useGeo)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+            }
             if (includeFloor)
             {
                 gazebuilder.Append(",");

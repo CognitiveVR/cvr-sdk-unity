@@ -50,22 +50,19 @@ namespace Cognitive3D
         internal static void RecordCustomEvent(string category, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), null, new float[] { GameplayReferences.HMD.position.x, GameplayReferences.HMD.position.y, GameplayReferences.HMD.position.z }, dynamicObjectId);
-            //TODO call this function (which invokes an event)
-            //CustomEvent.CustomEventRecordedEvent(category,)
+            CustomEvent.CustomEventRecordedEvent(category, GameplayReferences.HMD.position, null, dynamicObjectId, Util.Timestamp(Time.frameCount));
         }
 
         internal static void RecordCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), null, new float[] { position.x, position.y, position.z }, dynamicObjectId);
-            //TODO call this function (which invokes an event)
-            //CustomEvent.CustomEventRecordedEvent(category,)
+            CustomEvent.CustomEventRecordedEvent(category, position, null, dynamicObjectId, Util.Timestamp(Time.frameCount));
         }
 
         internal static void RecordCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), properties, new float[] { position.x, position.y, position.z }, dynamicObjectId);
-            //TODO call this function (which invokes an event)
-            //CustomEvent.CustomEventRecordedEvent(category,)
+            CustomEvent.CustomEventRecordedEvent(category, position, properties, dynamicObjectId, Util.Timestamp(Time.frameCount));
         }
 
         #endregion
@@ -97,7 +94,7 @@ namespace Cognitive3D
 
         #region Gaze
 
-        internal static void RecordWorldGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, double time, Vector3 floorPos, bool useFloor)
+        internal static void RecordWorldGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeWorld(
                 new float[] { position.x, position.y, position.z },
@@ -105,9 +102,11 @@ namespace Cognitive3D
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
                 time,
                 new float[] { floorPos.x, floorPos.y, floorPos.z },
-                useFloor);
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo);
         }
-        internal static void RecordDynamicGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time, Vector3 floorPos, bool useFloor)
+        internal static void RecordDynamicGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeDynamic(
                 new float[] { position.x, position.y, position.z },
@@ -116,9 +115,11 @@ namespace Cognitive3D
                 dynamicId,
                 time,
                 new float[] { floorPos.x, floorPos.y, floorPos.z },
-                useFloor);
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo);
         }
-        internal static void RecordMediaGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv, Vector3 floorPos, bool useFloor)
+        internal static void RecordMediaGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeMedia(
                 new float[] { position.x, position.y, position.z },
@@ -130,17 +131,21 @@ namespace Cognitive3D
                 mediatime,
                 new float[] {uv.x,uv.y},
                 new float[] {floorPos.x,floorPos.y,floorPos.z},
-                useFloor
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo
                 );
         }
-        internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor)
+        internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeSky(
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 time,
                 new float[] { floorPos.x, floorPos.y, floorPos.z },
-                useFloor);
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo);
         }
         #endregion
 
@@ -205,7 +210,7 @@ namespace Cognitive3D
         static void WebPost(string requestType, string body, bool cache)
         {
             //construct url from requesttype and cognitivestatics
-            string url = string.Empty;
+            string url;
             switch (requestType)
             {
                 case "event":

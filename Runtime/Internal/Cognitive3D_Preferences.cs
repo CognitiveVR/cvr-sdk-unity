@@ -25,11 +25,8 @@ namespace Cognitive3D
                         instance = CreateInstance<Cognitive3D_Preferences>();
                     }
                     IsSet = true;
-                    S_SnapshotInterval = instance.SnapshotInterval;
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
-                    S_DynamicSnapshotMaxTimer = instance.DynamicSnapshotMaxTimer;
-                    //S_DynamicExtremeSnapshotCount = instance.DynamicExtremeSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
@@ -38,12 +35,10 @@ namespace Cognitive3D
             }
         }
 
-        public static float S_SnapshotInterval;
+        //static for faster access
+        public const float SnapshotInterval = 0.1f;
         public static int S_GazeSnapshotCount;
         public static int S_DynamicSnapshotCount;
-        public static int S_DynamicExtremeSnapshotCount;
-        public static int S_DynamicSnapshotMaxTimer;
-
         public static int S_TransactionSnapshotCount;
         public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
@@ -76,20 +71,6 @@ namespace Cognitive3D
         //player tracking
 
         public bool EnableGaze = true;
-        float snapshotInterval = 0.1f;
-        public float SnapshotInterval
-        {
-            get
-            {
-                return snapshotInterval;
-            }
-            set
-            {
-                //--- IMPORTANT ---
-                //It is against the Cognitive3D terms of service to set this value lower than 0.1 (ie, 10 snapshots per second)
-                snapshotInterval = Mathf.Max(0.1f, value);
-            }
-        }
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
         public float GPSInterval = 1;
@@ -111,33 +92,7 @@ namespace Cognitive3D
         public int TransactionSnapshotCount = 64;
         public int FixationSnapshotCount = 64;
 
-        //min timer
-        //public int GazeSnapshotMinTimer = 6;
-        //public int SensorSnapshotMinTimer = 6;
-        //public int DynamicSnapshotMinTimer = 2;
-        //public int TransactionSnapshotMinTimer = 2;
-        //public int FixationSnapshotMinTimer = 2;
-
-        //extreme batch size
-
-        //public int GazeExtremeSnapshotCount = 256;
-        //public int SensorExtremeSnapshotCount = 256;
-        //public int DynamicExtremeSnapshotCount = 256;
-        //public int TransactionExtremeSnapshotCount = 256;
-        //public int FixationExtremeSnapshotCount = 256;
-
-        //max timer
-        //every X seconds, check to send any existing batched snapshots
-
-        //public int GazeSnapshotMaxTimer = 10;
-        public int SensorSnapshotMaxTimer = 10;
-        public int DynamicSnapshotMaxTimer = 10;
-        public int TransactionSnapshotMaxTimer = 10;
-        public int FixationSnapshotMaxTimer = 10;
-
         public int AutomaticSendTimer = 10;
-
-
 
         public bool SendDataOnQuit = true;
         public bool SendDataOnPause = true;
@@ -209,6 +164,10 @@ namespace Cognitive3D
             SceneSettings returnSettings = null;
 
             returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
+            if (returnSettings == null)
+            {
+                Debug.Log("active scene path doesn't exist " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
+            }
 
             return returnSettings;
         }
