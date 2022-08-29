@@ -455,10 +455,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
-#if C3D_FOVE
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Fove");
-            SetSessionProperty("c3d.app.sdktype", "Fove");
 #elif C3D_SNAPDRAGON
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
