@@ -13,25 +13,7 @@ namespace Cognitive3D
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
-#if C3D_TOBIIVR
-    static Vector3 lastDirection = Vector3.forward;
-
-    static Vector3 GetLookDirection()
-    {
-        var provider = Tobii.XR.TobiiXR.Internal.Provider;
-
-        if (provider == null)
-        {
-            return GameplayReferences.HMD.forward;
-        }
-        if (provider.EyeTrackingDataLocal.GazeRay.IsValid)
-        {
-            lastDirection = GameplayReferences.HMD.TransformDirection(provider.EyeTrackingDataLocal.GazeRay.Direction);
-        }
-
-        return lastDirection;
-    }
-#elif C3D_SNAPDRAGON
+#if C3D_SNAPDRAGON
         static Vector3 GetLookDirection()
         {
             return SvrManager.Instance.EyeDirection;
