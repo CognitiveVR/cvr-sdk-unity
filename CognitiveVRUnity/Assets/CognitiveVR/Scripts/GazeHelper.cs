@@ -262,6 +262,16 @@ namespace CognitiveVR
             }
             return lastDirection;
         }
+#elif CVR_MRTK
+        static Vector3 lastDirection = Vector3.forward;
+        static Vector3 GetLookDirection()
+        {
+            if (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabledAndValid)
+            {
+                lastDirection = Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.GazeDirection;
+            }
+            return lastDirection;
+        }
 #else
         static Vector3 GetLookDirection()
         {

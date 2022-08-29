@@ -16,6 +16,8 @@ namespace CognitiveVR
                 return true;
 #elif CVR_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
+#elif CVR_MRTK
+                return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled;
 #else
                 return false;
 #endif
@@ -93,6 +95,10 @@ namespace CognitiveVR
             {
                 UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
                 UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
+                if (XRIS == null)
+                {
+                    return false;
+                }
                 List<Vector3> boundaryPoints = new List<Vector3>();
                 if (XRIS.TryGetBoundaryPoints(boundaryPoints))
                 {

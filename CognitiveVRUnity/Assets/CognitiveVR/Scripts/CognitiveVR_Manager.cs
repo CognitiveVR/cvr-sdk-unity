@@ -542,6 +542,9 @@ namespace CognitiveVR
             //Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
             //Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
             Core.SetSessionProperty("c3d.app.sdktype", "OpenXR");
+#elif CVR_MRTK
+            Core.SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
+            Core.SetSessionProperty("c3d.app.sdktype", "MRTK");
 #endif
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             Core.SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
