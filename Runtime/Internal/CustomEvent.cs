@@ -474,8 +474,9 @@ namespace Cognitive3D
         }*/
 
         public delegate void onCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time);
+        //used by active session view
         public static event onCustomEventRecorded OnCustomEventRecorded;
-        private static void CustomEventRecordedEvent(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
+        internal static void CustomEventRecordedEvent(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
         {
             if (OnCustomEventRecorded != null)
             {
@@ -484,6 +485,7 @@ namespace Cognitive3D
         }
 
         //happens after the network has sent the request, before any response
+        //used by active session view
         public static event Cognitive3D_Manager.onSendData OnCustomEventSend;
         internal static void CustomEventSendEvent()
         {

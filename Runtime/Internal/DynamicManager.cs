@@ -48,7 +48,7 @@ namespace Cognitive3D
             }
         }
 
-        //happens after the network has sent the request, before any response
+        //happens after the network has sent the request, before any response. used by active session view
         public static event Cognitive3D_Manager.onSendData OnDynamicObjectSend;
         internal static void DynamicObjectSendEvent()
         {

@@ -82,7 +82,7 @@ namespace Cognitive3D
                 OnNewSensorRecorded(sensorName, initialValue);
         }
 
-        static bool automaticTimerActive = false;
+        /*static bool automaticTimerActive = false;
         static float nextSendTime = 0;
         internal static IEnumerator AutomaticSendTimer()
         {
@@ -101,7 +101,7 @@ namespace Cognitive3D
                     Core_OnSendData(false);
                 }
             }
-        }
+        }*/
 
         public static void RecordDataPoint(string category, float value)
         {
@@ -237,10 +237,12 @@ namespace Cognitive3D
             //}            
         }
 
+        //used by active session view
         public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
         public static event onNewSensorRecorded OnNewSensorRecorded;
 
         //happens after the network has sent the request, before any response
+        //used by active session view
         public static event Cognitive3D_Manager.onSendData OnSensorSend;
         internal static void SensorSendEvent()
         {

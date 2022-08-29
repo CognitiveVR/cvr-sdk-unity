@@ -281,11 +281,11 @@ namespace Cognitive3D
             {
                 _sessionId = (int)SessionTimeStamp + "_" + DeviceId;
             }
-
+            CoreInterface.Initialize(SessionID, SessionTimeStamp, DeviceId);
             IsInitialized = true;
             //if (Cognitive3D_Preferences.Instance.EnableGaze == false)
-                //GazeCore.SendSessionProperties(false);
-                //TODO support skipping spatial gaze data but still recording session properties
+            //GazeCore.SendSessionProperties(false);
+            //TODO support skipping spatial gaze data but still recording session properties
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
@@ -1056,7 +1056,10 @@ namespace Cognitive3D
                 }
 
                 //just to send this scene change event
-                InvokeSendDataEvent(false);
+                if (WriteSceneChangeEvent && TrackingScene != null)
+                {
+                    InvokeSendDataEvent(false);
+                }
                 ForceWriteSessionMetadata = true;
                 TrackingScene = scene;
             }

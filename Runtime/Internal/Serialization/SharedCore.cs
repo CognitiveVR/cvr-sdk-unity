@@ -198,7 +198,6 @@ namespace Cognitive3D.Serialization
         //records object of custom event data to be serialized later
         internal static void RecordCustomEvent(string category, double timestamp, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
-            System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder();
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
@@ -264,57 +263,62 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        //used to batch events together
+        private static System.Text.StringBuilder eventRequestBuilder = new System.Text.StringBuilder(1024);
+        //used to serialize each event
         private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(1024);
         static void SerializeEvents(bool writeToCache)
         {
+            if (CachedEventCount == 0) { return; }
+
             CachedEventCount = 0;
             //bundle up header stuff and transaction data
 
             //clear the transaction builder
-            eventBuilder.Length = 0;
+            eventRequestBuilder.Length = 0;
 
             //Cognitive3D.Util.logDebug("package transaction event data " + partCount);
             //when thresholds are reached, etc
 
-            eventBuilder.Append("{");
+            eventRequestBuilder.Append("{");
 
             //header
-            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, eventBuilder);
-            eventBuilder.Append(",");
+            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, eventRequestBuilder);
+            eventRequestBuilder.Append(",");
 
             if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
             {
-                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, eventBuilder);
-                eventBuilder.Append(",");
+                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, eventRequestBuilder);
+                eventRequestBuilder.Append(",");
             }
 
-            JsonUtil.SetDouble("timestamp", Cognitive3D_Manager.SessionTimeStamp, eventBuilder);
-            eventBuilder.Append(",");
-            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, eventBuilder);
-            eventBuilder.Append(",");
-            JsonUtil.SetInt("part", EventPartCount, eventBuilder);
+            JsonUtil.SetDouble("timestamp", Cognitive3D_Manager.SessionTimeStamp, eventRequestBuilder);
+            eventRequestBuilder.Append(",");
+            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, eventRequestBuilder);
+            eventRequestBuilder.Append(",");
+            JsonUtil.SetInt("part", EventPartCount, eventRequestBuilder);
             EventPartCount++;
-            eventBuilder.Append(",");
+            eventRequestBuilder.Append(",");
 
-            JsonUtil.SetString("formatversion", "1.0", eventBuilder);
-            eventBuilder.Append(",");
+            JsonUtil.SetString("formatversion", "1.0", eventRequestBuilder);
+            eventRequestBuilder.Append(",");
 
             //events
-            eventBuilder.Append("\"data\":[");
+            eventRequestBuilder.Append("\"data\":[");
 
-            eventBuilder.Append(eventBuilder.ToString());
+            eventRequestBuilder.Append(eventBuilder.ToString());
 
-            if (eventBuilder.Length > 0)
-                eventBuilder.Remove(eventBuilder.Length - 1, 1); //remove the last comma
-            eventBuilder.Append("]");
+            if (eventRequestBuilder.Length > 0)
+                eventRequestBuilder.Remove(eventRequestBuilder.Length - 1, 1); //remove the last comma
+            eventRequestBuilder.Append("]");
 
-            eventBuilder.Append("}");
+            eventRequestBuilder.Append("}");
 
             eventBuilder.Length = 0;
 
             //send transaction contents to scene explorer
 
-            string packagedEvents = eventBuilder.ToString();
+            string packagedEvents = eventRequestBuilder.ToString();
 
             //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
             //string url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
@@ -1243,6 +1247,8 @@ namespace Cognitive3D.Serialization
 
         static void SerializeGaze(bool writeToCache)
         {
+            if (gazeCount == 0 && newSessionProperties.Count == 0) { return; }
+
             //TODO allow option to send session properties but not gaze
             //TODO session properties should be set/saved here, not in cognitive3d_manager
 
@@ -1275,13 +1281,14 @@ namespace Cognitive3D.Serialization
 
             //TODO HMDName
             //JsonUtil.SetString("hmdtype", HMDName, gazebuilder);
+            //gazebuilder.Append(",");
 
-            gazebuilder.Append(",");
             JsonUtil.SetFloat("interval", 0.1f, gazebuilder);
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
 
+            //TODO remove this reference to cognitive manager - shis hsould be true when scene has changed - add a callback
             if (Cognitive3D_Manager.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
             {
                 Cognitive3D_Manager.ForceWriteSessionMetadata = false;
@@ -1403,6 +1410,8 @@ namespace Cognitive3D.Serialization
 
         private static void SerializeSensors(bool writeToCache)
         {
+            if (currentSensorSnapshots == 0) { return; }
+
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
             JsonUtil.SetString("name", DeviceId, sb);

@@ -50,16 +50,22 @@ namespace Cognitive3D
         internal static void RecordCustomEvent(string category, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), null, new float[] { GameplayReferences.HMD.position.x, GameplayReferences.HMD.position.y, GameplayReferences.HMD.position.z }, dynamicObjectId);
+            //TODO call this function (which invokes an event)
+            //CustomEvent.CustomEventRecordedEvent(category,)
         }
 
         internal static void RecordCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), null, new float[] { position.x, position.y, position.z }, dynamicObjectId);
+            //TODO call this function (which invokes an event)
+            //CustomEvent.CustomEventRecordedEvent(category,)
         }
 
         internal static void RecordCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
             SharedCore.RecordCustomEvent(category, Util.Timestamp(Time.frameCount), properties, new float[] { position.x, position.y, position.z }, dynamicObjectId);
+            //TODO call this function (which invokes an event)
+            //CustomEvent.CustomEventRecordedEvent(category,)
         }
 
         #endregion
@@ -142,7 +148,7 @@ namespace Cognitive3D
 
         internal static void FixationSettings(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS)
         {
-            //also send a delegate to announce when a new fixation has begun/end
+            //also send a delegate to announce when a new fixation has begun/end. connect that to FixationCore.FixationRecordEvent()
             SharedCore.FixationInitialize(maxBlinkMS, preBlinkDiscardMS, blinkEndWarmupMS, minFixationMS, maxConsecutiveDiscardMS, maxfixationAngle, maxConsecutiveOffDynamic, dynamicFixationSizeMultiplier, focusSizeFromCenter, saccadefixationEndMS);
         }
 
