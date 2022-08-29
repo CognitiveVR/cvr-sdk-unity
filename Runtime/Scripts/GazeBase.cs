@@ -33,12 +33,6 @@ namespace Cognitive3D
 #elif C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-#elif C3D_PUPIL
-            gazeController = GameplayReferences.GazeController;
-            if (gazeController != null)
-                gazeController.OnReceive3dGaze += ReceiveEyeData;
-            else
-                Debug.LogError("Pupil Labs GazeController is null!");
 #elif C3D_OMNICEPT
             if (gb == null)
             {
@@ -189,23 +183,6 @@ namespace Cognitive3D
             }
         }
 
-#if C3D_PUPIL
-        PupilLabs.GazeController gazeController;
-        Vector3 localGazeDirection;
-        Vector3 pupilViewportPosition;
-
-        void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f) { return; }
-            localGazeDirection = data.GazeDirection;
-            pupilViewportPosition = data.NormPos;
-        }
-
-        private void OnDisable()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-#endif
 #if C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;
@@ -225,9 +202,7 @@ namespace Cognitive3D
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-#if C3D_PUPIL
-            gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
-#elif C3D_TOBIIVR
+#if C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
@@ -283,11 +258,9 @@ namespace Cognitive3D
         /// </summary>
         public Vector3 GetViewportGazePoint()
         {
-            Vector2 screenGazePoint = new Vector2(0.5f,0.5f);
+            Vector2 screenGazePoint = new Vector2(0.5f, 0.5f);
 
-#if C3D_PUPIL//screenpoint
-            screenGazePoint = pupilViewportPosition;
-#elif C3D_TOBIIVR
+#if C3D_TOBIIVR
             if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
             {
                 var gazeray = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay;
