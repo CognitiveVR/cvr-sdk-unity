@@ -60,12 +60,6 @@ namespace Cognitive3D
 
         return lastDirection;
     }
-#elif C3D_NEURABLE
-
-    static Vector3 GetLookDirection()
-    {
-        return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-    }
 #elif C3D_SNAPDRAGON
         static Vector3 GetLookDirection()
         {
