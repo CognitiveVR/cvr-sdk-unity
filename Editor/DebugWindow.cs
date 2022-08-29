@@ -123,26 +123,13 @@ namespace Cognitive3D
             sb.AppendLine("GPS Update Interval: " + p.GPSInterval);
             sb.AppendLine("GPS Accuracy: " + p.GPSAccuracy);
             sb.AppendLine("Record Floor Position: " + p.RecordFloorPosition);
+            
+            sb.AppendLine("Automatic Send Timer: " + p.AutomaticSendTimer);
             sb.AppendLine("Gaze Snapshot Batch Size: " + p.GazeSnapshotCount);
             sb.AppendLine("Event Snapshot Batch Size: " + p.TransactionSnapshotCount);
-            //sb.AppendLine("Event Extreme Batch Size: " + p.TransactionExtremeSnapshotCount);
-            //sb.AppendLine("Event Minimum Timer: " + p.TransactionSnapshotMinTimer);
-            sb.AppendLine("Event Automatic Send Timer: " + p.TransactionSnapshotMaxTimer);
-
             sb.AppendLine("Dynamic Snapshot Batch Size: " + p.DynamicSnapshotCount);
-            //sb.AppendLine("Dynamic Extreme Batch Size: " + p.DynamicExtremeSnapshotCount);
-            //sb.AppendLine("Dynamic Minimum Timer: " + p.DynamicSnapshotMinTimer);
-            sb.AppendLine("Dynamic Automatic Send Timer: " + p.DynamicSnapshotMaxTimer);
-
             sb.AppendLine("Sensor Snapshot Batch Size: " + p.SensorSnapshotCount);
-            //sb.AppendLine("Sensor Extreme Batch Size: " + p.SensorExtremeSnapshotCount);
-            //sb.AppendLine("Sensor Minimum Timer: " + p.SensorSnapshotMinTimer);
-            sb.AppendLine("Sensor Automatic Send Timer: " + p.SensorSnapshotMaxTimer);
-
             sb.AppendLine("Fixation Snapshot Batch Size: " + p.FixationSnapshotCount);
-            //sb.AppendLine("Fixation Extreme Batch Size: " + p.FixationExtremeSnapshotCount);
-            //sb.AppendLine("Fixation Minimum Timer: " + p.FixationSnapshotMinTimer);
-            sb.AppendLine("Fixation Automatic Send Timer: " + p.FixationSnapshotMaxTimer);
 
             sb.AppendLine("Save Data to Local Cache if no internet connection: " + p.LocalStorage);
             sb.AppendLine("Cache Size (bytes): " + p.LocalDataCacheSize);
