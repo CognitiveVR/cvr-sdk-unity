@@ -13,36 +13,7 @@ namespace Cognitive3D
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
-
-#if C3D_PUPIL
-        
-        static Vector3 GetLookDirection()
-        {
-            InitCheck();
-            return gazeDirection;
-        }
-
-        static PupilLabs.GazeController gazeController;
-        static Vector3 gazeDirection = Vector3.forward;
-
-        static void InitCheck()
-        {
-            if (gazeController != null){return;}
-
-            gazeController = gazeController = GameplayReferences.GazeController;
-            if (gazeController != null)
-                gazeController.OnReceive3dGaze += ReceiveEyeData;
-            else
-                Debug.LogError("Pupil Labs GazeController is null!");
-            gazeController.OnReceive3dGaze += ReceiveEyeData;
-        }
-
-        static void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f) { return; }
-            gazeDirection = data.GazeDirection;
-        }
-#elif C3D_TOBIIVR
+#if C3D_TOBIIVR
     static Vector3 lastDirection = Vector3.forward;
 
     static Vector3 GetLookDirection()
