@@ -14,10 +14,9 @@ namespace Cognitive3D.Components
 
 #if C3D_OCULUS
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
             OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
             OVRManager.TrackingLost += OVRManager_TrackingLost;
@@ -71,10 +70,9 @@ namespace Cognitive3D.Components
 
 #if C3D_PICOVR
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
             Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
             Pvr_UnitySDKSensor.Enter3DofModelEvent += TrackingLost;
@@ -100,10 +98,9 @@ namespace Cognitive3D.Components
 #endif
 #if C3D_PICOXR
 
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
 
             //there's no obvious substitute in Pico Unity XR 1.2.3
             //Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
@@ -130,14 +127,11 @@ namespace Cognitive3D.Components
 #endif
 
         //known bug - steamvr1.2 occlusion events will not be correctly reported if only 1 controller is enabled. need to test steamvr2
-#if C3D_STEAMVR2 || C3D_STEAMVR
-        public override void Cognitive3D_Init(Error initError)
+#if C3D_STEAMVR2
+        public override void Cognitive3D_Init()
         {
-            if (initError != Error.None) { return; }
-            base.Cognitive3D_Init(initError);
-            
+            base.Cognitive3D_Init();            
             Cognitive3D_Manager.PoseUpdateEvent += Cognitive3D_Manager_PoseUpdateHandler; //1.2
-            //Cognitive3D_Manager.PoseUpdateEvent += Cognitive3D_Manager_PoseUpdateEvent; //1.1
         }
 
         //steam 1.2
@@ -190,7 +184,7 @@ namespace Cognitive3D.Components
 
         public override bool GetWarning()
         {
-#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_PICOVR
+#if C3D_STEAMVR2 || C3D_OCULUS || C3D_PICOVR
             return false;
 #else
             return true;

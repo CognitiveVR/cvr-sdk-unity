@@ -28,9 +28,7 @@ namespace Cognitive3D
         //called immediately after construction
         public virtual void Initialize()
         {
-#if C3D_STEAMVR
-            Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_OnPoseEvent; //1.2
-#elif C3D_OCULUS
+#if C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
 #elif C3D_OMNICEPT
@@ -43,42 +41,6 @@ namespace Cognitive3D
 #endif
             cameraRoot = GameplayReferences.HMD.root;
         }
-
-        //TODO support more sdks to send when HMD removed (wave, varjo, steamvr2)
-
-#if C3D_STEAMVR
-        void Cognitive3D_Manager_OnPoseEvent(Valve.VR.EVREventType evrevent)
-        {
-            if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
-            {
-                headsetPresent = true;
-            }
-            if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
-            {
-                headsetPresent = false;
-                if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
-                {
-                    Core.InvokeSendDataEvent(false);
-                }
-            }
-        }
-
-        void Cognitive3D_Manager_OnPoseEventOLD(Valve.VR.EVREventType evrevent)
-        {
-            if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionStarted)
-            {
-                headsetPresent = true;
-            }
-            if (evrevent == Valve.VR.EVREventType.VREvent_TrackedDeviceUserInteractionEnded)
-            {
-                headsetPresent = false;
-                if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
-                {
-                    Core.InvokeSendDataEvent(false);
-                }
-            }
-        }
-#endif
 
 #if C3D_OCULUS
         private void OVRManager_HMDMounted()
@@ -189,7 +151,7 @@ namespace Cognitive3D
             {
                 gazeDirection = GameplayReferences.HMD.TransformDirection(ray.direction);
             }
-#elif C3D_VARJO
+#elif C3D_VARJOXR
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
                 var data = Varjo.XR.VarjoEyeTracking.GetGaze();
@@ -199,11 +161,19 @@ namespace Cognitive3D
                     gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
                 }
             }
-#elif C3D_SNAPDRAGON
-            gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
+#elif C3D_VARJOVR
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
+            {
+                var data = Varjo.XR.VarjoEyeTracking.GetGaze();
+                if (data.status != Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid)
+                {
+                    var ray = data.gaze;
+                    gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
+                }
+            }
 #elif C3D_OMNICEPT
             gazeDirection = lastDirection;
-#elif C3D_XR
+#else
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
@@ -247,10 +217,7 @@ namespace Cognitive3D
                 screenGazePoint = rightv2;
             else if (leftSet && rightSet)
                 screenGazePoint = (leftv2 + rightv2) / 2;
-#elif C3D_SNAPDRAGON
-            var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
-            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);
-#elif C3D_XR
+#else
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {

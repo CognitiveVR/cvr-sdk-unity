@@ -495,7 +495,7 @@ namespace Cognitive3D.ActiveSession
             //#if C3D_XR
             //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
             //uses projection matrix from openvr if developer is using a openvr-based sdk
-#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_TOBIIVR
+#if C3D_STEAMVR2
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
             m.m00 = vm.m0;

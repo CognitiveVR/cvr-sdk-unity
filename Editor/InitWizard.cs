@@ -220,8 +220,8 @@ namespace Cognitive3D
 #if C3D_VIVEWAVE
         selectedsdks.Add("C3D_VIVEWAVE");
 #endif
-#if C3D_VARJO
-        selectedsdks.Add("C3D_VARJO");
+#if C3D_VARJOVR
+        selectedsdks.Add("C3D_VARJOVR");
 #endif
 #if C3D_VARJOXR
         selectedsdks.Add("C3D_VARJOXR");
@@ -587,7 +587,7 @@ namespace Cognitive3D
                 }
             }
 
-#elif C3D_XR
+#else
             if (cameraBase == null && leftcontroller == null && rightcontroller == null)
             {
                 if (Camera.main != null)
@@ -629,14 +629,6 @@ namespace Cognitive3D
                     setupComplete = true;
                 }
             }
-#else
-            //TODO add support for this stuff
-            //hand motion stuff (hololens, meta, leapmotion, magicleap)
-            //ar stuff (arkit, arcore)
-            //other oculus stuff (gear, go, quest_touch)
-            //magic leap, snapdragon, daydream
-            GUI.Label(new Rect(30, 245, 440, 30), "We do not automatically support input tracking for the selected SDK at this time.", "boldlabel");
-            return;
 #endif
 
             //what controllers do we support. add scroll list here!
@@ -646,7 +638,7 @@ namespace Cognitive3D
             int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
 #pragma warning restore 162
 
-#if C3D_XR
+//#if C3D_XR
             offset = 80;
 
             List<string> controllerNames = new List<string>() { "Vive", "Oculus Rift", "Oculus Quest", "Windows MR","Pico Neo 2" };
@@ -666,7 +658,7 @@ namespace Cognitive3D
 
             GUI.EndScrollView();
 
-#endif //C3D_xr controller selection
+//#endif //C3D_xr controller selection
 
             //left hand label
             GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
@@ -834,36 +826,7 @@ namespace Cognitive3D
                 right.AddComponent<DynamicObject>();
             }
 
-#if C3D_STEAMVR
-            
-            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
-            {
-                left.AddComponent<ControllerInputTracker>();
-            }
-            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
-            {
-                right.AddComponent<ControllerInputTracker>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-            }
-#elif C3D_STEAMVR2
+#if C3D_STEAMVR2
             
             if (left != null && left.GetComponent<ControllerInputTracker>() == null)
             {
@@ -1033,8 +996,77 @@ namespace Cognitive3D
                 dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
                 inputTracker.RightHand = dyn;
             }
-#elif C3D_XR
-            //add component to cognitice manager
+#elif C3D_OCULUS
+            if (left != null)
+            {
+                var dyn = left.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
+                dyn.IsRight = false;
+                dyn.IsController = true;
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
+#if UNITY_ANDROID //check for oculus quest controllers
+                var config = OVRProjectConfig.GetProjectConfig();
+                if (config.targetDeviceTypes.Count > 0)
+                {
+                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
+                    {
+                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
+                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
+                    }
+                }
+#endif
+            }
+            if (right != null)
+            {
+                var dyn = right.GetComponent<DynamicObject>();
+                dyn.UseCustomMesh = false;
+                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
+                dyn.IsRight = true;
+                dyn.IsController = true;
+                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
+#if UNITY_ANDROID //check for oculus quest controllers
+                var config = OVRProjectConfig.GetProjectConfig();
+                if (config.targetDeviceTypes.Count > 0)
+                {
+                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
+                    {
+                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
+                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
+                    }
+                }
+#endif
+            }
+
+            if (cameraBase != null)
+            {
+                var tracker = FindObjectOfType<ControllerInputTracker>();
+                if (tracker == null)
+                {
+                    //add controller tracker to camera base
+                    tracker = cameraBase.AddComponent<ControllerInputTracker>();
+                }
+                if (left != null)
+                    tracker.LeftHand = left.GetComponent<DynamicObject>();
+                if (right != null)
+                    tracker.RightHand = right.GetComponent<DynamicObject>();
+            }
+            else
+            {
+                var tracker = FindObjectOfType<ControllerInputTracker>();
+                GameObject trackergo;
+                if (tracker == null)
+                {
+                    trackergo = new GameObject("Controller Tracker");
+                    tracker = trackergo.AddComponent<ControllerInputTracker>();
+                }
+                if (left != null)
+                    tracker.LeftHand = left.GetComponent<DynamicObject>();
+                if (right != null)
+                    tracker.RightHand = right.GetComponent<DynamicObject>();
+            }
+#else
+            //add component to cognitive manager
             var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
@@ -1112,75 +1144,6 @@ namespace Cognitive3D
                     dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
                 }
-            }
-#elif C3D_OCULUS
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
-#if UNITY_ANDROID //check for oculus quest controllers
-                var config = OVRProjectConfig.GetProjectConfig();
-                if (config.targetDeviceTypes.Count > 0)
-                {
-                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
-                    {
-                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
-                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
-                    }
-                }
-#endif
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
-#if UNITY_ANDROID //check for oculus quest controllers
-                var config = OVRProjectConfig.GetProjectConfig();
-                if (config.targetDeviceTypes.Count > 0)
-                {
-                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
-                    {
-                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
-                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
-                    }
-                }
-#endif
-            }
-
-            if (cameraBase != null)
-            {
-                var tracker = FindObjectOfType<ControllerInputTracker>();
-                if (tracker == null)
-                {
-                    //add controller tracker to camera base
-                    tracker = cameraBase.AddComponent<ControllerInputTracker>();
-                }
-                if (left != null)
-                    tracker.LeftHand = left.GetComponent<DynamicObject>();
-                if (right != null)
-                    tracker.RightHand = right.GetComponent<DynamicObject>();
-            }
-            else
-            {
-                var tracker = FindObjectOfType<ControllerInputTracker>();
-                GameObject trackergo;
-                if (tracker == null)
-                {
-                    trackergo = new GameObject("Controller Tracker");
-                    tracker = trackergo.AddComponent<ControllerInputTracker>();
-                }
-                if (left != null)
-                    tracker.LeftHand = left.GetComponent<DynamicObject>();
-                if (right != null)
-                    tracker.RightHand = right.GetComponent<DynamicObject>();
             }
 #endif
         }
@@ -1761,12 +1724,7 @@ namespace Cognitive3D
                     //second save screenshot
                     System.Action completedRefreshSceneVersion1 = delegate ()
                     {
-#if UNITY_2018_3_OR_NEWER
-                        //EditorCore.SceneViewCameraScreenshot(UnityEditor.SceneView.GetAllSceneCameras()[0], UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
                         EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-#else
-                    EditorCore.SaveCurrentScreenshot(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-#endif
                     };
 
                     //first refresh scene version

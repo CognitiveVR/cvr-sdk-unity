@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
-#if UNITY_2019_4_OR_NEWER
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
-#endif
 
 namespace Cognitive3D
 {
@@ -27,8 +24,6 @@ namespace Cognitive3D
             Refresh();
             return DebugText;
         }
-
-#if UNITY_2019_4_OR_NEWER
         static ListRequest Request;
         static List<string> PackageList = new List<string>();
         static string filePath;
@@ -59,13 +54,6 @@ namespace Cognitive3D
                 EditorApplication.update -= Progress;
             }
         }
-#else
-        public static void WriteDebugToFile(string filepath)
-        {
-            string debugContent = GetDebugContents();
-            System.IO.File.WriteAllText(filepath, debugContent);
-        }
-#endif
 
         static void Refresh()
         {
@@ -86,15 +74,11 @@ namespace Cognitive3D
             sb.AppendLine("*****************************");
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             sb.AppendLine("Scripting Define Symbols: " + s);
-
-#if UNITY_2019_4_OR_NEWER
             sb.AppendLine("Packages:");
             foreach (var package in PackageList)
             {
                 sb.AppendLine("  " + package);
             }
-#endif
-
             sb.AppendLine("SDK Version: " + Cognitive3D_Manager.SDK_VERSION);
             try
             {

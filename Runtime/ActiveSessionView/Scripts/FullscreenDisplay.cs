@@ -21,11 +21,10 @@ namespace Cognitive3D.ActiveSession
         {
             //Asv = asv;
             HMDCamera = camera;
-#if C3D_XR //if openvr xr. windowsMR displays both eyes. CONSIDER solutions
-        openVROffset = new Vector2(-0.05f,-0.11f);
-#elif C3D_STEAMVR2 //if openvr desktop 2.0.5
-        //openVROffset = new Vector2(0.083f,0.11f);
+#if C3D_STEAMVR2 //if openvr desktop 2.0.5
         openVROffset = new Vector2(0f,0f);
+#else
+        openVROffset = new Vector2(-0.05f,-0.11f);
 #endif
             Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
         }
@@ -88,7 +87,7 @@ namespace Cognitive3D.ActiveSession
             output.x = Remap(input.x, 820 - 580, 820 + 580, 0, Screen.width);
             output.y = Remap(input.y, 950 - 300, 950 + 300, 0, Screen.height);
 
-#if C3D_STEAMVR2 || C3D_XR
+#if C3D_STEAMVR2
         output.x += openVROffset.x * Screen.width;
         output.y += openVROffset.y * Screen.height;
 #endif
@@ -135,9 +134,9 @@ namespace Cognitive3D.ActiveSession
 
             DrawTextureCentered(ReticleTexture, new Vector2(ReticleSize, ReticleSize), screenPoint, ReticleColor);
         }
-        #endregion
+#endregion
 
-        #region Fixations
+#region Fixations
 
         public Texture fixationTexture;
         List<Fixation> fixations = new List<Fixation>(64);
@@ -177,9 +176,9 @@ namespace Cognitive3D.ActiveSession
             }
         }
 
-        #endregion
+#endregion
 
-        #region Saccades
+#region Saccades
 
         public Color SaccadeColor;
         public float SaccadeWidth;

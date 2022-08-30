@@ -5,15 +5,17 @@ using System.Collections;
 /// sends recenter hmd transaction
 /// </summary>
 
+//TODO add support for other recenter events
+
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Recenter Event")]
     public class RecenterEvent : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        public override void Cognitive3D_Init(Error initError)
+        public override void Cognitive3D_Init()
         {
-            base.Cognitive3D_Init(initError);
+            base.Cognitive3D_Init();
             if (OVRManager.display != null)
                 OVRManager.display.RecenteredPose += RecenterEventTracker_RecenteredPose;
         }

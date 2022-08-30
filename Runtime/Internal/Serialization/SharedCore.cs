@@ -685,6 +685,8 @@ namespace Cognitive3D.Serialization
             return (index + offset) % CachedEyeCaptures;
         }
 
+        static List<string> fixationHitDynamicIds = new List<string>(CachedEyeCaptures);
+        static List<EyeCapture> localFixationUsedCaptures = new List<EyeCapture>(CachedEyeCaptures);
         /// <summary>
         /// returns true if 'active fixation' is actually active again
         /// </summary>
@@ -693,10 +695,9 @@ namespace Cognitive3D.Serialization
         static bool TryBeginLocalFixation(int index)
         {
             int samples = 0;
-            List<string> hitDynamicIds = new List<string>();
-            long firstOnTransformTime = 0;
-
-            List<EyeCapture> usedCaptures = new List<EyeCapture>();
+            fixationHitDynamicIds.Clear();
+            localFixationUsedCaptures.Clear();
+            long firstOnTransformTime = 0;            
 
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
@@ -709,12 +710,12 @@ namespace Cognitive3D.Serialization
                     return false;
                 }
                 samples++;
-                usedCaptures.Add(EyeCaptures[GetIndex(i)]);
+                localFixationUsedCaptures.Add(EyeCaptures[GetIndex(i)]);
                 if (firstOnTransformTime < 1)
                     firstOnTransformTime = EyeCaptures[GetIndex(i)].Time;
                 if (EyeCaptures[GetIndex(i)].UseCaptureMatrix)
                 {
-                    hitDynamicIds.Add(EyeCaptures[GetIndex(i)].HitDynamicId);
+                    fixationHitDynamicIds.Add(EyeCaptures[GetIndex(i)].HitDynamicId);
                 }
                 if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
             }
@@ -724,10 +725,10 @@ namespace Cognitive3D.Serialization
             {
                 return false;
             }
-            if (usedCaptures.Count > 2)
+            if (localFixationUsedCaptures.Count > 2)
             {
                 //fail if the time between samples is < minFixationMs
-                if ((usedCaptures[usedCaptures.Count - 1].Time - usedCaptures[0].Time) < MinFixationMs) { return false; }
+                if ((localFixationUsedCaptures[localFixationUsedCaptures.Count - 1].Time - localFixationUsedCaptures[0].Time) < MinFixationMs) { return false; }
             }
             //TODO find source of rare bug with fixation duration < MinFixationMs when fixating on fast moving dynamic object
 
@@ -743,7 +744,7 @@ namespace Cognitive3D.Serialization
 
             Vector3 averageLocalPosition = Vector3.zero;
             Vector3 averageWorldPosition = Vector3.zero;
-            foreach (var v in usedCaptures)
+            foreach (var v in localFixationUsedCaptures)
             {
                 if (v.UseCaptureMatrix)
                 {
@@ -786,14 +787,14 @@ namespace Cognitive3D.Serialization
             //======== average positions and check if fixations are within radius. using only the first eye capture matrix as a reference
 
             int hitSampleCount = 0;
-            Vector3 position = usedCaptures[0].CaptureMatrix.GetColumn(3);
+            Vector3 position = localFixationUsedCaptures[0].CaptureMatrix.GetColumn(3);
             Quaternion rotation = Quaternion.LookRotation(
-                usedCaptures[0].CaptureMatrix.GetColumn(2),
-                usedCaptures[0].CaptureMatrix.GetColumn(1)
+                localFixationUsedCaptures[0].CaptureMatrix.GetColumn(2),
+                localFixationUsedCaptures[0].CaptureMatrix.GetColumn(1)
             );
             var unscaledCaptureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
 
-            foreach (var v in usedCaptures)
+            foreach (var v in localFixationUsedCaptures)
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
@@ -810,7 +811,7 @@ namespace Cognitive3D.Serialization
             //then use all captures world position to check if within fixation radius
 
             bool withinRadius = true;
-            foreach (var v in usedCaptures)
+            foreach (var v in localFixationUsedCaptures)
             {
                 if (v.HitDynamicId != mostUsedId) { continue; }
                 if (!v.UseCaptureMatrix) { continue; }
@@ -841,21 +842,21 @@ namespace Cognitive3D.Serialization
                 ActiveFixation.LocalPosition = averageLocalPosition;
                 ActiveFixation.WorldPosition = averageWorldPosition; //average world position is already matrix unscaled above
                 ActiveFixation.DynamicObjectId = mostUsedId;
-                ActiveFixation.DynamicMatrix = usedCaptures[0].CaptureMatrix;
+                ActiveFixation.DynamicMatrix = localFixationUsedCaptures[0].CaptureMatrix;
 
-                float distance = Vector3.Magnitude(averageWorldPosition - usedCaptures[0].HmdPosition);
+                float distance = Vector3.Magnitude(averageWorldPosition - localFixationUsedCaptures[0].HmdPosition);
                 float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
 
                 ActiveFixation.StartDistance = distance;
                 ActiveFixation.MaxRadius = opposite;
-                ActiveFixation.StartMs = usedCaptures[0].Time;
-                ActiveFixation.LastOnTransform = usedCaptures[0].Time;
-                ActiveFixation.LastEyesOpen = usedCaptures[0].Time;
-                ActiveFixation.LastNonDiscardedTime = usedCaptures[0].Time;
-                ActiveFixation.LastInRange = usedCaptures[0].Time;
+                ActiveFixation.StartMs = localFixationUsedCaptures[0].Time;
+                ActiveFixation.LastOnTransform = localFixationUsedCaptures[0].Time;
+                ActiveFixation.LastEyesOpen = localFixationUsedCaptures[0].Time;
+                ActiveFixation.LastNonDiscardedTime = localFixationUsedCaptures[0].Time;
+                ActiveFixation.LastInRange = localFixationUsedCaptures[0].Time;
                 ActiveFixation.IsLocal = true;
-                ActiveFixation.DynamicTransform = usedCaptures[0].HitDynamicTransform;
-                foreach (var c in usedCaptures)
+                ActiveFixation.DynamicTransform = localFixationUsedCaptures[0].HitDynamicTransform;
+                foreach (var c in localFixationUsedCaptures)
                 {
                     if (c.SkipPositionForFixationAverage) { continue; }
                     if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
@@ -865,7 +866,7 @@ namespace Cognitive3D.Serialization
                         CachedEyeCapturePositions.Add(c.LocalPosition);
                     }
                 }
-                foreach (var c in usedCaptures)
+                foreach (var c in localFixationUsedCaptures)
                 {
                     //add first used sample as start
                     if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
@@ -884,18 +885,19 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        static List<EyeCapture> worldFixationSamples = new List<EyeCapture>(CachedEyeCaptures);
+
         //checks the NEXT eyecaptures to see if we should start a fixation
         static bool TryBeginFixation(int index)
         {
             Vector3 averageWorldPos = Vector3.zero;
             //number of eye captures on a surface
             int sampleCount = 0;
+            worldFixationSamples.Clear();
 
             long firstOnTransformTime = 0;
             long firstSampleTime = long.MaxValue;
             long lastSampleTime = 0;
-
-            List<EyeCapture> samples = new List<EyeCapture>();
 
             //take all the eye captures within the minimum fixation duration
             //escape if any are eyes closed or discarded captures
@@ -921,7 +923,7 @@ namespace Cognitive3D.Serialization
                 lastSampleTime = System.Math.Max(lastSampleTime, sample.Time);
 
                 sampleCount++;
-                samples.Add(EyeCaptures[GetIndex(i)]);
+                worldFixationSamples.Add(EyeCaptures[GetIndex(i)]);
                 //lastSampleTime = EyeCaptures[GetIndex(i)].Time;
                 if (firstOnTransformTime < 1)
                     firstOnTransformTime = sample.Time;
@@ -964,7 +966,7 @@ namespace Cognitive3D.Serialization
 
             //check that each sample is within the fixation radius
             //for (int i = 0; i < sampleCount; i++)
-            foreach (var v in samples)
+            foreach (var v in worldFixationSamples)
             {
                 //get starting screen position to compare other eye capture points against
                 //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);

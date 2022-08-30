@@ -797,7 +797,7 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
             }
         }
-#elif C3D_XR
+#else
         const int CachedEyeCaptures = 120;
 
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -865,30 +865,6 @@ namespace Cognitive3D
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
-#else
-        const int CachedEyeCaptures = 120;
-        //public Ray CombinedWorldGazeRay() { return new Ray(); }
-        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(GameplayReferences.HMD.position,GameplayReferences.HMD.forward); return true;}
-
-        public bool LeftEyeOpen() { return true; }
-        public bool RightEyeOpen() { return true; }
-
-        public long EyeCaptureTimestamp()
-        {
-            return (long)(Util.Timestamp() * 1000);
-        }
-
-        //returns true if there is another data point to work on
-        int lastProcessedFrame;
         public bool GetNextData()
         {
             if (lastProcessedFrame != Time.frameCount)

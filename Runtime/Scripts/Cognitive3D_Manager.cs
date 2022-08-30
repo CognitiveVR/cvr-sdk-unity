@@ -3,12 +3,8 @@ using Cognitive3D;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-#if C3D_STEAMVR || C3D_STEAMVR2
+#if  C3D_STEAMVR2
 using Valve.VR;
-#endif
-
-#if C3D_META
-using System.Runtime.InteropServices;
 #endif
 
 /// <summary>
@@ -20,6 +16,8 @@ using System.Runtime.InteropServices;
 //level change events
 //quit and destroy events
 
+//TODO move Omnicept, Steam and Oculus specific features into components
+
 namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
@@ -28,41 +26,8 @@ namespace Cognitive3D
     public class Cognitive3D_Manager : MonoBehaviour
     {
 
-#if C3D_META
-        [DllImport("MetaVisionDLL", EntryPoint = "getSerialNumberAndCalibration")]
-        internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
-#endif
-
         #region Events
 
-
-#if C3D_STEAMVR
-        //1.1
-        /*
-        public delegate void PoseUpdateHandler(params object[] args);
-        /// <summary>
-        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
-        /// </summary>
-        public static event PoseUpdateHandler PoseUpdateEvent;
-        public void OnPoseUpdate(params object[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
-        */
-
-        //1.2
-        public delegate void PoseUpdateHandler(params TrackedDevicePose_t[] args);
-        /// <summary>
-        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
-        /// </summary>
-        public static event PoseUpdateHandler PoseUpdateEvent;
-        public void OnPoseUpdate(params TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
-
-        //1.1 and 1.2
-        public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
-        /// <summary>
-        /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
-        /// </summary>
-        public static event PoseEventHandler PoseEvent;
-        public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
-#endif
 #if C3D_STEAMVR2
         public delegate void PoseUpdateHandler(params Valve.VR.TrackedDevicePose_t[] args);
         /// <summary>
@@ -193,12 +158,6 @@ namespace Cognitive3D
                 Util.logDebug("Cognitive3D_Manager Initialize does not have valid apikey");
                 return;
             }
-
-#if C3D_STEAMVR
-            SteamVR_Events.NewPoses.AddListener(OnPoseUpdate); //steamvr 1.2
-            PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
-            //SteamVR_Utils.Event.Listen("new_poses", OnPoseUpdate); //steamvr 1.1
-#endif
 
 #if C3D_STEAMVR2
             Valve.VR.SteamVR_Events.NewPoses.AddListener(OnPoseUpdate);
@@ -394,33 +353,6 @@ namespace Cognitive3D
 
             SetSessionProperty("c3d.deviceid", DeviceId);
 
-#if C3D_META
-            string serialnumber;
-            string xml;
-            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
-            }
-#elif C3D_STEAMVR
-
-            string serialnumber = null;
-
-            var error = ETrackedPropertyError.TrackedProp_Success;
-            var result = new System.Text.StringBuilder();
-
-            if (OpenVR.System != null)
-            {
-                var capacity = OpenVR.System.GetStringTrackedDeviceProperty(0, ETrackedDeviceProperty.Prop_SerialNumber_String, result, 64, ref error);
-                if (capacity > 0)
-                    serialnumber = result.ToString();
-
-                if (!string.IsNullOrEmpty(serialnumber))
-                {
-                    Core.SetSessionProperty("c3d.device.serialnumber", serialnumber);
-                }
-            }
-#endif
-
 #if UNITY_EDITOR
             SetSessionProperty("c3d.app.inEditor", true);
 #else
@@ -429,45 +361,30 @@ namespace Cognitive3D
             SetSessionProperty("c3d.version", SDK_VERSION);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 
-#if C3D_STEAMVR2 || C3D_STEAMVR
+#if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
-#if C3D_SNAPDRAGON
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Snapdragon");
-#elif C3D_OCULUS
+
+#if C3D_OCULUS
             SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type", "None");
             SetSessionProperty("c3d.app.sdktype", "Oculus");
-#elif C3D_ARKIT
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "ARKit");
-#elif C3D_ARCORE
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "ARCore");
-#elif C3D_GOOGLEVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Google VR");
 #elif C3D_HOLOLENS
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Hololens");
-#elif C3D_META
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Meta");
-#elif C3D_VARJO
+#elif C3D_VARJOVR
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Varjo");
-            SetSessionProperty("c3d.app.sdktype", "Varjo");
+            SetSessionProperty("c3d.app.sdktype", "VarjoVR");
+#elif C3D_VARJOXR
+            SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            SetSessionProperty("c3d.device.eyetracking.type","Varjo");
+            SetSessionProperty("c3d.app.sdktype", "VarjoXR");
 #elif C3D_OMNICEPT
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
@@ -502,17 +419,6 @@ namespace Cognitive3D
             SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
 
             SetSessionProperty("c3d.app.engine", "Unity");
-        }
-
-        /// <summary>
-        /// sets the user's name property
-        /// </summary>
-        /// <param name="name"></param>
-        [Obsolete("Use Core.SetParticipantFullName and Core.SetParticipantId instead")]
-        public static void SetUserName(string name)
-        {
-            if (!string.IsNullOrEmpty(name))
-                SetParticipantFullName(name);
         }
 
         /// <summary>
@@ -574,11 +480,11 @@ namespace Cognitive3D
 
         #region Updates and Loops
 
-#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS
+#if C3D_STEAMVR2 || C3D_OCULUS
         GameplayReferences.ControllerInfo tempControllerInfo = null;
 #endif
 
-#if C3D_STEAMVR || C3D_STEAMVR2
+#if C3D_STEAMVR2
         private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
         {
             for (int i = 0; i<args.Length;i++)
@@ -636,7 +542,7 @@ namespace Cognitive3D
 
             //this should only update if components that use these values are found (controller visibility, arm length?)
 
-#if C3D_STEAMVR || C3D_STEAMVR2
+#if C3D_STEAMVR2
             var system = Valve.VR.OpenVR.System;
             if (system != null)
             {
@@ -1074,22 +980,6 @@ namespace Cognitive3D
             CognitiveStatics.Reset();
             DynamicManager.Reset();
         }
-
-        //internal static Error InitError;
-
-        /// <summary>
-        /// Starts a Cognitive3D session. Records hardware info, creates network manager
-        /// returns false if it cannot start the session or session has already started. returns true if it starts a session
-        /// </summary>
-        /*public static bool Init()
-        {
-            //_hmd = HMDCamera;
-
-
-            return true;
-        }*/
-
-
 
         public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
         {
