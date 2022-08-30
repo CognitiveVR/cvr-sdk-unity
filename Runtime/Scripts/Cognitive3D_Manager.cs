@@ -332,25 +332,6 @@ namespace Cognitive3D
         }
 
 #if C3D_OMNICEPT
-        double pupillometryTimestamp;
-
-        //update every 100MS
-        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyeTracking data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            if (pupillometryTimestamp < timestampMS)
-            {
-                pupillometryTimestamp = timestampMS + 0.1;
-                if (data.LeftEye.PupilDilationConfidence > 0.5f && data.LeftEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftEye.PupilDilation, timestampMS);
-                }
-                if (data.RightEye.PupilDilationConfidence > 0.5f && data.RightEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightEye.PupilDilation, timestampMS);
-                }
-            }
-        }
 
         //every 5000 ms
         void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
