@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Cognitive3D;
 using System.Text;
-using Cognitive3D.External;
 
 namespace Cognitive3D
 {
@@ -23,7 +22,7 @@ namespace Cognitive3D
 
         static GazeCore()
         {
-            Cognitive3D_Manager.OnSendData += SendGazeData;
+            //Cognitive3D_Manager.OnSendData += SendGazeData;
             gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 1200);
             gazebuilder.Append("{\"data\":[");
         }
@@ -65,37 +64,8 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            gazebuilder.Append("{");
+            CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp);
 
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", compass, gazebuilder);
-            }
-            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
-            }
-
-            gazebuilder.Append("}");
-            gazeCount++;
-            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
-            {
-                SendGazeData(false);
-            }
-            else
-            {
-                gazebuilder.Append(",");
-            }
             SkyGazeRecordEvent(timestamp, string.Empty, Vector3.zero, hmdpoint, hmdrotation);
         }
 
@@ -109,40 +79,8 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            gazebuilder.Append("{");
-
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("o", objectid, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", compass, gazebuilder);
-            }
-            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
-            }
-            gazebuilder.Append("}");
-
-            gazeCount++;
-            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
-            {
-                SendGazeData(false);
-            }
-            else
-            {
-                gazebuilder.Append(",");
-            }
+            CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp);
+            
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
@@ -156,38 +94,8 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            gazebuilder.Append("{");
-
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", gazepoint, gazebuilder);
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", compass, gazebuilder);
-            }
-            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
-            }
-            gazebuilder.Append("}");
-
-            gazeCount++;
-            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
-            {
-                SendGazeData(false);
-            }
-            else
-            {
-                gazebuilder.Append(",");
-            }
+            CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp);
+            
             WorldGazeRecordEvent(timestamp, string.Empty, gazepoint, hmdpoint, hmdrotation);
         }
 
@@ -202,51 +110,12 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
 
-            gazebuilder.Append("{");
-
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("o", objectid, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("mediaId", mediasource, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetInt("mediatime", mediatimeMs, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector2("uvs", uvs, gazebuilder);
-
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", gpsloc, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", compass, gazebuilder);
-            }
-            if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
-            {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
-            }
-
-            gazebuilder.Append("}");
-            gazeCount++;
-            if (gazeCount >= Cognitive3D_Preferences.Instance.GazeSnapshotCount)
-            {
-                SendGazeData(false);
-            }
-            else
-            {
-                gazebuilder.Append(",");
-            }
+            CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs);
+            
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
-        private static void SendGazeData(bool copyDataToCache)
+        /*private static void SendGazeData(bool copyDataToCache)
         {
             if (Cognitive3D_Preferences.Instance.EnableGaze == false)
             {
@@ -375,9 +244,9 @@ namespace Cognitive3D
             //gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 200);
             gazebuilder.Length = 9;
             //gazebuilder.Append("{\"data\":[");
-        }
+        }*/
 
-        public static void SendSessionProperties(bool copyDataToCache)
+        /*public static void SendSessionProperties(bool copyDataToCache)
         {
             if (!Cognitive3D_Manager.IsInitialized)
             {
@@ -498,6 +367,6 @@ namespace Cognitive3D
             Cognitive3D_Manager.NetworkManager.Post(url, content);
             if (OnGazeSend != null)
                 OnGazeSend.Invoke(copyDataToCache);
-        }
+        }*/
     }
 }

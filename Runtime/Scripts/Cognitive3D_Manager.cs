@@ -114,11 +114,6 @@ namespace Cognitive3D
         public bool AssignOculusProfileToParticipant = true;
 #endif
 
-#if C3D_AH || C3D_PUPIL
-        [Tooltip("Start recording analytics after calibration is successfully completed")]
-        public bool InitializeAfterCalibration = true;
-#endif
-
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
@@ -166,43 +161,7 @@ namespace Cognitive3D
                 });
             }
 #endif
-
-#if C3D_AH
-            if (InitializeAfterCalibration)
-            {
-                if (AdhawkApi.Calibrator.Instance != null)
-                {
-                    while (!AdhawkApi.Calibrator.Instance.Calibrated)
-                    {
-                        yield return new WaitForSeconds(1);
-                        if (AdhawkApi.Calibrator.Instance == null){break;}
-                    }
-                }
-                Initialize();
-            }
-#endif
-#if C3D_PUPIL
-            if (InitializeAfterCalibration)
-            {
-                if (calibrationController == null)
-                    calibrationController = GameplayReferences.CalibrationController;
-                if (calibrationController != null)
-                    calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
-                else
-                    Util.logWarning("Cognitive Manager could not find PupilLabs.CalibrationController in scene. Initialize After Calibration will not work as expected!");
-            }
-#endif
         }
-
-#if C3D_PUPIL
-        PupilLabs.CalibrationController calibrationController;
-
-        private void PupilLabs_OnCalibrationSucceeded()
-        {
-            calibrationController.OnCalibrationSucceeded -= PupilLabs_OnCalibrationSucceeded;
-            Initialize();
-        }
-#endif
 
         [System.NonSerialized]
         public GazeBase gazeBase;
@@ -282,8 +241,9 @@ namespace Cognitive3D
             }
 
             IsInitialized = true;
-            if (Cognitive3D_Preferences.Instance.EnableGaze == false)
-                GazeCore.SendSessionProperties(false);
+            //if (Cognitive3D_Preferences.Instance.EnableGaze == false)
+                //GazeCore.SendSessionProperties(false);
+                //TODO support skipping spatial gaze data but still recording session properties
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
@@ -473,11 +433,7 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
-#if C3D_FOVE
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Fove");
-            SetSessionProperty("c3d.app.sdktype", "Fove");
-#elif C3D_SNAPDRAGON
+#if C3D_SNAPDRAGON
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Snapdragon");
@@ -486,10 +442,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type", "None");
             SetSessionProperty("c3d.app.sdktype", "Oculus");
-#elif C3D_NEURABLE
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Neurable");
 #elif C3D_ARKIT
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
@@ -532,19 +484,7 @@ namespace Cognitive3D
             //TODO add XR inputdevice name
 
             //eye tracker addons
-#if C3D_TOBIIVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Tobii");
-#elif C3D_PUPIL
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Pupil");
-            SetSessionProperty("c3d.app.sdktype", "Pupil");
-#elif C3D_AH
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Adhawk");
-            SetSessionProperty("c3d.app.sdktype", "Adhawk");
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");

@@ -2,10 +2,6 @@
 using System.Collections;
 using Cognitive3D;
 using System;
-#if C3D_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
 
 //utility code to get player's eye ray
 
@@ -17,79 +13,7 @@ namespace Cognitive3D
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
-
-#if C3D_PUPIL
-        
-        static Vector3 GetLookDirection()
-        {
-            InitCheck();
-            return gazeDirection;
-        }
-
-        static PupilLabs.GazeController gazeController;
-        static Vector3 gazeDirection = Vector3.forward;
-
-        static void InitCheck()
-        {
-            if (gazeController != null){return;}
-
-            gazeController = gazeController = GameplayReferences.GazeController;
-            if (gazeController != null)
-                gazeController.OnReceive3dGaze += ReceiveEyeData;
-            else
-                Debug.LogError("Pupil Labs GazeController is null!");
-            gazeController.OnReceive3dGaze += ReceiveEyeData;
-        }
-
-        static void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f) { return; }
-            gazeDirection = data.GazeDirection;
-        }
-
-#elif C3D_FOVE
-    static Vector3 GetLookDirection()
-    {
-        Fove.Unity.FoveInterface fi = GameplayReferences.FoveInstance;
-        if (fi == null)
-        {
-            return GameplayReferences.HMD.forward;
-        }
-        var eyeRays = fi.GetGazeRays();
-        Vector3 v = new Vector3(eyeRays.left.direction.x, eyeRays.left.direction.y, eyeRays.left.direction.z);
-        return v.normalized;
-    }
-#elif C3D_TOBIIVR
-    static Vector3 lastDirection = Vector3.forward;
-
-    static Vector3 GetLookDirection()
-    {
-        var provider = Tobii.XR.TobiiXR.Internal.Provider;
-
-        if (provider == null)
-        {
-            return GameplayReferences.HMD.forward;
-        }
-        if (provider.EyeTrackingDataLocal.GazeRay.IsValid)
-        {
-            lastDirection = GameplayReferences.HMD.TransformDirection(provider.EyeTrackingDataLocal.GazeRay.Direction);
-        }
-
-        return lastDirection;
-    }
-#elif C3D_NEURABLE
-
-    static Vector3 GetLookDirection()
-    {
-        return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-    }
-#elif C3D_AH
-
-    static Vector3 GetLookDirection()
-    {
-        return Calibrator.Instance.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
-    }
-#elif C3D_SNAPDRAGON
+#if C3D_SNAPDRAGON
         static Vector3 GetLookDirection()
         {
             return SvrManager.Instance.EyeDirection;

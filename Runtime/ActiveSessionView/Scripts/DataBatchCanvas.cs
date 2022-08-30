@@ -52,10 +52,12 @@ namespace Cognitive3D.ActiveSession
             if (frame < 10) { return; }
             frame = 0;
 
+            //TODO make other place to check that have started (data.CachedDataCount)
+
             #region Events
             if (EventTimeSinceSend < 0)
             {
-                if (Cognitive3D.CustomEvent.CachedEvents > 0)
+                if (false /*Cognitive3D.CustomEvent.CachedEvents > 0*/)
                 {
                     //has data, not sent
                     EventSendText.color = noDataColor;
@@ -78,7 +80,7 @@ namespace Cognitive3D.ActiveSession
             #region Gaze
             if (GazeTimeSinceSend < 0)
             {
-                if (Cognitive3D.GazeCore.CachedGaze > 0)
+                if (false /*Cognitive3D.GazeCore.CachedGaze > 0*/)
                 {
                     GazeSendText.color = noDataColor;
                     GazeSendText.text = notYetSentString;
@@ -98,7 +100,7 @@ namespace Cognitive3D.ActiveSession
             #region Fixations
             if (FixationTimeSinceSend < 0)
             {
-                if (FixationCore.CachedFixations > 0)
+                if (false /*FixationCore.CachedFixations > 0*/)
                 {
                     FixationSendText.color = noDataColor;
                     FixationSendText.text = notYetSentString;
@@ -118,7 +120,7 @@ namespace Cognitive3D.ActiveSession
             #region Dynamics
             if (DynamicTimeSinceSend < 0)
             {
-                if (Cognitive3D.DynamicManager.CachedSnapshots > 0)
+                if (false /*Cognitive3D.DynamicManager.CachedSnapshots > 0*/)
                 {
                     DynamicSendText.color = noDataColor;
                     DynamicSendText.text = notYetSentString;
@@ -138,7 +140,7 @@ namespace Cognitive3D.ActiveSession
             #region Sensors
             if (SensorTimeSinceSend < 0)
             {
-                if (Cognitive3D.SensorRecorder.CachedSensors > 0)
+                if (false /*Cognitive3D.SensorRecorder.CachedSensors > 0*/)
                 {
                     SensorSendText.color = noDataColor;
                     SensorSendText.text = notYetSentString;

@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D;
 
-#if C3D_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
-
 //deals with most generic integration stuff
 //hmd removed - send data
 
@@ -25,10 +20,6 @@ namespace Cognitive3D
     public class GazeBase : MonoBehaviour
     {
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
-#if C3D_AH
-        private static Calibrator ah_calibrator;
-#endif
-
         public static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
@@ -42,14 +33,6 @@ namespace Cognitive3D
 #elif C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
             OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-#elif C3D_AH
-            ah_calibrator = Calibrator.Instance;
-#elif C3D_PUPIL
-            gazeController = GameplayReferences.GazeController;
-            if (gazeController != null)
-                gazeController.OnReceive3dGaze += ReceiveEyeData;
-            else
-                Debug.LogError("Pupil Labs GazeController is null!");
 #elif C3D_OMNICEPT
             if (gb == null)
             {
@@ -200,23 +183,6 @@ namespace Cognitive3D
             }
         }
 
-#if C3D_PUPIL
-        PupilLabs.GazeController gazeController;
-        Vector3 localGazeDirection;
-        Vector3 pupilViewportPosition;
-
-        void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f) { return; }
-            localGazeDirection = data.GazeDirection;
-            pupilViewportPosition = data.NormPos;
-        }
-
-        private void OnDisable()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-#endif
 #if C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;
@@ -236,19 +202,7 @@ namespace Cognitive3D
         /// </summary>
         public Vector3 GetWorldGazeDirection()
         {
-#if C3D_FOVE //direction
-            var eyeRays = GameplayReferences.FoveInstance.GetGazeRays();
-            var ray = eyeRays.left;
-            gazeDirection = new Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-            gazeDirection.Normalize();
-#elif C3D_PUPIL
-            gazeDirection = GameplayReferences.HMD.TransformDirection(localGazeDirection);
-#elif C3D_TOBIIVR
-            if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
-            {
-                gazeDirection = GameplayReferences.HMD.TransformDirection(Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.Direction);
-            }    
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             var ray = new Ray();
             //improvement? - if using callback, listen and use last valid data instead of calling SRanipal_Eye_API.GetEyeData
             if (ViveSR.anipal.Eye.SRanipal_Eye.GetGazeRay(ViveSR.anipal.Eye.GazeIndex.COMBINE, out ray))
@@ -265,10 +219,6 @@ namespace Cognitive3D
                     gazeDirection = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
                 }
             }
-#elif C3D_NEURABLE
-            gazeDirection = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay().direction;
-#elif C3D_AH
-            gazeDirection = ah_calibrator.GetGazeVector(filterType: FilterType.ExponentialMovingAverage);
 #elif C3D_SNAPDRAGON
             gazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
 #elif C3D_OMNICEPT
@@ -303,29 +253,9 @@ namespace Cognitive3D
         /// </summary>
         public Vector3 GetViewportGazePoint()
         {
-            Vector2 screenGazePoint = new Vector2(0.5f,0.5f);
+            Vector2 screenGazePoint = new Vector2(0.5f, 0.5f);
 
-#if C3D_FOVE //screenpoint
-
-            //var normalizedPoint = FoveInterface.GetNormalizedViewportPosition(ray.GetPoint(1000), Fove.EFVR_Eye.Left); //Unity Plugin Version 1.3.1
-            var normalizedPoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(GameplayReferences.FoveInstance.GetGazeRays().left.GetPoint(1000));
-
-            //Vector2 gazePoint = hmd.GetGazePoint();
-            if (float.IsNaN(normalizedPoint.x))
-            {
-                return screenGazePoint;
-            }
-
-            screenGazePoint = new Vector2(normalizedPoint.x, normalizedPoint.y);
-#elif C3D_PUPIL//screenpoint
-            screenGazePoint = pupilViewportPosition;
-#elif C3D_TOBIIVR
-            if (Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay.IsValid)
-            {
-                var gazeray = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal.GazeRay;
-                screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(gazeray.Origin + GameplayReferences.HMD.TransformDirection(gazeray.Direction) * 1000);                
-            }
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             var leftv2 = Vector2.zero;
             var rightv2 = Vector2.zero;
 
@@ -337,13 +267,6 @@ namespace Cognitive3D
                 screenGazePoint = rightv2;
             else if (leftSet && rightSet)
                 screenGazePoint = (leftv2 + rightv2) / 2;
-
-#elif C3D_NEURABLE
-            screenGazePoint = Neurable.Core.NeurableUser.Instance.NeurableCam.NormalizedFocalPoint;
-#elif C3D_AH
-            Vector3 x = ah_calibrator.GetGazeOrigin();
-            Vector3 r = ah_calibrator.GetGazeVector();
-            screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(x + 10 * r);
 #elif C3D_SNAPDRAGON
             var worldgazeDirection = SvrManager.Instance.leftCamera.transform.TransformDirection(SvrManager.Instance.EyeDirection);
             screenGazePoint = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(GameplayReferences.HMD.position + 10 * worldgazeDirection);

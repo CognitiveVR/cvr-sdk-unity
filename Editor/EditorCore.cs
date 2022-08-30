@@ -796,7 +796,7 @@ namespace Cognitive3D
                 return;
             }
 
-            MediaSource[] sources = JsonUtil.GetJsonArray<MediaSource>(text);
+            MediaSource[] sources = Util.GetJsonArray<MediaSource>(text);
             Debug.Log("Response contains " + sources.Length + " media sources");
             UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
             MediaSources = sources;

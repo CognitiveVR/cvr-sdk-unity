@@ -243,11 +243,11 @@ namespace Cognitive3D
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send(Vector3 position)
         {
-            float[] pos = new float[3] { 0, 0, 0 };
+            //float[] pos = new float[3] { 0, 0, 0 };
 
-            pos[0] = position.x;
-            pos[1] = position.y;
-            pos[2] = position.z;
+            //pos[0] = position.x;
+            //pos[1] = position.y;
+            //pos[2] = position.z;
 
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
@@ -255,7 +255,7 @@ namespace Cognitive3D
                 SetProperty("duration", duration);
             }
 
-            SendCustomEvent(category, _properties, pos, dynamicObjectId);
+            SendCustomEvent(category, _properties, position, dynamicObjectId);
         }
 
         /// <summary>
@@ -266,14 +266,14 @@ namespace Cognitive3D
         public void Send()
         {
             //TODO should be using gampelay references, not Cognitive3D_Manager.HMD
-            float[] pos = new float[3] { 0, 0, 0 };
-
-            if (GameplayReferences.HMD != null)
-            {
-                pos[0] = GameplayReferences.HMD.position.x;
-                pos[1] = GameplayReferences.HMD.position.y;
-                pos[2] = GameplayReferences.HMD.position.z;
-            }
+            //float[] pos = new float[3] { 0, 0, 0 };
+            //
+            //if (GameplayReferences.HMD != null)
+            //{
+            //    pos[0] = GameplayReferences.HMD.position.x;
+            //    pos[1] = GameplayReferences.HMD.position.y;
+            //    pos[2] = GameplayReferences.HMD.position.z;
+            //}
 
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
@@ -281,7 +281,7 @@ namespace Cognitive3D
                 SetProperty("duration", duration);
             }
 
-            SendCustomEvent(category, _properties, pos, dynamicObjectId);
+            SendCustomEvent(category, _properties, GameplayReferences.HMD.position, dynamicObjectId);
         }
 
 
@@ -304,7 +304,7 @@ namespace Cognitive3D
 
         private static void Core_OnSendData(bool copyDataToCache)
         {
-            SendTransactions(copyDataToCache);
+            //SendTransactions(copyDataToCache);
         }
 
 
@@ -332,26 +332,27 @@ namespace Cognitive3D
                 {
                     if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                         Util.logDevelopment("check to automatically send events");
-                    SendTransactions(false);
+                    //TODO setup looping automatic send timers
+                    //SendTransactions(false);
                 }
             }
         }
 
         //checks for min send time and extreme batch size before calling send
-        static void TrySendTransactions()
-        {
-            //bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
-            //bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
-
-            //within last send interval and less than extreme count
-            if (cachedEvents < Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
-            {
-                SendTransactions(false);
-            }
-        }
+        //static void TrySendTransactions()
+        //{
+        //    //bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
+        //    //bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
+        //
+        //    //within last send interval and less than extreme count
+        //    if (cachedEvents < Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
+        //    {
+        //        SendTransactions(false);
+        //    }
+        //}
 
         static float minTimer_lastSendTime = -60;
-        static void SendTransactions(bool copyDataToCache)
+        /*static void SendTransactions(bool copyDataToCache)
         {
             if (cachedEvents == 0)
             {
@@ -439,16 +440,16 @@ namespace Cognitive3D
             {
                 OnCustomEventSend.Invoke(copyDataToCache);
             }
-        }
+        }*/
 
-        public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
+        /*public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; })
 
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
@@ -470,7 +471,7 @@ namespace Cognitive3D
             {
                 TrySendTransactions();
             }
-        }
+        }*/
 
         public delegate void onCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time);
         public static event onCustomEventRecorded OnCustomEventRecorded;
@@ -494,7 +495,9 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
-            eventBuilder.Append("{");
+            CoreInterface.RecordCustomEvent(category, position, dynamicObjectId);
+
+            /*eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
             JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
@@ -514,17 +517,17 @@ namespace Cognitive3D
             if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
-            }
+            }*/
         }
 
         //writes json to display the transaction in sceneexplorer
         public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
-            SendCustomEvent(category, properties, new float[3] { position.x, position.y, position.z }, dynamicObjectId);
-        }
+            //SendCustomEvent(category, properties, new float[3] { position.x, position.y, position.z }, dynamicObjectId);
+        //}
 
-        public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
-        {
+        //public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
+        //{
             if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
@@ -532,7 +535,9 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
-            eventBuilder.Append("{");
+            CoreInterface.RecordCustomEvent(category, properties, position, dynamicObjectId);
+
+            /*eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
             JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
@@ -591,7 +596,7 @@ namespace Cognitive3D
             if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
             {
                 TrySendTransactions();
-            }
+            }*/
         }
     }
 }

@@ -515,8 +515,12 @@ namespace Cognitive3D
             else //finished everything format and send
             {
                 SendResponsesAsCustomEvents(); //for personalization api
-                var responses = FormatResponses();
-                NetworkManager.PostExitpollAnswers(responses, QuestionSetName, questionSetVersion); //for exitpoll microservice
+                //var responses = FormatResponses();
+
+                string responseBody = CoreInterface.SerializeExitpollAnswers(responseProperties, QuestionSetId, myparameters.Hook);
+
+
+                NetworkManager.PostExitpollAnswers(responseBody, QuestionSetName, questionSetVersion); //for exitpoll microservice
                 CurrentExitPollPanel = null;
                 Cleanup(true);
             }
@@ -556,7 +560,7 @@ namespace Cognitive3D
         }
 
         //puts responses from questions into json for exitpoll microservice
-        string FormatResponses()
+        /*string FormatResponses()
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             builder.Append("{");
@@ -632,7 +636,7 @@ namespace Cognitive3D
             builder.Append("}");
 
             return builder.ToString();
-        }
+        }*/
 
         GameObject GetPrefab(Dictionary<string, string> properties)
         {
