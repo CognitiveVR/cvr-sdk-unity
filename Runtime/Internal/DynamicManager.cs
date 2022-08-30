@@ -7,8 +7,9 @@ using Cognitive3D;
 
 
 //what is the split between dynamicCORE and dynamicMANAGER?
-//MANAGER holds array of data and puts contents into CORE queues
-//CORE writes json from queues
+//MANAGER holds array of data and puts contents into CORE queues. this iterates through the array (128/frame) - checks for changes to submit to core
+    //checking for delta should stay on engine side - engine specific checks that aren't as easily generalized
+//CORE writes json from threaded queues. CORE should live in the dll
 
 //add/remove dynamics to list. passed into core for writing to json
 //run through list to check if the dynamic has moved recently
@@ -22,7 +23,7 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
-        public static int CachedSnapshots { get { return DynamicObjectCore.tempsnapshots; } }
+        //public static int CachedSnapshots { get { return DynamicObjectCore.tempsnapshots; } }
 
         public static void Initialize()
         {
@@ -47,7 +48,7 @@ namespace Cognitive3D
             }
         }
 
-        //happens after the network has sent the request, before any response
+        //happens after the network has sent the request, before any response. used by active session view
         public static event Cognitive3D_Manager.onSendData OnDynamicObjectSend;
         internal static void DynamicObjectSendEvent()
         {
@@ -112,7 +113,8 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            Cognitive3D.DynamicObjectCore.WriteDynamicManifestEntry(data);
+            //Cognitive3D.DynamicObjectCore.WriteDynamicManifestEntry(data);
+            CoreInterface.WriteDynamicManifestEntry(data);
         }
 
         public static void RegisterController(DynamicData data)
@@ -147,7 +149,8 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
 
-            Cognitive3D.DynamicObjectCore.WriteControllerManifestEntry(data);
+            //Cognitive3D.DynamicObjectCore.WriteControllerManifestEntry(data);
+            CoreInterface.WriteControllerManifestEntry(data);
         }
 
         //public static void RegisterMedia(DynamicData data, string videoUrl)
@@ -391,7 +394,8 @@ namespace Cognitive3D
                 }
 
                 ActiveDynamicObjectsArray[i].HasProperties = false;
-                Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
             }
         }
 
@@ -590,7 +594,8 @@ namespace Cognitive3D
                     }
 
                     ActiveDynamicObjectsArray[i].HasProperties = false;
-                    Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
                 }
             }
         }
@@ -731,7 +736,8 @@ namespace Cognitive3D
                         }
                     }
 
-                    Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
+                    //Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
+                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
                 }
 
 
@@ -779,7 +785,8 @@ namespace Cognitive3D
             while (index != 0);
 
             //force dynamicCore to send all queued data as web requests
-            Cognitive3D.DynamicObjectCore.FlushData(copyDataToCache);
+            //Cognitive3D.DynamicObjectCore.FlushData(copyDataToCache);
+            CoreInterface.Flush(copyDataToCache);
         }
 
         //this happens AFTER tracking scene is set
@@ -800,9 +807,15 @@ namespace Cognitive3D
                         if (ActiveDynamicObjectsArray[i].active)
                         {
                             if (ActiveDynamicObjectsArray[i].IsController)
-                                DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
+                            {
+                                //DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
+                                CoreInterface.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
+                            }
                             else
-                                DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                            {
+                                //DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                                CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                            }
                         }
                     }
                 }

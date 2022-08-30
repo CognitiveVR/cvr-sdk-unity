@@ -347,7 +347,7 @@ namespace Cognitive3D
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment(url + " " + stringcontent);
+                Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
         }
 
         //skip network cleanup if immediately/manually destroyed

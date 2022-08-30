@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
-#if UNITY_2019_4_OR_NEWER
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager;
-#endif
 
 namespace Cognitive3D
 {
@@ -27,8 +24,6 @@ namespace Cognitive3D
             Refresh();
             return DebugText;
         }
-
-#if UNITY_2019_4_OR_NEWER
         static ListRequest Request;
         static List<string> PackageList = new List<string>();
         static string filePath;
@@ -59,13 +54,6 @@ namespace Cognitive3D
                 EditorApplication.update -= Progress;
             }
         }
-#else
-        public static void WriteDebugToFile(string filepath)
-        {
-            string debugContent = GetDebugContents();
-            System.IO.File.WriteAllText(filepath, debugContent);
-        }
-#endif
 
         static void Refresh()
         {
@@ -86,15 +74,11 @@ namespace Cognitive3D
             sb.AppendLine("*****************************");
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             sb.AppendLine("Scripting Define Symbols: " + s);
-
-#if UNITY_2019_4_OR_NEWER
             sb.AppendLine("Packages:");
             foreach (var package in PackageList)
             {
                 sb.AppendLine("  " + package);
             }
-#endif
-
             sb.AppendLine("SDK Version: " + Cognitive3D_Manager.SDK_VERSION);
             try
             {
@@ -115,7 +99,7 @@ namespace Cognitive3D
             sb.AppendLine("Enable Logging: " + p.EnableLogging);
             sb.AppendLine("Enable Development Logging: " + p.EnableDevLogging);
             sb.AppendLine("Gaze Type: " + p.GazeType.ToString());
-            sb.AppendLine("Snapshot Interval: " + p.SnapshotInterval);
+            sb.AppendLine("Snapshot Interval: " + Cognitive3D_Preferences.SnapshotInterval);
             sb.AppendLine("Dynamic Object Search in Parent: " + p.DynamicObjectSearchInParent);
             sb.AppendLine("Dynamic Object Layer Mask: " + p.DynamicLayerMask);
             sb.AppendLine("Track GPS Location: " + p.TrackGPSLocation);
@@ -123,26 +107,13 @@ namespace Cognitive3D
             sb.AppendLine("GPS Update Interval: " + p.GPSInterval);
             sb.AppendLine("GPS Accuracy: " + p.GPSAccuracy);
             sb.AppendLine("Record Floor Position: " + p.RecordFloorPosition);
+            
+            sb.AppendLine("Automatic Send Timer: " + p.AutomaticSendTimer);
             sb.AppendLine("Gaze Snapshot Batch Size: " + p.GazeSnapshotCount);
             sb.AppendLine("Event Snapshot Batch Size: " + p.TransactionSnapshotCount);
-            //sb.AppendLine("Event Extreme Batch Size: " + p.TransactionExtremeSnapshotCount);
-            //sb.AppendLine("Event Minimum Timer: " + p.TransactionSnapshotMinTimer);
-            sb.AppendLine("Event Automatic Send Timer: " + p.TransactionSnapshotMaxTimer);
-
             sb.AppendLine("Dynamic Snapshot Batch Size: " + p.DynamicSnapshotCount);
-            //sb.AppendLine("Dynamic Extreme Batch Size: " + p.DynamicExtremeSnapshotCount);
-            //sb.AppendLine("Dynamic Minimum Timer: " + p.DynamicSnapshotMinTimer);
-            sb.AppendLine("Dynamic Automatic Send Timer: " + p.DynamicSnapshotMaxTimer);
-
             sb.AppendLine("Sensor Snapshot Batch Size: " + p.SensorSnapshotCount);
-            //sb.AppendLine("Sensor Extreme Batch Size: " + p.SensorExtremeSnapshotCount);
-            //sb.AppendLine("Sensor Minimum Timer: " + p.SensorSnapshotMinTimer);
-            sb.AppendLine("Sensor Automatic Send Timer: " + p.SensorSnapshotMaxTimer);
-
             sb.AppendLine("Fixation Snapshot Batch Size: " + p.FixationSnapshotCount);
-            //sb.AppendLine("Fixation Extreme Batch Size: " + p.FixationExtremeSnapshotCount);
-            //sb.AppendLine("Fixation Minimum Timer: " + p.FixationSnapshotMinTimer);
-            sb.AppendLine("Fixation Automatic Send Timer: " + p.FixationSnapshotMaxTimer);
 
             sb.AppendLine("Save Data to Local Cache if no internet connection: " + p.LocalStorage);
             sb.AppendLine("Cache Size (bytes): " + p.LocalDataCacheSize);

@@ -939,20 +939,11 @@ namespace Cognitive3D
             {
                 try
                 {
-#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out textureReadable[i]))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
                         SetTextureImporterFormat(originalTexture, true);
                     }
-#else
-
-                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out textureReadable[i]))
-                    {
-                        Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
-                        SetTextureImporterFormat(originalTexture, true);
-                    }
-#endif
                 }
                 catch {}
             }
@@ -966,7 +957,6 @@ namespace Cognitive3D
 
             float[] colorAtLayer = new float[layerCount];
 
-#if UNITY_2018_4_OR_NEWER
             Vector2 TerrainSize = new Vector2(data.size.x, data.size.z);
             TerrainLayer[] layers = data.terrainLayers;
             //get highest value splatmap at point and write terrain texture to baked texture
@@ -1008,42 +998,6 @@ namespace Cognitive3D
                     }
                 }
             }
-#else
-            SplatPrototype[] prototypes = data.splatPrototypes;
-            //get highest value splatmap at point and write terrain texture to baked texture
-            for (int y = 0; y < outTex.height; y++)
-            {
-                for (int x = 0; x < outTex.width; x++)
-                {
-                    for (int i = 0; i < colorAtLayer.Length; i++)
-                    {
-                        colorAtLayer[i] = maps[(int)(x / upscalewidth), (int)(y / upscaleheight), i];
-                    }
-                    //highest value splat
-                    int highestMap = 0;
-                    float highestMapValue = 0;
-                    for (int i = 0; i < colorAtLayer.Length; i++)
-                    {
-                        if (colorAtLayer[i] > highestMapValue)
-                        {
-                            highestMapValue = colorAtLayer[i];
-                            highestMap = i;
-                        }
-                    }
-                    //write terrain texture to baked texture
-                    if (prototypes.Length > 0 && prototypes[highestMap].texture != null)
-                    {
-                        //TODO figure out correct tiling for textures
-                        Color color = prototypes[highestMap].texture.GetPixel(y, x);
-                        outTex.SetPixel(y, x, color);
-                    }
-                    else
-                    {
-                        outTex.SetPixel(y, x, Color.red);
-                    }
-                }
-            }
-#endif
             outTex.Apply();
 
             //terrain texture importer to original read/write settings
@@ -1052,20 +1006,11 @@ namespace Cognitive3D
                 try
                 {
                     bool ignored;
-#if UNITY_2018_4_OR_NEWER
                     if (GetTextureImportFormat(data.terrainLayers[i].diffuseTexture, out ignored))
                     {
                         Texture2D originalTexture = data.terrainLayers[i].diffuseTexture as Texture2D;
                         SetTextureImporterFormat(originalTexture, textureReadable[i]);
                     }
-#else
-
-                    if (GetTextureImportFormat(data.splatPrototypes[i].texture, out ignored))
-                    {
-                        Texture2D originalTexture = data.splatPrototypes[i].texture as Texture2D;
-                        SetTextureImporterFormat(originalTexture, textureReadable[i]);
-                    }
-#endif
                 }
                 catch {}
             }

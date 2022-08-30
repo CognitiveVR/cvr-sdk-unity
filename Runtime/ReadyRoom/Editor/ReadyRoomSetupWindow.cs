@@ -229,20 +229,18 @@ namespace Cognitive3D
 
         void RefreshGrabbables(bool forceRefresh = false)
         {
-#if UNITY_2018_3_OR_NEWER
-        //destroyed components won't trigger Grabbables.Contains(null). probably some internal nested prefab reason?
-        if (Grabbables != null)
-        {
-            foreach (var v in Grabbables)
+            //destroyed components won't trigger Grabbables.Contains(null). probably some internal nested prefab reason?
+            if (Grabbables != null)
             {
-                if (v == null)
+                foreach (var v in Grabbables)
                 {
-                    forceRefresh = true;
-                    break;
+                    if (v == null)
+                    {
+                        forceRefresh = true;
+                        break;
+                    }
                 }
             }
-        }
-#endif
             if (forceRefresh || Grabbables == null || Grabbables.Contains(null))
             {
                 Grabbables = new List<GrabComponentsRequired>(FindObjectsOfType<GrabComponentsRequired>());

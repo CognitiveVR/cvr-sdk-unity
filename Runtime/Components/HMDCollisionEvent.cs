@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
         }
         public override string GetDescription()
         {
-#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2 || C3D_NEURABLE || C3D_VARJO || C3D_FOVE || C3D_PICOVR || C3D_PICOXR
+#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2 || C3D_NEURABLE || C3D_VARJOVR || C3D_VARJOXR || C3D_FOVE || C3D_PICOVR || C3D_PICOXR
             return "Sends transactions if the HMD collides with something in the game world";
 #else
             return "Current platform does not support this component";
@@ -48,7 +48,7 @@ namespace Cognitive3D.Components
 
         public override bool GetWarning()
         {
-#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2 || C3D_NEURABLE || C3D_VARJO || C3D_FOVE || C3D_PICOVR || C3D_PICOXR
+#if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2 || C3D_NEURABLE || C3D_VARJOXR || C3D_VARJOVR || C3D_FOVE || C3D_PICOVR || C3D_PICOXR
             return false;
 #else
             return true;

@@ -105,7 +105,7 @@ namespace Cognitive3D.ActiveSession
             }
 
             //ms
-            int gazeInterval = (int)(Cognitive3D_Preferences.Instance.SnapshotInterval * 1000f);
+            int gazeInterval = (int)(Cognitive3D_Preferences.SnapshotInterval * 1000f);
 
             var DynamicSequenceDisplay = DynamicSeqenceList.Find(delegate (DynamicSortable obj) { return obj.Id == objectid; });
             if (DynamicSequenceDisplay != null)

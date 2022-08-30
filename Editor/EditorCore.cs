@@ -80,13 +80,8 @@ namespace Cognitive3D
 
             if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
             {
-#if UNITY_2019_4_OR_NEWER
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
-#else
-                EditorApplication.playmodeStateChanged -= ModeChanged;
-                EditorApplication.playmodeStateChanged += ModeChanged;
-#endif
             }
         }
 
@@ -99,7 +94,6 @@ namespace Cognitive3D
             InitWizard.Init();
         }
 
-#if UNITY_2019_4_OR_NEWER
         static void ModeChanged(PlayModeStateChange playModeState)
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)
@@ -110,19 +104,6 @@ namespace Cognitive3D
                 uploadDelayFrames = 10;
             }
         }
-#else
-        static void ModeChanged()
-        {
-            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
-                 EditorApplication.isPlaying)
-            {
-                if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
-                    EditorApplication.update += DelayUploadCache;
-                EditorApplication.playmodeStateChanged -= ModeChanged;
-                uploadDelayFrames = 10;
-            }
-        }
-#endif
 
         static int uploadDelayFrames = 0;
         private static void DelayUploadCache()
@@ -1137,7 +1118,6 @@ namespace Cognitive3D
         static RenderTexture sceneRT = null;
         public static RenderTexture GetSceneRenderTexture()
         {
-#if UNITY_2018_3_OR_NEWER
             if (sceneRT == null)
                 sceneRT = new RenderTexture(256, 256, 24);
 
@@ -1148,21 +1128,6 @@ namespace Cognitive3D
                 cameras[0].Render();
             }
             return sceneRT;
-#else
-            if (SceneView.lastActiveSceneView != null)
-            {
-                System.Reflection.FieldInfo[] fields = typeof(SceneView).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                foreach (var v in fields)
-                {
-                    if (v.Name == "m_SceneTargetTexture")
-                    {
-                        sceneRT = v.GetValue(SceneView.lastActiveSceneView) as RenderTexture;
-                        break;
-                    }
-                }
-            }
-            return sceneRT;
-#endif
         }
 
         public static void UploadCustomScreenshot()
@@ -1276,7 +1241,6 @@ namespace Cognitive3D
             completeScreenshot = null;
         }
 
-#if UNITY_2018_3_OR_NEWER
         public static void SceneViewCameraScreenshot(Camera cam, string sceneName, System.Action saveCameraScreenshot)
         {
             //create render texture
@@ -1304,81 +1268,6 @@ namespace Cognitive3D
                 saveCameraScreenshot.Invoke();
             saveCameraScreenshot = null;
         }
-#else
-
-        static List<Camera> tempDisabledCameras = new List<Camera>();
-        static string saveScreenshotSceneName;
-        static int delay = 0;
-        static System.Action SaveScreenshotComplete;
-
-        /// <summary>
-        /// take a screenshot from the scene view and save to a file
-        /// </summary>
-        public static void SaveCurrentScreenshot(string sceneName, System.Action saveScreenshotComplete)
-        {
-            delay = 0;
-            saveScreenshotSceneName = sceneName;
-            SaveScreenshotComplete = saveScreenshotComplete;
-            EditorApplication.update += DelaySaveScreenshot;
-        }
-
-        static void DelaySaveScreenshot()
-        {
-            foreach (var c in UnityEngine.Object.FindObjectsOfType<Camera>())
-            {
-                if (c.enabled && c.gameObject.activeInHierarchy)
-                {
-                    c.enabled = false;
-                    tempDisabledCameras.Add(c);
-                }
-            }
-            if (delay < 1) { delay++; return; } //disable cameras for 2 frames - fixes issue with scene render texture and multiple cameras
-
-            var saveRenderTexture = GetSceneRenderTexture();
-            if (saveRenderTexture == null)
-            {
-                Debug.LogWarning("EditorCore::SaveScreenshot could not save screenshot for scene: " + saveScreenshotSceneName + ". Scene Render texture is null");
-                foreach (var c in tempDisabledCameras)
-                {
-                    c.enabled = true;
-                }
-                tempDisabledCameras.Clear();
-
-                EditorApplication.update -= DelaySaveScreenshot;
-                if (SaveScreenshotComplete != null)
-                    SaveScreenshotComplete.Invoke();
-                SaveScreenshotComplete = null;
-                return;
-            }
-
-            //write rendertexture to png
-            Texture2D tex = new Texture2D(saveRenderTexture.width, saveRenderTexture.height);
-            RenderTexture.active = saveRenderTexture;
-            tex.ReadPixels(new Rect(0, 0, saveRenderTexture.width, saveRenderTexture.height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = null;
-
-            EditorApplication.update -= DelaySaveScreenshot;
-            foreach (var c in tempDisabledCameras)
-            {
-                c.enabled = true;
-            }
-            tempDisabledCameras.Clear();
-
-            //create directory
-            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport");
-            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName);
-            Directory.CreateDirectory("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot");
-
-            //save file
-            File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + saveScreenshotSceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png", tex.EncodeToPNG());
-            //use editor update to delay the screenshot 1 frame
-
-            if (SaveScreenshotComplete != null)
-                SaveScreenshotComplete.Invoke();
-            SaveScreenshotComplete = null;
-        }
-#endif
 
         #endregion
 

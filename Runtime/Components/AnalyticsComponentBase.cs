@@ -20,9 +20,12 @@ namespace Cognitive3D.Components
                 Cognitive3D_Init();
         }
 
+        /// <summary>
+        /// called as the last step of the Cognitive3D session begin process OR on start if Cognitive3D Manager has already been initialized
+        /// </summary>
         public virtual void Cognitive3D_Init()
         {
-            //called as the last step of the Cognitive3D session begin process
+            
         }
 
         //Cognitive3D Component Setup uses reflection to find these Methods. These help display each component, but are not required

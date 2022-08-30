@@ -45,11 +45,7 @@ namespace Cognitive3D.ActiveSession
 
         private void OnPreRender()
         {
-#if UNITY_2019_2_OR_NEWER
             Graphics.Blit(rt, temp, flipMat);
-#else
-            Graphics.Blit(rt, temp);
-#endif
         }
     }
 }

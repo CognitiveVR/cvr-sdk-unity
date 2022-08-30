@@ -118,7 +118,7 @@ namespace Cognitive3D.ActiveSession
                 yield return new WaitForSeconds(2);
                 WarningText.enabled = false;
             }
-#elif C3D_VARJO
+#elif C3D_VARJOXR
             if (Varjo.XR.VarjoEyeTracking.GetGaze().status == Varjo.XR.VarjoEyeTracking.GazeStatus.Valid)
             {
                 WarningText.text = "Eye Tracking Calibrated";

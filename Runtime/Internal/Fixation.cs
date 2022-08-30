@@ -29,11 +29,6 @@ namespace Cognitive3D
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;
 
-
-        public float[] worldPosition;
-        public float[] localPosition;
-
-
         //set when starting local fixation. should hold last evaluated eye capture matrix for a dynamic object (updated every frame)
         public Matrix4x4 DynamicMatrix;
         //only used for active session view visualization!
