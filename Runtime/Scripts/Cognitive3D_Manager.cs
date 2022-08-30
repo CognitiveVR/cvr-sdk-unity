@@ -7,10 +7,6 @@ using System;
 using Valve.VR;
 #endif
 
-#if C3D_META
-using System.Runtime.InteropServices;
-#endif
-
 /// <summary>
 /// initializes Cognitive3D analytics. Add components to track additional events
 /// </summary>
@@ -27,11 +23,6 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-
-#if C3D_META
-        [DllImport("MetaVisionDLL", EntryPoint = "getSerialNumberAndCalibration")]
-        internal static extern bool GetSerialNumberAndCalibration([MarshalAs(UnmanagedType.BStr), Out] out string serial, [MarshalAs(UnmanagedType.BStr), Out] out string xml);
-#endif
 
         #region Events
 
@@ -337,14 +328,7 @@ namespace Cognitive3D
 
             SetSessionProperty("c3d.deviceid", DeviceId);
 
-#if C3D_META
-            string serialnumber;
-  s          string xml;
-            if (GetSerialNumberAndCalibration(out serialnumber, out xml))
-            {
-                Core.SetSessionProperty("c3d.device.serialnumber",serialnumber);
-            }
-#elif C3D_STEAMVR
+#if C3D_STEAMVR
 
             string serialnumber = null;
 
@@ -403,10 +387,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Hololens");
-#elif C3D_META
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Meta");
 #elif C3D_VARJO
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Varjo");
