@@ -15,10 +15,10 @@ namespace Cognitive3D.Components
         private void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyeTracking data)
         {
             double hmdTimestamp = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            float minimumConfidenceThreshold = 0.5f;
-            float eyeOpenPupilDilationThreshold = 1.5f;
-            string hpLeftEyeDiameterTag = "HP.Left Pupil Diameter";
-            string hpRightEyeDiameterTag = "HP.Right Pupil Diameter";
+            const float minimumConfidenceThreshold = 0.5f;
+            const float eyeOpenPupilDilationThreshold = 1.5f;
+            const string hpLeftEyeDiameterTag = "HP.Left Pupil Diameter";
+            const string hpRightEyeDiameterTag = "HP.Right Pupil Diameter";
             
             if (hmdTimestamp > pupillometryUpdateTime)
             {
