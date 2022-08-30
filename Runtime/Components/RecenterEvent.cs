@@ -5,7 +5,7 @@ using System.Collections;
 /// sends recenter hmd transaction
 /// </summary>
 
-//TODO add support for other recenter events
+//TODO add support for other recenter events, if there is a general way to do this
 
 namespace Cognitive3D.Components
 {

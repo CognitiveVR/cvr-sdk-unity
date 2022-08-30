@@ -417,45 +417,7 @@ namespace Cognitive3D
             bool leftSetupComplete = false;
             bool rightSetupComplete = false;
 
-#if C3D_STEAMVR
-            if (cameraBase == null)
-            {
-                //basic setup
-                var manager = FindObjectOfType<SteamVR_ControllerManager>();
-                if (manager != null)
-                {
-                    cameraBase = manager.gameObject;
-                    leftcontroller = manager.left;
-                    rightcontroller = manager.right;
-                }
-                else
-                {
-                    //interaction system setup
-                    var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
-                    if (player)
-                    {
-                        leftcontroller = player.hands[0].gameObject;
-                        rightcontroller = player.hands[1].gameObject;
-                    }
-                }
-            }
-
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && rdyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && ldyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
-#elif C3D_STEAMVR2
+#if C3D_STEAMVR2
             if (cameraBase == null)
             {
                 //interaction system setup
@@ -638,27 +600,11 @@ namespace Cognitive3D
             int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
 #pragma warning restore 162
 
-//#if C3D_XR
+#if C3D_STEAMVR2
+    
+#else
             offset = 80;
-
-            List<string> controllerNames = new List<string>() { "Vive", "Oculus Rift", "Oculus Quest", "Windows MR","Pico Neo 2" };
-
-            Rect innerScrollSize = new Rect(30, 0, 120, controllerNames.Count * 32);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 180, 440, 128), sdkScrollPos, innerScrollSize, false, true);
-
-            for (int i = 0; i < controllerNames.Count; i++)
-            {
-                bool selected = controllerDisplayName == controllerNames[i];
-                if (GUI.Button(new Rect(30, i * 32, 420, 30), controllerNames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
-                {
-                    controllerDisplayName = controllerNames[i];
-                }
-                GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-            }
-
-            GUI.EndScrollView();
-
-//#endif //C3D_xr controller selection
+#endif
 
             //left hand label
             GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
@@ -810,6 +756,23 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(105, 480, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
             }
+#else
+            List<string> controllerNames = new List<string>() { "Vive", "Oculus Rift", "Oculus Quest", "Windows MR","Pico Neo 2" };
+
+            Rect innerScrollSize = new Rect(30, 0, 120, controllerNames.Count * 32);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 180, 440, 128), sdkScrollPos, innerScrollSize, false, true);
+
+            for (int i = 0; i < controllerNames.Count; i++)
+            {
+                bool selected = controllerDisplayName == controllerNames[i];
+                if (GUI.Button(new Rect(30, i * 32, 420, 30), controllerNames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+                {
+                    controllerDisplayName = controllerNames[i];
+                }
+                GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+            }
+
+            GUI.EndScrollView();
 #endif
         }
 
@@ -1148,9 +1111,9 @@ namespace Cognitive3D
 #endif
         }
 
-        #endregion
+#endregion
 
-        #region Dynamic Objects
+#region Dynamic Objects
 
         Vector2 dynamicScrollPosition;
 
@@ -1318,7 +1281,7 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
         void UploadSceneUpdate()
         {
