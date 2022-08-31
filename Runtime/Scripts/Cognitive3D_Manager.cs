@@ -280,62 +280,7 @@ namespace Cognitive3D
             OnPreSessionEnd += Core_EndSessionEvent;
             InvokeSendDataEvent(false);
             StartCoroutine(AutomaticSendData());
-#if C3D_OMNICEPT
-            var gliaBehaviour = GameplayReferences.GliaBehaviour;
-
-            if (gliaBehaviour != null)
-            {
-                gliaBehaviour.OnEyeTracking.AddListener(RecordEyePupillometry);
-                gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
-                gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
-                gliaBehaviour.OnHeartRateVariability.AddListener(RecordHeartRateVariability);
-            }
-#endif
         }
-
-#if C3D_OMNICEPT
-        double pupillometryTimestamp;
-
-        //update every 100MS
-        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyeTracking data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            if (pupillometryTimestamp < timestampMS)
-            {
-                pupillometryTimestamp = timestampMS + 0.1;
-                if (data.LeftEye.PupilDilationConfidence > 0.5f && data.LeftEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftEye.PupilDilation, timestampMS);
-                }
-                if (data.RightEye.PupilDilationConfidence > 0.5f && data.RightEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightEye.PupilDilation, timestampMS);
-                }
-            }
-        }
-
-        //every 5000 ms
-        void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.HeartRate", data.Rate, timestampMS);
-        }
-
-        //every 60 000ms
-        void RecordHeartRateVariability(HP.Omnicept.Messaging.Messages.HeartRateVariability data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.HeartRate.Variability", data.Sdnn, timestampMS);
-        }
-
-        //every 1000MS
-        void RecordCognitiveLoad(HP.Omnicept.Messaging.Messages.CognitiveLoad data)
-        {
-            double timestampMS = (double)data.Timestamp.OmniceptTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.CognitiveLoad", data.CognitiveLoadValue, timestampMS);
-            SensorRecorder.RecordDataPoint("HP.CognitiveLoad.Confidence", data.StandardDeviation, timestampMS);
-        }
-#endif
 
         /// <summary>
         /// sets automatic session properties from scripting define symbols, device ids, etc
@@ -378,18 +323,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Hololens");
-#elif C3D_VARJOVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Varjo");
-            SetSessionProperty("c3d.app.sdktype", "VarjoVR");
-#elif C3D_VARJOXR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Varjo");
-            SetSessionProperty("c3d.app.sdktype", "VarjoXR");
-#elif C3D_OMNICEPT
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #elif C3D_PICOVR
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
@@ -644,16 +577,6 @@ namespace Cognitive3D
         private void Core_EndSessionEvent()
         {
             OnPreSessionEnd -= Core_EndSessionEvent;
-#if C3D_OMNICEPT
-            var gliaBehaviour = GameplayReferences.GliaBehaviour;
-
-            if (gliaBehaviour != null)
-            {
-                //gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
-                gliaBehaviour.OnHeartRate.RemoveListener(RecordHeartRate);
-                gliaBehaviour.OnCognitiveLoad.RemoveListener(RecordCognitiveLoad);
-            }
-#endif
         }
 
         void OnDestroy()
