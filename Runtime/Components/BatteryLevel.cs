@@ -12,6 +12,7 @@ using Cognitive3D;
 
 //TODO add picovr sdk Pvr_UnitySDKAPI.System.UPvr_GetHmdBatteryStatus()
 //SystemInfo.batteryLevel works. returns -1 for invalid systems
+//could also check left/right hand battery level with InputDevice.TryGetFeature commonusage.batteryLevel
 
 namespace Cognitive3D.Components
 {

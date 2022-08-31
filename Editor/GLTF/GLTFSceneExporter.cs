@@ -1395,7 +1395,6 @@ namespace UnityGLTF
 				tempTexture.Apply();
 				texture = tempTexture;
 			}
-#if UNITY_2017_1_OR_NEWER
 			if (texture.GetType() == typeof(CustomRenderTexture))
 			{
 				Texture2D tempTexture = new Texture2D(texture.width, texture.height);
@@ -1406,7 +1405,6 @@ namespace UnityGLTF
 				tempTexture.Apply();
 				texture = tempTexture;
 			}
-#endif
 
 			_imageInfos.Add(new ImageInfo
 			{

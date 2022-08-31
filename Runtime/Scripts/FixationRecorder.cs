@@ -501,7 +501,7 @@ namespace Cognitive3D
             }
             return false;
         }
-#elif C3D_VARJO
+#elif C3D_VARJOXR
         const int CachedEyeCaptures = 100; //VARJO
 
         Varjo.XR.VarjoEyeTracking.GazeData currentData;
@@ -797,7 +797,7 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
             }
         }
-#elif C3D_XR
+#else
         const int CachedEyeCaptures = 120;
 
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -874,30 +874,6 @@ namespace Cognitive3D
             }
             return false;
         }
-#else
-        const int CachedEyeCaptures = 120;
-        //public Ray CombinedWorldGazeRay() { return new Ray(); }
-        public bool CombinedWorldGazeRay(out Ray ray){ray = new Ray(GameplayReferences.HMD.position,GameplayReferences.HMD.forward); return true;}
-
-        public bool LeftEyeOpen() { return true; }
-        public bool RightEyeOpen() { return true; }
-
-        public long EyeCaptureTimestamp()
-        {
-            return (long)(Util.Timestamp() * 1000);
-        }
-
-        //returns true if there is another data point to work on
-        int lastProcessedFrame;
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
 #endif
 
 #endregion
@@ -953,9 +929,6 @@ namespace Cognitive3D
         public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
         public List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
 
-        bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
-        bool WasOutOfDispersionLastFrame = false; //ensures at least 1 frame is out of fixation dispersion cone before ending fixation
-
 
         void Reset()
         {
@@ -964,27 +937,19 @@ namespace Cognitive3D
             FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
-        /*void OnEnable()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Util.logWarning("Multiple Fixation Recorders found!");
-                return;
-            }
-            Instance = this;
-        }*/
-
         public void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
 
             IsFixating = false;
             ActiveFixation = new Fixation();
-
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
+
+            CoreInterface.FixationSettings(MaxBlinkMs, PreBlinkDiscardMs, BlinkEndWarmupMs, MinFixationMs, MaxConsecutiveDiscardMs, MaxFixationAngle, MaxConsecutiveOffDynamicMs, DynamicFixationSizeMultiplier, FocusSizeFromCenter, SaccadeFixationEndMs);
+
 #if C3D_FOVE
             fovebase = GameplayReferences.FoveInstance;
 #elif C3D_SRANIPAL
@@ -1032,86 +997,6 @@ namespace Cognitive3D
         void RecordEyeCapture()
         {
             //this should just raycast + bring all the necessary eye data together and pass it into the CoreInterface
-
-
-
-
-
-            //check for new fixation
-            //else check for ending fixation
-            //update eyecapture state
-
-            /*if (!IsFixating)
-            {
-                //check if this is the start of a new fixation. set this and all next captures to this
-                //the 'current' fixation we're checking is 1 second behind recording eye captures
-                if (TryBeginLocalFixation(index))
-                {
-                    IsFixating = true;
-                }
-                else
-                {
-                    if (TryBeginFixation(index))
-                    {
-                        IsFixating = true;
-                    }
-                }
-            }
-            else
-            {
-                //check if eye capture is valid to append to fixation
-                //check if fixation 
-
-                if (ActiveFixation.IsLocal)
-                {
-                    if (ActiveFixation.DynamicObjectId != EyeCaptures[index].HitDynamicId)
-                    {
-                        EyeCaptures[index].SkipPositionForFixationAverage = true;
-                    }
-                }
-                else
-                {
-                    if (EyeCaptures[index].UseCaptureMatrix)
-                        EyeCaptures[index].SkipPositionForFixationAverage = true;
-                }
-
-                //update if eye capture is out of range
-                //compared here since we don't necessarily know how fixation has changed since last capture
-                //this is relative to the fixation, not an absolute that could be changed since recording
-                bool IsOutOfRange = IsGazeOutOfRange(EyeCaptures[index]);
-                if (!IsOutOfRange)
-                {
-                    //ActiveFixation.DurationMs = EyeCaptures[index].Time - ActiveFixation.StartMs;
-                }
-                else
-                {
-                    EyeCaptures[index].OutOfRange = true;
-                }
-
-                //update if eye capture is freshly off a transform (eg, if eye capture not on active fixation's dynamic object)
-                EyeCaptures[index].OffTransform = IsFixatingOffTransform(EyeCaptures[index]);
-
-                ActiveFixation.AddEyeCapture(EyeCaptures[index]);
-
-                if (CheckEndFixation(ActiveFixation))
-                {
-                    if (ActiveFixation.DurationMs > MinFixationMs)
-                    {
-                        FixationCore.RecordFixation(ActiveFixation);
-                    }
-
-                    IsFixating = false;
-
-                    if (ActiveFixation.IsLocal)
-                    {
-                        //ActiveFixation.LocalTransform = null;
-                    }
-                    CachedEyeCapturePositions.Clear();
-                }
-                WasOutOfDispersionLastFrame = IsOutOfRange;
-            }
-
-            WasCaptureDiscardedLastFrame = EyeCaptures[index].Discard;*/
             
 
             //reset all values
@@ -1132,6 +1017,7 @@ namespace Cognitive3D
             Vector3 world;
 
             DynamicObject hitDynamic = null;
+            int hitType = 0;
 
             var hitresult = GazeRaycast(out world, out hitDynamic);
 
@@ -1154,7 +1040,7 @@ namespace Cognitive3D
                         EyeCaptures[index].SkipPositionForFixationAverage = true;
                     }
 
-
+                    hitType = 1;
                     EyeCaptures[index].UseCaptureMatrix = true;
                     //TODO test that this matrix is correct if dynamic is parented to offset/rotated/scaled transform
                     EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
@@ -1173,6 +1059,7 @@ namespace Cognitive3D
                 }
                 else
                 {
+                    hitType = 0;
                     EyeCaptures[index].UseCaptureMatrix = false;
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
@@ -1184,6 +1071,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
             {
+                hitType = 2;
                 //eye capture world point could be used for getting the direction, but position is invalid (on skybox)
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
@@ -1195,6 +1083,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
+                hitType = 3;
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].Discard = true;
@@ -1209,7 +1098,7 @@ namespace Cognitive3D
             }
 
             //submit eye data here
-            CoreInterface.RecordEyeData(EyeCaptures[index]);
+            CoreInterface.RecordEyeData(EyeCaptures[index],hitType);
 
 
             index = (index + 1) % CachedEyeCaptures;
@@ -1288,572 +1177,5 @@ namespace Cognitive3D
 
             return false;
         }
-
-        /// <summary>
-        /// for local fixations, is this eye capture hitting the active fixation dynamic object
-        /// for either fixation return true if looking at sky
-        /// </summary>
-        /// <param name="capture"></param>
-        /// <returns></returns>
-        /*bool IsFixatingOffTransform(EyeCapture capture)
-        {
-            if (ActiveFixation.IsLocal)
-            {
-                if (!capture.UseCaptureMatrix)
-                {
-                    return true;
-                }
-                if (capture.HitDynamicId != ActiveFixation.DynamicObjectId)
-                {
-                    return true;
-                }
-            }
-            if (capture.OffTransform)
-            {
-                return true;
-            }
-            return false;
-        }*/
-
-        /// <summary>
-        /// returns true if gaze is NOT within active fixation
-        /// updates average fixation position
-        /// removes old smooth pursuit eye captures points (DynamicRollingAverageMS)
-        /// </summary>
-        /// <param name="capture"></param>
-        /// <returns></returns>
-        /*bool IsGazeOutOfRange(EyeCapture capture)
-        {
-            if (!IsFixating) { return true; }
-
-            if (ActiveFixation.IsLocal) //local fixations need to update world position based on local eye captures
-            {
-                if (capture.UseCaptureMatrix == false)
-                {
-                    capture.SkipPositionForFixationAverage = true;
-                }
-                else if (capture.HitDynamicId != ActiveFixation.DynamicObjectId) //if hit a dynamic, BUT NOT THIS DYNAMIC, don't update position
-                {
-                    capture.SkipPositionForFixationAverage = true;
-                }
-
-                if (capture.SkipPositionForFixationAverage || capture.OffTransform)
-                {
-                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
-                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
-                    Quaternion rotation = Quaternion.LookRotation(
-                        ActiveFixation.DynamicMatrix.GetColumn(2),
-                        ActiveFixation.DynamicMatrix.GetColumn(1)
-                    );
-                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
-
-                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
-                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
-
-                    var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
-                    var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
-                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
-                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
-                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
-                    if (Vector3.Dot(_eyeCaptureDirection, _fixationDirection) < _adjusteddotangle)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    //should use transform matrix from when eye capture was captured instead of world position
-                    //using the capture's matrix against the active fixation matrix. this will be 1 frame behind?
-
-                    //IMPROVEMENT multiplyPoint3x4 without decomposing + rebuilding matrix
-                    Vector3 position = ActiveFixation.DynamicMatrix.GetColumn(3);
-                    Quaternion rotation = Quaternion.LookRotation(
-                        ActiveFixation.DynamicMatrix.GetColumn(2),
-                        ActiveFixation.DynamicMatrix.GetColumn(1)
-                    );
-                    var unscaledMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
-                    var captureWorldPos = unscaledMatrix.MultiplyPoint3x4(capture.LocalPosition);
-
-                    var activeFixationWorldPos = unscaledMatrix.MultiplyPoint3x4(ActiveFixation.LocalPosition);
-
-                    //if in range, we will add captureWorldPos to CachedEyeCapturePositions and update activefixation.localposition
-                    //then update average position then check angle
-                    Vector3 averagelocalpos = Vector3.zero;
-                    foreach (var v in CachedEyeCapturePositions)
-                    {
-                        averagelocalpos += v;
-                    }
-                    averagelocalpos += capture.LocalPosition;
-                    averagelocalpos /= (CachedEyeCapturePositions.Count + 1);                                        
-                    
-                    var _fixationDirection = (activeFixationWorldPos - capture.HmdPosition).normalized;
-                    var _eyeCaptureDirection = (captureWorldPos - capture.HmdPosition).normalized;
-
-                    var _screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
-                    var _rescale = FocusSizeFromCenter.Evaluate(_screendist);
-                    var _adjusteddotangle = Mathf.Cos(MaxFixationAngle * _rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
-                    float dot = Vector3.Dot(_eyeCaptureDirection, _fixationDirection);
-                    
-                    if (dot < _adjusteddotangle)
-                    {
-                        return true;
-                    }
-
-                    float distance = Vector3.Magnitude(activeFixationWorldPos - capture.HmdPosition);
-                    float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-                    ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
-
-                    CachedEyeCapturePositions.Add(capture.LocalPosition);
-
-                    if (CachedEyeCapturePositions.Count > 120) //IMPROVEMENT cache eye captures based on time, not on count
-                        CachedEyeCapturePositions.RemoveAt(0);
-                    ActiveFixation.LocalPosition = averagelocalpos;
-                }
-                ActiveFixation.LastInRange = capture.Time;
-                return false;
-            }
-            else //world
-            {
-                if (capture.UseCaptureMatrix == true)
-                {
-                    capture.SkipPositionForFixationAverage = true;
-                }
-
-                var screendist = Vector2.Distance(capture.ScreenPos, new Vector2(0.5f, 0.5f));
-                var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-                if (capture.SkipPositionForFixationAverage || capture.OffTransform) //eye capture is invalid (probably from looking at skybox)
-                {
-                    Vector3 lookDir = (capture.WorldPosition - capture.HmdPosition).normalized;
-                    Vector3 fixationDir = (ActiveFixation.WorldPosition - capture.HmdPosition).normalized;
-
-                    if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        //look at skybox. not necessarily out of fixation range
-                    }
-                }
-                else
-                {
-                    //TODO if hit dynamic, don't update position
-                    Vector3 averageworldpos = Vector3.zero;
-                    foreach (var v in CachedEyeCapturePositions)
-                    {
-                        averageworldpos += v;
-                    }
-                    averageworldpos += capture.WorldPosition;
-                    averageworldpos /= (CachedEyeCapturePositions.Count + 1);
-
-
-                    Vector3 lookDir = (capture.WorldPosition - capture.HmdPosition).normalized;
-                    Vector3 fixationDir = (averageworldpos - capture.HmdPosition).normalized;
-
-                    if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
-                    {
-                        return true;
-                    }
-
-                    float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - capture.HmdPosition);
-                    float currentRadius = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-                    ActiveFixation.MaxRadius = Mathf.Max(ActiveFixation.MaxRadius, currentRadius);
-
-                    CachedEyeCapturePositions.Add(capture.WorldPosition);
-                    ActiveFixation.WorldPosition = averageworldpos;
-                }
-                ActiveFixation.LastInRange = capture.Time;
-            }
-            return false;
-        }*/
-
-        /// <summary>
-        /// returns true if the fixation should be ended. copies fixation for visualization
-        /// </summary>
-        /// <param name="testFixation"></param>
-        /// <returns></returns>
-        /*bool CheckEndFixation(Fixation testFixation)
-        {
-            //check for blinking too long
-            if (EyeCaptures[index].Time > testFixation.LastEyesOpen + MaxBlinkMs)
-            {
-                FixationCore.FixationRecordEvent(testFixation);
-                //Debug.LogError("END FIXATION BLINK " + EyeCaptures[index].Time);
-                return true;
-            }
-
-            //check for general discarding. maybe HMD issue, just a bunch of null data or some other issue
-            if (EyeCaptures[index].Time > testFixation.LastNonDiscardedTime + MaxConsecutiveDiscardMs)
-            {
-                if (!WasCaptureDiscardedLastFrame)
-                {
-                }
-                else
-                {
-                    FixationCore.FixationRecordEvent(testFixation);
-                    //Debug.LogError("END FIXATION DISCARD " + EyeCaptures[index].Time);
-                    return true;
-                }
-            }
-
-            //check for out of fixation point range
-            if (EyeCaptures[index].Time > testFixation.LastInRange + SaccadeFixationEndMs)
-            {
-                if (!WasOutOfDispersionLastFrame)
-                {
-                    //out of range dispersion threshold the previous frame
-                }
-                else
-                {
-                    //Debug.LogError("END FIXATION RANGE duration" + testFixation.DurationMs);
-                    FixationCore.FixationRecordEvent(testFixation);
-                    return true;
-                }
-            }
-
-            //if not looking at transform for a while, end fixation
-            if (EyeCaptures[index].Time > testFixation.LastOnTransform + MaxConsecutiveOffDynamicMs)
-            {
-                FixationCore.FixationRecordEvent(testFixation);
-                //Debug.LogError("END FIXATION TRANSFORM " + EyeCaptures[index].Time);
-                return true;
-            }
-
-            return false;
-        }*/
-
-        /// <summary>
-        /// returns true if 'active fixation' is actually active again
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        /*bool TryBeginLocalFixation(int index)
-        {
-            int samples = 0;
-            List<string> hitDynamicIds = new List<string>();
-            long firstOnTransformTime = 0;
-
-            List<EyeCapture> usedCaptures = new List<EyeCapture>();
-
-            for (int i = 0; i < CachedEyeCaptures; i++)
-            {
-                if (EyeCaptures[GetIndex(i)].Discard || EyeCaptures[GetIndex(i)].EyesClosed) { return false; }
-                if (!EyeCaptures[GetIndex(i)].UseCaptureMatrix) { return false; }
-                if (EyeCaptures[GetIndex(i)].SkipPositionForFixationAverage)
-                {
-                    //if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
-                    //continue;
-                    return false;
-                }
-                samples++;
-                usedCaptures.Add(EyeCaptures[GetIndex(i)]);
-                if (firstOnTransformTime < 1)
-                    firstOnTransformTime = EyeCaptures[GetIndex(i)].Time;
-                if (EyeCaptures[GetIndex(i)].UseCaptureMatrix)
-                {
-                    hitDynamicIds.Add(EyeCaptures[GetIndex(i)].HitDynamicId);
-                }
-                if (EyeCaptures[index].Time + MinFixationMs < EyeCaptures[GetIndex(i)].Time) { break; }
-            }
-
-            //check that there are any valid eye captures
-            if (samples < 2)
-            {
-                return false;
-            }
-            if (usedCaptures.Count > 2)
-            {
-                //fail if the time between samples is < minFixationMs
-                if ((usedCaptures[usedCaptures.Count - 1].Time - usedCaptures[0].Time) < MinFixationMs) { return false; }
-            }
-            //TODO find source of rare bug with fixation duration < MinFixationMs when fixating on fast moving dynamic object
-
-            if (EyeCaptures[index].Time - firstOnTransformTime > MaxConsecutiveOffDynamicMs)
-            {
-                //fail now. off transform time will fail this before getting to first on transform time
-                //otherwise, fixation steady enough to be called a fixation and surface point will 'eventually' be valid
-                return false;
-            }
-            //================================= CALCULATE HIT DYNAMIC IDS
-            int hitTransformCount = 0;
-            Dictionary<string, int> hitCounts = new Dictionary<string, int>();
-
-            Vector3 averageLocalPosition = Vector3.zero;
-            Vector3 averageWorldPosition = Vector3.zero;
-            foreach (var v in usedCaptures)
-            {
-                if (v.UseCaptureMatrix)
-                {
-                    if (hitCounts.ContainsKey(v.HitDynamicId))
-                    {
-                        hitCounts[v.HitDynamicId]++;
-                    }
-                    else
-                    {
-                        hitCounts.Add(v.HitDynamicId, 1);
-                    }
-                    hitTransformCount++;
-                }
-            }
-            
-            //escape if no eye captures are using dynamic object transform matrix (this is possibly redundant)
-            if (hitTransformCount == 0)
-            {
-                return false;
-            }
-            
-            //======= figure out most used DynamicObjectId
-            int usecount = 0;
-            string mostUsedId = null;
-            foreach (var v in hitCounts)
-            {
-                if (v.Value > usecount)
-                {
-                    mostUsedId = v.Key;
-                    usecount = v.Value;
-                }
-            }
-
-            if (string.IsNullOrEmpty(mostUsedId))
-            {
-                //most used dynamic object id is none! something is wrong somehow
-                return false;
-            }
-
-            //======== average positions and check if fixations are within radius. using only the first eye capture matrix as a reference
-
-            int hitSampleCount = 0;
-            Vector3 position = usedCaptures[0].CaptureMatrix.GetColumn(3);
-            Quaternion rotation = Quaternion.LookRotation(
-                usedCaptures[0].CaptureMatrix.GetColumn(2),
-                usedCaptures[0].CaptureMatrix.GetColumn(1)
-            );
-            var unscaledCaptureMatrix = Matrix4x4.TRS(position, rotation, Vector3.one);
-
-            foreach (var v in usedCaptures)
-            {
-                if (v.HitDynamicId != mostUsedId) { continue; }
-                if (!v.UseCaptureMatrix) { continue; }
-                hitSampleCount++;
-                averageLocalPosition += v.LocalPosition;
-                averageWorldPosition += unscaledCaptureMatrix.MultiplyPoint3x4(v.LocalPosition);
-            }
-
-            averageLocalPosition /= hitSampleCount;
-            averageWorldPosition /= hitSampleCount;
-            
-
-            //use captures that hit the most common dynamic to figure out fixation start point
-            //then use all captures world position to check if within fixation radius
-            
-            bool withinRadius = true;
-            foreach(var v in usedCaptures)
-            {
-                if (v.HitDynamicId != mostUsedId) { continue; }
-                if (!v.UseCaptureMatrix) { continue; }
-
-                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
-                var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * DynamicFixationSizeMultiplier * Mathf.Deg2Rad);
-
-                Vector3 p = v.CaptureMatrix.GetColumn(3);
-                Quaternion r = Quaternion.LookRotation(
-                    v.CaptureMatrix.GetColumn(2),
-                    v.CaptureMatrix.GetColumn(1)
-                );
-                var m = Matrix4x4.TRS(p, r, Vector3.one);
-
-                Vector3 lookDir = (m.MultiplyPoint3x4(v.LocalPosition) - v.HmdPosition).normalized;
-                Vector3 fixationDir = (averageWorldPosition - v.HmdPosition).normalized;
-                if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
-                {
-                    withinRadius = false;
-                    break;
-                }
-            }
-
-            if (withinRadius)
-            {
-                //all eye captures within fixation radius. save transform, set ActiveFixation start time and world position
-                ActiveFixation.LocalPosition = averageLocalPosition;
-                ActiveFixation.WorldPosition = averageWorldPosition; //average world position is already matrix unscaled above
-                ActiveFixation.DynamicObjectId = mostUsedId;
-                ActiveFixation.DynamicMatrix = usedCaptures[0].CaptureMatrix;
-
-                float distance = Vector3.Magnitude(averageWorldPosition - usedCaptures[0].HmdPosition);
-                float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-
-                ActiveFixation.StartDistance = distance;
-                ActiveFixation.MaxRadius = opposite;
-                ActiveFixation.StartMs = usedCaptures[0].Time;
-                ActiveFixation.LastOnTransform = usedCaptures[0].Time;
-                ActiveFixation.LastEyesOpen = usedCaptures[0].Time;
-                ActiveFixation.LastNonDiscardedTime = usedCaptures[0].Time;
-                ActiveFixation.LastInRange = usedCaptures[0].Time;
-                ActiveFixation.IsLocal = true;
-                ActiveFixation.DynamicTransform = usedCaptures[0].HitDynamicTransform;
-                foreach (var c in usedCaptures)
-                {
-                    if (c.SkipPositionForFixationAverage) { continue; }
-                    if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
-                    {
-                        //added to cachedEyeCapturePositions here - should skip when checking isGazeInRange
-                        c.SkipPositionForFixationAverage = true;
-                        CachedEyeCapturePositions.Add(c.LocalPosition);
-                    }
-                }
-                foreach (var c in usedCaptures)
-                {
-                    //add first used sample as start
-                    if (c.UseCaptureMatrix && c.HitDynamicId == ActiveFixation.DynamicObjectId)
-                    {
-                        ActiveFixation.AddEyeCapture(c);
-                        break;
-                    }
-                }
-                WasOutOfDispersionLastFrame = false;
-                return true;
-            }
-            else
-            {
-                //something out of range from average world pos
-                return false;
-            }
-        }
-
-        //checks the NEXT eyecaptures to see if we should start a fixation
-        bool TryBeginFixation(int index)
-        {
-            Vector3 averageWorldPos = Vector3.zero;
-            //number of eye captures on a surface
-            int sampleCount = 0;
-
-            long firstOnTransformTime = 0;
-            long firstSampleTime = long.MaxValue;
-            long lastSampleTime = 0;
-
-            List<EyeCapture> samples = new List<EyeCapture>();
-
-            //take all the eye captures within the minimum fixation duration
-            //escape if any are eyes closed or discarded captures
-            for (int i = 0; i < CachedEyeCaptures; i++)
-            {
-                var sample = EyeCaptures[GetIndex(i)];
-                if (sample.Discard || sample.EyesClosed) { return false; }
-                if (sample.SkipPositionForFixationAverage)
-                {
-                    //eye capture should be skipped (look at sky, discarded). also check if out of min fixation time
-                    //if (EyeCaptures[index].Time + MinFixationMs < sample.Time){break;}
-                    //continue;
-                    return false;
-                }
-
-                if (sample.UseCaptureMatrix)
-                {
-                    //CONSIDER would this be more accurate to return false if a threshold of eye captures are on dynamics? any dynamics? one dynamic?
-                    return false;
-                }
-
-                firstSampleTime = System.Math.Min(firstSampleTime, sample.Time);
-                lastSampleTime = System.Math.Max(lastSampleTime, sample.Time);
-
-                sampleCount++;
-                samples.Add(EyeCaptures[GetIndex(i)]);
-                //lastSampleTime = EyeCaptures[GetIndex(i)].Time;
-                if (firstOnTransformTime < 1)
-                    firstOnTransformTime = sample.Time;
-                //TODO should use EyeCaptures.LocalPosition * EyeCaptures.Matrix. world position will be offset if object is moving
-                averageWorldPos += sample.WorldPosition;
-                if (EyeCaptures[index].Time + MinFixationMs < sample.Time)
-                {
-                    break;
-                }
-            }
-            
-            if (sampleCount < 2)
-            {
-                //need at least 2 samples for a time span
-                return false;
-            }
-
-            //duration of first sample to last sample
-            long duration = lastSampleTime - firstSampleTime;
-            if (duration < MinFixationMs)
-            {
-                return false;
-            }
-
-            averageWorldPos /= sampleCount;
-
-            //TODO what is the time span between samples - how does 1 sample think it's enough time to make a world fixation??
-            //a fixation MUST start on a transform. alternatively could mark transform as 'on transform' early
-            //IMPROVEMENT set fixation as starting now if MaxOffTransformMS < time to first point with transform
-            //if (EyeCaptures[index].OffTransform) { return false; }
-
-            if (EyeCaptures[index].Time - firstOnTransformTime > MaxConsecutiveOffDynamicMs)
-            {
-                //fail now! off transform time will fail this before getting to first on transform time
-                //otherwise, fixation steady enough to be called a fixation and surface point will 'eventually' be valid
-                return false;
-            }
-            
-            bool withinRadius = true;
-
-            //check that each sample is within the fixation radius
-            //for (int i = 0; i < sampleCount; i++)
-            foreach(var v in samples)
-            {
-                //get starting screen position to compare other eye capture points against
-                //var screenpos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(EyeCaptures[index].WorldPosition);
-                var screendist = Vector2.Distance(v.ScreenPos, new Vector2(0.5f, 0.5f));
-                var rescale = FocusSizeFromCenter.Evaluate(screendist);
-                var adjusteddotangle = Mathf.Cos(MaxFixationAngle * rescale * Mathf.Deg2Rad);
-
-                //var sample = EyeCaptures[GetIndex(i)];
-                Vector3 lookDir = (v.WorldPosition - v.HmdPosition).normalized;
-                Vector3 fixationDir = (averageWorldPos - v.HmdPosition).normalized;
-
-                if (Vector3.Dot(lookDir, fixationDir) < adjusteddotangle)
-                {
-                    withinRadius = false;
-                    break;
-                }
-            }
-
-            if (withinRadius)
-            {
-                //all points are within the fixation radius. set ActiveFixation start time and save the each world position for used eye capture points
-                ActiveFixation.WorldPosition = averageWorldPos;
-
-                float distance = Vector3.Magnitude(ActiveFixation.WorldPosition - EyeCaptures[index].HmdPosition);
-                float opposite = Mathf.Atan(MaxFixationAngle * Mathf.Deg2Rad) * distance;
-
-                ActiveFixation.StartMs = EyeCaptures[index].Time;
-                ActiveFixation.LastInRange = ActiveFixation.StartMs;
-                ActiveFixation.StartDistance = distance;
-                ActiveFixation.MaxRadius = opposite;
-                ActiveFixation.LastEyesOpen = EyeCaptures[index].Time;
-                ActiveFixation.LastNonDiscardedTime = EyeCaptures[index].Time;
-                ActiveFixation.LastInRange = EyeCaptures[index].Time;
-                ActiveFixation.LastOnTransform = firstOnTransformTime;
-                ActiveFixation.IsLocal = false;
-                for (int i = 0; i < sampleCount; i++)
-                {
-                    var sample = EyeCaptures[GetIndex(i)];
-                    if (sample.SkipPositionForFixationAverage) { continue; }
-
-                    //added to cachedEyeCapturePositions here - should skip when checking isGazeInRange
-                    sample.SkipPositionForFixationAverage = true;
-                    CachedEyeCapturePositions.Add(sample.WorldPosition);
-                }
-                return true;
-            }
-            else
-            {
-                //something out of range from average world pos
-                return false;
-            }
-        }*/
     }
 }

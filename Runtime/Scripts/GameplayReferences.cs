@@ -12,7 +12,7 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_TOBIIVR || C3D_AH || C3D_FOVE || C3D_PUPIL || C3D_SRANIPAL || C3D_VARJO || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
+#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
                 return true;
 #elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
@@ -25,7 +25,7 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOVR || C3D_PICOXR || C3D_XR || C3D_WINDOWSMR || C3D_VARJO || C3D_SNAPDRAGON || C3D_OMNICEPT
+#if C3D_STEAMVR2 || C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOVR || C3D_PICOXR || C3D_XR || C3D_WINDOWSMR || C3D_VARJOVR || C3D_VARJOXR || C3D_OMNICEPT
                 return true;
 #else
                 return false;
@@ -34,9 +34,10 @@ namespace Cognitive3D
         }
         public static bool SDKSupportsRoomSize
         {
+            //TODO should be everything except AR SDKS
             get
             {
-#if C3D_STEAMVR || C3D_STEAMVR2 || C3D_OCULUS || C3D_XR || C3D_PICOVR || C3D_PICOXR
+#if C3D_STEAMVR2 || C3D_OCULUS || C3D_XR || C3D_PICOVR || C3D_PICOXR
                 return true;
 #else
                 return false;
@@ -66,7 +67,7 @@ namespace Cognitive3D
         ///return value is in meters
         public static bool GetRoomSize(ref Vector3 roomSize)
         {
-#if C3D_STEAMVR || C3D_STEAMVR2
+#if C3D_STEAMVR2
             float roomX = 0;
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
@@ -84,21 +85,6 @@ namespace Cognitive3D
             {
                 roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
                 return true;
-            }
-            return false;
-#elif C3D_XR || C3D_WINDOWSMR || C3D_VARJO
-            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
-            if (inputDevices.Count > 0)
-            {
-                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
-                UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
-                List<Vector3> boundaryPoints = new List<Vector3>();
-                if (XRIS.TryGetBoundaryPoints(boundaryPoints))
-                {
-                    roomSize = GetArea(boundaryPoints.ToArray());
-                    return true;
-                }
             }
             return false;
 #elif C3D_PICOXR
@@ -124,6 +110,23 @@ namespace Cognitive3D
                 return false;
             }
 #else
+            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
+            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
+            if (inputDevices.Count > 0)
+            {
+                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
+                UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
+                if (XRIS == null)
+                {
+                    return false;
+                }
+                List<Vector3> boundaryPoints = new List<Vector3>();
+                if (XRIS.TryGetBoundaryPoints(boundaryPoints))
+                {
+                    roomSize = GetArea(boundaryPoints.ToArray());
+                    return true;
+                }
+            }
             return false;
 #endif
         }
@@ -139,21 +142,6 @@ namespace Cognitive3D
                     _cameraRig = GameObject.FindObjectOfType<OVRCameraRig>();
                 }
                 return _cameraRig;
-            }
-        }
-#endif
-
-#if C3D_FOVE
-        static Fove.Unity.FoveInterface _foveInstance;
-        public static Fove.Unity.FoveInterface FoveInstance
-        {
-            get
-            {
-                if (_foveInstance == null)
-                {
-                    _foveInstance = GameObject.FindObjectOfType<Fove.Unity.FoveInterface>();
-                }
-                return _foveInstance;
             }
         }
 #endif
@@ -182,70 +170,6 @@ namespace Cognitive3D
                     gliaBehaviour = GameObject.FindObjectOfType<HP.Omnicept.Unity.GliaBehaviour>();
                 }
                 return gliaBehaviour;
-            }
-        }
-#endif
-#if C3D_PUPIL
-        static PupilLabs.GazeController gazeController;
-        public static PupilLabs.GazeController GazeController
-        {
-            get
-            {
-                if (gazeController == null)
-                {
-                    gazeController = GameObject.FindObjectOfType<PupilLabs.GazeController>();
-                }
-                return gazeController;
-            }
-        }
-        static PupilLabs.CalibrationController calibrationController;
-        public static PupilLabs.CalibrationController CalibrationController
-        {
-            get
-            {
-                if (calibrationController == null)
-                {
-                    calibrationController = GameObject.FindObjectOfType<PupilLabs.CalibrationController>();
-                }
-                return calibrationController;
-            }
-        }
-#endif
-#if C3D_STEAMVR
-        static SteamVR_Camera steamVR_Camera;
-        public static SteamVR_Camera SteamVR_Camera
-        {
-            get
-            {
-                if (steamVR_Camera == null)
-                {
-                    steamVR_Camera = GameObject.FindObjectOfType<SteamVR_Camera>();
-                }
-                return steamVR_Camera;
-            }
-        }
-        static Valve.VR.InteractionSystem.Player player;
-        public static Valve.VR.InteractionSystem.Player Player
-        {
-            get
-            {
-                if (player == null)
-                {
-                    player = GameObject.FindObjectOfType<Valve.VR.InteractionSystem.Player>();
-                }
-                return player;
-            }
-        }
-                static SteamVR_ControllerManager controllerManager;
-        public static SteamVR_ControllerManager ControllerManager
-        {
-            get
-            {
-                if (controllerManager == null)
-                {
-                    controllerManager = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
-                }
-                return controllerManager;
             }
         }
 #endif
@@ -281,22 +205,14 @@ namespace Cognitive3D
             {
                 if (_hmd == null)
                 {
-#if C3D_STEAMVR
-                    SteamVR_Camera cam = GameplayReferences.SteamVR_Camera;
-                    if (cam != null){ _hmd = cam.transform; }
-#elif C3D_OCULUS
+#if C3D_OCULUS
                     OVRCameraRig rig = CameraRig;
                     if (rig != null)
                     {
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
                     }
-#elif C3D_FOVE
-                    var fi = FoveInstance;
-                    if (fi != null)
-                    {
-                        _hmd = fi.transform;
-                    }
+
 #elif C3D_VIVEWAVE
                     var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
                     for (int i = 0; i < cameras.Length; i++)
@@ -406,90 +322,6 @@ namespace Cognitive3D
             }
         }
 
-#elif C3D_STEAMVR
-
-        static SteamVR_ControllerManager cm;
-        static Valve.VR.InteractionSystem.Player player;
-
-        static void InitializeControllers()
-        {
-            if (controllers != null && controllers[0].transform != null && controllers[1].transform != null && controllers[0].id >0 && controllers[1].id > 0) {return;}
-
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-            //try to initialize with controllermanager
-            //otherwise try to initialize with player.hands
-            if (cm == null)
-            {
-                cm = GameplayReferences.SteamVR_ControllerManager;
-            }
-            if (cm != null)
-            {
-                var left = cm.left.GetComponent<SteamVR_TrackedObject>();
-                controllers[0].transform = left.transform;
-                controllers[0].id = (int)left.index;
-                controllers[0].isRight = false;
-                if (left.index != SteamVR_TrackedObject.EIndex.None)
-                {
-                    controllers[0].connected = SteamVR_Controller.Input((int)left.index).connected;
-                    controllers[0].visible = SteamVR_Controller.Input((int)left.index).valid;
-                }
-                else
-                {
-                    controllers[0].connected = false;
-                    controllers[0].visible = false;
-                }
-
-                var right = cm.right.GetComponent<SteamVR_TrackedObject>();
-                controllers[1].transform = right.transform;
-                controllers[1].id = (int)right.index;
-                controllers[1].isRight = true;
-                if (right.index != SteamVR_TrackedObject.EIndex.None)
-                {
-                    controllers[1].connected = SteamVR_Controller.Input((int)right.index).connected;
-                    controllers[1].visible = SteamVR_Controller.Input((int)right.index).valid;
-                }
-                else
-                {
-                    controllers[1].connected = false;
-                    controllers[1].visible = false;
-                }
-            }
-            else
-            {
-                if (player == null)
-                {
-                    player = GameplayReferences.Player;
-                }
-                if (player != null)
-                {
-                    var left = player.leftHand;
-                    if (left != null && left.controller != null)
-                    {
-                        controllers[0].transform = player.leftHand.transform;
-                        controllers[0].id = (int)player.leftHand.controller.index;
-                        controllers[0].isRight = false;
-                        controllers[0].connected = left.controller.connected;
-                        controllers[0].visible = left.controller.valid;
-                    }
-
-                    var right = player.rightHand;
-                    if (right != null && right.controller != null)
-                    {
-                        controllers[1].transform = player.rightHand.transform;
-                        controllers[1].id = (int)player.rightHand.controller.index;
-                        controllers[1].isRight = true;
-                        controllers[1].connected = right.controller.connected;
-                        controllers[1].visible = right.controller.valid;
-                    }
-                }
-            }
-
-        }
 #elif C3D_VIVEWAVE
 
         //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
@@ -633,7 +465,7 @@ namespace Cognitive3D
                 Debug.Log("Failed at GetEyeTrackingDevice 1");
             return device.isValid;
         }
-#elif C3D_XR
+#else
 
         //no clear way to get controller reliably. dynamic object calls this when enabled
         public static void SetController(GameObject go, bool isRight)
@@ -657,16 +489,6 @@ namespace Cognitive3D
             }
         }
 
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-        }
-#else
         static void InitializeControllers()
         {
             if (controllers == null)

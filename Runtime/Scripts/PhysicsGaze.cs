@@ -31,12 +31,6 @@ namespace Cognitive3D
             RaycastHit hit;
             Ray ray = GazeHelper.GetCurrentWorldGazeRay();
 
-            Vector3 gpsloc = new Vector3();
-            float compass = 0;
-            Vector3 floorPos = new Vector3();
-
-            GetOptionalSnapshotData(ref gpsloc, ref compass, ref floorPos);
-
             float hitDistance;
             DynamicObject hitDynamic;
             Vector3 hitWorld;
@@ -50,14 +44,14 @@ namespace Cognitive3D
                 {
                     var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
                     var mediauvs = hitcoord;
-                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, GameplayReferences.HMD.position, GameplayReferences.HMD.rotation, gpsloc, compass, mediacomponent.MediaSource, mediatime, mediauvs, floorPos);
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, GameplayReferences.HMD.position, GameplayReferences.HMD.rotation, mediacomponent.MediaSource, mediatime, mediauvs);
                 }
                 else
                 {
-                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, ray.origin, GameplayReferences.HMD.rotation, gpsloc, compass, floorPos);
+                    GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, ray.origin, GameplayReferences.HMD.rotation);
                 }
 
-                Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1, 0, 1, 0.5f), Cognitive3D_Preferences.Instance.SnapshotInterval);
+                Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1, 0, 1, 0.5f), Cognitive3D_Preferences.SnapshotInterval);
                 //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
                 //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
                 //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
@@ -79,8 +73,8 @@ namespace Cognitive3D
                 Quaternion rot = GameplayReferences.HMD.rotation;
 
                 //hit world
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot, gpsloc, compass, floorPos);
-                Debug.DrawLine(pos, gazepoint, Color.red, Cognitive3D_Preferences.Instance.SnapshotInterval);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot);
+                Debug.DrawLine(pos, gazepoint, Color.red, Cognitive3D_Preferences.SnapshotInterval);
 
                 //Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
                 //Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
@@ -99,7 +93,7 @@ namespace Cognitive3D
                 Vector3 pos = GameplayReferences.HMD.position;
                 Quaternion rot = GameplayReferences.HMD.rotation;
                 Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
-                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot, gpsloc, compass, floorPos);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot);
                 //Debug.DrawRay(pos, displayPosition, Color.cyan, Cognitive3D_Preferences.Instance.SnapshotInterval);
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                     DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();

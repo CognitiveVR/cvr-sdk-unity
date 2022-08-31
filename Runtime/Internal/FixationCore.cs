@@ -14,36 +14,36 @@ namespace Cognitive3D
 
         static FixationCore()
         {
-            Cognitive3D_Manager.OnSendData += Core_OnSendData;
-            nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
-            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
+            //Cognitive3D_Manager.OnSendData += Core_OnSendData;
+            //nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
+            //Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
         }
 
         private static void Core_InitEvent()
         {
-            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
-            Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
+            //Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
+            //Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
         }
 
-        static float nextSendTime = 0;
-        internal static IEnumerator AutomaticSendTimer()
-        {
-            while (true)
-            {
-                while (nextSendTime > Time.realtimeSinceStartup)
-                {
-                    yield return null;
-                }
-                //try to send!
-                nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
-                if (Cognitive3D_Manager.IsInitialized)
-                {
-                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                        Util.logDevelopment("check to automatically send fixations");
-                    Core_OnSendData(false);
-                }
-            }
-        }
+        //static float nextSendTime = 0;
+        //internal static IEnumerator AutomaticSendTimer()
+        //{
+        //    while (true)
+        //    {
+        //        while (nextSendTime > Time.realtimeSinceStartup)
+        //        {
+        //            yield return null;
+        //        }
+        //        //try to send!
+        //        nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.FixationSnapshotMaxTimer;
+        //        if (Cognitive3D_Manager.IsInitialized)
+        //        {
+        //            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+        //                Util.logDevelopment("check to automatically send fixations");
+        //            Core_OnSendData(false);
+        //        }
+        //    }
+        //}
 
         //static void TrySendData()
         //{
@@ -73,8 +73,9 @@ namespace Cognitive3D
         //}
 
         public delegate void onFixationRecord(Fixation fixation);
+        //used by active session view
         public static event onFixationRecord OnFixationRecord;
-        public static void FixationRecordEvent(Fixation fixation)
+        internal static void FixationRecordEvent(Fixation fixation)
         {
             if (OnFixationRecord != null)
                 OnFixationRecord.Invoke(fixation);
@@ -82,6 +83,12 @@ namespace Cognitive3D
 
         //happens after the network has sent the request, before any response
         public static event Cognitive3D_Manager.onSendData OnFixationSend;
+        //used by active session view
+        internal static void FixationSendEvent()
+        {
+            if (OnFixationSend != null)
+                OnFixationSend.Invoke(false);
+        }
 
         static float lastSendTime = -60;
         private static void Core_OnSendData(bool copyDataToCache)

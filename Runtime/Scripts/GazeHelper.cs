@@ -13,12 +13,7 @@ namespace Cognitive3D
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
-#if C3D_SNAPDRAGON
-        static Vector3 GetLookDirection()
-        {
-            return SvrManager.Instance.EyeDirection;
-        }
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
 
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion version;
@@ -53,7 +48,7 @@ namespace Cognitive3D
             }
             return lastDir;
         }
-#elif C3D_VARJO
+#elif C3D_VARJOVR
         static Vector3 lastDir = Vector3.forward;
         static Vector3 GetLookDirection()
         {
@@ -66,6 +61,22 @@ namespace Cognitive3D
                     lastDir = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
                 }
             }
+            return lastDir;
+        }
+#elif C3D_VARJOXR
+        static Vector3 lastDir = Vector3.forward;
+        static Vector3 GetLookDirection()
+        {
+            if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
+            {
+                var data = Varjo.XR.VarjoEyeTracking.GetGaze();
+                if (data.status != Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid)
+                {
+                    var ray = data.gaze;
+                    lastDir = GameplayReferences.HMD.TransformDirection(new Vector3((float)ray.forward[0], (float)ray.forward[1], (float)ray.forward[2]));
+                }
+            }
+            //TODO CONSIDER defaulting the gaze to be in the forward direction of the HMD, not the world
             return lastDir;
         }
 #elif C3D_PICOVR
@@ -147,8 +158,7 @@ namespace Cognitive3D
             }
             return lastDirection;
         }
-#elif C3D_XR
-
+#else
         static Vector3 lastDirection = Vector3.forward;
         static Vector3 GetLookDirection()
         {
@@ -186,11 +196,7 @@ namespace Cognitive3D
             }
             return lastDirection;
         }
-#else
-        static Vector3 GetLookDirection()
-        {
-            return GameplayReferences.HMD.forward;
-        }
+
 #endif
     }
 }

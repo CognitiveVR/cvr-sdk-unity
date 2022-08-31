@@ -243,12 +243,6 @@ namespace Cognitive3D
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send(Vector3 position)
         {
-            //float[] pos = new float[3] { 0, 0, 0 };
-
-            //pos[0] = position.x;
-            //pos[1] = position.y;
-            //pos[2] = position.z;
-
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
@@ -265,16 +259,6 @@ namespace Cognitive3D
         /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
-            //TODO should be using gampelay references, not Cognitive3D_Manager.HMD
-            //float[] pos = new float[3] { 0, 0, 0 };
-            //
-            //if (GameplayReferences.HMD != null)
-            //{
-            //    pos[0] = GameplayReferences.HMD.position.x;
-            //    pos[1] = GameplayReferences.HMD.position.y;
-            //    pos[2] = GameplayReferences.HMD.position.z;
-            //}
-
             float duration = Time.realtimeSinceStartup - startTime;
             if (duration > 0.011f)
             {
@@ -284,198 +268,15 @@ namespace Cognitive3D
             SendCustomEvent(category, _properties, GameplayReferences.HMD.position, dynamicObjectId);
         }
 
-
-        //public functions
-        //add transaction
-        //send transactions
-
         internal static void Initialize()
         {
-            Cognitive3D_Manager.OnSendData -= Core_OnSendData;
-            Cognitive3D_Manager.OnSendData += Core_OnSendData;
-            autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
 
-            if (automaticTimerActive == false)
-            {
-                automaticTimerActive = true;
-                Cognitive3D_Manager.NetworkManager.StartCoroutine(AutomaticSendTimer());
-            }
         }
-
-        private static void Core_OnSendData(bool copyDataToCache)
-        {
-            //SendTransactions(copyDataToCache);
-        }
-
-
-        //used for unique identifier for sceneexplorer file names
-        private static int partCount = 1;
-
-        static int cachedEvents = 0;
-        public static int CachedEvents { get { return cachedEvents; } }
-
-        private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(512);
-        private static System.Text.StringBuilder builder = new System.Text.StringBuilder(1024);
-
-        static bool automaticTimerActive;
-        static float autoTimer_nextSendTime = 0;
-        internal static IEnumerator AutomaticSendTimer()
-        {
-            while (true)
-            {
-                while (autoTimer_nextSendTime > Time.realtimeSinceStartup)
-                {
-                    yield return null;
-                }
-                autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.TransactionSnapshotMaxTimer;
-                if (Cognitive3D_Manager.IsInitialized)
-                {
-                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                        Util.logDevelopment("check to automatically send events");
-                    //TODO setup looping automatic send timers
-                    //SendTransactions(false);
-                }
-            }
-        }
-
-        //checks for min send time and extreme batch size before calling send
-        //static void TrySendTransactions()
-        //{
-        //    //bool withinMinTimer = minTimer_lastSendTime + Cognitive3D_Preferences.Instance.TransactionSnapshotMinTimer > Time.realtimeSinceStartup;
-        //    //bool withinExtremeBatchSize = cachedEvents < Cognitive3D_Preferences.Instance.TransactionExtremeSnapshotCount;
-        //
-        //    //within last send interval and less than extreme count
-        //    if (cachedEvents < Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
-        //    {
-        //        SendTransactions(false);
-        //    }
-        //}
-
-        static float minTimer_lastSendTime = -60;
-        /*static void SendTransactions(bool copyDataToCache)
-        {
-            if (cachedEvents == 0)
-            {
-                return;
-            }
-
-            if (!Cognitive3D_Manager.IsInitialized)
-            {
-                return;
-            }
-
-            if (Cognitive3D_Manager.TrackingScene == null)
-            {
-                Util.logDebug("CustomEvent.SendTransactions could not find CurrentSceneId! has scene been uploaded and Cognitive3D_Manager.Initialize been called?");
-                cachedEvents = 0;
-                eventBuilder.Length = 0;
-                return;
-            }
-
-            autoTimer_nextSendTime = Time.realtimeSinceStartup + Cognitive3D_Preferences.Instance.DynamicSnapshotMaxTimer;
-            minTimer_lastSendTime = Time.realtimeSinceStartup;
-
-            cachedEvents = 0;
-            //bundle up header stuff and transaction data
-
-            //clear the transaction builder
-            builder.Length = 0;
-
-            //Cognitive3D.Util.logDebug("package transaction event data " + partCount);
-            //when thresholds are reached, etc
-
-            builder.Append("{");
-
-            //header
-            JsonUtil.SetString("userid", Cognitive3D_Manager.DeviceId, builder);
-            builder.Append(",");
-
-            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
-            {
-                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
-                builder.Append(",");
-            }
-
-            JsonUtil.SetDouble("timestamp", Cognitive3D_Manager.SessionTimeStamp, builder);
-            builder.Append(",");
-            JsonUtil.SetString("sessionid", Cognitive3D_Manager.SessionID, builder);
-            builder.Append(",");
-            JsonUtil.SetInt("part", partCount, builder);
-            partCount++;
-            builder.Append(",");
-
-            JsonUtil.SetString("formatversion", "1.0", builder);
-            builder.Append(",");
-
-            //events
-            builder.Append("\"data\":[");
-
-            builder.Append(eventBuilder.ToString());
-
-            if (eventBuilder.Length > 0)
-                builder.Remove(builder.Length - 1, 1); //remove the last comma
-            builder.Append("]");
-
-            builder.Append("}");
-
-            eventBuilder.Length = 0;
-
-            //send transaction contents to scene explorer
-
-            string packagedEvents = builder.ToString();
-
-            //sends all packaged transaction events from instrumentaiton subsystem to events endpoint on scene explorer
-            string url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
-
-            if (copyDataToCache)
-            {
-                if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, packagedEvents))
-                {
-                    Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, packagedEvents);
-                }
-            }
-
-            Cognitive3D_Manager.NetworkManager.Post(url, packagedEvents);
-            if (OnCustomEventSend != null)
-            {
-                OnCustomEventSend.Invoke(copyDataToCache);
-            }
-        }*/
-
-        /*public static void SendCustomEvent(string category, float[] position, string dynamicObjectId = "")
-        {
-            if (Cognitive3D_Manager.IsInitialized == false)
-            {
-                Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
-                return;
-            }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; })
-
-            eventBuilder.Append("{");
-            JsonUtil.SetString("name", category, eventBuilder);
-            eventBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
-            if (!string.IsNullOrEmpty(dynamicObjectId))
-            {
-                eventBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
-            }
-            eventBuilder.Append(",");
-            JsonUtil.SetVector("point", position, eventBuilder);
-            eventBuilder.Append("}"); //close transaction object
-            eventBuilder.Append(",");
-
-            CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), null, dynamicObjectId, Util.Timestamp(Time.frameCount));
-            cachedEvents++;
-            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
-            {
-                TrySendTransactions();
-            }
-        }*/
 
         public delegate void onCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time);
+        //used by active session view
         public static event onCustomEventRecorded OnCustomEventRecorded;
-        private static void CustomEventRecordedEvent(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
+        internal static void CustomEventRecordedEvent(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
         {
             if (OnCustomEventRecorded != null)
             {
@@ -484,7 +285,13 @@ namespace Cognitive3D
         }
 
         //happens after the network has sent the request, before any response
+        //used by active session view
         public static event Cognitive3D_Manager.onSendData OnCustomEventSend;
+        internal static void CustomEventSendEvent()
+        {
+            if (OnCustomEventSend != null)
+                OnCustomEventSend.Invoke(false);
+        }
 
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
@@ -496,38 +303,11 @@ namespace Cognitive3D
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             CoreInterface.RecordCustomEvent(category, position, dynamicObjectId);
-
-            /*eventBuilder.Append("{");
-            JsonUtil.SetString("name", category, eventBuilder);
-            eventBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
-            if (!string.IsNullOrEmpty(dynamicObjectId))
-            {
-                eventBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
-            }
-            eventBuilder.Append(",");
-            JsonUtil.SetVector("point", position, eventBuilder);
-
-            eventBuilder.Append("}"); //close transaction object
-            eventBuilder.Append(",");
-
-            CustomEventRecordedEvent(category, position, null, dynamicObjectId, Util.Timestamp(Time.frameCount));
-            cachedEvents++;
-            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
-            {
-                TrySendTransactions();
-            }*/
         }
 
         //writes json to display the transaction in sceneexplorer
         public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
-            //SendCustomEvent(category, properties, new float[3] { position.x, position.y, position.z }, dynamicObjectId);
-        //}
-
-        //public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
-        //{
             if (Cognitive3D_Manager.IsInitialized == false)
             {
                 Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
@@ -536,67 +316,6 @@ namespace Cognitive3D
             if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
 
             CoreInterface.RecordCustomEvent(category, properties, position, dynamicObjectId);
-
-            /*eventBuilder.Append("{");
-            JsonUtil.SetString("name", category, eventBuilder);
-            eventBuilder.Append(",");
-            JsonUtil.SetDouble("time", Util.Timestamp(Time.frameCount), eventBuilder);
-            if (!string.IsNullOrEmpty(dynamicObjectId))
-            {
-                eventBuilder.Append(',');
-                JsonUtil.SetString("dynamicId", dynamicObjectId, eventBuilder);
-            }
-            eventBuilder.Append(",");
-            JsonUtil.SetVector("point", position, eventBuilder);
-
-            if (properties != null && properties.Count > 0)
-            {
-                eventBuilder.Append(",");
-                eventBuilder.Append("\"properties\":{");
-                for (int i = 0; i < properties.Count; i++)
-                {
-                    if (i != 0) { eventBuilder.Append(","); }
-                    if (properties[i].Value.GetType() == typeof(string))
-                    {
-                        JsonUtil.SetString(properties[i].Key, (string)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == typeof(float))
-                    {
-                        JsonUtil.SetFloat(properties[i].Key, (float)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == typeof(double))
-                    {
-                        JsonUtil.SetDouble(properties[i].Key, (double)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == typeof(int))
-                    {
-                        JsonUtil.SetInt(properties[i].Key, (int)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == typeof(long))
-                    {
-                        JsonUtil.SetLong(properties[i].Key, (long)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == null)
-                    {
-                        JsonUtil.SetNull(properties[i].Key, eventBuilder);
-                    }
-                    else
-                    {
-                        JsonUtil.SetString(properties[i].Key, properties[i].Value.ToString(), eventBuilder);
-                    }
-                }
-                eventBuilder.Append("}"); //close properties object
-            }
-
-            eventBuilder.Append("}"); //close transaction object
-            eventBuilder.Append(",");
-
-            CustomEventRecordedEvent(category, new Vector3(position[0], position[1], position[2]), properties, dynamicObjectId, Util.Timestamp(Time.frameCount));
-            cachedEvents++;
-            if (cachedEvents >= Cognitive3D_Preferences.Instance.TransactionSnapshotCount)
-            {
-                TrySendTransactions();
-            }*/
         }
     }
 }
