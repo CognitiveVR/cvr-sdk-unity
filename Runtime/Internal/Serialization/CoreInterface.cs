@@ -155,19 +155,26 @@ namespace Cognitive3D
         {
             //also send a delegate to announce when a new fixation has begun/end. connect that to FixationCore.FixationRecordEvent()
             SharedCore.FixationInitialize(maxBlinkMS, preBlinkDiscardMS, blinkEndWarmupMS, minFixationMS, maxConsecutiveDiscardMS, maxfixationAngle, maxConsecutiveOffDynamic, dynamicFixationSizeMultiplier, focusSizeFromCenter, saccadefixationEndMS);
+            SharedCore.SetNewFixationDelegate(SomeFixationCallback);
         }
 
-        internal static void RecordEyeData(EyeCapture data)
+        private static void SomeFixationCallback(Fixation obj)
         {
-            double time = data.Time;
-            float[] worldPosition = new float[] { data.WorldPosition.x, data.WorldPosition.y, data.WorldPosition.z };
-            float[] hmdposition = new float[] { data.HmdPosition.x, data.HmdPosition.y, data.HmdPosition.z };
-            float[] screenposition = new float[] { data.ScreenPos.x, data.ScreenPos.y };
+            //TODO pass to ASV
+        }
+
+        internal static void RecordEyeData(EyeCapture data, int hitType)
+        {
+            //double time = data.Time;
+            //float[] worldPosition = new float[] { data.WorldPosition.x, data.WorldPosition.y, data.WorldPosition.z };
+            //float[] hmdposition = new float[] { data.HmdPosition.x, data.HmdPosition.y, data.HmdPosition.z };
+            //float[] screenposition = new float[] { data.ScreenPos.x, data.ScreenPos.y };
             bool blinking = data.EyesClosed;
             string dynamicId = data.HitDynamicId;
             Matrix4x4 dynamicMatrix = data.CaptureMatrix;
 
-            SharedCore.RecordEyeData(time, worldPosition, hmdposition, screenposition, blinking, dynamicId, dynamicMatrix);
+            //SharedCore.RecordEyeData(time, worldPosition, hmdposition, screenposition, blinking, dynamicId, dynamicMatrix);
+            SharedCore.RecordEyeData(data.Time, data.WorldPosition, data.LocalPosition, data.HmdPosition, data.ScreenPos, blinking, dynamicId, dynamicMatrix, hitType);
         }
 
         #endregion

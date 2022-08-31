@@ -501,7 +501,7 @@ namespace Cognitive3D
             }
             return false;
         }
-#elif C3D_VARJO
+#elif C3D_VARJOXR
         const int CachedEyeCaptures = 100; //VARJO
 
         Varjo.XR.VarjoEyeTracking.GazeData currentData;
@@ -1017,6 +1017,7 @@ namespace Cognitive3D
             Vector3 world;
 
             DynamicObject hitDynamic = null;
+            int hitType = 0;
 
             var hitresult = GazeRaycast(out world, out hitDynamic);
 
@@ -1039,7 +1040,7 @@ namespace Cognitive3D
                         EyeCaptures[index].SkipPositionForFixationAverage = true;
                     }
 
-
+                    hitType = 1;
                     EyeCaptures[index].UseCaptureMatrix = true;
                     //TODO test that this matrix is correct if dynamic is parented to offset/rotated/scaled transform
                     EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
@@ -1058,6 +1059,7 @@ namespace Cognitive3D
                 }
                 else
                 {
+                    hitType = 0;
                     EyeCaptures[index].UseCaptureMatrix = false;
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
@@ -1069,6 +1071,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
             {
+                hitType = 2;
                 //eye capture world point could be used for getting the direction, but position is invalid (on skybox)
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
@@ -1080,6 +1083,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
+                hitType = 3;
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].Discard = true;
@@ -1094,7 +1098,7 @@ namespace Cognitive3D
             }
 
             //submit eye data here
-            CoreInterface.RecordEyeData(EyeCaptures[index]);
+            CoreInterface.RecordEyeData(EyeCaptures[index],hitType);
 
 
             index = (index + 1) % CachedEyeCaptures;

@@ -279,6 +279,7 @@ namespace Cognitive3D
 
             OnPreSessionEnd += Core_EndSessionEvent;
             InvokeSendDataEvent(false);
+            StartCoroutine(AutomaticSendData());
 #if C3D_OMNICEPT
             var gliaBehaviour = GameplayReferences.GliaBehaviour;
 

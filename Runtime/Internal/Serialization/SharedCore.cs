@@ -349,6 +349,7 @@ namespace Cognitive3D.Serialization
 
         static List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
 
+        static bool fixationsInitialized;
         internal static void FixationInitialize(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS)
         {
             MaxBlinkMs = maxBlinkMS;
@@ -366,12 +367,15 @@ namespace Cognitive3D.Serialization
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
+            ActiveFixation = new Fixation();
+            fixationsInitialized = true;
         }
 
 
         //TODO replace matrix4x4 with something else not tied to unity
-        internal static void RecordEyeData(double time, float[] worldPosition, float[] hmdposition, float[] screenposition, bool blinking, string dynamicId, Matrix4x4 dynamicMatrix)
+        internal static void RecordEyeData(long time, Vector3 worldPosition, Vector3 localPosition, Vector3 hmdposition, Vector2 screenposition, bool blinking, string dynamicId, Matrix4x4 dynamicMatrix, int hitType)
         {
+            if (!fixationsInitialized) { return; }
             //check for new fixation
             //else check for ending fixation
             //update eyecapture state
@@ -445,6 +449,53 @@ namespace Cognitive3D.Serialization
                 }
                 WasOutOfDispersionLastFrame = IsOutOfRange;
             }
+
+
+            EyeCaptures[index].Discard = false;
+            EyeCaptures[index].SkipPositionForFixationAverage = false;
+            EyeCaptures[index].OffTransform = true;
+            EyeCaptures[index].OutOfRange = false;
+            EyeCaptures[index].HitDynamicId = string.Empty;
+            EyeCaptures[index].EyesClosed = blinking;
+            EyeCaptures[index].HmdPosition = hmdposition;
+            EyeCaptures[index].Time = time;
+            if (EyeCaptures[index].EyesClosed) { EyeCaptures[index].SkipPositionForFixationAverage = true; }
+
+            if (hitType == 0) //world
+            {
+                EyeCaptures[index].WorldPosition = worldPosition;
+                EyeCaptures[index].ScreenPos = screenposition;
+                EyeCaptures[index].UseCaptureMatrix = false;
+                EyeCaptures[index].OffTransform = false;
+                EyeCaptures[index].HitDynamicId = string.Empty;
+            }
+            else if (hitType == 1) //dynamic
+            {
+                EyeCaptures[index].WorldPosition = worldPosition;
+                EyeCaptures[index].ScreenPos = screenposition;
+                EyeCaptures[index].UseCaptureMatrix = true;
+                EyeCaptures[index].CaptureMatrix = dynamicMatrix;
+                EyeCaptures[index].HitDynamicId = dynamicId;
+                EyeCaptures[index].LocalPosition = localPosition;
+                EyeCaptures[index].OffTransform = false;
+            }
+            else if (hitType == 2) //sky
+            {
+                EyeCaptures[index].WorldPosition = worldPosition;
+                EyeCaptures[index].ScreenPos = screenposition;
+                EyeCaptures[index].UseCaptureMatrix = false;
+                EyeCaptures[index].OffTransform = true;
+                EyeCaptures[index].SkipPositionForFixationAverage = true;
+            }
+            else if (hitType == 3) //invalid
+            {
+                EyeCaptures[index].Discard = true;
+                EyeCaptures[index].SkipPositionForFixationAverage = true;
+                EyeCaptures[index].UseCaptureMatrix = false;
+                EyeCaptures[index].OffTransform = true;
+            }
+
+            index = (index + 1) % CachedEyeCaptures;
         }
 
 
@@ -984,7 +1035,6 @@ namespace Cognitive3D.Serialization
                     break;
                 }
             }
-
             if (withinRadius)
             {
                 //all points are within the fixation radius. set ActiveFixation start time and save the each world position for used eye capture points
@@ -1374,6 +1424,10 @@ namespace Cognitive3D.Serialization
 
         internal static void RecordSensor(string category, float value, double unixTimestamp)
         {
+            if (!CachedSnapshots.ContainsKey(category))
+            {
+                CachedSnapshots.Add(category, new List<string>());
+            }
             CachedSnapshots[category].Add(GetSensorDataToString(unixTimestamp, value));
             currentSensorSnapshots++;
             if (currentSensorSnapshots >= SensorThreshold)
