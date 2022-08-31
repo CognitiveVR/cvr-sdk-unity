@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if C3D_OMNICEPT
 using HP.Omnicept.Unity;
+#endif
 
 namespace Cognitive3D.Components
 {
