@@ -14,23 +14,9 @@ namespace Cognitive3D.Serialization
     internal static class SharedCore
     {
         #region Delegates and Callbacks
-        static System.Action<string> LogInfo;
-        public static void SetLogDelegate(System.Action<string> source)
-        {
-            LogInfo = source;
-        }
-
+        static System.Action<string> LogAction;
         static System.Action<string, string, bool> WebPost;
-        public static void SetPostDelegate(System.Action<string, string, bool> webPost)
-        {
-            WebPost = webPost;
-        }
-
         static System.Action<Fixation> NewFixation;
-        public static void SetNewFixationDelegate(System.Action<Fixation> newFixation)
-        {
-            NewFixation = newFixation;
-        }
         #endregion
 
 
@@ -38,6 +24,7 @@ namespace Cognitive3D.Serialization
 
         internal static void Flush(bool copyToCache)
         {
+            if (!IsInitialized) { return; }
             if (copyToCache)
             {
                 //immediately send everything
@@ -64,7 +51,10 @@ namespace Cognitive3D.Serialization
         static int DynamicThreshold;
         static int SensorThreshold;
         static int FixationThreshold;
-        public static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId)
+        static bool IsInitialized = false;
+
+        //TODO replace with a struct
+        internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction)
         {
             DeviceId = deviceId;
             SessionTimestamp = sessionTimestamp;
@@ -78,6 +68,34 @@ namespace Cognitive3D.Serialization
 
             InitializeDynamicSnapshotPool();
             InitializeGaze();
+
+            WebPost = webPost;
+            LogAction = logAction;
+
+            IsInitialized = true;
+        }
+
+        internal static void Reset()
+        {
+            IsInitialized = false;
+
+            //TODO reset everything - lists, stringbuilders, 
+            LogAction = null;
+            WebPost = null;
+            SessionId = string.Empty;
+            DeviceId = string.Empty;
+            ParticipantId = string.Empty;
+            SessionTimestamp = 0;
+            LobbyId = string.Empty;
+
+            newSessionProperties.Clear();
+            knownSessionProperties.Clear();
+
+            ResetCustomEvents();
+            ResetGaze();
+            ResetDynamics();
+            ResetSensors();
+            ResetFixations();
         }
 
         static string LobbyId;
@@ -87,8 +105,9 @@ namespace Cognitive3D.Serialization
         //all session properties, including new properties not yet sent
         static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
 
-        public static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
+        internal static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
         {
+            if (!IsInitialized) { return null; }
             if (clearNewProperties)
             {
                 if (newSessionProperties.Count > 0)
@@ -105,8 +124,9 @@ namespace Cognitive3D.Serialization
             return newSessionProperties;
         }
 
-        public static List<KeyValuePair<string, object>> GetAllSessionProperties(bool clearNewProperties)
+        internal static List<KeyValuePair<string, object>> GetAllSessionProperties(bool clearNewProperties)
         {
+            if (!IsInitialized) { return null; }
             if (clearNewProperties)
             {
                 newSessionProperties.Clear();
@@ -116,6 +136,7 @@ namespace Cognitive3D.Serialization
 
         internal static void SetSessionProperty(string key, object value)
         {
+            if (!IsInitialized) { return; }
             int foundIndex = 0;
             bool foundKey = false;
             for (int i = 0; i < knownSessionProperties.Count; i++)
@@ -168,7 +189,7 @@ namespace Cognitive3D.Serialization
 
         internal static void SetSessionPropertyIfEmpty(string key, object value)
         {
-
+            if (!IsInitialized) { return; }
             for (int i = 0; i < knownSessionProperties.Count; i++)
             {
                 if (knownSessionProperties[i].Key == key)
@@ -193,11 +214,16 @@ namespace Cognitive3D.Serialization
 
         #region CustomEvent
         static int CachedEventCount;
-        static int EventPartCount = 1;
+        static int EventJsonPart = 1;
+        //used to batch events together
+        private static System.Text.StringBuilder eventRequestBuilder = new System.Text.StringBuilder(1024);
+        //used to serialize each event
+        private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(1024);
 
         //records object of custom event data to be serialized later
         internal static void RecordCustomEvent(string category, double timestamp, List<KeyValuePair<string, object>> properties, float[] position, string dynamicObjectId = "")
         {
+            if (!IsInitialized) { return; }
             eventBuilder.Append("{");
             JsonUtil.SetString("name", category, eventBuilder);
             eventBuilder.Append(",");
@@ -263,10 +289,6 @@ namespace Cognitive3D.Serialization
             }
         }
 
-        //used to batch events together
-        private static System.Text.StringBuilder eventRequestBuilder = new System.Text.StringBuilder(1024);
-        //used to serialize each event
-        private static System.Text.StringBuilder eventBuilder = new System.Text.StringBuilder(1024);
         static void SerializeEvents(bool writeToCache)
         {
             if (CachedEventCount == 0) { return; }
@@ -296,8 +318,8 @@ namespace Cognitive3D.Serialization
             eventRequestBuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, eventRequestBuilder);
             eventRequestBuilder.Append(",");
-            JsonUtil.SetInt("part", EventPartCount, eventRequestBuilder);
-            EventPartCount++;
+            JsonUtil.SetInt("part", EventJsonPart, eventRequestBuilder);
+            EventJsonPart++;
             eventRequestBuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", eventRequestBuilder);
@@ -322,15 +344,38 @@ namespace Cognitive3D.Serialization
             WebPost("event", packagedEvents, writeToCache);
         }
 
-
+        static void ResetCustomEvents()
+        {
+            eventRequestBuilder.Length = 0;
+            eventBuilder.Length = 0;
+            CachedEventCount = 0;
+            EventJsonPart = 1;
+        }
 
         #endregion
 
         #region Fixation
 
+        static void ResetFixations()
+        {
+            fixationJsonPart = 1;
+            Fixations.Clear();
+            index = 0;
+            IsFixating = false;
+            WasCaptureDiscardedLastFrame = false;
+            WasOutOfDispersionLastFrame = false;
+            CachedEyeCapturePositions.Clear();
+            worldFixationSamples.Clear();
+            ActiveFixation = null;
+            EyeCaptures = null; //<------------------
+            fixationsInitialized = false;
+            fixationHitDynamicIds.Clear();
+            localFixationUsedCaptures.Clear();
+        }
+
         private static int fixationJsonPart = 1;
         static List<Fixation> Fixations = new List<Fixation>();
-        public static int CachedFixations { get { return Fixations.Count; } }
+        //static int CachedFixations { get { return Fixations.Count; } }
         static int index;
         static bool IsFixating;
         static bool WasCaptureDiscardedLastFrame = false; //ensures at least 1 frame is discarded before ending fixations
@@ -349,9 +394,28 @@ namespace Cognitive3D.Serialization
 
         static List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
 
-        static bool fixationsInitialized;
-        internal static void FixationInitialize(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS)
+        static List<EyeCapture> worldFixationSamples = new List<EyeCapture>(CachedEyeCaptures);
+        const int CachedEyeCaptures = 120;
+        static Fixation ActiveFixation;
+        static EyeCapture[] EyeCaptures;
+
+        //static int index = 0;
+        static int GetIndex(int offset)
         {
+            if (index + offset < 0)
+                return (CachedEyeCaptures + index + offset) % CachedEyeCaptures;
+            return (index + offset) % CachedEyeCaptures;
+        }
+
+        static List<string> fixationHitDynamicIds = new List<string>(CachedEyeCaptures);
+        static List<EyeCapture> localFixationUsedCaptures = new List<EyeCapture>(CachedEyeCaptures);
+
+
+        static bool fixationsInitialized;
+        internal static void FixationInitialize(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS, System.Action<Fixation> newFixation)
+        {
+            if (!IsInitialized) { return; }
+
             MaxBlinkMs = maxBlinkMS;
             PreBlinkDiscardMs = preBlinkDiscardMS;
             BlinkEndWarmupMs = blinkEndWarmupMS;
@@ -363,11 +427,14 @@ namespace Cognitive3D.Serialization
             FocusSizeFromCenter = focusSizeFromCenter;
             SaccadeFixationEndMs = saccadefixationEndMS;
 
+            EyeCaptures = new EyeCapture[CachedEyeCaptures];
+
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
                 EyeCaptures[i] = new EyeCapture() { Discard = true };
             }
             ActiveFixation = new Fixation();
+            NewFixation = newFixation;
             fixationsInitialized = true;
         }
 
@@ -375,6 +442,7 @@ namespace Cognitive3D.Serialization
         //TODO replace matrix4x4 with something else not tied to unity
         internal static void RecordEyeData(long time, Vector3 worldPosition, Vector3 localPosition, Vector3 hmdposition, Vector2 screenposition, bool blinking, string dynamicId, Matrix4x4 dynamicMatrix, int hitType)
         {
+            if (!IsInitialized) { return; }
             if (!fixationsInitialized) { return; }
             //check for new fixation
             //else check for ending fixation
@@ -499,8 +567,9 @@ namespace Cognitive3D.Serialization
         }
 
 
-        public static void RecordFixation(Fixation newFixation)
+        internal static void RecordFixation(Fixation newFixation)
         {
+            if (!IsInitialized) { return; }
             Fixations.Add(newFixation);
             if (Fixations.Count > FixationThreshold)
             {
@@ -724,20 +793,6 @@ namespace Cognitive3D.Serialization
             return false;
         }
 
-        const int CachedEyeCaptures = 120;
-        static Fixation ActiveFixation;
-        static EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
-
-        //static int index = 0;
-        static int GetIndex(int offset)
-        {
-            if (index + offset < 0)
-                return (CachedEyeCaptures + index + offset) % CachedEyeCaptures;
-            return (index + offset) % CachedEyeCaptures;
-        }
-
-        static List<string> fixationHitDynamicIds = new List<string>(CachedEyeCaptures);
-        static List<EyeCapture> localFixationUsedCaptures = new List<EyeCapture>(CachedEyeCaptures);
         /// <summary>
         /// returns true if 'active fixation' is actually active again
         /// </summary>
@@ -936,8 +991,6 @@ namespace Cognitive3D.Serialization
             }
         }
 
-        static List<EyeCapture> worldFixationSamples = new List<EyeCapture>(CachedEyeCaptures);
-
         //checks the NEXT eyecaptures to see if we should start a fixation
         static bool TryBeginFixation(int index)
         {
@@ -1072,7 +1125,7 @@ namespace Cognitive3D.Serialization
 
         private static void SerializeFixations(bool copyDataToCache)
         {
-            if (Fixations.Count <= 0) { LogInfo("Fixations.SendData found no data"); return; }
+            if (Fixations.Count <= 0) { LogAction("Fixations.SendData found no data"); return; }
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
@@ -1124,6 +1177,9 @@ namespace Cognitive3D.Serialization
         #endregion
 
         #region Gaze
+        static StringBuilder gazebuilder;
+        static int gazeCount;
+        static int gazeJsonPart;
 
         static void InitializeGaze()
         {
@@ -1131,13 +1187,16 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append("{\"data\":[");
         }
 
-        static StringBuilder gazebuilder;
-        static int gazeCount;
-        static int gazeJsonPart;
+        static void ResetGaze()
+        {
+            gazebuilder = null;
+            gazeJsonPart = 1;
+            gazeCount = 0;
+        }
 
         internal static void RecordGazeSky(float[] hmdposition, float[] hmdrotation, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
-
+            if (!IsInitialized) { return; }
             gazebuilder.Append("{");
 
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
@@ -1174,8 +1233,8 @@ namespace Cognitive3D.Serialization
 
         internal static void RecordGazeMedia(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, string mediaId, double timestamp, int mediaTimeMs, float[] uvs, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
+            if (!IsInitialized) { return; }
             gazebuilder.Append("{");
-
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetString("o", objectid, gazebuilder);
@@ -1219,8 +1278,8 @@ namespace Cognitive3D.Serialization
 
         internal static void RecordGazeWorld(float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
+            if (!IsInitialized) { return; }
             gazebuilder.Append("{");
-
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetVector("p", hmdpoint, gazebuilder);
@@ -1255,8 +1314,8 @@ namespace Cognitive3D.Serialization
 
         internal static void RecordGazeDynamic(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
+            if (!IsInitialized) { return; }
             gazebuilder.Append("{");
-
             JsonUtil.SetDouble("time", timestamp, gazebuilder);
             gazebuilder.Append(",");
             JsonUtil.SetString("o", objectid, gazebuilder);
@@ -1391,14 +1450,14 @@ namespace Cognitive3D.Serialization
         #endregion
 
         #region Sensor
-        public class SensorData
+        internal class SensorData
         {
-            public string Name;
-            public string Rate;
-            public float NextRecordTime;
-            public float UpdateInterval;
+            internal string Name;
+            internal string Rate;
+            internal float NextRecordTime;
+            internal float UpdateInterval;
 
-            public SensorData(string name, float rate)
+            internal SensorData(string name, float rate)
             {
                 Name = name;
                 Rate = string.Format("{0:0.00}", rate);
@@ -1415,15 +1474,14 @@ namespace Cognitive3D.Serialization
         }
 
         static Dictionary<string, SensorData> sensorData = new Dictionary<string, SensorData>();
-
-
         private static int sensorJsonPart = 1;
         private static Dictionary<string, List<string>> CachedSnapshots = new Dictionary<string, List<string>>();
         private static int currentSensorSnapshots = 0;
-        public static int CachedSensors { get { return currentSensorSnapshots; } }
+        static StringBuilder sbdatapoint = new StringBuilder(256);
 
         internal static void RecordSensor(string category, float value, double unixTimestamp)
         {
+            if (!IsInitialized) { return; }
             if (!CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots.Add(category, new List<string>());
@@ -1505,7 +1563,7 @@ namespace Cognitive3D.Serialization
             WebPost("sensor", sb.ToString(), writeToCache);
         }
 
-        static StringBuilder sbdatapoint = new StringBuilder(256);
+        
         //put this into the list of saved sensor data based on the name of the sensor
         private static string GetSensorDataToString(double timestamp, double sensorvalue)
         {
@@ -1524,6 +1582,15 @@ namespace Cognitive3D.Serialization
             return sbdatapoint.ToString();
         }
 
+        static void ResetSensors()
+        {
+            sensorData.Clear();
+            sensorJsonPart = 1;
+            CachedSnapshots.Clear();
+            currentSensorSnapshots = 0;
+            sbdatapoint.Length = 0;
+        }
+
         #endregion
 
         #region Dynamic
@@ -1536,11 +1603,9 @@ namespace Cognitive3D.Serialization
         private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
         private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
 
-        private static int FrameCount;       
-
         internal static int DynamicSnapshotsCount = 0;
 
-        internal static void InitializeDynamicSnapshotPool()
+        static void InitializeDynamicSnapshotPool()
         {
             //TODO EVENTUALLY replace coroutine with a thread
             Cognitive3D_Manager.Instance.StartCoroutine(CheckWriteJson());
@@ -1550,8 +1615,19 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        static void ResetDynamics()
+        {
+            DynamicJsonPart = 1;
+            ReadyToWriteJson = false;
+            InterruptThread = false;
+            queuedSnapshots.Clear();
+            queuedManifest.Clear();
+            DynamicSnapshotsCount = 0;
+        }
+
         internal static void WriteControllerManifestEntry(DynamicData data)
         {
+            if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.controllerType = data.ControllerType;
@@ -1577,6 +1653,7 @@ namespace Cognitive3D.Serialization
 
         internal static void WriteDynamicMediaManifestEntry(DynamicData data, string videourl)
         {
+            if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
             dome.videoURL = videourl;
 
@@ -1591,6 +1668,7 @@ namespace Cognitive3D.Serialization
 
         internal static void WriteDynamicManifestEntry(DynamicData data, string formattedProperties)
         {
+            if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             dome.HasProperties = true;
@@ -1611,6 +1689,7 @@ namespace Cognitive3D.Serialization
         /// <param name="data"></param>
         internal static void WriteDynamicManifestEntry(DynamicData data)
         {
+            if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
             queuedManifest.Enqueue(dome);
@@ -1622,8 +1701,9 @@ namespace Cognitive3D.Serialization
             }
         }
 
-        internal static void WriteDynamic(DynamicData data, string props, bool writeScale)
+        internal static void WriteDynamic(DynamicData data, string props, bool writeScale, double time)
         {
+            if (!IsInitialized) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -1642,7 +1722,7 @@ namespace Cognitive3D.Serialization
                 s.scaleZ = data.LastScale.z;
             }
             s.Properties = props;
-            s.Timestamp = Util.Timestamp(FrameCount);
+            s.Timestamp = time;
 
             queuedSnapshots.Enqueue(s);
             DynamicSnapshotsCount++;
@@ -1654,8 +1734,9 @@ namespace Cognitive3D.Serialization
         }
 
         //button properties are formated as   ,"buttons":{"input":value,"input":value}
-        internal static void WriteDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates)
+        internal static void WriteDynamicController(DynamicData data, string props, bool writeScale, string jbuttonstates, double time)
         {
+            if (!IsInitialized) { return; }
             var s = DynamicObjectSnapshot.GetSnapshot();
             s.Id = data.Id;
             s.posX = data.LastPosition.x;
@@ -1677,7 +1758,7 @@ namespace Cognitive3D.Serialization
             props = null;
             s.Buttons = jbuttonstates;
 
-            s.Timestamp = Util.Timestamp(FrameCount);
+            s.Timestamp = time;
 
             queuedSnapshots.Enqueue(s);
             DynamicSnapshotsCount++;
@@ -1989,7 +2070,7 @@ namespace Cognitive3D.Serialization
         //TODO list of some generic class that can be serialized instead of Cognitive3D.ExitPollSet.ResponseContext
         internal static string FormatExitpoll(List<Cognitive3D.ExitPollSet.ResponseContext> responseProperties, string QuestionSetId, string hook, string sceneId, int versionNumber, int versionId)
         {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            StringBuilder builder = new StringBuilder();
             builder.Append("{");
             JsonUtil.SetString("userId", DeviceId, builder);
             builder.Append(",");

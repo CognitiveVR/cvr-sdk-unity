@@ -23,8 +23,6 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
-        //public static int CachedSnapshots { get { return DynamicObjectCore.tempsnapshots; } }
-
         public static void Initialize()
         {
             Cognitive3D.Cognitive3D_Manager.OnSendData -= SendData;
@@ -395,7 +393,7 @@ namespace Cognitive3D
 
                 ActiveDynamicObjectsArray[i].HasProperties = false;
                 //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
-                CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
             }
         }
 
@@ -595,7 +593,7 @@ namespace Cognitive3D
 
                     ActiveDynamicObjectsArray[i].HasProperties = false;
                     //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
-                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
                 }
             }
         }
@@ -737,7 +735,7 @@ namespace Cognitive3D
                     }
 
                     //Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
-                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
+                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale,Util.Timestamp(Time.frameCount));
                 }
 
 

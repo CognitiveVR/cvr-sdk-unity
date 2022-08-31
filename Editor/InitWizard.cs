@@ -151,27 +151,6 @@ namespace Cognitive3D
             AssetDatabase.SaveAssets();
         }
 
-        //write gateway/dashboard/viewer urls to preferences
-        void ApplyBrandingUrls()
-        {
-            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.GatewayURL)))
-            {
-                EditorCore.GetPreferences().Gateway = EditorCore.DisplayValue(DisplayKey.GatewayURL);
-            }
-            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DashboardURL)))
-            {
-                EditorCore.GetPreferences().Dashboard = EditorCore.DisplayValue(DisplayKey.DashboardURL);
-            }
-            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.ViewerURL)))
-            {
-                EditorCore.GetPreferences().Viewer = EditorCore.DisplayValue(DisplayKey.ViewerURL);
-            }
-            if (!string.IsNullOrEmpty(EditorCore.DisplayValue(DisplayKey.DocumentationURL)))
-            {
-                EditorCore.GetPreferences().Documentation = EditorCore.DisplayValue(DisplayKey.DocumentationURL);
-            }
-        }
-
         void LoadKeys()
         {
             developerkey = EditorPrefs.GetString("developerkey");

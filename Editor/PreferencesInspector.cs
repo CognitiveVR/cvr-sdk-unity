@@ -106,7 +106,7 @@ namespace Cognitive3D
             EditorGUI.indentLevel++;
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
             EditorGUI.indentLevel--;
-            p.TransactionSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Event Snapshot Batch Size", "The number of Events to record before automatically sending a web request to the dashboard"), p.TransactionSnapshotCount), 1, 1000);
+            p.EventDataThreshold = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Event Snapshot Batch Size", "The number of Events to record before automatically sending a web request to the dashboard"), p.EventDataThreshold), 1, 1000);
 
             //dynamics
             EditorGUI.indentLevel++;

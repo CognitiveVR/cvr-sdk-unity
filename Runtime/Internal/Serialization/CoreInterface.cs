@@ -8,9 +8,11 @@ using System;
 //eventually this will use loaddll and getdelegate functions and convert data into nice interop formats
 //for now, this is just the points where all data passes through to the serializer
 
+//TODO CONSIDER holding onto all data here until the end of the frame instead of passing data points through one at a time
+
 namespace Cognitive3D
 {
-    public static class CoreInterface
+    internal static class CoreInterface
     {
         //logs a message in unity
         static System.Action<string> logCall;
@@ -22,10 +24,17 @@ namespace Cognitive3D
         {
             logCall += LogInfo;
             webPost += WebPost;
-
-            SharedCore.SetLogDelegate(logCall);
-            SharedCore.SetPostDelegate(webPost);
-            SharedCore.InitializeSettings(sessionId, 16, 16, 16, 16, 16,sessionTimestamp,deviceId);
+            SharedCore.InitializeSettings(sessionId,
+                Cognitive3D_Preferences.Instance.EventDataThreshold,
+                Cognitive3D_Preferences.Instance.GazeSnapshotCount,
+                Cognitive3D_Preferences.Instance.DynamicSnapshotCount,
+                Cognitive3D_Preferences.Instance.SensorSnapshotCount,
+                Cognitive3D_Preferences.Instance.FixationSnapshotCount,
+                sessionTimestamp,
+                deviceId,
+                webPost,
+                logCall
+                );
         }
 
         #region Session
@@ -81,14 +90,14 @@ namespace Cognitive3D
             SharedCore.WriteControllerManifestEntry(dynamicData);
         }
 
-        internal static void WriteDynamic(DynamicData dynamicData, string props, bool writeScale)
+        internal static void WriteDynamic(DynamicData dynamicData, string props, bool writeScale, double time)
         {
-            SharedCore.WriteDynamic(dynamicData, props, writeScale);
+            SharedCore.WriteDynamic(dynamicData, props, writeScale, time);
         }
 
-        internal static void WriteDynamicController(DynamicData dynamicData, string props, bool writeScale, string buttonStates)
+        internal static void WriteDynamicController(DynamicData dynamicData, string props, bool writeScale, string buttonStates, double time)
         {
-            SharedCore.WriteDynamicController(dynamicData, props, writeScale, buttonStates);
+            SharedCore.WriteDynamicController(dynamicData, props, writeScale, buttonStates, time);
         }
         #endregion
 
@@ -154,13 +163,12 @@ namespace Cognitive3D
         internal static void FixationSettings(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS)
         {
             //also send a delegate to announce when a new fixation has begun/end. connect that to FixationCore.FixationRecordEvent()
-            SharedCore.FixationInitialize(maxBlinkMS, preBlinkDiscardMS, blinkEndWarmupMS, minFixationMS, maxConsecutiveDiscardMS, maxfixationAngle, maxConsecutiveOffDynamic, dynamicFixationSizeMultiplier, focusSizeFromCenter, saccadefixationEndMS);
-            SharedCore.SetNewFixationDelegate(SomeFixationCallback);
+            SharedCore.FixationInitialize(maxBlinkMS, preBlinkDiscardMS, blinkEndWarmupMS, minFixationMS, maxConsecutiveDiscardMS, maxfixationAngle, maxConsecutiveOffDynamic, dynamicFixationSizeMultiplier, focusSizeFromCenter, saccadefixationEndMS, OnFixationRecorded);
         }
 
-        private static void SomeFixationCallback(Fixation obj)
+        private static void OnFixationRecorded(Fixation obj)
         {
-            //TODO pass to ASV
+            //TODO pass to ASV or call some other action that things can subscribe to
         }
 
         internal static void RecordEyeData(EyeCapture data, int hitType)
@@ -206,7 +214,9 @@ namespace Cognitive3D
         /// </summary>
         internal static void Reset()
         {
-            
+            SharedCore.Reset();
+            logCall -= LogInfo;
+            webPost -= WebPost;
         }
 
         static void LogInfo(string info)

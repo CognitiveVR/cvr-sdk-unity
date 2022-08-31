@@ -110,7 +110,7 @@ namespace Cognitive3D
             
             sb.AppendLine("Automatic Send Timer: " + p.AutomaticSendTimer);
             sb.AppendLine("Gaze Snapshot Batch Size: " + p.GazeSnapshotCount);
-            sb.AppendLine("Event Snapshot Batch Size: " + p.TransactionSnapshotCount);
+            sb.AppendLine("Event Snapshot Batch Size: " + p.EventDataThreshold);
             sb.AppendLine("Dynamic Snapshot Batch Size: " + p.DynamicSnapshotCount);
             sb.AppendLine("Sensor Snapshot Batch Size: " + p.SensorSnapshotCount);
             sb.AppendLine("Fixation Snapshot Batch Size: " + p.FixationSnapshotCount);

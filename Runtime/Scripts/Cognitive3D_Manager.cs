@@ -17,6 +17,7 @@ using Valve.VR;
 //quit and destroy events
 
 //TODO move Omnicept, Steam and Oculus specific features into components
+//TODO CONSIDER static framecount variable to avoid Time.frameCount access
 
 namespace Cognitive3D
 {
@@ -134,6 +135,8 @@ namespace Cognitive3D
         [System.NonSerialized]
         public FixationRecorder fixationRecorder;
 
+        //TODO replace Initialize with BeginSession
+        //TODO comment the different parts of this startup
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
         /// </summary>
@@ -296,14 +299,8 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
             SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
             SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
-
             SetSessionProperty("c3d.deviceid", DeviceId);
-
-#if UNITY_EDITOR
-            SetSessionProperty("c3d.app.inEditor", true);
-#else
-            Core.SetSessionProperty("c3d.app.inEditor", false);
-#endif
+            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 
@@ -884,6 +881,7 @@ namespace Cognitive3D
         public static void Reset()
         {
             InvokeEndSessionEvent();
+            CoreInterface.Reset();
             if (NetworkManager != null)
                 NetworkManager.EndSession();
             ParticipantId = null;
