@@ -169,6 +169,7 @@ namespace Cognitive3D
         private static void OnFixationRecorded(Fixation obj)
         {
             //TODO pass to ASV or call some other action that things can subscribe to
+            FixationCore.FixationRecordEvent(obj);
         }
 
         internal static void RecordEyeData(EyeCapture data, int hitType)

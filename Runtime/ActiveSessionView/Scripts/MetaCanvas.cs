@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+//TODO IMPROVEMENT - offline data batches should increment when session is active then loses internect connection
+
 namespace Cognitive3D
 {
     namespace ActiveSession
@@ -33,6 +35,7 @@ namespace Cognitive3D
 
             int lastSecondTime = 0;
             int lastBatchStorage = 0;
+            int currentBatchStorage = 0;
             System.Text.StringBuilder sb = new System.Text.StringBuilder(64);
             private void Update()
             {
@@ -53,7 +56,7 @@ namespace Cognitive3D
                     }
                 }
 
-                int currentBatchStorage = Cognitive3D_Manager.GetLocalStorageBatchCount();
+                currentBatchStorage = Cognitive3D_Manager.GetLocalStorageBatchCount();
                 if (currentBatchStorage != lastBatchStorage)
                 {
                     OfflineBatches.text = (currentBatchStorage / 2).ToString();

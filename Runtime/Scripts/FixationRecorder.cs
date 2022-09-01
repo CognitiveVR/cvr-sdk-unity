@@ -295,8 +295,8 @@ namespace Cognitive3D
 
         public void SetupCallbacks()
         {
-            Core.OnPostSessionEnd -= PostSessionEndEvent;
-            Core.OnPostSessionEnd += PostSessionEndEvent;
+            Cognitive3D_Manager.OnPostSessionEnd -= PostSessionEndEvent;
+            Cognitive3D_Manager.OnPostSessionEnd += PostSessionEndEvent;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 

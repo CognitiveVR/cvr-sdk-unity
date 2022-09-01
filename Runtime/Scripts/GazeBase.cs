@@ -53,7 +53,7 @@ namespace Cognitive3D
             headsetPresent = false;
             if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
             {
-                Core.InvokeSendDataEvent(false);
+                Cognitive3D_Manager.InvokeSendDataEvent(false);
             }
         }
 #endif

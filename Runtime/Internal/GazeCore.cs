@@ -42,11 +42,6 @@ namespace Cognitive3D
                 OnSkyGazeRecord.Invoke(timestamp, ignored, ignored2, hmdpoint, hmdrotation);
         }
 
-        //public static void SetHMDType(string hmdname)
-        //{
-        //    HMDName = hmdname;
-        //}
-
         static Transform cameraRoot;
         public static bool GetFloorPosition(ref Vector3 floorPos)
         {
