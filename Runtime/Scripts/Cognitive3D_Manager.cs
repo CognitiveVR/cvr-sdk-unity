@@ -378,7 +378,8 @@ namespace Cognitive3D
             
             if (replacingSceneId && Cognitive3D_Preferences.Instance.SendDataOnLevelLoad)
             {
-                InvokeSendDataEvent(false);
+                //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
+                InvokeSendDataEvent(true);
             }
 
             if (replacingSceneId)

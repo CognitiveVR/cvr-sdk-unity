@@ -87,7 +87,7 @@ namespace Cognitive3D
 
         internal static void WriteDynamicManifestEntry(DynamicData dynamicData)
         {
-            SharedCore.WriteControllerManifestEntry(dynamicData);
+            SharedCore.WriteDynamicManifestEntry(dynamicData);
         }
 
         internal static void WriteDynamic(DynamicData dynamicData, string props, bool writeScale, double time)
