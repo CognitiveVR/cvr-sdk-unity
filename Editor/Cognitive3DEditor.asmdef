@@ -4,7 +4,8 @@
     "references": [
         "Cognitive3D",
         "Unity.XR.OpenVR",
-        "SteamVR"
+        "SteamVR",
+        "Oculus.VR"
     ],
     "includePlatforms": [
         "Editor"

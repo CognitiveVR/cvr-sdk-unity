@@ -4,7 +4,9 @@
     "references": [
         "SteamVR",
         "Unity.XR.OpenVR",
-        "Varjo.XR"
+        "Varjo.XR",
+        "Oculus.VR",
+        "Oculus.Platform"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
