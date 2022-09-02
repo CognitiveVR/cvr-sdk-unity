@@ -768,299 +768,39 @@ namespace Cognitive3D
                 right.AddComponent<DynamicObject>();
             }
 
-#if C3D_STEAMVR2
-            
-            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
-            {
-                var listener = left.AddComponent<ControllerInputTracker>();
-                listener.Hand_InputSource = Valve.VR.SteamVR_Input_Sources.LeftHand;
-                listener.dynamic = listener.GetComponent<DynamicObject>();
-            }
-            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
-            {
-                var listener = right.AddComponent<ControllerInputTracker>();
-                listener.Hand_InputSource = Valve.VR.SteamVR_Input_Sources.RightHand;
-                listener.dynamic = listener.GetComponent<DynamicObject>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-            }
-#elif C3D_VIVEWAVE
-            var g = Resources.Load<GameObject>("AdaptiveController");
-
-            if (g == null)
-            {
-                Debug.LogWarning("could not load AdaptiveController");
-            }
-            else
-            {
-                var dyn = g.GetComponent<DynamicObject>();
-                if (dyn == null)
-                {
-                    dyn = g.AddComponent<DynamicObject>();
-                }
-                dyn.UseCustomMesh = false;
-                dyn.IsController = true;
-                //dyn.IsRight = false; //set from dominant/non dominant hand
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-
-                var ct = g.GetComponent<ControllerInputTracker>();
-                if (ct == null)
-                {
-                    ct = g.AddComponent<ControllerInputTracker>();
-                }
-            }
-
-            if (left != null && left.GetComponent<ControllerInputTracker>() == null)
-            {
-                left.AddComponent<ControllerInputTracker>();
-            }
-            if (right != null && right.GetComponent<ControllerInputTracker>() == null)
-            {
-                right.AddComponent<ControllerInputTracker>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveFocusController;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.vivefocuscontroller;
-            }
-#elif C3D_WINDOWSMR
-
-
-            //add component to cognitice manager
+            //add a single controller input tracker to the cognitive3d_manager
             var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
             if (inputTracker == null)
             {
-                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+                Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
             }
 
             if (left != null)
             {
                 var dyn = left.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = left.AddComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
+                //dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
-                inputTracker.LeftHand = dyn;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = right.AddComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right;
-                inputTracker.RightHand = dyn;
-            }
-
-            try
-            {
-                EditorCore.BindAxis(new EditorCore.Axis("LeftTouchpadH", 16));
-                EditorCore.BindAxis(new EditorCore.Axis("LeftTouchpadV", 17,true));
-                EditorCore.BindAxis(new EditorCore.Axis("RightTouchpadH", 18));
-                EditorCore.BindAxis(new EditorCore.Axis("RightTouchpadV", 19, true));
-                EditorCore.BindAxis(new EditorCore.Axis("LeftJoystickH", 0));
-                EditorCore.BindAxis(new EditorCore.Axis("LeftJoystickV", 1, true));
-                EditorCore.BindAxis(new EditorCore.Axis("RightJoystickH", 3));
-                EditorCore.BindAxis(new EditorCore.Axis("RightJoystickV", 4, true));
-                EditorCore.BindAxis(new EditorCore.Axis("LeftTrigger", 8));
-                EditorCore.BindAxis(new EditorCore.Axis("RightTrigger", 9));
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError("Cognitive Init Wizard error writing input axes:\n" + e);
-            }
-#elif C3D_PICOVR || C3D_PICOXR
-            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
-            if (inputTracker == null)
-            {
-                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = left.AddComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
-                inputTracker.LeftHand = dyn;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = right.AddComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
-                inputTracker.RightHand = dyn;
-            }
-#elif C3D_OCULUS
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
-#if UNITY_ANDROID //check for oculus quest controllers
-                var config = OVRProjectConfig.GetProjectConfig();
-                if (config.targetDeviceTypes.Count > 0)
-                {
-                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
-                    {
-                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
-                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
-                    }
-                }
-#endif
+                //dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
+                SetControllerDisplayType(dyn,false);
             }
             if (right != null)
             {
                 var dyn = right.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
+                //dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
-#if UNITY_ANDROID //check for oculus quest controllers
-                var config = OVRProjectConfig.GetProjectConfig();
-                if (config.targetDeviceTypes.Count > 0)
-                {
-                    if (config.targetDeviceTypes[0] == OVRProjectConfig.DeviceType.Quest)
-                    {
-                        dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
-                        dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
-                    }
-                }
-#endif
+                //dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
+                SetControllerDisplayType(dyn, true);
             }
+        }
 
-            if (cameraBase != null)
+        private static void SetControllerDisplayType(DynamicObject dyn, bool isRight)
+        {
+            if (isRight)
             {
-                var tracker = FindObjectOfType<ControllerInputTracker>();
-                if (tracker == null)
-                {
-                    //add controller tracker to camera base
-                    tracker = cameraBase.AddComponent<ControllerInputTracker>();
-                }
-                if (left != null)
-                    tracker.LeftHand = left.GetComponent<DynamicObject>();
-                if (right != null)
-                    tracker.RightHand = right.GetComponent<DynamicObject>();
-            }
-            else
-            {
-                var tracker = FindObjectOfType<ControllerInputTracker>();
-                GameObject trackergo;
-                if (tracker == null)
-                {
-                    trackergo = new GameObject("Controller Tracker");
-                    tracker = trackergo.AddComponent<ControllerInputTracker>();
-                }
-                if (left != null)
-                    tracker.LeftHand = left.GetComponent<DynamicObject>();
-                if (right != null)
-                    tracker.RightHand = right.GetComponent<DynamicObject>();
-            }
-#else
-            //add component to cognitive manager
-            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
-            if (inputTracker == null)
-            {
-                inputTracker = Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
-            }
-
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = left.AddComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                inputTracker.LeftHand = dyn;
-
-                if (controllerDisplayName == "Vive")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                }
-                else if (controllerDisplayName == "Oculus Rift")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
-                }
-                else if (controllerDisplayName == "Oculus Quest")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
-                }
-                else if (controllerDisplayName == "Windows MR")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
-                }
-                else if (controllerDisplayName == "Pico Neo 2")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
-                }
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                if (dyn == null)
-                    dyn = right.AddComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                inputTracker.RightHand = dyn;
-
                 if (controllerDisplayName == "Vive")
                 {
                     dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
@@ -1087,12 +827,39 @@ namespace Cognitive3D
                     dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
                 }
             }
-#endif
+            else
+            {
+                if (controllerDisplayName == "Vive")
+                {
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
+                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
+                }
+                else if (controllerDisplayName == "Oculus Rift")
+                {
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
+                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
+                }
+                else if (controllerDisplayName == "Oculus Quest")
+                {
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
+                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
+                }
+                else if (controllerDisplayName == "Windows MR")
+                {
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
+                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
+                }
+                else if (controllerDisplayName == "Pico Neo 2")
+                {
+                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
+                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
+                }
+            }
         }
 
-#endregion
+        #endregion
 
-#region Dynamic Objects
+        #region Dynamic Objects
 
         Vector2 dynamicScrollPosition;
 
