@@ -25,20 +25,18 @@ namespace Cognitive3D.Serialization
         internal static void Flush(bool copyToCache)
         {
             if (!IsInitialized) { return; }
-            if (copyToCache)
-            {
-                //immediately send everything
-                SerializeDynamicImmediate(copyToCache);
-            }
-            else
-            {
-                //lazy send everything over a couple frames
-                ReadyToWriteJson = true;
-            }
+
             SerializeEvents(copyToCache);
             SerializeGaze(copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
+
+            InterruptThread = true;
+            while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
+            {
+                SerializeDynamicImmediate(copyToCache);
+            }
+            DynamicSnapshotsCount = 0;
         }
 
         #region Settings

@@ -129,39 +129,37 @@ namespace Cognitive3D
                 return;
 #endif
             StartingScale = transform.lossyScale;
-            if (Cognitive3D_Manager.IsInitialized)
-            {                
-                string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
+            string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
-                if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityRight)
-                    tempMeshName = "windows_mixed_reality_controller_right";
-                if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityLeft)
-                    tempMeshName = "windows_mixed_reality_controller_left";
+            if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityRight)
+                tempMeshName = "windows_mixed_reality_controller_right";
+            if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityLeft)
+                tempMeshName = "windows_mixed_reality_controller_left";
 
-                if (SyncWithPlayerGazeTick)
-                {
-                    UpdateRate = 64;
-                }
+            if (SyncWithPlayerGazeTick)
+            {
+                UpdateRate = 64;
+            }
 
-                string registerid = UseCustomId ? CustomId : "";
+            string registerid = UseCustomId ? CustomId : "";
 
-                if (!UseCustomId && IdPool != null)
-                {
-                    UseCustomId = true;
-                    CustomId = IdPool.GetId();
-                    registerid = CustomId;
-                }
+            if (!UseCustomId && IdPool != null)
+            {
+                UseCustomId = true;
+                CustomId = IdPool.GetId();
+                registerid = CustomId;
+            }
 
-                string controllerName = string.Empty;
-                if (IsController)
-                    controllerName = ControllerType.ToString();
+            string controllerName = string.Empty;
+            if (IsController)
+                controllerName = ControllerType.ToString();
 
-                var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerName ,IsRight);
+            var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerName, IsRight);
 
-                DataId = Data.Id;
+            DataId = Data.Id;
 
-                if (IsController)
-                {
+            if (IsController)
+            {
 #if C3D_VIVEWAVE
                     var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;
                     if (WaveVR_Controller.Input(devicetype).DeviceType == wvr.WVR_DeviceType.WVR_DeviceType_Controller_Left)
@@ -177,33 +175,28 @@ namespace Cognitive3D
 #if C3D_WINDOWSMR || C3D_XR || C3D_PICOXR
                     Cognitive3D.GameplayReferences.SetController(gameObject, IsRight);
 #endif
-                    Cognitive3D.DynamicManager.RegisterController(Data);
-                }
-                else
-                {
-                    Cognitive3D.DynamicManager.RegisterDynamicObject(Data);
-                }
-                if (SyncWithPlayerGazeTick)
-                {
-                    Cognitive3D_Manager.OnTick += Core_TickEvent;
-                }
+                Cognitive3D.DynamicManager.RegisterController(Data);
             }
             else
             {
-                Cognitive3D_Manager.OnSessionBegin += OnCoreInitialize;
+                Cognitive3D.DynamicManager.RegisterDynamicObject(Data);
+            }
+            if (SyncWithPlayerGazeTick)
+            {
+                Cognitive3D_Manager.OnTick += SyncWithGazeTick;
             }
         }
 
-        private void Core_TickEvent()
+        private void SyncWithGazeTick()
         {
             Cognitive3D.DynamicManager.RecordDynamic(DataId,false);
         }
 
-        private void OnCoreInitialize()
-        {
-            Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
-            OnEnable();
-        }
+        //private void OnCoreInitialize()
+        //{
+        //    Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
+        //    OnEnable();
+        //}
 
         /// <summary>
         /// returns the Id of the Dynamic Object
@@ -268,13 +261,13 @@ namespace Cognitive3D
 
         private void OnDisable()
         {
-            Cognitive3D_Manager.OnTick -= Core_TickEvent;
+            Cognitive3D_Manager.OnTick -= SyncWithGazeTick;
 
             DynamicManager.SetTransform(DataId, transform);
 
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
 
-            Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
+            //Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
         }
 
 #if UNITY_EDITOR

@@ -135,14 +135,25 @@ namespace Cognitive3D
         [System.NonSerialized]
         public FixationRecorder fixationRecorder;
 
-        //TODO replace Initialize with BeginSession
+        [Obsolete("use Cognitive3D_Manager.BeginSession instead")]
+        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        {
+            BeginSession();
+
+            if (!string.IsNullOrEmpty(participantName))
+                SetParticipantFullName(participantName);
+            if (!string.IsNullOrEmpty(participantId))
+                SetParticipantId(participantId);
+            if (participantProperties != null)
+                SetSessionProperties(participantProperties);
+        }
         //TODO comment the different parts of this startup
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
         /// </summary>
         /// <param name="participantName">friendly name for identifying participant</param>
         /// <param name="participantId">unique id for identifying participant</param>
-        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        public void BeginSession()
         {
             if (instance != null && instance != this)
             {
@@ -170,11 +181,6 @@ namespace Cognitive3D
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
 
-            if (!string.IsNullOrEmpty(participantName))
-                SetParticipantFullName(participantName);
-            if (!string.IsNullOrEmpty(participantId))
-                SetParticipantId(participantId);
-
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
 
@@ -192,7 +198,6 @@ namespace Cognitive3D
             NetworkManager.Initialize(DataCache, ExitpollHandler);
 
             DynamicManager.Initialize();
-            //DynamicObjectCore.Initialize();
             CustomEvent.Initialize();
             SensorRecorder.Initialize();
 
@@ -276,9 +281,6 @@ namespace Cognitive3D
             InvokeSessionBeginEvent();
 
             SetSessionProperties();
-
-            if (participantProperties != null)
-                SetSessionProperties(participantProperties);
 
             OnPreSessionEnd += Core_EndSessionEvent;
             InvokeSendDataEvent(false);
@@ -606,6 +608,8 @@ namespace Cognitive3D
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            if (!IsInitialized) { return; }
+
             IsQuitting = true;
             if (hasCanceled) { return; }
 

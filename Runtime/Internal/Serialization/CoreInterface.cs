@@ -77,6 +77,8 @@ namespace Cognitive3D
         #endregion
 
         #region DynamicObject
+        //CONSIDER moving dynamic data array into shared core - engine just provides settings and transform data + dynamics enabling/disabling. initialize handles sending new manifest data?
+            //NO engines can be optimized to iterate through dynamic array, so this should be on the engine side
         //should the engine side keep a list of dynamic object data or just pass everything through this interface?
         //should checking for changes happen on engine side?
 
