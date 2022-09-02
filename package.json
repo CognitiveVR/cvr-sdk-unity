@@ -2,11 +2,11 @@
 	"name": "com.cognitive3d.c3d-sdk",
 	"version": "1.0.0",
 	"displayName": "Cognitive3D Unity SDK",
-	"description": "This is an example package",
-	"unity": "2019.1",
-	"documentationUrl": "https://example.com/",
-	"changelogUrl": "https://example.com/changelog.html",
-	"licensesUrl": "https://example.com/licensing.html",
+	"description": "Analytics Platform for VR/AR/MR",
+	"unity": "2019.4",
+	"documentationUrl": "https://docs.cognitive3d.com/",
+	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
+	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
 	"dependencies": {
 		"com.unity.nuget.newtonsoft-json": "3.0.2"
 	},
@@ -18,9 +18,9 @@
 		"cognitive"
 	],
 	"author": {
-		"name": "Cognitive3d",
-		"email": "support@example.com",
-		"url": "https://www.cognitive3d.com"
+		"name": "Cognitive3D",
+		"email": "support@cognitive3d.com",
+		"url": "https://cognitive3d.com"
 	},
 	"samples": [
 		{
