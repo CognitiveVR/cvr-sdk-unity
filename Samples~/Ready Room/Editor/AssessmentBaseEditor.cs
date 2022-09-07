@@ -22,6 +22,8 @@ namespace Cognitive3D
 
         public override void OnInspectorGUI()
         {
+            base.OnInspectorGUI();
+
             var ab = target as AssessmentBase;
 
             //display warnings from setup
@@ -46,37 +48,27 @@ namespace Cognitive3D
             }
             if (!skipAssessment)
             {
-                //display list of enable/disabled objects
-                string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
-                int childCount = ab.transform.childCount;
-                if (childCount > 0)
-                    controlledComponentList += "\n<b>Child Transforms</b>";
-                for (int i = 0; i < childCount; i++)
-                {
-                    controlledComponentList += "\n   " + ab.transform.GetChild(i).gameObject.name;
-                }
-                if (ab.ControlledByAssessmentState.Count > 0)
-                    controlledComponentList += "\n<b>Controlled By Assessment State</b>";
-                foreach (var v in ab.ControlledByAssessmentState)
-                {
-                    if (v == null) { continue; }
-                    controlledComponentList += "\n   " + v.name;
-                }
+                //whatever setup stuff you need
 
-                InitGUIStyle();
-                EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
 
-                EditorGUI.BeginDisabledGroup(true);
-                var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
-                if (textComponent != null)
-                {
-                    EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
-                }
-                EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the participant. Can be set in the Ready Room Setup window"), ab.Order);
-                EditorGUI.EndDisabledGroup();
+                ////display list of enable/disabled objects
+                //string controlledComponentList = "These components are enabled only while this Assessment is active:\n";
+                //int childCount = ab.transform.childCount;
+                //if (childCount > 0)
+                //    controlledComponentList += "\n<b>Child Transforms</b>";
+                //
+                //InitGUIStyle();
+                //EditorGUILayout.LabelField(new GUIContent(controlledComponentList, "These GameObjects are:\n- Disabled on OnEnable\n- Enabled on BeginAssessment\n- Disabled on CompleteAssessment"), helpboxStyle);
+                //
+                //EditorGUI.BeginDisabledGroup(true);
+                //var textComponent = ab.GetComponentInChildren<UnityEngine.UI.Text>();
+                //if (textComponent != null)
+                //{
+                //    EditorGUILayout.LabelField("Text Display:", textComponent.text, boldWrap);
+                //}
+                ////EditorGUILayout.IntField(new GUIContent("Order", "The order this assessment will be displayed to the participant. Can be set in the Ready Room Setup window"), ab.Order);
+                //EditorGUI.EndDisabledGroup();
             }
-
-            base.OnInspectorGUI();
         }
     }
 }

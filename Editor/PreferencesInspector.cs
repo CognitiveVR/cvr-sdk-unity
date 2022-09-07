@@ -133,7 +133,15 @@ namespace Cognitive3D
             p.LocalStorage = EditorGUILayout.Toggle("Save data to Local Cache if no internet connection", p.LocalStorage);
             if (GUILayout.Button("Open Local Cache Folder"))
             {
-                EditorUtility.RevealInFinder(Application.persistentDataPath+"/c3dlocal/");
+                string path = Application.persistentDataPath + "/c3dlocal/";
+                if (System.IO.Directory.Exists(path))
+                {
+                    EditorUtility.RevealInFinder(path);
+                }
+                else
+                {
+                    EditorUtility.RevealInFinder(Application.persistentDataPath);
+                }
             }
 
             GUILayout.EndHorizontal();

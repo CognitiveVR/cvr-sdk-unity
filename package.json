@@ -24,11 +24,6 @@
 	},
 	"samples": [
 		{
-			"displayName": "Active Session View",
-			"description": "A tool to visualize data at runtime on a second display",
-			"path": "Samples~/ActiveSessionView"
-		},
-		{
 			"displayName": "Ready Room",
 			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
 			"path": "Samples~/ReadyRoom"

@@ -49,6 +49,9 @@ namespace Cognitive3D
         public string Viewer = "viewer.cognitive3d.com/scene/";
         public string Documentation = "docs.cognitive3d.com";
 
+        //used to show Scene Setup Window each time SDK is installed into a project - instead of using editor preferences
+        public bool EditorHasDisplayedPopup = false;
+
         public GazeType GazeType = GazeType.Physics;
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
         public int RenderPassType;
@@ -161,14 +164,7 @@ namespace Cognitive3D
         /// <returns></returns>
         public static SceneSettings FindCurrentScene()
         {
-            SceneSettings returnSettings = null;
-
-            returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
-            if (returnSettings == null)
-            {
-                Debug.Log("active scene path doesn't exist " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
-            }
-
+            SceneSettings returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
             return returnSettings;
         }
 

@@ -5,7 +5,8 @@
         "Cognitive3D",
         "Unity.XR.OpenVR",
         "SteamVR",
-        "Oculus.VR"
+        "Oculus.VR",
+        "Unity.RenderPipelines.HighDefinition.Runtime"
     ],
     "includePlatforms": [
         "Editor"
@@ -16,6 +17,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "",
+            "define": "C3D_HDRP"
+        }
+    ],
     "noEngineReferences": false
 }

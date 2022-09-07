@@ -12,27 +12,18 @@ namespace Cognitive3D
         // -------- meta data about how the assessment manager should display this assessment
 
         //used in the editor to indicate if this Assessment will be activated
-        //deals with eye tracking/room scale/grabbing objects being supported by SDK and required by assessment
         [HideInInspector]
         public bool Active = true;
-
-        //used by the AssessmentManager to sort assessments
-        [HideInInspector]
-        public int Order = 0;
 
         //indicates that this assessment is only valid if Eye Tracking SDK is present
         public bool RequiresEyeTracking;
         //indicates that this assessment is only valid if Room Scale is configured
         public bool RequiresRoomScale;
-        //indicates that this assessment is only valid if interaction system allows picking up objects
+        //indicates that this assessment is only valid if controllers and an interaction system allows picking up objects
         public bool RequiresGrabbing;
 
         // -------- variables and events about this assessment's logic
         [Space(10)]
-
-        //a list of objects to disable when assessment is completed
-        //can be used to disable objects the player is grabbing, if these are normally parented to player hands
-        public List<GameObject> ControlledByAssessmentState;
 
         // -------- internal logic and state
         protected bool hasBegun;
@@ -42,29 +33,9 @@ namespace Cognitive3D
         public event onAssessmentStateChanged OnAssessmentBegin;
         public event onAssessmentStateChanged OnAssessmentComplete;
 
-        //disable all child gameobjects
         public virtual void OnEnable()
         {
-            int childCount = transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                transform.GetChild(i).gameObject.SetActive(false);
-            }
-
-            for (int i = 0; i < ControlledByAssessmentState.Count; i++)
-            {
-                if (ControlledByAssessmentState[i] == null) { continue; }
-                ControlledByAssessmentState[i].SetActive(false);
-            }
-        }
-
-        //delay startup - needs to wait until all assessment steps have disabled their child gameobjects in OnEnable
-        protected virtual void Start()
-        {
-            if (AssessmentManager.Instance == null)
-            {
-                new AssessmentManager();
-            }
+            
         }
 
         //enables child gameobjects and calls OnAssessmentBegin event
@@ -73,20 +44,26 @@ namespace Cognitive3D
             if (hasBegun) { return; }
             hasBegun = true;
 
-            int childCount = transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                transform.GetChild(i).gameObject.SetActive(true);
-            }
-
-            for (int i = 0; i < ControlledByAssessmentState.Count; i++)
-            {
-                if (ControlledByAssessmentState[i] == null) { continue; }
-                ControlledByAssessmentState[i].SetActive(true);
-            }
-
             if (OnAssessmentBegin != null)
                 OnAssessmentBegin.Invoke();
+        }
+
+        //checks if sdk supports required features (eye tracking, room scale, controllers)
+        public virtual bool IsValid()
+        {
+            if (RequiresEyeTracking == true && !GameplayReferences.SDKSupportsEyeTracking)
+            {
+                return false;
+            }
+            if (RequiresGrabbing == true && !GameplayReferences.SDKSupportsControllers)
+            {
+                return false;
+            }
+            if (RequiresRoomScale == true && !GameplayReferences.SDKSupportsRoomSize)
+            {
+                return false;
+            }
+            return true;
         }
 
         //calls OnAssessmentComplete event and disables child gameobjects
@@ -101,7 +78,7 @@ namespace Cognitive3D
                 OnAssessmentComplete.Invoke();
 
             //some VR interaction systems may need to destroy objects to make sure they correctly drop from the player's hand
-#if C3D_STEAMVR2 || C3D_STEAMVR
+#if C3D_STEAMVR2
             if (Valve.VR.InteractionSystem.Player.instance != null)
             {
                 foreach (var v in Valve.VR.InteractionSystem.Player.instance.leftHand.AttachedObjects)
@@ -115,18 +92,8 @@ namespace Cognitive3D
             }
 #endif
 
-            int childCount = transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                transform.GetChild(i).gameObject.SetActive(false);
-            }
-
-            for (int i = 0; i < ControlledByAssessmentState.Count; i++)
-            {
-                if (ControlledByAssessmentState[i] == null) { continue; }
-                ControlledByAssessmentState[i].SetActive(false);
-            }
-            AssessmentManager.Instance.ActivateNextAssessment();
+            gameObject.SetActive(false);
+            AssessmentManager.InvokeCompleteAssessmentEvent();
         }
     }
 }

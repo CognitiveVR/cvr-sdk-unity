@@ -8,7 +8,7 @@ namespace Cognitive3D
 {
     public class RoomSpaceDestination : MonoBehaviour
     {
-        [Tooltip("If null, this is automatically set to the HMD camera transform when enabled")]
+        [Tooltip("If null, this is automatically set to the main camera transform when enabled")]
         public Transform Target;
         public float Distance = 1;
 
@@ -19,7 +19,7 @@ namespace Cognitive3D
         void OnEnable()
         {
             if (Target == null)
-                Target = Cognitive3D.GameplayReferences.HMD;
+                Target = Camera.main.transform;
             if (hasVisited) { return; }
             StartCoroutine(CheckDistance());
         }

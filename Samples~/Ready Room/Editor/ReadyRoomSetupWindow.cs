@@ -8,6 +8,8 @@ namespace Cognitive3D
     public class ReadyRoomSetupWindow : EditorWindow
     {
         //called from menu item script
+
+        [MenuItem("Cognitive3D/Ready Room Setup", priority = 55)]
         public static void Init()
         {
             ReadyRoomSetupWindow window = (ReadyRoomSetupWindow)EditorWindow.GetWindow(typeof(ReadyRoomSetupWindow), true, "");
@@ -79,11 +81,6 @@ namespace Cognitive3D
         public void RefreshAssessments()
         {
             AllAssessments = new List<AssessmentBase>(Object.FindObjectsOfType<AssessmentBase>());
-
-            AllAssessments.Sort(delegate (AssessmentBase a, AssessmentBase b)
-            {
-                return a.Order.CompareTo(b.Order);
-            });
         }
 
         void OnGUI()
@@ -448,14 +445,6 @@ namespace Cognitive3D
                 Repaint();
 
                 GUI.Box(new Rect(30, 280, 425, 150), "", "box_sharp_alpha");
-
-
-                if (GUI.Button(new Rect(30, 450, 440, 30), "Start Session when participant selects a scene?", sceneSelect.StartSessionOnSceneChange ? "button_blueoutlineleft" : "button_disabledoutline"))
-                {
-                    sceneSelect.StartSessionOnSceneChange = !sceneSelect.StartSessionOnSceneChange;
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                }
-                GUI.Label(new Rect(425, 455, 24, 24), sceneSelect.StartSessionOnSceneChange ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
             }
         }
 
@@ -602,14 +591,6 @@ namespace Cognitive3D
                     if (sceneMenu != null)
                         SceneSelectAssessment = (SceneSelectMenu)sceneMenu;
                 }
-
-                if (SceneSelectAssessment != null)
-                {
-                    if (SceneSelectAssessment.Order != all.Count - 1)
-                    {
-                        forceWarning = true;
-                    }
-                }
             }
 
             if (Selection.activeTransform == assessment.transform)
@@ -665,16 +646,6 @@ namespace Cognitive3D
                 GUI.Label(isActiveRect, Cognitive3D.EditorCore.Alert, "image_centered");
             }
 
-            if (needsRefresh)
-            {
-                var all = GetAllAssessments();
-                for (int i = 0; i < all.Count; i++)
-                {
-                    all[i].Order = i;
-                }
-                ReorderAssessmentsInScene();
-            }
-
             string tooltip = "No Text Display";
             var textComponent = assessment.GetComponentInChildren<UnityEngine.UI.Text>();
             if (textComponent != null)
@@ -687,24 +658,6 @@ namespace Cognitive3D
                 tooltip = "Scene Select Menu should be last";
             }
             GUI.Label(gameObjectRect, new GUIContent(assessment.gameObject.name, tooltip), "dynamiclabel");
-        }
-
-        void ReorderAssessmentsInScene()
-        {
-            var rootGameObjects = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().GetRootGameObjects();
-
-            //repeat this a number of times - reordering gameobjects will get moved around by other moving gameobjects
-            for (int i = 0; i < rootGameObjects.Length; i++)
-            {
-                foreach (var g in rootGameObjects)
-                {
-                    //sort assessments by their order
-                    var assessment = g.GetComponent<AssessmentBase>();
-                    if (assessment != null)
-                        g.transform.SetSiblingIndex(assessment.Order);
-                }
-            }
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
 
         void DrawFooter()

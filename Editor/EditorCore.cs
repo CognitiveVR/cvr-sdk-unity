@@ -42,41 +42,13 @@ namespace Cognitive3D
             {
                 Debug.Log("Cognitive3D SDK version " + Cognitive3D_Manager.SDK_VERSION);
                 EditorPrefs.SetString("cognitive_sdk_version", Cognitive3D_Manager.SDK_VERSION);
-
-                bool needToUpdateDatabase = false;
-                //remove Cognitive3D_SceneExportWindow.cs
-                string[] exportWindowsGUIDs = AssetDatabase.FindAssets("Cognitive3D_sceneexportwindow");
-                foreach (string s in exportWindowsGUIDs)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(s);
-                    AssetDatabase.DeleteAsset(path);
-                    needToUpdateDatabase = true;
-                }
-
-                //remove SaccadeDrawer.cs (and check that it was in cognitive folder)
-                string[] saccadeDrawerGUIDs = AssetDatabase.FindAssets("saccadedrawer");
-                foreach(string s in saccadeDrawerGUIDs)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(s);
-                    if (path.Contains("cognitive"))
-                    {
-                        AssetDatabase.DeleteAsset(path);
-                        needToUpdateDatabase = true;
-                    }
-                }
-
-                if (needToUpdateDatabase)
-                {
-                    AssetDatabase.Refresh();
-                }
-
             }
 
-            if (!EditorPrefs.HasKey("cognitive_init_popup"))
+            if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup)
             {
+                Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup = true;
                 EditorApplication.update += UpdateInitWizard;
             }
-            EditorPrefs.SetBool("cognitive_init_popup", true);
 
             if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
             {
@@ -127,16 +99,6 @@ namespace Cognitive3D
             newManager.AddComponent<Cognitive3D.Components.HMDHeight>();
             newManager.AddComponent<Cognitive3D.Components.RoomSize>();
             newManager.AddComponent<Cognitive3D.Components.ArmLength>();
-
-#if C3D_SRANIPAL
-            var framework = GameObject.FindObjectOfType<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
-            if (framework == null)
-                newManager.AddComponent<ViveSR.anipal.Eye.SRanipal_Eye_Framework>();
-#endif
-
-#if C3D_NEURABLE
-            Neurable.Analytics.Portal.NeurableCognitiveMenu.InstantiateAnalyticsManager();
-#endif
         }
 
         public static DynamicObjectIdPool[] _cachedPoolAssets;
@@ -176,23 +138,8 @@ namespace Cognitive3D
             }
         }
 
-        static string assetTypeHDRP = "HDRenderPipelineAsset";
-
-        static bool IsHDRP()
-        {
-            if (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset == null) { return false; }
-            return UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name.Contains(assetTypeHDRP);
-        }
-
         public static void SetPlayerDefine(List<string> C3DSymbols)
         {
-            //check for Unity HDRP. add to C3DSymbols if so
-            if (IsHDRP())
-            {
-                //TODO package can define this in assembly definition
-                C3DSymbols.Add("C3D_HDRP");
-            }
-
             //get all scripting define symbols
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             string[] ExistingSymbols = s.Split(';');
@@ -258,13 +205,13 @@ namespace Cognitive3D
 
                     AssetDatabase.CreateAsset(_prefs, filepath + System.IO.Path.DirectorySeparatorChar + "Cognitive3D_Preferences.asset");
 
-                    List<string> names = new List<string>();
+                    /*List<string> names = new List<string>();
                     List<string> paths = new List<string>();
                     GetAllScenes(names, paths);
                     for (int i = 0; i < names.Count; i++)
                     {
                         Cognitive3D_Preferences.AddSceneSettings(_prefs, names[i], paths[i]);
-                    }
+                    }*/
                     EditorUtility.SetDirty(EditorCore.GetPreferences());
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
@@ -381,7 +328,7 @@ namespace Cognitive3D
             }
         }
 
-        #region GUI
+#region GUI
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
 
@@ -533,9 +480,9 @@ namespace Cognitive3D
                 return GUI.TextField(rect, value, maxlength, styleOverride);
             }
         }
-        #endregion
+#endregion
 
-        #region Icons and Textures
+#region Icons and Textures
         private static Texture2D _logo;
         public static Texture2D LogoTexture
         {
@@ -731,9 +678,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Media
+#region Media
 
         /// <summary>
         /// make a get request to get media available to this scene
@@ -792,9 +739,9 @@ namespace Cognitive3D
         }
 
         public static MediaSource[] MediaSources = new MediaSource[] { };
-        #endregion
+#endregion
 
-        #region Scene Setup Display Names
+#region Scene Setup Display Names
         static TextAsset DisplayNameAsset;
         static bool HasLoadedDisplayNames;
         public static string DisplayValue(DisplayKey key)
@@ -840,9 +787,9 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-        #endregion
+#endregion
 
-        #region SDK Updates
+#region SDK Updates
         //data about the last sdk release on github
         public class ReleaseInfo
         {
@@ -945,9 +892,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Files and Directories
+#region Files and Directories
 
         internal static bool HasDynamicExportFiles(string meshname)
         {
@@ -1111,9 +1058,9 @@ namespace Cognitive3D
             return ObjectNames;
         }
 
-        #endregion
+#endregion
 
-        #region Scene Screenshot
+#region Scene Screenshot
 
         static RenderTexture sceneRT = null;
         public static RenderTexture GetSceneRenderTexture()
@@ -1269,9 +1216,9 @@ namespace Cognitive3D
             saveCameraScreenshot = null;
         }
 
-        #endregion
+#endregion
 
-        #region Dynamic Object Thumbnails
+#region Dynamic Object Thumbnails
         //returns unused layer int. returns -1 if no unused layer is found
         public static int FindUnusedLayer()
         {
@@ -1421,9 +1368,9 @@ namespace Cognitive3D
                 rotation = Quaternion.LookRotation(target.transform.position - position, Vector3.up);
             }
         }
-        #endregion
+#endregion
 
-        #region Axis Input
+#region Axis Input
 
         public class Axis
         {
@@ -1501,7 +1448,7 @@ namespace Cognitive3D
             //invoke the callback with the response code
         }
 
-        #endregion
+#endregion
 
         public static Vector3 TransformPointUnscaled(Transform transform, Vector3 position)
         {

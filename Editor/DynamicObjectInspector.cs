@@ -284,15 +284,12 @@ namespace Cognitive3D
                 //controller stuff
                 GUILayout.BeginHorizontal();
 
-                UnityEditor.EditorGUILayout.PropertyField(isController, new GUIContent("Is Controller", "If true, this will record user's inputs and display the inputs in a popup on SceneExplorer"));
-
                 if (targets.Length == 1)
                 {
                     var dyn = targets[0] as DynamicObject;
-
+                    dyn.IsController = EditorGUILayout.Toggle("Is Controller",dyn.IsController);
                     EditorGUI.BeginDisabledGroup(!dyn.IsController);
-                    EditorGUILayout.LabelField("Is Right Hand");
-                    dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight);
+                    dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand",dyn.IsRight);
                     EditorGUI.EndDisabledGroup();
                 }
 

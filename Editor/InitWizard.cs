@@ -208,6 +208,12 @@ namespace Cognitive3D
 #if C3D_OMNICEPT
             selectedsdks.Add("C3D_OMNICEPT");
 #endif
+
+            //C3D_Default doesn't enable or change any behaviour - only used in scene setup window and written to define symbols for debugging purposes
+            if (selectedsdks.Count == 0)
+            {
+                selectedsdks.Add("C3D_DEFAULT");
+            }
         }
 
         Vector2 sdkScrollPos;
@@ -228,6 +234,7 @@ namespace Cognitive3D
 
         List<SDKDefine> SDKNamesDefines = new List<SDKDefine>()
         {
+            new SDKDefine("Default","C3D_DEFAULT" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2" ),
             new SDKDefine("Oculus Integration 32.0","C3D_OCULUS" ),
             new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT" ),
@@ -254,7 +261,7 @@ namespace Cognitive3D
                 Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
             }
 
-            Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 32);
+            Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
             sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 350), sdkScrollPos, innerScrollSize, false, false);
 
             for (int i = 0; i < SDKNamesDefines.Count; i++)
@@ -262,7 +269,7 @@ namespace Cognitive3D
                 bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
                 GUIContent content = new GUIContent(SDKNamesDefines[i].Name);
                 float separator = 0;
-                if (i > 6)
+                if (i > 7)
                 {
                     separator = 32;
                 }
@@ -291,7 +298,7 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(420, i * 32 + separator, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-                if (i == 7)
+                if (i == 8)
                 {
                     int kerning = 4;
                     GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
@@ -855,10 +862,8 @@ namespace Cognitive3D
             Rect collider = new Rect(rect.x + 320, rect.y, 24, rect.height);
             Rect uploaded = new Rect(rect.x + 360, rect.y, 24, rect.height);
 
-            if (dynamic.UseCustomMesh)
-                GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
-            //else
-                //GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
+            //TODO some icon to indicate controller
+            GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
             GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
             if (!dynamic.HasCollider())
             {
@@ -1099,7 +1104,7 @@ namespace Cognitive3D
                     {
                         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
                         Close();
-                        ReadyRoomSetupWindow.Init();
+                        //ReadyRoomSetupWindow.Init();
                     }
                 }
             }
