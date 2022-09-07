@@ -54,9 +54,9 @@ namespace Cognitive3D
             var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
             var useCustomId = serializedObject.FindProperty("UseCustomId");
             var customId = serializedObject.FindProperty("CustomId");
-            var commonMeshName = serializedObject.FindProperty("CommonMesh");
+            //var commonMeshName = serializedObject.FindProperty("CommonMesh");
             var meshname = serializedObject.FindProperty("MeshName");
-            var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
+            //var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
             var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
             var idPool = serializedObject.FindProperty("IdPool");
@@ -93,8 +93,8 @@ namespace Cognitive3D
 
             //use custom mesh and mesh text field
             GUILayout.BeginHorizontal();
-            UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-            bool anycustomnames = false;
+            //UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
+            bool anycustomnames = true;
             foreach (var t in targets)
             {
                 var dyn = t as DynamicObject;
@@ -114,11 +114,11 @@ namespace Cognitive3D
             }
             if (!anycustomnames)
             {
-                UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
+                //UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
             }
             else //mesh names
             {
-                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent(""));
+                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
                 meshname.stringValue = ValidateMeshName(meshname.stringValue);
             }
             GUILayout.EndHorizontal();
@@ -197,7 +197,7 @@ namespace Cognitive3D
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
-                if (useCustomMesh.boolValue)
+                if (true/*useCustomMesh.boolValue*/)
                 {
                     //Mesh
                     GUILayout.Label("Export and Upload", EditorStyles.boldLabel);
@@ -288,19 +288,12 @@ namespace Cognitive3D
 
                 if (targets.Length == 1)
                 {
-
                     var dyn = targets[0] as DynamicObject;
 
-                    if (dyn.IsController)
-                    {
-                        dyn.ControllerType = (DynamicObject.ControllerDisplayType)EditorGUILayout.EnumPopup(dyn.ControllerType);
-                    }
-
-                    if (dyn.IsController)
-                    {
-                        EditorGUILayout.LabelField("Is Right", GUILayout.Width(60));
-                        dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight, GUILayout.Width(20));
-                    }
+                    EditorGUI.BeginDisabledGroup(!dyn.IsController);
+                    EditorGUILayout.LabelField("Is Right Hand");
+                    dyn.IsRight = EditorGUILayout.Toggle(dyn.IsRight);
+                    EditorGUI.EndDisabledGroup();
                 }
 
                 GUILayout.EndHorizontal();

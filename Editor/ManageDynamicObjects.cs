@@ -838,7 +838,8 @@ namespace Cognitive3D
 
         //gameobject name or id pool count
         GUI.Label(gameobjectRect, dynamic.gameobjectName, dynamiclabel);
-        GUI.Label(mesh, dynamic.objectReference.UseCustomMesh?dynamic.meshName:dynamic.objectReference.CommonMesh.ToString(), dynamiclabel);
+        //GUI.Label(mesh, dynamic.objectReference.UseCustomMesh?dynamic.meshName:dynamic.objectReference.CommonMesh.ToString(), dynamiclabel);
+        GUI.Label(mesh, dynamic.meshName, dynamiclabel);
 
         if (dynamic.isIdPool)
         {

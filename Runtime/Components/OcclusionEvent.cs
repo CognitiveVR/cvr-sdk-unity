@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (isvalid) or is disconnected/loses power (disconnected)
+/// sends events when a controller becomes invalid
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -11,189 +11,45 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Occlusion Event")]
     public class OcclusionEvent : AnalyticsComponentBase
     {
-
-#if C3D_OCULUS
-
         public override void Cognitive3D_Init()
         {
-            base.Cognitive3D_Init();
-
-            OVRManager.TrackingAcquired += OVRManager_TrackingAcquired;
-            OVRManager.TrackingLost += OVRManager_TrackingLost;
+            GameplayReferences.OnControllerValidityChange += GameplayReferences_OnControllerValidityChange;
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
         }
 
-        bool LeftControllerVisible = true;
-        bool RightControllerVisible = true;
-
-        void Update()
+        private void Cognitive3D_Manager_OnPostSessionEnd()
         {
-            //TODO move this stuff into Cognitive3D_manager and get states from there
-            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && RightControllerVisible)
+            GameplayReferences.OnControllerValidityChange -= GameplayReferences_OnControllerValidityChange;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+        private void GameplayReferences_OnControllerValidityChange(UnityEngine.XR.InputDevice device, UnityEngine.XR.XRNode node, bool isValid)
+        {
+            if (node == UnityEngine.XR.XRNode.LeftHand)
             {
-                RightControllerVisible = false;
-                new CustomEvent("cvr.tracking").SetProperty("device","right controller").SetProperty("visible",false).Send();
+                new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("Is Valid", isValid).Send();
             }
-            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch) && !RightControllerVisible)
+            if (node == UnityEngine.XR.XRNode.RightHand)
             {
-                new CustomEvent("cvr.tracking").SetProperty("device","right controller").SetProperty("visible", true).Send();
-                RightControllerVisible = true;
-            }
-
-            if (!OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && LeftControllerVisible)
-            {
-                LeftControllerVisible = false;
-                new CustomEvent("cvr.tracking").SetProperty("device", "left controller").SetProperty("visible", false).Send();
-            }
-            if (OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch) && !LeftControllerVisible)
-            {
-                new CustomEvent("cvr.tracking").SetProperty("device", "left controller").SetProperty("visible", true).Send();
-                LeftControllerVisible = true;
-            }
-        }
-
-        private void OVRManager_TrackingLost()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", false).Send();
-        }
-
-        private void OVRManager_TrackingAcquired()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", true).Send();
-        }
-
-        void OnDestroy()
-        {
-            OVRManager.TrackingAcquired -= OVRManager_TrackingAcquired;
-            OVRManager.TrackingLost -= OVRManager_TrackingLost;
-        }
-#endif
-
-#if C3D_PICOVR
-
-        public override void Cognitive3D_Init()
-        {
-            base.Cognitive3D_Init();
-
-            Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
-            Pvr_UnitySDKSensor.Enter3DofModelEvent += TrackingLost;
-            Pvr_UnitySDKSensor.Exit3DofModelEvent += TrackingAcquired;
-        }
-
-        private void TrackingAcquired()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", true).Send();
-        }
-
-        private void TrackingLost()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", false).Send();
-        }
-
-        //Neo controller，"int a,int b"，a(0:controller0,1：controller1)，b(0:Disconnect，1：Connect)  
-        private void Pvr_ControllerManager_PvrControllerStateChangedEvent(string data)
-        {
-            //Debug.Log("PicoControllerManager State Change:   " + data);
-            //OcclusionChanged();
-        }
-#endif
-#if C3D_PICOXR
-
-        public override void Cognitive3D_Init()
-        {
-            base.Cognitive3D_Init();
-
-            //there's no obvious substitute in Pico Unity XR 1.2.3
-            //Pvr_ControllerManager.PvrControllerStateChangedEvent += Pvr_ControllerManager_PvrControllerStateChangedEvent;
-            //Pvr_UnitySDKSensor.Enter3DofModelEvent += TrackingLost;
-            //Pvr_UnitySDKSensor.Exit3DofModelEvent += TrackingAcquired;
-        }
-
-        private void TrackingAcquired()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", true).Send();
-        }
-
-        private void TrackingLost()
-        {
-            new CustomEvent("cvr.tracking").SetProperty("device", "hmd").SetProperty("visible", false).Send();
-        }
-
-        //Neo controller，"int a,int b"，a(0:controller0,1：controller1)，b(0:Disconnect，1：Connect)  
-        private void Pvr_ControllerManager_PvrControllerStateChangedEvent(string data)
-        {
-            //Debug.Log("PicoControllerManager State Change:   " + data);
-            //OcclusionChanged();
-        }
-#endif
-
-        //known bug - steamvr1.2 occlusion events will not be correctly reported if only 1 controller is enabled. need to test steamvr2
-#if C3D_STEAMVR2
-        public override void Cognitive3D_Init()
-        {
-            base.Cognitive3D_Init();            
-            Cognitive3D_Manager.PoseUpdateEvent += Cognitive3D_Manager_PoseUpdateHandler; //1.2
-        }
-
-        //steam 1.2
-        private void Cognitive3D_Manager_PoseUpdateHandler(Valve.VR.TrackedDevicePose_t[] args)
-        {
-            OcclusionChanged();
-        }
-#endif
-        bool leftWasVisible;
-        bool leftWasConnected;
-
-        bool rightWasVisible;
-        bool rightWasConnected;
-
-
-        GameplayReferences.ControllerInfo tempInfo;
-        void OcclusionChanged()
-        {
-            if (GameplayReferences.GetControllerInfo(false,out tempInfo))
-            {
-                if (tempInfo.connected != leftWasConnected)
-                {
-                    //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("connected", tempInfo.connected).Send();
-                    leftWasConnected = tempInfo.connected;
-                }
-                if (tempInfo.visible != leftWasVisible)
-                {
-                    //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "left").SetProperty("visible", tempInfo.visible).Send();
-                    leftWasVisible = tempInfo.visible;
-                }
-            }
-            if (GameplayReferences.GetControllerInfo(true, out tempInfo))
-            {
-                if (tempInfo.connected != rightWasConnected)
-                {
-                    //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("connected", tempInfo.connected).Send();
-                    rightWasConnected = tempInfo.connected;
-                }
-                if (tempInfo.visible != rightWasVisible)
-                {
-                    //event
-                    new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("visible", tempInfo.visible).Send();
-                    rightWasVisible = tempInfo.visible;
-                }
+                new CustomEvent("cvr.tracking").SetProperty("device", "right").SetProperty("Is Valid", isValid).Send();
             }
         }
 
         public override bool GetWarning()
         {
-#if C3D_STEAMVR2 || C3D_OCULUS || C3D_PICOVR
-            return false;
-#else
-            return true;
-#endif
+            if (GameplayReferences.SDKSupportsControllers)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public override string GetDescription()
         {
-            return "Sends transactions when a tracked device (likely a controller, but could also be headset or lighthouse) loses visibility (visible) or is disconnected/loses power (connected)";
+            return "Sends an event when a controller device becomes invalid (from tracking issue or disconnection)";
         }
     }
 }

@@ -30,7 +30,19 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        List<string> pageids = new List<string>() { "welcome", "authenticate", "selectsdk", "explainscene", "explaindynamic", "setupcontrollers", "listdynamics", "uploadscene", "uploadsummary", "done" };
+        List<string> pageids = new List<string>()
+        {
+            "welcome",
+            "authenticate",
+            "selectsdk",
+            //"explainscene",
+            //"explaindynamic",
+            "setupcontrollers",
+            "listdynamics",
+            "uploadscene",
+            "uploadsummary",
+            "done"
+        };
         public int currentPage;
 
         static int lastDevKeyResponseCode = 0;
@@ -61,7 +73,7 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 1 - WELCOME (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
+            GUI.Label(steptitlerect, "WELCOME (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
@@ -86,7 +98,7 @@ namespace Cognitive3D
         string developerkey = "";
         void AuthenticateUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 2 - AUTHENTICATION", "steptitle");
+            GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
             GUI.Label(boldlabelrect, "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys below to continue.\n\nThese are available on the Project Dashboard.", "boldlabel");
 
             //dev key
@@ -166,32 +178,11 @@ namespace Cognitive3D
         void GetSelectedSDKs()
         {
             selectedsdks.Clear();
-#if C3D_STEAMVR
-            selectedsdks.Add("C3D_STEAMVR");
-#endif
 #if C3D_STEAMVR2
             selectedsdks.Add("C3D_STEAMVR2");
 #endif
 #if C3D_OCULUS
             selectedsdks.Add("C3D_OCULUS");
-#endif
-#if C3D_GOOGLEVR
-            selectedsdks.Add("C3D_GOOGLEVR");
-#endif
-#if C3D_DEFAULT
-            selectedsdks.Add("C3D_DEFAULT");
-#endif
-#if C3D_FOVE
-            selectedsdks.Add("C3D_FOVE");
-#endif
-#if C3D_PUPIL
-            selectedsdks.Add("C3D_PUPIL");
-#endif
-#if C3D_TOBIIVR
-        selectedsdks.Add("C3D_TOBIIVR");
-#endif
-#if C3D_AH
-        selectedsdks.Add("C3D_AH");
 #endif
 #if C3D_SRANIPAL
         selectedsdks.Add("C3D_SRANIPAL");
@@ -211,29 +202,8 @@ namespace Cognitive3D
 #if C3D_PICOXR
         selectedsdks.Add("C3D_PICOXR");
 #endif
-#if C3D_ARKIT //apple
-            selectedsdks.Add("C3D_ARKIT");
-#endif
-#if C3D_ARCORE //google
-            selectedsdks.Add("C3D_ARCORE");
-#endif
-#if C3D_META
-            selectedsdks.Add("C3D_META");
-#endif
-#if C3D_NEURABLE
-            selectedsdks.Add("C3D_NEURABLE");
-#endif
-#if C3D_SNAPDRAGON
-            selectedsdks.Add("C3D_SNAPDRAGON");
-#endif
-#if C3D_HOLOLENS
-            selectedsdks.Add("C3D_HOLOLENS");
-#endif
 #if C3D_WINDOWSMR
             selectedsdks.Add("C3D_WINDOWSMR");
-#endif
-#if C3D_XR
-            selectedsdks.Add("C3D_XR");
 #endif
 #if C3D_OMNICEPT
             selectedsdks.Add("C3D_OMNICEPT");
@@ -274,7 +244,7 @@ namespace Cognitive3D
         {
             //additional SDK features
 
-            GUI.Label(steptitlerect, "STEP 3 - OPTIONAL SDK SUPPORT", "steptitle");
+            GUI.Label(steptitlerect, "OPTIONAL SDK SUPPORT", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Please select any additional SDKs you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
 
             GUIContent help = new GUIContent(EditorCore.Info);
@@ -335,7 +305,7 @@ namespace Cognitive3D
 
         void DynamicExplainUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 4b - WHAT IS A DYNAMIC OBJECT?", "steptitle");
+            GUI.Label(steptitlerect, "WHAT IS A DYNAMIC OBJECT?", "steptitle");
 
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during an experience which you wish to track.", "boldlabel");
 
@@ -354,7 +324,7 @@ namespace Cognitive3D
 
         void SceneExplainUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 4a - WHAT IS A SCENE?", "steptitle");
+            GUI.Label(steptitlerect, "WHAT IS A SCENE?", "steptitle");
 
             //GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not require colliders on it to detect user gaze.", "boldlabel");
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
@@ -389,7 +359,7 @@ namespace Cognitive3D
 
         void ControllerUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 5 - CONTROLLER SETUP", "steptitle");
+            GUI.Label(steptitlerect, "CONTROLLER SETUP", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Dynamic Objects can also easily track your controllers. Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
 
             bool setupComplete = false;
@@ -414,10 +384,10 @@ namespace Cognitive3D
             if (rightSetupComplete && leftSetupComplete)
             {
                 var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && rdyn.UseCustomMesh == false && rightcontroller.GetComponent<ControllerInputTracker>() != null)
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
                     var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.CommonMesh == DynamicObject.CommonDynamicMesh.ViveController && ldyn.UseCustomMesh == false && leftcontroller.GetComponent<ControllerInputTracker>() != null)
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
                     {
                         setupComplete = true;
                     }
@@ -443,43 +413,35 @@ namespace Cognitive3D
 
             if (rightSetupComplete && leftSetupComplete)
             {
-                var manager = FindObjectOfType<ControllerInputTracker>();
-                if (manager != null
-                    && manager.LeftHand != null
-                    && manager.LeftHand == leftcontroller.GetComponent<DynamicObject>()
-                    && manager.RightHand != null
-                    && manager.RightHand == rightcontroller.GetComponent<DynamicObject>())
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
-                    setupComplete = true;
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
+                    {
+                        setupComplete = true;
+                    }
                 }
             }
 #elif C3D_VIVEWAVE
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
-            setupComplete = false;
-
-            var g = Resources.Load<GameObject>("AdaptiveController");
-            if (g != null)
-            {
-                var inputtracker = g.GetComponent<ControllerInputTracker>();
-                if (inputtracker != null)
-                {
-                    setupComplete = true;
-                }
-            }
+            //TODO vive wave sdk controller setup support
 #elif C3D_WINDOWSMR
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
-            setupComplete = false;
             if (rightSetupComplete && leftSetupComplete)
             {
-                //add input tracker + left/right controllers set
-                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
-                    setupComplete = true;
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
+                    {
+                        setupComplete = true;
+                    }
                 }
             }
 #elif C3D_PICOVR
@@ -501,14 +463,16 @@ namespace Cognitive3D
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
-            setupComplete = false;
             if (rightSetupComplete && leftSetupComplete)
             {
-                //add input tracker + left/right controllers set
-                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
-                    setupComplete = true;
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
+                    {
+                        setupComplete = true;
+                    }
                 }
             }
 #elif C3D_PICOXR
@@ -517,73 +481,38 @@ namespace Cognitive3D
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
-            setupComplete = false;
             if (rightSetupComplete && leftSetupComplete)
             {
-                //add input tracker + left/right controllers set
-                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null && tracker.LeftHand != null && tracker.RightHand != null && tracker.LeftHand.gameObject == leftcontroller && tracker.RightHand.gameObject == rightcontroller)
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
-                    setupComplete = true;
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
+                    {
+                        setupComplete = true;
+                    }
                 }
             }
 
 #else
-            if (cameraBase == null && leftcontroller == null && rightcontroller == null)
-            {
-                if (Camera.main != null)
-                    cameraBase = Camera.main.gameObject;
-
-                //spatial tracking api moved to xr legacy input package in ~2019. that package gone in 2021?
-                //can use XR.InputDevices.GetDevicesWithCharacteristics but can't get gameobject from the results
-                /*var tracked = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
-                foreach (var v in tracked)
-                {
-                    if (v.deviceType == UnityEngine.SpatialTracking.TrackedPoseDriver.DeviceType.GenericXRController)
-                    {
-                        if (v.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.LeftPose)
-                        {
-                            leftcontroller = v.gameObject;
-                        }
-                        if (v.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.RightPose)
-                        {
-                            rightcontroller = v.gameObject;
-                        }
-                    }
-                }*/
-            }
-
             leftSetupComplete = leftcontroller != null;
             rightSetupComplete = rightcontroller != null;
 
-            setupComplete = false;
             if (rightSetupComplete && leftSetupComplete)
             {
-                //add input tracker + left/right controllers set
-                var tracker = Cognitive3D_Manager.Instance.GetComponent<ControllerInputTracker>();
-                if (tracker != null
-                        && tracker.LeftHand != null
-                        && tracker.LeftHand.gameObject == leftcontroller
-                        && tracker.RightHand != null
-                        && tracker.RightHand.gameObject == rightcontroller)
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
-                    setupComplete = true;
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
+                    {
+                        setupComplete = true;
+                    }
                 }
             }
 #endif
 
-            //what controllers do we support. add scroll list here!
-            //vive, oculus, microsoft, pico
-
-#pragma warning disable 162
             int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
-#pragma warning restore 162
-
-#if C3D_STEAMVR2
-    
-#else
-            offset = 80;
-#endif
 
             //left hand label
             GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
@@ -735,29 +664,12 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(105, 480, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
             }
-#else
-            List<string> controllerNames = new List<string>() { "Vive", "Oculus Rift", "Oculus Quest", "Windows MR","Pico Neo 2" };
-
-            Rect innerScrollSize = new Rect(30, 0, 120, controllerNames.Count * 32);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 180, 440, 128), sdkScrollPos, innerScrollSize, false, true);
-
-            for (int i = 0; i < controllerNames.Count; i++)
-            {
-                bool selected = controllerDisplayName == controllerNames[i];
-                if (GUI.Button(new Rect(30, i * 32, 420, 30), controllerNames[i], selected ? "button_blueoutlineleft" : "button_disabledoutline"))
-                {
-                    controllerDisplayName = controllerNames[i];
-                }
-                GUI.Label(new Rect(420, i * 32, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-            }
-
-            GUI.EndScrollView();
 #endif
         }
 
         public static void SetupControllers(GameObject left, GameObject right)
         {
-            Debug.Log("setup controllers");
+            Debug.Log("Set Controller Dynamic Object Settings. Create Controller Input Tracker component");
 
             if (left != null && left.GetComponent<DynamicObject>() == null)
             {
@@ -769,91 +681,27 @@ namespace Cognitive3D
             }
 
             //add a single controller input tracker to the cognitive3d_manager
-            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<ControllerInputTracker>();
+            var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<Components.ControllerInputTracker>();
             if (inputTracker == null)
             {
-                Cognitive3D_Manager.Instance.gameObject.AddComponent<ControllerInputTracker>();
+                Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.ControllerInputTracker>();
             }
 
             if (left != null)
             {
                 var dyn = left.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                //dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = false;
                 dyn.IsController = true;
-                //dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-                SetControllerDisplayType(dyn,false);
+                dyn.SyncWithPlayerGazeTick = true;
             }
             if (right != null)
             {
                 var dyn = right.GetComponent<DynamicObject>();
                 dyn.UseCustomMesh = false;
-                //dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
                 dyn.IsRight = true;
                 dyn.IsController = true;
-                //dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-                SetControllerDisplayType(dyn, true);
-            }
-        }
-
-        private static void SetControllerDisplayType(DynamicObject dyn, bool isRight)
-        {
-            if (isRight)
-            {
-                if (controllerDisplayName == "Vive")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                }
-                else if (controllerDisplayName == "Oculus Rift")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchright;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchRight;
-                }
-                else if (controllerDisplayName == "Oculus Quest")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchright;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchRight;
-                }
-                else if (controllerDisplayName == "Windows MR")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityRight;
-                }
-                else if (controllerDisplayName == "Pico Neo 2")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerRight;
-                }
-            }
-            else
-            {
-                if (controllerDisplayName == "Vive")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.vivecontroller;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.ViveController;
-                }
-                else if (controllerDisplayName == "Oculus Rift")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculustouchleft;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusRiftTouchLeft;
-                }
-                else if (controllerDisplayName == "Oculus Quest")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.oculusquesttouchleft;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.OculusQuestTouchLeft;
-                }
-                else if (controllerDisplayName == "Windows MR")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.WindowsMixedRealityLeft;
-                }
-                else if (controllerDisplayName == "Pico Neo 2")
-                {
-                    dyn.ControllerType = DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left;
-                    dyn.CommonMesh = DynamicObject.CommonDynamicMesh.PicoNeoControllerLeft;
-                }
+                dyn.SyncWithPlayerGazeTick = true;
             }
         }
 
@@ -881,7 +729,7 @@ namespace Cognitive3D
         int delayDisplayUploading = -1;
         void ListDynamicUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 6 - PREPARE DYNAMIC OBJECTS", "steptitle");
+            GUI.Label(steptitlerect, "PREPARE DYNAMIC OBJECTS", "steptitle");
 
             GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
@@ -1009,8 +857,8 @@ namespace Cognitive3D
 
             if (dynamic.UseCustomMesh)
                 GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
-            else
-                GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
+            //else
+                //GUI.Label(mesh, dynamic.CommonMesh.ToString(), "dynamiclabel");
             GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
             if (!dynamic.HasCollider())
             {
@@ -1031,7 +879,7 @@ namespace Cognitive3D
 
         void UploadSceneUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 7 - PREPARE SCENE", "steptitle");
+            GUI.Label(steptitlerect, "PREPARE SCENE", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
 
             GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
@@ -1182,7 +1030,7 @@ namespace Cognitive3D
                 understandRevealTime = EditorApplication.timeSinceStartup + 3;
             }
 
-            GUI.Label(steptitlerect, "STEP 9 - UPLOAD", "steptitle");
+            GUI.Label(steptitlerect, "UPLOAD", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -1334,11 +1182,6 @@ namespace Cognitive3D
                     onclick += () =>
                     {
                         EditorCore.SetPlayerDefine(selectedsdks);
-                        if (selectedsdks.Contains("C3D_TOBIIVR") || selectedsdks.Contains("C3D_NEURABLE") || selectedsdks.Contains("C3D_FOVE") || selectedsdks.Contains("C3D_PUPIL") || selectedsdks.Contains("C3D_AH") || selectedsdks.Contains("C3D_SNAPDRAGON") || selectedsdks.Contains("C3D_SRANIPAL"))
-                        {
-                            //eye tracking
-                            Cognitive3D_Preferences.Instance.GazeType = GazeType.Physics;
-                        }
                     };
                     onclick += () =>
                     {

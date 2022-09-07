@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 using UnityEngine.SceneManagement;
 
 //container for data and simple instance implementations (enable,disable) for dynamic object
@@ -36,7 +37,8 @@ namespace Cognitive3D
             PicoNeoControllerLeft = 15,
             PicoNeoControllerRight = 16,
             PicoNeo3ControllerLeft = 17,
-            PicoNeo3ControllerRight = 18
+            PicoNeo3ControllerRight = 18,
+            Unknown = 19,
         }
 
 
@@ -58,12 +60,14 @@ namespace Cognitive3D
             return true;
         }
 #endif
-        
+
         [System.NonSerialized]
+        //data id is the general way to get the actual id from the dynamic object (generated or custom id). use GetId
         public string DataId;
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
 
+        //custom id is set in editor and will be used
         /// <summary>
         /// should use GetId() to get the currently assigned dynamic object id
         /// </summary>
@@ -71,10 +75,9 @@ namespace Cognitive3D
         public float UpdateRate = 0.1f;
 
 
+        //only used to indicate that the mesh needs to be exported/uploaded. false for controllers
         public bool UseCustomMesh = true;
         public string MeshName;
-        public CommonDynamicMesh CommonMesh;
-
 
         public float PositionThreshold = 0.01f;
         public float RotationThreshold = 0.1f;
@@ -97,8 +100,8 @@ namespace Cognitive3D
             pico_neo_2_eye_controller_right,
             pico_neo_3_eye_controller_left,
             pico_neo_3_eye_controller_right,
+            unknown,
         }
-        public ControllerDisplayType ControllerType;
 
         public DynamicObjectIdPool IdPool;
 
@@ -121,6 +124,10 @@ namespace Cognitive3D
         }
 #endif
 
+        void DelayEnable(InputDevice device, XRNode node, bool isValid)
+        {
+            GameplayReferences.OnControllerValidityChange -= DelayEnable;
+        }
 
         private void OnEnable()
         {
@@ -129,12 +136,28 @@ namespace Cognitive3D
                 return;
 #endif
             StartingScale = transform.lossyScale;
-            string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
+            //string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
-            if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityRight)
-                tempMeshName = "windows_mixed_reality_controller_right";
-            if (!UseCustomMesh && CommonMesh == CommonDynamicMesh.WindowsMixedRealityLeft)
-                tempMeshName = "windows_mixed_reality_controller_left";
+            string controllerName = string.Empty;
+            string appliedMeshName = MeshName;
+
+            //TODO if a controller, delay registering the controller until the controller name has returned something valid
+            if (IsController)
+            {
+                GameplayReferences.SetController(this, IsRight);
+                InputDevice device;
+                if (!GameplayReferences.GetControllerInfo(IsRight, out device))
+                {
+                    GameplayReferences.OnControllerValidityChange += DelayEnable;
+                    //register to some 'controller validity changed' event and try later
+                    return;
+                }
+                else
+                {
+                    controllerName = GetControllerPopupName(device.name, IsRight).ToString();
+                    appliedMeshName = GetControllerMeshName(device.name, IsRight).ToString();
+                }
+            }
 
             if (SyncWithPlayerGazeTick)
             {
@@ -150,11 +173,7 @@ namespace Cognitive3D
                 registerid = CustomId;
             }
 
-            string controllerName = string.Empty;
-            if (IsController)
-                controllerName = ControllerType.ToString();
-
-            var Data = new DynamicData(gameObject.name, registerid, tempMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerName, IsRight);
+            var Data = new DynamicData(gameObject.name, registerid, appliedMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerName, IsRight);
 
             DataId = Data.Id;
 
@@ -189,14 +208,8 @@ namespace Cognitive3D
 
         private void SyncWithGazeTick()
         {
-            Cognitive3D.DynamicManager.RecordDynamic(DataId,false);
+            Cognitive3D.DynamicManager.RecordDynamic(DataId, false);
         }
-
-        //private void OnCoreInitialize()
-        //{
-        //    Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
-        //    OnEnable();
-        //}
 
         /// <summary>
         /// returns the Id of the Dynamic Object
@@ -224,13 +237,13 @@ namespace Cognitive3D
         /// </summary>
         public void RecordSnapshot(List<KeyValuePair<string, object>> properties)
         {
-            DynamicManager.SetProperties(DataId,properties);
+            DynamicManager.SetProperties(DataId, properties);
         }
 
-        public void RecordSnapshot(Dictionary<string,object> properties)
+        public void RecordSnapshot(Dictionary<string, object> properties)
         {
             List<KeyValuePair<string, object>> temp = new List<KeyValuePair<string, object>>(properties.Count);
-            foreach(var prop in properties)
+            foreach (var prop in properties)
             {
                 temp.Add(new KeyValuePair<string, object>(prop.Key, prop.Value));
             }
@@ -243,7 +256,7 @@ namespace Cognitive3D
         /// <param name="engagementName">name of the event</param>
         /// <param name="uniqueEngagementId">if multiple events with the same name are expected on this object, this can be used to end specific events</param>
         /// <param name="properties">optional parameters to add to the custom event</param>
-        public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string,object>> properties = null)
+        public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             DynamicManager.BeginEngagement(GetId(), engagementName, uniqueEngagementId, properties);
         }
@@ -266,12 +279,128 @@ namespace Cognitive3D
             DynamicManager.SetTransform(DataId, transform);
 
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
+        }
 
-            //Cognitive3D_Manager.OnSessionBegin -= OnCoreInitialize;
+        internal static CommonDynamicMesh GetControllerMeshName(string inName, bool isRight)
+        {
+            if (inName.Contains("Vive Wand")
+                || inName.Contains("Vive. Controller MV"))
+            {
+                return CommonDynamicMesh.ViveController;
+            }
+            if (inName.Equals("Oculus Touch Controller - Left")
+                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
+            {
+                return CommonDynamicMesh.OculusQuestTouchLeft;
+            }
+            if (inName.Equals("Oculus Touch Controller - Right")
+                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
+            {
+                return CommonDynamicMesh.OculusQuestTouchRight;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.ViveTracker;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.ViveFocusController;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.OculusRiftTouchLeft;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.OculusRiftTouchRight;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.WindowsMixedRealityLeft;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.WindowsMixedRealityRight;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.PicoNeoControllerLeft;
+            }
+            if (inName.Contains(""))
+            {
+                return CommonDynamicMesh.PicoNeoControllerRight;
+            }
+            if (inName.Equals("PicoXR Controller-Left"))
+            {
+                return CommonDynamicMesh.PicoNeo3ControllerLeft;
+            }
+            if (inName.Equals("PicoXR Controller-Right"))
+            {
+                return CommonDynamicMesh.PicoNeo3ControllerRight;
+            }
+            return CommonDynamicMesh.Unknown;
+        }
+
+        //the svg popup that displays the button presses
+        //used by controller input tracker to determine how to record input names
+        internal static ControllerDisplayType GetControllerPopupName(string inName, bool isRight)
+        {
+            if (inName.Contains("Vive Wand")
+                || inName.Contains("Vive. Controller MV"))
+            {
+                return ControllerDisplayType.vivecontroller;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.vivefocuscontroller;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.oculustouchleft;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.oculustouchright;
+            }
+            if (inName.Equals("Oculus Touch Controller - Left")
+                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
+            {
+                return ControllerDisplayType.oculusquesttouchleft;
+            }
+            if (inName.Equals("Oculus Touch Controller - Right")
+                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
+            {
+                return ControllerDisplayType.oculusquesttouchright;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.windows_mixed_reality_controller_left;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.windows_mixed_reality_controller_right;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.pico_neo_2_eye_controller_left;
+            }
+            if (inName.Contains(""))
+            {
+                return ControllerDisplayType.pico_neo_2_eye_controller_right;
+            }
+            if (inName.Equals("PicoXR Controller-Left"))
+            {
+                return ControllerDisplayType.pico_neo_3_eye_controller_left;
+            }
+            if(inName.Equals("PicoXR Controller-Right"))
+            {
+                return ControllerDisplayType.pico_neo_3_eye_controller_right;
+            }
+            return ControllerDisplayType.unknown;
         }
 
 #if UNITY_EDITOR
-    private void Reset()
+        private void Reset()
     {
         //set name is not set otherwise
         if (string.IsNullOrEmpty(MeshName))

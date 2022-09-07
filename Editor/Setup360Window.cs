@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 using Cognitive3D;
 
+//TODO upload this default mesh to the scene. possibly an entirely alternate scene upload process?
+
 namespace Cognitive3D
 {
     public class Setup360Window : EditorWindow
@@ -149,15 +151,6 @@ namespace Cognitive3D
 
             if (!sphere.GetComponent<DynamicObject>())
                 sphere.AddComponent<DynamicObject>();
-
-            var dyn = sphere.GetComponent<DynamicObject>();
-            dyn.UseCustomMesh = false;
-            if (latlong)
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.VideoSphereLatitude;
-            else
-                dyn.CommonMesh = DynamicObject.CommonDynamicMesh.VideoSphereCubemap;
-
-
 
             var camMain = Camera.main;
             if (camMain == null)

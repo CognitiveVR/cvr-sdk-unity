@@ -26,27 +26,6 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-
-        #region Events
-
-#if C3D_STEAMVR2
-        public delegate void PoseUpdateHandler(params Valve.VR.TrackedDevicePose_t[] args);
-        /// <summary>
-        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
-        /// </summary>
-        public static event PoseUpdateHandler PoseUpdateEvent;
-        public void OnPoseUpdate(params Valve.VR.TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
-
-        //1.1 and 1.2
-        public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
-        /// <summary>
-        /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
-        /// </summary>
-        public static event PoseEventHandler PoseEvent;
-        public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
-#endif
-        #endregion
-
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
         {
@@ -107,7 +86,7 @@ namespace Cognitive3D
                 yield return new WaitForSeconds(StartupDelayTime);
             }
             if (InitializeOnStart)
-                Initialize("");
+                BeginSession();
 
 #if C3D_OCULUS
             if (AssignOculusProfileToParticipant && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
@@ -173,11 +152,6 @@ namespace Cognitive3D
                 return;
             }
 
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.NewPoses.AddListener(OnPoseUpdate);
-            PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
-#endif
-
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
 
@@ -197,6 +171,7 @@ namespace Cognitive3D
             NetworkManager = networkGo.AddComponent<NetworkManager>();
             NetworkManager.Initialize(DataCache, ExitpollHandler);
 
+            GameplayReferences.Initialize();
             DynamicManager.Initialize();
             CustomEvent.Initialize();
             SensorRecorder.Initialize();
@@ -414,31 +389,6 @@ namespace Cognitive3D
 
         #region Updates and Loops
 
-#if C3D_STEAMVR2 || C3D_OCULUS
-        GameplayReferences.ControllerInfo tempControllerInfo = null;
-#endif
-
-#if C3D_STEAMVR2
-        private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
-        {
-            for (int i = 0; i<args.Length;i++)
-            {
-                for (int j = 0; j<2;j++)
-                {
-                    if (GameplayReferences.GetControllerInfo(j,out tempControllerInfo))
-                    {
-                        if (tempControllerInfo.id == i)
-                        {
-                            tempControllerInfo.connected = args[i].bDeviceIsConnected;
-                            tempControllerInfo.visible = args[i].bPoseIsValid;
-                        }
-
-                    }
-                }
-            }
-        }
-#endif
-
         /// <summary>
         /// start after successful session initialization
         /// </summary>
@@ -473,37 +423,6 @@ namespace Cognitive3D
 
             InvokeUpdateEvent(Time.deltaTime);
             UpdateSendHotkeyCheck();
-
-            //this should only update if components that use these values are found (controller visibility, arm length?)
-
-#if C3D_STEAMVR2
-            var system = Valve.VR.OpenVR.System;
-            if (system != null)
-            {
-                var vrEvent = new Valve.VR.VREvent_t();
-                var size = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(Valve.VR.VREvent_t));
-                for (int i = 0; i < 64; i++)
-                {
-                    if (!system.PollNextEvent(ref vrEvent, size))
-                        break;
-                    OnPoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
-                }
-            }
-#endif
-
-#if C3D_OCULUS
-            if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
-            {
-                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
-            }
-
-            if (GameplayReferences.GetControllerInfo(true, out tempControllerInfo))
-            {
-                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
-            }
-#endif
         }
 
         void UpdateSendHotkeyCheck()
@@ -570,7 +489,7 @@ namespace Cognitive3D
 
                 InvokeSendDataEvent(false);
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-                Reset();
+                ResetSessionData();
             }
         }
 
@@ -588,7 +507,7 @@ namespace Cognitive3D
 
             if (IsInitialized)
             {
-                Reset();
+                ResetSessionData();
             }
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
@@ -630,7 +549,7 @@ namespace Cognitive3D
             
 
             InvokeSendDataEvent(true);
-            Reset();
+            ResetSessionData();
             StartCoroutine(SlowQuit());
         }
 
@@ -883,7 +802,7 @@ namespace Cognitive3D
         /// <summary>
         /// Reset all of the static vars to their default values. Used when a session ends
         /// </summary>
-        public static void Reset()
+        public static void ResetSessionData()
         {
             InvokeEndSessionEvent();
             CoreInterface.Reset();
