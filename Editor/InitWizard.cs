@@ -15,7 +15,7 @@ namespace Cognitive3D
     public class InitWizard : EditorWindow
     {
         Rect steptitlerect = new Rect(30, 0, 100, 440);
-        Rect boldlabelrect = new Rect(30, 100, 440, 440);
+        //Rect boldlabelrect = new Rect(30, 100, 440, 440);
 
         public static void Init()
         {
@@ -30,14 +30,24 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
+        //TODO CONSIDER make some panel class? with update, on enter, buttons + actions?
+        //TODO can this be used with manage dynamic objects window as well?
+        //TODO also 360 video setup?
+            //maybe later. would require a pretty major refactor
+
         List<string> pageids = new List<string>()
         {
             "welcome",
             "authenticate",
             "selectsdk",
+
+            "gliasetup", //assemblies + prefab
+            "sranipalsetup", //assemblies + prefab
+            "compile",
+
             //"explainscene",
             //"explaindynamic",
-            "setupcontrollers",
+            "setupplayer", //controllers and hmd
             "listdynamics",
             "uploadscene",
             "uploadsummary",
@@ -45,22 +55,31 @@ namespace Cognitive3D
         };
         public int currentPage;
 
+        bool debugNewSceneVersion = false;
+
         static int lastDevKeyResponseCode = 0;
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.keyDown) { currentPage++; }
-            //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.keyDown) { currentPage--; }
+            //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.KeyDown) { currentPage++; }
+            //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.KeyDown) { currentPage--; }
+            //if (Event.current.keyCode == KeyCode.Alpha0 && Event.current.type == EventType.KeyDown) { debugNewSceneVersion = !debugNewSceneVersion; }
+
             switch (pageids[currentPage])
             {
                 case "welcome": WelcomeUpdate(); break;
                 case "authenticate": AuthenticateUpdate(); break;
                 case "selectsdk": SelectSDKUpdate(); break;
-                case "explainscene": SceneExplainUpdate(); break;
-                case "explaindynamic": DynamicExplainUpdate(); break;
-                case "setupcontrollers": ControllerUpdate(); break;
+
+                case "gliasetup": GliaSetup(); break;
+                case "sranipalsetup": SRAnipalSetup(); break;
+                case "compile": WaitForCompile(); break;
+
+                //case "explainscene": SceneExplainUpdate(); break;
+                //case "explaindynamic": DynamicExplainUpdate(); break;
+                case "setupplayer": ControllerUpdate(); break;
                 case "listdynamics": ListDynamicUpdate(); break;
                 case "uploadscene": UploadSceneUpdate(); break;
                 case "uploadsummary": UploadSummaryUpdate(); break;
@@ -76,19 +95,29 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "WELCOME (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
-            if (settings != null && !string.IsNullOrEmpty(settings.SceneId))
+            GUI.Label(new Rect(30, 45, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
+            if (GUI.Button(new Rect(130, 150, 240, 30), "Open Documentation Site"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
+            }
+
+            if (debugNewSceneVersion || settings != null && !string.IsNullOrEmpty(settings.SceneId))
             {
                 //upload new version
-                GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
-                GUI.Label(new Rect(0, 140, 475, 130), EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 140, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.\n\n\n\n" +
-                    "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color> Unless there are meaningful changes to the static scene geometry you probably don't need to upload this scene again.\n\n" +
+
+                GUI.Label(new Rect(0, 150, 475, 130), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(30, 250, 440, 440), "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color>\nYou may want to upload a new Scene Version if there are meaningful changes to the static scene geometry.\n\n" +
                     "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
+                if (GUI.Button(new Rect(130, 400, 240, 30), "Open Manage Dynamic Objects"))
+                {
+                    ManageDynamicObjects.Init();
+                }
             }
             else
             {
-                GUI.Label(boldlabelrect, "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
-                GUI.Label(new Rect(30, 200, 440, 440), "This will guide you through the initial setup of your scene, and will have production ready analytics at the end of this setup.", "normallabel");
+
+                GUI.Label(new Rect(30, 250, 440, 440), "At the end of this guide you will have production ready analytics.", "normallabel");
             }
         }
 
@@ -99,57 +128,61 @@ namespace Cognitive3D
         void AuthenticateUpdate()
         {
             GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
-            GUI.Label(boldlabelrect, "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys below to continue.\n\nThese are available on the Project Dashboard.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys.", "boldlabel");
 
+            GUI.Label(new Rect(30, 100, 440, 440), "These should be kept private to your organization.\n\nThe Developer Key is saved to Unity Editor Prefs (specific to the current user) and is never included in a build.\n\nThe Application Key is saved in Cognitive3D_Preferences asset.\n\nThese are available on the Project Dashboard. ", "normallabel");
+
+            if (GUI.Button(new Rect(130, 290, 240, 30), "Open Dashboard"))
+            {
+                Application.OpenURL("https://app.cognitive3d.com");
+            }
             //dev key
-            GUI.Label(new Rect(30, 250, 100, 30), "Developer Key", "miniheader");
+            GUI.Label(new Rect(30, 315, 100, 30), "Developer Key", "miniheader");
             if (string.IsNullOrEmpty(developerkey)) //empty
             {
-                GUI.Label(new Rect(30, 280, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 280, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
                 lastDevKeyResponseCode = 0;
-                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else if (lastDevKeyResponseCode == 200) //valid key
             {
-                GUI.Label(new Rect(440, 280, 24, 40), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.Checkmark, "image_centered");
                 string previous = developerkey;
-                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 if (previous != developerkey)
                     lastDevKeyResponseCode = 0;
             }
             else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
             {
-                GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
-                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32);
+                GUI.Label(new Rect(440, 345, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
+                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else //invalid key
             {
-                GUI.Label(new Rect(440, 280, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
+                GUI.Label(new Rect(440, 345, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
                 string previous = developerkey;
-                developerkey = EditorCore.TextField(new Rect(30, 280, 400, 40), developerkey, 32, "textfield_warning");
+                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
                 if (previous != developerkey)
                     lastDevKeyResponseCode = 0;
             }
 
             if (lastDevKeyResponseCode != 200 && lastDevKeyResponseCode != 0)
             {
-                GUI.Label(new Rect(30, 325, 400, 30), "This Developer Key is invalid or expired. Please visit this project on our dashboard and " +
-                    "ensure you have a valid Developer Key. This is a requirement to upload or update any Scene or Dynamic Object. Developer Keys expire " +
-                    "automatically after 90 days.", "miniwarning");
+                GUI.Label(new Rect(30, 390, 400, 30), "This Developer Key is invalid or expired. Please ensure the developer key is valid on the dashboard. Developer Keys expire automatically after 90 days.", "miniwarning");
             }
 
             //api key
-            GUI.Label(new Rect(30, 360, 100, 30), "Application Key", "miniheader");
-            apikey = EditorCore.TextField(new Rect(30, 390, 400, 40), apikey, 32);
+            GUI.Label(new Rect(30, 410, 100, 30), "Application Key", "miniheader");
+            apikey = EditorCore.TextField(new Rect(30, 440, 400, 40), apikey, 32);
             if (string.IsNullOrEmpty(apikey))
             {
-                GUI.Label(new Rect(30, 390, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 390, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, 440, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+                GUI.Label(new Rect(440, 440, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(440, 390, 24, 40), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(440, 440, 24, 40), EditorCore.Checkmark, "image_centered");
             }
 
         }
@@ -237,43 +270,45 @@ namespace Cognitive3D
 
         List<SDKDefine> SDKNamesDefines = new List<SDKDefine>()
         {
-            new SDKDefine("Default","C3D_DEFAULT" ),
-            new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2" ),
-            new SDKDefine("Oculus Integration 32.0","C3D_OCULUS" ),
-            new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT" ),
-            new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Vive Pro Eye Eyetracking" ), //previously C3D_VIVEPROEYE
-            new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR"),
-            new SDKDefine("Vive Wave 3.0.1","C3D_VIVEWAVE" ),
-            new SDKDefine("Pico Unity XR Platform 1.2.3","C3D_PICOXR" ),
-            new SDKDefine("MRTK 2.5.4","C3D_MRTK" ),
-            new SDKDefine("Windows Mixed Reality","C3D_WINDOWSMR" ), //legacy
-            new SDKDefine("Varjo VR","C3D_VARJOVR" ), //legacy
-            new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR" ), //legacy
+            new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
+            new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
+            new SDKDefine("Oculus Integration 32.0","C3D_OCULUS", "Adds Social Features" ),
+            new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
+            new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
+            new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
+            new SDKDefine("Vive Wave 3.0.1","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
+            new SDKDefine("Pico Unity XR Platform 1.2.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
+            new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
+            new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
+            new SDKDefine("Varjo VR","C3D_VARJOVR", "Prefer to upgrade to Varjo XR instead" ), //legacy
+            new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
         };
 
         void SelectSDKUpdate()
         {
             //additional SDK features
 
-            GUI.Label(steptitlerect, "OPTIONAL SDK SUPPORT", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Please select any additional SDKs you will be using in this project. <size=12>(Shift click to select multiple)</size>", "boldlabel");
+            GUI.Label(steptitlerect, "ADDITIONAL SDK SUPPORT", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Please select any SDKs you are using in this project.", "boldlabel");
 
-            GUIContent help = new GUIContent(EditorCore.Info);
-            help.tooltip = "docs.cognitive3d.com/unity/runtimes";
-            if (GUI.Button(new Rect(430, 75, 20, 20), help, "boldlabel"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
-            }
+            GUI.Label(new Rect(30, 100, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
+
+            //GUIContent help = new GUIContent(EditorCore.Info);
+            //help.tooltip = "docs.cognitive3d.com/unity/runtimes";
+            //if (GUI.Button(new Rect(430, 75, 20, 20), help, "boldlabel"))
+            //{
+            //    Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
+            //}
 
             Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 120, 440, 350), sdkScrollPos, innerScrollSize, false, false);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 220, 440, 250), sdkScrollPos, innerScrollSize, false, false);
 
             for (int i = 0; i < SDKNamesDefines.Count; i++)
             {
                 bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
                 GUIContent content = new GUIContent(SDKNamesDefines[i].Name);
                 float separator = 0;
-                if (i > 7)
+                if (i > 8)
                 {
                     separator = 32;
                 }
@@ -302,7 +337,7 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(420, i * 32 + separator, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
-                if (i == 8)
+                if (i == 9)
                 {
                     int kerning = 4;
                     GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
@@ -312,7 +347,82 @@ namespace Cognitive3D
             GUI.EndScrollView();
         }
 
-        #region Terminology
+        #region Glia Setup
+        //added to tell developer to add assemblies so C3D can use Glia api
+
+        void GliaSetup()
+        {
+            if (!selectedsdks.Contains("C3D_OMNICEPT"))
+            {
+                currentPage++;
+            }
+
+            GUI.Label(steptitlerect, "OMNICEPT ASSEMBLY SETUP", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
+
+            //TODO CONSIDER button to add assemblies to glia folder?
+
+            GUI.Label(new Rect(30, 100, 440, 440), "In your Project, locate the Glia folder. Create a new Assembly Definition Asset in that folder and name it GliaAssembly" +
+                "\n\nCreate a new Assembly Definition Asset in the Glia/Editor folder and name it GliaEditorAssembly" +
+                "\n\nFinally, make sure GliaEditorAssembly only supports the Editor platform", "normallabel");
+        }
+
+#endregion
+
+#region SRAnipal Setup
+        //added to tell developer to add assemblies so C3D can use sranipal api
+
+        void SRAnipalSetup()
+        {
+            if (!selectedsdks.Contains("C3D_SRANIPAL"))
+            {
+                currentPage++;
+            }
+
+            GUI.Label(steptitlerect, "SRANIPAL ASSEMBLY SETUP", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
+
+            //TODO CONSIDER button to add assemblies to sranipal folder?
+
+            GUI.Label(new Rect(30, 100, 440, 440), "In your Project, locate the ViveSR folder. Create a new Assembly Definition Asset in that folder and name it SRAnipalAssembly", "normallabel");
+        }
+
+        #endregion
+
+        #region WaitForCompile
+
+        void WaitForCompile()
+        {
+            GUI.Label(steptitlerect, "WAIT FOR COMPILE", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Applying selected SDKs and compiling.", "boldlabel");
+
+            GUI.Label(new Rect(30, 45, 440, 440), "This may take a moment.", "boldlabel");
+
+            //TEST this won't do some weird compile loop, right?
+            //TEST this also won't wait a frame and immediately skip compiling, right?
+
+            EditorCore.SetPlayerDefine(selectedsdks);
+
+            
+
+            if (EditorApplication.isCompiling) { return; }
+
+            //once compiling is finished
+            //add cognitive manager
+            //
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
+            }
+
+            currentPage++;
+        }
+
+
+#endregion
+
+#region Terminology
 
         void DynamicExplainUpdate()
         {
@@ -353,9 +463,9 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
         }
 
-        #endregion
+#endregion
 
-        #region Controllers
+#region Controllers
 
         static GameObject cameraBase;
         static GameObject leftcontroller;
@@ -370,8 +480,18 @@ namespace Cognitive3D
 
         void ControllerUpdate()
         {
-            GUI.Label(steptitlerect, "CONTROLLER SETUP", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Dynamic Objects can also easily track your controllers. Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
+            GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
+
+
+            //check that hmd is tagged as main camera
+
+            if (Camera.main == null)
+            {
+                GUI.Label(new Rect(0, 100, 475, 130), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(30, 200, 440, 440), "Cognitive3D requires a camera with the MainCamera tag to function properly", "normallabel");
+            }
+
 
             bool setupComplete = false;
             bool leftSetupComplete = false;
@@ -716,9 +836,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Dynamic Objects
+#region Dynamic Objects
 
         Vector2 dynamicScrollPosition;
 
@@ -740,7 +860,7 @@ namespace Cognitive3D
         int delayDisplayUploading = -1;
         void ListDynamicUpdate()
         {
-            GUI.Label(steptitlerect, "PREPARE DYNAMIC OBJECTS", "steptitle");
+            GUI.Label(steptitlerect, "EXPORT DYNAMIC OBJECTS", "steptitle");
 
             GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.", "boldlabel");
 
@@ -760,7 +880,7 @@ namespace Cognitive3D
             }
 
             Rect innerScrollSize = new Rect(30, 0, 420, tempdynamics.Length * 30);
-            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 280), dynamicScrollPosition, innerScrollSize, false, true);
+            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 120, 440, 260), dynamicScrollPosition, innerScrollSize, false, true);
 
             Rect dynamicrect;
             for (int i = 0; i < tempdynamics.Length; i++)
@@ -772,7 +892,9 @@ namespace Cognitive3D
 
             GUI.EndScrollView();
 
-            GUI.Box(new Rect(30, 120, 425, 280), "", "box_sharp_alpha");
+            GUI.Box(new Rect(30, 120, 425, 260), "", "box_sharp_alpha");
+
+            GUI.Label(new Rect(200, 380, 200, 30), "Texture Resolution", "miniheader");
 
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
@@ -810,12 +932,12 @@ namespace Cognitive3D
 
             if (delayDisplayUploading > 0)
             {
-                GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
+                GUI.Button(new Rect(180, 455, 140, 35), "Exporting...", "button_bluetext"); //fake replacement for button
                 delayDisplayUploading--;
             }
             else if (delayDisplayUploading == 0)
             {
-                GUI.Button(new Rect(180, 455, 140, 35), "Preparing...", "button_bluetext"); //fake replacement for button
+                GUI.Button(new Rect(180, 455, 140, 35), "Exporting...", "button_bluetext"); //fake replacement for button
                 Selection.objects = GameObject.FindObjectsOfType<GameObject>();
                 ExportUtility.ExportAllDynamicsInScene();
                 delayDisplayUploading--;
@@ -824,7 +946,7 @@ namespace Cognitive3D
             else
             {
                 //GUI.Label(new Rect(180, 450, 140, 40), "", "button_blueoutline");
-                if (GUI.Button(new Rect(180, 455, 140, 35), "Prepare All"))
+                if (GUI.Button(new Rect(180, 455, 140, 35), "Export All"))
                 {
                     delayDisplayUploading = 2;
                 }
@@ -874,9 +996,13 @@ namespace Cognitive3D
                 GUI.Label(collider, new GUIContent(EditorCore.Alert, "Tracking Gaze requires a collider"), "image_centered");
             }
 
-            if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName) || !dynamic.UseCustomMesh)
+            if (EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.MeshName))
             {
                 GUI.Label(uploaded, EditorCore.Checkmark, "image_centered");
+            }
+            else if (!dynamic.UseCustomMesh)
+            {
+                GUI.Label(uploaded, EditorCore.Controller, "image_centered");
             }
             else
             {
@@ -888,10 +1014,10 @@ namespace Cognitive3D
 
         void UploadSceneUpdate()
         {
-            GUI.Label(steptitlerect, "PREPARE SCENE", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>Scene</color> will be exported and prepared from all geometry without a <color=#8A9EB7FF>Dynamic Object</color> component.", "boldlabel");
+            GUI.Label(steptitlerect, "EXPORT SCENE", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported as the <color=#8A9EB7FF>Scene</color>.", "boldlabel");
 
-            GUI.Label(new Rect(30, 320, 200, 30), "Scene Export Texture Resolution", "miniheader");
+            GUI.Label(new Rect(200, 380, 200, 30), "Texture Resolution", "miniheader");
 
             //texture resolution settings
 
@@ -899,39 +1025,39 @@ namespace Cognitive3D
 
             //resolution settings here
 
-            if (GUI.Button(new Rect(30, 360, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
             {
                 Cognitive3D_Preferences.Instance.TextureResize = 4;
             }
             if (Cognitive3D_Preferences.Instance.TextureResize != 4)
             {
-                GUI.Box(new Rect(30, 360, 140, 35), "", "box_sharp_alpha");
+                GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
             }
             else
             {
                 GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
             }
 
-            if (GUI.Button(new Rect(180, 360, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
             {
                 Cognitive3D_Preferences.Instance.TextureResize = 2;
             }
             if (Cognitive3D_Preferences.Instance.TextureResize != 2)
             {
-                GUI.Box(new Rect(180, 360, 140, 35), "", "box_sharp_alpha");
+                GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
             }
             else
             {
                 GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
             }
 
-            if (GUI.Button(new Rect(330, 360, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
                 Cognitive3D_Preferences.Instance.TextureResize = 1;
             }
             if (Cognitive3D_Preferences.Instance.TextureResize != 1)
             {
-                GUI.Box(new Rect(330, 360, 140, 35), "", "box_sharp_alpha");
+                GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
             }
             else
             {
@@ -963,7 +1089,7 @@ namespace Cognitive3D
             if (numberOfLights > 50)
                 GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
 
-            if (GUI.Button(new Rect(0, 430, 500, 15), "Augmented Reality?  Skip Scene Export", "miniheadercenter"))
+            if (GUI.Button(new Rect(260, 455, 140, 35), "Export AR Scene"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -990,7 +1116,7 @@ namespace Cognitive3D
                 currentPage++;
             }
 
-            if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
+            if (GUI.Button(new Rect(100, 455, 140, 35), "Export Scene"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -1040,10 +1166,10 @@ namespace Cognitive3D
             }
 
             GUI.Label(steptitlerect, "UPLOAD", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Here is a final summary of what will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "This will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
-            if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
+            if (debugNewSceneVersion || settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
             {
                 int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
                 string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -1051,13 +1177,13 @@ namespace Cognitive3D
                 {
                     scenename = "SCENE NOT SAVED";
                 }
-                string settingsname = "1/1 Resolution";
-                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
-                GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading a new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
-                "Version " + settings.VersionNumber + " will be archived.", "label_disabledtext_large");
+                string settingsname = "1/1 Texture Resolution";
+                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Texture Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Texture  Resolution"; }
+                GUI.Label(new Rect(30, 100, 440, 440), "A new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
+                "Version " + (debugNewSceneVersion ? 1 : settings.VersionNumber) + " will be archived.", "label_disabledtext_large");
 
-                GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
+                GUI.Label(new Rect(30, 150, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
             }
             else
             {
@@ -1070,11 +1196,11 @@ namespace Cognitive3D
                 string settingsname = "1/1 Resolution";
                 if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
                 if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
-                GUI.Label(new Rect(30, 120, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
+                GUI.Label(new Rect(30, 100, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
 
-                GUI.Label(new Rect(30, 170, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Objects Meshes", "label_disabledtext_large");
+                GUI.Label(new Rect(30, 150, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
             }
-            GUI.Label(new Rect(30, 200, 440, 440), "The display image on the Dashboard will be this:", "label_disabledtext_large");
+            GUI.Label(new Rect(30, 180, 440, 440), "This Scene View will be used as a <color=#62B4F3FF>thumbnail</color> on the Dashboard:", "label_disabledtext_large");
 
 
             var sceneRT = EditorCore.GetSceneRenderTexture();
@@ -1084,22 +1210,17 @@ namespace Cognitive3D
 
         void DoneUpdate()
         {
-            GUI.Label(steptitlerect, "STEP 10 - DONE", "steptitle");
+            GUI.Label(steptitlerect, "DONE!", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ManagerName) + "</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
             if (GUI.Button(new Rect(150, 150, 200, 40), "Open Dashboard", "button_bluetext"))
             {
                 Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
             }
 
-            GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
-            if (GUI.Button(new Rect(150, 320, 200, 40), "Open Documentation", "button_bluetext"))
-            {
-                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Documentation);
-            }
-
-            GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene.", "boldlabel");
+            GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene. Add the Ready Room sample to your project", "boldlabel");
             if (GUI.Button(new Rect(150, 440, 200, 40), "Ready Room Setup", "button_bluetext"))
             {
+                //can i open a specific package from the package manager window
                 var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
                 if (readyRoomScenes.Length == 1)
                 {
@@ -1112,6 +1233,12 @@ namespace Cognitive3D
                     }
                 }
             }
+
+            GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
+            if (GUI.Button(new Rect(150, 320, 200, 40), "Open Documentation", "button_bluetext"))
+            {
+                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Documentation);
+            }
         }
 
         void DrawFooter()
@@ -1119,6 +1246,8 @@ namespace Cognitive3D
             GUI.color = EditorCore.BlueishGrey;
             GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
+
+            GUI.Label(new Rect(0, 450, 20, 40), currentPage.ToString());
 
             DrawBackButton();
 
@@ -1188,18 +1317,6 @@ namespace Cognitive3D
                 case "tagdynamics":
                     break;
                 case "selectsdk":
-                    onclick += () =>
-                    {
-                        EditorCore.SetPlayerDefine(selectedsdks);
-                    };
-                    onclick += () =>
-                    {
-                        var found = Object.FindObjectOfType<Cognitive3D_Manager>();
-                        if (found == null) //add Cognitive3D_manager
-                        {
-                            EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
-                        }
-                    };
                     break;
                 case "listdynamics":
 
@@ -1216,7 +1333,7 @@ namespace Cognitive3D
                     appearDisabled = dynamicsFromSceneExported != dynamics.Length;
                     if (appearDisabled)
                     {
-                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without uploading all Dynamic Objects?", "Yes", "No")) { currentPage++; } };
+                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting all Dynamic Objects?", "Yes", "No")) { currentPage++; } };
                     }
                     if (dynamics.Length == 0 && dynamicsFromSceneExported == 0)
                     {
@@ -1224,7 +1341,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        text = dynamicsFromSceneExported + "/" + dynamics.Length + " Prepared";
+                        text = dynamicsFromSceneExported + "/" + dynamics.Length + " Exported";
                     }
                     onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                     buttonrect = new Rect(350, 510, 140, 30);
@@ -1369,6 +1486,13 @@ namespace Cognitive3D
                     break;
                 case "uploadscene":
                     text = "Back";
+                    break;
+                case "gliasetup":
+                case "sranipalsetup":
+                case "compile":
+                case "setupplayer":
+                    text = "Back";
+                    onclick += () => { currentPage = 2; }; //go back to SDK select page
                     break;
                 case "uploadsummary":
                     onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };

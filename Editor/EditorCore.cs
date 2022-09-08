@@ -505,6 +505,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _controller;
+        public static Texture2D Controller
+        {
+            get
+            {
+                if (_controller == null)
+                    _controller = Resources.Load<Texture2D>("controller_icon");
+                return _controller;
+            }
+        }
+
         private static Texture2D _blueCheckmark;
         public static Texture2D BlueCheckmark
         {
@@ -555,7 +566,7 @@ namespace Cognitive3D
             get
             {
                 if (_info == null)
-                    _info = EditorGUIUtility.FindTexture("console.infoicon.sml");
+                    _info = Resources.Load<Texture2D>("info_icon");
                 return _info;
             }
         }
@@ -566,7 +577,7 @@ namespace Cognitive3D
             get
             {
                 if (_searchIcon == null)
-                    _searchIcon = EditorGUIUtility.FindTexture("search focused");
+                    _searchIcon = EditorGUIUtility.FindTexture("search focused"); //TODO use an asset in package, not unity engine
                 return _searchIcon;
             }
         }
@@ -663,7 +674,7 @@ namespace Cognitive3D
             get
             {
                 if (_settingsIcon == null)
-                    _settingsIcon = EditorGUIUtility.FindTexture("_Popup");
+                    _settingsIcon = EditorGUIUtility.FindTexture("_Popup"); //TODO use an asset in package, not unity engine
                 return _settingsIcon;
             }
         }
@@ -673,7 +684,7 @@ namespace Cognitive3D
             get
             {
                 if (_filterIcon == null)
-                    _filterIcon = EditorGUIUtility.FindTexture("d_FilterByType");
+                    _filterIcon = EditorGUIUtility.FindTexture("d_FilterByType"); //TODO use an asset in package, not unity engine
                 return _filterIcon;
             }
         }

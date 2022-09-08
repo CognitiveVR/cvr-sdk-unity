@@ -538,7 +538,7 @@ namespace Cognitive3D
         #endregion
 
 
-        public const string SDK_VERSION = "0.26.19";
+        public const string SDK_VERSION = "1.0.0";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>

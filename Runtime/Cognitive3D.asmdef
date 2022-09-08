@@ -6,7 +6,9 @@
         "Unity.XR.OpenVR",
         "Varjo.XR",
         "Oculus.VR",
-        "Oculus.Platform"
+        "Oculus.Platform",
+        "Glia",
+        "SRAnipalAssembly"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
