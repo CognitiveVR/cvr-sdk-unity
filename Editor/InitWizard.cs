@@ -208,6 +208,9 @@ namespace Cognitive3D
 #if C3D_OMNICEPT
             selectedsdks.Add("C3D_OMNICEPT");
 #endif
+#if C3D_MRTK
+            selectedsdks.Add("C3D_MRTK");
+#endif
 
             //C3D_Default doesn't enable or change any behaviour - only used in scene setup window and written to define symbols for debugging purposes
             if (selectedsdks.Count == 0)
@@ -242,6 +245,7 @@ namespace Cognitive3D
             new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR"),
             new SDKDefine("Vive Wave 3.0.1","C3D_VIVEWAVE" ),
             new SDKDefine("Pico Unity XR Platform 1.2.3","C3D_PICOXR" ),
+            new SDKDefine("MRTK 2.5.4","C3D_MRTK" ),
             new SDKDefine("Windows Mixed Reality","C3D_WINDOWSMR" ), //legacy
             new SDKDefine("Varjo VR","C3D_VARJOVR" ), //legacy
             new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR" ), //legacy
