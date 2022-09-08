@@ -49,11 +49,11 @@ namespace Cognitive3D
 
         public static bool IsQuitting = false;
 
+        [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
+        public bool BeginSessionAutomatically = true;
+
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 2;
-
-        [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
-        public bool InitializeOnStart = true;
 
 #if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
@@ -74,18 +74,14 @@ namespace Cognitive3D
             instance = this;
         }
 
-        [NonSerialized]
-        public long StartupTimestampMilliseconds;
-
         IEnumerator Start()
         {
-            StartupTimestampMilliseconds = (long)(Util.Timestamp() * 1000);
             GameObject.DontDestroyOnLoad(gameObject);
             if (StartupDelayTime > 0)
             {
                 yield return new WaitForSeconds(StartupDelayTime);
             }
-            if (InitializeOnStart)
+            if (BeginSessionAutomatically)
                 BeginSession();
 
 #if C3D_OCULUS
@@ -308,7 +304,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.sdktype", "PicoXR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #endif
-            //TODO add XR inputdevice name
 
             //eye tracker addons
 #if C3D_SRANIPAL
@@ -317,10 +312,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif C3D_WINDOWSMR
             SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
-#elif C3D_OPENXR
-            //Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            //Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
-            SetSessionProperty("c3d.app.sdktype", "OpenXR");
 #endif
             SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");

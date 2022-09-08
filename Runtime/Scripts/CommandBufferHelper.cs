@@ -46,7 +46,7 @@ namespace Cognitive3D
 #if C3D_OCULUS
                 //oculus renders side by side without a mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
-#elif C3D_DEFAULT || C3D_STEAMVR || C3D_STEAMVR2 //eye tracking should use physics gaze!
+#elif C3D_STEAMVR2 //eye tracking should use physics gaze!
                 //steam renders this side by side with mask
                 rect = new Rect(0, 0, rt.width / 2, rt.height);
 #else //adhawk, tobii, fove, pupil, neurable, vive pro eye

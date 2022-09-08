@@ -2,7 +2,7 @@
 using System.Collections;
 using Cognitive3D;
 
-//debug helper for gaze tracking with Fove, Pupil, Tobii, Vive Pro Eye, Adhawk, Varjo
+//debug helper for gaze tracking
 //does not need to have a 'Cognitive3D session' active to work
 
 namespace Cognitive3D

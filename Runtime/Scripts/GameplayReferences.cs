@@ -14,7 +14,7 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
+#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_OMNICEPT
                 return true;
 #elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
@@ -27,23 +27,22 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_STEAMVR2 || C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOVR || C3D_PICOXR || C3D_XR || C3D_WINDOWSMR || C3D_VARJOVR || C3D_VARJOXR || C3D_OMNICEPT
-                return true;
-#else
+                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
+#if C3D_MRTK
                 return false;
 #endif
+                return true;
             }
         }
         public static bool SDKSupportsRoomSize
         {
-            //TODO should be everything except AR SDKS
+            //should be everything except AR SDKS
             get
             {
-#if C3D_STEAMVR2 || C3D_OCULUS || C3D_XR || C3D_PICOVR || C3D_PICOXR
-                return true;
-#else
+#if C3D_MRTK
                 return false;
 #endif
+                return true;
             }
         }
 
@@ -82,7 +81,7 @@ namespace Cognitive3D
             }
         }
 
-        #region Room
+#region Room
 
         //really simple function to a rect from a collection of points
         //IMPROVEMENT support non-rectangular boundaries
@@ -175,9 +174,9 @@ namespace Cognitive3D
 #endif
         }
 
-        #endregion
+#endregion
 
-        #region HMD
+#region HMD
 
         static InputDevice HMDDevice;
 
@@ -297,9 +296,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Controllers
+#region Controllers
 
         //dynamic objects set as controllers call 'set controller' on enable passing a reference to that transform. input device isn't guaranteed to be valid at this point
 
@@ -398,6 +397,6 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
     }
 }

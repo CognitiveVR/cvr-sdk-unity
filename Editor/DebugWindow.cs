@@ -202,7 +202,7 @@ namespace Cognitive3D
             var manager = FindObjectOfType<Cognitive3D_Manager>();
             if (manager != null)
             {
-                sb.AppendLine("Manager Initialize On Start: " + manager.InitializeOnStart);
+                sb.AppendLine("Manager Initialize On Start: " + manager.BeginSessionAutomatically);
                 sb.AppendLine("Manager Startup Delay Time (s): " + manager.StartupDelayTime);
             }
             else
