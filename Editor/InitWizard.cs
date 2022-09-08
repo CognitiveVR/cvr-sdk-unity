@@ -209,11 +209,15 @@ namespace Cognitive3D
 
         #endregion
 
+        bool hasDoneInitialSDKSelection = false;
         void GetSelectedSDKs()
         {
-            selectedsdks.Clear();
+            if (hasDoneInitialSDKSelection == false)
+            {
+                hasDoneInitialSDKSelection = true;
+                selectedsdks.Clear();
 #if C3D_STEAMVR2
-            selectedsdks.Add("C3D_STEAMVR2");
+                selectedsdks.Add("C3D_STEAMVR2");
 #endif
 #if C3D_OCULUS
             selectedsdks.Add("C3D_OCULUS");
@@ -245,6 +249,7 @@ namespace Cognitive3D
 #if C3D_MRTK
             selectedsdks.Add("C3D_MRTK");
 #endif
+            }
 
             //C3D_Default doesn't enable or change any behaviour - only used in scene setup window and written to define symbols for debugging purposes
             if (selectedsdks.Count == 0)
@@ -277,7 +282,7 @@ namespace Cognitive3D
             new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
             new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
             new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
-            new SDKDefine("Vive Wave 3.0.1","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
+            new SDKDefine("Vive Wave 5.0.2","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
             new SDKDefine("Pico Unity XR Platform 1.2.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
             new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
             new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
@@ -351,41 +356,141 @@ namespace Cognitive3D
         #region Glia Setup
         //added to tell developer to add assemblies so C3D can use Glia api
 
+        bool hasDoneGliaStartCheck = false;
+        bool gliaAssemblyExists = false;
+
+        void GliaStart()
+        {
+            if (hasDoneGliaStartCheck) { return; }
+            hasDoneGliaStartCheck = true;
+
+            var assets = AssetDatabase.FindAssets("GliaAssembly");
+            var editorAssets = AssetDatabase.FindAssets("GliaEditorAssembly");
+            gliaAssemblyExists = assets.Length > 0 && editorAssets.Length > 0;
+        }
+
         void GliaSetup()
         {
             if (!selectedsdks.Contains("C3D_OMNICEPT"))
             {
                 currentPage++;
+                return;
             }
+            GliaStart();
 
             GUI.Label(steptitlerect, "OMNICEPT ASSEMBLY SETUP", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
 
-            //TODO CONSIDER button to add assemblies to glia folder?
+            GUI.Label(new Rect(30, 100, 440, 440), "To automatically access Omnicept's Glia API, the Cognitive3D SDK needs to reference the Glia Assembly, which doesn't exist by default." +
+                "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
-            GUI.Label(new Rect(30, 100, 440, 440), "In your Project, locate the Glia folder. Create a new Assembly Definition Asset in that folder and name it GliaAssembly" +
-                "\n\nCreate a new Assembly Definition Asset in the Glia/Editor folder and name it GliaEditorAssembly" +
-                "\n\nFinally, make sure GliaEditorAssembly only supports the Editor platform", "normallabel");
+            if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
+            {
+                var assets = AssetDatabase.FindAssets("GliaAssembly");
+                if (assets.Length == 0)
+                {
+                    //new text document?
+                    string assemblyDefinitionContent = "{\"name\": \"GliaAssembly\",\"rootNamespace\": \"\",\"references\": [],\"includePlatforms\": [],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
+                    string filepath = Application.dataPath + "/Glia/";
+
+                    System.IO.File.WriteAllText(filepath + "GliaAssembly.asmdef", assemblyDefinitionContent);
+                    EditorUtility.SetDirty(EditorCore.GetPreferences());
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+                assets = AssetDatabase.FindAssets("GliaEditorAssembly");
+                if (assets.Length == 0)
+                {
+                    //new text document?
+                    string assemblyDefinitionContent = "{\"name\": \"GliaEditorAssembly\",\"rootNamespace\": \"\",\"references\": [],\"includePlatforms\": [\"Editor\"],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
+                    string filepath = Application.dataPath + "/Glia/Editor";
+
+                    System.IO.File.WriteAllText(filepath + "GliaEditorAssembly.asmdef", assemblyDefinitionContent);
+                    EditorUtility.SetDirty(EditorCore.GetPreferences());
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+                hasDoneGliaStartCheck = false;
+            }
+
+            if (gliaAssemblyExists == false)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+
         }
 
-#endregion
+        #endregion
 
-#region SRAnipal Setup
+        #region SRAnipal Setup
         //added to tell developer to add assemblies so C3D can use sranipal api
+
+        bool hasDoneSRAnipalStartCheck = false;
+        bool sranipalAssemblyExists = false;
+
+        void SRAnipalStart()
+        {
+            if (hasDoneSRAnipalStartCheck) { return; }
+            hasDoneSRAnipalStartCheck = true;
+
+            var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
+            sranipalAssemblyExists = assets.Length > 0;
+        }    
 
         void SRAnipalSetup()
         {
             if (!selectedsdks.Contains("C3D_SRANIPAL"))
             {
                 currentPage++;
+                return;
             }
+            SRAnipalStart();
 
             GUI.Label(steptitlerect, "SRANIPAL ASSEMBLY SETUP", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
 
             //TODO CONSIDER button to add assemblies to sranipal folder?
 
-            GUI.Label(new Rect(30, 100, 440, 440), "In your Project, locate the ViveSR folder. Create a new Assembly Definition Asset in that folder and name it SRAnipalAssembly", "normallabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
+    "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
+
+            //do a checkmark if the assembly already exists
+
+            if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
+            {
+                var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
+                if (assets.Length == 0)
+                {
+                    //new text document?
+                    string assemblyDefinitionContent = "{\"name\": \"SRAnipalAssembly\",\"rootNamespace\": \"\",\"references\": [],\"includePlatforms\": [],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
+                    string filepath = Application.dataPath+"/ViveSR/";
+
+                    System.IO.File.WriteAllText(filepath + "SRAnipalAssembly.asmdef", assemblyDefinitionContent);
+                    EditorUtility.SetDirty(EditorCore.GetPreferences());
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+                hasDoneSRAnipalStartCheck = false;
+            }
+
+            if (sranipalAssemblyExists == false)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+            }    
         }
 
         #endregion

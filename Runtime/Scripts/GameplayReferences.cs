@@ -258,17 +258,6 @@ namespace Cognitive3D
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
                     }
-
-#elif C3D_VIVEWAVE
-                    var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
-                    for (int i = 0; i < cameras.Length; i++)
-                    {
-                        if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
-                        {
-                            _hmd = cameras[i].transform;
-                            break;
-                        }
-                    }
 #endif
 #if C3D_PICOVR
 //camera component is disabled, so it isn't returned with Camera.main

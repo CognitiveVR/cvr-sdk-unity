@@ -7,8 +7,8 @@
         "SteamVR",
         "Oculus.VR",
         "Unity.RenderPipelines.HighDefinition.Runtime",
-        "Glia",
-        "GliaEditor"
+        "GliaAssembly",
+        "GliaEditorAssembly"
     ],
     "includePlatforms": [
         "Editor"

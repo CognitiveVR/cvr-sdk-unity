@@ -179,21 +179,6 @@ namespace Cognitive3D
 
             if (IsController)
             {
-#if C3D_VIVEWAVE
-                    var devicetype = GetComponent<WaveVR_PoseTrackerManager>().Type;
-                    if (WaveVR_Controller.Input(devicetype).DeviceType == wvr.WVR_DeviceType.WVR_DeviceType_Controller_Left)
-                    {
-                        Data.IsRightHand = false;
-                    }
-                    else
-                    {
-                        Data.IsRightHand = true;
-                    }
-                    Cognitive3D.GameplayReferences.SetController(gameObject, Data.IsRightHand);
-#endif
-#if C3D_WINDOWSMR || C3D_XR || C3D_PICOXR
-                    Cognitive3D.GameplayReferences.SetController(gameObject, IsRight);
-#endif
                 Cognitive3D.DynamicManager.RegisterController(Data);
             }
             else

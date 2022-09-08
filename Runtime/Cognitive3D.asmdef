@@ -7,7 +7,7 @@
         "Varjo.XR",
         "Oculus.VR",
         "Oculus.Platform",
-        "Glia",
+        "GliaAssembly",
         "SRAnipalAssembly"
     ],
     "includePlatforms": [],
