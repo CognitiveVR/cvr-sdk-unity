@@ -66,6 +66,7 @@ namespace Cognitive3D
             //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.KeyDown) { currentPage++; }
             //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.KeyDown) { currentPage--; }
             //if (Event.current.keyCode == KeyCode.Alpha0 && Event.current.type == EventType.KeyDown) { debugNewSceneVersion = !debugNewSceneVersion; }
+            //if (Event.current.keyCode == KeyCode.R && Event.current.type == EventType.KeyDown) { initialPlayerSetup = false; }
 
             switch (pageids[currentPage])
             {
@@ -301,7 +302,7 @@ namespace Cognitive3D
             //}
 
             Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 220, 440, 250), sdkScrollPos, innerScrollSize, false, false);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 200, 440, 270), sdkScrollPos, innerScrollSize, false, false);
 
             for (int i = 0; i < SDKNamesDefines.Count; i++)
             {
@@ -395,21 +396,12 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "WAIT FOR COMPILE", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Applying selected SDKs and compiling.", "boldlabel");
-
-            GUI.Label(new Rect(30, 45, 440, 440), "This may take a moment.", "boldlabel");
-
-            //TEST this won't do some weird compile loop, right?
-            //TEST this also won't wait a frame and immediately skip compiling, right?
+            GUI.Label(new Rect(30, 100, 440, 440), "This may take a moment.", "normallabel");
 
             EditorCore.SetPlayerDefine(selectedsdks);
 
-            
-
             if (EditorApplication.isCompiling) { return; }
 
-            //once compiling is finished
-            //add cognitive manager
-            //
             var found = Object.FindObjectOfType<Cognitive3D_Manager>();
             if (found == null) //add Cognitive3D_manager
             {
@@ -467,9 +459,9 @@ namespace Cognitive3D
 
 #region Controllers
 
-        static GameObject cameraBase;
         static GameObject leftcontroller;
         static GameObject rightcontroller;
+        static GameObject mainCameraObject;
 
         static string controllerDisplayName; //used to set SE display
 
@@ -478,177 +470,140 @@ namespace Cognitive3D
         bool steamvr2actionset = false;
 #endif
 
-        void ControllerUpdate()
+        bool initialPlayerSetup = false;
+        //called once when entering controller update page. finds/sets expected defaults
+        void PlayerSetupStart()
         {
-            GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
+            if (initialPlayerSetup) { return; }
+            initialPlayerSetup = true;
 
-
-            //check that hmd is tagged as main camera
-
-            if (Camera.main == null)
+            var camera = Camera.main;
+            if (camera != null)
             {
-                GUI.Label(new Rect(0, 100, 475, 130), EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 200, 440, 440), "Cognitive3D requires a camera with the MainCamera tag to function properly", "normallabel");
+                mainCameraObject = camera.gameObject;
+            }
+            foreach(var dyn in FindObjectsOfType<DynamicObject>())
+            {
+                if (dyn.IsController && dyn.IsRight)
+                {
+                    rightcontroller = dyn.gameObject;
+                }
+                else if (dyn.IsController && !dyn.IsRight)
+                {
+                    leftcontroller = dyn.gameObject;
+                }
             }
 
-
-            bool setupComplete = false;
-            bool leftSetupComplete = false;
-            bool rightSetupComplete = false;
-
 #if C3D_STEAMVR2
-            if (cameraBase == null)
-            {
-                //interaction system setup
+            //interaction system setup
                 var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
                 if (player)
                 {
                     leftcontroller = player.hands[0].gameObject;
                     rightcontroller = player.hands[1].gameObject;
                 }
-            }
-
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
-
 #elif C3D_OCULUS
-            //GUI.Label(new Rect(30, 45, 440, 440), "looks like oculus", "boldlabel");
-            if (cameraBase == null)
-            {
-                //basic setup
+            //basic setup
                 var manager = FindObjectOfType<OVRCameraRig>();
                 if (manager != null)
                 {
-                    cameraBase = manager.gameObject;
                     leftcontroller = manager.leftHandAnchor.gameObject;
                     rightcontroller = manager.rightHandAnchor.gameObject;
                 }
-            }
-
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
 #elif C3D_VIVEWAVE
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
             //TODO vive wave sdk controller setup support
-#elif C3D_WINDOWSMR
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
 #elif C3D_PICOVR
-            if (cameraBase == null)
-            {
-                //basic setup
+            //basic setup
                 var manager = FindObjectOfType<Pvr_Controller>();
                 if (manager != null)
                 {
-                    if (Camera.main != null)
-                        cameraBase = Camera.main.gameObject;
                     if (manager.controller0 != null)
                         leftcontroller = manager.controller0;
                     if (manager.controller1 != null)
                         rightcontroller = manager.controller1;
                 }
-            }
-
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
 #elif C3D_PICOXR
             
             //TODO set controller input tracker to listen for the dynamic object component on some gameobject?
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
-
-#else
-            leftSetupComplete = leftcontroller != null;
-            rightSetupComplete = rightcontroller != null;
-
-            if (rightSetupComplete && leftSetupComplete)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
-                {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == true)
-                    {
-                        setupComplete = true;
-                    }
-                }
-            }
 #endif
+        }
 
-            int offset = 0; //indicates how much vertical offset to add to setup features so controller selection has space
+        void ControllerUpdate()
+        {
+            PlayerSetupStart();
+
+            GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
+
+            GUI.Label(new Rect(30, 45, 440, 440), "Ensure the Player Game Objects are configured.", "boldlabel");
+
+            //hmd
+            int hmdRectHeight = 170;
+
+            //Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
+
+            GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
+            if (GUI.Button(new Rect(80, hmdRectHeight, 290, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
+            {
+                Selection.activeGameObject = mainCameraObject;
+            }
+
+            int pickerID_HMD = 5689466;
+            if (GUI.Button(new Rect(370, hmdRectHeight, 100, 30), "Select..."))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    mainCameraObject, true, "", pickerID_HMD);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD)
+                {
+                    mainCameraObject = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                }
+            }
+
+            if (Camera.main != null && mainCameraObject != null && mainCameraObject == Camera.main.gameObject)
+            {
+                GUI.Label(new Rect(320, hmdRectHeight, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(320, hmdRectHeight, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+            }
+            //TODO warning icon if multiple objects tagged with mainCamera in scene
+
+            GUI.Label(new Rect(30, 100, 440, 440), "Cognitive3D requires a camera with the MainCamera tag to function properly", "normallabel");
+
+
+            bool allSetupConfigured = false;
+            bool leftControllerIsValid = false;
+            bool rightControllerIsValid = false;
+
+            //GUI.Label(new Rect(30, 100, 440, 440), "Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
+
+            leftControllerIsValid = leftcontroller != null;
+            rightControllerIsValid = rightcontroller != null;
+
+            if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
+            {
+                var rdyn = rightcontroller.GetComponent<DynamicObject>();
+                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
+                {
+                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false)
+                    {
+                        allSetupConfigured = true;
+                    }
+                }
+            }
+
+            int offset = -35; //indicates how much vertical offset to add to setup features so controller selection has space
 
             //left hand label
             GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
 
-            string leftname = "null";
+            string leftname = "Missing";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
             if (GUI.Button(new Rect(80, 245 + offset, 290, 30), leftname, "button_blueoutline"))
@@ -673,7 +628,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (leftSetupComplete)
+            if (leftControllerIsValid)
             {
                 GUI.Label(new Rect(320, 245 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
             }
@@ -685,7 +640,7 @@ namespace Cognitive3D
             //right hand label
             GUI.Label(new Rect(30, 285 + offset, 50, 30), "Right", "boldlabel");
 
-            string rightname = "null";
+            string rightname = "Missing";
             if (rightcontroller != null)
                 rightname = rightcontroller.gameObject.name;
 
@@ -711,7 +666,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (rightSetupComplete)
+            if (rightControllerIsValid)
             {
                 GUI.Label(new Rect(320, 285 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
             }
@@ -721,7 +676,7 @@ namespace Cognitive3D
             }
 
             //drag and drop
-            if (new Rect(30, 285 + offset, 440, 30).Contains(Event.current.mousePosition))
+            if (new Rect(30, 285 + offset, 440, 30).Contains(Event.current.mousePosition)) //right hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -729,7 +684,7 @@ namespace Cognitive3D
                     rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, 245 + offset, 440, 30).Contains(Event.current.mousePosition))
+            else if (new Rect(30, 245 + offset, 440, 30).Contains(Event.current.mousePosition)) //left hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -737,19 +692,32 @@ namespace Cognitive3D
                     leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
+            else if (new Rect(30, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
+                }
+            }
             else
             {
                 //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             }
 
-            if (GUI.Button(new Rect(125, 360 + offset, 250, 30), "Setup Controller Dynamics"))
+            if (GUI.Button(new Rect(125, 360 + offset, 250, 30), "Setup Player GameObjects"))
             {
+                if (mainCameraObject != null)
+                {
+                    mainCameraObject.tag = "MainCamera";
+                }
+
                 SetupControllers(leftcontroller, rightcontroller);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
             }
 
-            if (setupComplete)
+            if (allSetupConfigured)
             {
                 GUI.Label(new Rect(360, 360 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
             }
@@ -759,8 +727,9 @@ namespace Cognitive3D
             }
 
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(135, 390, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
-            if (GUI.Button(new Rect(125, 410, 250, 30), "Append Cognitive Action Set"))
+            int steamvr2offset = -30;
+            GUI.Label(new Rect(135, 390 + steamvr2offset, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
+            if (GUI.Button(new Rect(125, 410 + steamvr2offset, 250, 30), "Append Cognitive Action Set"))
             {
                 steamvr2actionset = true;
                 AppendSteamVRActionSet();
@@ -769,14 +738,14 @@ namespace Cognitive3D
             }
             if (steamvr2actionset)
             {
-                GUI.Label(new Rect(360, 410, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(360, 410 + steamvr2offset, 64, 30), EditorCore.Checkmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(360, 410, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(360, 410 + steamvr2offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
 
-            if (GUI.Button(new Rect(125, 450, 250, 30), "Add Default Bindings"))
+            if (GUI.Button(new Rect(125, 450 + steamvr2offset, 250, 30), "Add Default Bindings"))
             {
                 steamvr2bindings = true;
                 SetDefaultBindings();
@@ -784,16 +753,16 @@ namespace Cognitive3D
             }
             if (steamvr2bindings)
             {
-                GUI.Label(new Rect(360, 450, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(360, 450 + steamvr2offset, 64, 30), EditorCore.Checkmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(360, 450, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(360, 450 + steamvr2offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
             }
 
-            if (steamvr2bindings && steamvr2actionset && leftSetupComplete && rightSetupComplete && setupComplete)
+            if (steamvr2bindings && steamvr2actionset && allSetupConfigured)
             {
-                GUI.Label(new Rect(105, 480, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
+                GUI.Label(new Rect(105, 480 + steamvr2offset, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
             }
 #endif
         }
@@ -1080,14 +1049,16 @@ namespace Cognitive3D
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
-                if (GUI.Button(new Rect(0, 400, 500, 15), displayString, "miniheadercenter"))
+                if (GUI.Button(new Rect(0, 340, 500, 15), displayString, "miniheadercenter"))
                 {
-                    EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(Cognitive3D_Preferences.FindCurrentScene()));
+                    //EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(Cognitive3D_Preferences.FindCurrentScene()));
                 }
             }
 
-            if (numberOfLights > 50)
-                GUI.Label(new Rect(0, 415, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
+            if (numberOfLights > 50 || true)
+            {
+                GUI.Label(new Rect(0, 365, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
+            }
 
             if (GUI.Button(new Rect(260, 455, 140, 35), "Export AR Scene"))
             {
@@ -1180,10 +1151,12 @@ namespace Cognitive3D
                 string settingsname = "1/1 Texture Resolution";
                 if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Texture Resolution"; }
                 if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Texture  Resolution"; }
-                GUI.Label(new Rect(30, 100, 440, 440), "A new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
+                GUI.Label(new Rect(30, 100, 440, 440), "- A new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
                 "Version " + (debugNewSceneVersion ? 1 : settings.VersionNumber) + " will be archived.", "label_disabledtext_large");
 
-                GUI.Label(new Rect(30, 150, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
+                GUI.Label(new Rect(30, 150, 440, 440), "- <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes.", "label_disabledtext_large");
+
+                GUI.Label(new Rect(30, 180, 440, 440), "- This <color=#62B4F3FF>Thumbnail</color> from the Scene View:", "label_disabledtext_large");
             }
             else
             {
@@ -1193,14 +1166,15 @@ namespace Cognitive3D
                 {
                     scenename = "SCENE NOT SAVED";
                 }
-                string settingsname = "1/1 Resolution";
-                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Resolution"; }
-                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Resolution"; }
-                GUI.Label(new Rect(30, 100, 440, 440), "You will be uploading <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>", "label_disabledtext_large");
+                string settingsname = "1/1 Texture Resolution";
+                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Texture Resolution"; }
+                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Texture Resolution"; }
+                GUI.Label(new Rect(30, 100, 440, 440), "- <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>.", "label_disabledtext_large");
 
-                GUI.Label(new Rect(30, 150, 440, 440), "You will be uploading <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes", "label_disabledtext_large");
+                GUI.Label(new Rect(30, 140, 440, 440), "- <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes.", "label_disabledtext_large");
+
+                GUI.Label(new Rect(30, 180, 440, 440), "- This <color=#62B4F3FF>Thumbnail</color> from the Scene View:", "label_disabledtext_large");
             }
-            GUI.Label(new Rect(30, 180, 440, 440), "This Scene View will be used as a <color=#62B4F3FF>thumbnail</color> on the Dashboard:", "label_disabledtext_large");
 
 
             var sceneRT = EditorCore.GetSceneRenderTexture();
@@ -1246,11 +1220,8 @@ namespace Cognitive3D
             GUI.color = EditorCore.BlueishGrey;
             GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
-
-            GUI.Label(new Rect(0, 450, 20, 40), currentPage.ToString());
-
+            
             DrawBackButton();
-
             DrawNextButton();
         }
 
@@ -1317,6 +1288,10 @@ namespace Cognitive3D
                 case "tagdynamics":
                     break;
                 case "selectsdk":
+                    break;
+                case "compile":
+                    onclick = null;
+                    buttonDisabled = true;
                     break;
                 case "listdynamics":
 
