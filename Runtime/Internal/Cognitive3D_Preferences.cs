@@ -97,17 +97,7 @@ namespace Cognitive3D
 
         public int AutomaticSendTimer = 10;
 
-        public bool SendDataOnQuit = true;
-        public bool SendDataOnPause = true;
-        public bool SendDataOnHMDRemove = true;
-        public bool SendDataOnLevelLoad = true;
-        public bool SendDataOnHotkey = false;
-        public bool HotkeyShift = true;
-        public bool HotkeyCtrl = false;
-        public bool HotkeyAlt = false;
-        public KeyCode SendDataHotkey = KeyCode.F9;
-
-        //defualt 10MB cache size
+        //defualt 100MB cache size
         public long LocalDataCacheSize = 1024 * 1024 * 100;
         public bool LocalStorage = true;
         public bool UploadCacheOnEndPlay = true;

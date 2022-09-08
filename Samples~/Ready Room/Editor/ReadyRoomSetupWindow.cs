@@ -7,9 +7,6 @@ namespace Cognitive3D
 {
     public class ReadyRoomSetupWindow : EditorWindow
     {
-        //called from menu item script
-
-        [MenuItem("Cognitive3D/Ready Room Setup", priority = 55)]
         public static void Init()
         {
             ReadyRoomSetupWindow window = (ReadyRoomSetupWindow)EditorWindow.GetWindow(typeof(ReadyRoomSetupWindow), true, "");

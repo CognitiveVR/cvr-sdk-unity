@@ -40,9 +40,15 @@ namespace Cognitive3D
                 hasCheckedRenderType = true;
             }
 
+            GUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.LabelField("SDK Version " + Cognitive3D_Manager.SDK_VERSION);
             EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button("Debug Info"))
+            {
+                DebugInformationWindow.Init();
+            }
+            GUILayout.EndHorizontal();
 
             p.ApplicationKey = EditorGUILayout.TextField("Application Key", p.ApplicationKey);
             p.AttributionKey = EditorGUILayout.TextField("Attribution Key", p.AttributionKey);
@@ -73,7 +79,7 @@ namespace Cognitive3D
 
             p.TriggerInteraction = (QueryTriggerInteraction)EditorGUILayout.EnumPopup("Gaze Query Trigger Interaction", p.TriggerInteraction);
 
-            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Track GPS Location", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
+            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location at Interval", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
 
             EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
             EditorGUI.indentLevel++;
@@ -95,35 +101,11 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);
 
             p.AutomaticSendTimer = EditorGUILayout.IntField(new GUIContent("Automatic Send Timer", "The time (in seconds) to automatically send any outstanding Data"), p.AutomaticSendTimer);
-
-            //gaze
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Gaze", EditorStyles.boldLabel);
-            EditorGUI.indentLevel--;
+            p.AutomaticSendTimer = Mathf.Clamp(p.AutomaticSendTimer, 1, 60);
             p.GazeSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Gaze Snapshot Batch Size","The number of Gaze datapoints to record before automatically sending a web request to the dashboard"), p.GazeSnapshotCount),64,1500);
-
-            //transactions
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
-            EditorGUI.indentLevel--;
             p.EventDataThreshold = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Event Snapshot Batch Size", "The number of Events to record before automatically sending a web request to the dashboard"), p.EventDataThreshold), 1, 1000);
-
-            //dynamics
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Dynamics", EditorStyles.boldLabel);
-            EditorGUI.indentLevel--;
             p.DynamicSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Dynamic Snapshot Batch Size", "The number of Dynamic snapshots and manifest entries to record before automatically sending a web request to the dashboard"), p.DynamicSnapshotCount), 16, 1500);
-
-            //sensors
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
-            EditorGUI.indentLevel--;
             p.SensorSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Sensor Snapshot Batch Size", "The number of Sensor datapoints to record before automatically sending a web request to the dashboard"), p.SensorSnapshotCount), 64, 1500);
-
-            //fixations
-            EditorGUI.indentLevel++;
-            EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
-            EditorGUI.indentLevel--;
             p.FixationSnapshotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Fixation Snapshot Batch Size", "The number of Fixations to record before automatically sending a web request to the dashboard"), p.FixationSnapshotCount), 1, 1000);
 
             EditorGUILayout.Space();
@@ -172,55 +154,6 @@ namespace Cognitive3D
             p.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), p.Gateway);
             p.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), p.Viewer);
             p.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), p.Dashboard);
-            p.SendDataOnHMDRemove = EditorGUILayout.Toggle("Send Data on HMD Remove", p.SendDataOnHMDRemove);
-            p.SendDataOnLevelLoad = EditorGUILayout.Toggle("Send Data on Level Load", p.SendDataOnLevelLoad);
-            p.SendDataOnQuit = EditorGUILayout.Toggle("Send Data on Quit", p.SendDataOnQuit);
-            p.SendDataOnPause = EditorGUILayout.Toggle("Send Data on Pause", p.SendDataOnPause);
-            p.SendDataOnHotkey = EditorGUILayout.Toggle("Send Data on Hotkey", p.SendDataOnHotkey);
-            EditorGUI.indentLevel++;
-            EditorGUI.BeginDisabledGroup(!p.SendDataOnHotkey);
-            GUILayout.BeginHorizontal();
-
-            p.SendDataHotkey = (KeyCode)EditorGUILayout.EnumPopup("Hotkey", p.SendDataHotkey);
-
-            if (p.HotkeyShift){GUI.color = Color.green;}
-            if (GUILayout.Button("Shift", EditorStyles.miniButtonLeft)) { p.HotkeyShift = !p.HotkeyShift; }
-            GUI.color = Color.white;
-
-            if (p.HotkeyCtrl) { GUI.color = Color.green; }
-            if (GUILayout.Button("Ctrl", EditorStyles.miniButtonMid)) { p.HotkeyCtrl = !p.HotkeyCtrl; }
-            GUI.color = Color.white;
-
-            if (p.HotkeyAlt) { GUI.color = Color.green; }
-            if (GUILayout.Button("Alt", EditorStyles.miniButtonRight)) { p.HotkeyAlt = !p.HotkeyAlt; }
-            GUI.color = Color.white;
-
-            /*if (remapHotkey)
-            {
-                GUILayout.Button("Any Key", EditorStyles.miniButton, GUILayout.Width(100));
-                Event e = Event.current;
-
-                if (e.type == EventType.keyDown && e.keyCode != KeyCode.None && e.keyCode != KeyCode.LeftShift && e.keyCode != KeyCode.RightShift && e.keyCode != KeyCode.LeftControl && e.keyCode != KeyCode.RightControl && e.keyCode != KeyCode.LeftAlt && e.keyCode != KeyCode.RightAlt)
-                {
-                    p.HotkeyAlt = e.alt;
-                    p.HotkeyShift = e.shift;
-                    p.HotkeyCtrl = e.control;
-                    p.SendDataHotkey = e.keyCode;
-                    remapHotkey = false;
-                    Repaint();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Remap", EditorStyles.miniButton,GUILayout.Width(100)))
-                {
-                    remapHotkey = true;
-                }
-            }*/
-
-            GUILayout.EndHorizontal();
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.indentLevel--;
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);

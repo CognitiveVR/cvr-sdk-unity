@@ -353,7 +353,7 @@ namespace Cognitive3D
                 replacingSceneId = true;
             }
             
-            if (replacingSceneId && Cognitive3D_Preferences.Instance.SendDataOnLevelLoad)
+            if (replacingSceneId)
             {
                 //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
                 InvokeSendDataEvent(true);
@@ -422,22 +422,6 @@ namespace Cognitive3D
             }
 
             InvokeUpdateEvent(Time.deltaTime);
-            UpdateSendHotkeyCheck();
-        }
-
-        void UpdateSendHotkeyCheck()
-        {
-            Cognitive3D_Preferences prefs = Cognitive3D_Preferences.Instance;
-
-            if (!prefs.SendDataOnHotkey) { return; }
-            if (Input.GetKeyDown(prefs.SendDataHotkey))
-            {
-                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
-                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
-                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
-
-                InvokeSendDataEvent(false);
-            }
         }
 
 #endregion
@@ -517,11 +501,8 @@ namespace Cognitive3D
         void OnApplicationPause(bool paused)
         {
             if (!IsInitialized) { return; }
-            if (Cognitive3D_Preferences.Instance.SendDataOnPause)
-            {
-                new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
-                InvokeSendDataEvent(true);
-            }
+            new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
+            InvokeSendDataEvent(true);
         }
 
         bool hasCanceled = false;

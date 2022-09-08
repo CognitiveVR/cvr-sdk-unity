@@ -123,13 +123,6 @@ namespace Cognitive3D
             sb.AppendLine("Custom Viewer: " + p.Viewer);
             sb.AppendLine("Custom Dashboard: " + p.Dashboard);
 
-            sb.AppendLine("Send Data on HMD Remove: " + p.SendDataOnHMDRemove);
-            sb.AppendLine("Send Data on Level Load: " + p.SendDataOnLevelLoad);
-            sb.AppendLine("Send Data on Quit: " + p.SendDataOnQuit);
-            sb.AppendLine("Send Data on Hotkey: " + p.SendDataOnHotkey);
-            sb.AppendLine("Send Data Primary Hotkey: " + p.SendDataHotkey);
-            sb.AppendLine("Send Data Hotkey Modifiers: " + p.HotkeyShift + " " + p.HotkeyCtrl + " " + p.HotkeyAlt);
-
             sb.AppendLine("Texture Export Quality: " + p.TextureResize);
             sb.AppendLine("Export Lowest LOD from LODGroup Components: " + p.ExportSceneLODLowest);
             sb.AppendLine("Export AO Maps: " + p.ExportAOMaps);
