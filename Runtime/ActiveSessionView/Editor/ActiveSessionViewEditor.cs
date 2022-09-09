@@ -230,25 +230,7 @@ namespace Cognitive3D.ActiveSession
         public static void SetCameraTarget(ActiveSessionView activeSessionView)
         {
             if (activeSessionView == null) { return; }
-#if C3D_TOBIIVR
-            activeSessionView.VRSceneCamera = Camera.main;
-#elif C3D_FOVE
-            var fove = FindObjectOfType<Fove.Unity.FoveInterface>();
-            if (fove != null)
-            {
-                activeSessionView.VRSceneCamera = fove.GetComponent<Camera>();
-            }
-#elif C3D_STEAMVR
-            var cam = FindObjectOfType<SteamVR_Camera>();
-            if (cam != null)
-            {
-                activeSessionView.VRSceneCamera = cam.GetComponent<Camera>();
-            }
-            else
-            {
-                Debug.LogError("Couldn't find Camera (eye)!");
-            }
-#elif C3D_STEAMVR2
+#if C3D_STEAMVR2
             
             var playarea = FindObjectOfType<Valve.VR.SteamVR_PlayArea>();
             if (playarea != null)

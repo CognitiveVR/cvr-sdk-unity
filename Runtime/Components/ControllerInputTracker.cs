@@ -7,497 +7,52 @@ using UnityEngine.XR;
 using Valve.VR;
 #endif
 
+//replaced everything to use InputFeature
+//automatically get left/right controllers at runtime from gameplayreferences
+//TODO use inputdevice or openvr api automatically to figure out what mesh/svg to display
+    //inputDevice.name.Contains("")
+
 
 //adds controller input properties to dynamic object snapshot for display on sceneexplorer
 
-//TODO XR framework inputs
-//magic leap touchpad, trigger, hand pose, buttons
-//snapdragon touchpad, buttons
-//steamvr1 buttons, touchpad, trigger, grip
-//oculus buttons, trigger, joytstick, grip
-//leapmotion hand events
-
-namespace Cognitive3D
+namespace Cognitive3D.Components
 {
-    public class ControllerInputTracker : MonoBehaviour
+    public class ControllerInputTracker : AnalyticsComponentBase
     {
-        [Cognitive3D.Components.ClampSetting(0.1f)]
-        public float UpdateRate = 0.1f;
+        const float UpdateRate = 0.1f;
         float nextUpdateTime;
         //records analogue inputs at this interval
 
-        void Start()
+        DynamicObject LeftHand;
+        DynamicObject RightHand;
+
+        public override void Cognitive3D_Init()
         {
+            InputDevice device;
+            if (!GameplayReferences.GetControllerInfo(true, out device))
+            {
+                GameplayReferences.OnControllerValidityChange += DelayEnable;
+            }
+            else if (!GameplayReferences.GetControllerInfo(false, out device))
+            {
+                GameplayReferences.OnControllerValidityChange += DelayEnable;
+            }
+            else
+            {
+                Init();
+            }
+        }
+
+        void DelayEnable(InputDevice device, XRNode node, bool isValid)
+        {
+            GameplayReferences.OnControllerValidityChange -= DelayEnable;
             Init();
         }
 
-#if C3D_OCULUS
-
-        enum OculusControllerType
-        {
-            RiftTouch,
-            QuestTouch,
-            Go
-        }
-        OculusControllerType controllerType;
-
-        public DynamicObject LeftHand;
-        public DynamicObject RightHand;
+#if C3D_STEAMVR2
 
         List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
         List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
-        
-        Vector3 LeftHandVector;
-        Vector3 RightHandVector;
-        float minMagnitude = 0.05f;
-        int LeftTrigger;
-        int RightTrigger;
-
-        int LeftGrip;
-        int RightGrip;
-
-        void Init()
-        {
-            var avatar = GetComponent<OVRCameraRig>();
-            LeftHand = avatar.leftHandAnchor.GetComponent<DynamicObject>();
-            RightHand = avatar.rightHandAnchor.GetComponent<DynamicObject>();
-#if UNITY_ANDROID
-            controllerType = OculusControllerType.QuestTouch;
-#else
-            controllerType = OculusControllerType.RiftTouch;
-#endif
-        }
-
-        //have to do polling every frame to capture inputs
-        private void Update()
-        {
-            if (controllerType == OculusControllerType.RiftTouch)
-            {
-                UpdateRiftTouch();
-                if (Time.time > nextUpdateTime)
-                {
-                    RecordRiftAnalogInputs();
-                    nextUpdateTime = Time.time + UpdateRate;
-                }
-            }
-            else if (controllerType == OculusControllerType.QuestTouch)
-            {
-                UpdateQuestTouch();
-                if (Time.time > nextUpdateTime)
-                {
-                    RecordQuestAnalogInputs();
-                    nextUpdateTime = Time.time + UpdateRate;
-                }
-            }
-
-            if (CurrentRightButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
-                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentRightButtonStates[i]);
-                }
-                CurrentRightButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
-            }
-            if (CurrentLeftButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
-                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentLeftButtonStates[i]);
-                }
-                CurrentLeftButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
-            }
-        }
-
-        void UpdateRiftTouch()
-        {
-
-            //right hand a
-            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_abtn", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.One, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_abtn", false, CurrentRightButtonStates);
-
-            //right hand b
-            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_bbtn", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Two, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_bbtn", false, CurrentRightButtonStates);
-
-            //left hand X
-            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_xbtn", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.One, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_xbtn", false, CurrentLeftButtonStates);
-
-            //left hand y
-            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_ybtn", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Two, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_ybtn", false, CurrentLeftButtonStates);
-
-            //left thumbrest
-            if (OVRInput.GetDown(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_thumbrest", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_thumbrest", false, CurrentLeftButtonStates);
-
-            //right thumbrest
-            if (OVRInput.GetDown(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_thumbrest", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_thumbrest", false, CurrentRightButtonStates);
-
-            //start
-            if (OVRInput.GetDown(OVRInput.Button.Start, OVRInput.Controller.LTouch))
-                OnButtonChanged(RightHand, true, "rift_start", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Start, OVRInput.Controller.LTouch))
-                OnButtonChanged(RightHand, true, "rift_start", false, CurrentLeftButtonStates);
-
-            //trigger buttons
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_trigger", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_trigger", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_trigger", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_trigger", false, CurrentRightButtonStates);
-
-            //grip
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_grip", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_grip", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_grip", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_grip", false, CurrentRightButtonStates);
-
-
-            //thumbstick buttons
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_joystick", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_joystick", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "rift_joystick", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "rift_joystick", false, CurrentRightButtonStates);
-
-        }
-
-        void UpdateQuestTouch()
-        {
-            //right hand a
-            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "abtn", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.One, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "abtn", false, CurrentRightButtonStates);
-
-            //right hand b
-            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "bbtn", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Two, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "bbtn", false, CurrentRightButtonStates);
-
-            //left hand X
-            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "xbtn", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.One, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "xbtn", false, CurrentLeftButtonStates);
-
-            //left hand y
-            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "ybtn", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Two, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "ybtn", false, CurrentLeftButtonStates);
-
-            //left thumbrest
-            if (OVRInput.GetDown(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "thumbrest", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "thumbrest", false, CurrentLeftButtonStates);
-
-            //right thumbrest
-            if (OVRInput.GetDown(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "thumbrest", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Touch.PrimaryThumbRest, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "thumbrest", false, CurrentRightButtonStates);
-
-            //start
-            if (OVRInput.GetDown(OVRInput.Button.Start, OVRInput.Controller.LTouch))
-                OnButtonChanged(RightHand, true, "start", true, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.Start, OVRInput.Controller.LTouch))
-                OnButtonChanged(RightHand, true, "start", false, CurrentLeftButtonStates);
-
-            //trigger buttons
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "trigger", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "trigger", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "trigger", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "trigger", false, CurrentRightButtonStates);
-
-            //grip
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "grip", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "grip", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "grip", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "grip", false, CurrentRightButtonStates);
-
-
-            //thumbstick buttons
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "joystick", true, CurrentLeftButtonStates);
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "joystick", true, CurrentRightButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch))
-                OnButtonChanged(LeftHand, false, "joystick", false, CurrentLeftButtonStates);
-            if (OVRInput.GetUp(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch))
-                OnButtonChanged(RightHand, true, "joystick", false, CurrentRightButtonStates);
-
-        }
-
-        //polling
-        //check for (float)triggers, (vector2)touchpads, etc
-        public void RecordRiftAnalogInputs()
-        {
-            //joysticks
-            {
-                var touchpadaxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.LTouch);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = OVRInput.Get(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch) ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LeftHandVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(LeftHand, false, "rift_joystick", force, touchpadaxis, CurrentLeftButtonStates);
-                    }
-
-                    LeftHandVector = currentVector;
-                }
-            }
-
-            {
-                var touchpadaxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = OVRInput.Get(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch) ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(RightHandVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(RightHand, true, "rift_joystick", force, touchpadaxis, CurrentRightButtonStates);
-                    }
-                    RightHandVector = currentVector;
-                }
-            }
-
-            //triggers
-            int currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) * 100);
-            if (LeftTrigger != currentTrigger)
-            {
-                var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_trigger"; });
-                if (trigger != null)
-                {
-                    trigger.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(LeftHand, false, "rift_trigger", currentTrigger, CurrentLeftButtonStates);
-                }
-                LeftTrigger = currentTrigger;
-            }
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) * 100);
-            if (RightTrigger != currentTrigger)
-            {
-                var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_trigger"; });
-                if (trigger != null)
-                {
-                    trigger.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(RightHand, true, "rift_trigger", currentTrigger, CurrentRightButtonStates);
-                }
-                RightTrigger = currentTrigger;
-            }
-
-            //grips
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.LTouch) * 100);
-            if (LeftGrip != currentTrigger)
-            {
-                var grip = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_grip"; });
-                if (grip != null)
-                {
-                    grip.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(LeftHand, false, "rift_grip", currentTrigger, CurrentLeftButtonStates);
-                }
-                LeftGrip = currentTrigger;
-            }
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.RTouch) * 100);
-            if (RightGrip != currentTrigger)
-            {
-                var grip = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "rift_grip"; });
-                if (grip != null)
-                {
-                    grip.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(RightHand, true, "rift_grip", currentTrigger, CurrentRightButtonStates);
-                }
-                RightGrip = currentTrigger;
-            }
-        }
-
-        //polling
-        //check for (float)triggers, (vector2)touchpads, etc
-        public void RecordQuestAnalogInputs()
-        {
-            //joysticks
-            {
-                var touchpadaxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.LTouch);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = OVRInput.Get(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch) ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LeftHandVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(LeftHand, false, "joystick", force, touchpadaxis, CurrentLeftButtonStates);
-                    }
-
-                    LeftHandVector = currentVector;
-                }
-            }
-
-            {
-                var touchpadaxis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = OVRInput.Get(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch) ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(RightHandVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(RightHand, true, "joystick", force, touchpadaxis, CurrentRightButtonStates);
-                    }
-                    RightHandVector = currentVector;
-                }
-            }
-
-            //triggers
-            int currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) * 100);
-            if (LeftTrigger != currentTrigger)
-            {
-                var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "trigger"; });
-                if (trigger != null)
-                {
-                    trigger.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(LeftHand, false, "trigger", currentTrigger, CurrentLeftButtonStates);
-                }
-                LeftTrigger = currentTrigger;
-            }
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) * 100);
-            if (RightTrigger != currentTrigger)
-            {
-                var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "trigger"; });
-                if (trigger != null)
-                {
-                    trigger.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(RightHand, true, "trigger", currentTrigger, CurrentRightButtonStates);
-                }
-                RightTrigger = currentTrigger;
-            }
-
-            //grips
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.LTouch) * 100);
-            if (LeftGrip != currentTrigger)
-            {
-                var grip = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "grip"; });
-                if (grip != null)
-                {
-                    grip.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(LeftHand, false, "grip", currentTrigger, CurrentLeftButtonStates);
-                }
-                LeftGrip = currentTrigger;
-            }
-            currentTrigger = (int)(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.RTouch) * 100);
-            if (RightGrip != currentTrigger)
-            {
-                var grip = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "grip"; });
-                if (grip != null)
-                {
-                    grip.ButtonPercent = currentTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(RightHand, true, "grip", currentTrigger, CurrentRightButtonStates);
-                }
-                RightGrip = currentTrigger;
-            }
-        }
-
-#elif C3D_STEAMVR2
-
-        List<ButtonState> CurrentButtonStates = new List<ButtonState>();
-        
-        public DynamicObject dynamic;
-
-        public SteamVR_Input_Sources Hand_InputSource;
 
         public SteamVR_Action_Boolean gripAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("c3d_input", "grip");
         public SteamVR_Action_Single triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Single>("c3d_input", "trigger");
@@ -516,25 +71,66 @@ namespace Cognitive3D
         {
             //register actions
             if (gripAction != null)
-                gripAction.AddOnChangeListener(OnGripActionChange, Hand_InputSource);
+            {
+                gripAction.AddOnChangeListener(OnGripActionChange, SteamVR_Input_Sources.LeftHand);
+                gripAction.AddOnChangeListener(OnGripActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (touchAction != null)
-                touchAction.AddOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            {
+                touchAction.AddOnChangeListener(OnTouchActionChange, SteamVR_Input_Sources.LeftHand);
+                touchAction.AddOnChangeListener(OnTouchActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (pressAction != null)
-                pressAction.AddOnChangeListener(OnPressActionChange, Hand_InputSource);
+            {
+                pressAction.AddOnChangeListener(OnPressActionChange, SteamVR_Input_Sources.LeftHand);
+                pressAction.AddOnChangeListener(OnPressActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (menuAction != null)
-                menuAction.AddOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            {
+                menuAction.AddOnChangeListener(OnMenuActionChange, SteamVR_Input_Sources.LeftHand);
+                menuAction.AddOnChangeListener(OnMenuActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (C3D_ActionSet != null)
-                C3D_ActionSet.Activate(Hand_InputSource);
+            {
+                C3D_ActionSet.Activate(SteamVR_Input_Sources.LeftHand);
+                C3D_ActionSet.Activate(SteamVR_Input_Sources.RightHand);
+            }
         }
 
         private void OnGripActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
         {
-            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_grip", newState, CurrentButtonStates);
+            if (fromSource == SteamVR_Input_Sources.RightHand)
+            {
+                OnButtonChanged(
+                RightHand,
+                true,
+                "vive_grip",
+                newState,
+                CurrentRightButtonStates);
+            }
+            else
+            {
+                OnButtonChanged(
+                LeftHand,
+                false,
+                "vive_grip",
+                newState,
+                CurrentLeftButtonStates);
+            }
         }
 
         private void OnTouchActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
         {
-            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            ButtonState buttonstate;
+            if (fromSource == SteamVR_Input_Sources.RightHand)
+            {
+                buttonstate = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            }
+            else
+            {
+                buttonstate = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            }
+
             if (buttonstate != null)
             {
                 if (newState)
@@ -549,21 +145,50 @@ namespace Cognitive3D
             }
             else
             {
-                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                var axis = touchpadAction.GetAxis(fromSource);
                 if (newState)
                     TouchForce = 50;
                 else if (pressAction.state)
                     TouchForce = 100;
                 else
                     TouchForce = 0;
-                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+
+                if (fromSource == SteamVR_Input_Sources.RightHand)
+                {
+                    OnVectorChanged(
+                        RightHand,
+                        true,
+                        "vive_touchpad",
+                        TouchForce,
+                        axis,
+                        CurrentRightButtonStates);
+                }
+                else
+                {
+                    OnVectorChanged(
+                        LeftHand,
+                        false,
+                        "vive_touchpad",
+                        TouchForce,
+                        axis,
+                        CurrentLeftButtonStates);
+                }
+
                 lastAxis = axis;
             }
         }
 
         private void OnPressActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
         {
-            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            ButtonState buttonstate;
+            if (fromSource == SteamVR_Input_Sources.RightHand)
+            {
+                buttonstate = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            }
+            else
+            {
+                buttonstate = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+            }
             if (buttonstate != null)
             {
                 if (newState)
@@ -578,41 +203,103 @@ namespace Cognitive3D
             }
             else
             {
-                var axis = touchpadAction.GetAxis(Hand_InputSource);
+                var axis = touchpadAction.GetAxis(fromSource);
                 if (newState)
                     TouchForce = 100;
                 else if (touchAction.state)
                     TouchForce = 50;
                 else
                     TouchForce = 0;
-                OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+
+                if (fromSource == SteamVR_Input_Sources.RightHand)
+                {
+                    OnVectorChanged(
+                        RightHand,
+                        true,
+                        "vive_touchpad",
+                        TouchForce,
+                        axis,
+                        CurrentRightButtonStates);
+                }
+                else
+                {
+                    OnVectorChanged(
+                        LeftHand,
+                        false,
+                        "vive_touchpad",
+                        TouchForce,
+                        axis,
+                        CurrentLeftButtonStates);
+                }
+
                 lastAxis = axis;
             }
         }
 
         private void OnMenuActionChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
         {
-            OnButtonChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_menubtn", newState, CurrentButtonStates);
+            if (fromSource == SteamVR_Input_Sources.RightHand)
+            {
+                OnButtonChanged(
+                    RightHand,
+                    true,
+                    "vive_menubtn",
+                    newState,
+                    CurrentRightButtonStates);
+            }
+            else
+            {
+                OnButtonChanged(
+                    LeftHand,
+                    false,
+                    "vive_menubtn",
+                    newState,
+                    CurrentLeftButtonStates);
+            }
         }
 
         void OnDisable()
         {
             //remove actions
             if (gripAction != null)
-                gripAction.RemoveOnChangeListener(OnGripActionChange, Hand_InputSource);
+            {
+                gripAction.RemoveOnChangeListener(OnGripActionChange, SteamVR_Input_Sources.LeftHand);
+                gripAction.RemoveOnChangeListener(OnGripActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (touchAction != null)
-                touchAction.RemoveOnChangeListener(OnTouchActionChange, Hand_InputSource);
+            {
+                touchAction.RemoveOnChangeListener(OnTouchActionChange, SteamVR_Input_Sources.LeftHand);
+                touchAction.RemoveOnChangeListener(OnTouchActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (pressAction != null)
-                pressAction.RemoveOnChangeListener(OnPressActionChange, Hand_InputSource);
+            {
+                pressAction.RemoveOnChangeListener(OnPressActionChange, SteamVR_Input_Sources.LeftHand);
+                pressAction.RemoveOnChangeListener(OnPressActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (menuAction != null)
-                menuAction.RemoveOnChangeListener(OnMenuActionChange, Hand_InputSource);
+            {
+                menuAction.RemoveOnChangeListener(OnMenuActionChange, SteamVR_Input_Sources.LeftHand);
+                menuAction.RemoveOnChangeListener(OnMenuActionChange, SteamVR_Input_Sources.RightHand);
+            }
             if (C3D_ActionSet != null)
-                C3D_ActionSet.Deactivate(Hand_InputSource);
+            {
+                C3D_ActionSet.Deactivate(SteamVR_Input_Sources.LeftHand);
+                C3D_ActionSet.Deactivate(SteamVR_Input_Sources.RightHand);
+            }
         }
 
         void Init()
         {
-            
+            //TODO loop this if a controller is null
+            Transform tempTransform;
+            if (GameplayReferences.GetControllerTransform(false,out tempTransform))
+            {
+                LeftHand = tempTransform.GetComponent<DynamicObject>();
+            }
+            if (GameplayReferences.GetControllerTransform(true, out tempTransform))
+            {
+                RightHand = tempTransform.GetComponent<DynamicObject>();
+            }
         }
 
         private void LateUpdate()
@@ -625,1223 +312,108 @@ namespace Cognitive3D
                 nextUpdateTime = Time.time + UpdateRate;
             }
 
-            if (CurrentButtonStates.Count > 0)
+            if (CurrentLeftButtonStates.Count > 0)
             {
-            	List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
-            	for(int i = 0; i< CurrentButtonStates.Count;i++)
+            	List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
+            	for(int i = 0; i< CurrentLeftButtonStates.Count;i++)
             	{
-            		copy.Add(CurrentButtonStates[i]);
+            		copy.Add(CurrentLeftButtonStates[i]);
             	}
-                CurrentButtonStates.Clear();
-            	DynamicManager.RecordControllerEvent(dynamic.DataId, copy);
+                CurrentLeftButtonStates.Clear();
+            	DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
+            }
+            if (CurrentRightButtonStates.Count > 0)
+            {
+                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
+                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
+                {
+                    copy.Add(CurrentRightButtonStates[i]);
+                }
+                CurrentRightButtonStates.Clear();
+                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
             }
         }
 
         void RecordAnalogInputs()
         {
-            float trigger = triggerAction.GetAxis(Hand_InputSource);
-            int tempTrigger = (int)(trigger * 100);
-            if (Trigger != tempTrigger)
-            {
-                var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
-                if (buttonstate != null)
+            { //left hand
+                float trigger = triggerAction.GetAxis(SteamVR_Input_Sources.LeftHand);
+                int tempTrigger = (int)(trigger * 100);
+                if (Trigger != tempTrigger)
                 {
-                    buttonstate.ButtonPercent = tempTrigger;
-                }
-                else
-                {
-                    OnSingleChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_trigger", tempTrigger, CurrentButtonStates);
-                }
-                Trigger = tempTrigger;
-            }
-
-            if (TouchForce != 0)
-            {
-                var axis = touchpadAction.GetAxis(Hand_InputSource);
-
-                if (Vector3.SqrMagnitude(axis - lastAxis) > sqrMag)
-                {
-                    var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                    var buttonstate = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
                     if (buttonstate != null)
                     {
-                        buttonstate.X = axis.x;
-                        buttonstate.Y = axis.y;
+                        buttonstate.ButtonPercent = tempTrigger;
                     }
                     else
                     {
-                        OnVectorChanged(dynamic, Hand_InputSource == SteamVR_Input_Sources.RightHand, "vive_touchpad", TouchForce, axis, CurrentButtonStates);
+                        OnSingleChanged(LeftHand, false, "vive_trigger", tempTrigger, CurrentLeftButtonStates);
                     }
-
-                    lastAxis = axis;
+                    Trigger = tempTrigger;
                 }
-            }
-        }
-#elif C3D_VIVEWAVE
-    
-        //this should go on the adaptive controller prefab, the controllers in the scene or whatever the player spawns
-        //add all inputs to wave button list
 
-        List<ButtonState> CurrentButtonStates = new List<ButtonState>();
-    
-        bool isRight;
-        DynamicObject dynamic;
-
-        bool initialized;
-        WaveVR_Controller.EDeviceType devicetype = WaveVR_Controller.EDeviceType.Head;
-
-        //called from start
-        void Init()
-        {
-            initialized = true;
-            dynamic = GetComponent<DynamicObject>();
-
-            devicetype = GetComponent<WaveVR_ControllerPoseTracker>().Type;
-            wvr.WVR_DeviceType t = WaveVR.Instance.controllerLeft.type; //left/right
-            
-            if (WaveVR_Controller.Input(devicetype).DeviceType == t)
-            {
-                //this is the left controller
-                isRight = false;
-            }
-            else
-            {
-                isRight = true;
-            }
-            List<WaveVR_ButtonList.EButtons> _buttons = new List<WaveVR_ButtonList.EButtons>();
-
-            foreach (var v in (WaveVR_ButtonList.EButtons[])System.Enum.GetValues(typeof(WaveVR_ButtonList.EButtons)))
-            {
-                _buttons.Add(v);
-            }
-
-            // button list of Dominant hand.
-            WaveVR_ButtonList.Instance.SetupButtonList(devicetype, _buttons);
-        }
-
-        //updates for interaction hand implementation
-        private void Update()
-        {
-            if (initialized == false)
-            {
-                return;
-            }
-
-            //menu
-            if (WaveVR_Controller.Input(devicetype).GetPressDown(wvr.WVR_InputId.WVR_InputId_Alias1_Menu))
-            {
-                OnButtonChanged(dynamic, isRight, "menubtn", true, CurrentButtonStates);
-            }
-            if (WaveVR_Controller.Input(devicetype).GetPressUp(wvr.WVR_InputId.WVR_InputId_Alias1_Menu))
-            {
-                OnButtonChanged(dynamic, isRight, "menubtn", false, CurrentButtonStates);
-            }
-
-            //grip
-            if (WaveVR_Controller.Input(devicetype).GetPressDown(wvr.WVR_InputId.WVR_InputId_Alias1_Grip))
-            {
-                OnButtonChanged(dynamic, isRight, "gripbtn", true, CurrentButtonStates);
-            }
-            if (WaveVR_Controller.Input(devicetype).GetPressUp(wvr.WVR_InputId.WVR_InputId_Alias1_Grip))
-            {
-                OnButtonChanged(dynamic, isRight, "gripbtn", false, CurrentButtonStates);
-            }
-        
-            //touchpad touched/pressed
-            if (WaveVR_Controller.Input(devicetype).GetPressDown(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad))
-            {
-                CurrentTouchpadState = TouchpadState.Press;
-                var touchpadaxis = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = 100;
-                Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "touchpad", force, touchpadaxis, CurrentButtonStates);
-                LastTouchpadVector = currentVector;
-            }
-            else if (WaveVR_Controller.Input(devicetype).GetTouchDown(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad))
-            {
-                CurrentTouchpadState = TouchpadState.Touch;
-                var touchpadaxis = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = 50;
-                Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "touchpad", force, touchpadaxis, CurrentButtonStates);
-                LastTouchpadVector = currentVector;
-            }
-            else if (WaveVR_Controller.Input(devicetype).GetPressUp(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad))
-            {
-                CurrentTouchpadState = TouchpadState.Touch;
-                var touchpadaxis = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-
-                int force = 0;
-                if (WaveVR_Controller.Input(devicetype).GetTouch(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad))
-                    force = 50;                
-                Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "touchpad", force, touchpadaxis, CurrentButtonStates);
-                LastTouchpadVector = currentVector;
-            }
-            else if (WaveVR_Controller.Input(devicetype).GetTouchUp(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad))
-            {
-                CurrentTouchpadState = TouchpadState.None;
-                var touchpadaxis = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                OnVectorChanged(dynamic, isRight, "touchpad", force, touchpadaxis, CurrentButtonStates);
-                LastTouchpadVector = currentVector;
-            }
-
-            //trigger clicked
-            if (WaveVR_Controller.Input(devicetype).GetPressDown(wvr.WVR_InputId.WVR_InputId_Alias1_Trigger))
-            {
-                if (LastTrigger != 100)
+                if (TouchForce != 0)
                 {
-                    var triggeramount = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Trigger).x;
-                    int currentTrigger = (int)(triggeramount * 100);
-                    LastTrigger = currentTrigger;
-                    OnButtonChanged(dynamic, isRight, "trigger", true, CurrentButtonStates);
-                }
-            }
-            else if (WaveVR_Controller.Input(devicetype).GetPressUp(wvr.WVR_InputId.WVR_InputId_Alias1_Trigger))
-            {
-                if (LastTrigger != 0)
-                {
-                    LastTrigger = 0;
-                    OnButtonChanged(dynamic, isRight, "trigger", false, CurrentButtonStates);
-                }
-            }
+                    var axis = touchpadAction.GetAxis(SteamVR_Input_Sources.LeftHand);
 
-            if (Time.time > nextUpdateTime)
-            {
-                RecordAnalogInputs(); //should this go at the end? double inputs on triggers
-                nextUpdateTime = Time.time + UpdateRate;
-            }
-
-            if (CurrentButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentButtonStates.Count);
-
-                for (int i = 0; i < CurrentButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentButtonStates[i]); //move the reference over to the copy
-                }
-                CurrentButtonStates.Clear();
-                DynamicManager.RecordControllerEvent(dynamic.DataId, copy);
-            }
-        }
-
-        enum TouchpadState
-        {
-            None,
-            Touch,
-            Press
-        }
-
-        TouchpadState CurrentTouchpadState;
-        Vector3 LastTouchpadVector;
-        float minMagnitude = 0.05f;
-        int LastTrigger;
-
-        //check for (float)triggers, (vector2)touchpads, etc
-        public void RecordAnalogInputs()
-        {
-            if (CurrentTouchpadState != TouchpadState.None)
-            {
-                //var touchpadaxis = ControllerDevice.GetAxis(Varjo.Valve.VR.EVRButtonId.k_EButton_Axis0);
-                var touchpadaxis = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Touchpad);
-                var x = touchpadaxis.x;
-                var y = touchpadaxis.y;
-                int force = CurrentTouchpadState == TouchpadState.None ? 0 : CurrentTouchpadState == TouchpadState.Touch ? 50 : 100;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LastTouchpadVector-currentVector)>minMagnitude)
-                {
-                    var touchpadstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "touchpad"; });
-                    if (touchpadstate != null)
+                    if (Vector3.SqrMagnitude(axis - lastAxis) > sqrMag)
                     {
-                        touchpadstate.X = x;
-                        touchpadstate.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(dynamic, isRight, "touchpad", force, touchpadaxis, CurrentButtonStates);
-                    }    
-                
-                    LastTouchpadVector = currentVector;
-                }
-            }
-
-
-            var buttonstate = CurrentButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "trigger"; });
-            if (buttonstate != null)
-            {
-                var triggeramount = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Trigger).x;
-                int currentTrigger = (int)(triggeramount * 100);
-                if (LastTrigger != currentTrigger)
-                {
-                    buttonstate.ButtonPercent = currentTrigger;
-                    LastTrigger = currentTrigger;
-                }
-            }
-            else
-            {
-                var triggeramount = WaveVR_Controller.Input(devicetype).GetAxis(wvr.WVR_InputId.WVR_InputId_Alias1_Trigger).x;
-                int currentTrigger = (int)(triggeramount * 100);
-                if (LastTrigger != currentTrigger)
-                {
-                    OnSingleChanged(dynamic, isRight, "trigger", currentTrigger, CurrentButtonStates);
-                    LastTrigger = currentTrigger;
-                }
-            }
-        }
-#elif C3D_WINDOWSMR
-
-        //one input tracker for both controllers??
-        //yes
-
-        public DynamicObject LeftHand;
-        public DynamicObject RightHand;
-
-        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
-        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
-
-        Vector3 LeftJoystickVector;
-        Vector3 RightJoystickVector;
-        Vector3 LeftTouchpadVector;
-        Vector3 RightTouchpadVector;
-        float minMagnitude = 0.05f;
-        int LeftTrigger;
-        int RightTrigger;
-
-        enum TouchpadState
-        {
-            None,
-            Touch,
-            Press
-        }
-
-        TouchpadState LeftTouchpadState;
-        TouchpadState RightTouchpadState;
-        TouchpadState LeftJoystickState;
-        TouchpadState RightJoystickState;
-
-        void Init()
-        {
-
-        }
-
-        private void Update()
-        {
-            //grip left
-            if (Input.GetKeyDown(KeyCode.JoystickButton4))
-                OnButtonChanged(LeftHand, false, "wmr_grip", true, CurrentLeftButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton4))
-                OnButtonChanged(LeftHand, false, "wmr_grip", false, CurrentLeftButtonStates);
-
-            //grip right
-            if (Input.GetKeyDown(KeyCode.JoystickButton5))
-                OnButtonChanged(RightHand, true, "wmr_grip", true, CurrentRightButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton5))
-                OnButtonChanged(RightHand, true, "wmr_grip", false, CurrentRightButtonStates);
-
-            //menu left
-            if (Input.GetKeyDown(KeyCode.JoystickButton6))
-                OnButtonChanged(LeftHand, false, "wmr_menubtn", true, CurrentLeftButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton6))
-                OnButtonChanged(LeftHand, false, "wmr_menubtn", false, CurrentLeftButtonStates);
-
-            //menu right
-            if (Input.GetKeyDown(KeyCode.JoystickButton7))
-                OnButtonChanged(RightHand, true, "wmr_menubtn", true, CurrentRightButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton7))
-                OnButtonChanged(RightHand, true, "wmr_menubtn", false, CurrentRightButtonStates);
-
-            //left touchpad
-            Vector2 leftTouchVector = new Vector2(Input.GetAxis("LeftTouchpadH"), Input.GetAxis("LeftTouchpadV"));
-            if (Input.GetKeyDown(KeyCode.JoystickButton18))
-            {
-                OnVectorChanged(LeftHand, false, "wmr_touchpad", 50, leftTouchVector, CurrentLeftButtonStates);
-                LeftTouchpadState = TouchpadState.Touch;
-            }
-            if (Input.GetKeyDown(KeyCode.JoystickButton16))
-            {
-                OnVectorChanged(LeftHand, false, "wmr_touchpad", 100, leftTouchVector, CurrentLeftButtonStates);
-                LeftTouchpadState = TouchpadState.Press;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton18))
-            {
-                OnVectorChanged(LeftHand, false, "wmr_touchpad", 0, leftTouchVector, CurrentLeftButtonStates);
-                LeftTouchpadState = TouchpadState.None;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton16))
-            {
-                if (Input.GetKey(KeyCode.JoystickButton18))
-                {
-                    OnVectorChanged(LeftHand, false, "wmr_touchpad", 50, leftTouchVector, CurrentLeftButtonStates);
-                    LeftTouchpadState = TouchpadState.Touch;
-                }
-                else
-                {
-                    OnVectorChanged(LeftHand, false, "wmr_touchpad", 0, leftTouchVector, CurrentLeftButtonStates);
-                    LeftTouchpadState = TouchpadState.None;
-                }
-            }
-
-            //right touchpad
-            Vector2 rightTouchVector = new Vector2(Input.GetAxis("RightTouchpadH"), Input.GetAxis("RightTouchpadV"));
-            if (Input.GetKeyDown(KeyCode.JoystickButton19))
-            {
-                OnVectorChanged(RightHand, true, "wmr_touchpad", 50, rightTouchVector, CurrentRightButtonStates);
-                RightTouchpadState = TouchpadState.Touch;
-            }
-            if (Input.GetKeyDown(KeyCode.JoystickButton17))
-            {
-                OnVectorChanged(RightHand, true, "wmr_touchpad", 100, rightTouchVector, CurrentRightButtonStates);
-                RightTouchpadState = TouchpadState.Press;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton19))
-            {
-                OnVectorChanged(RightHand, true, "wmr_touchpad", 0, rightTouchVector, CurrentRightButtonStates);
-                RightTouchpadState = TouchpadState.None;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton17))
-            {
-                if (Input.GetKey(KeyCode.JoystickButton19))
-                {
-                    OnVectorChanged(RightHand, true, "wmr_touchpad", 50, rightTouchVector, CurrentRightButtonStates);
-                    RightTouchpadState = TouchpadState.Touch;
-                }
-                else
-                {
-                    OnVectorChanged(RightHand, true, "wmr_touchpad", 0, rightTouchVector, CurrentRightButtonStates);
-                    RightTouchpadState = TouchpadState.None;
-                }
-            }
-
-            //left joystick
-            Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
-            if (Input.GetKeyDown(KeyCode.JoystickButton8))
-            {
-                OnVectorChanged(LeftHand, false, "wmr_joystick", 100, leftJoystickVector, CurrentLeftButtonStates);
-                LeftJoystickState = TouchpadState.Press;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton8))
-            {
-                OnVectorChanged(LeftHand, false, "wmr_joystick", 0, leftJoystickVector, CurrentLeftButtonStates);
-                LeftJoystickState = TouchpadState.None;
-            }
-
-            //right joystick
-            Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
-            if (Input.GetKeyDown(KeyCode.JoystickButton9))
-            {
-                OnVectorChanged(RightHand, true, "wmr_joystick", 100, rightJoystickVector, CurrentRightButtonStates);
-                RightJoystickState = TouchpadState.Press;
-            }
-            if (Input.GetKeyUp(KeyCode.JoystickButton9))
-            {
-                OnVectorChanged(RightHand, true, "wmr_joystick", 0, rightJoystickVector, CurrentRightButtonStates);
-                RightJoystickState = TouchpadState.None;
-            }
-
-            //left trigger
-            if (Input.GetKeyDown(KeyCode.JoystickButton14))
-                OnSingleChanged(LeftHand, false, "wmr_trigger", 100, CurrentLeftButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton14))
-            {
-                float trigger = Input.GetAxis("LeftTrigger");
-                OnSingleChanged(LeftHand, false, "wmr_trigger", (int)(trigger * 100), CurrentLeftButtonStates);
-            }
-
-            //right trigger
-            if (Input.GetKeyDown(KeyCode.JoystickButton15))
-                OnSingleChanged(RightHand, true, "wmr_trigger", 100, CurrentRightButtonStates);
-            if (Input.GetKeyUp(KeyCode.JoystickButton15))
-            {
-                float trigger = Input.GetAxis("RightTrigger");
-                OnSingleChanged(RightHand, true, "wmr_trigger", (int)(trigger * 100), CurrentRightButtonStates);
-            }
-
-            if (Time.time > nextUpdateTime)
-            {
-                RecordAnalogInputs();
-                nextUpdateTime = Time.time + UpdateRate;
-            }
-            if (CurrentRightButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
-                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentRightButtonStates[i]);
-                }
-                CurrentRightButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
-            }
-            if (CurrentLeftButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
-                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentLeftButtonStates[i]);
-                }
-                CurrentLeftButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
-            }
-        }
-
-        void RecordAnalogInputs()
-        {
-            //joysticks
-            {
-                Vector2 leftJoystickVector = new Vector2(Input.GetAxis("LeftJoystickH"), Input.GetAxis("LeftJoystickV"));
-                var x = leftJoystickVector.x;
-                var y = leftJoystickVector.y;
-                int force = LeftJoystickState == TouchpadState.Press ? 100 : 0;
-
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(LeftHand, false, "wmr_joystick", force, leftJoystickVector, CurrentLeftButtonStates);
-                    }
-                    LeftJoystickVector = currentVector;
-                }
-            }
-
-            {
-                Vector2 rightJoystickVector = new Vector2(Input.GetAxis("RightJoystickH"), Input.GetAxis("RightJoystickV"));
-                var x = rightJoystickVector.x;
-                var y = rightJoystickVector.y;
-                int force = RightJoystickState == TouchpadState.Press ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(RightHand, true, "wmr_joystick", force, rightJoystickVector, CurrentRightButtonStates);
-                    }
-                    RightJoystickVector = currentVector;
-                }
-            }
-
-            //touchpad
-            {
-                Vector2 leftTouchpadVector = new Vector2(Input.GetAxis("LeftTouchpadH"), Input.GetAxis("LeftTouchpadV"));
-                var x = leftTouchpadVector.x;
-                var y = leftTouchpadVector.y;
-                int force = LeftTouchpadState == TouchpadState.Press ? 100 : LeftTouchpadState == TouchpadState.Touch ? 50 : 0;
-
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LeftTouchpadVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_touchpad"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(LeftHand, false, "wmr_touchpad", force, leftTouchpadVector, CurrentLeftButtonStates);
-                    }
-                    LeftTouchpadVector = currentVector;
-                }
-            }
-            {
-                Vector2 rightTouchpadVector = new Vector2(Input.GetAxis("RightTouchpadH"), Input.GetAxis("RightTouchpadV"));
-                var x = rightTouchpadVector.x;
-                var y = rightTouchpadVector.y;
-                int force = RightTouchpadState == TouchpadState.Press ? 100 : RightTouchpadState == TouchpadState.Touch ? 50 : 0;
-
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(RightTouchpadVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_touchpad"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(RightHand, true, "wmr_touchpad", force, rightTouchpadVector, CurrentRightButtonStates);
-                    }
-                    RightTouchpadVector = currentVector;
-                }
-            }
-
-            //triggers
-            {
-                int currentTrigger = (int)(Input.GetAxis("LeftTrigger") * 100);
-                if (LeftTrigger != currentTrigger)
-                {
-                    var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_trigger"; });
-                    if (trigger != null)
-                    {
-                        trigger.ButtonPercent = currentTrigger;
-                    }
-                    else
-                    {
-                        OnSingleChanged(LeftHand, false, "wmr_trigger", currentTrigger, CurrentLeftButtonStates);
-                    }
-                    LeftTrigger = currentTrigger;
-                }
-            }
-            {
-                int currentTrigger = (int)(Input.GetAxis("RightTrigger") * 100);
-                if (RightTrigger != currentTrigger)
-                {
-                    var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "wmr_trigger"; });
-                    if (trigger != null)
-                    {
-                        trigger.ButtonPercent = currentTrigger;
-                    }
-                    else
-                    {
-                        OnSingleChanged(RightHand, true, "wmr_trigger", currentTrigger, CurrentRightButtonStates);
-                    }
-                    RightTrigger = currentTrigger;
-                }
-            }
-        }
-#elif C3D_PICOVR
-
-        //one input tracker for both controllers??
-        //yes
-
-        public DynamicObject LeftHand;
-        public DynamicObject RightHand;
-
-        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
-        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
-
-        Vector3 LeftJoystickVector;
-        Vector3 RightJoystickVector;
-        float minMagnitude = 0.05f;
-        int LeftTrigger;
-        int RightTrigger;
-
-        enum TouchpadState
-        {
-            None,
-            Touch,
-            Press
-        }
-
-        TouchpadState LeftJoystickState;
-        TouchpadState RightJoystickState;
-
-        void Init()
-        {
-
-        }
-
-        private void Update()
-        {
-            //grip left
-            if (Pvr_ControllerManager.controllerlink.Controller0.Left.PressedDown)
-                OnButtonChanged(LeftHand, false, "pico_grip", true, CurrentLeftButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller0.Left.PressedUp)
-                OnButtonChanged(LeftHand, false, "pico_grip", false, CurrentLeftButtonStates);
-
-            //grip right
-            if (Pvr_ControllerManager.controllerlink.Controller1.Right.PressedDown)
-                OnButtonChanged(RightHand, true, "pico_grip", true, CurrentRightButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller1.Right.PressedUp)
-                OnButtonChanged(RightHand, true, "pico_grip", false, CurrentRightButtonStates);
-
-            //x left
-            if (Pvr_ControllerManager.controllerlink.Controller0.X.PressedDown)
-                OnButtonChanged(LeftHand, false, "pico_xbtn", true, CurrentLeftButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller0.X.PressedUp)
-                OnButtonChanged(LeftHand, false, "pico_xbtn", false, CurrentLeftButtonStates);
-
-            //y left
-            if (Pvr_ControllerManager.controllerlink.Controller0.Y.PressedDown)
-                OnButtonChanged(LeftHand, false, "pico_ybtn", true, CurrentLeftButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller0.Y.PressedUp)
-                OnButtonChanged(LeftHand, false, "pico_ybtn", false, CurrentLeftButtonStates);
-
-            //menu left
-            if (Pvr_ControllerManager.controllerlink.Controller0.App.PressedDown)
-                OnButtonChanged(LeftHand, false, "pico_menubtn", true, CurrentLeftButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller0.App.PressedUp)
-                OnButtonChanged(LeftHand, false, "pico_menubtn", false, CurrentLeftButtonStates);
-
-            //a right
-            if (Pvr_ControllerManager.controllerlink.Controller1.A.PressedDown)
-                OnButtonChanged(RightHand, true, "pico_abtn", true, CurrentRightButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller1.A.PressedUp)
-                OnButtonChanged(RightHand, true, "pico_abtn", false, CurrentRightButtonStates);
-
-            //b right
-            if (Pvr_ControllerManager.controllerlink.Controller1.B.PressedDown)
-                OnButtonChanged(RightHand, true, "pico_bbtn", true, CurrentRightButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller1.B.PressedUp)
-                OnButtonChanged(RightHand, true, "pico_bbtn", false, CurrentRightButtonStates);
-
-            //menu right
-            if (Pvr_ControllerManager.controllerlink.Controller1.App.PressedDown)
-                OnButtonChanged(RightHand, true, "pico_menubtn", true, CurrentRightButtonStates);
-            if (Pvr_ControllerManager.controllerlink.Controller1.App.PressedUp)
-                OnButtonChanged(RightHand, true, "pico_menubtn", false, CurrentRightButtonStates);
-
-            //left joystick
-
-            Vector2 leftJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(0);
-
-            if (Pvr_ControllerManager.controllerlink.Controller0.Touch.PressedDown)
-            {
-                OnVectorChanged(LeftHand, false, "pico_joystick", 100, leftJoystickVector, CurrentLeftButtonStates);
-                LeftJoystickState = TouchpadState.Press;
-            }
-            if (Pvr_ControllerManager.controllerlink.Controller0.Touch.PressedUp)
-            {
-                OnVectorChanged(LeftHand, false, "pico_joystick", 0, leftJoystickVector, CurrentLeftButtonStates);
-                LeftJoystickState = TouchpadState.None;
-            }
-
-            //right joystick
-            Vector2 rightJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(1);
-            if (Pvr_ControllerManager.controllerlink.Controller1.Touch.PressedDown)
-            {
-                OnVectorChanged(RightHand, true, "pico_joystick", 100, rightJoystickVector, CurrentRightButtonStates);
-                RightJoystickState = TouchpadState.Press;
-            }
-            if (Pvr_ControllerManager.controllerlink.Controller1.Touch.PressedUp)
-            {
-                OnVectorChanged(RightHand, true, "pico_joystick", 0, rightJoystickVector, CurrentRightButtonStates);
-                RightJoystickState = TouchpadState.None;
-            }
-
-            //left trigger
-            int leftTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f) * 100f);
-            if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedDown)
-            {
-                LeftTrigger = leftTrigger;
-                OnSingleChanged(LeftHand, false, "pico_trigger", leftTrigger, CurrentLeftButtonStates);
-            }
-            if (Pvr_ControllerManager.controllerlink.Controller0.Trigger.PressedUp)
-            {
-                LeftTrigger = leftTrigger;
-                OnSingleChanged(LeftHand, false, "pico_trigger", leftTrigger, CurrentLeftButtonStates);
-            }
-
-            //right trigger
-            int rightTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f) * 100f);
-            if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedDown)
-            {
-                RightTrigger = rightTrigger;
-                OnSingleChanged(RightHand, true, "pico_trigger", rightTrigger, CurrentRightButtonStates);
-            }
-            if (Pvr_ControllerManager.controllerlink.Controller1.Trigger.PressedUp)
-            {
-                RightTrigger = rightTrigger;
-                OnSingleChanged(RightHand, true, "pico_trigger", rightTrigger, CurrentRightButtonStates);
-            }
-
-            if (Time.time > nextUpdateTime)
-            {
-                RecordAnalogInputs();
-                nextUpdateTime = Time.time + UpdateRate;
-            }
-            if (CurrentRightButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
-                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentRightButtonStates[i]);
-                }
-                CurrentRightButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
-            }
-            if (CurrentLeftButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
-                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentLeftButtonStates[i]);
-                }
-                CurrentLeftButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
-            }
-        }
-
-        void RecordAnalogInputs()
-        {
-            //joysticks
-            {
-                Vector2 leftJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(0);
-                var x = leftJoystickVector.x;
-                var y = leftJoystickVector.y;
-                int force = LeftJoystickState == TouchpadState.Press ? 100 : 0;
-
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(LeftHand, false, "pico_joystick", force, leftJoystickVector, CurrentLeftButtonStates);
-                    }
-                    LeftJoystickVector = currentVector;
-                }
-            }
-
-            {
-                Vector2 rightJoystickVector = Pvr_UnitySDKAPI.Controller.UPvr_GetAxis2D(1);
-                var x = rightJoystickVector.x;
-                var y = rightJoystickVector.y;
-                int force = RightJoystickState == TouchpadState.Press ? 100 : 0;
-                Vector3 currentVector = new Vector3(x, y, force);
-                if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
-                {
-                    var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_joystick"; });
-                    if (joystick != null)
-                    {
-                        joystick.X = x;
-                        joystick.Y = y;
-                    }
-                    else
-                    {
-                        OnVectorChanged(RightHand, true, "pico_joystick", force, rightJoystickVector, CurrentRightButtonStates);
-                    }
-                    RightJoystickVector = currentVector;
-                }
-            }
-
-            //triggers
-            {
-                int currentTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(0) / 255f) * 100f);
-                if (LeftTrigger != currentTrigger)
-                {
-                    var trigger = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
-                    if (trigger != null)
-                    {
-                        trigger.ButtonPercent = currentTrigger;
-                    }
-                    else
-                    {
-                        OnSingleChanged(LeftHand, false, "pico_trigger", currentTrigger, CurrentLeftButtonStates);
-                    }
-                    LeftTrigger = currentTrigger;
-                }
-            }
-            {
-                int currentTrigger = (int)((Pvr_UnitySDKAPI.Controller.UPvr_GetControllerTriggerValue(1) / 255f) * 100f);
-                if (RightTrigger != currentTrigger)
-                {
-                    var trigger = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "pico_trigger"; });
-                    if (trigger != null)
-                    {
-                        trigger.ButtonPercent = currentTrigger;
-                    }
-                    else
-                    {
-                        OnSingleChanged(RightHand, true, "pico_trigger", currentTrigger, CurrentRightButtonStates);
-                    }
-                    RightTrigger = currentTrigger;
-                }
-            }
-        }
-#elif C3D_PICOXR
-
-        public DynamicObject LeftHand;
-        public DynamicObject RightHand;
-
-        List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
-        List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
-
-        Dictionary<string, ButtonState> LeftLastFrameButtonStates = new Dictionary<string, ButtonState>();
-        Dictionary<string, ButtonState> RightLastFrameButtonStates = new Dictionary<string, ButtonState>();
-
-        Vector3 LeftJoystickVector;
-        Vector3 RightJoystickVector;
-        float minMagnitude = 0.05f;
-
-        void Init()
-        {
-            if (LeftHand.ControllerType == DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left)
-            {
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
-                LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
-            }
-            if (RightHand.ControllerType == DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right)
-            {
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
-                RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
-                RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
-            }
-        }
-
-        private void Update()
-        {
-            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
-            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
-
-            InputDeviceCharacteristics leftTrackedControllerFilter = InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left;
-            InputDeviceCharacteristics rightTrackedControllerFilter = InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right;
-
-            InputDevices.GetDevicesWithCharacteristics(leftTrackedControllerFilter, leftHandDevices);
-            InputDevices.GetDevicesWithCharacteristics(rightTrackedControllerFilter, rightHandDevices);
-
-            if (leftHandDevices.Count > 0)
-            {
-                //menu left
-                bool menu;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
-                    {
-                        OnButtonChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonName, menu, CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent = menu ? 100 : 0;
-                    }
-                }
-
-                //left primary axis
-                Vector2 primaryaxis2d;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
-                {
-                    bool touchPressChanged = false;
-                    int axisPower = 0;
-                    //check for touch or press. if changed, write entire vector
-                    bool touch;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
-                    {
-                        if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
+                        var buttonstate = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                        if (buttonstate != null)
                         {
-                            touchPressChanged = true;
-                            LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
-                            axisPower = touch ? 50 : 0;
-                        }
-                    }
-                    bool press;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
-                    {
-                        if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
-                        {
-                            touchPressChanged = true;
-                            LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
-                            axisPower = press ? 100 : 0;
-                        }
-                    }
-                    if (touchPressChanged)
-                    {
-                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, primaryaxis2d.x, primaryaxis2d.y, CurrentLeftButtonStates);
-                    }
-                }
-
-                //left trigger as button
-                bool triggerButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
-                    {
-                        OnButtonChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonName, triggerButton, CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent = triggerButton ? 100 : 0;
-                    }
-                }
-
-
-
-                //left grip as button
-                bool gripButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
-                    {
-                        OnButtonChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonName, gripButton, CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent = gripButton ? 100 : 0;
-                    }
-                }
-
-                //left primary button
-                bool primaryButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
-                    {
-                        OnButtonChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonName, primaryButton, CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent = primaryButton ? 100 : 0;
-                    }
-                }
-
-                //left secondary button
-                bool secondaryButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
-                    {
-                        OnButtonChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonName, secondaryButton, CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent = secondaryButton ? 100 : 0;
-                    }
-                }
-            }
-
-            if (rightHandDevices.Count > 0)
-            {
-                //menu right
-                bool menu;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu) && RightLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
-                    {
-                        OnButtonChanged(RightHand, false, RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonName, menu, CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent = menu ? 100 : 0;
-                    }
-                }
-
-                //right primary axis
-                Vector2 primaryaxis2d;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
-                {
-                    bool touchPressChanged = false;
-                    int axisPower = 0;
-                    //check for touch or press. if changed, write entire vector
-                    bool touch;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
-                    {
-                        if (RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
-                        {
-                            touchPressChanged = true;
-                            RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent = touch ? 50 : 0;
-                            axisPower = touch ? 50 : 0;
-                        }
-                    }
-                    bool press;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
-                    {
-                        if (RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
-                        {
-                            touchPressChanged = true;
-                            RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent = press ? 100 : 0;
-                            axisPower = press ? 100 : 0;
-                        }
-                    }
-                    if (touchPressChanged)
-                    {
-                        OnVectorChanged(RightHand, false, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, primaryaxis2d.x, primaryaxis2d.y, CurrentRightButtonStates);
-                    }
-                }
-
-                //right trigger button
-                bool triggerButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
-                    {
-                        OnButtonChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonName, triggerButton, CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent = triggerButton ? 100 : 0;
-                    }
-                }
-                //right grip button
-                bool gripButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
-                    {
-                        OnButtonChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonName, gripButton, CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent = gripButton ? 100 : 0;
-                    }
-                }
-                //right primary button
-                bool primaryButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
-                    {
-                        OnButtonChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonName, primaryButton, CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent = primaryButton ? 100 : 0;
-                    }
-                }
-                //right secondary button
-                bool secondaryButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
-                    {
-                        OnButtonChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonName, secondaryButton, CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent = secondaryButton ? 100 : 0;
-                    }
-                }
-            }
-
-            if (Time.time > nextUpdateTime)
-            {
-                nextUpdateTime = Time.time + UpdateRate;
-                RecordAnalogInputs();
-            }
-            if (CurrentRightButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentRightButtonStates.Count);
-                for (int i = 0; i < CurrentRightButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentRightButtonStates[i]);
-                }
-                CurrentRightButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
-            }
-            if (CurrentLeftButtonStates.Count > 0)
-            {
-                List<ButtonState> copy = new List<ButtonState>(CurrentLeftButtonStates.Count);
-                for (int i = 0; i < CurrentLeftButtonStates.Count; i++)
-                {
-                    copy.Add(CurrentLeftButtonStates[i]);
-                }
-                CurrentLeftButtonStates.Clear();
-
-                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
-            }
-        }
-
-        void RecordAnalogInputs()
-        {
-            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftHandDevices);
-            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.RightHand, rightHandDevices);
-
-            if (leftHandDevices.Count > 0)
-            {
-                //left primary joystick
-                Vector2 leftJoystickVector;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
-                {
-                    int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
-                    var x = leftJoystickVector.x;
-                    var y = leftJoystickVector.y;
-
-                    Vector3 currentVector = new Vector3(x, y, axisPower);
-                    if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
-                    {
-                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName; });
-                        if (joystick != null)
-                        {
-                            joystick.X = x;
-                            joystick.Y = y;
+                            buttonstate.X = axis.x;
+                            buttonstate.Y = axis.y;
                         }
                         else
                         {
-                            OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
+                            OnVectorChanged(LeftHand, false, "vive_touchpad", TouchForce, axis, CurrentLeftButtonStates);
                         }
-                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);
-                        LeftJoystickVector = currentVector;
-                    }
-                }
-                //grip left
-                float grip;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.grip.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
-                    {
-                        OnSingleChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonName, (int)(grip * 100), CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent = (int)(grip * 100);
-                    }
-                }
-                //trigger left
-                float trigger;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
-                {
-                    if (LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
-                    {
-                        OnSingleChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonName, (int)(trigger * 100), CurrentLeftButtonStates);
-                        LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent = (int)(trigger * 100);
+
+                        lastAxis = axis;
                     }
                 }
             }
-            if (rightHandDevices.Count > 0)
-            {
-                //right primary joystick
-                Vector2 rightJoystickVector;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+            { //right hand
+                float trigger = triggerAction.GetAxis(SteamVR_Input_Sources.RightHand);
+                int tempTrigger = (int)(trigger * 100);
+                if (Trigger != tempTrigger)
                 {
-                    int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
-                    var x = rightJoystickVector.x;
-                    var y = rightJoystickVector.y;
-
-                    Vector3 currentVector = new Vector3(x, y, axisPower);
-                    if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
+                    var buttonstate = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                    if (buttonstate != null)
                     {
-                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName; });
-                        if (joystick != null)
+                        buttonstate.ButtonPercent = tempTrigger;
+                    }
+                    else
+                    {
+                        OnSingleChanged(RightHand, true, "vive_trigger", tempTrigger, CurrentRightButtonStates);
+                    }
+                    Trigger = tempTrigger;
+                }
+
+                if (TouchForce != 0)
+                {
+                    var axis = touchpadAction.GetAxis(SteamVR_Input_Sources.LeftHand);
+
+                    if (Vector3.SqrMagnitude(axis - lastAxis) > sqrMag)
+                    {
+                        var buttonstate = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == "vive_touchpad"; });
+                        if (buttonstate != null)
                         {
-                            joystick.X = x;
-                            joystick.Y = y;
+                            buttonstate.X = axis.x;
+                            buttonstate.Y = axis.y;
                         }
                         else
                         {
-                            OnVectorChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, rightJoystickVector, CurrentRightButtonStates);
+                            OnVectorChanged(RightHand, true, "vive_touchpad", TouchForce, axis, CurrentRightButtonStates);
                         }
-                        RightJoystickVector = currentVector;
-                    }
-                }
-                //grip right
-                float grip;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
-                    {
-                        OnSingleChanged(RightHand, false, RightLastFrameButtonStates[CommonUsages.grip.name].ButtonName, (int)(grip * 100), CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent = (int)(grip * 100);
-                    }
-                }
 
-                //trigger right
-                float trigger;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger) && RightLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
-                {
-                    if (RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
-                    {
-                        OnSingleChanged(RightHand, false, RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonName, (int)(trigger * 100), CurrentRightButtonStates);
-                        RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent = (int)(trigger * 100);
+                        lastAxis = axis;
                     }
                 }
             }
         }
-//TODO this should be default, unless STEAMVR2 is selected. use this instead of PicoXR, PicoVR, WindowsMR, Oculus
 #else
-        public DynamicObject LeftHand;
-        public DynamicObject RightHand;
-
         List<ButtonState> CurrentLeftButtonStates = new List<ButtonState>();
         List<ButtonState> CurrentRightButtonStates = new List<ButtonState>();
 
@@ -1856,112 +428,210 @@ namespace Cognitive3D
 
         void Init()
         {
-            if (LeftHand.ControllerType == DynamicObject.ControllerDisplayType.oculusquesttouchleft)
+            Transform tempTransform;
+            if (GameplayReferences.GetControllerTransform(false,out tempTransform))
             {
-                //thumbrest not included in xr inputs?
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick",0,0,0,true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
-                LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
+                LeftHand = tempTransform.GetComponent<DynamicObject>();
             }
-            if (RightHand.ControllerType == DynamicObject.ControllerDisplayType.oculusquesttouchright)
+            if (GameplayReferences.GetControllerTransform(true, out tempTransform))
             {
-                //thumbrest not included in xr inputs?
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
-                RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("abtn"));
-                RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("bbtn"));
+                RightHand = tempTransform.GetComponent<DynamicObject>();
             }
-            if (LeftHand.ControllerType == DynamicObject.ControllerDisplayType.oculustouchleft)
+
+            //delay init if needed
+
+            DynamicObject.ControllerDisplayType displayType;
+            InputDevice tempDevice;
+
+            //left hand
+            if (GameplayReferences.GetControllerInfo(false,out tempDevice))
             {
-                //thumbrest not included in xr inputs?
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("rift_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("rift_start"));
-                LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_xbtn"));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_ybtn"));
+                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,false);
+                switch (displayType)
+                {
+                    case DynamicObject.ControllerDisplayType.vivecontroller:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("vive_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("vive_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("vive_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("vive_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("vive_menubtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.vivefocuscontroller:
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculustouchleft:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("rift_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("rift_start"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculustouchright:
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculusquesttouchleft:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculusquesttouchright:
+                        break;
+                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right:
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
+                        break;
+                    case DynamicObject.ControllerDisplayType.unknown:
+                        break;
+                }
             }
-            if (RightHand.ControllerType == DynamicObject.ControllerDisplayType.oculustouchright)
+
+            //right hand
+            if (GameplayReferences.GetControllerInfo(true, out tempDevice))
             {
-                //thumbrest not included in xr inputs?
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("rift_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("rift_start"));
-                RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_abtn"));
-                RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_bbtn"));
+                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,true);
+                switch (displayType)
+                {
+                    case DynamicObject.ControllerDisplayType.vivecontroller:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("vive_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("vive_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("vive_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("vive_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("vive_menubtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.vivefocuscontroller:
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculustouchleft:
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculustouchright:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("rift_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("rift_start"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_xbtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculusquesttouchleft:
+
+                        break;
+                    case DynamicObject.ControllerDisplayType.oculusquesttouchright:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left:
+
+                        break;
+                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left:
+
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
+
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.unknown:
+                        break;
+                }
             }
-            if (LeftHand.ControllerType == DynamicObject.ControllerDisplayType.vivecontroller)
-            {
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("vive_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("vive_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("vive_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("vive_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("vive_menubtn"));
-            }
-            if (RightHand.ControllerType == DynamicObject.ControllerDisplayType.vivecontroller)
-            {
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("vive_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("vive_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("vive_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("vive_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("vive_menubtn"));
-            }
-            if (LeftHand.ControllerType == DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left)
-            {
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
-                LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
-                LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
-            }
-            if (RightHand.ControllerType == DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right)
-            {
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
-                RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
-                RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
-            }
+
+            //TODO set initial button states
         }
 
         private void Update()

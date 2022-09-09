@@ -7,55 +7,37 @@ namespace Cognitive3D
 {
     public class ReadyRoomSetupWindow : EditorWindow
     {
-        //called from menu item script
         public static void Init()
         {
             ReadyRoomSetupWindow window = (ReadyRoomSetupWindow)EditorWindow.GetWindow(typeof(ReadyRoomSetupWindow), true, "");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-
-            UseEyeTracking = EditorPrefs.GetInt("useEyeTracking", -1);
-            UseRoomScale = EditorPrefs.GetInt("useRoomScale", -1);
-            UseGrabbableObjects = EditorPrefs.GetInt("useGrabbable", -1);
-
-            //check that window.Grabbables is empty
-            /*if (UseEyeTracking != -1 && UseGrabbableObjects != -1 && UseRoomScale != -1)
-            {
-                window.RefreshGrabbables(true);
-                if (window.Grabbables.Count > 0)
-                {
-                    //user has done most of the setup, but still has grabbables to fix
-                    window.currentPage = 4;
-                    //IMPROVEMENT search pageids for index of 'grab components'
-                }
-                else
-                {
-                    //user has already run through the Ready Room setup. Unlikely that they will need to change this basic stuff
-                    window.currentPage = window.pageids.Count - 1;
-                }
-            }*/
         }
 
-        //called after recompile if window already open
-        void OnEnable()
-        {
-            UseEyeTracking = EditorPrefs.GetInt("useEyeTracking", -1);
-            UseRoomScale = EditorPrefs.GetInt("useRoomScale", -1);
-            UseGrabbableObjects = EditorPrefs.GetInt("useGrabbable", -1);
-            Repaint();
-        }
-
-        List<AssessmentBase> AllAssessments = new List<AssessmentBase>();
-        List<string> pageids = new List<string>() { "welcome", "player", "eye tracking", "room scale", "grab components", "custom", "scene menu", "overview" };
+        List<string> pageids = new List<string>() {
+            "welcome",
+            "player",
+            "eye tracking",
+            "room scale",
+            "grab components",
+            "custom",
+            "scene menu",
+            "overview" };
         public int currentPage;
 
         Rect steptitlerect = new Rect(30, 0, 100, 440);
-        Rect boldlabelrect = new Rect(30, 100, 440, 440);
+        Rect boldlabelrect = new Rect(30, 45, 440, 440);
 
-        public static int UseEyeTracking = -1;
-        public static int UseRoomScale = -1;
-        public static int UseGrabbableObjects = -1;
+        public enum FeatureUsage
+        {
+            NotSet,
+            Enable,
+            Disable,
+        }
+        public static FeatureUsage UseEyeTracking;
+        public static FeatureUsage UseRoomScale;
+        public static FeatureUsage UseGrabbableObjects;
 
         string selectedSceneInfoPath;
         Vector2 dynamicScrollPosition = Vector2.zero;
@@ -64,26 +46,11 @@ namespace Cognitive3D
 
         public List<AssessmentBase> GetAllAssessments()
         {
-            foreach (var assessment in AllAssessments)
+            if (AssessmentManager.Instance != null)
             {
-                if (assessment == null)
-                {
-                    RefreshAssessments();
-                    break;
-                }
+                return AssessmentManager.Instance.AllAssessments;
             }
-            return AllAssessments;
-        }
-
-        //Finds all assessments and sorts them
-        public void RefreshAssessments()
-        {
-            AllAssessments = new List<AssessmentBase>(Object.FindObjectsOfType<AssessmentBase>());
-
-            AllAssessments.Sort(delegate (AssessmentBase a, AssessmentBase b)
-            {
-                return a.Order.CompareTo(b.Order);
-            });
+            return null;
         }
 
         void OnGUI()
@@ -91,8 +58,8 @@ namespace Cognitive3D
             GUI.skin = Cognitive3D.EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            if (GetAllAssessments() == null || GetAllAssessments().Count == 0)
-                RefreshAssessments();
+            if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.KeyDown) { currentPage++; }
+            if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.KeyDown) { currentPage--; }
 
             switch (pageids[currentPage])
             {
@@ -111,66 +78,60 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - WELCOME", "steptitle");
+            GUI.Label(steptitlerect, "WELCOME", "steptitle");
 
             GUI.Label(boldlabelrect, "Welcome to the Ready Room Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 170, 440, 440), "Ready Room is a simple & configurable environment for your participants to learn how to use VR properly.", "normallabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "Ready Room is a simple & configurable environment to teach your players some basic VR conventions.", "normallabel");
 
-            GUI.Label(new Rect(30, 230, 440, 440), "The purpose is to allow your participants to explore and learn VR in a simple tutorial area before htey proceed to your VR experience. " +
-                "This ensure that any interaction data from participants who are troubleshooting hardware, learning how to use controllers, or understand basic VR interactions is kept separate from your actual experience.", "normallabel");
-
-            GUI.Label(new Rect(30, 370, 440, 440), "By default, we do not collect any data from the Ready Room.", "normallabel");
-
-            GUI.Label(new Rect(30, 410, 440, 440), "This setup helps configure the Ready Room scene for your equipment.", "normallabel");
+            GUI.Label(new Rect(30, 150, 440, 440), "The purpose is to allow your players to explore and learn VR in a simple tutorial area before they proceed to your VR experience." +
+                "\n\nThis gives you a chance to troubleshoot hardware and make sure your players are comfortable before recording data.", "normallabel");
         }
 
+        //TODO quick setup buttons here - add OVR prefabs or SteamVR prefabs based on what's been set in scene seutp window
         void PlayerUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - PLAYER", "steptitle");
+            GUI.Label(steptitlerect, "CONFIGURE PLAYER PREFAB", "steptitle");
 
-            GUI.Label(boldlabelrect, "Ensure your Player is configured correctly", "boldlabel");
-            GUI.Label(new Rect(30, 200, 440, 30), "<b>Step 1:</b> Add your <b>Player</b> prefab to the Ready Room Scene", "normallabel_actionable");
-            GUI.Label(new Rect(30, 260, 440, 30), "<b>Step 2:</b> If the player has controllers, add a <b>ControllerPointer</b> Component to each controller", "normallabel_actionable");
-            GUI.Label(new Rect(30, 340, 440, 30), "<b>Step 3:</b> Add a <b>HMDPointer</b> Component to the player's HMD camera", "normallabel_actionable");
+            GUI.Label(boldlabelrect, "Ensure your Player prefab is configured correctly", "boldlabel");
+            GUI.Label(new Rect(30, 100, 440, 30), "- Add your <color=#62B4F3FF>Player prefab</color> to this scene." +
+                "\n  This may be OVRCameraRig or SteamVR's [CameraRig].", "normallabel");
+            GUI.Label(new Rect(30, 160, 440, 30), "- If the player prefab has controllers, add a <color=#62B4F3FF>ControllerPointer</color>\n  Component to each controller.", "normallabel");
+            GUI.Label(new Rect(30, 220, 440, 30), "- Add a <color=#62B4F3FF>HMDPointer</color> Component to the player's HMD camera.", "normallabel");
         }
 
         void EyeTrackingUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - EYE TRACKING", "steptitle");
+            GUI.Label(steptitlerect, "EYE TRACKING", "steptitle");
 
             GUI.Label(boldlabelrect, "Do you use eye tracking?", "boldlabel");
 
-            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseEyeTracking == 0 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseEyeTracking == FeatureUsage.Disable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseEyeTracking = 0;
-                EditorPrefs.SetInt("useEyeTracking", UseEyeTracking);
-                UpdateActiveAssessments();
+                UseEyeTracking = FeatureUsage.Disable;
             }
-            if (UseEyeTracking != 0)
+            if (UseEyeTracking != FeatureUsage.Disable)
             {
                 GUI.Box(new Rect(100, 150, 100, 30), "", "box_sharp_alpha");
             }
-            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseEyeTracking == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseEyeTracking == FeatureUsage.Enable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseEyeTracking = 1;
-                EditorPrefs.SetInt("useEyeTracking", UseEyeTracking);
-                UpdateActiveAssessments();
+                UseEyeTracking = FeatureUsage.Enable;
             }
-            if (UseEyeTracking != 1)
+            if (UseEyeTracking != FeatureUsage.Enable)
             {
                 GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
             }
 
-            if (UseEyeTracking == 0)
+            if (UseEyeTracking == FeatureUsage.Disable)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about calibrating eye tracking", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The player will not see any instructions about calibrating eye tracking", "normallabel");
             }
-            if (UseEyeTracking == 1)
+            if (UseEyeTracking == FeatureUsage.Enable)
             {
                 if (GameplayReferences.SDKSupportsEyeTracking)
                 {
-                    GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the participant to ensure eye tracking is correctly calibrated", "normallabel");
-                    GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 4:</b> Add any required Eye Tracking components to the scene", "normallabel_actionable");
+                    GUI.Label(new Rect(30, 200, 440, 440), "A short test will appear for the player to ensure eye tracking is correctly calibrated", "normallabel");
+                    GUI.Label(new Rect(30, 260, 440, 440), "- Add any required Eye Tracking prefabs to the scene\n  (such as GliaBehaviour or SRAnipal Eye Framework)", "normallabel_actionable");
                 }
                 else
                 {
@@ -178,52 +139,56 @@ namespace Cognitive3D
                     GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support eye tracking", "normallabel");
                 }
             }
+            if (AssessmentManager.Instance != null)
+            {
+                AssessmentManager.Instance.AllowEyeTrackingAssessments = UseEyeTracking == FeatureUsage.Enable;
+            }
         }
 
         void RoomScaleUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - ROOM SCALE", "steptitle");
+            GUI.Label(steptitlerect, "ROOM SCALE", "steptitle");
 
             GUI.Label(boldlabelrect, "Do you use room scale?", "boldlabel");
 
-            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseRoomScale == 0 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseRoomScale == FeatureUsage.Disable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseRoomScale = 0;
-                EditorPrefs.SetInt("useRoomScale", UseRoomScale);
-                UpdateActiveAssessments();
+                UseRoomScale = FeatureUsage.Disable;
             }
-            if (UseRoomScale != 0)
+            if (UseRoomScale != FeatureUsage.Disable)
             {
                 GUI.Box(new Rect(100, 150, 100, 30), "", "box_sharp_alpha");
             }
-            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseRoomScale == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseRoomScale == FeatureUsage.Enable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseRoomScale = 1;
-                EditorPrefs.SetInt("useRoomScale", UseRoomScale);
-                UpdateActiveAssessments();
+                UseRoomScale = FeatureUsage.Enable;
             }
-            if (UseRoomScale != 1)
+            if (UseRoomScale != FeatureUsage.Enable)
             {
                 GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
             }
 
-            if (UseRoomScale == 0)
+            if (UseRoomScale == FeatureUsage.Disable)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about moving around the room", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The player will not see any instructions about moving around the room", "normallabel");
             }
-            if (UseRoomScale == 1)
+            if (UseRoomScale == FeatureUsage.Enable)
             {
-                //TODO editorcore.roomscale
-#if C3D_TOBIIVR || C3D_NEURABLE || C3D_PUPIL || C3D_AH || C3D_SNAPDRAGON || C3D_SRANIPAL
-            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
-            GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add any required Room Scale components to the scene", "normallabel_actionable");
-#elif C3D_STEAMVR || C3D_STEAMVR2
-            GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the participant to move around the room", "normallabel");
-            GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 5:</b> Add a SteamVR_PlayArea component to a new gameobject in this scene", "normallabel_actionable");
-#else
-                GUI.Label(new Rect(0, 200, 475, 40), Cognitive3D.EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support room scale", "normallabel");
-#endif
+                if (GameplayReferences.SDKSupportsRoomSize)
+                {
+                    GUI.Label(new Rect(30, 200, 440, 440), "There will be a short test to ask the player to move around the room", "normallabel");
+                    GUI.Label(new Rect(30, 260, 440, 440), "- Make sure the room boundaries are configured beforehand" +
+                        "\n\n- Add any required Room Scale prefabs to the scene\n  (such as SteamVR's [CameraRig])", "normallabel_actionable");
+                }
+                else
+                {
+                    GUI.Label(new Rect(0, 200, 475, 40), Cognitive3D.EditorCore.Alert, "image_centered");
+                    GUI.Label(new Rect(30, 260, 440, 440), "The SDK selected in the Cognitive3D Setup Wizard does not support room scale", "normallabel");
+                }
+            }
+            if (AssessmentManager.Instance != null)
+            {
+                AssessmentManager.Instance.AllowRoomScaleAssessments = UseRoomScale == FeatureUsage.Enable;
             }
         }
 
@@ -249,45 +214,42 @@ namespace Cognitive3D
 
         void GrabUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - INTERACTIONS", "steptitle");
+            GUI.Label(steptitlerect, "PICKING UP ITEMS", "steptitle");
 
-            GUI.Label(boldlabelrect, "Does the participant pick up anything?", "boldlabel");
+            GUI.Label(boldlabelrect, "Does the player pick up anything?", "boldlabel");
 
-            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseGrabbableObjects == 0 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(100, 150, 100, 30), "NO", UseGrabbableObjects == FeatureUsage.Disable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseGrabbableObjects = 0;
-                EditorPrefs.SetInt("useGrabbable", UseGrabbableObjects);
-                UpdateActiveAssessments();
+                UseGrabbableObjects = FeatureUsage.Disable;
             }
-            if (UseGrabbableObjects != 0)
+            if (UseGrabbableObjects != FeatureUsage.Disable)
             {
                 GUI.Box(new Rect(100, 150, 100, 30), "", "box_sharp_alpha");
             }
-            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseGrabbableObjects == 1 ? "button_blueoutline" : "button_disabledtext"))
+            if (GUI.Button(new Rect(300, 150, 100, 30), "YES", UseGrabbableObjects == FeatureUsage.Enable ? "button_blueoutline" : "button_disabledtext"))
             {
-                UseGrabbableObjects = 1;
-                EditorPrefs.SetInt("useGrabbable", UseGrabbableObjects);
-                UpdateActiveAssessments();
+                UseGrabbableObjects = FeatureUsage.Enable;
                 RefreshGrabbables(true);
             }
-            if (UseGrabbableObjects != 1)
+            if (UseGrabbableObjects != FeatureUsage.Enable)
             {
                 GUI.Box(new Rect(300, 150, 100, 30), "", "box_sharp_alpha");
             }
 
-            if (UseGrabbableObjects == 0)
+            if (UseGrabbableObjects == FeatureUsage.Disable)
             {
-                GUI.Label(new Rect(30, 200, 440, 440), "The participant will not see any instructions about picking up objects", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "The player will not see any instructions about picking up objects", "normallabel");
             }
-            if (UseGrabbableObjects == 1)
+            if (UseGrabbableObjects == FeatureUsage.Enable)
             {
                 RefreshGrabbables();
 
-                GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the participant to pickup and examine a small cube", "normallabel");
+                GUI.Label(new Rect(30, 200, 440, 440), "There will be a test asking the player to pick up and examine a small cube", "normallabel");
 
                 if (Grabbables.Count > 0)
                 {
-                    GUI.Label(new Rect(30, 260, 440, 440), "<b>Step 6:</b> These gameobject must to be configured to use your grabbing interaction:", "normallabel_actionable");
+                    //steamvr's Interactable or Oculus's Grabbable
+                    GUI.Label(new Rect(30, 260, 440, 440), "- These Game Objects must to be configured to use your grabbing interaction:", "normallabel_actionable");
 
                     Rect innerScrollSize = new Rect(30, 0, 420, Grabbables.Count * 30);
                     dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 330, 440, 100), dynamicScrollPosition, innerScrollSize, false, true);
@@ -319,27 +281,34 @@ namespace Cognitive3D
                     }
                 }
             }
+            if (AssessmentManager.Instance != null)
+            {
+                AssessmentManager.Instance.AllowGrabbingAssessments = UseGrabbableObjects == FeatureUsage.Enable;
+            }
         }
 
         void CustomUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - CUSTOM", "steptitle");
+            GUI.Label(steptitlerect, "CUSTOM", "steptitle");
 
             GUI.Label(boldlabelrect, "Add your own assessments", "boldlabel");
 
-            GUI.Label(new Rect(30, 150, 440, 200), "A good assessment will teach the participant how to use any unique tools or objects and explain common conventions in your experience", "normallabel");
+            GUI.Label(new Rect(30, 100, 440, 200), "A good assessment will teach the player how to use any unique tools or objects and explain common conventions in your experience." +
+                "\n\nSee Documentation for an example", "normallabel");
 
-            GUI.Label(new Rect(30, 230, 440, 200), "<b>Step 7a:</b> Create a new gameobject and add an <b>AssessmentBase</b> script, or a script that inherits from this.\n\n" +
-                "<b>Step 7b:</b> Add any required game objects as children. These will be disable on <b>Awake()</b> and enabled when your assessment begins.\n\n" +
-                "<b>Step 7c:</b> Call <b>CompleteAssesment()</b> when the participant has demonstrated understanding. This will disable child gameobjects and the next assessment will begin.", "normallabel_actionable");
+            if (GUI.Button(new Rect(150, 230, 240, 30), "Open Documentation Site"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/ready-room/#example-custom-assessment");
+            }
         }
 
         bool hasDisplayedBuildPopup = false;
         void SceneMenuUpdate()
         {
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - SCENE MENU", "steptitle");
+            GUI.Label(steptitlerect, "SCENE MENU", "steptitle");
 
-            GUI.Label(boldlabelrect, "<b>Step 8:</b> Display scenes when the Ready Room is complete", "normallabel_actionable");
+            GUI.Label(boldlabelrect, "Display Scene Selection when completed", "boldlabel");
+            GUI.Label(new Rect(30, 100, 440, 200), "When all tests in the Ready Room are complete, the player will see one or more scenes to load", "normallabel");
 
             if (!hasDisplayedBuildPopup)
             {
@@ -380,7 +349,7 @@ namespace Cognitive3D
             {
                 //display warning
                 GUI.Label(new Rect(0, 200, 475, 130), Cognitive3D.EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 300, 440, 440), "There is no Scene Select Menu in this scene. Make sure the participant can correctly exit Ready Room when completed", "normallabel");
+                GUI.Label(new Rect(30, 300, 440, 440), "There is no Scene Select Menu in this scene. Make sure the player can correctly exit Ready Room when completed", "normallabel");
             }
             else
             {
@@ -432,7 +401,7 @@ namespace Cognitive3D
                 {
                     //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                 }
-                GUI.Label(dropArea, "Drag and Drop Scene Assets here\nto add to the Scene Select Menu", "ghostlabel_actionable");
+                GUI.Label(dropArea, "Drag and Drop Scene Assets here", "ghostlabel");
 
                 Rect innerScrollSize = new Rect(30, 0, 420, sceneSelect.SceneInfos.Count * 30);
                 dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 280, 440, 150), dynamicScrollPosition, innerScrollSize, false, true);
@@ -448,14 +417,6 @@ namespace Cognitive3D
                 Repaint();
 
                 GUI.Box(new Rect(30, 280, 425, 150), "", "box_sharp_alpha");
-
-
-                if (GUI.Button(new Rect(30, 450, 440, 30), "Start Session when participant selects a scene?", sceneSelect.StartSessionOnSceneChange ? "button_blueoutlineleft" : "button_disabledoutline"))
-                {
-                    sceneSelect.StartSessionOnSceneChange = !sceneSelect.StartSessionOnSceneChange;
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                }
-                GUI.Label(new Rect(425, 455, 24, 24), sceneSelect.StartSessionOnSceneChange ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
             }
         }
 
@@ -532,9 +493,9 @@ namespace Cognitive3D
         {
             var all = GetAllAssessments();
 
-            GUI.Label(steptitlerect, "STEP " + (currentPage + 1) + " - OVERVIEW", "steptitle");
+            GUI.Label(steptitlerect, "OVERVIEW", "steptitle");
 
-            GUI.Label(boldlabelrect, "These are the <color=#8A9EB7FF>Assessments</color> currently found in the scene.", "boldlabel");
+            GUI.Label(boldlabelrect, "These are the <color=#8A9EB7FF>Assessments</color> that will be shown:", "boldlabel");
 
             Rect enabled = new Rect(30, 145, 120, 30);
             GUI.Label(enabled, "Enabled", "dynamicheader");
@@ -559,7 +520,6 @@ namespace Cognitive3D
             GUI.EndScrollView();
             GUI.Box(new Rect(30, 170, 425, 280), "", "box_sharp_alpha");
             Repaint();
-            UpdateActiveAssessments();
         }
 
         void DrawAssessment(AssessmentBase assessment, Rect rect, bool darkbackground)
@@ -591,7 +551,6 @@ namespace Cognitive3D
             else
                 GUI.Box(rect, "", "dynamicentry_odd");
 
-            bool forceWarning = false;
             if (assessment.GetType() == typeof(SceneSelectMenu))
             {
                 var all = GetAllAssessments();
@@ -601,14 +560,6 @@ namespace Cognitive3D
                     var sceneMenu = all.Find(delegate (AssessmentBase obj) { return obj.GetType() == typeof(SceneSelectMenu); });
                     if (sceneMenu != null)
                         SceneSelectAssessment = (SceneSelectMenu)sceneMenu;
-                }
-
-                if (SceneSelectAssessment != null)
-                {
-                    if (SceneSelectAssessment.Order != all.Count - 1)
-                    {
-                        forceWarning = true;
-                    }
                 }
             }
 
@@ -629,6 +580,7 @@ namespace Cognitive3D
             }
             else
             {
+                //TODO make a tiny icon to display here instead of text
                 if (GUI.Button(up, "^"))
                 {
                     var all = GetAllAssessments();
@@ -656,7 +608,7 @@ namespace Cognitive3D
             Rect isActiveRect = new Rect(rect.x + 10, rect.y, 24, rect.height);
             Rect gameObjectRect = new Rect(rect.x + 60, rect.y, 420, rect.height);
 
-            if (assessment.Active && !forceWarning)
+            if (assessment.IsValid())
             {
                 GUI.Label(isActiveRect, Cognitive3D.EditorCore.Checkmark, "image_centered");
             }
@@ -665,46 +617,8 @@ namespace Cognitive3D
                 GUI.Label(isActiveRect, Cognitive3D.EditorCore.Alert, "image_centered");
             }
 
-            if (needsRefresh)
-            {
-                var all = GetAllAssessments();
-                for (int i = 0; i < all.Count; i++)
-                {
-                    all[i].Order = i;
-                }
-                ReorderAssessmentsInScene();
-            }
-
-            string tooltip = "No Text Display";
-            var textComponent = assessment.GetComponentInChildren<UnityEngine.UI.Text>();
-            if (textComponent != null)
-            {
-                tooltip = textComponent.text;
-            }
-            if (forceWarning)
-            {
-                //scene assessment not in last position
-                tooltip = "Scene Select Menu should be last";
-            }
+            string tooltip = assessment.InvalidReason();
             GUI.Label(gameObjectRect, new GUIContent(assessment.gameObject.name, tooltip), "dynamiclabel");
-        }
-
-        void ReorderAssessmentsInScene()
-        {
-            var rootGameObjects = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().GetRootGameObjects();
-
-            //repeat this a number of times - reordering gameobjects will get moved around by other moving gameobjects
-            for (int i = 0; i < rootGameObjects.Length; i++)
-            {
-                foreach (var g in rootGameObjects)
-                {
-                    //sort assessments by their order
-                    var assessment = g.GetComponent<AssessmentBase>();
-                    if (assessment != null)
-                        g.transform.SetSiblingIndex(assessment.Order);
-                }
-            }
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
 
         void DrawFooter()
@@ -717,7 +631,6 @@ namespace Cognitive3D
             if (GUI.Button(backbuttonrect, "Back", "button_disabled"))
             {
                 currentPage = Mathf.Max(0, currentPage - 1);
-                RefreshAssessments();
                 Grabbables = null;
             }
 
@@ -725,9 +638,9 @@ namespace Cognitive3D
             {
                 //last page
                 Rect nextbuttonrect = new Rect(410, 510, 80, 30);
-                if (GUI.Button(nextbuttonrect, "Refresh", "button"))
+                if (GUI.Button(nextbuttonrect, "Done", "button"))
                 {
-                    RefreshAssessments();
+                    Close();
                 }
             }
             else
@@ -743,7 +656,6 @@ namespace Cognitive3D
                     if (GUI.Button(nextbuttonrect, "Next", style))
                     {
                         currentPage = Mathf.Min(pageids.Count - 1, currentPage + 1);
-                        RefreshAssessments();
                         Grabbables = null;
                         if (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name != "ReadyRoom")
                         {
@@ -770,7 +682,7 @@ namespace Cognitive3D
                 }
                 if (pageids[currentPage] == "eye tracking")
                 {
-                    if (UseEyeTracking == -1)
+                    if (UseEyeTracking == FeatureUsage.NotSet)
                     {
                         style = "button_disabled";
                         clickAction = null;
@@ -778,7 +690,7 @@ namespace Cognitive3D
                 }
                 if (pageids[currentPage] == "room scale")
                 {
-                    if (UseRoomScale == -1)
+                    if (UseRoomScale == FeatureUsage.NotSet)
                     {
                         style = "button_disabled";
                         clickAction = null;
@@ -786,16 +698,16 @@ namespace Cognitive3D
                 }
                 if (pageids[currentPage] == "grab components")
                 {
-                    if (UseGrabbableObjects == -1)
+                    if (UseGrabbableObjects == FeatureUsage.NotSet)
                     {
                         style = "button_disabled";
                         clickAction = null;
                     }
-                    else if (UseGrabbableObjects == 0)
+                    else if (UseGrabbableObjects == FeatureUsage.Disable)
                     {
-                        //not using grabbable things, find to skip
+                        //not using grabbable things, fine to skip
                     }
-                    else if (UseGrabbableObjects == 1)
+                    else if (UseGrabbableObjects == FeatureUsage.Enable)
                     {
                         if (Grabbables != null && Grabbables.Count > 0)
                         {
@@ -809,12 +721,12 @@ namespace Cognitive3D
                 {
                     if (clickAction != null)
                         clickAction.Invoke();
-                    RefreshAssessments();
                     Grabbables = null;
                 }
             }
         }
 
+        //TODO test these quick setup functions
         public static void SetupOculus(Object[] targets)
         {
 #if C3D_OCULUS
@@ -863,60 +775,6 @@ namespace Cognitive3D
                 Cognitive3D.InitWizard.Init();
             }
 #endif
-        }
-
-        public static void SetupXRInteractionToolkit(Object[] targets)
-        {
-#if C3D_XRINTERACTION_TOOLKIT
-
-        //add XRGrabInteractable component
-
-        foreach(var v in targets)
-        {
-            var grab = (v as GrabComponentsRequired);
-            grab.gameObject.AddComponent<XRGrabInteractable>();
-            if (grab.GetComponentInChildren<Collider>() == null)
-            {
-                grab.gameObject.AddComponent<BoxCollider>();
-            }
-        }
-        for(int i = 0; i< targets.Length;i++)
-        {
-            DestroyImmediate(targets[i]);
-        }
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-#else
-            if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "XRInteraction Toolkit package was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
-            {
-                Cognitive3D.InitWizard.Init();
-            }
-#endif
-        }
-
-        void UpdateActiveAssessments()
-        {
-            var all = GetAllAssessments();
-            foreach (var a in all)
-                a.Active = true;
-
-            OnEnable();
-
-            var tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresGrabbing && (UseGrabbableObjects != 1); });
-            foreach (var a in tempAssessments)
-            {
-                a.Active = false;
-            }
-            tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresRoomScale && (UseRoomScale != 1); });
-            foreach (var a in tempAssessments)
-            {
-                a.Active = false;
-            }
-            tempAssessments = all.FindAll(delegate (AssessmentBase obj) { return obj.RequiresEyeTracking && (UseEyeTracking != 1); });
-            foreach (var a in tempAssessments)
-            {
-                a.Active = false;
-            }
-            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
     }
 }

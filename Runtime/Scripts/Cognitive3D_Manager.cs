@@ -17,6 +17,7 @@ using Valve.VR;
 //quit and destroy events
 
 //TODO move Omnicept, Steam and Oculus specific features into components
+//TODO CONSIDER static framecount variable to avoid Time.frameCount access
 
 namespace Cognitive3D
 {
@@ -25,27 +26,6 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-
-        #region Events
-
-#if C3D_STEAMVR2
-        public delegate void PoseUpdateHandler(params Valve.VR.TrackedDevicePose_t[] args);
-        /// <summary>
-        /// params are SteamVR pose args. does not check index. Currently only used for TrackedDevice valid/disconnected
-        /// </summary>
-        public static event PoseUpdateHandler PoseUpdateEvent;
-        public void OnPoseUpdate(params Valve.VR.TrackedDevicePose_t[] args) { if (PoseUpdateEvent != null) { PoseUpdateEvent(args); } }
-
-        //1.1 and 1.2
-        public delegate void PoseEventHandler(Valve.VR.EVREventType eventType);
-        /// <summary>
-        /// polled in Update. sends all events from Valve.VR.OpenVR.System.PollNextEvent(ref vrEvent, size)
-        /// </summary>
-        public static event PoseEventHandler PoseEvent;
-        public void OnPoseEvent(Valve.VR.EVREventType eventType) { if (PoseEvent != null) { PoseEvent(eventType); } }
-#endif
-        #endregion
-
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
         {
@@ -69,11 +49,11 @@ namespace Cognitive3D
 
         public static bool IsQuitting = false;
 
+        [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
+        public bool BeginSessionAutomatically = true;
+
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 2;
-
-        [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
-        public bool InitializeOnStart = true;
 
 #if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
@@ -94,22 +74,18 @@ namespace Cognitive3D
             instance = this;
         }
 
-        [NonSerialized]
-        public long StartupTimestampMilliseconds;
-
         IEnumerator Start()
         {
-            StartupTimestampMilliseconds = (long)(Util.Timestamp() * 1000);
             GameObject.DontDestroyOnLoad(gameObject);
             if (StartupDelayTime > 0)
             {
                 yield return new WaitForSeconds(StartupDelayTime);
             }
-            if (InitializeOnStart)
-                Initialize("");
+            if (BeginSessionAutomatically)
+                BeginSession();
 
 #if C3D_OCULUS
-            if (AssignOculusProfileToParticipant && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            if (AssignOculusProfileToParticipant && (ParticipantName == string.Empty && ParticipantId == string.Empty))
             {
                 if (!Oculus.Platform.Core.IsInitialized())
                     Oculus.Platform.Core.Initialize();
@@ -122,7 +98,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        Core.SetParticipantId(message.Data.OculusID.ToString());
+                        SetParticipantId(message.Data.OculusID.ToString());
                     }
                 });
             }
@@ -134,12 +110,25 @@ namespace Cognitive3D
         [System.NonSerialized]
         public FixationRecorder fixationRecorder;
 
+        [Obsolete("use Cognitive3D_Manager.BeginSession instead")]
+        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        {
+            BeginSession();
+
+            if (!string.IsNullOrEmpty(participantName))
+                SetParticipantFullName(participantName);
+            if (!string.IsNullOrEmpty(participantId))
+                SetParticipantId(participantId);
+            if (participantProperties != null)
+                SetSessionProperties(participantProperties);
+        }
+        //TODO comment the different parts of this startup
         /// <summary>
         /// Start recording a session. Sets SceneId, records basic hardware information, starts coroutines to record other data points on intervals
         /// </summary>
         /// <param name="participantName">friendly name for identifying participant</param>
         /// <param name="participantId">unique id for identifying participant</param>
-        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        public void BeginSession()
         {
             if (instance != null && instance != this)
             {
@@ -159,18 +148,8 @@ namespace Cognitive3D
                 return;
             }
 
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.NewPoses.AddListener(OnPoseUpdate);
-            PoseUpdateEvent += PoseUpdateEvent_ControllerStateUpdate;
-#endif
-
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
-
-            if (!string.IsNullOrEmpty(participantName))
-                SetParticipantFullName(participantName);
-            if (!string.IsNullOrEmpty(participantId))
-                SetParticipantId(participantId);
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
@@ -188,8 +167,8 @@ namespace Cognitive3D
             NetworkManager = networkGo.AddComponent<NetworkManager>();
             NetworkManager.Initialize(DataCache, ExitpollHandler);
 
+            GameplayReferences.Initialize();
             DynamicManager.Initialize();
-            //DynamicObjectCore.Initialize();
             CustomEvent.Initialize();
             SensorRecorder.Initialize();
 
@@ -274,67 +253,10 @@ namespace Cognitive3D
 
             SetSessionProperties();
 
-            if (participantProperties != null)
-                SetSessionProperties(participantProperties);
-
             OnPreSessionEnd += Core_EndSessionEvent;
             InvokeSendDataEvent(false);
-#if C3D_OMNICEPT
-            var gliaBehaviour = GameplayReferences.GliaBehaviour;
-
-            if (gliaBehaviour != null)
-            {
-                gliaBehaviour.OnEyeTracking.AddListener(RecordEyePupillometry);
-                gliaBehaviour.OnHeartRate.AddListener(RecordHeartRate);
-                gliaBehaviour.OnCognitiveLoad.AddListener(RecordCognitiveLoad);
-                gliaBehaviour.OnHeartRateVariability.AddListener(RecordHeartRateVariability);
-            }
-#endif
+            StartCoroutine(AutomaticSendData());
         }
-
-#if C3D_OMNICEPT
-        double pupillometryTimestamp;
-
-        //update every 100MS
-        void RecordEyePupillometry(HP.Omnicept.Messaging.Messages.EyeTracking data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            if (pupillometryTimestamp < timestampMS)
-            {
-                pupillometryTimestamp = timestampMS + 0.1;
-                if (data.LeftEye.PupilDilationConfidence > 0.5f && data.LeftEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Left Pupil Diameter", data.LeftEye.PupilDilation, timestampMS);
-                }
-                if (data.RightEye.PupilDilationConfidence > 0.5f && data.RightEye.PupilDilation > 1.5f)
-                {
-                    SensorRecorder.RecordDataPoint("HP.Right Pupil Diameter", data.RightEye.PupilDilation, timestampMS);
-                }
-            }
-        }
-
-        //every 5000 ms
-        void RecordHeartRate(HP.Omnicept.Messaging.Messages.HeartRate data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.HeartRate", data.Rate, timestampMS);
-        }
-
-        //every 60 000ms
-        void RecordHeartRateVariability(HP.Omnicept.Messaging.Messages.HeartRateVariability data)
-        {
-            double timestampMS = (double)data.Timestamp.SystemTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.HeartRate.Variability", data.Sdnn, timestampMS);
-        }
-
-        //every 1000MS
-        void RecordCognitiveLoad(HP.Omnicept.Messaging.Messages.CognitiveLoad data)
-        {
-            double timestampMS = (double)data.Timestamp.OmniceptTimeMicroSeconds / 1000000.0;
-            SensorRecorder.RecordDataPoint("HP.CognitiveLoad", data.CognitiveLoadValue, timestampMS);
-            SensorRecorder.RecordDataPoint("HP.CognitiveLoad.Confidence", data.StandardDeviation, timestampMS);
-        }
-#endif
 
         /// <summary>
         /// sets automatic session properties from scripting define symbols, device ids, etc
@@ -350,14 +272,8 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
             SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
             SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
-
             SetSessionProperty("c3d.deviceid", DeviceId);
-
-#if UNITY_EDITOR
-            SetSessionProperty("c3d.app.inEditor", true);
-#else
-            Core.SetSessionProperty("c3d.app.inEditor", false);
-#endif
+            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 
@@ -377,18 +293,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Hololens");
-#elif C3D_VARJOVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Varjo");
-            SetSessionProperty("c3d.app.sdktype", "VarjoVR");
-#elif C3D_VARJOXR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Varjo");
-            SetSessionProperty("c3d.app.sdktype", "VarjoXR");
-#elif C3D_OMNICEPT
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #elif C3D_PICOVR
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
@@ -399,8 +303,10 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "PicoXR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+#elif CVR_MRTK
+            SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
+            SetSessionProperty("c3d.app.sdktype", "MRTK");
 #endif
-            //TODO add XR inputdevice name
 
             //eye tracker addons
 #if C3D_SRANIPAL
@@ -409,10 +315,6 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif C3D_WINDOWSMR
             SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
-#elif C3D_OPENXR
-            //Core.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            //Core.SetSessionProperty("c3d.device.eyetracking.type","OpenXR");
-            SetSessionProperty("c3d.app.sdktype", "OpenXR");
 #endif
             SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
             SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
@@ -445,9 +347,10 @@ namespace Cognitive3D
                 replacingSceneId = true;
             }
             
-            if (replacingSceneId && Cognitive3D_Preferences.Instance.SendDataOnLevelLoad)
+            if (replacingSceneId)
             {
-                InvokeSendDataEvent(false);
+                //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
+                InvokeSendDataEvent(true);
             }
 
             if (replacingSceneId)
@@ -479,31 +382,6 @@ namespace Cognitive3D
         }
 
         #region Updates and Loops
-
-#if C3D_STEAMVR2 || C3D_OCULUS
-        GameplayReferences.ControllerInfo tempControllerInfo = null;
-#endif
-
-#if C3D_STEAMVR2
-        private void PoseUpdateEvent_ControllerStateUpdate(params Valve.VR.TrackedDevicePose_t[] args)
-        {
-            for (int i = 0; i<args.Length;i++)
-            {
-                for (int j = 0; j<2;j++)
-                {
-                    if (GameplayReferences.GetControllerInfo(j,out tempControllerInfo))
-                    {
-                        if (tempControllerInfo.id == i)
-                        {
-                            tempControllerInfo.connected = args[i].bDeviceIsConnected;
-                            tempControllerInfo.visible = args[i].bPoseIsValid;
-                        }
-
-                    }
-                }
-            }
-        }
-#endif
 
         /// <summary>
         /// start after successful session initialization
@@ -538,53 +416,6 @@ namespace Cognitive3D
             }
 
             InvokeUpdateEvent(Time.deltaTime);
-            UpdateSendHotkeyCheck();
-
-            //this should only update if components that use these values are found (controller visibility, arm length?)
-
-#if C3D_STEAMVR2
-            var system = Valve.VR.OpenVR.System;
-            if (system != null)
-            {
-                var vrEvent = new Valve.VR.VREvent_t();
-                var size = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(Valve.VR.VREvent_t));
-                for (int i = 0; i < 64; i++)
-                {
-                    if (!system.PollNextEvent(ref vrEvent, size))
-                        break;
-                    OnPoseEvent((Valve.VR.EVREventType)vrEvent.eventType);
-                }
-            }
-#endif
-
-#if C3D_OCULUS
-            if (GameplayReferences.GetControllerInfo(false, out tempControllerInfo))
-            {
-                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
-            }
-
-            if (GameplayReferences.GetControllerInfo(true, out tempControllerInfo))
-            {
-                tempControllerInfo.connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-                tempControllerInfo.visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
-            }
-#endif
-        }
-
-        void UpdateSendHotkeyCheck()
-        {
-            Cognitive3D_Preferences prefs = Cognitive3D_Preferences.Instance;
-
-            if (!prefs.SendDataOnHotkey) { return; }
-            if (Input.GetKeyDown(prefs.SendDataHotkey))
-            {
-                if (prefs.HotkeyShift && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift)) { return; }
-                if (prefs.HotkeyAlt && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) { return; }
-                if (prefs.HotkeyCtrl && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) { return; }
-
-                InvokeSendDataEvent(false);
-            }
         }
 
 #endregion
@@ -636,23 +467,13 @@ namespace Cognitive3D
 
                 InvokeSendDataEvent(false);
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-                Reset();
+                ResetSessionData();
             }
         }
 
         private void Core_EndSessionEvent()
         {
             OnPreSessionEnd -= Core_EndSessionEvent;
-#if C3D_OMNICEPT
-            var gliaBehaviour = GameplayReferences.GliaBehaviour;
-
-            if (gliaBehaviour != null)
-            {
-                //gliaBehaviour.OnEyePupillometry.RemoveListener(RecordEyePupillometry);
-                gliaBehaviour.OnHeartRate.RemoveListener(RecordHeartRate);
-                gliaBehaviour.OnCognitiveLoad.RemoveListener(RecordCognitiveLoad);
-            }
-#endif
         }
 
         void OnDestroy()
@@ -664,7 +485,7 @@ namespace Cognitive3D
 
             if (IsInitialized)
             {
-                Reset();
+                ResetSessionData();
             }
 
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
@@ -674,16 +495,15 @@ namespace Cognitive3D
         void OnApplicationPause(bool paused)
         {
             if (!IsInitialized) { return; }
-            if (Cognitive3D_Preferences.Instance.SendDataOnPause)
-            {
-                new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
-                InvokeSendDataEvent(true);
-            }
+            new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
+            InvokeSendDataEvent(true);
         }
 
         bool hasCanceled = false;
         void OnApplicationQuit()
         {
+            if (!IsInitialized) { return; }
+
             IsQuitting = true;
             if (hasCanceled) { return; }
 
@@ -704,7 +524,7 @@ namespace Cognitive3D
             
 
             InvokeSendDataEvent(true);
-            Reset();
+            ResetSessionData();
             StartCoroutine(SlowQuit());
         }
 
@@ -718,7 +538,7 @@ namespace Cognitive3D
         #endregion
 
 
-        public const string SDK_VERSION = "0.26.19";
+        public const string SDK_VERSION = "1.0.0";
 
         public delegate void onSendData(bool copyDataToCache); //send data
         /// <summary>
@@ -957,9 +777,10 @@ namespace Cognitive3D
         /// <summary>
         /// Reset all of the static vars to their default values. Used when a session ends
         /// </summary>
-        public static void Reset()
+        public static void ResetSessionData()
         {
             InvokeEndSessionEvent();
+            CoreInterface.Reset();
             if (NetworkManager != null)
                 NetworkManager.EndSession();
             ParticipantId = null;

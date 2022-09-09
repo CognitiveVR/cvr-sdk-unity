@@ -25,7 +25,7 @@ namespace Cognitive3D.Components
         [Tooltip("Distance from HMD to average shoulder height")]
         public float EyeToShoulderHeight = 0.186f; //meters
 
-        GameplayReferences.ControllerInfo tempInfo = null;
+        Transform tempInfo = null;
 
         public override void Cognitive3D_Init()
         {
@@ -45,20 +45,18 @@ namespace Cognitive3D.Components
 
                 bool includedSample = false;
 
-                //if left controller is active, record max distance
-                if (GameplayReferences.GetControllerInfo(false, out tempInfo))
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
                 {
-                    if (tempInfo.connected && tempInfo.visible)
+                    if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
                         maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
                         includedSample = true;
                     }
                 }
 
-                //if right controller is active, record max distance
-                if (GameplayReferences.GetControllerInfo(true, out tempInfo))
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
                 {
-                    if (tempInfo.connected && tempInfo.visible)
+                    if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
                         maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
                         includedSample = true;

@@ -22,14 +22,14 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
         }
 
-        GameplayReferences.ControllerInfo tempInfo;
+        Transform tempInfo;
         private void Cognitive3D_Manager_OnTick()
         {
             bool hit;
 
-            if (GameplayReferences.GetControllerInfo(false,out tempInfo))
+            if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
             {
-                if (tempInfo.connected && tempInfo.visible)
+                if (GameplayReferences.GetControllerTransform(false,out tempInfo))
                 {
                     hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
                     if (hit && !LeftControllerColliding)
@@ -44,21 +44,20 @@ namespace Cognitive3D.Components
                     }
                 }
             }
-
-            if (GameplayReferences.GetControllerInfo(true, out tempInfo))
+            if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
             {
-                if (tempInfo.connected && tempInfo.visible)
+                if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                 {
                     hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
-                    if (hit && !RightControllerColliding)
+                    if (hit && !LeftControllerColliding)
                     {
-                        RightControllerColliding = true;
+                        LeftControllerColliding = true;
                         new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
                     }
-                    else if (!hit && RightControllerColliding)
+                    else if (!hit && LeftControllerColliding)
                     {
                         new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
-                        RightControllerColliding = false;
+                        LeftControllerColliding = false;
                     }
                 }
             }

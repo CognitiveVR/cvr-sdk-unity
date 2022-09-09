@@ -19,8 +19,6 @@ namespace Cognitive3D
         public List<SceneInfo> SceneInfos;
         [Tooltip("Destroy these gameobjects before the selected scene is loaded")]
         public List<GameObject> DestroyOnSceneChange = new List<GameObject>();
-        [Tooltip("Automatically start a session when this scene changes")]
-        public bool StartSessionOnSceneChange = true;
 
         //calls GetPositions and spawns SceneButtonPrefabs at each position
         public override void BeginAssessment()
@@ -54,7 +52,7 @@ namespace Cognitive3D
             List<Vector3> positions = new List<Vector3>();
             for (float i = 1f / count / 2; i < 1; i += 1f / count)
             {
-                float angle = Mathf.Lerp(Mathf.PI / 2 + ArcSize, Mathf.PI / 2 - ArcSize, i);
+                float angle = Mathf.Lerp(Mathf.PI / 2 + ArcSize * Mathf.Deg2Rad, Mathf.PI / 2 - ArcSize * Mathf.Deg2Rad, i);
                 Vector3 pos = new Vector3(Mathf.Cos(angle) * SpawnRadius, Height, Mathf.Sin(angle) * SpawnRadius);
                 positions.Add(pos);
             }
@@ -71,8 +69,6 @@ namespace Cognitive3D
                 if (go != null)
                     Destroy(go);
             }
-            if (StartSessionOnSceneChange)
-                Cognitive3D_Manager.Instance.Initialize();
             SceneManager.LoadScene(info.ScenePath);
         }
 
@@ -80,6 +76,38 @@ namespace Cognitive3D
         public override void CompleteAssessment()
         {
             //base.CompleteAssessment();
+        }
+
+        public override bool IsValid()
+        {
+            bool baseValid = base.IsValid();
+            if (baseValid == false) { return false; }
+
+            if (SceneInfos.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override string InvalidReason()
+        {
+            string baseReason = base.InvalidReason();
+            if (!string.IsNullOrEmpty(baseReason))
+            {
+                return baseReason;
+            }
+            if (SceneInfos.Count > 0)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return "No Scenes set";
+            }
         }
     }
 }

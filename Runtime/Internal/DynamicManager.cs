@@ -5,14 +5,9 @@ using System;
 using UnityEngine.SceneManagement;
 using Cognitive3D;
 
-
-//what is the split between dynamicCORE and dynamicMANAGER?
+//dynamic component registers/removes itself from this centrally managed dynamicData array. manager handles sending manifest when
 //MANAGER holds array of data and puts contents into CORE queues. this iterates through the array (128/frame) - checks for changes to submit to core
     //checking for delta should stay on engine side - engine specific checks that aren't as easily generalized
-//CORE writes json from threaded queues. CORE should live in the dll
-
-//add/remove dynamics to list. passed into core for writing to json
-//run through list to check if the dynamic has moved recently
 namespace Cognitive3D
 {
     //used to update and record all dynamic object changes
@@ -23,8 +18,6 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
-        //public static int CachedSnapshots { get { return DynamicObjectCore.tempsnapshots; } }
-
         public static void Initialize()
         {
             Cognitive3D.Cognitive3D_Manager.OnSendData -= SendData;
@@ -34,18 +27,27 @@ namespace Cognitive3D
             Cognitive3D.Cognitive3D_Manager.OnSendData += SendData;
             Cognitive3D.Cognitive3D_Manager.OnUpdate += OnUpdate;
             Cognitive3D.Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
+
+            //when the cognitive3d manager begins a new session, should mark all data in ActiveDynamicObjectsArray as needing to send manifest again
+            for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
+            {
+                if (ActiveDynamicObjectsArray[i].active)
+                    CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+            }
         }
 
         internal static void Reset()
         {
-            for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
-            {
-                ActiveDynamicObjectsArray[i].active = false;
-            }
-            for(int i = 0; i<DynamicObjectIdArray.Length;i++)
-            {
-                DynamicObjectIdArray[i].Used = false;
-            }
+            //don't clear the active dynamic data
+
+            //for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
+            //{
+            //    ActiveDynamicObjectsArray[i].active = false;
+            //}
+            //for(int i = 0; i<DynamicObjectIdArray.Length;i++)
+            //{
+            //    DynamicObjectIdArray[i].Used = false;
+            //}
         }
 
         //happens after the network has sent the request, before any response. used by active session view
@@ -114,7 +116,9 @@ namespace Cognitive3D
             }
 
             //Cognitive3D.DynamicObjectCore.WriteDynamicManifestEntry(data);
-            CoreInterface.WriteDynamicManifestEntry(data);
+
+            if (Cognitive3D_Manager.IsInitialized)
+                CoreInterface.WriteDynamicManifestEntry(data);
         }
 
         public static void RegisterController(DynamicData data)
@@ -150,7 +154,8 @@ namespace Cognitive3D
             }
 
             //Cognitive3D.DynamicObjectCore.WriteControllerManifestEntry(data);
-            CoreInterface.WriteControllerManifestEntry(data);
+            if (Cognitive3D_Manager.IsInitialized)
+                CoreInterface.WriteControllerManifestEntry(data);
         }
 
         //public static void RegisterMedia(DynamicData data, string videoUrl)
@@ -182,10 +187,6 @@ namespace Cognitive3D
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
         public static void RemoveDynamicObject(string id)
         {
-            if (!Cognitive3D_Manager.IsInitialized) { return; }
-            if (Cognitive3D_Manager.TrackingScene == null) { return; }
-            //if application is quitting, return?
-
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
                 if (String.CompareOrdinal(ActiveDynamicObjectsArray[i].Id, id) == 0)
@@ -395,7 +396,7 @@ namespace Cognitive3D
 
                 ActiveDynamicObjectsArray[i].HasProperties = false;
                 //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
-                CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
             }
         }
 
@@ -595,7 +596,7 @@ namespace Cognitive3D
 
                     ActiveDynamicObjectsArray[i].HasProperties = false;
                     //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
-                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
+                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
                 }
             }
         }
@@ -737,7 +738,7 @@ namespace Cognitive3D
                     }
 
                     //Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
-                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
+                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale,Util.Timestamp(Time.frameCount));
                 }
 
 

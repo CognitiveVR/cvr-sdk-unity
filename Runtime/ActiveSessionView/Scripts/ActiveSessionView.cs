@@ -40,66 +40,8 @@ namespace Cognitive3D.ActiveSession
             copy.Initialize(MainCameraRenderImage);
 
             WarningText.gameObject.SetActive(false);
-#if C3D_AH
-            if (AdhawkApi.Calibrator.Instance != null)
-            {
-                if (!AdhawkApi.Calibrator.Instance.Calibrated)
-                {
-                    WarningText.text = "Eye Tracking not Calibrated";
-                }
 
-                while (!AdhawkApi.Calibrator.Instance.Calibrated)
-                {
-                    yield return new WaitForSeconds(1);
-                    if (AdhawkApi.Calibrator.Instance == null) { break; }
-                }
-
-                if (!AdhawkApi.Calibrator.Instance.Calibrated)
-                {
-                    WarningText.text = "Eye Tracking Calibrated";
-                    yield return new WaitForSeconds(2);
-                    WarningText.enabled = false;
-                }
-            }
-            else
-            {
-                WarningText.text = "Could not find Calibrator";
-            }
-#elif C3D_PUPIL
-            if (calibrationController == null)
-                calibrationController = FindObjectOfType<PupilLabs.CalibrationController>();
-            if (calibrationController != null)
-            {
-                calibrationController.OnCalibrationSucceeded += PupilLabs_OnCalibrationSucceeded;
-                calibrationController.OnCalibrationStarted += PupilLabs_OnCalibrationStarted;
-                calibrationController.OnCalibrationFailed += PupilLabs_OnCalibrationFailed;
-            }
-            else
-            {
-                WarningText.text = "Could not find Calibration Controller";
-            }
-#elif C3D_TOBIIVR
-            WarningText.enabled = false;
-#elif C3D_FOVE
-            if (!Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
-            {
-                WarningText.text = "Eye Tracking not Calibrated";
-            }
-
-            while (Fove.Unity.FoveManager.IsEyeTrackingCalibrating() || !Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
-            {
-                if (Fove.Unity.FoveManager.IsEyeTrackingCalibrating())
-                    WarningText.text = "Calibration In Progress";
-                yield return new WaitForSeconds(1);
-            }
-
-            if (Fove.Unity.FoveManager.IsEyeTrackingCalibrated())
-            {
-                WarningText.text = "Eye Tracking Calibrated";
-                yield return new WaitForSeconds(2);
-                WarningText.enabled = false;
-            }
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             bool needCalibration = false;
             int output = ViveSR.anipal.Eye.SRanipal_Eye_API.IsUserNeedCalibration(ref needCalibration);
             ViveSR.Error error = (ViveSR.Error)output;
@@ -130,31 +72,11 @@ namespace Cognitive3D.ActiveSession
                 WarningText.text = "Eye Tracking not Calibrated";
             }
 #else
+            //TODO add omnicept, vive wave, other eye tracking SDK support
             WarningText.text = "No Eye Tracking Found!";
 #endif
         }
 
-#if C3D_PUPIL
-        PupilLabs.CalibrationController calibrationController;
-
-        private void PupilLabs_OnCalibrationSucceeded()
-        {
-            WarningText.text = "Calibration Successful";
-            calibrationController.OnCalibrationSucceeded -= PupilLabs_OnCalibrationSucceeded;
-            calibrationController.OnCalibrationStarted -= PupilLabs_OnCalibrationStarted;
-            calibrationController.OnCalibrationFailed -= PupilLabs_OnCalibrationFailed;
-        }
-
-        private void PupilLabs_OnCalibrationFailed()
-        {
-            WarningText.text = "Calibration Failed";
-        }
-
-        private void PupilLabs_OnCalibrationStarted()
-        {
-            WarningText.text = "Is Calibrating";
-        }
-#endif
         public void Button_ToggleFullscreen(bool showFullscreen)
         {
             if (showFullscreen)

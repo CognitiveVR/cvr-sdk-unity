@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//allows the HMD to activate buttons that implement the IGazeFocus interface
+
+//TODO use inputfeature to automatically configure this
+
 namespace Cognitive3D
 {
     public class HMDPointer : MonoBehaviour

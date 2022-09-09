@@ -219,7 +219,7 @@ namespace Cognitive3D
                 else if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
                 {
                     Transform t = null;
-                    if (GameplayReferences.GetController(true, out t))
+                    if (GameplayReferences.GetControllerTransform(true, out t))
                     {
                         pointerInstance.transform.SetParent(t);
                         pointerInstance.transform.localPosition = Vector3.zero;
@@ -229,7 +229,7 @@ namespace Cognitive3D
                 else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
                 {
                     Transform t = null;
-                    if (GameplayReferences.GetController(false, out t))
+                    if (GameplayReferences.GetControllerTransform(false, out t))
                     {
                         pointerInstance.transform.SetParent(t);
                         pointerInstance.transform.localPosition = Vector3.zero;

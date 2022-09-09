@@ -3,16 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D;
 
-//deals with most generic integration stuff
-//hmd removed - send data
-
-//must implement
-//1. dynamics raycast
-//2. call dynamic.OnGaze(interval)
-//3. fove/pupil/tobii gaze direction
-//4. media
-//5. gps + compass
-//6. floor position
+//deals with most generic hmd position and facing direction functions
 
 namespace Cognitive3D
 {
@@ -51,10 +42,7 @@ namespace Cognitive3D
         private void OVRManager_HMDUnmounted()
         {
             headsetPresent = false;
-            if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
-            {
-                Core.InvokeSendDataEvent(false);
-            }
+            Cognitive3D_Manager.InvokeSendDataEvent(false);
         }
 #endif
 

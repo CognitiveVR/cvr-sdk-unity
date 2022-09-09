@@ -28,7 +28,7 @@ namespace Cognitive3D
                     S_GazeSnapshotCount = instance.GazeSnapshotCount;
                     S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    S_TransactionSnapshotCount = instance.TransactionSnapshotCount;
+                    S_EventDataThreshold = instance.EventDataThreshold;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
                 return instance;
@@ -39,7 +39,7 @@ namespace Cognitive3D
         public const float SnapshotInterval = 0.1f;
         public static int S_GazeSnapshotCount;
         public static int S_DynamicSnapshotCount;
-        public static int S_TransactionSnapshotCount;
+        public static int S_EventDataThreshold;
         public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
 
@@ -48,6 +48,9 @@ namespace Cognitive3D
         public string Dashboard = "app.cognitive3d.com";
         public string Viewer = "viewer.cognitive3d.com/scene/";
         public string Documentation = "docs.cognitive3d.com";
+
+        //used to show Scene Setup Window each time SDK is installed into a project - instead of using editor preferences
+        public bool EditorHasDisplayedPopup = false;
 
         public GazeType GazeType = GazeType.Physics;
         //0 is multipass, 1 is single pass, 2 is singlepass instanced
@@ -89,22 +92,12 @@ namespace Cognitive3D
         public int GazeSnapshotCount = 64;
         public int SensorSnapshotCount = 128;
         public int DynamicSnapshotCount = 128;
-        public int TransactionSnapshotCount = 64;
+        public int EventDataThreshold = 64;
         public int FixationSnapshotCount = 64;
 
         public int AutomaticSendTimer = 10;
 
-        public bool SendDataOnQuit = true;
-        public bool SendDataOnPause = true;
-        public bool SendDataOnHMDRemove = true;
-        public bool SendDataOnLevelLoad = true;
-        public bool SendDataOnHotkey = false;
-        public bool HotkeyShift = true;
-        public bool HotkeyCtrl = false;
-        public bool HotkeyAlt = false;
-        public KeyCode SendDataHotkey = KeyCode.F9;
-
-        //defualt 10MB cache size
+        //defualt 100MB cache size
         public long LocalDataCacheSize = 1024 * 1024 * 100;
         public bool LocalStorage = true;
         public bool UploadCacheOnEndPlay = true;
@@ -161,14 +154,7 @@ namespace Cognitive3D
         /// <returns></returns>
         public static SceneSettings FindCurrentScene()
         {
-            SceneSettings returnSettings = null;
-
-            returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
-            if (returnSettings == null)
-            {
-                Debug.Log("active scene path doesn't exist " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
-            }
-
+            SceneSettings returnSettings = FindSceneByPath(UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
             return returnSettings;
         }
 

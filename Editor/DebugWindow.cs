@@ -110,7 +110,7 @@ namespace Cognitive3D
             
             sb.AppendLine("Automatic Send Timer: " + p.AutomaticSendTimer);
             sb.AppendLine("Gaze Snapshot Batch Size: " + p.GazeSnapshotCount);
-            sb.AppendLine("Event Snapshot Batch Size: " + p.TransactionSnapshotCount);
+            sb.AppendLine("Event Snapshot Batch Size: " + p.EventDataThreshold);
             sb.AppendLine("Dynamic Snapshot Batch Size: " + p.DynamicSnapshotCount);
             sb.AppendLine("Sensor Snapshot Batch Size: " + p.SensorSnapshotCount);
             sb.AppendLine("Fixation Snapshot Batch Size: " + p.FixationSnapshotCount);
@@ -122,13 +122,6 @@ namespace Cognitive3D
             sb.AppendLine("Custom Gateway: " + p.Gateway);
             sb.AppendLine("Custom Viewer: " + p.Viewer);
             sb.AppendLine("Custom Dashboard: " + p.Dashboard);
-
-            sb.AppendLine("Send Data on HMD Remove: " + p.SendDataOnHMDRemove);
-            sb.AppendLine("Send Data on Level Load: " + p.SendDataOnLevelLoad);
-            sb.AppendLine("Send Data on Quit: " + p.SendDataOnQuit);
-            sb.AppendLine("Send Data on Hotkey: " + p.SendDataOnHotkey);
-            sb.AppendLine("Send Data Primary Hotkey: " + p.SendDataHotkey);
-            sb.AppendLine("Send Data Hotkey Modifiers: " + p.HotkeyShift + " " + p.HotkeyCtrl + " " + p.HotkeyAlt);
 
             sb.AppendLine("Texture Export Quality: " + p.TextureResize);
             sb.AppendLine("Export Lowest LOD from LODGroup Components: " + p.ExportSceneLODLowest);
@@ -209,7 +202,7 @@ namespace Cognitive3D
             var manager = FindObjectOfType<Cognitive3D_Manager>();
             if (manager != null)
             {
-                sb.AppendLine("Manager Initialize On Start: " + manager.InitializeOnStart);
+                sb.AppendLine("Manager Initialize On Start: " + manager.BeginSessionAutomatically);
                 sb.AppendLine("Manager Startup Delay Time (s): " + manager.StartupDelayTime);
             }
             else

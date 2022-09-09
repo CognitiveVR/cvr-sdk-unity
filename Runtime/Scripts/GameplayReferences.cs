@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 //static access point to get references to main cameras, controllers, room data
 
@@ -12,10 +14,12 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_XR || C3D_OMNICEPT
+#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_OMNICEPT
                 return true;
 #elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
+#elif CVR_MRTK
+                return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled;
 #else
                 return false;
 #endif
@@ -25,42 +29,83 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_STEAMVR2 || C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOVR || C3D_PICOXR || C3D_XR || C3D_WINDOWSMR || C3D_VARJOVR || C3D_VARJOXR || C3D_OMNICEPT
-                return true;
-#else
+                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
+#if C3D_MRTK
                 return false;
 #endif
+                return true;
             }
         }
         public static bool SDKSupportsRoomSize
         {
-            //TODO should be everything except AR SDKS
+            //should be everything except AR SDKS
             get
             {
-#if C3D_STEAMVR2 || C3D_OCULUS || C3D_XR || C3D_PICOVR || C3D_PICOXR
-                return true;
-#else
+#if C3D_MRTK
                 return false;
 #endif
+                return true;
             }
         }
 
-        #region HMD and Controllers
-
-        private static Camera cam;
-        public static Camera HMDCameraComponent
+        internal static void Initialize()
         {
-            get
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+        private static void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+        //updates controller and hmd inputdevices to call events when states change
+        private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (head.isValid != HMDDevice.isValid)
             {
-                if (cam == null)
-                {
-                    if (HMD != null)
-                    {
-                        cam = HMD.GetComponent<Camera>();
-                    }
-                }
-                return cam;
+                InvokeHMDValidityChangeEvent(head.isValid);
+                HMDDevice = head;
             }
+            var left = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            if (left.isValid != controllerDevices[0].isValid)
+            {
+                controllerDevices[0] = left;
+                InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
+            }
+            var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            if (right.isValid != controllerDevices[1].isValid)
+            {
+                controllerDevices[1] = right;
+                InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
+            }
+        }
+
+#region Room
+
+        //really simple function to a rect from a collection of points
+        //IMPROVEMENT support non-rectangular boundaries
+        //IMPROVEMENT support rotated rectangular boundaries
+        static Vector3 GetArea(Vector3[] points)
+        {
+            float minX = 0;
+            float maxX = 0;
+            float minZ = 0;
+            float maxZ = 0;
+            foreach (var v in points)
+            {
+                if (v.x < minX)
+                    minX = v.x;
+                if (v.x > maxX)
+                    maxX = v.x;
+                if (v.z < minZ)
+                    maxZ = v.z;
+                if (v.z > maxZ)
+                    minZ = v.z;
+            }
+            return new Vector3(maxX - minX, 0, maxZ - minZ);
         }
 
         ///x,y,z is width, height, depth
@@ -72,7 +117,7 @@ namespace Cognitive3D
             float roomY = 0;
             if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
-                roomSize = new Vector3(roomX,0,roomY);
+                roomSize = new Vector3(roomX, 0, roomY);
                 return true;
             }
             else
@@ -131,6 +176,28 @@ namespace Cognitive3D
 #endif
         }
 
+#endregion
+
+#region HMD
+
+        static InputDevice HMDDevice;
+
+        private static Camera cam;
+        public static Camera HMDCameraComponent
+        {
+            get
+            {
+                if (cam == null)
+                {
+                    if (HMD != null)
+                    {
+                        cam = HMD.GetComponent<Camera>();
+                    }
+                }
+                return cam;
+            }
+        }
+
 #if C3D_OCULUS
         static OVRCameraRig _cameraRig;
         static OVRCameraRig CameraRig
@@ -174,28 +241,7 @@ namespace Cognitive3D
         }
 #endif
 
-        //really simple function to a rect from a collection of points
-        //IMPROVEMENT support non-rectangular boundaries
-        //IMPROVEMENT support rotated rectangular boundaries
-        static Vector3 GetArea(Vector3[] points)
-        {
-            float minX = 0;
-            float maxX = 0;
-            float minZ = 0;
-            float maxZ = 0;
-            foreach (var v in points)
-            {
-                if (v.x < minX)
-                    minX = v.x;
-                if (v.x > maxX)
-                    maxX = v.x;
-                if (v.z < minZ)
-                    maxZ = v.z;
-                if (v.z > maxZ)
-                    minZ = v.z;
-            }
-            return new Vector3(maxX - minX, 0, maxZ - minZ);
-        }
+
 
         private static Transform _hmd;
         /// <summary>Returns HMD based on included SDK, or Camera.Main if no SDK is used. MAY RETURN NULL!</summary>
@@ -211,17 +257,6 @@ namespace Cognitive3D
                     {
                         Camera cam = rig.centerEyeAnchor.GetComponent<Camera>();
                         _hmd = cam.transform;
-                    }
-
-#elif C3D_VIVEWAVE
-                    var cameras = GameObject.FindObjectsOfType<WaveVR_Camera>();
-                    for (int i = 0; i < cameras.Length; i++)
-                    {
-                        if (cameras[i].eye == wvr.WVR_Eye.WVR_Eye_Both)
-                        {
-                            _hmd = cameras[i].transform;
-                            break;
-                        }
                     }
 #endif
 #if C3D_PICOVR
@@ -252,264 +287,52 @@ namespace Cognitive3D
             }
         }
 
-#if C3D_OCULUS
-        //records controller transforms from either interaction player or behaviour poses
-        static void InitializeControllers()
+#endregion
+
+#region Controllers
+
+        //dynamic objects set as controllers call 'set controller' on enable passing a reference to that transform. input device isn't guaranteed to be valid at this point
+
+        static Transform[] controllerTransforms = new Transform[2];
+        static InputDevice[] controllerDevices = new InputDevice[2];
+
+
+        public delegate void onDeviceValidityChange(InputDevice device, XRNode node, bool isValid);
+        /// <summary>
+        /// called after the controller has changed from valid/invalid
+        /// </summary>
+        public static event onDeviceValidityChange OnControllerValidityChange;
+        public static void InvokeControllerValidityChangeEvent(InputDevice device, XRNode node, bool isValid) { if (OnControllerValidityChange != null) { OnControllerValidityChange(device, node, isValid); } }
+
+        public static event onDeviceValidityChange OnHMDValidityChange;
+        public static void InvokeHMDValidityChangeEvent(bool isValid) { if (OnHMDValidityChange != null) { OnHMDValidityChange(HMDDevice, XRNode.Head, isValid); } }
+
+        //dynamic object sets itself as a controller. simple way of getting the correct dynamic object
+        public static bool SetController(DynamicObject dyn, bool isRight)
         {
-            if (CameraRig == null) { return; } //TODO IMPROVE could be calling FindObjectOfType every frame
-
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-            }
-
-            if (controllers[0] == null)
-            {
-                controllers[0] = new ControllerInfo() { transform = CameraRig.leftHandAnchor, isRight = false, id = 1 };
-                controllers[0].connected = OVRInput.IsControllerConnected(OVRInput.Controller.LTouch);
-                controllers[0].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.LTouch);
-
-            }
-
-            if (controllers[1] == null)
-            {
-                controllers[1] = new ControllerInfo() { transform = CameraRig.rightHandAnchor, isRight = true, id = 2 };
-                controllers[1].connected = OVRInput.IsControllerConnected(OVRInput.Controller.RTouch);
-                controllers[1].visible = OVRInput.GetControllerPositionTracked(OVRInput.Controller.RTouch);
-            }
-        }
-#elif C3D_STEAMVR2
-
-        static Valve.VR.SteamVR_Behaviour_Pose[] poses;
-
-        //records controller transforms from either interaction player or behaviour poses
-        static void InitializeControllers()
-        {
-            if (controllers == null || controllers[0].transform == null || controllers[1].transform == null)
-            {
-                if (controllers == null)
-                {
-                    controllers = new ControllerInfo[2];
-                    controllers[0] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
-                    controllers[1] = new ControllerInfo() { transform = null, isRight = false, id = -1 };
-                }
-
-                if (poses != null)
-                {
-                    for (int i = 0; i < poses.Length; i++)
-                    {
-                        if (poses[i] == null)
-                        {
-                            poses = null;
-                            break;
-                        }
-                    }
-                }
-
-                if (poses == null)
-                {
-                    poses = GameObject.FindObjectsOfType<Valve.VR.SteamVR_Behaviour_Pose>();
-                }
-                if (poses != null && poses.Length > 1)
-                {
-                    controllers[0].transform = poses[0].transform;
-                    controllers[1].transform = poses[1].transform;
-                    controllers[0].isRight = poses[0].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
-                    controllers[1].isRight = poses[1].inputSource == Valve.VR.SteamVR_Input_Sources.RightHand;
-                    controllers[0].id = poses[0].GetDeviceIndex();
-                    controllers[1].id = poses[1].GetDeviceIndex();
-                }
-            }
-        }
-
-#elif C3D_VIVEWAVE
-
-        //no clear way to get vive wave controller reliably. wave controller dynamics call this when enabled
-        public static void SetController(GameObject go, bool isRight)
-        {
-            InitializeControllers();
             if (isRight)
             {
-                controllers[1].transform = go.transform;
-                controllers[1].isRight = true;
-                controllers[1].id = WaveVR.Instance.controllerRight.index;
-                controllers[1].connected = WaveVR.Instance.controllerRight.connected;
-                controllers[1].visible = WaveVR.Instance.controllerRight.pose.pose.IsValidPose;
+                controllerTransforms[1] = dyn.transform;
+                controllerDevices[1] = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+                return controllerDevices[1].isValid;
             }
             else
             {
-                controllers[0].transform = go.transform;
-                controllers[0].isRight = false;
-                controllers[0].id = WaveVR.Instance.controllerLeft.index;
-                controllers[0].connected = WaveVR.Instance.controllerLeft.connected;
-                controllers[0].visible = WaveVR.Instance.controllerLeft.pose.pose.IsValidPose;
+                controllerTransforms[0] = dyn.transform;
+                controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+                return controllerDevices[0].isValid;
             }
         }
-
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-        }
-#elif C3D_WINDOWSMR
-
-        //no clear way to get controller reliably. dynamic object calls this when enabled
-        public static void SetController(GameObject go, bool isRight)
-        {
-            InitializeControllers();
-            if (isRight)
-            {
-                controllers[1].transform = go.transform;
-                controllers[1].isRight = true;
-                controllers[1].connected = true;
-                controllers[1].visible = true;
-                controllers[1].id = 1;
-            }
-            else
-            {
-                controllers[0].transform = go.transform;
-                controllers[0].isRight = false;
-                controllers[0].connected = true;
-                controllers[0].visible = true;
-                controllers[0].id = 0;
-            }
-        }
-
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-        }
-#elif C3D_PICOVR
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                var manager = Pvr_ControllerManager.Instance;
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-                if (manager != null)
-                {
-                    var pico_controller = manager.GetComponent<Pvr_Controller>();
-                    controllers[0].transform = pico_controller.controller0.transform;
-                    controllers[0].isRight = false;
-                    controllers[0].connected = true;
-                    controllers[0].visible = true;
-                    controllers[0].id = 0;
-                    controllers[1].transform = pico_controller.controller1.transform;
-                    controllers[1].isRight = true;
-                    controllers[1].connected = true;
-                    controllers[1].visible = true;
-                    controllers[1].id = 1;
-                }
-            }
-        }
-#elif C3D_PICOXR
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-        }
-
-        public static void SetController(GameObject go, bool isRight)
-        {
-            InitializeControllers();
-            if (isRight)
-            {
-                controllers[1].transform = go.transform;
-                controllers[1].isRight = true;
-                controllers[1].connected = true;
-                controllers[1].visible = true;
-                controllers[1].id = 1;
-            }
-            else
-            {
-                controllers[0].transform = go.transform;
-                controllers[0].isRight = false;
-                controllers[0].connected = true;
-                controllers[0].visible = true;
-                controllers[0].id = 0;
-            }
-        }
-
-        public static bool GetEyeTrackingDevice(out UnityEngine.XR.InputDevice device)
-        {
-            //TODO cache input device and check if 'IsValid'
-            device = default(UnityEngine.XR.InputDevice);
-
-            if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
-                return false;
-
-            List<UnityEngine.XR.InputDevice> devices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.EyeTracking | UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, devices);
-            if (devices.Count == 0)
-            {
-                Debug.Log("Failed at GetEyeTrackingDevice 0");
-                return false;
-            }
-            device = devices[0];
-            if (!device.isValid)
-                Debug.Log("Failed at GetEyeTrackingDevice 1");
-            return device.isValid;
-        }
-#else
-
-        //no clear way to get controller reliably. dynamic object calls this when enabled
-        public static void SetController(GameObject go, bool isRight)
-        {
-            InitializeControllers();
-            if (isRight)
-            {
-                controllers[1].transform = go.transform;
-                controllers[1].isRight = true;
-                controllers[1].connected = true;
-                controllers[1].visible = true;
-                controllers[1].id = 1;
-            }
-            else
-            {
-                controllers[0].transform = go.transform;
-                controllers[0].isRight = false;
-                controllers[0].connected = true;
-                controllers[0].visible = true;
-                controllers[0].id = 0;
-            }
-        }
-
-        static void InitializeControllers()
-        {
-            if (controllers == null)
-            {
-                controllers = new ControllerInfo[2];
-                controllers[0] = new ControllerInfo();
-                controllers[1] = new ControllerInfo();
-            }
-        }
-#endif
 
         public static IControllerPointer ControllerPointerLeft;
         public static IControllerPointer ControllerPointerRight;
 
         public static bool DoesPointerExistInScene()
         {
-            InitializeControllers();
-            if (ControllerPointerLeft == null && controllers[0].transform != null)
-                ControllerPointerLeft = controllers[0].transform.GetComponent<IControllerPointer>();
-            if (ControllerPointerRight == null && controllers[1].transform != null)
-                ControllerPointerRight = controllers[1].transform.GetComponent<IControllerPointer>();
+            if (ControllerPointerLeft == null && controllerTransforms[0] != null)
+                ControllerPointerLeft = controllerTransforms[0].GetComponent<IControllerPointer>();
+            if (ControllerPointerRight == null && controllerTransforms[1].transform != null)
+                ControllerPointerRight = controllerTransforms[1].GetComponent<IControllerPointer>();
             if (ControllerPointerRight == null && ControllerPointerLeft == null)
             {
                 return false;
@@ -517,92 +340,51 @@ namespace Cognitive3D
             return true;
         }
 
-
-        public class ControllerInfo
-        {
-            public Transform transform;
-            public bool isRight;
-            public int id = -1;
-
-            public bool connected;
-            public bool visible;
-        }
-
-        static ControllerInfo[] controllers;
-
-        public static bool GetControllerInfo(int deviceID, out ControllerInfo info)
-        {
-            InitializeControllers();
-            if (controllers[0].id == deviceID && controllers[0].transform != null) { info = controllers[0]; return true; }
-            if (controllers[1].id == deviceID && controllers[1].transform != null) { info = controllers[1]; return true; }
-            info = null;
-            return false;
-        }
-
-        public static bool GetControllerInfo(bool right, out ControllerInfo info)
-        {
-            InitializeControllers();
-            if (controllers[0].isRight == right && controllers[0].id >= 0 && controllers[0].transform != null) { info = controllers[0]; return true; }
-            if (controllers[1].isRight == right && controllers[1].id >= 0 && controllers[1].transform != null) { info = controllers[1]; return true; }
-            info = null;
-            return false;
-        }
-
-
         /// <summary>
-        /// steamvr ID is tracked device id
-        /// oculus ID 0 is right, 1 is left controller
+        /// this function returns true if the cached data for this node is valid. for head, lefthand and righthand only
         /// </summary>
-        public static bool GetController(int deviceid, out Transform transform)
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static bool IsInputDeviceValid(XRNode node)
         {
-            if (SDKSupportsControllers)
+            switch (node)
             {
-                InitializeControllers();
-                if (controllers[0].id == deviceid) { transform = controllers[0].transform; return true; }
-                if (controllers[1].id == deviceid) { transform = controllers[1].transform; return true; }
-                transform = null;
-                return false;
-            }
-            else
-            {
-                transform = null;
-                return false;
+                case XRNode.Head:
+                    return HMDDevice.isValid;
+                case XRNode.LeftHand:
+                    return controllerDevices[0].isValid;
+                case XRNode.RightHand:
+                    return controllerDevices[1].isValid;
+                default:
+                    return false;
             }
         }
 
-        public static bool GetController(bool right, out Transform transform)
+        public static bool GetControllerInfo(bool right, out InputDevice info)
         {
-            if (SDKSupportsControllers)
+            if (right)
             {
-                InitializeControllers();
-                if (right == controllers[0].isRight && controllers[0].id >= 0) { transform = controllers[0].transform; return true; }
-                if (right == controllers[1].isRight && controllers[1].id >= 0) { transform = controllers[1].transform; return true; }
-                transform = null;
-                return false;
+                info = controllerDevices[1];
+                return controllerDevices[1].isValid;
             }
             else
             {
-                transform = null;
-                return false;
+                info = controllerDevices[0];
+                return controllerDevices[0].isValid;
             }
         }
 
-        /// <summary>Returns Tracked Controller position by index. Based on SDK</summary>
-        public static bool GetControllerPosition(bool right, out Vector3 position)
+        public static bool GetControllerTransform(bool right, out Transform transform)
         {
-            if (SDKSupportsControllers)
+            if (right)
             {
-
-                InitializeControllers();
-                if (right == controllers[0].isRight && controllers[0].transform != null && controllers[0].id >= 0) { position = controllers[0].transform.position; return true; }
-                if (right == controllers[1].isRight && controllers[1].transform != null && controllers[1].id >= 0) { position = controllers[1].transform.position; return true; }
-                position = Vector3.zero;
-                return false;
+                transform = controllerTransforms[1];
+                return transform != null;
             }
             else
             {
-                position = Vector3.zero;
-                return false;
+                transform = controllerTransforms[0];
+                return transform != null;
             }
         }
 

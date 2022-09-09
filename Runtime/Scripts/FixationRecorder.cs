@@ -1,10 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-#if C3D_AH
-using AdhawkApi;
-using AdhawkApi.Numerics.Filters;
-#endif
 
 namespace Cognitive3D
 {
@@ -34,87 +30,7 @@ namespace Cognitive3D
         }
 
         #region EyeTracker
-
-#if C3D_FOVE
-        const int CachedEyeCaptures = 70; //FOVE
-        Fove.Unity.FoveInterface fovebase;
-        public bool CombinedWorldGazeRay(out Ray ray)
-        {
-            var r = fovebase.GetGazeRays();
-            ray = new Ray((r.left.origin + r.right.origin) / 2, (r.left.direction + r.right.direction) / 2);
-            return true;
-        }
-
-        public bool LeftEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Left; }
-        public bool RightEyeOpen() { return Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Both && Fove.Unity.FoveManager.CheckEyesClosed() != Fove.Eye.Right; }
-
-        public long EyeCaptureTimestamp()
-        {
-            return (long)(Util.Timestamp() * 1000);
-        }
-
-        int lastProcessedFrame;
-        //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
-#elif C3D_TOBIIVR
-        const int CachedEyeCaptures = 120; //TOBII
-        Tobii.XR.IEyeTrackingProvider EyeTracker;
-        Tobii.XR.TobiiXR_EyeTrackingData currentData;
-        public bool CombinedWorldGazeRay(out Ray ray)
-        {
-            ray = new Ray();
-            ray.origin = GameplayReferences.HMD.TransformPoint(currentData.GazeRay.Origin);
-            ray.direction = GameplayReferences.HMD.TransformDirection(currentData.GazeRay.Direction);
-
-            //if (currentData.GazeRay.IsValid)
-                //Debug.DrawRay(ray.origin, ray.direction * 1000, Color.magenta, 5);
-
-            return currentData.GazeRay.IsValid;
-        }
-
-        public bool LeftEyeOpen() { return !currentData.IsLeftEyeBlinking; }
-        public bool RightEyeOpen() { return !currentData.IsRightEyeBlinking; }
-
-        //unix timestamp of application start in milliseconds
-        long tobiiStartTimestamp;
-        
-        private IEnumerator Start()
-        {            
-            while (EyeTracker == null)
-            {
-                yield return null;
-                EyeTracker = Tobii.XR.TobiiXR.Internal.Provider;
-                //is this fixation recorder component added immediately? or after cognitive session start?
-            }
-            tobiiStartTimestamp = Cognitive3D_Manager.Instance.StartupTimestampMilliseconds;
-        }
-
-        public long EyeCaptureTimestamp()
-        {
-            return tobiiStartTimestamp + (long)(currentData.Timestamp * 1000);
-        }
-
-        int lastProcessedFrame;
-        //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                currentData = Tobii.XR.TobiiXR.Internal.Provider.EyeTrackingDataLocal;
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
-#elif C3D_PICOVR
+#if C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
         public bool CombinedWorldGazeRay(out Ray ray)
@@ -295,8 +211,8 @@ namespace Cognitive3D
 
         public void SetupCallbacks()
         {
-            Core.OnPostSessionEnd -= PostSessionEndEvent;
-            Core.OnPostSessionEnd += PostSessionEndEvent;
+            Cognitive3D_Manager.OnPostSessionEnd -= PostSessionEndEvent;
+            Cognitive3D_Manager.OnPostSessionEnd += PostSessionEndEvent;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
@@ -501,7 +417,7 @@ namespace Cognitive3D
             }
             return false;
         }
-#elif C3D_VARJO
+#elif C3D_VARJOXR
         const int CachedEyeCaptures = 100; //VARJO
 
         Varjo.XR.VarjoEyeTracking.GazeData currentData;
@@ -601,128 +517,6 @@ namespace Cognitive3D
             }
             return false;
         }
-#elif C3D_NEURABLE
-        const int CachedEyeCaptures = 120;
-        //public Ray CombinedWorldGazeRay() { return Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay(); }
-        public bool CombinedWorldGazeRay(out Ray ray)
-        {
-            ray = Neurable.Core.NeurableUser.Instance.NeurableCam.GazeRay();
-            return true;
-        }
-
-        //TODO neurable check eye state
-        public bool LeftEyeOpen() { return true; }
-        public bool RightEyeOpen() { return true; }
-
-        static System.DateTime epoch = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-        public long EyeCaptureTimestamp()
-        {
-            //TODO return correct timestamp - might need to use Tobii implementation
-            System.TimeSpan span = System.DateTime.UtcNow - epoch;
-            return (long)(span.TotalSeconds * 1000);
-        }
-
-        int lastProcessedFrame;
-        //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
-#elif C3D_AH
-        const int CachedEyeCaptures = 120; //ADHAWK
-        private static Calibrator ah_calibrator;
-        AdhawkApi.EyeTracker eyetracker;
-        public bool CombinedWorldGazeRay(out Ray ray)
-        {
-            Vector3 r = ah_calibrator.GetGazeVector(filterType: AdhawkApi.Numerics.Filters.FilterType.ExponentialMovingAverage);
-            Vector3 x = ah_calibrator.GetGazeOrigin();
-            ray = new Ray(x, r);
-            return true;
-        }
-
-        public bool LeftEyeOpen() { return eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingLeft || eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingBoth; }
-        public bool RightEyeOpen() { return eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingRight || eyetracker.CurrentTrackingState == AdhawkApi.EyeTracker.TrackingState.TrackingBoth; }
-
-        public long EyeCaptureTimestamp()
-        {
-            return (long)(Util.Timestamp() * 1000);
-        }
-
-        int lastProcessedFrame;
-        //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (lastProcessedFrame != Time.frameCount)
-            {
-                lastProcessedFrame = Time.frameCount;
-                return true;
-            }
-            return false;
-        }
-#elif C3D_PUPIL
-        PupilLabs.GazeController gazeController;
-
-        void ReceiveEyeData(PupilLabs.GazeData data)
-        {
-            if (data.Confidence < 0.6f)
-            {
-                return;
-            }
-            PupilGazeData pgd = new PupilGazeData();
-
-            pgd.Timestamp = (long)(Util.Timestamp() * 1000);
-            pgd.LeftEyeOpen = data.IsEyeDataAvailable(1);
-            pgd.RightEyeOpen = data.IsEyeDataAvailable(0);
-            pgd.GazeRay = new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.TransformDirection(data.GazeDirection));
-            GazeDataQueue.Enqueue(pgd);
-        }
-
-        Queue<PupilGazeData> GazeDataQueue = new Queue<PupilGazeData>(8);
-        class PupilGazeData
-        {
-            public long Timestamp;
-            public Ray GazeRay;
-            public bool LeftEyeOpen;
-            public bool RightEyeOpen;
-        }
-
-        private void OnDisable()
-        {
-            gazeController.OnReceive3dGaze -= ReceiveEyeData;
-        }
-
-        const int CachedEyeCaptures = 120; //PUPIL LABS
-        public bool CombinedWorldGazeRay(out Ray ray)
-        {
-            //world gaze direction
-            ray = currentData.GazeRay;
-            return true;
-        }
-
-        public bool LeftEyeOpen() { return currentData.LeftEyeOpen; }
-        public bool RightEyeOpen() { return currentData.RightEyeOpen; }
-
-        public long EyeCaptureTimestamp()
-        {
-            return currentData.Timestamp;
-        }
-
-        PupilGazeData currentData;
-        //returns true if there is another data point to work on
-        public bool GetNextData()
-        {
-            if (GazeDataQueue.Count > 0)
-            {
-                currentData = GazeDataQueue.Dequeue();
-                return true;
-            }
-            return false;
-        }
 #elif C3D_OMNICEPT
         //TODO check if this is on a different thread
         Queue<SimpleGliaEyeData> trackingDataQueue = new Queue<SimpleGliaEyeData>();
@@ -796,6 +590,48 @@ namespace Cognitive3D
                 //eye tracking
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
             }
+        }
+#elif CVR_MRTK
+        const int CachedEyeCaptures = 30;
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            if (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid)
+            {
+                ray = new Ray
+                    (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.GazeOrigin,
+                    Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.GazeDirection
+                    );
+                return true;
+            }
+            ray = new Ray();
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
+        }
+        public bool RightEyeOpen()
+        {
+            return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
         }
 #else
         const int CachedEyeCaptures = 120;
@@ -950,21 +786,10 @@ namespace Cognitive3D
 
             CoreInterface.FixationSettings(MaxBlinkMs, PreBlinkDiscardMs, BlinkEndWarmupMs, MinFixationMs, MaxConsecutiveDiscardMs, MaxFixationAngle, MaxConsecutiveOffDynamicMs, DynamicFixationSizeMultiplier, FocusSizeFromCenter, SaccadeFixationEndMs);
 
-#if C3D_FOVE
-            fovebase = GameplayReferences.FoveInstance;
-#elif C3D_SRANIPAL
+#if C3D_SRANIPAL
             SetupCallbacks();
             System.TimeSpan span = System.DateTime.UtcNow - epoch;
             epochStart = span.TotalSeconds;
-#elif C3D_AH
-            ah_calibrator = Calibrator.Instance;
-            eyetracker = EyeTracker.Instance;
-#elif C3D_PUPIL
-            gazeController = GameplayReferences.GazeController;
-            if (gazeController != null)
-                gazeController.OnReceive3dGaze += ReceiveEyeData;
-            else
-                Debug.LogError("Pupil Labs GazeController is null!");
 #elif C3D_OMNICEPT
 
             var gliaBehaviour = GameplayReferences.GliaBehaviour;
@@ -1017,6 +842,7 @@ namespace Cognitive3D
             Vector3 world;
 
             DynamicObject hitDynamic = null;
+            int hitType = 0;
 
             var hitresult = GazeRaycast(out world, out hitDynamic);
 
@@ -1039,7 +865,7 @@ namespace Cognitive3D
                         EyeCaptures[index].SkipPositionForFixationAverage = true;
                     }
 
-
+                    hitType = 1;
                     EyeCaptures[index].UseCaptureMatrix = true;
                     //TODO test that this matrix is correct if dynamic is parented to offset/rotated/scaled transform
                     EyeCaptures[index].CaptureMatrix = Matrix4x4.TRS(hitDynamic.transform.position, hitDynamic.transform.rotation, hitDynamic.transform.lossyScale);
@@ -1058,6 +884,7 @@ namespace Cognitive3D
                 }
                 else
                 {
+                    hitType = 0;
                     EyeCaptures[index].UseCaptureMatrix = false;
 
                     DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = EyeCaptures[index].WorldPosition;
@@ -1069,6 +896,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
             {
+                hitType = 2;
                 //eye capture world point could be used for getting the direction, but position is invalid (on skybox)
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
@@ -1080,6 +908,7 @@ namespace Cognitive3D
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
+                hitType = 3;
                 EyeCaptures[index].SkipPositionForFixationAverage = true;
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].Discard = true;
@@ -1094,7 +923,7 @@ namespace Cognitive3D
             }
 
             //submit eye data here
-            CoreInterface.RecordEyeData(EyeCaptures[index]);
+            CoreInterface.RecordEyeData(EyeCaptures[index],hitType);
 
 
             index = (index + 1) % CachedEyeCaptures;

@@ -50,15 +50,10 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("1. Add your interaction script(s) to this object, to make it grabbable.", BodyStyle);
 #if C3D_OCULUS
         EditorGUILayout.HelpBox("Oculus: You likely need to add the \"Grabbable\" component", MessageType.Info);
-#elif C3D_STEAMVR
-        EditorGUILayout.HelpBox("SteamVR: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
 #elif C3D_STEAMVR2
         EditorGUILayout.HelpBox("SteamVR2: You likely need to add the \"Interactable\" and \"Throwable\" components\n\nYou may need to set the \"Attachment Flags\" as well", MessageType.Info);
-#elif C3D_UNITYXR
-        EditorGUILayout.HelpBox("UnityXR: You likely need to add the \"XR Grab Interactable\" component", MessageType.Info);
 #endif
-            EditorGUILayout.LabelField("2. Add a collider if necessary", BodyStyle);
-            EditorGUILayout.LabelField("3. Remove this component", BodyStyle);
+            EditorGUILayout.LabelField("2. Remove this component", BodyStyle);
             EditorGUI.indentLevel--;
         }
     }
