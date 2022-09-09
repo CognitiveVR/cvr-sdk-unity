@@ -874,6 +874,48 @@ namespace CognitiveVR
             }
             return false;
         }
+#elif CVR_MRTK
+        const int CachedEyeCaptures = 30;
+        public bool CombinedWorldGazeRay(out Ray ray)
+        {
+            if (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid)
+            {
+                ray = new Ray
+                    (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.GazeOrigin,
+                    Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.GazeDirection
+                    );
+                return true;
+            }
+            ray = new Ray();
+            return false;
+        }
+
+        public bool LeftEyeOpen()
+        {
+            return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
+        }
+        public bool RightEyeOpen()
+        {
+            return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
+        }
+
+        public long EyeCaptureTimestamp()
+        {
+            //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        public bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120; //UNKNOWN
         //public Ray CombinedWorldGazeRay() { return new Ray(); }
