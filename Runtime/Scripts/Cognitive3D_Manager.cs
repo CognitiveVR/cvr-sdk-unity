@@ -85,7 +85,7 @@ namespace Cognitive3D
                 BeginSession();
 
 #if C3D_OCULUS
-            if (AssignOculusProfileToParticipant && (Core.ParticipantName == string.Empty && Core.ParticipantId == string.Empty))
+            if (AssignOculusProfileToParticipant && (ParticipantName == string.Empty && ParticipantId == string.Empty))
             {
                 if (!Oculus.Platform.Core.IsInitialized())
                     Oculus.Platform.Core.Initialize();
@@ -98,7 +98,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        Core.SetParticipantId(message.Data.OculusID.ToString());
+                        SetParticipantId(message.Data.OculusID.ToString());
                     }
                 });
             }

@@ -12,7 +12,18 @@ namespace Cognitive3D
 {
     public class AssessmentManager : MonoBehaviour
     {
-        public static AssessmentManager Instance { get; private set; }
+        static AssessmentManager _instance;
+        public static AssessmentManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<AssessmentManager>();
+                }
+                return _instance;
+            }
+        }
 
         //Index of the current Assessment in the AllAssessments list
         int CurrentAssessmentIndex = -1;
@@ -20,9 +31,12 @@ namespace Cognitive3D
         //Ordered list of all assessments to be run in the Ready Room
         public List<AssessmentBase> AllAssessments;
 
+        public bool AllowEyeTrackingAssessments;
+        public bool AllowRoomScaleAssessments;
+        public bool AllowGrabbingAssessments;
+
         private void Awake()
         {
-            Instance = this;
             foreach (var assessment in AllAssessments)
             {
                 assessment.gameObject.SetActive(false);

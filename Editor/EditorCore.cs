@@ -890,7 +890,7 @@ namespace Cognitive3D
                             }
                             else
                             {
-                                Debug.Log("Version: " + installedVersion + ". Up to date!");
+                                Debug.Log("Cognitive3D Version: " + installedVersion + ". Up to date!");
                             }
                         }
                         else if (skipVersion == version) //skip this version. limit this check to once a day

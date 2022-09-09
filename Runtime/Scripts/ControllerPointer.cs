@@ -4,7 +4,9 @@ using UnityEngine;
 
 //this is attached to a controller
 //activates a IPointerFocus component. that component must be on the UI layer
-//line color lerps to transparent is not pointing at IPointerFocus component. this uses _TintColor
+//a line renderer is used to display the direction of the controller. the line renderer is transparent while it is not pointing at a IPointerFocus component
+
+//TODO use inputfeature to automatically configure this
 
 namespace Cognitive3D
 {

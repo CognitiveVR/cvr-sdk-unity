@@ -52,10 +52,6 @@ namespace Cognitive3D
             var ab = target as AssessmentBase;
 
             InitGUIStyle();
-            if (ab.Active == false)
-            {
-                EditorGUILayout.HelpBox("This assessment is disabled because due to how Ready Room is configured", MessageType.Info);
-            }
             
             base.OnInspectorGUI();
         }

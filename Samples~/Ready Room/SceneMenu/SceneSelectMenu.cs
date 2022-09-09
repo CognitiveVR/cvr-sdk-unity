@@ -77,5 +77,37 @@ namespace Cognitive3D
         {
             //base.CompleteAssessment();
         }
+
+        public override bool IsValid()
+        {
+            bool baseValid = base.IsValid();
+            if (baseValid == false) { return false; }
+
+            if (SceneInfos.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override string InvalidReason()
+        {
+            string baseReason = base.InvalidReason();
+            if (!string.IsNullOrEmpty(baseReason))
+            {
+                return baseReason;
+            }
+            if (SceneInfos.Count > 0)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return "No Scenes set";
+            }
+        }
     }
 }

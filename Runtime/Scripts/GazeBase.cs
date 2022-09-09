@@ -42,10 +42,7 @@ namespace Cognitive3D
         private void OVRManager_HMDUnmounted()
         {
             headsetPresent = false;
-            if (Cognitive3D_Preferences.Instance.SendDataOnHMDRemove)
-            {
-                Cognitive3D_Manager.InvokeSendDataEvent(false);
-            }
+            Cognitive3D_Manager.InvokeSendDataEvent(false);
         }
 #endif
 

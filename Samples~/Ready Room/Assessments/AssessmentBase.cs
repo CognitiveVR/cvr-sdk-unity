@@ -11,10 +11,6 @@ namespace Cognitive3D
     {
         // -------- meta data about how the assessment manager should display this assessment
 
-        //used in the editor to indicate if this Assessment will be activated
-        [HideInInspector]
-        public bool Active = true;
-
         //indicates that this assessment is only valid if Eye Tracking SDK is present
         public bool RequiresEyeTracking;
         //indicates that this assessment is only valid if Room Scale is configured
@@ -51,19 +47,30 @@ namespace Cognitive3D
         //checks if sdk supports required features (eye tracking, room scale, controllers)
         public virtual bool IsValid()
         {
-            if (RequiresEyeTracking == true && !GameplayReferences.SDKSupportsEyeTracking)
+            if (AssessmentManager.Instance == null) { return false; }
+
+            if (RequiresEyeTracking == true && !AssessmentManager.Instance.AllowEyeTrackingAssessments)
             {
                 return false;
             }
-            if (RequiresGrabbing == true && !GameplayReferences.SDKSupportsControllers)
+            if (RequiresGrabbing == true && !AssessmentManager.Instance.AllowGrabbingAssessments)
             {
                 return false;
             }
-            if (RequiresRoomScale == true && !GameplayReferences.SDKSupportsRoomSize)
+            if (RequiresRoomScale == true && !AssessmentManager.Instance.AllowRoomScaleAssessments)
             {
                 return false;
             }
             return true;
+        }
+
+        public virtual string InvalidReason()
+        {
+            if (AssessmentManager.Instance == null) { return "Assessment Manager is missing"; }
+            if (RequiresEyeTracking == true && !AssessmentManager.Instance.AllowEyeTrackingAssessments) { return "Eye Tracking is required but not enabled"; }
+            if (RequiresGrabbing == true && !AssessmentManager.Instance.AllowGrabbingAssessments) { return "Grabbing Objects is required but not enabled"; }
+            if (RequiresRoomScale == true && !AssessmentManager.Instance.AllowRoomScaleAssessments) { return "Room Scale is required but not enabled"; }
+            return string.Empty;
         }
 
         //calls OnAssessmentComplete event and disables child gameobjects
