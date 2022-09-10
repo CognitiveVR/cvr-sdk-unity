@@ -20,11 +20,9 @@ namespace Cognitive3D
 
         public static void Initialize()
         {
-            Cognitive3D.Cognitive3D_Manager.OnSendData -= SendData;
             Cognitive3D.Cognitive3D_Manager.OnUpdate -= OnUpdate;
             Cognitive3D.Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
 
-            Cognitive3D.Cognitive3D_Manager.OnSendData += SendData;
             Cognitive3D.Cognitive3D_Manager.OnUpdate += OnUpdate;
             Cognitive3D.Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
 
@@ -761,8 +759,9 @@ namespace Cognitive3D
 
         /// <summary>
         /// used to manually send all outstanding dynamic data immediately
+        /// called from FlushData
         /// </summary>
-        public static void SendData(bool copyDataToCache)
+        internal static void SendData(bool copyDataToCache)
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
 

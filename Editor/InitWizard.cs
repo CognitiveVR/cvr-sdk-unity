@@ -1160,7 +1160,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (numberOfLights > 50 || true)
+            if (numberOfLights > 50)
             {
                 GUI.Label(new Rect(0, 365, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
             }

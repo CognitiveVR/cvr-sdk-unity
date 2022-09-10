@@ -254,7 +254,7 @@ namespace Cognitive3D
             SetSessionProperties();
 
             OnPreSessionEnd += Core_EndSessionEvent;
-            InvokeSendDataEvent(false);
+            FlushData();
             StartCoroutine(AutomaticSendData());
         }
 
@@ -350,7 +350,7 @@ namespace Cognitive3D
             if (replacingSceneId)
             {
                 //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
-                InvokeSendDataEvent(true);
+                FlushData();
             }
 
             if (replacingSceneId)
@@ -465,7 +465,7 @@ namespace Cognitive3D
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
                 Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
 
-                InvokeSendDataEvent(false);
+                FlushData();
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
                 ResetSessionData();
             }
@@ -496,7 +496,7 @@ namespace Cognitive3D
         {
             if (!IsInitialized) { return; }
             new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
-            InvokeSendDataEvent(true);
+            FlushData();
         }
 
         bool hasCanceled = false;
@@ -523,7 +523,7 @@ namespace Cognitive3D
             QuitEventClear();
             
 
-            InvokeSendDataEvent(true);
+            FlushData();
             ResetSessionData();
             StartCoroutine(SlowQuit());
         }
@@ -540,16 +540,17 @@ namespace Cognitive3D
 
         public const string SDK_VERSION = "1.0.0";
 
-        public delegate void onSendData(bool copyDataToCache); //send data
-        /// <summary>
-        /// invoked when Cognitive3D_Manager.SendData is called or when the session ends
-        /// </summary>
-        public static event onSendData OnSendData;
+        //data has been sent. this is used to visualize on active session view
+        public delegate void onSendData(bool copyDataToCache);
 
         /// <summary>
-        /// call this to send all outstanding data to the dashboard
+        /// call this to immediately send all outstanding data to the dashboard
         /// </summary>
-        public static void InvokeSendDataEvent(bool copyDataToCache) { if (OnSendData != null) { OnSendData(copyDataToCache); } }
+        public static void FlushData()
+        {
+            DynamicManager.SendData(true);
+            CoreInterface.Flush(true);
+        }
 
         public delegate void onSessionBegin();
         /// <summary>
@@ -723,7 +724,7 @@ namespace Cognitive3D
                 //just to send this scene change event
                 if (WriteSceneChangeEvent && TrackingScene != null)
                 {
-                    InvokeSendDataEvent(false);
+                    FlushData();
                 }
                 ForceWriteSessionMetadata = true;
                 TrackingScene = scene;
@@ -777,7 +778,7 @@ namespace Cognitive3D
         /// <summary>
         /// Reset all of the static vars to their default values. Used when a session ends
         /// </summary>
-        public static void ResetSessionData()
+        internal static void ResetSessionData()
         {
             InvokeEndSessionEvent();
             CoreInterface.Reset();
@@ -845,7 +846,7 @@ namespace Cognitive3D
 
         /// <summary>
         /// sets a property about the participant in the current session
-        /// should first call Core.SetParticipantName() and Core.SetParticipantId()
+        /// should first call SetParticipantFullName() and SetParticipantId()
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -908,6 +909,11 @@ namespace Cognitive3D
             if (DataCache == null)
                 return 0;
             return DataCache.NumberOfBatches();
+        }
+
+        public static float GetLocalStorage()
+        {
+            return 0;
         }
     }
 }

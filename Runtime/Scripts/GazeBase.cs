@@ -42,7 +42,7 @@ namespace Cognitive3D
         private void OVRManager_HMDUnmounted()
         {
             headsetPresent = false;
-            Cognitive3D_Manager.InvokeSendDataEvent(false);
+            Cognitive3D_Manager.FlushData();
         }
 #endif
 

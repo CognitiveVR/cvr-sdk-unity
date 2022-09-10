@@ -556,7 +556,7 @@ namespace Cognitive3D
                 position = CurrentExitPollPanel.transform.position;
 
             exitpollEvent.Send(position);
-            Cognitive3D_Manager.InvokeSendDataEvent(false);
+            Cognitive3D_Manager.FlushData();
         }
 
         //puts responses from questions into json for exitpoll microservice
