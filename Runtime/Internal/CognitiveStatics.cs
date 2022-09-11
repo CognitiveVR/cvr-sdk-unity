@@ -7,60 +7,60 @@ using System.Text;
 
 namespace Cognitive3D
 {
-    public static class CognitiveStatics
+    internal static class CognitiveStatics
     {
         private const string version = "0";
 
         //editor urls
         //GET dynamic object manifest
-        public static string GETDYNAMICMANIFEST(int versionid)
+        internal static string GETDYNAMICMANIFEST(int versionid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects"); //changed api to data
         }
 
         //POST dynamic object manifest
-        public static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
+        internal static string POSTDYNAMICMANIFEST(string sceneid, int versionnumber)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
         }
         //POST dynamic object mesh data
-        public static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
+        internal static string POSTDYNAMICOBJECTDATA(string sceneid, int versionnumber, string exportdirectory)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
         //GET scene settings and read scene version
-        public static string GETSCENEVERSIONS(string sceneid)
+        internal static string GETSCENEVERSIONS(string sceneid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid); //changed api to data
         }
 
         //POST scene screenshot
-        public static string POSTSCREENSHOT(string sceneid, int versionnumber)
+        internal static string POSTSCREENSHOT(string sceneid, int versionnumber)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
         }
 
         //POST upload decimated scene
-        public static string POSTNEWSCENE()
+        internal static string POSTNEWSCENE()
         {
             return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
         }
 
         //POST upload and replace existing scene
-        public static string POSTUPDATESCENE(string sceneid)
+        internal static string POSTUPDATESCENE(string sceneid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
-        
+
         //GET github api to get latest release data
-        public const string GITHUB_SDKVERSION = "https://api.github.com/repos/CognitiveVR/cvr-sdk-unity/releases/latest";
+        internal const string GITHUB_SDKVERSION = "https://api.github.com/repos/CognitiveVR/cvr-sdk-unity/releases/latest";
 
         //UNITY where the user goes to download the sdk
-        public const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
+        internal const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
 
         //GET media source list
-        public static string GETMEDIASOURCELIST()
+        internal static string GETMEDIASOURCELIST()
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/media");
         }

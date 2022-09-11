@@ -26,7 +26,7 @@
 		{
 			"displayName": "Ready Room",
 			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
-			"path": "Samples~/ReadyRoom"
+			"path": "Samples~/Ready Room"
 		}
 	]
 }

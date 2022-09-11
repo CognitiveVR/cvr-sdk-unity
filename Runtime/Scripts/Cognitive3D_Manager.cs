@@ -7,6 +7,8 @@ using System;
 using Valve.VR;
 #endif
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
+
 /// <summary>
 /// initializes Cognitive3D analytics. Add components to track additional events
 /// </summary>
