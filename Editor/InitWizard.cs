@@ -98,7 +98,7 @@ namespace Cognitive3D
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             GUI.Label(new Rect(30, 45, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
             GUI.Label(new Rect(30, 100, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
-            if (GUI.Button(new Rect(130, 150, 240, 30), "Open Documentation Site"))
+            if (GUI.Button(new Rect(130, 175, 240, 30), "Open Documentation Site"))
             {
                 Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
             }
@@ -107,10 +107,10 @@ namespace Cognitive3D
             {
                 //upload new version
 
-                GUI.Label(new Rect(0, 150, 475, 130), EditorCore.Alert, "image_centered");
-                GUI.Label(new Rect(30, 250, 440, 440), "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color>\nYou may want to upload a new Scene Version if there are meaningful changes to the static scene geometry.\n\n" +
+                GUI.Label(new Rect(0, 175, 475, 130), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(30, 275, 440, 440), "<color=#8A9EB7FF>This scene has already been uploaded to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "!</color>\nYou may want to upload a new Scene Version if there are meaningful changes to the static scene geometry.\n\n" +
                     "Use <color=#8A9EB7FF>Manage Dynamic Objects</color> if you want to upload new Dynamic Objects to your existing scene.", "normallabel");
-                if (GUI.Button(new Rect(130, 400, 240, 30), "Open Manage Dynamic Objects"))
+                if (GUI.Button(new Rect(130, 425, 240, 30), "Open Manage Dynamic Objects"))
                 {
                     ManageDynamicObjects.Init();
                 }
