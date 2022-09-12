@@ -58,19 +58,6 @@ namespace Cognitive3D
             data.CopyTo(fileBytes, headers.Length);
         }
 
-        /*static FileStream CreateEmpty(string filepath)
-        {
-            var fileStream = new FileStream(filepath, FileMode.Create);
-            byte emptyByte = new byte();
-
-            for (int i = 0; i < HEADER_SIZE; i++) //preparing the header
-            {
-                fileStream.WriteByte(emptyByte);
-            }
-
-            return fileStream;
-        }*/
-
         static byte[] ConvertAndWrite(AudioClip clip)
         {
             if (clip == null)

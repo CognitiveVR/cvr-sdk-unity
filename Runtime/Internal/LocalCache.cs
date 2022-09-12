@@ -29,22 +29,12 @@ namespace Cognitive3D
         public LocalCache(string directoryPath)
         {
             localDataPath = directoryPath;// + "data/";
-            //localExitPollPath = directoryPath + "exitpoll/";
-
-            //constructed from Cognitive3D_Manager enable. sets environment end of line character
-            //if (EnvironmentEOL == null && !string.IsNullOrEmpty(EOLCharacter))
-            //{
-            //    EnvironmentEOL = EOLCharacter;
-            //    EOLByteCount = System.Text.Encoding.UTF8.GetByteCount(EOLCharacter);
-            //}
 
             //open file streams
             //should listen for network destroy event
             if (sr != null) { sr.Close(); sr = null; }
             if (sw != null) { sw.Close(); sw = null; }
             if (fs != null) { fs.Close(); fs = null; }
-
-            //LocalStorageActive = Cognitive3D_Preferences.Instance.LocalStorage;
 
             if (!Cognitive3D_Preferences.Instance.LocalStorage) { return; }
             try
@@ -55,8 +45,6 @@ namespace Cognitive3D
                 fs = File.Open(localDataPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 sr = new StreamReader(fs);
                 sw = new StreamWriter(fs);
-                //read all line sizes from data
-                //Debug.Log("local cache initialize" + sr.Peek());
 
                 linesizes = new Stack<int>();
                 while (sr.Peek() != -1)
@@ -68,7 +56,6 @@ namespace Cognitive3D
             }
             catch (System.Exception e)
             {
-                //LocalStorageActive = false;
                 Debug.LogException(e);
             }
         }

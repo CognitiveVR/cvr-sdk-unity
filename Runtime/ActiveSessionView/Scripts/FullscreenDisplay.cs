@@ -8,7 +8,7 @@ using Cognitive3D;
 //use smoothness to blend reticle position over frames (removes some jitter)
 
 //BUG this only works correctly at a 16:9 aspect ratio
-//TODO figure out the correct vector math. need to know the sub-region from the HMD image
+//TODO figure out the correct projection math. need to know the sub-region from the HMD image
 //CONSIDER scaling fixation/reticle size based on screen resolution
 //TODO render saccades
 
@@ -45,8 +45,8 @@ namespace Cognitive3D.ActiveSession
             {
                 fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
                 quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
-                FixationCore.OnFixationRecord -= Fixation_OnFixationRecord;
-                FixationCore.OnFixationRecord += Fixation_OnFixationRecord;
+                FixationRecorder.OnFixationRecord -= Fixation_OnFixationRecord;
+                FixationRecorder.OnFixationRecord += Fixation_OnFixationRecord;
                 //VectorMathThread = new System.Threading.Thread(CalculateVectors);
                 //VectorMathThread.Start();
             }
@@ -434,7 +434,7 @@ namespace Cognitive3D.ActiveSession
         private void OnDestroy()
         {
             Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
-            FixationCore.OnFixationRecord -= Fixation_OnFixationRecord;
+            FixationRecorder.OnFixationRecord -= Fixation_OnFixationRecord;
         }
     }
 }

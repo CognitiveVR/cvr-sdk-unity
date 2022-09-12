@@ -567,8 +567,8 @@ namespace Cognitive3D
         EditorCore.ExportedDynamicObjects = null;
         EditorCore._cachedPoolAssets = null;
 
-        //TODO want to refresh list, but also keep selected items
-        //make a list of selected dynamics by reference. when reconstructing the entries list, 
+        //refresh list, but also keep selected items
+        //make a list of selected dynamics by reference. when reconstructing the entries list, save to temporary list
         if (Entries != null)
         {
             foreach (var e in Entries)

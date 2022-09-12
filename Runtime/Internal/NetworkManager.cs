@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 //TODO should use async/await for web requests instead of coroutines - less garbage and faster
 //IMPROVEMENT shouldn't be a monobehaviour. shouldn't be static. instance should live on Core
-//IMPROVEMENT should use an interface. what would this include? implementation handles writing to cache (if it exists)
+//IMPROVEMENT handle writing to cache (if it exists). move this from CoreInterface
 
 namespace Cognitive3D
 {
@@ -165,7 +165,6 @@ namespace Cognitive3D
             }
             else
             {
-                //TODO what is response if no internet?
                 if (responsecode == 401) { Util.logError("Network Post Data response code is 401. Is APIKEY set?"); return; }
                 if (responsecode == 404) { Util.logError("Network Post Data response code is 404. Invalid URL?"); return; }
                 if (responsecode == -1) { Util.logError("Network Post Data could not parse response code. Check upload URL"); return; }

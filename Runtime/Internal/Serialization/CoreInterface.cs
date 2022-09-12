@@ -20,7 +20,7 @@ namespace Cognitive3D
         //returns the type of data (event, gaze, dynamic, sensor, fixation) and the body of the web request. also if the data should be cached immediately (flush called on session end)
         static System.Action<string,string, bool> webPost;
 
-        internal static void Initialize(string sessionId, double sessionTimestamp, string deviceId)
+        internal static void Initialize(string sessionId, double sessionTimestamp, string deviceId, string hmdName)
         {
             logCall += LogInfo;
             webPost += WebPost;
@@ -33,7 +33,8 @@ namespace Cognitive3D
                 sessionTimestamp,
                 deviceId,
                 webPost,
-                logCall
+                logCall,
+                hmdName
                 );
         }
 
@@ -170,8 +171,8 @@ namespace Cognitive3D
 
         private static void OnFixationRecorded(Fixation obj)
         {
-            //TODO pass to ASV or call some other action that things can subscribe to
-            FixationCore.FixationRecordEvent(obj);
+            //pass to ASV or call some other action that things can subscribe to
+            FixationRecorder.FixationRecordEvent(obj);
         }
 
         internal static void RecordEyeData(EyeCapture data, int hitType)
@@ -251,13 +252,13 @@ namespace Cognitive3D
                     break;
                 case "fixation":
                     url = CognitiveStatics.POSTFIXATIONDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
-                    FixationCore.FixationSendEvent();
+                    FixationRecorder.FixationSendEvent();
                     break;
                 default: Util.logDevelopment("Invalid Web Post type"); return;
             }
 
             //TODO CONSIDER shouldn't this be in NetworkManager?
-            if (Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, body))
+            if (cache && Cognitive3D_Manager.NetworkManager.runtimeCache != null && Cognitive3D_Manager.NetworkManager.runtimeCache.CanWrite(url, body))
             {
                 Cognitive3D_Manager.NetworkManager.runtimeCache.WriteContent(url, body);
             }

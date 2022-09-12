@@ -43,6 +43,7 @@ namespace Cognitive3D.Serialization
         static string SessionId;
         static string DeviceId;
         static double SessionTimestamp;
+        static string HMDName;
         static string ParticipantId;
         static int EventThreshold;
         static int GazeThreshold;
@@ -52,10 +53,11 @@ namespace Cognitive3D.Serialization
         static bool IsInitialized = false;
 
         //TODO replace with a struct
-        internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction)
+        internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
         {
             DeviceId = deviceId;
             SessionTimestamp = sessionTimestamp;
+            HMDName = hmdName;
             SessionId = sessionId;
 
             EventThreshold = eventThreshold;
@@ -77,7 +79,6 @@ namespace Cognitive3D.Serialization
         {
             IsInitialized = false;
 
-            //TODO reset everything - lists, stringbuilders, 
             LogAction = null;
             WebPost = null;
             SessionId = string.Empty;
@@ -691,7 +692,6 @@ namespace Cognitive3D.Serialization
                 }
                 else
                 {
-                    //TODO if hit dynamic, don't update position
                     Vector3 averageworldpos = Vector3.zero;
                     foreach (var v in CachedEyeCapturePositions)
                     {
@@ -1052,7 +1052,6 @@ namespace Cognitive3D.Serialization
 
             averageWorldPos /= sampleCount;
 
-            //TODO what is the time span between samples - how does 1 sample think it's enough time to make a world fixation??
             //a fixation MUST start on a transform. alternatively could mark transform as 'on transform' early
             //IMPROVEMENT set fixation as starting now if MaxOffTransformMS < time to first point with transform
             //if (EyeCaptures[index].OffTransform) { return false; }
@@ -1352,7 +1351,7 @@ namespace Cognitive3D.Serialization
         {
             if (gazeCount == 0 && newSessionProperties.Count == 0) { return; }
 
-            //TODO allow option to send session properties but not gaze
+            //TODO allow option to send session properties but not gaze. Look at this for XRPF implementation
 
             if (gazebuilder[gazebuilder.Length - 1] == ',')
             {
@@ -1381,16 +1380,16 @@ namespace Cognitive3D.Serialization
             gazeJsonPart++;
             gazebuilder.Append(",");
 
-            //TODO HMDName
-            //JsonUtil.SetString("hmdtype", HMDName, gazebuilder);
-            //gazebuilder.Append(",");
+            //TODO check if HMDName is used anywhere
+            JsonUtil.SetString("hmdtype", HMDName, gazebuilder);
+            gazebuilder.Append(",");
 
             JsonUtil.SetFloat("interval", 0.1f, gazebuilder);
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
 
-            //TODO remove this reference to cognitive manager - shis hsould be true when scene has changed - add a callback
+            //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
             if (Cognitive3D_Manager.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
             {
                 Cognitive3D_Manager.ForceWriteSessionMetadata = false;

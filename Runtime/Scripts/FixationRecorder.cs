@@ -1002,5 +1002,23 @@ namespace Cognitive3D
 
             return false;
         }
+
+        public delegate void onFixationRecord(Fixation fixation);
+        //used by active session view
+        public static event onFixationRecord OnFixationRecord;
+        internal static void FixationRecordEvent(Fixation fixation)
+        {
+            if (OnFixationRecord != null)
+                OnFixationRecord.Invoke(fixation);
+        }
+
+        //happens after the network has sent the request, before any response
+        public static event Cognitive3D_Manager.onSendData OnFixationSend;
+        //used by active session view
+        internal static void FixationSendEvent()
+        {
+            if (OnFixationSend != null)
+                OnFixationSend.Invoke(false);
+        }
     }
 }

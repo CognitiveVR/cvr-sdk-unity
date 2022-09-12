@@ -16,16 +16,15 @@ namespace Cognitive3D.ActiveSession
         void Start()
         {
             if (Cognitive3D_Manager.IsInitialized) { Core_InitEvent(); }
-            else { Cognitive3D_Manager.OnSessionBegin += Core_InitEvent; }
+            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
             Cognitive3D_Manager.OnPreSessionEnd += Core_EndSessionEvent;
         }
 
         private void Core_InitEvent()
         {
-            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
             CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
             GazeCore.OnGazeSend += GazeCore_OnGazeSend;
-            FixationCore.OnFixationSend += FixationCore_OnFixationSend;
+            FixationRecorder.OnFixationSend += FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
         }
@@ -52,23 +51,14 @@ namespace Cognitive3D.ActiveSession
             if (frame < 10) { return; }
             frame = 0;
 
-            //TODO make other place to check that have started (data.CachedDataCount)
+            //TODO IMPROVEMENT split 'no data available' and 'not sent yet' on internal state
 
             #region Events
             if (EventTimeSinceSend < 0)
             {
-                if (false /*Cognitive3D.CustomEvent.CachedEvents > 0*/)
-                {
-                    //has data, not sent
-                    EventSendText.color = noDataColor;
-                    EventSendText.text = notYetSentString;
-                }
-                else
-                {
-                    //no data
-                    EventSendText.color = noDataColor;
-                    EventSendText.text = neverSentString;
-                }
+                //no data
+                EventSendText.color = noDataColor;
+                EventSendText.text = neverSentString;
             }
             else
             {
@@ -80,16 +70,8 @@ namespace Cognitive3D.ActiveSession
             #region Gaze
             if (GazeTimeSinceSend < 0)
             {
-                if (false /*Cognitive3D.GazeCore.CachedGaze > 0*/)
-                {
-                    GazeSendText.color = noDataColor;
-                    GazeSendText.text = notYetSentString;
-                }
-                else
-                {
-                    GazeSendText.color = noDataColor;
-                    GazeSendText.text = neverSentString;
-                }
+                GazeSendText.color = noDataColor;
+                GazeSendText.text = neverSentString;
             }
             else
             {
@@ -100,16 +82,8 @@ namespace Cognitive3D.ActiveSession
             #region Fixations
             if (FixationTimeSinceSend < 0)
             {
-                if (false /*FixationCore.CachedFixations > 0*/)
-                {
-                    FixationSendText.color = noDataColor;
-                    FixationSendText.text = notYetSentString;
-                }
-                else
-                {
-                    FixationSendText.color = noDataColor;
-                    FixationSendText.text = neverSentString;
-                }
+                FixationSendText.color = noDataColor;
+                FixationSendText.text = neverSentString;
             }
             else
             {
@@ -120,16 +94,8 @@ namespace Cognitive3D.ActiveSession
             #region Dynamics
             if (DynamicTimeSinceSend < 0)
             {
-                if (false /*Cognitive3D.DynamicManager.CachedSnapshots > 0*/)
-                {
-                    DynamicSendText.color = noDataColor;
-                    DynamicSendText.text = notYetSentString;
-                }
-                else
-                {
-                    DynamicSendText.color = noDataColor;
-                    DynamicSendText.text = neverSentString;
-                }
+                DynamicSendText.color = noDataColor;
+                DynamicSendText.text = neverSentString;
             }
             else
             {
@@ -140,16 +106,8 @@ namespace Cognitive3D.ActiveSession
             #region Sensors
             if (SensorTimeSinceSend < 0)
             {
-                if (false /*Cognitive3D.SensorRecorder.CachedSensors > 0*/)
-                {
-                    SensorSendText.color = noDataColor;
-                    SensorSendText.text = notYetSentString;
-                }
-                else
-                {
-                    SensorSendText.color = noDataColor;
-                    SensorSendText.text = neverSentString;
-                }
+                SensorSendText.color = noDataColor;
+                SensorSendText.text = neverSentString;
             }
             else
             {
@@ -217,15 +175,18 @@ namespace Cognitive3D.ActiveSession
         {
             CustomEvent.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
             GazeCore.OnGazeSend -= GazeCore_OnGazeSend;
-            FixationCore.OnFixationSend -= FixationCore_OnFixationSend;
+            FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
-            Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
         }
 
         private void Core_EndSessionEvent()
         {
-            Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
+            CustomEvent.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
+            GazeCore.OnGazeSend -= GazeCore_OnGazeSend;
+            FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
+            DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
+            SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
         }
     }
 }

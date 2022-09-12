@@ -23,7 +23,7 @@ namespace Cognitive3D.ActiveSession
             UpdateSortIcons();
             if (GameplayReferences.SDKSupportsEyeTracking)
             {
-                FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                FixationRecorder.OnFixationRecord += FixationCore_OnFixationRecord;
             }
             else
             {

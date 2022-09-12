@@ -141,7 +141,7 @@ namespace Cognitive3D
             string controllerName = string.Empty;
             string appliedMeshName = MeshName;
 
-            //TODO if a controller, delay registering the controller until the controller name has returned something valid
+            //if a controller, delay registering the controller until the controller name has returned something valid
             if (IsController)
             {
                 GameplayReferences.SetController(this, IsRight);

@@ -180,11 +180,15 @@ namespace Cognitive3D
             {
                 _sessionId = (int)SessionTimeStamp + "_" + DeviceId;
             }
-            CoreInterface.Initialize(SessionID, SessionTimeStamp, DeviceId);
+
+            string hmdName = "unknown";
+            var hmdDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
+            if (hmdDevice.isValid)
+                hmdName = hmdDevice.name;
+
+            CoreInterface.Initialize(SessionID, SessionTimeStamp, DeviceId, hmdName);
             IsInitialized = true;
-            //if (Cognitive3D_Preferences.Instance.EnableGaze == false)
-            //GazeCore.SendSessionProperties(false);
-            //TODO support skipping spatial gaze data but still recording session properties
+            //TODO support skipping spatial gaze data but still recording session properties for XRPF
 
             //get all loaded scenes. if one has a sceneid, use that
             var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
@@ -250,7 +254,6 @@ namespace Cognitive3D
                 fixationRecorder.Initialize();
             }
 
-            //if (InitEvent != null) { InitEvent(initError); }
             InvokeSessionBeginEvent();
 
             SetSessionProperties();

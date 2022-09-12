@@ -71,8 +71,10 @@ namespace Cognitive3D.ActiveSession
             {
                 WarningText.text = "Eye Tracking not Calibrated";
             }
+#elif C3D_OMNICEPT
+            WarningText.text = "Omnicept Found!";
 #else
-            //TODO add omnicept, vive wave, other eye tracking SDK support
+            //TODO add omnicept, other eye tracking SDK status visualization
             WarningText.text = "No Eye Tracking Found!";
 #endif
         }

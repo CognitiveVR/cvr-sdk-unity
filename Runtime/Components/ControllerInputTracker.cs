@@ -9,10 +9,6 @@ using Valve.VR;
 
 //replaced everything to use InputFeature
 //automatically get left/right controllers at runtime from gameplayreferences
-//TODO use inputdevice or openvr api automatically to figure out what mesh/svg to display
-    //inputDevice.name.Contains("")
-
-
 //adds controller input properties to dynamic object snapshot for display on sceneexplorer
 
 namespace Cognitive3D.Components

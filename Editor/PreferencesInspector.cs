@@ -57,10 +57,6 @@ namespace Cognitive3D
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Player Tracking",EditorStyles.boldLabel);
-            //TODO update command buffer gaze for latest versions of unity. but still need to raycast to hit dynamic objects. useful for complex surfaces without accurate colliders
-            //TODO support command buffer gaze with eye tracking
-            //p.GazeType = (GazeType)EditorGUILayout.EnumPopup("Gaze Type", p.GazeType);
-            //if (GUI.changed) CheckGazeRenderType(p);
             p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Record Gaze", "Use a raycast to find the gaze point in world space.\nDisabling this will still record HMD position and rotation"), p.EnableGaze);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
@@ -173,24 +169,11 @@ namespace Cognitive3D
             GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
             int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64 */};
             p.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), p.TextureResize, textureQualityNames, textureQualities);
-            //EditorCore.ExportSettings.TextureQuality = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), EditorCore.ExportSettings.TextureQuality, textureQualityNames, textureQualities);
             p.ExportSceneLODLowest = EditorGUILayout.Toggle("Export Lowest LOD from LODGroup components", p.ExportSceneLODLowest);
             p.ExportAOMaps = EditorGUILayout.Toggle("Export AO Maps", p.ExportAOMaps);
             GUILayout.BeginHorizontal();
-            //GUILayout.Space(15);
 
-            //TODO texture export settings
-
-            //the full process
-            //refresh scene versions
-            //save screenshot
-            //export scene
-            //decimate scene
-            //confirm upload of scene. new scene? new version?
-            //export dynamics
-            //confirm uploading dynamics
-            //confirm upload manifest
-
+            //TODO move this logic into editorcore and reference from both setup window and here
             if (GUILayout.Button("Export","ButtonLeft"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))

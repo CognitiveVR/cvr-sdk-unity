@@ -31,8 +31,8 @@ namespace Cognitive3D
         }
 
         //TODO CONSIDER make some panel class? with update, on enter, buttons + actions?
-        //TODO can this be used with manage dynamic objects window as well?
-        //TODO also 360 video setup?
+        //can this be used with manage dynamic objects window as well?
+        //also 360 video setup?
             //maybe later. would require a pretty major refactor
 
         List<string> pageids = new List<string>()
@@ -456,13 +456,12 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SRANIPAL ASSEMBLY SETUP", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
 
-            //TODO CONSIDER button to add assemblies to sranipal folder?
+            
 
             GUI.Label(new Rect(30, 100, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
     "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
-            //do a checkmark if the assembly already exists
-
+            //button to add assemblies to sranipal folder
             if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
             {
                 var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
@@ -480,6 +479,7 @@ namespace Cognitive3D
                 hasDoneSRAnipalStartCheck = false;
             }
 
+            //a checkmark if the assembly already exists
             if (sranipalAssemblyExists == false)
             {
                 //empty checkmark

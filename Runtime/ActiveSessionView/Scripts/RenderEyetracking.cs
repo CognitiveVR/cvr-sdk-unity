@@ -77,7 +77,7 @@ namespace Cognitive3D.ActiveSession
                 {
                     quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                     canDisplayFixations = true;
-                    FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                    FixationRecorder.OnFixationRecord += FixationCore_OnFixationRecord;
                     if (threaded)
                     {
                         VectorMathThread = new System.Threading.Thread(CalculateVectors);
@@ -113,7 +113,7 @@ namespace Cognitive3D.ActiveSession
             {
                 quadPositions = new Vector3[FixationRecorder.DisplayGazePointCount * 4];
                 canDisplayFixations = true;
-                FixationCore.OnFixationRecord += FixationCore_OnFixationRecord;
+                FixationRecorder.OnFixationRecord += FixationCore_OnFixationRecord;
                 if (threaded)
                 {
                     VectorMathThread = new System.Threading.Thread(CalculateVectors);
@@ -489,12 +489,6 @@ namespace Cognitive3D.ActiveSession
 
         void MatchTargetCamera()
         {
-            //prioritiz checking for xr - this is a specific backend as opposed to sranipal, steamvr2, etc
-            //BUT reticle and fixations don't match the projection without using C3D_SRANIPAL and OpenVR XR 1.1.4. what is happening?
-            //TODO make a combination chart of backends, sdks and headsets for testing
-            //#if C3D_XR
-            //FixationCamera.projectionMatrix = FollowCamera.projectionMatrix;
-            //uses projection matrix from openvr if developer is using a openvr-based sdk
 #if C3D_STEAMVR2
             var vm = VRSystem().GetProjectionMatrix(EVREye.Eye_Left, FixationCamera.nearClipPlane, FixationCamera.farClipPlane);
             Matrix4x4 m = new Matrix4x4();
@@ -580,7 +574,7 @@ namespace Cognitive3D.ActiveSession
 
         void OnDestroy()
         {
-            FixationCore.OnFixationRecord -= FixationCore_OnFixationRecord;
+            FixationRecorder.OnFixationRecord -= FixationCore_OnFixationRecord;
         }
 
 #region OpenVR Functions
