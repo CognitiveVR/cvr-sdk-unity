@@ -19,9 +19,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {
-#if !C3D_OCULUS
-        float batteryLevel; //0-100 battery level
-#endif
         public override void Cognitive3D_Init()
         {
             base.Cognitive3D_Init();
@@ -45,59 +42,14 @@ namespace Cognitive3D.Components
                 .SetProperty("batterystatus", OVRPlugin.batteryStatus)
                 .Send();
 #else
-
-            if (GetBatteryLevel())
-            {
-                Util.logDebug("batterylevel " + batteryLevel);
-
-                new CustomEvent("cvr.battery").SetProperty("batterylevel", batteryLevel).Send();
-            }
+            new CustomEvent("cvr.battery").SetProperty("batterylevel", GetBatteryLevel()).Send();
 #endif
         }
 
 #if !C3D_OCULUS
-        public bool GetBatteryLevel()
+        public float GetBatteryLevel()
         {
-            if (Application.platform == RuntimePlatform.Android)
-            {
-                try
-                {
-                    using (AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                    {
-                        if (null != unityPlayer)
-                        {
-                            using (AndroidJavaObject currActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                            {
-                                if (null != currActivity)
-                                {
-                                    using (AndroidJavaObject intentFilter = new AndroidJavaObject("android.content.IntentFilter", new object[] { "android.intent.action.BATTERY_CHANGED" }))
-                                    {
-                                        using (AndroidJavaObject batteryIntent = currActivity.Call<AndroidJavaObject>("registerReceiver", new object[] { null, intentFilter }))
-                                        {
-                                            int level = batteryIntent.Call<int>("getIntExtra", new object[] { "level", -1 });
-                                            int scale = batteryIntent.Call<int>("getIntExtra", new object[] { "scale", -1 });
-
-                                            // Error checking that probably isn't needed but I added just in case.
-                                            if (level == -1 || scale == -1)
-                                            {
-                                                batteryLevel = 50f;
-                                                return false;
-                                            }
-                                            batteryLevel = ((float)level / (float)scale) * 100.0f;
-                                            return true;
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            batteryLevel = 100f;
-            return false;
+            return SystemInfo.batteryLevel * 100;
         }
 #endif
 

@@ -616,7 +616,7 @@ namespace Cognitive3D
                     rightcontroller = manager.rightHandAnchor.gameObject;
                 }
 #elif C3D_VIVEWAVE
-            //TODO vive wave sdk controller setup support
+            //TODO investigate if automatically detecting vive wave controllers is possible
 #elif C3D_PICOVR
             //basic setup
                 var manager = FindObjectOfType<Pvr_Controller>();
@@ -629,7 +629,7 @@ namespace Cognitive3D
                 }
 #elif C3D_PICOXR
             
-            //TODO set controller input tracker to listen for the dynamic object component on some gameobject?
+            //TODO investigate if automatically detecting pico controllers is possible using PicoXR package
 #endif
         }
 

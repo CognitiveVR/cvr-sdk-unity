@@ -1093,5 +1093,10 @@ namespace Cognitive3D.Components
         {
             states.Add(new ButtonState(name, input, vector.x, vector.y, true));
         }
+
+        public override string GetDescription()
+        {
+            return "Records buttons, triggers, grips and joystick inputs on controllers";
+        }
     }
 }

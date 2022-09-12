@@ -1122,7 +1122,7 @@ namespace Cognitive3D.Serialization
 
         private static void SerializeFixations(bool copyDataToCache)
         {
-            if (Fixations.Count <= 0) { LogAction("Fixations.SendData found no data"); return; }
+            if (Fixations.Count <= 0) { return; }
 
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
