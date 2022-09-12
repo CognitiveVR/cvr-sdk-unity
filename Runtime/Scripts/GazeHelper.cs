@@ -206,7 +206,6 @@ namespace Cognitive3D
             }
             return lastDirection;
         }
-
 #endif
     }
 }
