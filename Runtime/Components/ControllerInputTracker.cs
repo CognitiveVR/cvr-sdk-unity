@@ -42,7 +42,7 @@ namespace Cognitive3D.Components
         void DelayEnable(InputDevice device, XRNode node, bool isValid)
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
-            Init();
+            Cognitive3D_Init();
         }
 
 #if C3D_STEAMVR2
@@ -632,20 +632,16 @@ namespace Cognitive3D.Components
 
         private void Update()
         {
-            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
-            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
-
-            InputDeviceCharacteristics leftTrackedControllerFilter = InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left;
-            InputDeviceCharacteristics rightTrackedControllerFilter = InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right;
-
-            InputDevices.GetDevicesWithCharacteristics(leftTrackedControllerFilter, leftHandDevices);
-            InputDevices.GetDevicesWithCharacteristics(rightTrackedControllerFilter, rightHandDevices);
+            InputDevice leftHandDevice;
+            GameplayReferences.GetControllerInfo(false, out leftHandDevice);
+            InputDevice rightHandDevice;
+            GameplayReferences.GetControllerInfo(true, out rightHandDevice);
             
-            if (leftHandDevices.Count > 0)
+            if (leftHandDevice.isValid)
             {
                 //menu left
                 bool menu;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.menuButton, out menu) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
                     {
@@ -656,13 +652,13 @@ namespace Cognitive3D.Components
 
                 //left primary axis
                 Vector2 primaryaxis2d;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
                     bool touchPressChanged = false;
                     int axisPower = 0;
                     //check for touch or press. if changed, write entire vector
                     bool touch;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
+                    if (leftHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
                     {
                         if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
                         {
@@ -672,7 +668,7 @@ namespace Cognitive3D.Components
                         }
                     }
                     bool press;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
+                    if (leftHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
                     {
                         if (LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
                         {
@@ -689,13 +685,13 @@ namespace Cognitive3D.Components
 
                 //left secondary axis
                 Vector2 secondaryaxis2d;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
                     bool touchPressChanged = false;
                     int axisPower = 0;
                     //check for touch or press. if changed, write entire vector
                     bool touch;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisTouch.name))
+                    if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisTouch.name))
                     {
                         if (LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
                         {
@@ -705,7 +701,7 @@ namespace Cognitive3D.Components
                         }
                     }
                     bool press;
-                    if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisClick.name))
+                    if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisClick.name))
                     {
                         if (LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
                         {
@@ -722,7 +718,7 @@ namespace Cognitive3D.Components
 
                 //left trigger as button
                 bool triggerButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
                     {
@@ -735,7 +731,7 @@ namespace Cognitive3D.Components
 
                 //left grip as button
                 bool gripButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
                     {
@@ -746,7 +742,7 @@ namespace Cognitive3D.Components
 
                 //left primary button
                 bool primaryButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
                     {
@@ -757,7 +753,7 @@ namespace Cognitive3D.Components
 
                 //left secondary button
                 bool secondaryButton;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
                     {
@@ -767,11 +763,11 @@ namespace Cognitive3D.Components
                 }
             }
 
-            if (rightHandDevices.Count > 0)
+            if (rightHandDevice.isValid)
             {
                 //menu right
                 bool menu;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.menuButton, out menu) && RightLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.menuButton, out menu) && RightLastFrameButtonStates.ContainsKey(CommonUsages.menuButton.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.menuButton.name].ButtonPercent != (menu ? 100 : 0))
                     {
@@ -782,13 +778,13 @@ namespace Cognitive3D.Components
 
                 //right primary axis
                 Vector2 primaryaxis2d;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out primaryaxis2d) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
                     bool touchPressChanged = false;
                     int axisPower = 0;
                     //check for touch or press. if changed, write entire vector
                     bool touch;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
+                    if (rightHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxisTouch, out touch) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
                     {
                         if (RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
                         {
@@ -798,7 +794,7 @@ namespace Cognitive3D.Components
                         }
                     }
                     bool press;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
+                    if (rightHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out press) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisClick.name))
                     {
                         if (RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
                         {
@@ -815,13 +811,13 @@ namespace Cognitive3D.Components
 
                 //right secondary axis
                 Vector2 secondaryaxis2d;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out secondaryaxis2d) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
                     bool touchPressChanged = false;
                     int axisPower = 0;
                     //check for touch or press. if changed, write entire vector
                     bool touch;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisTouch.name))
+                    if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxisTouch, out touch) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisTouch.name))
                     {
                         if (RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent != (touch ? 50 : 0))
                         {
@@ -831,7 +827,7 @@ namespace Cognitive3D.Components
                         }
                     }
                     bool press;
-                    if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisClick.name))
+                    if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxisClick, out press) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxisClick.name))
                     {
                         if (RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent != (press ? 100 : 0))
                         {
@@ -847,7 +843,7 @@ namespace Cognitive3D.Components
                 }
                 //right trigger button
                 bool triggerButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.triggerButton, out triggerButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.triggerButton.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.triggerButton.name].ButtonPercent != (triggerButton ? 100 : 0))
                     {
@@ -857,7 +853,7 @@ namespace Cognitive3D.Components
                 }
                 //right grip button
                 bool gripButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out gripButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.gripButton.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.gripButton.name].ButtonPercent != (gripButton ? 100 : 0))
                     {
@@ -867,7 +863,7 @@ namespace Cognitive3D.Components
                 }
                 //right primary button
                 bool primaryButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.primaryButton, out primaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primaryButton.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.primaryButton.name].ButtonPercent != (primaryButton ? 100 : 0))
                     {
@@ -877,7 +873,7 @@ namespace Cognitive3D.Components
                 }
                 //right secondary button
                 bool secondaryButton;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButton) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondaryButton.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.secondaryButton.name].ButtonPercent != (secondaryButton ? 100 : 0))
                     {
@@ -918,16 +914,16 @@ namespace Cognitive3D.Components
 
         void RecordAnalogInputs()
         {
-            var leftHandDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftHandDevices);
-            var rightHandDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.RightHand, rightHandDevices);
+            InputDevice leftHandDevice;
+            GameplayReferences.GetControllerInfo(false, out leftHandDevice);
+            InputDevice rightHandDevice;
+            GameplayReferences.GetControllerInfo(true, out rightHandDevice);
 
-            if (leftHandDevices.Count > 0)
+            if (leftHandDevice.isValid)
             {
                 //left primary joystick
                 Vector2 leftJoystickVector;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
                     int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
                     var x = leftJoystickVector.x;
@@ -951,7 +947,7 @@ namespace Cognitive3D.Components
                     }
                 }
                 //left secondary touchpad
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
                     int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
                     var x = leftJoystickVector.x;
@@ -976,7 +972,7 @@ namespace Cognitive3D.Components
                 }
                 //grip left
                 float grip;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.grip.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.grip, out grip) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.grip.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
                     {
@@ -986,7 +982,7 @@ namespace Cognitive3D.Components
                 }
                 //trigger left
                 float trigger;
-                if (leftHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
+                if (leftHandDevice.TryGetFeatureValue(CommonUsages.trigger, out trigger) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
                 {
                     if (LeftLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
                     {
@@ -995,12 +991,12 @@ namespace Cognitive3D.Components
                     }
                 }
             }
-            if (rightHandDevices.Count > 0)
+            if (rightHandDevice.isValid)
             {
 
                 //right primary joystick
                 Vector2 rightJoystickVector;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.primary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
                     int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
                     var x = rightJoystickVector.x;
@@ -1023,7 +1019,7 @@ namespace Cognitive3D.Components
                     }
                 }
                 //right secondary touchpad
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.secondary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
                     int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
                     var x = rightJoystickVector.x;
@@ -1049,7 +1045,7 @@ namespace Cognitive3D.Components
 
                 //grip right
                 float grip;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.grip, out grip) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.grip, out grip) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.grip.name].ButtonPercent != (int)(grip * 100))
                     {
@@ -1060,7 +1056,7 @@ namespace Cognitive3D.Components
 
                 //trigger right
                 float trigger;
-                if (rightHandDevices[0].TryGetFeatureValue(CommonUsages.trigger, out trigger) && RightLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
+                if (rightHandDevice.TryGetFeatureValue(CommonUsages.trigger, out trigger) && RightLastFrameButtonStates.ContainsKey(CommonUsages.trigger.name))
                 {
                     if (RightLastFrameButtonStates[CommonUsages.trigger.name].ButtonPercent != (int)(trigger * 100))
                     {

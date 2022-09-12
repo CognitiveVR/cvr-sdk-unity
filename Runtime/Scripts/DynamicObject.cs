@@ -127,6 +127,7 @@ namespace Cognitive3D
         void DelayEnable(InputDevice device, XRNode node, bool isValid)
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
+            OnEnable();
         }
 
         private void OnEnable()
@@ -136,7 +137,6 @@ namespace Cognitive3D
                 return;
 #endif
             StartingScale = transform.lossyScale;
-            //string tempMeshName = UseCustomMesh ? MeshName : CommonMesh.ToString().ToLower();
 
             string controllerName = string.Empty;
             string appliedMeshName = MeshName;
@@ -283,7 +283,7 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.OculusQuestTouchRight;
             }
-            if (inName.Contains(""))
+            /*if (inName.Contains(""))
             {
                 return CommonDynamicMesh.ViveTracker;
             }
@@ -314,7 +314,7 @@ namespace Cognitive3D
             if (inName.Contains(""))
             {
                 return CommonDynamicMesh.PicoNeoControllerRight;
-            }
+            }*/
             if (inName.Equals("PicoXR Controller-Left"))
             {
                 return CommonDynamicMesh.PicoNeo3ControllerLeft;
@@ -335,7 +335,7 @@ namespace Cognitive3D
             {
                 return ControllerDisplayType.vivecontroller;
             }
-            if (inName.Contains(""))
+            /*if (inName.Contains(""))
             {
                 return ControllerDisplayType.vivefocuscontroller;
             }
@@ -346,7 +346,7 @@ namespace Cognitive3D
             if (inName.Contains(""))
             {
                 return ControllerDisplayType.oculustouchright;
-            }
+            }*/
             if (inName.Equals("Oculus Touch Controller - Left")
                 || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
@@ -357,7 +357,7 @@ namespace Cognitive3D
             {
                 return ControllerDisplayType.oculusquesttouchright;
             }
-            if (inName.Contains(""))
+            /*if (inName.Contains(""))
             {
                 return ControllerDisplayType.windows_mixed_reality_controller_left;
             }
@@ -372,7 +372,7 @@ namespace Cognitive3D
             if (inName.Contains(""))
             {
                 return ControllerDisplayType.pico_neo_2_eye_controller_right;
-            }
+            }*/
             if (inName.Equals("PicoXR Controller-Left"))
             {
                 return ControllerDisplayType.pico_neo_3_eye_controller_left;
