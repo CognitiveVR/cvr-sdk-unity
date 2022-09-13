@@ -1,0 +1,30 @@
+{
+    "name": "Cognitive3DEditor",
+    "rootNamespace": "",
+    "references": [
+        "Cognitive3D",
+        "Unity.XR.OpenVR",
+        "SteamVR",
+        "Oculus.VR",
+        "Unity.RenderPipelines.HighDefinition.Runtime",
+        "GliaAssembly",
+        "GliaEditorAssembly"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "",
+            "define": "C3D_HDRP"
+        }
+    ],
+    "noEngineReferences": false
+}

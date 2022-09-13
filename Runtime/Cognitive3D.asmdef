@@ -1,0 +1,22 @@
+{
+    "name": "Cognitive3D",
+    "rootNamespace": "",
+    "references": [
+        "SteamVR",
+        "Unity.XR.OpenVR",
+        "Varjo.XR",
+        "Oculus.VR",
+        "Oculus.Platform",
+        "GliaAssembly",
+        "SRAnipalAssembly"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
