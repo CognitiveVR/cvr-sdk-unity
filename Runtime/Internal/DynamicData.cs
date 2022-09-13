@@ -5,7 +5,7 @@ using UnityEngine;
 //instance data about how this specific dynamic thing should work
 namespace Cognitive3D
 {
-    public struct DynamicData
+    internal struct DynamicData
     {
         public string Name;
         public string MeshName;

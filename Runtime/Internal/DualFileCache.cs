@@ -258,5 +258,16 @@ namespace Cognitive3D
             numberWriteBatches++;
             return true;
         }
+
+        public float GetCacheFillAmount()
+        {
+            long totalBytes = 0;
+
+            if (Cognitive3D_Preferences.Instance.LocalDataCacheSize <= 0) { return 1; }
+            if (write_filestream != null) { totalBytes += write_filestream.Length; }
+            if (read_filestream == null) { totalBytes += read_filestream.Length; }
+
+            return totalBytes / Cognitive3D_Preferences.Instance.LocalDataCacheSize;
+        }
     }
 }

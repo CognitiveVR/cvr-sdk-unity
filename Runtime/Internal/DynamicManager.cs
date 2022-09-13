@@ -72,7 +72,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public static void RegisterDynamicObject(DynamicData data)
+        internal static void RegisterDynamicObject(DynamicData data)
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
@@ -119,7 +119,7 @@ namespace Cognitive3D
                 CoreInterface.WriteDynamicManifestEntry(data);
         }
 
-        public static void RegisterController(DynamicData data)
+        internal static void RegisterController(DynamicData data)
         {
             //check for duplicate ids in all data
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)

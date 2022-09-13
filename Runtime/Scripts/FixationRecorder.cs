@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public class ThreadGazePoint
+    internal class ThreadGazePoint
     {
         public Vector3 WorldPoint;
         public bool IsLocal;
@@ -21,7 +21,6 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
-        //public static FixationRecorder Instance;
         private enum GazeRaycastResult
         {
             Invalid,
@@ -33,7 +32,7 @@ namespace Cognitive3D
 #if C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             ray = new Ray();
             Pvr_UnitySDKAPI.EyeTrackingGazeRay gazeRay = new Pvr_UnitySDKAPI.EyeTrackingGazeRay();
@@ -49,25 +48,25 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
             return data.leftEyeOpenness > 0.5f;
         }
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             Pvr_UnitySDKAPI.System.UPvr_getEyeTrackingData(ref data);
             return data.rightEyeOpenness > 0.5f;
         }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (lastProcessedFrame != Time.frameCount)
             {
@@ -79,7 +78,7 @@ namespace Cognitive3D
 #elif C3D_PICOXR
         const int CachedEyeCaptures = 120; //PICO
 
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             ray = new Ray();
 
@@ -122,7 +121,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             float openness = 0;
             if (Unity.XR.PXR.PXR_EyeTracking.GetLeftEyeGazeOpenness(out openness))
@@ -131,7 +130,7 @@ namespace Cognitive3D
             }
             return false;
         }
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             float openness = 0;
             if (Unity.XR.PXR.PXR_EyeTracking.GetRightEyeGazeOpenness(out openness))
@@ -141,14 +140,14 @@ namespace Cognitive3D
             return false;
         }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (lastProcessedFrame != Time.frameCount)
             {
@@ -209,7 +208,7 @@ namespace Cognitive3D
             }
         }
 
-        public void SetupCallbacks()
+        void SetupCallbacks()
         {
             Cognitive3D_Manager.OnPostSessionEnd -= PostSessionEndEvent;
             Cognitive3D_Manager.OnPostSessionEnd += PostSessionEndEvent;
@@ -295,7 +294,7 @@ namespace Cognitive3D
             EyeDataQueue2.Enqueue(eye_data);
         }
 
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             if (useDataQueue1)
             {
@@ -320,7 +319,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             float openness = 0;
             if (useDataQueue1)
@@ -342,7 +341,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             float openness = 0;
             if (useDataQueue1)
@@ -364,7 +363,7 @@ namespace Cognitive3D
             return false;
         }
 
-		public long EyeCaptureTimestamp()
+		long EyeCaptureTimestamp()
 		{
 			if (useDataQueue1)
 			{
@@ -387,7 +386,7 @@ namespace Cognitive3D
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (useDataQueue1)
             {
@@ -447,7 +446,7 @@ namespace Cognitive3D
             }
         }
 
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             ray = new Ray();
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
@@ -463,20 +462,20 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
                 return currentData.leftStatus != Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
             return false;
         }
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
                 return currentData.rightStatus != Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
             return false;
         }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             //currentData.captureTime //nanoseconds. steady clock
             long sinceStart = currentData.captureTime - startTimestamp;
@@ -489,7 +488,7 @@ namespace Cognitive3D
         Queue<Varjo.XR.VarjoEyeTracking.GazeData> queuedData = new Queue<Varjo.XR.VarjoEyeTracking.GazeData>();
 
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (Varjo.XR.VarjoEyeTracking.IsGazeAllowed() && Varjo.XR.VarjoEyeTracking.IsGazeCalibrated())
             {
@@ -548,7 +547,7 @@ namespace Cognitive3D
         
         SimpleGliaEyeData currentData;
         const int CachedEyeCaptures = 120;
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             if (currentData.confidence < 0.5f)
             {
@@ -559,10 +558,10 @@ namespace Cognitive3D
             return true;
         }
 
-        public bool LeftEyeOpen() { return currentData.leftEyeOpenness > 0.4f; }
-        public bool RightEyeOpen() { return currentData.rightEyeOpenness > 0.4f; }
+        bool LeftEyeOpen() { return currentData.leftEyeOpenness > 0.4f; }
+        bool RightEyeOpen() { return currentData.rightEyeOpenness > 0.4f; }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             //check that this correctly trims the microseconds
             return currentData.timestamp;
@@ -570,7 +569,7 @@ namespace Cognitive3D
 
         
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (trackingDataQueue.Count > 0)
             {
@@ -593,7 +592,7 @@ namespace Cognitive3D
         }
 #elif CVR_MRTK
         const int CachedEyeCaptures = 30;
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             if (Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid)
             {
@@ -607,16 +606,16 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
         }
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingDataValid;
         }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
             return (long)(Util.Timestamp() * 1000);
@@ -624,7 +623,7 @@ namespace Cognitive3D
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (lastProcessedFrame != Time.frameCount)
             {
@@ -636,7 +635,7 @@ namespace Cognitive3D
 #else
         const int CachedEyeCaptures = 120;
 
-        public bool CombinedWorldGazeRay(out Ray ray)
+        bool CombinedWorldGazeRay(out Ray ray)
         {
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
@@ -667,7 +666,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool LeftEyeOpen()
+        bool LeftEyeOpen()
         {
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
@@ -680,7 +679,7 @@ namespace Cognitive3D
             }
             return false;
         }
-        public bool RightEyeOpen()
+        bool RightEyeOpen()
         {
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
@@ -694,14 +693,14 @@ namespace Cognitive3D
             return false;
         }
 
-        public long EyeCaptureTimestamp()
+        long EyeCaptureTimestamp()
         {
             return (long)(Util.Timestamp() * 1000);
         }
 
         int lastProcessedFrame;
         //returns true if there is another data point to work on
-        public bool GetNextData()
+        bool GetNextData()
         {
             if (lastProcessedFrame != Time.frameCount)
             {
@@ -728,8 +727,8 @@ namespace Cognitive3D
 
         private EyeCapture[] EyeCaptures = new EyeCapture[CachedEyeCaptures];
 
-        public bool IsFixating { get; set; }
-        public Fixation ActiveFixation;
+        internal bool IsFixating { get; set; }
+        internal Fixation ActiveFixation;
 
         [Header("Blink")]
         [Tooltip("the maximum amount of time that can be assigned as a single 'blink'. if eyes are closed for longer than this, assume that the user is consciously closing their eyes")]
@@ -761,9 +760,9 @@ namespace Cognitive3D
         public int SaccadeFixationEndMs = 10;
 
         //used by RenderEyeTracking for rendering saccades
-        public const int DisplayGazePointCount = 4096;
-        public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
-        public List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
+        internal const int DisplayGazePointCount = 4096;
+        internal CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
+        internal List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
 
 
         void Reset()
@@ -773,7 +772,7 @@ namespace Cognitive3D
             FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
-        public void Initialize()
+        internal void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
 
