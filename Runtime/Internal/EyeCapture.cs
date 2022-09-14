@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public class EyeCapture
+    internal class EyeCapture
     {
         public Vector3 WorldPosition;
         public Vector3 LocalPosition;

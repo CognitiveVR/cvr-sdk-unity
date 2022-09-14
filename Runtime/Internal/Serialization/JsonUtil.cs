@@ -5,7 +5,7 @@ using System.Text;
 namespace Cognitive3D.Serialization
 {
 
-    public static class JsonUtil
+    internal static class JsonUtil
     {
         /// <returns>"name":["obj","obj","obj"]</returns>
         public static StringBuilder SetListString(string name, List<string> list, StringBuilder builder)

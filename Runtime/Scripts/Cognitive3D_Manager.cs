@@ -805,7 +805,6 @@ namespace Cognitive3D
             InvokePostEndSessionEvent();
 
             CognitiveStatics.Reset();
-            DynamicManager.Reset();
         }
 
         public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)

@@ -332,7 +332,7 @@ namespace Cognitive3D
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        public void Post(string url, string stringcontent)
+        internal void Post(string url, string stringcontent)
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
