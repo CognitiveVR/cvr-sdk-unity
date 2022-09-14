@@ -25,7 +25,6 @@ namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
-    [DefaultExecutionOrder(-1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
         private static Cognitive3D_Manager instance;
