@@ -30,7 +30,7 @@ namespace Cognitive3D
     }
 
     [InitializeOnLoad]
-    public class EditorCore
+    internal class EditorCore
     {
         static EditorCore()
         {
@@ -775,8 +775,8 @@ namespace Cognitive3D
                     case DisplayKey.FullName: return "Cognitive3D";
                     case DisplayKey.ShortName: return "Cognitive3D";
                     case DisplayKey.ManagerName: return "Cognitive3D_Manager";
+                    default: return "unknown";
                 }
-                return "unknown";
             }
             else
             {
@@ -826,7 +826,7 @@ namespace Cognitive3D
             SaveEditorVersion();
 
             checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
-            checkForUpdatesRequest.Send();
+            checkForUpdatesRequest.SendWebRequest();
             EditorApplication.update += UpdateCheckForUpdates;
         }
 
@@ -846,7 +846,7 @@ namespace Cognitive3D
                     SaveEditorVersion();
 
                     checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
-                    checkForUpdatesRequest.Send();
+                    checkForUpdatesRequest.SendWebRequest();
                     EditorApplication.update += UpdateCheckForUpdates;
                 }
             }

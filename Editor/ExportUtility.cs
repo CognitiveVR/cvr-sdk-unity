@@ -1621,7 +1621,7 @@ namespace Cognitive3D
                     dynamicUploadWWW = UnityWebRequest.Post(form.Url, form.Form);
                     foreach (var v in form.Headers)
                         dynamicUploadWWW.SetRequestHeader(v.Key, v.Value);
-                    dynamicUploadWWW.Send();
+                    dynamicUploadWWW.SendWebRequest();
                     currentDynamicUploadName = form.Name;
                 }
             }

@@ -86,15 +86,21 @@ namespace Cognitive3D
         public void Close()
         {
             if (read_filestream != null)
+            {
+                read_filestream.Dispose();
                 read_filestream.Close();
+            }
             if (write_filestream != null)
+            {
+                write_filestream.Dispose();
                 write_filestream.Close();
+            }
         }
 
         public bool HasContent()
         {
-            if (read_reader == null) Debug.LogError("has content reader null");
-            if (read_reader.BaseStream == null) Debug.LogError("has content base stream null");
+            if (read_reader == null) { Debug.LogError("has content reader null"); }
+            if (read_reader.BaseStream == null) { Debug.LogError("has content base stream null"); }
 
             return read_reader.BaseStream.Length > 0;
         }

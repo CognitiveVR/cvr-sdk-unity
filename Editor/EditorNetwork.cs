@@ -43,7 +43,7 @@ namespace Cognitive3D
             {
                 req.SetRequestHeader(v.Key, v.Value);
             }
-            req.Send();
+            req.SendWebRequest();
 
 
             EditorWebRequests.Add(new EditorWebRequest(req, callback, blocking, requestName, requestInfo));
@@ -83,7 +83,7 @@ namespace Cognitive3D
             {
                 p.SetRequestHeader(v.Key, v.Value);
             }
-            p.Send();
+            p.SendWebRequest();
 
             EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
 
@@ -100,7 +100,7 @@ namespace Cognitive3D
             {
                 p.SetRequestHeader(v.Key, v.Value);
             }
-            p.Send();
+            p.SendWebRequest();
 
             EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
 
@@ -151,7 +151,7 @@ namespace Cognitive3D
             if (ActiveQueuedWebRequest == null)
             {
                 ActiveQueuedWebRequest = EditorWebRequestsQueue.Dequeue();
-                ActiveQueuedWebRequest.Request.Send();
+                ActiveQueuedWebRequest.Request.SendWebRequest();
             }
 
             EditorUtility.DisplayProgressBar(ActiveQueuedWebRequest.RequestName, ActiveQueuedWebRequest.RequestInfo, ActiveQueuedWebRequest.Request.uploadProgress);

@@ -85,6 +85,7 @@ namespace Cognitive3D
                 case "uploadscene": UploadSceneUpdate(); break;
                 case "uploadsummary": UploadSummaryUpdate(); break;
                 case "done": DoneUpdate(); break;
+                default: break;
             }
 
             DrawFooter();

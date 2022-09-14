@@ -559,87 +559,10 @@ namespace Cognitive3D
             Cognitive3D_Manager.FlushData();
         }
 
-        //puts responses from questions into json for exitpoll microservice
-        /*string FormatResponses()
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("{");
-            JsonUtil.SetString("userId", Cognitive3D_Manager.DeviceId, builder);
-            builder.Append(",");
-            if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
-            {
-                JsonUtil.SetString("participantId", Cognitive3D_Manager.ParticipantId, builder);
-                builder.Append(",");
-            }
-            if (!string.IsNullOrEmpty(Cognitive3D_Manager.LobbyId))
-            {
-                JsonUtil.SetString("lobbyId", Cognitive3D_Manager.LobbyId, builder);
-                builder.Append(",");
-            }
-            JsonUtil.SetString("questionSetId", QuestionSetId, builder);
-            builder.Append(",");
-            JsonUtil.SetString("sessionId", Cognitive3D_Manager.SessionID, builder);
-            builder.Append(",");
-            JsonUtil.SetString("hook", myparameters.Hook, builder);
-            builder.Append(",");
-
-            var scenesettings = Cognitive3D_Manager.TrackingScene;
-            if (scenesettings != null)
-            {
-                JsonUtil.SetString("sceneId", scenesettings.SceneId, builder);
-                builder.Append(",");
-                JsonUtil.SetInt("versionNumber", scenesettings.VersionNumber, builder);
-                builder.Append(",");
-                JsonUtil.SetInt("versionId", scenesettings.VersionId, builder);
-                builder.Append(",");
-            }
-
-            builder.Append("\"answers\":[");
-
-            for (int i = 0; i < responseProperties.Count; i++)
-            {
-                var valueString = responseProperties[i].ResponseValue as string;
-                if (!string.IsNullOrEmpty(valueString) && valueString == "skip")
-                {
-                    builder.Append("null,");
-                }
-                else
-                {
-                    builder.Append("{");
-                    JsonUtil.SetString("type", responseProperties[i].QuestionType, builder);
-                    builder.Append(",\"value\":");
-
-                    if (!string.IsNullOrEmpty(valueString))
-                    {
-                        builder.Append("\"");
-                        builder.Append(valueString);
-                        builder.Append("\"");
-                    }
-                    else if (responseProperties[i].ResponseValue is bool)
-                    {
-                        builder.Append(((bool)responseProperties[i].ResponseValue).ToString().ToLower());
-                    }
-                    else if (responseProperties[i].ResponseValue is int)
-                    {
-                        builder.Append((int)responseProperties[i].ResponseValue);
-                    }
-                    else
-                    {
-                        builder.Append("\"\"");
-                    }
-
-                    builder.Append("},");
-                }
-            }
-            builder.Remove(builder.Length - 1, 1); //remove comma
-            builder.Append("]");
-            builder.Append("}");
-
-            return builder.ToString();
-        }*/
-
         GameObject GetPrefab(Dictionary<string, string> properties)
         {
+            if (!properties.ContainsKey("type")) { return null; }
+
             GameObject prefab = null;
             switch (properties["type"])
             {
@@ -703,6 +626,7 @@ namespace Cognitive3D
                         prefab = ExitPoll.ExitPollTrueFalse;
                     }
                     break;
+                default: Util.logDebug("Unknown Exitpoll panel type: " + properties["type"]);break;
             }
             return prefab;
         }

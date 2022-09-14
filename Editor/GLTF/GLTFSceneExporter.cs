@@ -503,16 +503,10 @@ namespace UnityGLTF
 				_buffer.Uri = fileName + ".bin";
 				_buffer.ByteLength = (uint)_bufferWriter.BaseStream.Length;
 
-				var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf"));
-				_root.Serialize(gltfFile);
-
-#if WINDOWS_UWP
-			gltfFile.Dispose();
-			binFile.Dispose();
-#else
-				gltfFile.Close();
-				binFile.Close();
-#endif
+				using (var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf")))
+				{
+					_root.Serialize(gltfFile);
+				}
 				ExportImages(path, preExxportedTextures);
 			}
 			catch (System.Exception e)
