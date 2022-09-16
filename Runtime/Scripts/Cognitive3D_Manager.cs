@@ -51,10 +51,10 @@ namespace Cognitive3D
         public static bool IsQuitting = false;
 
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
-        public bool BeginSessionAutomatically = false;
+        public bool BeginSessionAutomatically = true;
 
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
-        public float StartupDelayTime = 2;
+        public float StartupDelayTime = 0;
 
 #if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
@@ -83,7 +83,9 @@ namespace Cognitive3D
                 yield return new WaitForSeconds(StartupDelayTime);
             }
             if (BeginSessionAutomatically)
+            {
                 BeginSession();
+            }
 
 #if C3D_OCULUS
             if (AssignOculusProfileToParticipant && (ParticipantName == string.Empty && ParticipantId == string.Empty))
@@ -162,7 +164,9 @@ namespace Cognitive3D
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
             if (Cognitive3D_Preferences.Instance.LocalStorage)
+            {
                 DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+            }
             GameObject networkGo = new GameObject("Cognitive Network");
             networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
             NetworkManager = networkGo.AddComponent<NetworkManager>();
@@ -183,7 +187,9 @@ namespace Cognitive3D
             string hmdName = "unknown";
             var hmdDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
             if (hmdDevice.isValid)
+            {
                 hmdName = hmdDevice.name;
+            }
 
             CoreInterface.Initialize(SessionID, SessionTimeStamp, DeviceId, hmdName);
             IsInitialized = true;
