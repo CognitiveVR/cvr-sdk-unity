@@ -218,9 +218,6 @@ namespace Cognitive3D
         /// creates a new custom event related to a dynamic object
         /// </summary>
         /// <param name="objectid"></param>
-        /// <param name="engagementname"></param>
-        /// <param name="uniqueEngagementId"></param>
-        /// <param name="properties"></param>
         public static void BeginEngagement(string objectid)
         {
             BeginEngagement(objectid, "default", objectid + "default", null);
@@ -259,6 +256,16 @@ namespace Cognitive3D
                 Engagements[uniqueEngagementId].Send(pos);
                 Engagements[uniqueEngagementId] = ce;
             }
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        public static void BeginEngagement(DynamicObject dynamicObject, String engagementname)
+        {
+            BeginEngagement(dynamicObject.GetId(), engagementname, dynamicObject.GetId() + engagementname, null);
         }
 
         public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
