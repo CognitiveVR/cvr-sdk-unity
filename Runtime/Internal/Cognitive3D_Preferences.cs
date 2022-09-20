@@ -76,9 +76,7 @@ namespace Cognitive3D
         public bool EnableGaze = true;
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
-        public float GPSInterval = 1;
         public float GPSAccuracy = 2;
-        public bool SyncGPSWithGaze;
         public bool RecordFloorPosition = true;
 
         public int GazeLayerMask = -1;

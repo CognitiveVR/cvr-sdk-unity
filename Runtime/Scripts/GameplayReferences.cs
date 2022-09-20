@@ -388,6 +388,54 @@ namespace Cognitive3D
             }
         }
 
-#endregion
+        #endregion
+
+        #region Location
+
+#if C3D_LOCATION
+        public static bool TryGetGPSLocation(ref Vector4 loc)
+        {
+            if (Input.location.status == LocationServiceStatus.Stopped && Input.location.isEnabledByUser)
+            {
+                Cognitive3D_Manager.Instance.StartCoroutine(InitializeLocation());
+            }
+            if (Input.location.status != LocationServiceStatus.Running)
+            {                
+                return false;
+            }
+            loc.x = Input.location.lastData.latitude;
+            loc.y = Input.location.lastData.longitude;
+            loc.z = Input.location.lastData.altitude;
+            loc.w = 360 - Input.compass.magneticHeading;
+            return true;
+        }
+
+        static IEnumerator InitializeLocation()
+        {
+            Input.location.Start(Cognitive3D_Preferences.Instance.GPSAccuracy, Cognitive3D_Preferences.Instance.GPSAccuracy);
+
+            int maxWait = 20;
+            while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
+            {
+                yield return new WaitForSeconds(0.5f);
+                maxWait--;
+            }
+            if (Input.location.status == LocationServiceStatus.Initializing)
+            {
+                yield break;
+            }
+            else if (Input.location.status == LocationServiceStatus.Failed)
+            {
+                yield break;
+            }
+        }
+#else
+        public static bool TryGetGPSLocation(ref Vector4 loc)
+        {
+            return false;
+        }
+#endif
+
+        #endregion
     }
 }
