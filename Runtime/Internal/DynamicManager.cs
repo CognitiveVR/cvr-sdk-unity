@@ -221,7 +221,19 @@ namespace Cognitive3D
         /// <param name="engagementname"></param>
         /// <param name="uniqueEngagementId"></param>
         /// <param name="properties"></param>
-        public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        public static void BeginEngagement(string objectid)
+        {
+            BeginEngagement(objectid, "default", objectid + "default", null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// <param name="properties"></param>
+        public static void BeginEngagement(string objectid, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
