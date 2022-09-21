@@ -1521,9 +1521,6 @@ namespace Cognitive3D
             {
                 case "welcome": buttonDisabled = true; break;
                 case "authenticate":
-                    text = "Back";
-                    buttonrect = new Rect(260, 510, 80, 30);
-                    break;
                 case "listdynamics":
                     text = "Back";
                     buttonrect = new Rect(260, 510, 80, 30);
