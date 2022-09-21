@@ -39,7 +39,6 @@ namespace Cognitive3D.ActiveSession
         public Color normalColor;
         public Color justSentColor;
         string neverSentString = "No data";
-        string notYetSentString = "Not yet sent";
         string justSentString = "Just sent!";
 
         float timeSinceLastTick;

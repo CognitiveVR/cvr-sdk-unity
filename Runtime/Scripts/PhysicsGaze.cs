@@ -11,7 +11,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
     public class PhysicsGaze : GazeBase
     {
-        public override void Initialize()
+        internal override void Initialize()
         {
             Cognitive3D_Manager.OnSessionBegin += Cognitive3D_Manager_InitEvent;
             base.Initialize();

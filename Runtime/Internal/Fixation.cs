@@ -52,7 +52,7 @@ namespace Cognitive3D
         public string DynamicObjectId;
 
         //called just before new eyecapture is recorded. this has been around 1 second, so 'safe' to actually record
-        public void AddEyeCapture(EyeCapture eyeCapture)
+        internal void AddEyeCapture(EyeCapture eyeCapture)
         {
             bool validEyeCapture = true;
 

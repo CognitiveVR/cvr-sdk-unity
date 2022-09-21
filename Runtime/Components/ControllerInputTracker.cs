@@ -528,6 +528,7 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
+                    default: Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
                 }
             }
 
@@ -624,6 +625,7 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
+                    default: Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
                 }
             }
 

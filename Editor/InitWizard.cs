@@ -12,12 +12,12 @@ using Valve.Newtonsoft.Json;
 
 namespace Cognitive3D
 {
-    public class InitWizard : EditorWindow
+    internal class InitWizard : EditorWindow
     {
         Rect steptitlerect = new Rect(30, 0, 100, 440);
         //Rect boldlabelrect = new Rect(30, 100, 440, 440);
 
-        public static void Init()
+        internal static void Init()
         {
             InitWizard window = (InitWizard)EditorWindow.GetWindow(typeof(InitWizard), true, "");
             window.minSize = new Vector2(500, 550);
@@ -53,7 +53,7 @@ namespace Cognitive3D
             "uploadsummary",
             "done"
         };
-        public int currentPage;
+        int currentPage;
 
         bool debugNewSceneVersion = false;
 
@@ -85,6 +85,7 @@ namespace Cognitive3D
                 case "uploadscene": UploadSceneUpdate(); break;
                 case "uploadsummary": UploadSummaryUpdate(); break;
                 case "done": DoneUpdate(); break;
+                default: break;
             }
 
             DrawFooter();
@@ -1597,7 +1598,7 @@ namespace Cognitive3D
         }
 
 #if C3D_STEAMVR2
-        public static void AppendSteamVRActionSet()
+        internal static void AppendSteamVRActionSet()
         {
             SteamVR_Input_ActionFile actionfile;
             if (LoadActionFile(out actionfile))
@@ -1655,7 +1656,7 @@ namespace Cognitive3D
             return true;
         }
 
-        public static void SetDefaultBindings()
+        internal static void SetDefaultBindings()
         {
             SteamVR_Input_BindingFile bindingfile;
             if (LoadBindingFile(out bindingfile))

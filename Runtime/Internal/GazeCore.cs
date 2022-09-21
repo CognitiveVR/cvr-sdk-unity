@@ -24,26 +24,26 @@ namespace Cognitive3D
 
         public delegate void onGazeRecord(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation);
         public static event onGazeRecord OnDynamicGazeRecord;
-        public static void DynamicGazeRecordEvent(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
+        internal static void DynamicGazeRecordEvent(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
         {
             if (OnDynamicGazeRecord != null)
                 OnDynamicGazeRecord.Invoke(timestamp,objectid,localgazepoint,hmdpoint,hmdrotation);
         }
         public static event onGazeRecord OnWorldGazeRecord;
-        public static void WorldGazeRecordEvent(double timestamp, string ignored, Vector3 worldgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
+        internal static void WorldGazeRecordEvent(double timestamp, string ignored, Vector3 worldgazepoint, Vector3 hmdpoint, Quaternion hmdrotation)
         {
             if (OnWorldGazeRecord != null)
                 OnWorldGazeRecord.Invoke(timestamp, ignored, worldgazepoint, hmdpoint, hmdrotation);
         }
         public static event onGazeRecord OnSkyGazeRecord;
-        public static void SkyGazeRecordEvent(double timestamp, string ignored, Vector3 ignored2, Vector3 hmdpoint, Quaternion hmdrotation)
+        internal static void SkyGazeRecordEvent(double timestamp, string ignored, Vector3 ignored2, Vector3 hmdpoint, Quaternion hmdrotation)
         {
             if (OnSkyGazeRecord != null)
                 OnSkyGazeRecord.Invoke(timestamp, ignored, ignored2, hmdpoint, hmdrotation);
         }
 
         static Transform cameraRoot;
-        public static bool GetFloorPosition(ref Vector3 floorPos)
+        internal static bool GetFloorPosition(ref Vector3 floorPos)
         {
             if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
@@ -62,7 +62,7 @@ namespace Cognitive3D
         }
 
         ///sky position
-        public static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
+        internal static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -89,7 +89,7 @@ namespace Cognitive3D
         }
 
         //gaze on dynamic object
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
+        internal static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -116,7 +116,7 @@ namespace Cognitive3D
         }
 
         //world position
-        public static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
+        internal static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -144,7 +144,7 @@ namespace Cognitive3D
 
         //looking at a media dynamic object
         //mediatime is milliseconds since the start of the video
-        public static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, string mediasource, int mediatimeMs, Vector2 uvs)
+        internal static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, string mediasource, int mediatimeMs, Vector2 uvs)
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {

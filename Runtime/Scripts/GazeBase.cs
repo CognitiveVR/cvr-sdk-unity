@@ -10,14 +10,14 @@ namespace Cognitive3D
     [AddComponentMenu("")]
     public class GazeBase : MonoBehaviour
     {
-        public CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
-        public static Vector3 LastGazePoint;
+        internal CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
+        internal static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
         protected Transform cameraRoot;
 
         //called immediately after construction
-        public virtual void Initialize()
+        internal virtual void Initialize()
         {
 #if C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
@@ -54,7 +54,7 @@ namespace Cognitive3D
         /// <param name="distance"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
+        protected virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
         {
             //raycast to dynamic. if failed, spherecast with radius
             //if hit dynamic, return info
@@ -130,7 +130,7 @@ namespace Cognitive3D
         /// <summary>
         /// get the raw gaze direction in world space. includes eye tracking. returns previous direction if currently invalid
         /// </summary>
-        public Vector3 GetWorldGazeDirection()
+        protected Vector3 GetWorldGazeDirection()
         {
 #if C3D_SRANIPAL
             var ray = new Ray();
@@ -189,7 +189,7 @@ namespace Cognitive3D
         /// <summary>
         /// get the position of the eye gaze in normalized viewport space
         /// </summary>
-        public Vector3 GetViewportGazePoint()
+        protected Vector3 GetViewportGazePoint()
         {
             Vector2 screenGazePoint = new Vector2(0.5f, 0.5f);
 

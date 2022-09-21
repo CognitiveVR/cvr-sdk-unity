@@ -278,7 +278,7 @@ namespace Cognitive3D
                 CacheRequest.SetRequestHeader("Content-Type", "application/json");
                 CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
                 CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                CacheRequest.Send();
+                CacheRequest.SendWebRequest();
 
                 if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                     Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
@@ -308,7 +308,7 @@ namespace Cognitive3D
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             instance.StartCoroutine(instance.WaitForExitpollResponse(request, hookname, callback,timeout));
         }
@@ -323,7 +323,7 @@ namespace Cognitive3D
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true));
@@ -332,7 +332,7 @@ namespace Cognitive3D
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        public void Post(string url, string stringcontent)
+        internal void Post(string url, string stringcontent)
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
@@ -340,7 +340,7 @@ namespace Cognitive3D
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-            request.Send();
+            request.SendWebRequest();
 
             activeRequests.Add(request);
             instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));

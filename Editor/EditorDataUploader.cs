@@ -40,7 +40,7 @@ namespace Cognitive3D
 						uploadRequest.SetRequestHeader("Content-Type", "application/json");
 						uploadRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
 						uploadRequest.SetRequestHeader("Authorization", "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey);
-						uploadRequest.Send();
+						uploadRequest.SendWebRequest();
 						attemptedUploads++;
 
 						if (Cognitive3D_Preferences.Instance.EnableDevLogging)

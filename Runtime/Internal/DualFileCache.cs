@@ -86,15 +86,21 @@ namespace Cognitive3D
         public void Close()
         {
             if (read_filestream != null)
+            {
+                read_filestream.Dispose();
                 read_filestream.Close();
+            }
             if (write_filestream != null)
+            {
+                write_filestream.Dispose();
                 write_filestream.Close();
+            }
         }
 
         public bool HasContent()
         {
-            if (read_reader == null) Debug.LogError("has content reader null");
-            if (read_reader.BaseStream == null) Debug.LogError("has content base stream null");
+            if (read_reader == null) { Debug.LogError("has content reader null"); }
+            if (read_reader.BaseStream == null) { Debug.LogError("has content base stream null"); }
 
             return read_reader.BaseStream.Length > 0;
         }
@@ -257,6 +263,17 @@ namespace Cognitive3D
             writer.Flush();
             numberWriteBatches++;
             return true;
+        }
+
+        public float GetCacheFillAmount()
+        {
+            long totalBytes = 0;
+
+            if (Cognitive3D_Preferences.Instance.LocalDataCacheSize <= 0) { return 1; }
+            if (write_filestream != null) { totalBytes += write_filestream.Length; }
+            if (read_filestream != null) { totalBytes += read_filestream.Length; }
+
+            return totalBytes / Cognitive3D_Preferences.Instance.LocalDataCacheSize;
         }
     }
 }

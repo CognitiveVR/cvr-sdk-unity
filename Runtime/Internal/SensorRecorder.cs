@@ -10,7 +10,7 @@ namespace Cognitive3D
 {
     public static class SensorRecorder
     {
-        public class SensorData
+        internal class SensorData
         {
             public string Name;
             public string Rate;

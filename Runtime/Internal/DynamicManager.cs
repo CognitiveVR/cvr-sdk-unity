@@ -18,7 +18,7 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
-        public static void Initialize()
+        internal static void Initialize()
         {
             Cognitive3D.Cognitive3D_Manager.OnUpdate -= OnUpdate;
             Cognitive3D.Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
@@ -34,20 +34,6 @@ namespace Cognitive3D
             }
         }
 
-        internal static void Reset()
-        {
-            //don't clear the active dynamic data
-
-            //for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
-            //{
-            //    ActiveDynamicObjectsArray[i].active = false;
-            //}
-            //for(int i = 0; i<DynamicObjectIdArray.Length;i++)
-            //{
-            //    DynamicObjectIdArray[i].Used = false;
-            //}
-        }
-
         //happens after the network has sent the request, before any response. used by active session view
         public static event Cognitive3D_Manager.onSendData OnDynamicObjectSend;
         internal static void DynamicObjectSendEvent()
@@ -56,7 +42,7 @@ namespace Cognitive3D
                 OnDynamicObjectSend.Invoke(false);
         }
 
-        public static bool GetDynamicObjectName(string id, out string name)
+        internal static bool GetDynamicObjectName(string id, out string name)
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
@@ -72,7 +58,7 @@ namespace Cognitive3D
             return false;
         }
 
-        public static void RegisterDynamicObject(DynamicData data)
+        internal static void RegisterDynamicObject(DynamicData data)
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
@@ -112,14 +98,11 @@ namespace Cognitive3D
                 //just expanded the array. this spot will be empty
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
-
-            //Cognitive3D.DynamicObjectCore.WriteDynamicManifestEntry(data);
-
             if (Cognitive3D_Manager.IsInitialized)
                 CoreInterface.WriteDynamicManifestEntry(data);
         }
 
-        public static void RegisterController(DynamicData data)
+        internal static void RegisterController(DynamicData data)
         {
             //check for duplicate ids in all data
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
@@ -150,40 +133,12 @@ namespace Cognitive3D
                 //just expanded the array. this spot will be empty
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
-
-            //Cognitive3D.DynamicObjectCore.WriteControllerManifestEntry(data);
             if (Cognitive3D_Manager.IsInitialized)
                 CoreInterface.WriteControllerManifestEntry(data);
         }
 
-        //public static void RegisterMedia(DynamicData data, string videoUrl)
-        //{
-        //    bool foundSpot = false;
-        //    for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
-        //    {
-        //        //if (string.IsNullOrEmpty(ActiveDynamicObjectsArray[i].Id))
-        //        if (!ActiveDynamicObjectsArray[i].active)
-        //        {
-        //            ActiveDynamicObjectsArray[i] = data;
-        //            foundSpot = true;
-        //            break;
-        //        }
-        //    }
-        //    if (!foundSpot)
-        //    {
-        //        Debug.LogWarning("Dynamic Object Array expanded!");
-        //
-        //        int nextFreeIndex = ActiveDynamicObjectsArray.Length;
-        //        Array.Resize<DynamicData>(ref ActiveDynamicObjectsArray, ActiveDynamicObjectsArray.Length * 2);
-        //        //just expanded the array. this spot will be empty
-        //        ActiveDynamicObjectsArray[nextFreeIndex] = data;
-        //    }
-        //
-        //    Cognitive3D.Internal.DynamicCore.RegisterMedia(data, videoUrl);
-        //}
-
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
-        public static void RemoveDynamicObject(string id)
+        internal static void RemoveDynamicObject(string id)
         {
             for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
             {
@@ -221,7 +176,7 @@ namespace Cognitive3D
         /// <param name="engagementname"></param>
         /// <param name="uniqueEngagementId"></param>
         /// <param name="properties"></param>
-        public static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        internal static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
@@ -249,7 +204,7 @@ namespace Cognitive3D
             }
         }
 
-        public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        internal static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
@@ -266,7 +221,7 @@ namespace Cognitive3D
                 }
             }
 
-            CustomEvent ce = null;
+            CustomEvent ce;
             if (Engagements.TryGetValue(uniqueEngagementId, out ce))
             {
                 ce.SetProperties(properties).Send(pos);
@@ -284,7 +239,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="data"></param>
         /// <param name="changedInputs"></param>
-        public static void RecordControllerEvent(string id, List<ButtonState> changedInputs)
+        internal static void RecordControllerEvent(string id, List<ButtonState> changedInputs)
         {
             bool found = false;
             int i = 0;
@@ -318,7 +273,6 @@ namespace Cognitive3D
             if (changedInputs.Count > 0)
             {
                 ActiveDynamicObjectsArray[i].dirty = true;
-                //builder.Append(",\"buttons\":{");
                 for(int j = 0; j<changedInputs.Count;j++)
                 {
                     if (j != 0) { builder.Append(","); }
@@ -336,7 +290,6 @@ namespace Cognitive3D
                     }
                     builder.Append("}");
                 }
-                //builder.Append("}");
             }
 
             if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
@@ -393,12 +346,11 @@ namespace Cognitive3D
                 }
 
                 ActiveDynamicObjectsArray[i].HasProperties = false;
-                //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
                 CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
             }
         }
 
-        public static void SetProperties(string id, List<KeyValuePair<string,object>> properties)
+        internal static void SetProperties(string id, List<KeyValuePair<string,object>> properties)
         {
             bool found = false;
             int i = 0;
@@ -416,7 +368,7 @@ namespace Cognitive3D
             ActiveDynamicObjectsArray[i].Properties = properties;
         }
 
-        public static void SetDirty(string id)
+        internal static void SetDirty(string id)
         {
             bool found = false;
             int i = 0;
@@ -432,7 +384,7 @@ namespace Cognitive3D
             ActiveDynamicObjectsArray[i].dirty = true;
         }
 
-        public static void SetTransform(string id, Transform transform)
+        internal static void SetTransform(string id, Transform transform)
         {
             bool found = false;
             int i = 0;
@@ -454,7 +406,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static bool IsDataActive(string id)
+        internal static bool IsDataActive(string id)
         {
             if (string.IsNullOrEmpty(id)) { return false; }
             bool found = false;
@@ -476,7 +428,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="id"></param>
         /// <param name="forceWrite">writes snapshot even if dynamic hasn't moved beyond threshold</param>
-        public static void RecordDynamic(string id, bool forceWrite)
+        internal static void RecordDynamic(string id, bool forceWrite)
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
 
@@ -593,7 +545,6 @@ namespace Cognitive3D
                     }
 
                     ActiveDynamicObjectsArray[i].HasProperties = false;
-                    //Cognitive3D.DynamicObjectCore.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString());
                     CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
                 }
             }
@@ -825,7 +776,7 @@ namespace Cognitive3D
         }
 
         static int lastValidId;
-        public static string GetUniqueObjectId(string meshname)
+        internal static string GetUniqueObjectId(string meshname)
         {
             for (int i = 0; i < DynamicObjectIdArray.Length; i++)
             {
