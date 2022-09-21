@@ -40,16 +40,19 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            return "Records GPS Location as a Session Property";
+            if (!GameplayReferences.IsGPSLocationEnabled())
+            {
+                return "Records GPS Location as a Session Property\nGPS Location is not enabled\nAdd C3D_LOCATION to scripting define symbols in Project Settings";
+            }
+            else
+            {
+                return "Records GPS Location as a Session Property";
+            }
         }
 
         public override bool GetWarning()
         {
-#if UNITY_ANDROID || CVR_ARKIT || CVR_ARCORE || UNITY_IOS
-            return true;
-#else
-            return false;
-#endif
+            return !GameplayReferences.IsGPSLocationEnabled();
         }
     }
 }
