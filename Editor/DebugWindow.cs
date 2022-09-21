@@ -103,8 +103,6 @@ namespace Cognitive3D
             sb.AppendLine("Dynamic Object Search in Parent: " + p.DynamicObjectSearchInParent);
             sb.AppendLine("Dynamic Object Layer Mask: " + p.DynamicLayerMask);
             sb.AppendLine("Track GPS Location: " + p.TrackGPSLocation);
-            sb.AppendLine("GPS Sync with Player Update: " + p.SyncGPSWithGaze);
-            sb.AppendLine("GPS Update Interval: " + p.GPSInterval);
             sb.AppendLine("GPS Accuracy: " + p.GPSAccuracy);
             sb.AppendLine("Record Floor Position: " + p.RecordFloorPosition);
             

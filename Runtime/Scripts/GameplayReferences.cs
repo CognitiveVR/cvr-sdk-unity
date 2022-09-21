@@ -388,6 +388,68 @@ namespace Cognitive3D
             }
         }
 
-#endregion
+        #endregion
+
+        #region Location
+
+#if C3D_LOCATION
+        /// <summary>
+        /// starts location services if not already active.
+        /// writes location latitude, longitude, altitude and compass heading as x,y,z,w respectively
+        /// </summary>
+        /// <param name="loc"></param>
+        /// <returns>true if location data is available</returns>
+        public static bool TryGetGPSLocation(ref Vector4 loc)
+        {
+            if (!Input.location.isEnabledByUser)
+            {
+                return false;
+            }
+            if (Input.location.status == LocationServiceStatus.Stopped)
+            {
+                Input.location.Start(Cognitive3D_Preferences.Instance.GPSAccuracy, Cognitive3D_Preferences.Instance.GPSAccuracy);
+            }
+            if (Input.location.status != LocationServiceStatus.Running)
+            {                
+                return false;
+            }
+            loc.x = Input.location.lastData.latitude;
+            loc.y = Input.location.lastData.longitude;
+            loc.z = Input.location.lastData.altitude;
+            loc.w = 360 - Input.compass.magneticHeading;
+            return true;
+        }
+
+        /// <summary>
+        /// returns true if C3D_LOCATION is an included symbol
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsGPSLocationEnabled()
+        {
+            return true;
+        }
+#else
+        /// <summary>
+        /// starts location services if not already active.
+        /// writes location latitude, longitude, altitude and compass heading as x,y,z,w respectively
+        /// </summary>
+        /// <param name="loc"></param>
+        /// <returns>true if location data is available</returns>
+        public static bool TryGetGPSLocation(ref Vector4 loc)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// returns true if C3D_LOCATION is an included symbol
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsGPSLocationEnabled()
+        {
+            return false;
+        }
+#endif
+
+        #endregion
     }
 }

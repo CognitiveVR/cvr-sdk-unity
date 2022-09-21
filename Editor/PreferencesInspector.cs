@@ -9,7 +9,6 @@ namespace Cognitive3D
     [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
     {
-        bool gpsFoldout;
         bool hasCheckedRenderType = false;
 
         public static void CheckGazeRenderType(Cognitive3D_Preferences p)
@@ -74,24 +73,21 @@ namespace Cognitive3D
             p.DynamicLayerMask = dynamicMask.value;
 
             p.TriggerInteraction = (QueryTriggerInteraction)EditorGUILayout.EnumPopup("Gaze Query Trigger Interaction", p.TriggerInteraction);
-
-            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location at Interval", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
-
-            EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
-            EditorGUI.indentLevel++;
-            gpsFoldout = EditorGUILayout.Foldout(gpsFoldout,"GPS Options");
-            if (gpsFoldout)
-            {
-                p.SyncGPSWithGaze = EditorGUILayout.Toggle(new GUIContent("Sync with Player Update", "Request new GPS location every time the player position and gaze is recorded"), p.SyncGPSWithGaze);
-                EditorGUI.BeginDisabledGroup(p.SyncGPSWithGaze);
-                p.GPSInterval = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Update Interval","Interval in seconds to record new GPS location data"), p.GPSInterval), 0.1f, 60f);
-                EditorGUI.EndDisabledGroup();
-                p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy","Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
-            }
-            EditorGUI.indentLevel--;
-            EditorGUI.EndDisabledGroup();
-
             p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Location", EditorStyles.boldLabel);
+            bool disableGeoSettings = false;
+#if !C3D_LOCATION
+            EditorGUILayout.HelpBox("Location data is currently disabled. Add C3D_LOCATION to scripting define symbols in Project Settings", MessageType.Info);
+            disableGeoSettings = true;
+#else
+            disableGeoSettings = false;
+#endif
+            EditorGUI.BeginDisabledGroup(disableGeoSettings);
+            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location with HMD Position", "Record GPS location and compass direction at the same rate as HMD position"), p.TrackGPSLocation);
+            p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy", "Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);

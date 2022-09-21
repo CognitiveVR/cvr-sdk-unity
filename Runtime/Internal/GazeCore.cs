@@ -79,8 +79,10 @@ namespace Cognitive3D
             bool useGeo = false;
             if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
-                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
-                useGeo = true;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+                    useGeo = true;
+                }
             }
 
             CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp, floorPos, validFloor, geo, useGeo);
@@ -106,8 +108,10 @@ namespace Cognitive3D
             bool useGeo = false;
             if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
-                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
-                useGeo = true;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+                    useGeo = true;
+                }
             }
 
             CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor, geo, useGeo);
@@ -133,8 +137,10 @@ namespace Cognitive3D
             bool useGeo = false;
             if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
-                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
-                useGeo = true;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+                    useGeo = true;
+                }
             }
 
             CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor, geo, useGeo);
@@ -161,8 +167,10 @@ namespace Cognitive3D
             bool useGeo = false;
             if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
             {
-                Cognitive3D_Manager.Instance.GetGPSLocation(ref geo);
-                useGeo = true;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+                    useGeo = true;
+                }
             }
 
             CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor, geo, useGeo);

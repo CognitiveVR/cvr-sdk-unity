@@ -216,21 +216,7 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             new CustomEvent("c3d.sessionStart").Send();
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                Input.location.Start(Cognitive3D_Preferences.Instance.GPSAccuracy, Cognitive3D_Preferences.Instance.GPSAccuracy);
-                Input.compass.enabled = true;
-                if (Cognitive3D_Preferences.Instance.SyncGPSWithGaze)
-                {
-                    //just get gaze snapshot to grab this
-                }
-                else
-                {
-                    StartCoroutine(GPSTick());
-                }
-            }
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
-            GPSUpdateInverval = new WaitForSeconds(Cognitive3D_Preferences.Instance.GPSInterval);
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
             StartCoroutine(Tick());
             Util.logDebug("Cognitive3D Initialized");
@@ -428,38 +414,6 @@ namespace Cognitive3D
             InvokeUpdateEvent(Time.deltaTime);
         }
 
-#endregion
-
-#region GPS
-        public void GetGPSLocation(ref Vector4 geo)
-        {
-            if (Cognitive3D_Preferences.Instance.SyncGPSWithGaze)
-            {
-                geo.x = Input.location.lastData.latitude;
-                geo.y = Input.location.lastData.longitude;
-                geo.z = Input.location.lastData.altitude;
-                geo.w = 360 - Input.compass.magneticHeading;
-            }
-            else
-            {
-                geo = GPSLocation;
-                geo.w = CompassOrientation;
-            }
-        }
-
-        Vector3 GPSLocation;
-        float CompassOrientation;
-        IEnumerator GPSTick()
-        {
-            while (IsInitialized)
-            {
-                yield return GPSUpdateInverval;
-                GPSLocation.x = Input.location.lastData.latitude;
-                GPSLocation.y = Input.location.lastData.longitude;
-                GPSLocation.z = Input.location.lastData.altitude;
-                CompassOrientation = 360 - Input.compass.magneticHeading;
-            }
-        }
 #endregion
 
 #region Application Quit, Session End and OnDestroy
