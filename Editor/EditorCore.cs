@@ -465,7 +465,9 @@ namespace Cognitive3D
         {
             int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
             if (textFieldID == 0)
+            {
                 return value;
+            }
 
 #if !UNITY_2019_4_OR_NEWER
             //enables copy/paste from text fields in old versions of unity
@@ -480,9 +482,31 @@ namespace Cognitive3D
                 return GUI.TextField(rect, value, maxlength, styleOverride);
             }
         }
-#endregion
 
-#region Icons and Textures
+        /// <summary>
+        /// TextField with copy-paste support
+        /// Overload when no styleoverride is passed in
+        /// </summary>
+        public static string TextField(Rect rect, string value, int maxlength)
+        {
+            int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
+            if (textFieldID == 0)
+            {
+                return value;
+            }
+
+#if !UNITY_2019_4_OR_NEWER
+            //enables copy/paste from text fields in old versions of unity
+            value = HandleCopyPaste(textFieldID) ?? value;
+#endif
+            return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
+        }
+
+
+
+        #endregion
+
+        #region Icons and Textures
         private static Texture2D _logo;
         public static Texture2D LogoTexture
         {
