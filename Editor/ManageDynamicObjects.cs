@@ -300,15 +300,6 @@ namespace Cognitive3D
         }
 
         Rect idrect = new Rect(350, 55, 80, 30);
-        //GUI.Label(uploaded, "Exported Mesh", "dynamicheader");
-        if (GUI.Button(idrect, "Id", "dynamicheader"))
-        {
-            /*if (SortMethod != SortByMethod.Duration)
-                SortMethod = SortByMethod.Duration;
-            else
-                SortMethod = SortByMethod.ReverseDuration;
-            SortByExported();*/
-        }
 
         Rect uploaded = new Rect(470, 55, 90, 30);
         string exportedStyle = (SortMethod == SortByMethod.Exported || SortMethod == SortByMethod.ReverseExported) ? "dynamicheaderbold" : "dynamicheader";
@@ -677,7 +668,9 @@ namespace Cognitive3D
             return -1;
         });
         if (SortMethod == SortByMethod.ReverseExported)
-            Entries.Reverse();
+            {
+                Entries.Reverse();
+            }
     }
 
     void OnToggleMeshFilter()

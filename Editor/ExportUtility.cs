@@ -1325,7 +1325,7 @@ namespace Cognitive3D
                 //export as gltf
                 try
                 {
-                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[1] { temporaryDynamic.transform }, temporaryDynamic);
+                    var exporter = new UnityGLTF.GLTFSceneExporter(new Transform[] { temporaryDynamic.transform }, temporaryDynamic);
                     exporter.SetNonStandardOverrides(temp);
                     exporter.SaveGLTFandBin(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar, temporaryDynamic.MeshName, customTextureExports);
                 }
