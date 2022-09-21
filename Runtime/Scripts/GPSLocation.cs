@@ -6,28 +6,19 @@ using System.Collections.Generic;
 /// Adds the starting GPS location to session properties at the start of the session
 /// </summary>
 
+//TODO consider looping this on an interval
+
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/GPS Location")]
     public class GPSLocation : Cognitive3D.Components.AnalyticsComponentBase
     {
-        //YieldInstruction GPSUpdateInverval;
-        //public float Interval = 10;
-        //public bool UpdateOnInterval = true;
-
         public override void Cognitive3D_Init()
         {
             base.Cognitive3D_Init();
 
             //loop until TryGetGPSLocation returns true
             StartCoroutine(GPSBegin());
-
-            //if enabled, loop on interval
-            //if (UpdateOnInterval)
-            //{
-            //    GPSUpdateInverval = new WaitForSeconds(Interval);
-            //    StartCoroutine(GPSTick());
-            //}
         }
 
         IEnumerator GPSBegin()
@@ -46,15 +37,6 @@ namespace Cognitive3D.Components
                 }
             }
         }
-
-        //IEnumerator GPSTick()
-        //{
-        //    while (Cognitive3D_Manager.IsInitialized)
-        //    {
-        //        yield return GPSUpdateInverval;
-        //        //write to sensors?
-        //    }
-        //}
 
         public override string GetDescription()
         {
