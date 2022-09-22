@@ -1418,11 +1418,23 @@ namespace Cognitive3D
             public int InputType = 2;
             public int AxisNum = 0;
             public int JoystickNum = 0;
-            public Axis(string name, int axis, bool inverted = false)
+            public Axis(string name, int axis, bool inverted)
             {
                 Name = name;
                 AxisNum = axis;
                 Invert = inverted;
+            }
+
+            /// <summary>
+            /// Overloaded constructor
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="axis"></param>
+            public Axis(string name, int axis)
+            {
+                Name = name;
+                AxisNum = axis;
+                Invert = false;
             }
         }
 
