@@ -461,7 +461,7 @@ namespace Cognitive3D
         /// <summary>
         /// TextField with copy-paste support
         /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength, string styleOverride = null)
+        public static string TextField(Rect rect, string value, int maxlength, string styleOverride)
         {
             int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
             if (textFieldID == 0)
