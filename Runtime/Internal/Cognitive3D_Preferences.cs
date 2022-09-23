@@ -53,8 +53,6 @@ namespace Cognitive3D
         public bool EditorHasDisplayedPopup = false;
 
         public GazeType GazeType = GazeType.Physics;
-        //0 is multipass, 1 is single pass, 2 is singlepass instanced
-        public int RenderPassType;
 
         public bool IsApplicationKeyValid
         {
