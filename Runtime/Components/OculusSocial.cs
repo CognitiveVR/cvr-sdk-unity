@@ -7,10 +7,12 @@ namespace Cognitive3D.Components
     public class OculusSocial : AnalyticsComponentBase
     {
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
-        public bool AssignOculusProfileToParticipant = true;
+        [SerializeField]
+        private bool AssignOculusProfileToParticipant = true;
 
         [Tooltip("Sets a session property with the size of the user's party (skipped if playing alone)")]
-        public bool RecordPartySize = true;
+        [SerializeField]
+        private bool RecordPartySize = true;
 
         public override void Cognitive3D_Init()
         {
