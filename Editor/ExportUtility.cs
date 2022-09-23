@@ -406,7 +406,9 @@ namespace Cognitive3D
             AssetDatabase.SaveAssets();
 
             if (UploadComplete != null)
+            {
                 UploadComplete.Invoke();
+            }
             UploadComplete = null;
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
