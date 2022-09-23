@@ -61,17 +61,16 @@ namespace Cognitive3D
         }
 #endif
 
-        [System.NonSerialized]
         //data id is the general way to get the actual id from the dynamic object (generated or custom id). use GetId
-        public string DataId;
+        private string DataId;
         //this is only used for a custom editor to help CustomId be set correctly
         public bool UseCustomId = true;
 
-        //custom id is set in editor and will be used
+        //custom id is set in editor and will be used when set. internal to be accessed by various editor windows
         /// <summary>
         /// should use GetId() to get the currently assigned dynamic object id
         /// </summary>
-        public string CustomId;
+        internal string CustomId;
         public float UpdateRate = 0.1f;
 
 

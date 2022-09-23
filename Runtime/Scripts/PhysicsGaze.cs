@@ -38,7 +38,7 @@ namespace Cognitive3D
             Vector2 hitcoord;
             if (Cognitive3D_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
             {
-                string ObjectId = hitDynamic.DataId;
+                string ObjectId = hitDynamic.GetId();
                 var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
                 if (mediacomponent != null)
                 {

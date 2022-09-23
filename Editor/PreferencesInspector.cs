@@ -9,35 +9,9 @@ namespace Cognitive3D
     [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
     {
-        bool hasCheckedRenderType = false;
-
-        public static void CheckGazeRenderType(Cognitive3D_Preferences p)
-        {
-            if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
-            {
-                p.RenderPassType = 0;
-                EditorUtility.SetDirty(p);
-            }
-            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.SinglePass && p.RenderPassType != 1)
-            {
-                p.RenderPassType = 1;
-                EditorUtility.SetDirty(p);
-            }
-            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.Instancing)
-            {
-                if (p.GazeType == GazeType.Command)
-                    Debug.LogError("Cognitive3D Analytics does not support Command Buffer Gaze with SinglePass (Instanced) stereo rendering. Please change the gaze type in Cognitive3D->Advanced Options menu");
-            }
-        }
-
         public override void OnInspectorGUI()
         {
             var p = (Cognitive3D_Preferences)target;
-            if (!hasCheckedRenderType)
-            {
-                CheckGazeRenderType(p);
-                hasCheckedRenderType = true;
-            }
 
             GUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
@@ -141,11 +115,8 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
-            p.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), p.Protocol);
-            p.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), p.Gateway);
-            p.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), p.Viewer);
-            p.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), p.Dashboard);
+            EditorGUILayout.LabelField("Network", EditorStyles.boldLabel);
+            p.Gateway = EditorGUILayout.TextField(new GUIContent("Gateway", "In almost every case, this should be\ndata.cognitive3d.com"), p.Gateway);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);

@@ -899,7 +899,7 @@ namespace Cognitive3D.Components
                 }
                 CurrentRightButtonStates.Clear();
 
-                DynamicManager.RecordControllerEvent(RightHand.DataId, copy);
+                DynamicManager.RecordControllerEvent(RightHand.GetId(), copy);
             }
             if (CurrentLeftButtonStates.Count > 0)
             {
@@ -910,7 +910,7 @@ namespace Cognitive3D.Components
                 }
                 CurrentLeftButtonStates.Clear();
 
-                DynamicManager.RecordControllerEvent(LeftHand.DataId, copy);
+                DynamicManager.RecordControllerEvent(LeftHand.GetId(), copy);
             }
         }
 
