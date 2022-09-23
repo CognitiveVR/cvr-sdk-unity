@@ -56,11 +56,6 @@ namespace Cognitive3D
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 0;
 
-#if C3D_OCULUS
-        [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
-        public bool AssignOculusProfileToParticipant = true;
-#endif
-
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
@@ -86,26 +81,6 @@ namespace Cognitive3D
             {
                 BeginSession();
             }
-
-#if C3D_OCULUS
-            if (AssignOculusProfileToParticipant && (ParticipantName == string.Empty && ParticipantId == string.Empty))
-            {
-                if (!Oculus.Platform.Core.IsInitialized())
-                    Oculus.Platform.Core.Initialize();
-
-                Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
-                {
-                    if (message.IsError)
-                    {
-                        Debug.LogError(message.GetError().Message);
-                    }
-                    else
-                    {
-                        SetParticipantId(message.Data.OculusID.ToString());
-                    }
-                });
-            }
-#endif
         }
 
         [System.NonSerialized]

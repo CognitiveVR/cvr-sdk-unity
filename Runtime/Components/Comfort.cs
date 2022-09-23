@@ -103,18 +103,17 @@ namespace Cognitive3D.Components
                 .SetProperty("fps", lastFps)
                 .SetProperty("rps", lastRps)
 #if C3D_OCULUS
-                    .SetProperty("cpulevel", OVRPlugin.cpuLevel)
-                    .SetProperty("gpulevel", OVRPlugin.gpuLevel)
-                    .SetProperty("powersaving", OVRPlugin.powerSaving)
+                .SetProperty("cpulevel", OVRPlugin.suggestedCpuPerfLevel.ToString())
+                .SetProperty("gpulevel", OVRPlugin.suggestedGpuPerfLevel.ToString())
+                .SetProperty("powersaving", OVRPlugin.powerSaving)
 #endif
-                    .Send();
-            Util.logDebug("comfort fps " + lastFps + " rps " + lastRps);
+                .Send();
         }
 
         public override string GetDescription()
         {
 #if C3D_OCULUS
-            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
+            return "Sends event when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
 #else
             return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
 #endif
