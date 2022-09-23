@@ -554,7 +554,9 @@ namespace UnityGLTF
 
 			RenderTextureReadWrite textureType = RenderTextureReadWrite.sRGB;
 			if (linear)
+            {
 				textureType = RenderTextureReadWrite.Linear;
+			}
 
 			var destRenderTexture = RenderTexture.GetTemporary(texture.width, texture.height, 0, RenderTextureFormat.ARGB32, textureType);
 
