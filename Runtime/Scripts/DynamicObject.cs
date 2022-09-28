@@ -31,7 +31,7 @@ namespace Cognitive3D
             VideoSphereLatitude = 9,
             VideoSphereCubemap = 10,
             SnapdragonVRController = 11,
-            ViveFocusController = 12, //the 6dof controller
+            ViveFocusControllerRight = 12,
             OculusQuestTouchLeft = 13,
             OculusQuestTouchRight = 14,
             PicoNeoControllerLeft = 15,
@@ -39,6 +39,7 @@ namespace Cognitive3D
             PicoNeo3ControllerLeft = 17,
             PicoNeo3ControllerRight = 18,
             Unknown = 19,
+            ViveFocusControllerLeft = 20,
         }
 
 
@@ -70,7 +71,7 @@ namespace Cognitive3D
         /// <summary>
         /// should use GetId() to get the currently assigned dynamic object id
         /// </summary>
-        internal string CustomId;
+        public string CustomId;
         public float UpdateRate = 0.1f;
 
 
@@ -87,19 +88,20 @@ namespace Cognitive3D
         public bool IsRight;
         public enum ControllerDisplayType
         {
-            vivecontroller, //wand
-            vivefocuscontroller,
-            oculustouchleft,
-            oculustouchright,
-            oculusquesttouchleft,
-            oculusquesttouchright,
-            windows_mixed_reality_controller_left,
-            windows_mixed_reality_controller_right,
-            pico_neo_2_eye_controller_left,
-            pico_neo_2_eye_controller_right,
-            pico_neo_3_eye_controller_left,
-            pico_neo_3_eye_controller_right,
-            unknown,
+            vivecontroller = 1, //wand
+            vivefocuscontrollerright = 2,
+            oculustouchleft = 3,
+            oculustouchright = 4,
+            oculusquesttouchleft = 5,
+            oculusquesttouchright = 6,
+            windows_mixed_reality_controller_left = 7,
+            windows_mixed_reality_controller_right = 8,
+            pico_neo_2_eye_controller_left = 9,
+            pico_neo_2_eye_controller_right = 10,
+            pico_neo_3_eye_controller_left = 11,
+            pico_neo_3_eye_controller_right = 12,
+            unknown = 13,
+            vivefocuscontrollerleft = 14,
         }
 
         public DynamicObjectIdPool IdPool;

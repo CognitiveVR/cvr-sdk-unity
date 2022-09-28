@@ -1,6 +1,5 @@
 {
     "name": "Cognitive3D",
-    "rootNamespace": "",
     "references": [
         "SteamVR",
         "Unity.XR.OpenVR",
@@ -8,7 +7,10 @@
         "Oculus.VR",
         "Oculus.Platform",
         "GliaAssembly",
-        "SRAnipalAssembly"
+        "SRAnipalAssembly",
+        "Wave.Essence",
+        "Wave.XRSDK",
+        "Wave.Native"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

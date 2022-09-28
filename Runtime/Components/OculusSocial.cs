@@ -6,6 +6,7 @@ namespace Cognitive3D.Components
 {
     public class OculusSocial : AnalyticsComponentBase
     {
+#if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         [SerializeField]
         private bool AssignOculusProfileToParticipant = true;
@@ -79,10 +80,11 @@ namespace Cognitive3D.Components
                 }
             });
         }
-
+#endif
         public override string GetDescription()
         {
             return "Set a property for the user's party size and an Id to associate the user across your organization";
         }
     }
+
 }

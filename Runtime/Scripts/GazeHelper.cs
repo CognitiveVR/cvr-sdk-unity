@@ -168,6 +168,13 @@ namespace Cognitive3D
             }
             return lastDirection;
         }
+#elif C3D_VIVEWAVE
+        static Vector3 lastDirection = Vector3.forward;
+        static Vector3 GetLookDirection()
+        {
+            Wave.Essence.Eye.EyeManager.Instance.GetCombindedEyeDirectionNormalized(out lastDirection);
+            return lastDirection;
+        }
 #else
         static Vector3 lastDirection = Vector3.forward;
         static Vector3 GetLookDirection()

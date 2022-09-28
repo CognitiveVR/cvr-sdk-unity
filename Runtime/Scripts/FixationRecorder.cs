@@ -632,6 +632,65 @@ namespace Cognitive3D
             }
             return false;
         }
+#elif C3D_VIVEWAVE
+        const int CachedEyeCaptures = 30;
+        bool CombinedWorldGazeRay(out Ray ray)
+        {
+            Vector3 originPoint;
+            Vector3 lastDirection;
+            
+            if (Wave.Essence.Eye.EyeManager.Instance.GetCombindedEyeDirectionNormalized(out lastDirection) && Wave.Essence.Eye.EyeManager.Instance.GetCombinedEyeOrigin(out originPoint))
+            {
+                ray = new Ray(originPoint, lastDirection);
+                return true;
+            }
+
+            ray = new Ray();
+            return false;
+        }
+
+        bool LeftEyeOpen()
+        {
+            float leftEyeOpenVal;
+            if (Wave.Essence.Eye.EyeManager.Instance.GetLeftEyeOpenness(out leftEyeOpenVal))
+            {
+                if (leftEyeOpenVal >= 0.5f)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        bool RightEyeOpen()
+        {
+            float rightEyeOpenVal;
+            if (Wave.Essence.Eye.EyeManager.Instance.GetRightEyeOpenness(out rightEyeOpenVal))
+            {
+                if (rightEyeOpenVal >= 0.5f)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        long EyeCaptureTimestamp()
+        {
+            //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120;
 
