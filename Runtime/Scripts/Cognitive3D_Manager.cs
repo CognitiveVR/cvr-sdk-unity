@@ -274,7 +274,7 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "PicoXR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
-#elif CVR_MRTK
+#elif C3D_MRTK
             SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
             SetSessionProperty("c3d.app.sdktype", "MRTK");
 #endif

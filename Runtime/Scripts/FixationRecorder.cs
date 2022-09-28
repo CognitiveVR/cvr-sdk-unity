@@ -590,7 +590,7 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
             }
         }
-#elif CVR_MRTK
+#elif C3D_MRTK
         const int CachedEyeCaptures = 30;
         bool CombinedWorldGazeRay(out Ray ray)
         {

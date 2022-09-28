@@ -83,7 +83,19 @@ namespace Cognitive3D.Components
 #endif
         public override string GetDescription()
         {
+#if C3D_OCULUS
             return "Set a property for the user's party size and an Id to associate the user across your organization";
+#else
+            return "Oculus Social properties can only be accessed when using the Oculus Platform";
+#endif
+        }
+        public override bool GetWarning()
+        {
+#if C3D_OCULUS
+            return false;
+#else
+            return true;
+#endif
         }
     }
 

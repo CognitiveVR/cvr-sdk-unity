@@ -158,7 +158,7 @@ namespace Cognitive3D
             }
             return lastDirection;
         }
-#elif CVR_MRTK
+#elif C3D_MRTK
         static Vector3 lastDirection = Vector3.forward;
         static Vector3 GetLookDirection()
         {
