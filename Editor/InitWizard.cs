@@ -508,8 +508,8 @@ namespace Cognitive3D
             var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
             bool eyeManagerExists = eyeManager != null;
 
-            GUI.Label(new Rect(30, 100, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
-    "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
+    "\n\nUse the button below to add the WaveEyeManager to the scene if it does not already exist.", "normallabel");
 
             //button to add assemblies to sranipal folder
             if (GUI.Button(new Rect(130, 290, 240, 30), "Create EyeManager"))
