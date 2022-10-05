@@ -20,6 +20,8 @@ namespace Cognitive3D
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
 #elif C3D_MRTK
                 return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled;
+#elif C3D_VIVEWAVE
+                return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #else
                 return false;
 #endif
