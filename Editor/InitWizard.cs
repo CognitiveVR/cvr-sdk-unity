@@ -503,6 +503,7 @@ namespace Cognitive3D
                 return;
             }
 
+#if C3D_VIVEWAVE
             GUI.Label(steptitlerect, "VIVE WAVE SETUP", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "Add EyeManager to the scene.", "boldlabel");
             var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
@@ -535,6 +536,7 @@ namespace Cognitive3D
                 //full checkmark
                 GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
             }
+#endif
         }
 
         #endregion
