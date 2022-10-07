@@ -73,6 +73,13 @@ namespace Cognitive3D.Serialization
             LogAction = logAction;
 
             IsInitialized = true;
+            
+            //apply pre session properties
+            foreach(var kvp in preSessionProperties)
+            {
+                SetSessionProperty(kvp.Key, kvp.Value);
+            }
+            preSessionProperties.Clear();
         }
 
         internal static void Reset()
@@ -87,6 +94,7 @@ namespace Cognitive3D.Serialization
             SessionTimestamp = 0;
             LobbyId = string.Empty;
 
+            preSessionProperties.Clear();
             newSessionProperties.Clear();
             knownSessionProperties.Clear();
 
@@ -97,12 +105,40 @@ namespace Cognitive3D.Serialization
             ResetFixations();
         }
 
+        //used internally for recording session properties set before the session has initialized
+        static List<KeyValuePair<string, object>> preSessionProperties = new List<KeyValuePair<string, object>>(32);
+
         static string LobbyId;
         //any changed properties that have not been written to the session
         static List<KeyValuePair<string, object>> newSessionProperties = new List<KeyValuePair<string, object>>(32);
 
         //all session properties, including new properties not yet sent
         static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
+
+        static void SetPreSessionProperty(string key, object value)
+        {
+            for (int i = 0; i < preSessionProperties.Count; i++)
+            {
+                if (preSessionProperties[i].Key == key)
+                {
+                    preSessionProperties[i] = new KeyValuePair<string, object>(key, value);
+                    return;
+                }
+            }
+            preSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+        }
+
+        static void SetPreSessionPropertyIfEmpty(string key, object value)
+        {
+            for (int i = 0; i < preSessionProperties.Count; i++)
+            {
+                if (preSessionProperties[i].Key == key)
+                {
+                    return;
+                }
+            }
+            preSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+        }
 
         internal static List<KeyValuePair<string, object>> GetNewSessionProperties(bool clearNewProperties)
         {
@@ -135,7 +171,11 @@ namespace Cognitive3D.Serialization
 
         internal static void SetSessionProperty(string key, object value)
         {
-            if (!IsInitialized) { return; }
+            if (!IsInitialized)
+            {
+                SetPreSessionProperty(key, value);
+                return;
+            }
             int foundIndex = 0;
             bool foundKey = false;
             for (int i = 0; i < knownSessionProperties.Count; i++)
@@ -188,7 +228,11 @@ namespace Cognitive3D.Serialization
 
         internal static void SetSessionPropertyIfEmpty(string key, object value)
         {
-            if (!IsInitialized) { return; }
+            if (!IsInitialized)
+            {
+                SetPreSessionPropertyIfEmpty(key, value);
+                return;
+            }
             for (int i = 0; i < knownSessionProperties.Count; i++)
             {
                 if (knownSessionProperties[i].Key == key)
@@ -204,6 +248,7 @@ namespace Cognitive3D.Serialization
         internal static void SetLobbyId(string lobbyid)
         {
             LobbyId = lobbyid;
+            SetSessionProperty("c3d.lobbyId", lobbyid);
         }
         internal static void SetParticipantId(string participantId)
         {

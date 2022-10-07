@@ -140,7 +140,15 @@ namespace Cognitive3D
 
             if (Cognitive3D_Preferences.Instance.LocalStorage)
             {
-                DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                try
+                {
+                    DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                }
+                catch
+                {
+                    //data cache can fail if multiple game instances are running at once on the same computer
+                    //for example, when testing multiplayer
+                }
             }
             GameObject networkGo = new GameObject("Cognitive Network");
             networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
@@ -674,10 +682,9 @@ namespace Cognitive3D
             }
         }
 
-        public static string LobbyId { get; private set; }
         public static void SetLobbyId(string lobbyId)
         {
-            LobbyId = lobbyId;
+            CoreInterface.SetLobbyId(lobbyId);
         }
 
         public static void SetParticipantFullName(string name)

@@ -48,7 +48,7 @@ namespace Cognitive3D
         {
             SharedCore.SetSessionPropertyIfEmpty(propertyName, propertyValue);
         }
-        internal static void SetLobby(string lobbyid)
+        internal static void SetLobbyId(string lobbyid)
         {
             SharedCore.SetLobbyId(lobbyid);
         }
