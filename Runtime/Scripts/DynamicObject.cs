@@ -70,6 +70,7 @@ namespace Cognitive3D
         /// <summary>
         /// should use GetId() to get the currently assigned dynamic object id
         /// </summary>
+        [SerializeField]
         internal string CustomId;
         public float UpdateRate = 0.1f;
 

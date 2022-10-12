@@ -190,8 +190,7 @@ namespace Cognitive3D
                 if (_prefs == null)
                 {
                     _prefs = ScriptableObject.CreateInstance<Cognitive3D_Preferences>();
-                    string filepath = "Assets/Resources/";
-
+                    string filepath = "Assets/Resources";
                     if (!AssetDatabase.IsValidFolder(filepath))
                     {
                         AssetDatabase.CreateFolder("Assets", "Resources");
