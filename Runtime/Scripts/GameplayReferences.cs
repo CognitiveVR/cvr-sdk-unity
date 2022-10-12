@@ -330,9 +330,13 @@ namespace Cognitive3D
         public static bool DoesPointerExistInScene()
         {
             if (ControllerPointerLeft == null && controllerTransforms[0] != null)
+            {
                 ControllerPointerLeft = controllerTransforms[0].GetComponent<IControllerPointer>();
-            if (ControllerPointerRight == null && controllerTransforms[1].transform != null)
+            }
+            if (ControllerPointerRight == null && controllerTransforms[1] != null)
+            {
                 ControllerPointerRight = controllerTransforms[1].GetComponent<IControllerPointer>();
+            }
             if (ControllerPointerRight == null && ControllerPointerLeft == null)
             {
                 return false;
