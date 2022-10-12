@@ -278,7 +278,8 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
             SetSessionProperty("c3d.app.sdktype", "MRTK");
 #elif C3D_VIVEWAVE
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
+            SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
+            SetSessionProperty("c3d.app.sdktype", "Vive Wave");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL
