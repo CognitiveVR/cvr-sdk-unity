@@ -1113,7 +1113,7 @@ namespace Cognitive3D
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
                 float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
-                string displayString = "";
+                string displayString;
                 if (sceneSize < 1)
                 {
                     displayString = "Exported File Size: <1 MB";
@@ -1126,6 +1126,7 @@ namespace Cognitive3D
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
+                GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
             }
 
             if (numberOfLights > 50)

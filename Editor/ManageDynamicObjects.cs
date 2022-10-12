@@ -300,6 +300,7 @@ namespace Cognitive3D
         }
 
         Rect idrect = new Rect(350, 55, 80, 30);
+        GUI.Label(idrect, "Id", "dynamicheader");
 
         Rect uploaded = new Rect(470, 55, 90, 30);
         string exportedStyle = (SortMethod == SortByMethod.Exported || SortMethod == SortByMethod.ReverseExported) ? "dynamicheaderbold" : "dynamicheader";
