@@ -253,16 +253,24 @@ namespace Cognitive3D
             else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
             {
                 if (parameters.PointerOverride != null)
+                {
                     thingToSpawn = "Spawn " + parameters.PointerOverride.name;
+                }
                 else
+                {
                     thingToSpawn = "Spawn Nothing";
+                }
             }
             else if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
             {
                 if (parameters.PointerOverride != null)
+                {
                     thingToSpawn = "Select " + parameters.PointerOverride.name + " from scene";
+                }
                 else
+                {
                     thingToSpawn = "Select Nothing from scene";
+                }
             }
 
             string howToAttach = "";
