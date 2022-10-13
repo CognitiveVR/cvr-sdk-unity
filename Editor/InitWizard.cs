@@ -39,11 +39,11 @@ namespace Cognitive3D
             "welcome",
             "authenticate",
             "selectsdk",
-
             "gliasetup", //assemblies + prefab
             "sranipalsetup", //assemblies + prefab
             "compile",
-
+            "wavesetup",
+            
             //"explainscene",
             //"explaindynamic",
             "setupplayer", //controllers and hmd
@@ -69,6 +69,7 @@ namespace Cognitive3D
                 case "selectsdk": SelectSDKUpdate(); break;
 
                 case "gliasetup": GliaSetup(); break;
+                case "wavesetup": ViveFocusSetup(); break; 
                 case "sranipalsetup": SRAnipalSetup(); break;
                 case "compile": WaitForCompile(); break;
 
@@ -477,6 +478,50 @@ namespace Cognitive3D
                 //full checkmark
                 GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
             }    
+        }
+
+        void ViveFocusSetup()
+        {
+            if (!selectedsdks.Contains("C3D_VIVEWAVE"))
+            {
+                currentPage++;
+                return;
+            }
+
+#if C3D_VIVEWAVE
+            GUI.Label(steptitlerect, "VIVE WAVE SETUP", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "Add EyeManager to the scene.", "boldlabel");
+            var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
+            bool eyeManagerExists = eyeManager != null;
+
+            GUI.Label(new Rect(30, 100, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
+    "\n\nUse the button below to add the WaveEyeManager to the scene if it does not already exist.", "normallabel");
+
+            //button to add assemblies to sranipal folder
+            if (GUI.Button(new Rect(130, 290, 240, 30), "Create EyeManager"))
+            {
+                if (eyeManager == null)
+                {
+                    var m_EyeManager = new GameObject("WaveEyeManager");
+                    m_EyeManager.AddComponent<Wave.Essence.Eye.EyeManager>();
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                    eyeManagerExists = true;
+                } 
+            }
+
+            //a checkmark if the assembly already exists
+            if (eyeManagerExists == false)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+            }
+#endif
         }
 
         #endregion
@@ -1533,6 +1578,7 @@ namespace Cognitive3D
                 case "gliasetup":
                 case "sranipalsetup":
                 case "compile":
+                case "wavesetup":
                 case "setupplayer":
                     text = "Back";
                     onclick += () => { currentPage = 2; }; //go back to SDK select page
