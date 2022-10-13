@@ -494,25 +494,14 @@ namespace UnityGLTF
 		{
 			var binFile = File.Create(Path.Combine(path, fileName + ".bin"));
 			_bufferWriter = new BinaryWriter(binFile);
+			var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf"));
 
 			try
 			{
-
 				_root.Scene = ExportScene(fileName, _rootTransforms);
-
 				_buffer.Uri = fileName + ".bin";
 				_buffer.ByteLength = (uint)_bufferWriter.BaseStream.Length;
-
-				var gltfFile = File.CreateText(Path.Combine(path, fileName + ".gltf"));
 				_root.Serialize(gltfFile);
-
-#if WINDOWS_UWP
-			gltfFile.Dispose();
-			binFile.Dispose();
-#else
-				gltfFile.Close();
-				binFile.Close();
-#endif
 				ExportImages(path, preExxportedTextures);
 			}
 			catch (System.Exception e)
@@ -522,11 +511,15 @@ namespace UnityGLTF
 			}
 			finally
 			{
+				gltfFile.Dispose();
+				binFile.Dispose();
+				_bufferWriter.Dispose();
 				foreach (var v in LODDisabledRenderers)
 				{
 					if (v != null)
 						v.enabled = true;
 				}
+				LODDisabledRenderers.Clear();
 			}
 		}
 

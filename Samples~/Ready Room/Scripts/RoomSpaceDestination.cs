@@ -18,8 +18,10 @@ namespace Cognitive3D
         //start a coroutine to check distance frequently
         void OnEnable()
         {
-            if (Target == null)
+            if (Target == null && Camera.main != null)
+            {
                 Target = Camera.main.transform;
+            }
             if (hasVisited) { return; }
             StartCoroutine(CheckDistance());
         }
@@ -32,7 +34,12 @@ namespace Cognitive3D
             {
                 yield return wait;
                 if (hasVisited) { yield break; }
-                if (Target == null) { Debug.Log("Room Space Destination Target is null!", this); yield break; }
+                if (Target == null)
+                {
+                    Debug.Log("Room Space Destination Target is null!", this);
+                    OnEnter.Invoke();
+                    yield break;
+                }
                 Vector3 position = transform.position;
                 position.y = 0;
 

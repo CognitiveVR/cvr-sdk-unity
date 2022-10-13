@@ -35,5 +35,8 @@ namespace Cognitive3D
 		void Close();
 
 		bool CanWrite(string destination, string content);
+
+		//returns 0-1 indicating how much space is available based on the maximum cache size. 1 is full
+		float GetCacheFillAmount();
 	}
 }

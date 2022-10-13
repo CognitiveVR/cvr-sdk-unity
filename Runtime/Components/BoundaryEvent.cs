@@ -9,6 +9,7 @@ using Valve.VR;
 /// </summary>
 
 //TODO add picovr sdk Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetVisible();
+//TODO investigate openxr support for boundary visibility
 
 namespace Cognitive3D.Components
 {
@@ -54,32 +55,10 @@ namespace Cognitive3D.Components
         }
 #endif
 
-
-
-#if C3D_OCULUS
-        bool BoundsVisible;
-        void Update()
-        {
-            if (OVRManager.boundary.GetVisible() && !BoundsVisible)
-            {
-                new CustomEvent("cvr.boundary").SetProperty("visible", true).Send();
-                BoundsVisible = true;
-
-            }
-            if (!OVRManager.boundary.GetVisible() && BoundsVisible)
-            {
-                new CustomEvent("cvr.boundary").SetProperty("visible", false).Send();
-                BoundsVisible = false;
-            }
-        }
-#endif
-
         public override string GetDescription()
         {
 #if C3D_STEAMVR2
-            return "Sends transaction when SteamVR Chaperone becomes visible and becomes hidden";
-#elif C3D_OCULUS
-            return "Sends transaction when Oculus Guardian becomes visible and becomes hidden";
+            return "Sends an event when Boundary becomes visible and becomes hidden";
 #else
             return "Current platform does not support this component";
 #endif
@@ -87,7 +66,7 @@ namespace Cognitive3D.Components
 
         public override bool GetWarning()
         {
-#if C3D_STEAMVR2 || C3D_OCULUS
+#if C3D_STEAMVR2
             return false;
 #else
             return true;

@@ -1,6 +1,5 @@
 {
     "name": "Cognitive3DEditor",
-    "rootNamespace": "",
     "references": [
         "Cognitive3D",
         "Unity.XR.OpenVR",
@@ -8,7 +7,9 @@
         "Oculus.VR",
         "Unity.RenderPipelines.HighDefinition.Runtime",
         "GliaAssembly",
-        "GliaEditorAssembly"
+        "GliaEditorAssembly",
+        "Wave.Native",
+        "Wave.Essence"
     ],
     "includePlatforms": [
         "Editor"

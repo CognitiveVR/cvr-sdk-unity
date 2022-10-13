@@ -9,36 +9,9 @@ namespace Cognitive3D
     [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
     {
-        bool gpsFoldout;
-        bool hasCheckedRenderType = false;
-
-        public static void CheckGazeRenderType(Cognitive3D_Preferences p)
-        {
-            if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.MultiPass && p.RenderPassType != 0)
-            {
-                p.RenderPassType = 0;
-                EditorUtility.SetDirty(p);
-            }
-            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.SinglePass && p.RenderPassType != 1)
-            {
-                p.RenderPassType = 1;
-                EditorUtility.SetDirty(p);
-            }
-            else if (PlayerSettings.stereoRenderingPath == StereoRenderingPath.Instancing)
-            {
-                if (p.GazeType == GazeType.Command)
-                    Debug.LogError("Cognitive3D Analytics does not support Command Buffer Gaze with SinglePass (Instanced) stereo rendering. Please change the gaze type in Cognitive3D->Advanced Options menu");
-            }
-        }
-
         public override void OnInspectorGUI()
         {
             var p = (Cognitive3D_Preferences)target;
-            if (!hasCheckedRenderType)
-            {
-                CheckGazeRenderType(p);
-                hasCheckedRenderType = true;
-            }
 
             GUILayout.BeginHorizontal();
             EditorGUI.BeginDisabledGroup(true);
@@ -74,24 +47,21 @@ namespace Cognitive3D
             p.DynamicLayerMask = dynamicMask.value;
 
             p.TriggerInteraction = (QueryTriggerInteraction)EditorGUILayout.EnumPopup("Gaze Query Trigger Interaction", p.TriggerInteraction);
-
-            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location at Interval", "Record GPS location and compass direction at the interval below"), p.TrackGPSLocation);
-
-            EditorGUI.BeginDisabledGroup(!p.TrackGPSLocation);
-            EditorGUI.indentLevel++;
-            gpsFoldout = EditorGUILayout.Foldout(gpsFoldout,"GPS Options");
-            if (gpsFoldout)
-            {
-                p.SyncGPSWithGaze = EditorGUILayout.Toggle(new GUIContent("Sync with Player Update", "Request new GPS location every time the player position and gaze is recorded"), p.SyncGPSWithGaze);
-                EditorGUI.BeginDisabledGroup(p.SyncGPSWithGaze);
-                p.GPSInterval = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Update Interval","Interval in seconds to record new GPS location data"), p.GPSInterval), 0.1f, 60f);
-                EditorGUI.EndDisabledGroup();
-                p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy","Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
-            }
-            EditorGUI.indentLevel--;
-            EditorGUI.EndDisabledGroup();
-
             p.RecordFloorPosition = EditorGUILayout.Toggle(new GUIContent("Record Floor Position", "Includes the floor position below the HMD in a VR experience"), p.RecordFloorPosition);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Location", EditorStyles.boldLabel);
+            bool disableGeoSettings = false;
+#if !C3D_LOCATION
+            EditorGUILayout.HelpBox("Location data is currently disabled. Add C3D_LOCATION to scripting define symbols in Project Settings", MessageType.Info);
+            disableGeoSettings = true;
+#else
+            disableGeoSettings = false;
+#endif
+            EditorGUI.BeginDisabledGroup(disableGeoSettings);
+            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location with HMD Position", "Record GPS location and compass direction at the same rate as HMD position"), p.TrackGPSLocation);
+            p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy", "Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Sending Data Batches", EditorStyles.boldLabel);
@@ -145,11 +115,8 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Sending Data", EditorStyles.boldLabel);
-            p.Protocol = EditorGUILayout.TextField(new GUIContent("Custom Protocol", "https"), p.Protocol);
-            p.Gateway = EditorGUILayout.TextField(new GUIContent("Custom Gateway", "data.cognitive3d.com"), p.Gateway);
-            p.Viewer = EditorGUILayout.TextField(new GUIContent("Custom Viewer", "viewer.cognitive3d.com/scene/"), p.Viewer);
-            p.Dashboard = EditorGUILayout.TextField(new GUIContent("Custom Dashboard", "app.cognitive3d.com"), p.Dashboard);
+            EditorGUILayout.LabelField("Network", EditorStyles.boldLabel);
+            p.Gateway = EditorGUILayout.TextField(new GUIContent("Gateway", "In almost every case, this should be\ndata.cognitive3d.com"), p.Gateway);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);

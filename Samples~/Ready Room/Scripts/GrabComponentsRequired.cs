@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //marks a component as needing sdk-specific grab components
-
-public class GrabComponentsRequired : MonoBehaviour
+namespace Cognitive3D
 {
+    public class GrabComponentsRequired : MonoBehaviour
+    {
 
+    }
 }

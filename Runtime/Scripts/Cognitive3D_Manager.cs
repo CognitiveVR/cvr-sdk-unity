@@ -25,7 +25,6 @@ namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
-    [DefaultExecutionOrder(-1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
         private static Cognitive3D_Manager instance;
@@ -55,12 +54,7 @@ namespace Cognitive3D
         public bool BeginSessionAutomatically = true;
 
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
-        public float StartupDelayTime = 2;
-
-#if C3D_OCULUS
-        [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
-        public bool AssignOculusProfileToParticipant = true;
-#endif
+        public float StartupDelayTime = 0;
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -84,27 +78,9 @@ namespace Cognitive3D
                 yield return new WaitForSeconds(StartupDelayTime);
             }
             if (BeginSessionAutomatically)
-                BeginSession();
-
-#if C3D_OCULUS
-            if (AssignOculusProfileToParticipant && (ParticipantName == string.Empty && ParticipantId == string.Empty))
             {
-                if (!Oculus.Platform.Core.IsInitialized())
-                    Oculus.Platform.Core.Initialize();
-
-                Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
-                {
-                    if (message.IsError)
-                    {
-                        Debug.LogError(message.GetError().Message);
-                    }
-                    else
-                    {
-                        SetParticipantId(message.Data.OculusID.ToString());
-                    }
-                });
+                BeginSession();
             }
-#endif
         }
 
         [System.NonSerialized]
@@ -163,7 +139,9 @@ namespace Cognitive3D
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
             if (Cognitive3D_Preferences.Instance.LocalStorage)
+            {
                 DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+            }
             GameObject networkGo = new GameObject("Cognitive Network");
             networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
             NetworkManager = networkGo.AddComponent<NetworkManager>();
@@ -184,7 +162,9 @@ namespace Cognitive3D
             string hmdName = "unknown";
             var hmdDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
             if (hmdDevice.isValid)
+            {
                 hmdName = hmdDevice.name;
+            }
 
             CoreInterface.Initialize(SessionID, SessionTimeStamp, DeviceId, hmdName);
             IsInitialized = true;
@@ -211,21 +191,7 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             new CustomEvent("c3d.sessionStart").Send();
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                Input.location.Start(Cognitive3D_Preferences.Instance.GPSAccuracy, Cognitive3D_Preferences.Instance.GPSAccuracy);
-                Input.compass.enabled = true;
-                if (Cognitive3D_Preferences.Instance.SyncGPSWithGaze)
-                {
-                    //just get gaze snapshot to grab this
-                }
-                else
-                {
-                    StartCoroutine(GPSTick());
-                }
-            }
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
-            GPSUpdateInverval = new WaitForSeconds(Cognitive3D_Preferences.Instance.GPSInterval);
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
             StartCoroutine(Tick());
             Util.logDebug("Cognitive3D Initialized");
@@ -308,11 +274,13 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "PicoXR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
-#elif CVR_MRTK
+#elif C3D_MRTK
             SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
             SetSessionProperty("c3d.app.sdktype", "MRTK");
+#elif C3D_VIVEWAVE
+            SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
+            SetSessionProperty("c3d.app.sdktype", "Vive Wave");
 #endif
-
             //eye tracker addons
 #if C3D_SRANIPAL
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
@@ -425,38 +393,6 @@ namespace Cognitive3D
 
 #endregion
 
-#region GPS
-        public void GetGPSLocation(ref Vector4 geo)
-        {
-            if (Cognitive3D_Preferences.Instance.SyncGPSWithGaze)
-            {
-                geo.x = Input.location.lastData.latitude;
-                geo.y = Input.location.lastData.longitude;
-                geo.z = Input.location.lastData.altitude;
-                geo.w = 360 - Input.compass.magneticHeading;
-            }
-            else
-            {
-                geo = GPSLocation;
-                geo.w = CompassOrientation;
-            }
-        }
-
-        Vector3 GPSLocation;
-        float CompassOrientation;
-        IEnumerator GPSTick()
-        {
-            while (IsInitialized)
-            {
-                yield return GPSUpdateInverval;
-                GPSLocation.x = Input.location.lastData.latitude;
-                GPSLocation.y = Input.location.lastData.longitude;
-                GPSLocation.z = Input.location.lastData.altitude;
-                CompassOrientation = 360 - Input.compass.magneticHeading;
-            }
-        }
-#endregion
-
 #region Application Quit, Session End and OnDestroy
         /// <summary>
         /// End the Cognitive3D session. sends any outstanding data to dashboard and sceneexplorer
@@ -562,47 +498,47 @@ namespace Cognitive3D
         /// Cognitive3D Core.Init callback
         /// </summary>
         public static event onSessionBegin OnSessionBegin;
-        public static void InvokeSessionBeginEvent() { if (OnSessionBegin != null) { OnSessionBegin.Invoke(); } }
+        private static void InvokeSessionBeginEvent() { if (OnSessionBegin != null) { OnSessionBegin.Invoke(); } }
 
         public delegate void onSessionEnd();
         /// <summary>
         /// Cognitive3D Core.Init callback
         /// </summary>
         public static event onSessionEnd OnPreSessionEnd;
-        public static void InvokeEndSessionEvent() { if (OnPreSessionEnd != null) { OnPreSessionEnd.Invoke(); } }
+        private static void InvokeEndSessionEvent() { if (OnPreSessionEnd != null) { OnPreSessionEnd.Invoke(); } }
 
         public static event onSessionEnd OnPostSessionEnd;
-        public static void InvokePostEndSessionEvent() { if (OnPostSessionEnd != null) { OnPostSessionEnd.Invoke(); } }
+        private static void InvokePostEndSessionEvent() { if (OnPostSessionEnd != null) { OnPostSessionEnd.Invoke(); } }
 
         public delegate void onUpdate(float deltaTime);
         /// <summary>
         /// Update. Called through Manager's update function
         /// </summary>
         public static event onUpdate OnUpdate;
-        public static void InvokeUpdateEvent(float deltaTime) { if (OnUpdate != null) { OnUpdate(deltaTime); } }
+        private static void InvokeUpdateEvent(float deltaTime) { if (OnUpdate != null) { OnUpdate(deltaTime); } }
 
         public delegate void onTick();
         /// <summary>
         /// repeatedly called if the sceneid is valid. interval is Cognitive3D_Preferences.Instance.PlayerSnapshotInterval
         /// </summary>
         public static event onTick OnTick;
-        public static void InvokeTickEvent() { if (OnTick != null) { OnTick(); } }
+        private static void InvokeTickEvent() { if (OnTick != null) { OnTick(); } }
 
         public delegate void onQuit();
         /// <summary>
         /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
         /// </summary>
         public static event onQuit OnQuit;
-        public static void InvokeQuitEvent() { if (OnQuit != null) { OnQuit(); } }
-        public static bool IsQuitEventBound() { return OnQuit != null; }
-        public static void QuitEventClear() { OnQuit = null; }
+        private static void InvokeQuitEvent() { if (OnQuit != null) { OnQuit(); } }
+        private static bool IsQuitEventBound() { return OnQuit != null; }
+        private static void QuitEventClear() { OnQuit = null; }
 
         public delegate void onLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
         /// <summary>
         /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
         /// </summary>
         public static event onLevelLoaded OnLevelLoaded;
-        public static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
+        private static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
 
         //public delegate void onDataSend();
 
@@ -783,7 +719,7 @@ namespace Cognitive3D
         /// <summary>
         /// Reset all of the static vars to their default values. Used when a session ends
         /// </summary>
-        internal static void ResetSessionData()
+        private static void ResetSessionData()
         {
             InvokeEndSessionEvent();
             CoreInterface.Reset();
@@ -805,7 +741,6 @@ namespace Cognitive3D
             InvokePostEndSessionEvent();
 
             CognitiveStatics.Reset();
-            DynamicManager.Reset();
         }
 
         public static void SetSessionProperties(List<KeyValuePair<string, object>> kvpList)
@@ -918,7 +853,9 @@ namespace Cognitive3D
 
         public static float GetLocalStorage()
         {
-            return 0;
+            if (DataCache == null)
+                return 0;
+            return DataCache.GetCacheFillAmount();
         }
     }
 }

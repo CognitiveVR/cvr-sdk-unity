@@ -30,7 +30,7 @@ namespace Cognitive3D
     }
 
     [InitializeOnLoad]
-    public class EditorCore
+    internal class EditorCore
     {
         static EditorCore()
         {
@@ -47,6 +47,9 @@ namespace Cognitive3D
             if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup)
             {
                 Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup = true;
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
                 EditorApplication.update += UpdateInitWizard;
             }
 
@@ -99,6 +102,7 @@ namespace Cognitive3D
             newManager.AddComponent<Cognitive3D.Components.HMDHeight>();
             newManager.AddComponent<Cognitive3D.Components.RoomSize>();
             newManager.AddComponent<Cognitive3D.Components.ArmLength>();
+            //TODO add additional components based on selected SDKs
         }
 
         public static DynamicObjectIdPool[] _cachedPoolAssets;
@@ -153,11 +157,6 @@ namespace Cognitive3D
                     ExistingNonC3DSymbols.Add(v);
                 }
             }
-            //foreach (var v in ExistingSymbols) Debug.Log("existing defines " + v);
-            //foreach (var v in C3DSymbols) Debug.Log("C3D defines " + v);
-            //foreach (var v in ExistingNonC3DSymbols) Debug.Log("existing non cvr defines " + v);
-
-            //IMPROVEMENT check if ExistingSymbols == (C3DSymbols + ExistingNonC3DSymbols) regardless of order
 
             //combine symbols
             List<string> finalDefines = new List<string>();
@@ -196,22 +195,7 @@ namespace Cognitive3D
                     {
                         AssetDatabase.CreateFolder("Assets", "Resources");
                     }
-
-                    //go with the base resource folder if it exists
-                    //if (!RecursiveDirectorySearch("", out filepath, "Cognitive3D" + System.IO.Path.DirectorySeparatorChar + "Resources"))
-                    //{ Debug.LogError("couldn't find Cognitive3D/Resources folder"); }
-
-
-
                     AssetDatabase.CreateAsset(_prefs, filepath + System.IO.Path.DirectorySeparatorChar + "Cognitive3D_Preferences.asset");
-
-                    /*List<string> names = new List<string>();
-                    List<string> paths = new List<string>();
-                    GetAllScenes(names, paths);
-                    for (int i = 0; i < names.Count; i++)
-                    {
-                        Cognitive3D_Preferences.AddSceneSettings(_prefs, names[i], paths[i]);
-                    }*/
                     EditorUtility.SetDirty(EditorCore.GetPreferences());
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
@@ -799,8 +783,8 @@ namespace Cognitive3D
                     case DisplayKey.FullName: return "Cognitive3D";
                     case DisplayKey.ShortName: return "Cognitive3D";
                     case DisplayKey.ManagerName: return "Cognitive3D_Manager";
+                    default: return "unknown";
                 }
-                return "unknown";
             }
             else
             {
@@ -850,7 +834,7 @@ namespace Cognitive3D
             SaveEditorVersion();
 
             checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
-            checkForUpdatesRequest.Send();
+            checkForUpdatesRequest.SendWebRequest();
             EditorApplication.update += UpdateCheckForUpdates;
         }
 
@@ -870,7 +854,7 @@ namespace Cognitive3D
                     SaveEditorVersion();
 
                     checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
-                    checkForUpdatesRequest.Send();
+                    checkForUpdatesRequest.SendWebRequest();
                     EditorApplication.update += UpdateCheckForUpdates;
                 }
             }

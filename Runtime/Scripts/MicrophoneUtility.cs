@@ -33,11 +33,11 @@ using System.Collections.Generic;
 
 namespace Cognitive3D
 {
-    public static class MicrophoneUtility
+    internal static class MicrophoneUtility
     {
         //const int HEADER_SIZE = 44;
 
-        public static void Save(AudioClip clip, out byte[] fileBytes)
+        internal static void Save(AudioClip clip, out byte[] fileBytes)
         {
             byte[] data;
             byte[] headers;
@@ -153,7 +153,7 @@ namespace Cognitive3D
 
         static int _sampleWindow = 128;
         //get data from microphone into audioclip
-        public static float LevelMax(AudioClip clip)
+        internal static float LevelMax(AudioClip clip)
         {
             float levelMax = 0;
             float[] waveData = new float[_sampleWindow];
@@ -183,7 +183,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static string EncodeWav(byte[] bytes)
+        internal static string EncodeWav(byte[] bytes)
         {
             return Convert.ToBase64String(bytes);
         }

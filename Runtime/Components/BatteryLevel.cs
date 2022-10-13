@@ -33,25 +33,8 @@ namespace Cognitive3D.Components
 
         void SendBatteryLevel()
         {
-
-#if C3D_OCULUS
-            Util.logDebug("batterylevel " + OVRPlugin.batteryLevel);
-            new CustomEvent("cvr.battery")
-                .SetProperty("batterylevel", OVRPlugin.batteryLevel)
-                .SetProperty("batterytemperature", OVRPlugin.batteryTemperature)
-                .SetProperty("batterystatus", OVRPlugin.batteryStatus)
-                .Send();
-#else
-            new CustomEvent("cvr.battery").SetProperty("batterylevel", GetBatteryLevel()).Send();
-#endif
+            new CustomEvent("cvr.battery").SetProperty("batterylevel", SystemInfo.batteryLevel * 100).Send();
         }
-
-#if !C3D_OCULUS
-        public float GetBatteryLevel()
-        {
-            return SystemInfo.batteryLevel * 100;
-        }
-#endif
 
         public override bool GetWarning()
         {
@@ -64,9 +47,7 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-#if UNITY_ANDROID && C3D_OCULUS
-            return "Send the battery level of Android device after initialization and on quit\nAlso includes battery temperature and status";
-#elif UNITY_ANDROID
+#if UNITY_ANDROID
             return "Send the battery level of Android device after initialization and on quit";
 #else
             return "Current platform does not support this component. Must be set to Android";

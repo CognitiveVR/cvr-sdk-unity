@@ -53,8 +53,6 @@ namespace Cognitive3D
         public bool EditorHasDisplayedPopup = false;
 
         public GazeType GazeType = GazeType.Physics;
-        //0 is multipass, 1 is single pass, 2 is singlepass instanced
-        public int RenderPassType;
 
         public bool IsApplicationKeyValid
         {
@@ -76,9 +74,7 @@ namespace Cognitive3D
         public bool EnableGaze = true;
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
-        public float GPSInterval = 1;
         public float GPSAccuracy = 2;
-        public bool SyncGPSWithGaze;
         public bool RecordFloorPosition = true;
 
         public int GazeLayerMask = -1;
