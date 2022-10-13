@@ -15,7 +15,6 @@ namespace Cognitive3D
     internal class InitWizard : EditorWindow
     {
         Rect steptitlerect = new Rect(30, 0, 100, 440);
-        //Rect boldlabelrect = new Rect(30, 100, 440, 440);
 
         internal static void Init()
         {
@@ -63,11 +62,6 @@ namespace Cognitive3D
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            //if (Event.current.keyCode == KeyCode.Equals && Event.current.type == EventType.KeyDown) { currentPage++; }
-            //if (Event.current.keyCode == KeyCode.Minus && Event.current.type == EventType.KeyDown) { currentPage--; }
-            //if (Event.current.keyCode == KeyCode.Alpha0 && Event.current.type == EventType.KeyDown) { debugNewSceneVersion = !debugNewSceneVersion; }
-            //if (Event.current.keyCode == KeyCode.R && Event.current.type == EventType.KeyDown) { initialPlayerSetup = false; }
-
             switch (pageids[currentPage])
             {
                 case "welcome": WelcomeUpdate(); break;
@@ -79,8 +73,6 @@ namespace Cognitive3D
                 case "sranipalsetup": SRAnipalSetup(); break;
                 case "compile": WaitForCompile(); break;
 
-                //case "explainscene": SceneExplainUpdate(); break;
-                //case "explaindynamic": DynamicExplainUpdate(); break;
                 case "setupplayer": ControllerUpdate(); break;
                 case "listdynamics": ListDynamicUpdate(); break;
                 case "uploadscene": UploadSceneUpdate(); break;
@@ -300,13 +292,6 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 45, 440, 440), "Please select any SDKs you are using in this project.", "boldlabel");
 
             GUI.Label(new Rect(30, 100, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
-
-            //GUIContent help = new GUIContent(EditorCore.Info);
-            //help.tooltip = "docs.cognitive3d.com/unity/runtimes";
-            //if (GUI.Button(new Rect(430, 75, 20, 20), help, "boldlabel"))
-            //{
-            //    Application.OpenURL("https://docs.cognitive3d.com/unity/runtimes");
-            //}
 
             Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
             sdkScrollPos = GUI.BeginScrollView(new Rect(30, 200, 440, 270), sdkScrollPos, innerScrollSize, false, false);
@@ -590,7 +575,6 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "WHAT IS A SCENE?", "steptitle");
 
-            //GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is the base geometry of your level. A scene does not require colliders on it to detect user gaze.", "boldlabel");
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
 
 
@@ -602,7 +586,6 @@ namespace Cognitive3D
 
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
 
-            //GUI.Label(new Rect(30, 350, 440, 440), "The Scene will be uploaded in one large step, and can be updated at a later date, resulting in a new Scene Version.", "normallabel");
             GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
         }
 
@@ -690,8 +673,6 @@ namespace Cognitive3D
             //hmd
             int hmdRectHeight = 170;
 
-            //Transform mainCameraTransform = Camera.main != null ? Camera.main.transform : null;
-
             GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
             if (GUI.Button(new Rect(80, hmdRectHeight, 290, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
             {
@@ -730,8 +711,6 @@ namespace Cognitive3D
             bool allSetupConfigured = false;
             bool leftControllerIsValid = false;
             bool rightControllerIsValid = false;
-
-            //GUI.Label(new Rect(30, 100, 440, 440), "Please check that the GameObjects below are the controllers you are using.\n\nThen press <color=#8A9EB7FF>Setup Controller Dynamics</color>, or you can skip this step by pressing <color=#8A9EB7FF>Next</color>.", "normallabel");
 
             leftControllerIsValid = leftcontroller != null;
             rightControllerIsValid = rightcontroller != null;
@@ -850,10 +829,6 @@ namespace Cognitive3D
                 {
                     mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
                 }
-            }
-            else
-            {
-                //DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             }
 
             if (GUI.Button(new Rect(125, 360 + offset, 250, 30), "Setup Player GameObjects"))
@@ -1032,7 +1007,6 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
             {
                 Cognitive3D_Preferences.Instance.TextureResize = 2;
-                //selectedExportQuality = ExportSettings.DefaultSettings;
             }
             if (Cognitive3D_Preferences.Instance.TextureResize != 2)
             {
@@ -1042,7 +1016,6 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
             {
                 Cognitive3D_Preferences.Instance.TextureResize = 1;
-                //selectedExportQuality = ExportSettings.HighSettings;
             }
             if (Cognitive3D_Preferences.Instance.TextureResize != 1)
             {
@@ -1065,7 +1038,6 @@ namespace Cognitive3D
             }
             else
             {
-                //GUI.Label(new Rect(180, 450, 140, 40), "", "button_blueoutline");
                 if (GUI.Button(new Rect(180, 455, 140, 35), "Export All"))
                 {
                     delayDisplayUploading = 2;
@@ -1187,7 +1159,7 @@ namespace Cognitive3D
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
                 float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
-                string displayString = "";
+                string displayString;
                 if (sceneSize < 1)
                 {
                     displayString = "Exported File Size: <1 MB";
@@ -1200,10 +1172,7 @@ namespace Cognitive3D
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
-                if (GUI.Button(new Rect(0, 340, 500, 15), displayString, "miniheadercenter"))
-                {
-                    //EditorUtility.RevealInFinder(EditorCore.GetSceneExportDirectory(Cognitive3D_Preferences.FindCurrentScene()));
-                }
+                GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
             }
 
             if (numberOfLights > 50)
@@ -1354,7 +1323,6 @@ namespace Cognitive3D
                     {
                         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
                         Close();
-                        //ReadyRoomSetupWindow.Init();
                     }
                 }
             }
@@ -1387,7 +1355,6 @@ namespace Cognitive3D
             }
             else
             {
-                //EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
                 Debug.LogError("Developer Key invalid or expired");
             }
         }
@@ -1418,7 +1385,6 @@ namespace Cognitive3D
                         onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
                     }
 
-                    //onclick += () => ApplyBrandingUrls();
                     buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
                     if (buttonDisabled)
                     {
@@ -1428,7 +1394,6 @@ namespace Cognitive3D
                     if (buttonDisabled == false && lastDevKeyResponseCode != 200)
                     {
                         text = "Validate";
-                        //MuteDevKeyPopupWindow = true;
                     }
 
                     if (buttonDisabled == false && lastDevKeyResponseCode == 200)
@@ -1603,9 +1568,6 @@ namespace Cognitive3D
             {
                 case "welcome": buttonDisabled = true; break;
                 case "authenticate":
-                    text = "Back";
-                    buttonrect = new Rect(260, 510, 80, 30);
-                    break;
                 case "listdynamics":
                     text = "Back";
                     buttonrect = new Rect(260, 510, 80, 30);

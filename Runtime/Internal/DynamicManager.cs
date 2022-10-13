@@ -173,10 +173,20 @@ namespace Cognitive3D
         /// creates a new custom event related to a dynamic object
         /// </summary>
         /// <param name="objectid"></param>
+        public static void BeginEngagement(string objectid)
+        {
+            BeginEngagement(objectid, "default", objectid + "default", null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
         /// <param name="engagementname"></param>
         /// <param name="uniqueEngagementId"></param>
         /// <param name="properties"></param>
-        internal static void BeginEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+
+        public static void BeginEngagement(string objectid, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
@@ -204,7 +214,17 @@ namespace Cognitive3D
             }
         }
 
-        internal static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        public static void BeginEngagement(DynamicObject dynamicObject, String engagementname)
+        {
+            BeginEngagement(dynamicObject.GetId(), engagementname, dynamicObject.GetId() + engagementname, null);
+        }
+
+        public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
             if (uniqueEngagementId == null)
