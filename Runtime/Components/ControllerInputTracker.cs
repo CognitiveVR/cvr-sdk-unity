@@ -464,8 +464,8 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
-                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("ybtn"));
-                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.oculustouchleft:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
