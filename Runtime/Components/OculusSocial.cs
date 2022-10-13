@@ -102,15 +102,6 @@ namespace Cognitive3D.Components
             return true;
 #endif
         }
-
-        public override bool GetWarning()
-        {
-#if C3D_OCULUS
-            return false;
-#else
-            return true;
-#endif
-        }
     }
 
 }
