@@ -102,6 +102,7 @@ namespace Cognitive3D
             newManager.AddComponent<Cognitive3D.Components.HMDHeight>();
             newManager.AddComponent<Cognitive3D.Components.RoomSize>();
             newManager.AddComponent<Cognitive3D.Components.ArmLength>();
+            newManager.AddComponent<Cognitive3D.Components.Framerate>();
             //TODO add additional components based on selected SDKs
         }
 
@@ -189,8 +190,7 @@ namespace Cognitive3D
                 if (_prefs == null)
                 {
                     _prefs = ScriptableObject.CreateInstance<Cognitive3D_Preferences>();
-                    string filepath = "Assets/Resources/";
-
+                    string filepath = "Assets/Resources";
                     if (!AssetDatabase.IsValidFolder(filepath))
                     {
                         AssetDatabase.CreateFolder("Assets", "Resources");

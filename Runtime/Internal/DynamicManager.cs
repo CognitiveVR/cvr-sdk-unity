@@ -167,15 +167,62 @@ namespace Cognitive3D
             Util.logError("remove dynamic object id " + id + " not found");
         }
 
+        #region Engagement Events
+
         static Dictionary<string, CustomEvent> Engagements = new Dictionary<string, CustomEvent>();
 
         /// <summary>
         /// creates a new custom event related to a dynamic object
         /// </summary>
         /// <param name="objectid"></param>
-        public static void BeginEngagement(string objectid)
+        /// <param name="engagementname"></param>
+        public static void BeginEngagement(string objectid, string engagementname)
         {
-            BeginEngagement(objectid, "default", objectid + "default", null);
+            BeginEngagement(objectid, engagementname, objectid + engagementname, null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public static void BeginEngagement(string objectid, string engagementname, string uniqueEngagementId)
+        {
+            BeginEngagement(objectid, engagementname, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        public static void BeginEngagement(DynamicObject dynamicObject, string engagementname)
+        {
+            BeginEngagement(dynamicObject.GetId(), engagementname, dynamicObject.GetId() + engagementname, null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public static void BeginEngagement(DynamicObject dynamicObject, string engagementname, string uniqueEngagementId)
+        {
+            BeginEngagement(dynamicObject.GetId(), engagementname, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// creates a new custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// /// <param name="properties"></param>
+        public static void BeginEngagement(DynamicObject dynamicObject, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
+        {
+            BeginEngagement(dynamicObject.GetId(), engagementname, uniqueEngagementId, properties);
         }
 
         /// <summary>
@@ -185,11 +232,10 @@ namespace Cognitive3D
         /// <param name="engagementname"></param>
         /// <param name="uniqueEngagementId"></param>
         /// <param name="properties"></param>
-
         public static void BeginEngagement(string objectid, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
-            if (uniqueEngagementId == null)
+            if (string.IsNullOrEmpty(uniqueEngagementId))
             {
                 uniqueEngagementId = objectid + " " + engagementname;
             }
@@ -215,19 +261,69 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// creates a new custom event related to a dynamic object
+        /// ends an existing custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        public static void EndEngagement(string objectid, string engagementname)
+        {
+            EndEngagement(objectid, engagementname,string.Empty,null);
+        }
+
+        /// <summary>
+        /// ends an existing custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public static void EndEngagement(string objectid, string engagementname, string uniqueEngagementId)
+        {
+            EndEngagement(objectid, engagementname, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// ends an existing custom event related to a dynamic object
         /// </summary>
         /// <param name="dynamicObject"></param>
         /// <param name="engagementname"></param>
-        public static void BeginEngagement(DynamicObject dynamicObject, String engagementname)
+        public static void EndEngagement(DynamicObject dynamicObject, string engagementname)
         {
-            BeginEngagement(dynamicObject.GetId(), engagementname, dynamicObject.GetId() + engagementname, null);
+            EndEngagement(dynamicObject.GetId(), engagementname, dynamicObject.GetId() + engagementname, null);
         }
 
-        public static void EndEngagement(string objectid, string engagementname = "default", string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        /// <summary>
+        /// ends an existing custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public static void EndEngagement(DynamicObject dynamicObject, string engagementname, string uniqueEngagementId)
+        {
+            EndEngagement(dynamicObject.GetId(), engagementname, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// ends an existing custom event related to a dynamic object
+        /// </summary>
+        /// <param name="dynamicObject"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public static void EndEngagement(DynamicObject dynamicObject, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
+        {
+            EndEngagement(dynamicObject.GetId(), engagementname, uniqueEngagementId, properties);
+        }
+
+        /// <summary>
+        /// ends an existing custom event related to a dynamic object
+        /// </summary>
+        /// <param name="objectid"></param>
+        /// <param name="engagementname"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// <param name="properties"></param>
+        public static void EndEngagement(string objectid, string engagementname, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             if (Cognitive3D_Manager.TrackingScene == null) { return; }
-            if (uniqueEngagementId == null)
+            if (string.IsNullOrEmpty(uniqueEngagementId))
             {
                 uniqueEngagementId = objectid + " " + engagementname;
             }
@@ -253,6 +349,8 @@ namespace Cognitive3D
                 new CustomEvent(engagementname).SetProperties(properties).SetDynamicObject(objectid).Send(pos);
             }
         }
+
+        #endregion
 
         /// <summary>
         /// takes a list of inputs changed this frame. writes a snapshot outside of normal tick

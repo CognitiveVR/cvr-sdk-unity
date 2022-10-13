@@ -18,7 +18,7 @@ namespace Cognitive3D.Components
         public override void Cognitive3D_Init()
         {
             base.Cognitive3D_Init();
-
+#if C3D_OCULUS
             if (!Oculus.Platform.Core.IsInitialized())
             {
                 //Initialize will throw error if appid is invalid/missing
@@ -39,10 +39,12 @@ namespace Cognitive3D.Components
                     Debug.LogException(e);
                 }
             }
+#endif
         }
 
         void AssignParticipant()
         {
+#if C3D_OCULUS
             Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
             {
                 if (message.IsError)
@@ -57,10 +59,12 @@ namespace Cognitive3D.Components
                     });
                 }
             });
+#endif
         }
 
         void CheckPartySize()
         {
+#if C3D_OCULUS
             Oculus.Platform.Parties.GetCurrent().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.Party> message)
             {
                 if (message.IsError)
@@ -79,6 +83,7 @@ namespace Cognitive3D.Components
                     //no party
                 }
             });
+#endif
         }
 #endif
         public override string GetDescription()

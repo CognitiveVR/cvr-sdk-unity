@@ -21,7 +21,14 @@ namespace Cognitive3D
                     instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
                     if (instance == null)
                     {
-                        Debug.LogWarning("Could not find Cognitive3D_Preferences in Resources. Settings will be incorrect!");
+#if UNITY_EDITOR
+                        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                        {
+                            Debug.LogError("Cognitive3D_Preferences asset is missing!");
+                        }
+#else
+                        Debug.LogError("Cognitive3D_Preferences asset is missing!");
+#endif
                         instance = CreateInstance<Cognitive3D_Preferences>();
                     }
                     IsSet = true;

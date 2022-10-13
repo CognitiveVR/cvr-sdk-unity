@@ -71,7 +71,7 @@ namespace Cognitive3D
         /// <summary>
         /// should use GetId() to get the currently assigned dynamic object id
         /// </summary>
-        [SerializeField] //internal needs to be serialized (redudant?) so editor can access it
+        [SerializeField]
         internal string CustomId;
         public float UpdateRate = 0.1f;
 
@@ -237,13 +237,34 @@ namespace Cognitive3D
             DynamicManager.SetProperties(DataId, temp);
         }
 
+        #region Engagement Events
+
         /// <summary>
         /// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
         /// </summary>
         /// <param name="engagementName">name of the event</param>
-        /// <param name="uniqueEngagementId">if multiple events with the same name are expected on this object, this can be used to end specific events</param>
-        /// <param name="properties">optional parameters to add to the custom event</param>
-        public void BeginEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        public void BeginEngagement(string engagementName)
+        {
+            DynamicManager.BeginEngagement(GetId(), engagementName, GetId() + engagementName, null);
+        }
+
+        /// <summary>
+        /// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public void BeginEngagement(string engagementName, string uniqueEngagementId)
+        {
+            DynamicManager.BeginEngagement(GetId(), engagementName, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// Alternate method for beginning a Custom Event and setting this Dynamic Object as the target
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// <param name="properties"></param>
+        public void BeginEngagement(string engagementName, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             DynamicManager.BeginEngagement(GetId(), engagementName, uniqueEngagementId, properties);
         }
@@ -252,12 +273,33 @@ namespace Cognitive3D
         /// Alternate method to end a Custom Event on a specific Dynamic Object. If the event does not exist, creates and immediately ends the event
         /// </summary>
         /// <param name="engagementName">the name of the Event to end</param>
-        /// <param name="uniqueEngagementId">identifies the event to end, regardless of name</param>
-        /// <param name="properties">any properties to add to this event before it ends</param>
-        public void EndEngagement(string engagementName, string uniqueEngagementId = null, List<KeyValuePair<string, object>> properties = null)
+        public void EndEngagement(string engagementName)
+        {
+            DynamicManager.EndEngagement(GetId(), engagementName, GetId() + engagementName, null);
+        }
+
+        /// <summary>
+        /// Alternate method to end a Custom Event on a specific Dynamic Object. If the event does not exist, creates and immediately ends the event
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="uniqueEngagementId"></param>
+        public void EndEngagement(string engagementName, string uniqueEngagementId)
+        {
+            DynamicManager.EndEngagement(GetId(), engagementName, uniqueEngagementId, null);
+        }
+
+        /// <summary>
+        /// Alternate method to end a Custom Event on a specific Dynamic Object. If the event does not exist, creates and immediately ends the event
+        /// </summary>
+        /// <param name="engagementName"></param>
+        /// <param name="uniqueEngagementId"></param>
+        /// <param name="properties"></param>
+        public void EndEngagement(string engagementName, string uniqueEngagementId, List<KeyValuePair<string, object>> properties)
         {
             DynamicManager.EndEngagement(GetId(), engagementName, uniqueEngagementId, properties);
         }
+
+        #endregion
 
         private void OnDisable()
         {
