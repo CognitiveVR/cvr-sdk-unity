@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.XR;
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -14,6 +15,39 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
     public class HMDPresentEvent : AnalyticsComponentBase
     {
+        InputDevice currentHmd;
+        bool wasUserPresentLastFrame;
+        private void Update()
+        {
+            if (!currentHmd.isValid)
+            {
+                currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentLastFrame);
+            }
+            else
+            {
+                CheckUserPresence();
+            }
+        }
+
+        void CheckUserPresence()
+        {
+            bool isUserCurrentlyPresent;
+            if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
+            {
+                if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                {
+                    CustomEvent.SendCustomEvent("cvr.Headset reworn by user", GameplayReferences.HMD.position);
+                    wasUserPresentLastFrame = true;
+                }
+                else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
+                {
+                    CustomEvent.SendCustomEvent("cvr.Headset removed by user", GameplayReferences.HMD.position);
+                    wasUserPresentLastFrame = false;
+                }
+            }
+        }
+
 #if C3D_OCULUS
 
         public override void Cognitive3D_Init()
