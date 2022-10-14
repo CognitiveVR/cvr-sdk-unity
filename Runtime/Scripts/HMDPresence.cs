@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -12,11 +10,12 @@ public class HMDPresence : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(currentHmd);
-        Debug.Log("Is it valid? " + currentHmd.isValid);
-        // currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-        
-        if (currentHmd != null)
+        if (!currentHmd.isValid)
+        {
+            currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            lastPresenceVal = true;
+        }
+        else
         {
             CheckUserPresence();
         }
@@ -28,11 +27,13 @@ public class HMDPresence : MonoBehaviour
         {
             if (isUserPresent && !lastPresenceVal) // put on headset after removing
             {
-
+                new Cognitive3D.CustomEvent("c3d.Headset Reworn by User").Send();
+                lastPresenceVal = true;
             }
             else if (!isUserPresent && lastPresenceVal) // removing headset
             {
-
+                new Cognitive3D.CustomEvent("c3d.Headset Removed by User").Send();
+                lastPresenceVal = false;
             }
         }
     }
