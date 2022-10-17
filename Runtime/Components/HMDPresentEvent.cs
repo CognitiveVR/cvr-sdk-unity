@@ -19,6 +19,7 @@ namespace Cognitive3D.Components
         bool wasUserPresentLastFrame;
         private void Update()
         {
+#if !C3D_OMNICEPT
             if (!currentHmd.isValid)
             {
                 currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
@@ -28,6 +29,7 @@ namespace Cognitive3D.Components
             {
                 CheckUserPresence();
             }
+#endif
         }
 
         void CheckUserPresence()
@@ -37,12 +39,12 @@ namespace Cognitive3D.Components
             {
                 if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
                 {
-                    CustomEvent.SendCustomEvent("cvr.Headset reworn by user", GameplayReferences.HMD.position);
+                    CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
                     wasUserPresentLastFrame = true;
                 }
                 else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
                 {
-                    CustomEvent.SendCustomEvent("cvr.Headset removed by user", GameplayReferences.HMD.position);
+                    CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
                     wasUserPresentLastFrame = false;
                 }
             }
