@@ -19,7 +19,7 @@ namespace Cognitive3D.Components
         bool wasUserPresentLastFrame;
         private void Update()
         {
-#if !C3D_OMNICEPT
+#if !C3D_OMNICEPT && !C3D_VIVEWAVE
             if (!currentHmd.isValid)
             {
                 currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
@@ -48,41 +48,6 @@ namespace Cognitive3D.Components
                     wasUserPresentLastFrame = false;
                 }
             }
-        }
-
-#if C3D_OCULUS
-
-        public override void Cognitive3D_Init()
-        {
-            base.Cognitive3D_Init();
-            OVRManager.HMDMounted += OVRManager_HMDMounted;
-            OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-        }
-
-        private void OVRManager_HMDMounted()
-        {
-            new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
-        }
-
-        private void OVRManager_HMDUnmounted()
-        {
-            new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time).Send();
-        }
-
-        void OnDestroy()
-        {
-            OVRManager.HMDMounted -= OVRManager_HMDMounted;
-            OVRManager.HMDUnmounted -= OVRManager_HMDUnmounted;
-        }
-#endif
-
-        public override bool GetWarning()
-        {
-#if C3D_OCULUS
-            return false;
-#else
-            return true;
-#endif
         }
 
         public override string GetDescription()
