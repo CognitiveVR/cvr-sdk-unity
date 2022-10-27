@@ -52,11 +52,16 @@ namespace Cognitive3D.Components
             // Interval ended - update GUI text and start new interval
             if (frames != 0)
             {
+#if XRPF
                 if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
                 {
                     float lastFps = accum / frames;
                     SensorRecorder.RecordDataPoint("FPS", lastFps);
-                } 
+                }
+#else
+                float lastFps = accum / frames;
+                SensorRecorder.RecordDataPoint("FPS", lastFps);
+#endif
             }
             else
             {
