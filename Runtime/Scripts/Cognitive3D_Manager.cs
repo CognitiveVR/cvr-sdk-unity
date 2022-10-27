@@ -247,6 +247,7 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.name", Application.productName);
             SetSessionProperty("c3d.app.version", Application.version);
             SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+#if XRPF
             if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
             {
                 SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
@@ -258,6 +259,16 @@ namespace Cognitive3D
                 SetSessionProperty("c3d.deviceid", DeviceId);
                 SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
             }
+#else
+                SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+                SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+                SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+                SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
+                SetSessionProperty("c3d.deviceid", DeviceId);
+                SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+#endif
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 
@@ -382,7 +393,7 @@ namespace Cognitive3D
             //a situation where a scene without an ID is loaded additively, then a scene with an id is unloaded, the sceneid will persist
         }
 
-        #region Updates and Loops
+#region Updates and Loops
 
         /// <summary>
         /// start after successful session initialization
@@ -504,7 +515,7 @@ namespace Cognitive3D
             Application.Quit();
         }
 
-        #endregion
+#endregion
 
 
         public const string SDK_VERSION = "1.0.0";
