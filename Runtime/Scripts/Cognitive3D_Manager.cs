@@ -6,6 +6,9 @@ using System;
 #if  C3D_STEAMVR2
 using Valve.VR;
 #endif
+#if XRPF
+using XRPF;
+#endif
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
 
@@ -89,7 +92,7 @@ namespace Cognitive3D
         public FixationRecorder fixationRecorder;
 
         [Obsolete("use Cognitive3D_Manager.BeginSession instead")]
-        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        public void Initialize(string participantName = "", string participantId = "", List<KeyValuePair<string, object>> participantProperties = null)
         {
             BeginSession();
 
@@ -231,7 +234,6 @@ namespace Cognitive3D
             InvokeSessionBeginEvent();
 
             SetSessionProperties();
-
             OnPreSessionEnd += Core_EndSessionEvent;
             FlushData();
             StartCoroutine(AutomaticSendData());
@@ -255,6 +257,17 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+
+            #region XRPF_PROPERTIES
+            if (XRPF.PrivacyFramework.Agreement != null)
+            {
+                SetSessionProperty("xrpf.allowed.location.data", XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed);
+                SetSessionProperty("xrpf.allowed.hardware.data", XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed);
+                SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
+                SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
+                SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+            }
+            #endregion
 
 #if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below

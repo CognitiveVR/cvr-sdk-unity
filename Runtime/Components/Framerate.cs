@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Cognitive3D;
+#if XRPF
+using XRPF;
+#endif
 
 /// <summary>
 /// sends fps as a sensor
@@ -49,8 +52,11 @@ namespace Cognitive3D.Components
             // Interval ended - update GUI text and start new interval
             if (frames != 0)
             {
-                float lastFps = accum / frames;
-                SensorRecorder.RecordDataPoint("FPS", lastFps);
+                if (XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+                {
+                    float lastFps = accum / frames;
+                    SensorRecorder.RecordDataPoint("FPS", lastFps);
+                } 
             }
             else
             {
