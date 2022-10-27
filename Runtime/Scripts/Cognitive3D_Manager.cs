@@ -6,9 +6,6 @@ using System;
 #if  C3D_STEAMVR2
 using Valve.VR;
 #endif
-#if XRPF
-using XRPF;
-#endif
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
 

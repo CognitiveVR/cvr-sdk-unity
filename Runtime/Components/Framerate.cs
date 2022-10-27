@@ -1,9 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Cognitive3D;
-#if XRPF
-using XRPF;
-#endif
 
 /// <summary>
 /// sends fps as a sensor
@@ -22,7 +19,12 @@ namespace Cognitive3D.Components
         {
             //if (initError != Error.None) { return; }
             base.Cognitive3D_Init();
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+            {
+#endif
+                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            }
             timeleft = FramerateTrackingInterval;
         }
 
@@ -52,16 +54,8 @@ namespace Cognitive3D.Components
             // Interval ended - update GUI text and start new interval
             if (frames != 0)
             {
-#if XRPF
-                if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-                {
-                    float lastFps = accum / frames;
-                    SensorRecorder.RecordDataPoint("FPS", lastFps);
-                }
-#else
                 float lastFps = accum / frames;
                 SensorRecorder.RecordDataPoint("FPS", lastFps);
-#endif
             }
             else
             {
