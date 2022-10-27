@@ -272,6 +272,17 @@ namespace Cognitive3D
             }
             #endregion
 
+            #region XRPF_PROPERTIES
+            if (XRPF.PrivacyFramework.Agreement != null)
+            {
+                SetSessionProperty("xrpf.allowed.location.data", XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed);
+                SetSessionProperty("xrpf.allowed.hardware.data", XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed);
+                SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
+                SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
+                SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+            }
+            #endregion
+
 #if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
             if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
