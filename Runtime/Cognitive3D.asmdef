@@ -20,9 +20,13 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [
-        "XRPF"
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.xrpf.privacyframework",
+            "expression": "",
+            "define": "XRPF"
+        }
     ],
-    "versionDefines": [],
     "noEngineReferences": false
 }

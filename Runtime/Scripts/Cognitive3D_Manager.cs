@@ -246,8 +246,8 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-            {
 #endif
+            { 
                 SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
                 SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
                 SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
@@ -271,7 +271,7 @@ namespace Cognitive3D
                 SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
             }
 #endif
-            #endregion
+#endregion
 #if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
 #if XRPF
@@ -340,7 +340,7 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.sdktype", "Vive Wave");
         }
 #endif
-            //eye tracker addons
+//eye tracker addons
 #if C3D_SRANIPAL
 #if XRPF
         if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)

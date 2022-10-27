@@ -21,8 +21,8 @@ namespace Cognitive3D.Components
             base.Cognitive3D_Init();
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+#endif            
             {
-#endif
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             }
             timeleft = FramerateTrackingInterval;
