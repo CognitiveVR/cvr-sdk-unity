@@ -274,7 +274,7 @@ namespace Cognitive3D
                 SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
             }
 #endif
-#endregion
+            #endregion
 #if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
 #if XRPF
@@ -288,44 +288,89 @@ namespace Cognitive3D
 #endif
 
 #if C3D_OCULUS
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type", "None");
             SetSessionProperty("c3d.app.sdktype", "Oculus");
+        }
 #elif C3D_HOLOLENS
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", false);
             SetSessionProperty("c3d.device.eyetracking.type","None");
             SetSessionProperty("c3d.app.sdktype", "Hololens");
+        }
 #elif C3D_PICOVR
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "PicoVR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+        }
 #elif C3D_PICOXR
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "PicoXR");
             SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+        }
 #elif C3D_MRTK
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
             SetSessionProperty("c3d.app.sdktype", "MRTK");
+        }
 #elif C3D_VIVEWAVE
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
             SetSessionProperty("c3d.app.sdktype", "Vive Wave");
+        }
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+        {
             SetSessionProperty("c3d.device.eyetracking.enabled", true);
             SetSessionProperty("c3d.device.eyetracking.type","Tobii");
             SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
+        }
 #elif C3D_WINDOWSMR
-            SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
+#if XRPF
+        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
-            SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
-            SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
-            SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
+        {
+            SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
+        }
+#endif
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
+                SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
+                SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
 
-            SetSessionProperty("c3d.app.engine", "Unity");
+                SetSessionProperty("c3d.app.engine", "Unity");
+            }
         }
 
         /// <summary>
