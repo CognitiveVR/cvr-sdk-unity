@@ -454,6 +454,7 @@ namespace Cognitive3D
         //set name is not set otherwise
         if (string.IsNullOrEmpty(MeshName))
         {
+            //CONSIDER meshfilter name + material name if one is found on this gameobject?
             MeshName = gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }

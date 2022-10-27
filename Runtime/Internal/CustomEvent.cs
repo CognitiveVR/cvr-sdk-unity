@@ -265,7 +265,13 @@ namespace Cognitive3D
                 SetProperty("duration", duration);
             }
 
-            SendCustomEvent(category, _properties, GameplayReferences.HMD.position, dynamicObjectId);
+            Vector3 position = Vector3.zero;
+            if (GameplayReferences.HMD != null)
+            {
+                position = GameplayReferences.HMD.position;
+            }
+
+            SendCustomEvent(category, _properties, position, dynamicObjectId);
         }
 
         internal static void Initialize()

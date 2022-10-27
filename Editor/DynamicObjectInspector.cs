@@ -93,34 +93,21 @@ namespace Cognitive3D
 
             //use custom mesh and mesh text field
             GUILayout.BeginHorizontal();
-            //UnityEditor.EditorGUILayout.PropertyField(useCustomMesh);
-            bool anycustomnames = true;
+            EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
             foreach (var t in targets)
             {
                 var dyn = t as DynamicObject;
                 if (dyn.UseCustomMesh)
                 {
-                    anycustomnames = true;
-                    if (string.IsNullOrEmpty(dyn.MeshName))
+                    dyn.MeshName = ValidateMeshName(dyn.MeshName);
+                    if (!Application.isPlaying)
                     {
-                        dyn.MeshName = ValidateMeshName(dyn.MeshName);
-                        if (!Application.isPlaying)
-                        {
-                            UnityEditor.EditorUtility.SetDirty(dyn);
-                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                        }
+                        UnityEditor.EditorUtility.SetDirty(dyn);
+                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                     }
                 }
             }
-            if (!anycustomnames)
-            {
-                //UnityEditor.EditorGUILayout.PropertyField(commonMeshName, new GUIContent(""));
-            }
-            else //mesh names
-            {
-                UnityEditor.EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
-                meshname.stringValue = ValidateMeshName(meshname.stringValue);
-            }
+
             GUILayout.EndHorizontal();
 
             if (idType == -1)
@@ -222,6 +209,7 @@ namespace Cognitive3D
                     {
                         List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
                         ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                        UploadCustomIdForAggregation();
                     }
                     EditorGUI.EndDisabledGroup();
 
@@ -231,50 +219,6 @@ namespace Cognitive3D
                     int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64*/ };
                     Cognitive3D_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), Cognitive3D_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
                     GUILayout.Space(5);
-
-                    //ID upload
-                    var dyn = target as DynamicObject;
-                    if (dyn.UseCustomId)
-                    {
-                        EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                        if (GUILayout.Button("Upload Custom ID for aggregation"))
-                        {
-                            Debug.Log("upload custom id to scene");
-                            //ExportUtility.UploadSelectedDynamicObjectMeshes(true);
-                            EditorCore.RefreshSceneVersion(delegate ()
-                            {
-                                ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
-                                    new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
-                                    new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
-                                    new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                                ManageDynamicObjects.UploadManifest(manifest, null);
-                            });
-                        }
-                        EditorGUI.EndDisabledGroup();
-                    }
-                    else if (dyn.IdPool != null)
-                    {
-                        EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                        if (GUILayout.Button("Upload ID Pool for aggregation"))
-                        {
-                            Debug.Log("upload id pool to scene");
-                            //ExportUtility.UploadSelectedDynamicObjectMeshes(true);
-                            EditorCore.RefreshSceneVersion(delegate ()
-                            {
-                                ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                                for(int i = 0; i< dyn.IdPool.Ids.Length;i++)
-                                {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
-                                        new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
-                                        new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
-                                        new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                                }
-                                ManageDynamicObjects.UploadManifest(manifest, null);
-                            });
-                        }
-                        EditorGUI.EndDisabledGroup();
-                    }
                 }
 
                 //Snapshot Threshold
@@ -340,6 +284,40 @@ namespace Cognitive3D
             serializedObject.Update();
         }
 
+        void UploadCustomIdForAggregation()
+        {
+            var dyn = target as DynamicObject;
+            if (dyn.UseCustomId)
+            {
+                Debug.Log("upload custom id to scene");
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                        new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
+                        new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
+                        new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
+                    ManageDynamicObjects.UploadManifest(manifest, null);
+                });
+            }
+            else if (dyn.IdPool != null)
+            {
+                Debug.Log("upload id pool to scene");
+                EditorCore.RefreshSceneVersion(delegate ()
+                {
+                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
+                    {
+                        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                            new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
+                            new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
+                            new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
+                    }
+                    ManageDynamicObjects.UploadManifest(manifest, null);
+                });
+            }
+        }
+
         void CheckCustomId()
         {
             if (Application.isPlaying) { return; }
@@ -364,11 +342,10 @@ namespace Cognitive3D
 
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
-                    string s = System.Guid.NewGuid().ToString();
-                    var customId = "editor_" + s;
-                    dynamics[i].CustomId = customId;
-                    usedids.Add(customId);
-                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + customId);
+                    string guid = System.Guid.NewGuid().ToString();
+                    dynamics[i].CustomId = guid;
+                    usedids.Add(guid);
+                    Util.logDebug(dynamics[i].gameObject.name + " has same customid, set new guid " + guid);
                     if (!Application.isPlaying)
                     {
                         UnityEditor.EditorUtility.SetDirty(dynamics[i]);

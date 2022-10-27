@@ -487,7 +487,7 @@ namespace Cognitive3D
         #endregion
 
 
-        public const string SDK_VERSION = "1.0.0";
+        public const string SDK_VERSION = "1.0.1";
 
         //data has been sent. this is used to visualize on active session view
         public delegate void onSendData(bool copyDataToCache);
