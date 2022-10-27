@@ -6,6 +6,9 @@ using System;
 #if  C3D_STEAMVR2
 using Valve.VR;
 #endif
+#if XRPF
+using XRPF;
+#endif
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
 
@@ -89,7 +92,7 @@ namespace Cognitive3D
         public FixationRecorder fixationRecorder;
 
         [Obsolete("use Cognitive3D_Manager.BeginSession instead")]
-        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        public void Initialize(string participantName = "", string participantId = "", List<KeyValuePair<string, object>> participantProperties = null)
         {
             BeginSession();
 
@@ -231,7 +234,6 @@ namespace Cognitive3D
             InvokeSessionBeginEvent();
 
             SetSessionProperties();
-
             OnPreSessionEnd += Core_EndSessionEvent;
             FlushData();
             StartCoroutine(AutomaticSendData());
@@ -245,22 +247,39 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.name", Application.productName);
             SetSessionProperty("c3d.app.version", Application.version);
             SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
-            SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
-            SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
-            SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
-            SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
-            SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
-            SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
-            SetSessionProperty("c3d.deviceid", DeviceId);
+            if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+            {
+                SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
+                SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
+                SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
+                SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+                SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+                SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
+                SetSessionProperty("c3d.deviceid", DeviceId);
+                SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+            }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
-            SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+
+            #region XRPF_PROPERTIES
+            if (XRPF.PrivacyFramework.Agreement != null)
+            {
+                SetSessionProperty("xrpf.allowed.location.data", XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed);
+                SetSessionProperty("xrpf.allowed.hardware.data", XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed);
+                SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
+                SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
+                SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+            }
+            #endregion
 
 #if C3D_STEAMVR2
             //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Vive");
+            if (XRPF.PrivacyFramework.Agreement != null && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+            {                
+                SetSessionProperty("c3d.device.eyetracking.enabled", false);
+                SetSessionProperty("c3d.device.eyetracking.type","None");
+                SetSessionProperty("c3d.app.sdktype", "Vive");
+            }
 #endif
 
 #if C3D_OCULUS
