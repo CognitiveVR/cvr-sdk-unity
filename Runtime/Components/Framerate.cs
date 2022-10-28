@@ -19,7 +19,12 @@ namespace Cognitive3D.Components
         {
             //if (initError != Error.None) { return; }
             base.Cognitive3D_Init();
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+#endif            
+            {
+                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            }
             timeleft = FramerateTrackingInterval;
         }
 

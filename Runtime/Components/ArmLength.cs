@@ -71,8 +71,13 @@ namespace Cognitive3D.Components
             {
                 //send arm length
                 float distance = Mathf.Sqrt(maxSqrDistance);
-                //dashboard expects centimeters
-                Cognitive3D_Manager.SetParticipantProperty("armlength", distance * 100);
+#if XRPF
+                if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
+#endif
+                {
+                    //dashboard expects centimeters
+                    Cognitive3D_Manager.SetParticipantProperty("armlength", distance * 100);
+                }    
             }
         }
 

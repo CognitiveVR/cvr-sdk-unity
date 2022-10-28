@@ -89,7 +89,7 @@ namespace Cognitive3D
         public FixationRecorder fixationRecorder;
 
         [Obsolete("use Cognitive3D_Manager.BeginSession instead")]
-        public void Initialize(string participantName="", string participantId = "", List<KeyValuePair<string,object>> participantProperties = null)
+        public void Initialize(string participantName = "", string participantId = "", List<KeyValuePair<string, object>> participantProperties = null)
         {
             BeginSession();
 
@@ -231,7 +231,6 @@ namespace Cognitive3D
             InvokeSessionBeginEvent();
 
             SetSessionProperties();
-
             OnPreSessionEnd += Core_EndSessionEvent;
             FlushData();
             StartCoroutine(AutomaticSendData());
@@ -245,6 +244,30 @@ namespace Cognitive3D
             SetSessionProperty("c3d.app.name", Application.productName);
             SetSessionProperty("c3d.app.version", Application.version);
             SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                SendHardwareDataAsSessionProperty();
+            }
+            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
+            SetSessionProperty("c3d.version", SDK_VERSION);
+#region XRPF_PROPERTIES
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+            {
+                SetSessionProperty("xrpf.allowed.location.data", XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed);
+                SetSessionProperty("xrpf.allowed.hardware.data", XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed);
+                SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
+                SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
+                SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+            }
+#endif
+#endregion
+        }
+
+        private void SendHardwareDataAsSessionProperty()
+        {
             SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
             SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
             SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
@@ -252,57 +275,57 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
             SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
             SetSessionProperty("c3d.deviceid", DeviceId);
-            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
-            SetSessionProperty("c3d.version", SDK_VERSION);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 
+            #region SDK_SPECIFIC
 #if C3D_STEAMVR2
-            //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Vive");
+        //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
+        SetSessionProperty("c3d.device.eyetracking.enabled", false);
+        SetSessionProperty("c3d.device.eyetracking.type","None");
+        SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
 
 #if C3D_OCULUS
-            SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type", "None");
-            SetSessionProperty("c3d.app.sdktype", "Oculus");
+        SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
+        SetSessionProperty("c3d.device.eyetracking.enabled", false);
+        SetSessionProperty("c3d.device.eyetracking.type", "None");
+        SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif C3D_HOLOLENS
-            SetSessionProperty("c3d.device.eyetracking.enabled", false);
-            SetSessionProperty("c3d.device.eyetracking.type","None");
-            SetSessionProperty("c3d.app.sdktype", "Hololens");
+        SetSessionProperty("c3d.device.eyetracking.enabled", false);
+        SetSessionProperty("c3d.device.eyetracking.type","None");
+        SetSessionProperty("c3d.app.sdktype", "Hololens");
 #elif C3D_PICOVR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "PicoVR");
-            SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        SetSessionProperty("c3d.app.sdktype", "PicoVR");
+        SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #elif C3D_PICOXR
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "PicoXR");
-            SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        SetSessionProperty("c3d.app.sdktype", "PicoXR");
+        SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #elif C3D_MRTK
-            SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
-            SetSessionProperty("c3d.app.sdktype", "MRTK");
+        SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
+        SetSessionProperty("c3d.app.sdktype", "MRTK");
 #elif C3D_VIVEWAVE
-            SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
-            SetSessionProperty("c3d.app.sdktype", "Vive Wave");
+        SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
+        SetSessionProperty("c3d.app.sdktype", "Vive Wave");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL
-            SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif C3D_WINDOWSMR
-            SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
+        SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #endif
-            SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
-            SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
-            SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
-
-            SetSessionProperty("c3d.app.engine", "Unity");
+        SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
+        SetSessionPropertyIfEmpty("c3d.device.eyetracking.type", "None");
+        SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
+        SetSessionProperty("c3d.app.engine", "Unity");
+            #endregion
         }
+
 
         /// <summary>
         /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
@@ -362,7 +385,7 @@ namespace Cognitive3D
             //a situation where a scene without an ID is loaded additively, then a scene with an id is unloaded, the sceneid will persist
         }
 
-        #region Updates and Loops
+#region Updates and Loops
 
         /// <summary>
         /// start after successful session initialization
@@ -484,7 +507,7 @@ namespace Cognitive3D
             Application.Quit();
         }
 
-        #endregion
+#endregion
 
 
         public const string SDK_VERSION = "1.0.1";

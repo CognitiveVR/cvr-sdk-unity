@@ -48,14 +48,24 @@ namespace Cognitive3D.Components
             const string hpRightEyeDiameterTag = "HP.Right Pupil Diameter";
             if (hmdTimestamp > pupillometryUpdateTime)
             {
-                pupillometryUpdateTime = hmdTimestamp + (pupillometryUpdateIntervalMilliSeconds / milliSecondsToSeconds); 
+                pupillometryUpdateTime = hmdTimestamp + (pupillometryUpdateIntervalMilliSeconds / milliSecondsToSeconds);
                 if (data.LeftEye.PupilDilationConfidence > minimumConfidenceThreshold && data.LeftEye.PupilDilation > eyeOpenPupilDilationThreshold)
                 {
-                    SensorRecorder.RecordDataPoint(hpLeftEyeDiameterTag, data.LeftEye.PupilDilation, hmdTimestamp);
-                }                  
+#if XRPF
+                    if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBioDataAllowed)
+#endif
+                    {
+                        SensorRecorder.RecordDataPoint(hpLeftEyeDiameterTag, data.LeftEye.PupilDilation, hmdTimestamp);
+                    }
+                }
                 if (data.RightEye.PupilDilationConfidence > minimumConfidenceThreshold && data.RightEye.PupilDilation > eyeOpenPupilDilationThreshold)
                 {
-                    SensorRecorder.RecordDataPoint(hpRightEyeDiameterTag, data.RightEye.PupilDilation, hmdTimestamp);
+#if XRPF
+                    if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBioDataAllowed)
+#endif
+                    {
+                        SensorRecorder.RecordDataPoint(hpRightEyeDiameterTag, data.RightEye.PupilDilation, hmdTimestamp);
+                    }
                 }
             }
         }
@@ -65,7 +75,12 @@ namespace Cognitive3D.Components
         {
             const string hpHeartRateTag = "HP.HeartRate";
             double hmdTimestamp = (double)data.Timestamp.SystemTimeMicroSeconds / microSecondsToSeconds;
-            SensorRecorder.RecordDataPoint(hpHeartRateTag, data.Rate, hmdTimestamp);
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBioDataAllowed)
+#endif
+            {
+                SensorRecorder.RecordDataPoint(hpHeartRateTag, data.Rate, hmdTimestamp);
+            }
         }
 
         // Updates every 6 seconds by HP
@@ -73,7 +88,12 @@ namespace Cognitive3D.Components
         {
             const string hpHeartRateVariabilityTag = "HP.HeartRate.Variability";
             double hmdTimestamp = (double)data.Timestamp.SystemTimeMicroSeconds / microSecondsToSeconds;
-            SensorRecorder.RecordDataPoint(hpHeartRateVariabilityTag, data.Sdnn, hmdTimestamp);
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBioDataAllowed)
+#endif
+            {
+                SensorRecorder.RecordDataPoint(hpHeartRateVariabilityTag, data.Sdnn, hmdTimestamp);
+            }
         }
 
         // Updates every 1 second by HP
@@ -82,9 +102,14 @@ namespace Cognitive3D.Components
             const string hpCognitiveLoadTag = "HP.CognitiveLoad";
             const string hpCognitiveLoadConfidenceTag = "HP.CognitiveLoad.Confidence";
             double hmdTimestamp = (double)data.Timestamp.SystemTimeMicroSeconds / microSecondsToSeconds;
-            SensorRecorder.RecordDataPoint(hpCognitiveLoadTag, data.CognitiveLoadValue, hmdTimestamp);
-            SensorRecorder.RecordDataPoint(hpCognitiveLoadConfidenceTag, data.StandardDeviation, hmdTimestamp);
-        }
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBioDataAllowed)
+#endif
+            {
+                SensorRecorder.RecordDataPoint(hpCognitiveLoadTag, data.CognitiveLoadValue, hmdTimestamp);
+                SensorRecorder.RecordDataPoint(hpCognitiveLoadConfidenceTag, data.StandardDeviation, hmdTimestamp);
+            }
+         }
 #endif
     }
 }

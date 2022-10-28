@@ -1,5 +1,6 @@
 {
     "name": "Cognitive3D",
+    "rootNamespace": "",
     "references": [
         "SteamVR",
         "Unity.XR.OpenVR",
@@ -10,7 +11,8 @@
         "SRAnipalAssembly",
         "Wave.Essence",
         "Wave.XRSDK",
-        "Wave.Native"
+        "Wave.Native",
+        "XRPF"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,6 +21,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.xrpf.privacyframework",
+            "expression": "",
+            "define": "XRPF"
+        }
+    ],
     "noEngineReferences": false
 }

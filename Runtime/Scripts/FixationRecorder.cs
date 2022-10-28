@@ -28,7 +28,7 @@ namespace Cognitive3D
             HitWorld
         }
 
-        #region EyeTracker
+#region EyeTracker
 #if C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
@@ -981,9 +981,12 @@ namespace Cognitive3D
             }
 
             //submit eye data here
-            CoreInterface.RecordEyeData(EyeCaptures[index],hitType);
-
-
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
+#endif
+            {
+                CoreInterface.RecordEyeData(EyeCaptures[index], hitType);
+            }
             index = (index + 1) % CachedEyeCaptures;
         }
 
