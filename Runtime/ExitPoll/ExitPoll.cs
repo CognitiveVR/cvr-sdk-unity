@@ -492,6 +492,17 @@ namespace Cognitive3D
                     return;
                 }
 
+                // Skip voice response if XRPF doesn't allow hardware data
+#if XRPF
+                if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && !XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+                {
+                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                                                  // because that is what PanelID gets set to
+                    panelCount++;
+                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    return;
+                }
+#endif
                 var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
                 CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
 
