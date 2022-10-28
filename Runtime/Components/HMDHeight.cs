@@ -54,7 +54,13 @@ namespace Cognitive3D.Components
             }
 
             float medianHeight = Median(heights);
-            Cognitive3D_Manager.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
+#endif
+            {
+                Cognitive3D_Manager.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
+
+            }
         }
 
         private float Median(float[] items)
