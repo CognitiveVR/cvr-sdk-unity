@@ -1,9 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-#if XRPF
-using XRPF;
-#endif
 
 namespace Cognitive3D
 {
