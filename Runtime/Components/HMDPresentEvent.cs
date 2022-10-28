@@ -34,18 +34,23 @@ namespace Cognitive3D.Components
 
         void CheckUserPresence()
         {
-            bool isUserCurrentlyPresent;
-            if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
             {
-                if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                bool isUserCurrentlyPresent;
+                if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
                 {
-                    CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
-                    wasUserPresentLastFrame = true;
-                }
-                else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
-                {
-                    CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
-                    wasUserPresentLastFrame = false;
+                    if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                    {
+                        CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
+                        wasUserPresentLastFrame = true;
+                    }
+                    else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
+                    {
+                        CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
+                        wasUserPresentLastFrame = false;
+                    }
                 }
             }
         }
