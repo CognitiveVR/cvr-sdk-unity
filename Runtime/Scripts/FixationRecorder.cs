@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if XRPF
+using XRPF;
+#endif
 
 namespace Cognitive3D
 {
@@ -28,7 +31,7 @@ namespace Cognitive3D
             HitWorld
         }
 
-        #region EyeTracker
+#region EyeTracker
 #if C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
@@ -981,10 +984,13 @@ namespace Cognitive3D
             }
 
             //submit eye data here
-            CoreInterface.RecordEyeData(EyeCaptures[index],hitType);
-
-
-            index = (index + 1) % CachedEyeCaptures;
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
+#endif
+            {
+                CoreInterface.RecordEyeData(EyeCaptures[index], hitType);
+                index = (index + 1) % CachedEyeCaptures;
+            }
         }
 
         //the position in the world/local hit. returns true if hit something
