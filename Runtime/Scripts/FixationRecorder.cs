@@ -986,8 +986,8 @@ namespace Cognitive3D
 #endif
             {
                 CoreInterface.RecordEyeData(EyeCaptures[index], hitType);
-                index = (index + 1) % CachedEyeCaptures;
             }
+            index = (index + 1) % CachedEyeCaptures;
         }
 
         //the position in the world/local hit. returns true if hit something

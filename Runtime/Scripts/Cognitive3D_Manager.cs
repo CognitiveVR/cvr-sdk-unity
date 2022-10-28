@@ -266,7 +266,7 @@ namespace Cognitive3D
 #endregion
         }
 
-        public void SendHardwareDataAsSessionProperty()
+        private void SendHardwareDataAsSessionProperty()
         {
             SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
             SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
