@@ -18,7 +18,7 @@ namespace Cognitive3D.Components
         InputDevice currentHmd;
         bool wasUserPresentLastFrame;
 
-        private void Start()
+        public override void Cognitive3D_Init()
         {
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
@@ -27,9 +27,9 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
                 OVRManager.HMDMounted += HandleHMDMounted;
                 OVRManager.HMDUnmounted += HandleHMDUnmounted;
+                Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
 #endif
             }
-
         }
 
         private void Update()
@@ -79,6 +79,15 @@ namespace Cognitive3D.Components
                     }
                 }
             }
+        }
+        
+        private void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+#if C3D_OCULUS
+                OVRManager.HMDMounted -= HandleHMDMounted;
+                OVRManager.HMDUnmounted -= HandleHMDUnmounted;
+                Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+#endif
         }
 
         public override string GetDescription()
