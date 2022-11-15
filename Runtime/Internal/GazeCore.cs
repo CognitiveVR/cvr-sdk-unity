@@ -54,8 +54,11 @@ namespace Cognitive3D
                 RaycastHit floorhit = new RaycastHit();
                 if (Physics.Raycast(GameplayReferences.HMD.position, -cameraRoot.up, out floorhit))
                 {
-                    floorPos = floorhit.point;
-                    return true;
+                    if (!floorhit.collider.gameObject.GetComponent<DynamicObject>())
+                    {
+                        floorPos = floorhit.point;
+                        return true;
+                    }
                 }
             }
             return false;
