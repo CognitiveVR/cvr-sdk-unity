@@ -821,127 +821,9 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(305, 510, 210, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
             {
                 ExportAndUpload(false);
-                    /*
-
-                EditorCore.RefreshSceneVersion(() =>
-                {
-                    var dynamics = GameObject.FindObjectsOfType<DynamicObject>();
-                    List<GameObject> gos = new List<GameObject>();
-                    foreach (var v in dynamics)
-                    {
-                        gos.Add(v.gameObject);
-                    }
-
-                    Selection.objects = gos.ToArray();
-
-                    List<GameObject> uploadList = new List<GameObject>();
-                    List<DynamicObject> exportList = new List<DynamicObject>();
-                    foreach (var entry in Entries)
-                    {
-                        var dyn = entry.objectReference;
-                        if (dyn == null) { continue; }
-                        if (!entry.selected) { continue; }
-                        //check if export files exist
-                        if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
-                        {
-                            exportList.Add(dyn);
-                        }
-                        //check if thumbnail exists
-                        if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
-                        {
-                            EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                        }
-                        uploadList.Add(dyn.gameObject);
-                    }
-                    ExportUtility.ExportDynamicObjects(exportList);
-
-                    EditorCore.RefreshSceneVersion(delegate ()
-                    {
-                        ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                        //var manifest = new AggregationManifest();
-                        //AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                        //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                        //ManageDynamicObjects.UploadManifest(manifest, () => );
-                    });
-                });*/
             }
             EditorGUI.EndDisabledGroup();
-
-
-                /*
-                //all, unless selected
-                int selectionCount = 0;
-                int selectedEntries = 0;
-                foreach (var entry in Entries)
-                {
-                    if (!entry.selected) { continue; }
-                        selectedEntries++;
-                    if (entry.isIdPool)
-                    {
-                        selectionCount += entry.idPoolCount;
-                    }
-                    else
-                        selectionCount++;
-                }
-                if (selectedEntries == 0 || selectedEntries == Entries.Count)
-                {
-                    if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload All Ids for Aggregation", tooltip)))
-                    {
-                        //all dynamics in scene - should be selected dynamics?
-                        EditorCore.RefreshSceneVersion(delegate ()
-                        {
-                            AggregationManifest manifest = new AggregationManifest();
-                            //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-                            var uploadList = new List<DynamicObject>();
-                            foreach (var entry in Entries)
-                            {
-                                if (!entry.isIdPool)
-                                    uploadList.Add(entry.objectReference);
-                                else
-                                {
-                                    foreach (var poolid in entry.poolReference.Ids)
-                                    {
-                                        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
-                                    }
-                                }
-                            }
-                            AddOrReplaceDynamic(manifest, uploadList);
-                            //TODO manifest add pool ids
-                            //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                            ManageDynamicObjects.UploadManifest(manifest, null);
-                        });
-                    }
-                }
-                else
-                {
-                    if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload "+selectionCount+" Selected Ids for Aggregation", tooltip)))
-                    {
-                        //all dynamics in scene - should be selected dynamics?
-                        EditorCore.RefreshSceneVersion(delegate ()
-                        {
-                            AggregationManifest manifest = new AggregationManifest();
-                            //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-                            var uploadList = new List<DynamicObject>();
-                            foreach (var entry in Entries)
-                            {
-                                if (!entry.selected) { continue; }
-                                if (!entry.isIdPool)
-                                    uploadList.Add(entry.objectReference);
-                                else
-                                {
-                                    foreach (var poolid in entry.poolReference.Ids)
-                                    {
-                                        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
-                                    }
-                                }
-                            }
-                            AddOrReplaceDynamic(manifest, uploadList);
-                            //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                            ManageDynamicObjects.UploadManifest(manifest, null);
-                        });
-                    }
-                }*/
-            }
+        }
         else
         {
             var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
@@ -977,6 +859,12 @@ namespace Cognitive3D
         }
     }
 
+
+    /// <summary>
+    /// logic to get scene version, then prompt user if they want to export meshes or use existing export in folder
+    /// then upload meshes to scene explorer and upload ids for aggregation
+    /// </summary>
+    /// <param name="selectedOnly"></param>
     void ExportAndUpload(bool selectedOnly)
     {
         EditorCore.RefreshSceneVersion(() =>
@@ -1276,6 +1164,11 @@ namespace Cognitive3D
         }
     }
 
+    /// <summary>
+    /// adds or updates dynamic object ids in a provided manifest for aggregation
+    /// </summary>
+    /// <param name="manifest"></param>
+    /// <param name="scenedynamics"></param>
     public static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
     {
         bool meshNameMissing = false;
