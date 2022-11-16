@@ -2,23 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class AutodeskShaderProperties : UnityGLTF.GLTFSceneExporter.ShaderPropertyCollection
+namespace Cognitive3D.UnityGLTF
 {
-	public AutodeskShaderProperties()
+	class AutodeskShaderProperties : GLTFSceneExporter.ShaderPropertyCollection
 	{
-		ShaderNames.Add("Autodesk Interactive");
+		public AutodeskShaderProperties()
+		{
+			ShaderNames.Add("Autodesk Interactive");
 
-		AlbedoMapName = "_MainTex";
-		AlbedoColorName = "_Color";
+			AlbedoMapName = "_MainTex";
+			AlbedoColorName = "_Color";
 
-		MetallicMapName = "_MetallicGlossMap";
-		MetallicPowerName = "_Metallic";
+			MetallicMapName = "_MetallicGlossMap";
+			MetallicPowerName = "_Metallic";
 
-		RoughnessMapName = "_SpecGlossMap";
-		RoughnessPowerName = "_GlossMapScale";
+			RoughnessMapName = "_SpecGlossMap";
+			RoughnessPowerName = "_GlossMapScale";
 
-		NormalMapName = "_BumpMap";
-		NormalMapPowerName = "_BumpScale";
-		NormalProcessShader = "Hidden/NormalChannel"; // UNITY rgba  ->   GLTF ag11
+			NormalMapName = "_BumpMap";
+			NormalMapPowerName = "_BumpScale";
+			NormalProcessShader = "Hidden/NormalChannel"; // UNITY rgba  ->   GLTF ag11
+		}
 	}
 }
