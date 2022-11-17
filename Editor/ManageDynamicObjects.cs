@@ -347,7 +347,7 @@ namespace Cognitive3D
 
         
         Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
-        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, 325), dynamicScrollPosition, innerScrollSize, false, true);
+        dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, 365), dynamicScrollPosition, innerScrollSize, false, true);
 
         Rect dynamicrect;
         int GuiOffset = 0;
@@ -361,7 +361,7 @@ namespace Cognitive3D
             usedRows++;
         }
         GUI.EndScrollView();
-        GUI.Box(new Rect(30, 80, 525, 325), "", "box_sharp_alpha");
+        GUI.Box(new Rect(30, 80, 525, 365), "", "box_sharp_alpha");
 
         //buttons
 
@@ -385,12 +385,12 @@ namespace Cognitive3D
                 selectionCount++;
         }*/
         foreach(var entry in Entries)
+        {
+            if (entry.selected)
             {
-                if (entry.selected)
-                {
-                    selectionCount++;
-                }
+                selectionCount++;
             }
+        }
 
         //IMPROVEMENT enable mesh upload from selected dynamic object id pool that has exported mesh files
         //if (Selection.activeObject.GetType() == typeof(DynamicObjectIdPool))
@@ -408,131 +408,31 @@ namespace Cognitive3D
 
         //resolution settings here
         EditorGUI.BeginDisabledGroup(DisableButtons);
-        if (GUI.Button(new Rect(80, 415, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(80, 455, 140, 35), new GUIContent("1/4 Resolution", DisableButtons?"":"Quarter resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
         {
             Cognitive3D_Preferences.Instance.TextureResize = 4;
         }
         if (Cognitive3D_Preferences.Instance.TextureResize != 4)
         {
-            GUI.Box(new Rect(80, 415, 140, 35), "", "box_sharp_alpha");
+            GUI.Box(new Rect(80, 455, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(230, 415, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(230, 455, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
         {
             Cognitive3D_Preferences.Instance.TextureResize = 2;
         }
         if (Cognitive3D_Preferences.Instance.TextureResize != 2)
         {
-            GUI.Box(new Rect(230, 415, 140, 35), "", "box_sharp_alpha");
+            GUI.Box(new Rect(230, 455, 140, 35), "", "box_sharp_alpha");
         }
 
-        if (GUI.Button(new Rect(380, 415, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
+        if (GUI.Button(new Rect(380, 455, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
         {
             Cognitive3D_Preferences.Instance.TextureResize = 1;
         }
         if (Cognitive3D_Preferences.Instance.TextureResize != 1)
         {
-            GUI.Box(new Rect(380, 415, 140, 35), "", "box_sharp_alpha");
-        }
-        EditorGUI.EndDisabledGroup();
-
-        
-        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId) || selectionCount == 0);
-        if (GUI.Button(new Rect(80, 460, 215, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
-        {
-            EditorCore.RefreshSceneVersion(() =>
-            {
-                List<GameObject> uploadList = new List<GameObject>();
-                List<DynamicObject> exportList = new List<DynamicObject>();
-                foreach(var entry in Entries)
-                {
-                    var dyn = entry.objectReference;
-                    if (dyn == null) { continue; }
-                    if (!entry.selected) { continue; }
-                    //check if export files exist
-                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
-                    {
-                        exportList.Add(dyn);                        
-                    }
-                    //check if thumbnail exists
-                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
-                    {
-                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                    }
-                    uploadList.Add(dyn.gameObject);
-                }
-
-                ExportUtility.ExportDynamicObjects(exportList);
-
-                EditorCore.RefreshSceneVersion(delegate ()
-                {
-                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    //var manifest = new AggregationManifest();
-                    //AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                    ////if an id pool is explicitly selected, you can upload it here. otherwise this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    //ManageDynamicObjects.UploadManifest(manifest, () => ExportUtility.UploadSelectedDynamicObjectMeshes(true));
-                    //
-                    //foreach (var entry in Entries)
-                    //{
-                    //    if (!entry.isIdPool) { continue; }
-                    //    if (!entry.selected) { continue; }
-                    //
-                    //    ManageDynamicObjects.AggregationManifest poolManifest = new Cognitive3D.ManageDynamicObjects.AggregationManifest();
-                    //    foreach (var id in entry.poolReference.Ids)
-                    //    {
-                    //        poolManifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, id, new float[3] { 1, 1, 1 }));
-                    //    }
-                    //    ManageDynamicObjects.UploadManifest(poolManifest, null);
-                    //}
-                });
-            });
-        }
-        EditorGUI.EndDisabledGroup();
-        
-        EditorGUI.BeginDisabledGroup(currentscene == null || string.IsNullOrEmpty(currentscene.SceneId));
-        if (GUI.Button(new Rect(305, 460, 210, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
-        {
-            EditorCore.RefreshSceneVersion(() =>
-            {
-                var dynamics = GameObject.FindObjectsOfType<DynamicObject>();
-                List<GameObject> gos = new List<GameObject>();
-                foreach (var v in dynamics)
-                {
-                    gos.Add(v.gameObject);
-                }
-
-                Selection.objects = gos.ToArray();
-
-                List<GameObject> uploadList = new List<GameObject>();
-                List<DynamicObject> exportList = new List<DynamicObject>();
-                foreach (var entry in Entries)
-                {
-                    var dyn = entry.objectReference;
-                    if (dyn == null) { continue; }
-                    if (!entry.selected) { continue; }
-                    //check if export files exist
-                    if (!EditorCore.HasDynamicExportFiles(dyn.MeshName))
-                    {
-                        exportList.Add(dyn);
-                    }
-                    //check if thumbnail exists
-                    if (!EditorCore.HasDynamicObjectThumbnail(dyn.MeshName))
-                    {
-                        EditorCore.SaveDynamicThumbnailAutomatic(dyn.gameObject);
-                    }
-                    uploadList.Add(dyn.gameObject);
-                }
-                ExportUtility.ExportDynamicObjects(exportList);
-
-                EditorCore.RefreshSceneVersion(delegate ()
-                {
-                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    //var manifest = new AggregationManifest();
-                    //AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                    //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                    //ManageDynamicObjects.UploadManifest(manifest, () => );
-                });
-            });
+            GUI.Box(new Rect(380, 455, 140, 35), "", "box_sharp_alpha");
         }
         EditorGUI.EndDisabledGroup();
 
@@ -710,6 +610,11 @@ namespace Cognitive3D
         string compareString = inputstring.ToLower();
         foreach (var entry in Entries)
         {
+            if (entry == null) { continue; }
+            if (string.IsNullOrEmpty(entry.meshName)) { continue; }
+            if (entry.objectReference == null) { continue;}
+            //IMPROVEMENT filter should be applied to id pools
+
             entry.visible = false;
             if (filterMeshes && entry.objectReference.UseCustomMesh && entry.meshName.ToLower().Contains(compareString))
             {
@@ -839,19 +744,34 @@ namespace Cognitive3D
         {
             GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", dynamiclabel);
         }
+        else if (dynamic.objectReference.UseCustomId)
+        {
+            GUI.Label(idRect, dynamic.objectReference.GetId(), dynamiclabel);
+        }
+        else if (dynamic.objectReference.IdPool != null)
+        {
+            GUI.Label(idRect, dynamic.objectReference.IdPool.name, dynamiclabel);
+        }
         else
         {
-            GUI.Label(idRect, dynamic.objectReference.CustomId, dynamiclabel);
+            GUI.Label(idRect, "Generated", dynamiclabel);
         }
 
-        //has been exported
-        if (!dynamic.objectReference.UseCustomMesh || EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName))
+        if (dynamic.objectReference == null)
         {
-            GUI.Label(uploaded, EditorCore.Checkmark, image_centered);
+            //likely a pool
         }
         else
         {
-            GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
+            //has been exported
+            if (!dynamic.objectReference.UseCustomMesh || EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName))
+            {
+                GUI.Label(uploaded, EditorCore.Checkmark, image_centered);
+            }
+            else
+            {
+                GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
+            }
         }
     }
     
@@ -861,93 +781,53 @@ namespace Cognitive3D
         GUI.DrawTexture(new Rect(0, 500, 600, 50), EditorGUIUtility.whiteTexture);
         GUI.color = Color.white;
 
-        string tooltip = "";
+        //string tooltip = "";
         
+        //all, unless selected
+        int selectionCount = 0;
+        int selectedEntries = 0;
+        foreach (var entry in Entries)
+        {
+            if (!entry.selected) { continue; }
+                selectedEntries++;
+            if (entry.isIdPool)
+            {
+                selectionCount += entry.idPoolCount;
+            }
+            else
+                selectionCount++;
+        }
+
         var currentScene = Cognitive3D_Preferences.FindCurrentScene();
+        string scenename = "Not Saved";
+        int versionnumber = 0;
+        //string buttontextstyle = "button_bluetext";
         if (currentScene == null || string.IsNullOrEmpty(currentScene.SceneId))
         {
-            tooltip = "Upload list of all Dynamic Object IDs. Scene settings not saved";
+            //buttontextstyle = "button_disabledtext";
         }
         else
         {
-            tooltip = "Upload list of all Dynamic Object IDs and Mesh Names to " + currentScene.SceneName + " version " + currentScene.VersionNumber;
+            scenename = currentScene.SceneName;
+            versionnumber = currentScene.VersionNumber;
         }
 
         bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
         if (enabled)
         {
-            //all, unless selected
-            int selectionCount = 0;
-            int selectedEntries = 0;
-            foreach (var entry in Entries)
+            EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId) || selectionCount == 0);
+            if (GUI.Button(new Rect(80, 510, 215, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
             {
-                if (!entry.selected) { continue; }
-                    selectedEntries++;
-                if (entry.isIdPool)
-                {
-                    selectionCount += entry.idPoolCount;
-                }
-                else
-                    selectionCount++;
+                ExportAndUpload(true);
             }
-            if (selectedEntries == 0 || selectedEntries == Entries.Count)
+            EditorGUI.EndDisabledGroup();
+
+            EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
+            if (GUI.Button(new Rect(305, 510, 210, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
             {
-                if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload All Ids for Aggregation", tooltip)))
-                {
-                    //all dynamics in scene - should be selected dynamics?
-                    EditorCore.RefreshSceneVersion(delegate ()
-                    {
-                        AggregationManifest manifest = new AggregationManifest();
-                        //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-                        var uploadList = new List<DynamicObject>();
-                        foreach (var entry in Entries)
-                        {
-                            if (!entry.isIdPool)
-                                uploadList.Add(entry.objectReference);
-                            else
-                            {
-                                foreach (var poolid in entry.poolReference.Ids)
-                                {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
-                                }
-                            }
-                        }
-                        AddOrReplaceDynamic(manifest, uploadList);
-                        //TODO manifest add pool ids
-                        //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                        ManageDynamicObjects.UploadManifest(manifest, null);
-                    });
-                }
+                ExportAndUpload(false);
             }
-            else
-            {
-                if (GUI.Button(new Rect(130, 510, 350, 30), new GUIContent("Upload "+selectionCount+" Selected Ids for Aggregation", tooltip)))
-                {
-                    //all dynamics in scene - should be selected dynamics?
-                    EditorCore.RefreshSceneVersion(delegate ()
-                    {
-                        AggregationManifest manifest = new AggregationManifest();
-                        //var uploadList = new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
-                        var uploadList = new List<DynamicObject>();
-                        foreach (var entry in Entries)
-                        {
-                            if (!entry.selected) { continue; }
-                            if (!entry.isIdPool)
-                                uploadList.Add(entry.objectReference);
-                            else
-                            {
-                                foreach (var poolid in entry.poolReference.Ids)
-                                {
-                                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
-                                }
-                            }
-                        }
-                        AddOrReplaceDynamic(manifest, uploadList);
-                        //Important! this should never upload Id Pools automatically! possible these aren't wanted in a scene and will clutter dashboard
-                        ManageDynamicObjects.UploadManifest(manifest, null);
-                    });
-                }
-            }
+            EditorGUI.EndDisabledGroup();
         }
         else
         {
@@ -968,12 +848,12 @@ namespace Cognitive3D
                 errorMessage = "Developer Key not set";
             }
             
-            EditorGUI.BeginDisabledGroup(true);
-            GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip));
-            EditorGUI.EndDisabledGroup();
+            //EditorGUI.BeginDisabledGroup(true);
+            //GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip));
+            //EditorGUI.EndDisabledGroup();
 
             GUI.color = new Color(1, 0.9f, 0.9f);
-            GUI.DrawTexture(new Rect(0, 420, 650, 150), EditorGUIUtility.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 410, 650, 150), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
             GUI.Label(new Rect(30, 430, 530, 30), errorMessage,"normallabel");
         
@@ -982,6 +862,95 @@ namespace Cognitive3D
                 InitWizard.Init();
             }
         }
+    }
+
+
+    /// <summary>
+    /// logic to get scene version, then prompt user if they want to export meshes or use existing export in folder
+    /// then upload meshes to scene explorer and upload ids for aggregation
+    /// </summary>
+    /// <param name="selectedOnly"></param>
+    void ExportAndUpload(bool selectedOnly)
+    {
+        EditorCore.RefreshSceneVersion(() =>
+        {
+            int selection = EditorUtility.DisplayDialogComplex("Export Meshes?", "Do you want to export meshes before uploading to Scene Explorer?", "Yes, export selected meshes", "No, use existing files", "Cancel");
+
+            if (selection == 2) //cancel
+            {
+                return;
+            }
+
+            List<GameObject> uploadList = new List<GameObject>();
+            List<DynamicObject> exportList = new List<DynamicObject>();
+
+            if (selection == 0) //export
+            {
+                foreach (var entry in Entries)
+                {
+                    var dyn = entry.objectReference;
+                    if (dyn == null) { continue; }
+                    if (selectedOnly)
+                    {
+                        if (!entry.selected) { continue; }
+                    }
+                    //check if export files exist
+                    exportList.Add(dyn);
+                    uploadList.Add(dyn.gameObject);
+                }
+                ExportUtility.ExportDynamicObjects(exportList);
+            }
+            else if (selection == 1) //don't export
+            {
+                foreach (var entry in Entries)
+                {
+                    var dyn = entry.objectReference;
+                    if (dyn == null) { continue; }
+                    if (selectedOnly)
+                    {
+                        if (!entry.selected) { continue; }
+                    }
+                    //check if export files exist
+                    uploadList.Add(dyn.gameObject);
+                }
+            }
+
+            //upload meshes and ids
+            EditorCore.RefreshSceneVersion(delegate ()
+            {
+                if (ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true))
+                {
+                    var manifest = new AggregationManifest();
+                    List<DynamicObject> manifestList = new List<DynamicObject>();
+                    foreach (var entry in Entries)
+                    {
+                        if (selectedOnly)
+                        {
+                            if (!entry.selected) { continue; }
+                        }
+                        var dyn = entry.objectReference;
+                        if (dyn == null) { continue; }
+
+                        if (!entry.isIdPool)
+                        {
+                            if (dyn.UseCustomId == true)
+                            {
+                                manifestList.Add(entry.objectReference);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var poolid in entry.poolReference.Ids)
+                            {
+                                manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
+                            }
+                        }
+                    }
+                    AddOrReplaceDynamic(manifest, manifestList);
+                    UploadManifest(manifest, null);
+                }
+            });
+        });
     }
 
     //currently unused
@@ -1200,6 +1169,11 @@ namespace Cognitive3D
         }
     }
 
+    /// <summary>
+    /// adds or updates dynamic object ids in a provided manifest for aggregation
+    /// </summary>
+    /// <param name="manifest"></param>
+    /// <param name="scenedynamics"></param>
     public static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
     {
         bool meshNameMissing = false;

@@ -33,7 +33,12 @@ namespace Cognitive3D.Components
 
         void SendBatteryLevel()
         {
-            new CustomEvent("cvr.battery").SetProperty("batterylevel", SystemInfo.batteryLevel * 100).Send();
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                new CustomEvent("cvr.battery").SetProperty("batterylevel", SystemInfo.batteryLevel * 100).Send();
+            }
         }
 
         public override bool GetWarning()

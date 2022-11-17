@@ -30,9 +30,14 @@ namespace Cognitive3D.Components
                 yield return wait;
                 if (GameplayReferences.TryGetGPSLocation(ref geo))
                 {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.geo.latitude", geo.x);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.geo.longitude", geo.y);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.geo.altitude", geo.z);
+#if XRPF
+                    if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed)
+#endif
+                    {
+                        Cognitive3D_Manager.SetSessionProperty("c3d.geo.latitude", geo.x);
+                        Cognitive3D_Manager.SetSessionProperty("c3d.geo.longitude", geo.y);
+                        Cognitive3D_Manager.SetSessionProperty("c3d.geo.altitude", geo.z);
+                    }    
                     break;
                 }
             }

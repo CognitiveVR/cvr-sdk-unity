@@ -55,7 +55,12 @@ namespace Cognitive3D.Components
                 {
                     Oculus.Platform.Users.GetOrgScopedID(message.Data.ID).OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.OrgScopedID> message2)
                     {
-                        Cognitive3D_Manager.SetParticipantId(message2.Data.ID.ToString());
+#if XRPF
+                        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
+#endif
+                        {
+                            Cognitive3D_Manager.SetParticipantId(message2.Data.ID.ToString());
+                        }
                     });
                 }
             });
@@ -75,7 +80,12 @@ namespace Cognitive3D.Components
                 {
                     if (message.Data.UsersOptional != null)
                     {
-                        Cognitive3D_Manager.SetSessionProperty("Party Size", message.Data.UsersOptional.Count);
+#if XRPF
+                        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
+#endif
+                        {
+                            Cognitive3D_Manager.SetSessionProperty("Party Size", message.Data.UsersOptional.Count);
+                        }
                     }
                 }
                 else

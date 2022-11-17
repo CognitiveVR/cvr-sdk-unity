@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.XR;
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -14,39 +15,44 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
     public class HMDPresentEvent : AnalyticsComponentBase
     {
-#if C3D_OCULUS
-
-        public override void Cognitive3D_Init()
+        InputDevice currentHmd;
+        bool wasUserPresentLastFrame;
+        private void Update()
         {
-            base.Cognitive3D_Init();
-            OVRManager.HMDMounted += OVRManager_HMDMounted;
-            OVRManager.HMDUnmounted += OVRManager_HMDUnmounted;
-        }
-
-        private void OVRManager_HMDMounted()
-        {
-            new CustomEvent("cvr.hmdpresent").SetProperty("present", true).SetProperty("starttime", Time.time).Send();
-        }
-
-        private void OVRManager_HMDUnmounted()
-        {
-            new CustomEvent("cvr.hmdpresent").SetProperty("present", false).SetProperty("endtime", Time.time).Send();
-        }
-
-        void OnDestroy()
-        {
-            OVRManager.HMDMounted -= OVRManager_HMDMounted;
-            OVRManager.HMDUnmounted -= OVRManager_HMDUnmounted;
-        }
+#if !C3D_OMNICEPT && !C3D_VIVEWAVE
+            if (!currentHmd.isValid)
+            {
+                currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentLastFrame);
+            }
+            else
+            {
+                CheckUserPresence();
+            }
 #endif
+        }
 
-        public override bool GetWarning()
+        void CheckUserPresence()
         {
-#if C3D_OCULUS
-            return false;
-#else
-            return true;
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
+            {
+                bool isUserCurrentlyPresent;
+                if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
+                {
+                    if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                    {
+                        CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
+                        wasUserPresentLastFrame = true;
+                    }
+                    else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
+                    {
+                        CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
+                        wasUserPresentLastFrame = false;
+                    }
+                }
+            }
         }
 
         public override string GetDescription()

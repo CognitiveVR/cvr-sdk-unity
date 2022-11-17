@@ -65,7 +65,8 @@ namespace Cognitive3D
         //data id is the general way to get the actual id from the dynamic object (generated or custom id). use GetId
         private string DataId;
         //this is only used for a custom editor to help CustomId be set correctly
-        public bool UseCustomId = true;
+        [SerializeField]
+        internal bool UseCustomId = true;
 
         //custom id is set in editor and will be used when set. internal to be accessed by various editor windows
         /// <summary>
@@ -454,6 +455,7 @@ namespace Cognitive3D
         //set name is not set otherwise
         if (string.IsNullOrEmpty(MeshName))
         {
+            //CONSIDER meshfilter name + material name if one is found on this gameobject?
             MeshName = gameObject.name.ToLower().Replace(" ", "_").Replace("<", "_").Replace(">", "_").Replace("|", "_").Replace("?", "_").Replace("*", "_").Replace("\"", "_").Replace("/", "_").Replace("\\", "_").Replace(":", "_");
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }

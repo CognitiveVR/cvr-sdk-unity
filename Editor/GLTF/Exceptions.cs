@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine.Networking;
 
-namespace UnityGLTF 
+namespace Cognitive3D.UnityGLTF
 {
 	[Serializable()]
 	public class WebRequestException : Exception 

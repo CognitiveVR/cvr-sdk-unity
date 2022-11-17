@@ -27,7 +27,6 @@ namespace Cognitive3D.ActiveSession
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
-            //base.OnInspectorGUI();
             ActiveSessionView asv = target as ActiveSessionView;
             var ret = asv.GetComponentInChildren<RenderEyetracking>();
             var sc = asv.GetComponentInChildren<SensorCanvas>();
@@ -36,14 +35,6 @@ namespace Cognitive3D.ActiveSession
             {
 
                 string tooltip = "VR Camera should be Main Camera";
-
-#if C3D_FOVE
-                tooltip = "VR Camera should be 'Fove Interface'"
-#elif C3D_STEAMVR
-                tooltip = "VR Camera should be 'Camera (eye)'";
-#elif C3D_STEAMVR2
-                tooltip = "VR Camera should be 'Camera'";
-#endif
                 if (asv.VRSceneCamera == null)
                 {
                     GUILayout.BeginHorizontal();
@@ -55,7 +46,9 @@ namespace Cognitive3D.ActiveSession
                     GUILayout.EndHorizontal();
                 }
                 if (eventSystem == null)
+                {
                     eventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                }
                 if (eventSystem == null)
                 {
                     GUILayout.BeginHorizontal();
@@ -76,114 +69,117 @@ namespace Cognitive3D.ActiveSession
             #region get feature visibility
 
             FeatureVisibility reticleVisibility = FeatureVisibility.Off;
-            if (asv.FullscreenDisplay.showReticle && ret.showReticle)
-            {
-                reticleVisibility = FeatureVisibility.DetailViewAndFullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showReticle && ret.showReticle)
-            {
-                reticleVisibility = FeatureVisibility.DetailView;
-            }
-            else if (asv.FullscreenDisplay.showReticle && !ret.showReticle)
-            {
-                reticleVisibility = FeatureVisibility.Fullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showReticle && !ret.showReticle)
-            {
-                reticleVisibility = FeatureVisibility.Off;
-            }
-
             FeatureVisibility fixationVisibility = FeatureVisibility.Off;
-            if (asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
-            {
-                fixationVisibility = FeatureVisibility.DetailViewAndFullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
-            {
-                fixationVisibility = FeatureVisibility.DetailView;
-            }
-            else if (asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
-            {
-                fixationVisibility = FeatureVisibility.Fullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
-            {
-                fixationVisibility = FeatureVisibility.Off;
-            }
-
             FeatureVisibility saccadeVisibility = FeatureVisibility.Off;
-            if (asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
+
+            if (asv.FullscreenDisplay != null)
             {
-                saccadeVisibility = FeatureVisibility.DetailViewAndFullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
-            {
-                saccadeVisibility = FeatureVisibility.DetailView;
-            }
-            else if (asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
-            {
-                saccadeVisibility = FeatureVisibility.Fullscreen;
-            }
-            else if (!asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
-            {
-                saccadeVisibility = FeatureVisibility.Off;
+                //reticle
+                if (asv.FullscreenDisplay.showReticle && ret.showReticle)
+                {
+                    reticleVisibility = FeatureVisibility.DetailViewAndFullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showReticle && ret.showReticle)
+                {
+                    reticleVisibility = FeatureVisibility.DetailView;
+                }
+                else if (asv.FullscreenDisplay.showReticle && !ret.showReticle)
+                {
+                    reticleVisibility = FeatureVisibility.Fullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showReticle && !ret.showReticle)
+                {
+                    reticleVisibility = FeatureVisibility.Off;
+                }
+
+                //fixation
+                if (asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
+                {
+                    fixationVisibility = FeatureVisibility.DetailViewAndFullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showFixations && ret.shouldDisplayFixations)
+                {
+                    fixationVisibility = FeatureVisibility.DetailView;
+                }
+                else if (asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
+                {
+                    fixationVisibility = FeatureVisibility.Fullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showFixations && !ret.shouldDisplayFixations)
+                {
+                    fixationVisibility = FeatureVisibility.Off;
+                }
+
+                //saccades
+                
+                if (asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
+                {
+                    saccadeVisibility = FeatureVisibility.DetailViewAndFullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showSaccades && ret.shouldDisplaySaccades)
+                {
+                    saccadeVisibility = FeatureVisibility.DetailView;
+                }
+                else if (asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
+                {
+                    saccadeVisibility = FeatureVisibility.Fullscreen;
+                }
+                else if (!asv.FullscreenDisplay.showSaccades && !ret.shouldDisplaySaccades)
+                {
+                    saccadeVisibility = FeatureVisibility.Off;
+                }
+
+                //reticle
+                EditorGUILayout.LabelField("Reticle", EditorStyles.boldLabel);
+                reticleVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Reticle", reticleVisibility);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Reticle Texture");
+                asv.FullscreenDisplay.ReticleTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.ReticleTexture, typeof(Texture), false);
+                GUILayout.EndHorizontal();
+                asv.FullscreenDisplay.ReticleSize = EditorGUILayout.Slider("Reticle Size (pixels)", asv.FullscreenDisplay.ReticleSize, 10, 120);
+                asv.FullscreenDisplay.ReticleColor = EditorGUILayout.ColorField("Reticle Color", asv.FullscreenDisplay.ReticleColor);
+                ret.ReticleColor = asv.FullscreenDisplay.ReticleColor;
+                ret.ReticleSize = asv.FullscreenDisplay.ReticleSize;
+                ret.ReticleTexture = asv.FullscreenDisplay.ReticleTexture;
+
+                //fixations
+                //TEST number of fixations to display fullscreen
+                //TODO number of fixations to display render view
+                EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
+                fixationVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Fixations", fixationVisibility);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Fixation Texture");
+                asv.FullscreenDisplay.fixationTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.fixationTexture, typeof(Texture), false);
+                GUILayout.EndHorizontal();
+                asv.FullscreenDisplay.fixationSize = EditorGUILayout.Slider("Fixation Size (pixels)", asv.FullscreenDisplay.fixationSize, 10, 120);
+                asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Color", asv.FullscreenDisplay.FixationColor);
+                asv.FullscreenDisplay.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.FullscreenDisplay.NumberOfFixationsToDisplay, 0, 64);
+                ret.FixationColor = asv.FullscreenDisplay.FixationColor;
+                ret.NumberOfFixationsToDisplay = asv.FullscreenDisplay.NumberOfFixationsToDisplay;
+
+                //saccades
+                //TODO saccade clip to time
+                //TODO saccades in fullscreen view
+                EditorGUILayout.LabelField("Saccades", EditorStyles.boldLabel);
+                saccadeVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Saccades", saccadeVisibility);
+                if (saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen || saccadeVisibility == FeatureVisibility.Fullscreen)
+                {
+                    EditorGUILayout.HelpBox("Saccades not currently supported on Fullscreen view", MessageType.Warning);
+                }
+                asv.FullscreenDisplay.SaccadeColor = EditorGUILayout.ColorField("Saccade Color", asv.FullscreenDisplay.SaccadeColor);
+                asv.FullscreenDisplay.SaccadeWidth = EditorGUILayout.Slider("Saccade Width", asv.FullscreenDisplay.SaccadeWidth, 0.001f, 0.1f);
+                asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Recent Time (seconds)", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
+                ret.SaccadesFromLastSeconds = asv.FullscreenDisplay.SaccadeTimespan;
+                ret.SaccadeColor = asv.FullscreenDisplay.SaccadeColor;
+                ret.SaccadeWidth = asv.FullscreenDisplay.SaccadeWidth;
             }
 
             #endregion
-
-
-            //reticle
-            EditorGUILayout.LabelField("Reticle", EditorStyles.boldLabel);
-            reticleVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Reticle", reticleVisibility);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Reticle Texture");
-            asv.FullscreenDisplay.ReticleTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.ReticleTexture, typeof(Texture), false);
-            GUILayout.EndHorizontal();
-            asv.FullscreenDisplay.ReticleSize = EditorGUILayout.Slider("Reticle Size (pixels)", asv.FullscreenDisplay.ReticleSize, 10, 120);
-            asv.FullscreenDisplay.ReticleColor = EditorGUILayout.ColorField("Reticle Color", asv.FullscreenDisplay.ReticleColor);
-            ret.ReticleColor = asv.FullscreenDisplay.ReticleColor;
-            ret.ReticleSize = asv.FullscreenDisplay.ReticleSize;
-            ret.ReticleTexture = asv.FullscreenDisplay.ReticleTexture;
-
-
-            //fixations
-            EditorGUILayout.LabelField("Fixations", EditorStyles.boldLabel);
-            fixationVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Fixations", fixationVisibility);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Fixation Texture");
-            asv.FullscreenDisplay.fixationTexture = (Texture)EditorGUILayout.ObjectField(asv.FullscreenDisplay.fixationTexture, typeof(Texture), false);
-            GUILayout.EndHorizontal();
-            asv.FullscreenDisplay.fixationSize = EditorGUILayout.Slider("Fixation Size (pixels)", asv.FullscreenDisplay.fixationSize, 10, 120);
-            asv.FullscreenDisplay.FixationColor = EditorGUILayout.ColorField("Fixation Color", asv.FullscreenDisplay.FixationColor);
-            asv.FullscreenDisplay.NumberOfFixationsToDisplay = EditorGUILayout.IntSlider("Number of Fixations to Display", asv.FullscreenDisplay.NumberOfFixationsToDisplay, 0, 64);
-            ret.FixationColor = asv.FullscreenDisplay.FixationColor;
-            ret.NumberOfFixationsToDisplay = asv.FullscreenDisplay.NumberOfFixationsToDisplay;
-            //TEST number of fixations to display fullscreen
-            //TODO number of fixations to display render view
-
-
-            //saccades
-            EditorGUILayout.LabelField("Saccades", EditorStyles.boldLabel);
-            saccadeVisibility = (FeatureVisibility)EditorGUILayout.EnumPopup("Show Saccades", saccadeVisibility);
-            if (saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen || saccadeVisibility == FeatureVisibility.Fullscreen)
-            {
-                EditorGUILayout.HelpBox("Saccades not currently supported on Fullscreen view", MessageType.Warning);
-            }
-            asv.FullscreenDisplay.SaccadeColor = EditorGUILayout.ColorField("Saccade Color", asv.FullscreenDisplay.SaccadeColor);
-            asv.FullscreenDisplay.SaccadeWidth = EditorGUILayout.Slider("Saccade Width", asv.FullscreenDisplay.SaccadeWidth, 0.001f, 0.1f);
-            asv.FullscreenDisplay.SaccadeTimespan = EditorGUILayout.Slider("Saccade Recent Time (seconds)", asv.FullscreenDisplay.SaccadeTimespan, 0, 10);
-            ret.SaccadesFromLastSeconds = asv.FullscreenDisplay.SaccadeTimespan;
-            ret.SaccadeColor = asv.FullscreenDisplay.SaccadeColor;
-            ret.SaccadeWidth = asv.FullscreenDisplay.SaccadeWidth;
-            //TODO saccade clip to time
-            //TODO saccades in fullscreen view
-
 
             //sensors
             EditorGUILayout.LabelField("Sensors", EditorStyles.boldLabel);
             sc.LineWidth = EditorGUILayout.Slider("Sensor Line Width", sc.LineWidth, 0.001f, 0.03f);
             sc.MaxSensorTimeSpan = EditorGUILayout.Slider("Sensor Timespan", sc.MaxSensorTimeSpan, 10, 120);
-
 
 
             //internal
@@ -203,22 +199,26 @@ namespace Cognitive3D.ActiveSession
                 #region set feature visibility
 
                 ret.showReticle = reticleVisibility == FeatureVisibility.DetailView || reticleVisibility == FeatureVisibility.DetailViewAndFullscreen;
-                asv.FullscreenDisplay.showReticle = reticleVisibility == FeatureVisibility.Fullscreen || reticleVisibility == FeatureVisibility.DetailViewAndFullscreen;
-
                 ret.shouldDisplayFixations = fixationVisibility == FeatureVisibility.DetailView || fixationVisibility == FeatureVisibility.DetailViewAndFullscreen;
-                asv.FullscreenDisplay.showFixations = fixationVisibility == FeatureVisibility.Fullscreen || fixationVisibility == FeatureVisibility.DetailViewAndFullscreen;
-
                 ret.shouldDisplaySaccades = saccadeVisibility == FeatureVisibility.DetailView || saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen;
-                asv.FullscreenDisplay.showSaccades = saccadeVisibility == FeatureVisibility.Fullscreen || saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen;
+
+                if (asv.FullscreenDisplay != null)
+                {
+                    asv.FullscreenDisplay.showReticle = reticleVisibility == FeatureVisibility.Fullscreen || reticleVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                    asv.FullscreenDisplay.showFixations = fixationVisibility == FeatureVisibility.Fullscreen || fixationVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                    asv.FullscreenDisplay.showSaccades = saccadeVisibility == FeatureVisibility.Fullscreen || saccadeVisibility == FeatureVisibility.DetailViewAndFullscreen;
+                    EditorUtility.SetDirty(asv.FullscreenDisplay);
+                }
 
                 #endregion
 
                 EditorUtility.SetDirty(ret);
                 EditorUtility.SetDirty(sc);
                 EditorUtility.SetDirty(asv);
-                EditorUtility.SetDirty(asv.FullscreenDisplay);
                 if (!Application.isPlaying)
+                {
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(asv.gameObject.scene);
+                }
             }
         }
 

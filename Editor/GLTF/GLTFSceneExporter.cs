@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityGLTF.Extensions;
 
-namespace UnityGLTF
+namespace Cognitive3D.UnityGLTF
 {
 	using CameraType = GLTF.Schema.CameraType;
 	using WrapMode = GLTF.Schema.WrapMode;
