@@ -610,6 +610,11 @@ namespace Cognitive3D
         string compareString = inputstring.ToLower();
         foreach (var entry in Entries)
         {
+            if (entry == null) { continue; }
+            if (string.IsNullOrEmpty(entry.meshName)) { continue; }
+            if (entry.objectReference == null) { continue;}
+            //IMPROVEMENT filter should be applied to id pools
+
             entry.visible = false;
             if (filterMeshes && entry.objectReference.UseCustomMesh && entry.meshName.ToLower().Contains(compareString))
             {
