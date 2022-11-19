@@ -22,7 +22,7 @@ namespace Cognitive3D.Components
         DynamicObject LeftHand;
         DynamicObject RightHand;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
             InputDevice device;
             if (!GameplayReferences.GetControllerInfo(true, out device))
@@ -42,7 +42,7 @@ namespace Cognitive3D.Components
         void DelayEnable(InputDevice device, XRNode node, bool isValid)
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
-            Cognitive3D_Init();
+            OnSessionBegin();
         }
 
 #if C3D_STEAMVR2

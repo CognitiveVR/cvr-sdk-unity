@@ -15,9 +15,9 @@ namespace Cognitive3D.Components
         [SerializeField]
         private bool RecordPartySize = true;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
 #if C3D_OCULUS
             if (!Oculus.Platform.Core.IsInitialized())
             {
