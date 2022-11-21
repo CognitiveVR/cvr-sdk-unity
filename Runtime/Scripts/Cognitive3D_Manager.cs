@@ -206,12 +206,6 @@ namespace Cognitive3D
             StartCoroutine(Tick());
             Util.logDebug("Cognitive3D Initialized");
 
-            var components = GetComponentsInChildren<Cognitive3D.Components.AnalyticsComponentBase>();
-            for (int i = 0; i < components.Length; i++)
-            {
-                components[i].Cognitive3D_Init();
-            }
-
             //TODO support for 360 skysphere media recording
             gazeBase = gameObject.GetComponent<PhysicsGaze>();
             if (gazeBase == null)

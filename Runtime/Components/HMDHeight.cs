@@ -28,9 +28,9 @@ namespace Cognitive3D.Components
 
         float[] heights;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
 
             heights = new float[SampleCount];
 

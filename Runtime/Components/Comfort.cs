@@ -26,9 +26,9 @@ namespace Cognitive3D.Components
         [Tooltip("Falling below and rising above this threshold will send events")]
         public int LowFramerateThreshold = 60;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             timeleft = ComfortTrackingInterval;
             if (GameplayReferences.HMD != null)
