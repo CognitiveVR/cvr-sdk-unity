@@ -16,9 +16,9 @@ namespace Cognitive3D.Components
         
         public LayerMask CollisionLayerMask = 1;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
         }
 

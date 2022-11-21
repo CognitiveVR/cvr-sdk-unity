@@ -11,7 +11,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Occlusion Event")]
     public class OcclusionEvent : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
             GameplayReferences.OnControllerValidityChange += GameplayReferences_OnControllerValidityChange;
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;

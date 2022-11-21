@@ -13,9 +13,9 @@ namespace Cognitive3D.Components
     public class RecenterEvent : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             if (OVRManager.display != null)
                 OVRManager.display.RecenteredPose += RecenterEventTracker_RecenteredPose;
         }

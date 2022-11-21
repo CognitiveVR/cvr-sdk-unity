@@ -24,9 +24,9 @@ namespace Cognitive3D.Components
 
         Vector3 lastRootPosition;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             lastRootPosition = root.position;
         }
