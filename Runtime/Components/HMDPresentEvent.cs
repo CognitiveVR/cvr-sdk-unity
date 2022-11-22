@@ -16,14 +16,20 @@ namespace Cognitive3D.Components
     public class HMDPresentEvent : AnalyticsComponentBase
     {
         InputDevice currentHmd;
-        bool wasUserPresentLastFrame;
+        bool wasUserPresentPreviously;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
+                if (!currentHmd.isValid)
+                {
+                    currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+                    currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
+                }
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
 #if C3D_OCULUS
                 OVRManager.HMDMounted += HandleHMDMounted;
                 OVRManager.HMDUnmounted += HandleHMDUnmounted;
@@ -38,7 +44,7 @@ namespace Cognitive3D.Components
             if (!currentHmd.isValid)
             {
                 currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentLastFrame);
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
             }
             else
             {
@@ -46,7 +52,6 @@ namespace Cognitive3D.Components
             }
 #endif
         }
-
 
         void HandleHMDMounted()
         {
@@ -67,15 +72,15 @@ namespace Cognitive3D.Components
                 bool isUserCurrentlyPresent;
                 if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
                 {
-                    if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                    if (isUserCurrentlyPresent && !wasUserPresentPreviously) // put on headset after removing
                     {
                         CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
-                        wasUserPresentLastFrame = true;
+                        wasUserPresentPreviously = true;
                     }
-                    else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
+                    else if (!isUserCurrentlyPresent && wasUserPresentPreviously) // removing headset
                     {
                         CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
-                        wasUserPresentLastFrame = false;
+                        wasUserPresentPreviously = false;
                     }
                 }
             }
@@ -84,9 +89,9 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnPostSessionEnd()
         {
 #if C3D_OCULUS
-                OVRManager.HMDMounted -= HandleHMDMounted;
-                OVRManager.HMDUnmounted -= HandleHMDUnmounted;
-                Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+            OVRManager.HMDMounted -= HandleHMDMounted;
+            OVRManager.HMDUnmounted -= HandleHMDUnmounted;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
 #endif
         }
 
