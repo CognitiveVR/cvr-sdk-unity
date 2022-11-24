@@ -46,6 +46,9 @@ namespace Cognitive3D
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+            
+            bool basicGUIChanged = false;
+            EditorGUI.BeginChangeCheck();
 
             var script = serializedObject.FindProperty("m_Script");
             var updateRate = serializedObject.FindProperty("UpdateRate");
@@ -79,13 +82,13 @@ namespace Cognitive3D
                             if (string.IsNullOrEmpty(dynamic.CustomId))
                             {
                                 string s = System.Guid.NewGuid().ToString();
-                                dynamic.CustomId = "editor_" + s;
+                                dynamic.CustomId = s;
                             }
                         }
                     }
                 }
             }
-            
+
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
@@ -100,11 +103,7 @@ namespace Cognitive3D
                 if (dyn.UseCustomMesh)
                 {
                     dyn.MeshName = ValidateMeshName(dyn.MeshName);
-                    if (!Application.isPlaying)
-                    {
-                        UnityEditor.EditorUtility.SetDirty(dyn);
-                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
-                    }
+                    //if gui changed (including from this re-validation of a mesh name) it will mark this as dirty at the end
                 }
             }
 
@@ -181,48 +180,51 @@ namespace Cognitive3D
                 }
             }
 
+            basicGUIChanged = EditorGUI.EndChangeCheck();
+
+
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
+            bool advancedGUIChanged = false;
+            EditorGUI.BeginChangeCheck();
             if (foldout)
             {
-                if (true/*useCustomMesh.boolValue*/)
+                //Export Button
+                GUILayout.Label("Export and Upload", EditorStyles.boldLabel);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Export Mesh", "ButtonLeft", GUILayout.Height(30)))
                 {
-                    //Mesh
-                    GUILayout.Label("Export and Upload", EditorStyles.boldLabel);
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Export Mesh", "ButtonLeft",GUILayout.Height(30)))
-                    {
-                        ExportUtility.ExportAllSelectedDynamicObjects();
-                    }
-
-                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                    if (GUILayout.Button("Thumbnail from\nSceneView", "ButtonMid", GUILayout.Height(30)))
-                    {
-                        foreach (var v in serializedObject.targetObjects)
-                        {
-                            EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
-                        }
-                    }
-                    EditorGUI.EndDisabledGroup();
-
-                    EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                    if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
-                    {
-                        List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
-                        ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                        UploadCustomIdForAggregation();
-                    }
-                    EditorGUI.EndDisabledGroup();
-
-                    //texture export settings
-                    GUILayout.EndHorizontal();
-                    GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
-                    int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64*/ };
-                    Cognitive3D_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), Cognitive3D_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
-                    GUILayout.Space(5);
+                    ExportUtility.ExportAllSelectedDynamicObjects();
                 }
 
+                //Thumbnail Button
+                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                if (GUILayout.Button("Thumbnail from\nSceneView", "ButtonMid", GUILayout.Height(30)))
+                {
+                    foreach (var v in serializedObject.targetObjects)
+                    {
+                        EditorCore.SaveDynamicThumbnailSceneView((v as DynamicObject).gameObject);
+                    }
+                }
+                EditorGUI.EndDisabledGroup();
+
+                //Upload Button
+                EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
+                if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
+                {
+                    List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
+                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    UploadCustomIdForAggregation();
+                }
+                EditorGUI.EndDisabledGroup();
+
+                //texture export settings
+                GUILayout.EndHorizontal();
+                GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
+                int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64*/ };
+                Cognitive3D_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), Cognitive3D_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
+                GUILayout.Space(5);
+
                 //Snapshot Threshold
-                
                 GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
 
                 //controller stuff
@@ -257,9 +259,11 @@ namespace Cognitive3D
                 EditorGUI.EndDisabledGroup();
             } //advanced foldout
 
+            advancedGUIChanged = EditorGUI.EndChangeCheck();
 
-            if (GUI.changed)
+            if (basicGUIChanged || advancedGUIChanged)
             {
+                //activating the foldout will call 'gui changed' UGH
                 foreach (var t in targets)
                 {
                     var dyn = t as DynamicObject;
@@ -268,8 +272,6 @@ namespace Cognitive3D
                         dyn.MeshName = ValidateMeshName(dyn.MeshName);
                     }
                 }
-
-                //IMPROVEMENT should check that some meaningful property changed, not just foldout
                 if (!Application.isPlaying)
                 {
                     foreach (var t in targets)
@@ -281,7 +283,6 @@ namespace Cognitive3D
             }
 
             serializedObject.ApplyModifiedProperties();
-            serializedObject.Update();
         }
 
         void UploadCustomIdForAggregation()
@@ -289,7 +290,7 @@ namespace Cognitive3D
             var dyn = target as DynamicObject;
             if (dyn.UseCustomId)
             {
-                Debug.Log("upload custom id to scene");
+                Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
                     ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
@@ -302,7 +303,7 @@ namespace Cognitive3D
             }
             else if (dyn.IdPool != null)
             {
-                Debug.Log("upload id pool to scene");
+                Debug.Log("Cognitive3D Dynamic Object: Upload id pool to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
                     ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
