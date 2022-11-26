@@ -1,8 +1,7 @@
-﻿using GLTF.Schema;
+﻿using Cognitive3D.GLTF.Schema;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityGLTF;
 
 namespace Cognitive3D.UnityGLTF
 {
