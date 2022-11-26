@@ -8,9 +8,12 @@ namespace Cognitive3D.Demo
 {
     public class SimpleMover : MonoBehaviour
     {
-        public float MoveSpeed = 1;
-        public float RotateSpeed = 180;
-        public float Range = 3;
+		[SerializeField]
+        private float MoveSpeed = 1;
+		[SerializeField]
+        private float RotateSpeed = 180;
+		[SerializeField]
+        private float Range = 3;
         private Vector3 TargetPosition;
         private Vector3 StartingPosition;
 

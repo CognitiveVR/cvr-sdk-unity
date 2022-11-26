@@ -8,8 +8,10 @@ namespace Cognitive3D.Demo
 {
     public class SimpleDistanceSensor : MonoBehaviour
     {
-        public Transform target;
-        public Transform source;
+		[SerializeField]
+        private Transform target;
+		[SerializeField]
+        private Transform source;
         YieldInstruction waitForOneSecond;
 
         private void Start()

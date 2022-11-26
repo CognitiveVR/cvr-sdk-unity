@@ -8,7 +8,8 @@ namespace Cognitive3D.Demo
 {
     public class PlayerMoveXR : MonoBehaviour
     {
-        public float Speed = 1;
+		[SerializeField]
+        private float Speed = 1;
 		
         void FixedUpdate()
         {
