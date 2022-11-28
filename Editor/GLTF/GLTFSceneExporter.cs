@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using GLTF.Schema;
+using Cognitive3D.GLTF.Schema;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityGLTF.Extensions;
+using Cognitive3D.UnityGLTF.Extensions;
 
 namespace Cognitive3D.UnityGLTF
 {
-	using CameraType = GLTF.Schema.CameraType;
-	using WrapMode = GLTF.Schema.WrapMode;
+	using CameraType = Cognitive3D.GLTF.Schema.CameraType;
+	using WrapMode = Cognitive3D.GLTF.Schema.WrapMode;
 	using Path = System.IO.Path;
 	public class GLTFSceneExporter
 	{

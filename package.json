@@ -8,8 +8,7 @@
 	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
 	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
 	"dependencies": {
-		"com.unity.nuget.newtonsoft-json": "3.0.2",
-		"com.unity.xr.legacyinputhelpers": "2.1.7"
+		"com.unity.xr.legacyinputhelpers": "2.1.7"		
 	},
 	"keywords": [
 		"xr",

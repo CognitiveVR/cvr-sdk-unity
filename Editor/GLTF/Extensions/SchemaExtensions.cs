@@ -1,8 +1,8 @@
-﻿using GLTF;
-using GLTF.Schema;
+﻿using Cognitive3D.GLTF;
+using Cognitive3D.GLTF.Schema;
 using UnityEngine;
 
-namespace UnityGLTF.Extensions
+namespace Cognitive3D.UnityGLTF.Extensions
 {
 	public static class SchemaExtensions
 	{
@@ -19,29 +19,6 @@ namespace UnityGLTF.Extensions
 		}
 
 		public static readonly GLTF.Math.Vector4 TangentSpaceConversionScale = new GLTF.Math.Vector4(-1, 1, 1, -1);
-
-		/// <summary>
-		/// Get the converted unity translation, rotation, and scale from a gltf node
-		/// </summary>
-		/// <param name="node">gltf node</param>
-		/// <param name="position">unity translation vector</param>
-		/// <param name="rotation">unity rotation quaternion</param>
-		/// <param name="scale">unity scale vector</param>
-		public static void GetUnityTRSProperties(this Node node, out Vector3 position, out Quaternion rotation,
-			out Vector3 scale)
-		{
-			if (!node.UseTRS)
-			{
-				Matrix4x4 unityMat = node.Matrix.ToUnityMatrix4x4Convert();
-				unityMat.GetTRSProperties(out position, out rotation, out scale);
-			}
-			else
-			{
-				position = node.Translation.ToUnityVector3Convert();
-				rotation = node.Rotation.ToUnityQuaternionConvert();
-				scale = node.Scale.ToUnityVector3Raw();
-			}
-		}
 
 		/// <summary>
 		/// Set a gltf node's converted translation, rotation, and scale from a unity transform
