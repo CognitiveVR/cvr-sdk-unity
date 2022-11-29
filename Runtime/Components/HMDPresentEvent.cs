@@ -85,15 +85,16 @@ namespace Cognitive3D.Components
                 }
             }
         }
-        
+
+
+#if C3D_OCULUS
         private void Cognitive3D_Manager_OnPostSessionEnd()
         {
-#if C3D_OCULUS
             OVRManager.HMDMounted -= HandleHMDMounted;
             OVRManager.HMDUnmounted -= HandleHMDUnmounted;
             Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
-#endif
         }
+#endif
 
         public override string GetDescription()
         {
