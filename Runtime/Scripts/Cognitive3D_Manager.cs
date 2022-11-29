@@ -417,8 +417,7 @@ namespace Cognitive3D
 
             InvokeUpdateEvent(Time.deltaTime);
         }
-
-#endregion
+        #endregion
 
 #region Application Quit, Session End and OnDestroy
         /// <summary>
@@ -432,7 +431,6 @@ namespace Cognitive3D
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
                 Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-
                 FlushData();
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
                 ResetSessionData();
@@ -441,7 +439,7 @@ namespace Cognitive3D
 
         private void Core_EndSessionEvent()
         {
-            OnPreSessionEnd -= Core_EndSessionEvent;
+
         }
 
         void OnDestroy()
@@ -462,8 +460,19 @@ namespace Cognitive3D
 
         void OnApplicationPause(bool paused)
         {
+#if C3D_OCULUS && UNITY_ANDROID
+            if (paused)
+            {
+                double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
+                new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
+                {
+                    { "Reason", "Quit from Oculus Menu" },
+                    { "sessionlength", playtime }
+                }).Send();
+            }
+#endif
             if (!IsInitialized) { return; }
-            new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();
+            new CustomEvent("c3d.pause").SetProperty("is paused", paused).Send();  
             FlushData();
         }
 
@@ -480,10 +489,14 @@ namespace Cognitive3D
 
             if (IsQuitEventBound())
             {
-                new CustomEvent("Session End").SetProperty("sessionlength",playtime).Send();
+                new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
                 return;
             }
-            new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
+            new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
+                {
+                    { "Reason", "Quit from Oculus Menu" },
+                    { "sessionlength", playtime }
+                }).Send();
             Application.CancelQuit();
             //TODO update and test with Application.wantsToQuit and Application.qutting
 
