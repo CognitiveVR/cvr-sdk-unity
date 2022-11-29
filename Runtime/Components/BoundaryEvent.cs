@@ -17,12 +17,10 @@ namespace Cognitive3D.Components
     public class BoundaryEvent : AnalyticsComponentBase
     {
 #if C3D_STEAMVR2
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_PoseEventHandler;
-
-
 
             Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).AddListener(OnChaperoneChanged);
             Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).AddListener(OnChaperoneChanged);
@@ -30,7 +28,6 @@ namespace Cognitive3D.Components
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
                 new CustomEvent("cvr.boundary").Send();
-                Util.logDebug("chaperone visible INITIAL STATE");
             }
         }
 
@@ -39,12 +36,10 @@ namespace Cognitive3D.Components
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
                 new CustomEvent("cvr.boundary").SetProperty("visible", true).Send();
-                Util.logDebug("chaperone visible");
             }
             else
             {
                 new CustomEvent("cvr.boundary").SetProperty("visible", false).Send();
-                Util.logDebug("chaperone hidden");
             }
         }
 

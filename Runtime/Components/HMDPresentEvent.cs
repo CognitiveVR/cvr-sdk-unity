@@ -16,20 +16,51 @@ namespace Cognitive3D.Components
     public class HMDPresentEvent : AnalyticsComponentBase
     {
         InputDevice currentHmd;
-        bool wasUserPresentLastFrame;
+        bool wasUserPresentPreviously;
+
+        protected override void OnSessionBegin()
+        {
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                if (!currentHmd.isValid)
+                {
+                    currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+                    currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
+                }
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
+#if C3D_OCULUS
+                OVRManager.HMDMounted += HandleHMDMounted;
+                OVRManager.HMDUnmounted += HandleHMDUnmounted;
+                Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+#endif
+            }
+        }
+
         private void Update()
         {
-#if !C3D_OMNICEPT && !C3D_VIVEWAVE
+#if !C3D_OMNICEPT && !C3D_VIVEWAVE && !C3D_OCULUS
             if (!currentHmd.isValid)
             {
                 currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentLastFrame);
+                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
             }
             else
             {
                 CheckUserPresence();
             }
 #endif
+        }
+
+        void HandleHMDMounted()
+        {
+            CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
+        }
+
+        void HandleHMDUnmounted()
+        {
+            CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
         }
 
         void CheckUserPresence()
@@ -41,19 +72,29 @@ namespace Cognitive3D.Components
                 bool isUserCurrentlyPresent;
                 if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
                 {
-                    if (isUserCurrentlyPresent && !wasUserPresentLastFrame) // put on headset after removing
+                    if (isUserCurrentlyPresent && !wasUserPresentPreviously) // put on headset after removing
                     {
                         CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
-                        wasUserPresentLastFrame = true;
+                        wasUserPresentPreviously = true;
                     }
-                    else if (!isUserCurrentlyPresent && wasUserPresentLastFrame) // removing headset
+                    else if (!isUserCurrentlyPresent && wasUserPresentPreviously) // removing headset
                     {
                         CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
-                        wasUserPresentLastFrame = false;
+                        wasUserPresentPreviously = false;
                     }
                 }
             }
         }
+
+
+#if C3D_OCULUS
+        private void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            OVRManager.HMDMounted -= HandleHMDMounted;
+            OVRManager.HMDUnmounted -= HandleHMDUnmounted;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+#endif
 
         public override string GetDescription()
         {

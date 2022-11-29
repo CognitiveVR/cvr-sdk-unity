@@ -11,9 +11,9 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
 
             Vector3 roomsize = new Vector3();
             if (GameplayReferences.GetRoomSize(ref roomsize))

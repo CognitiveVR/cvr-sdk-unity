@@ -27,7 +27,7 @@ namespace Cognitive3D.Components
 
         Transform tempInfo = null;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
             StartCoroutine(Tick());
         }

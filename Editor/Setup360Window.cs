@@ -87,7 +87,7 @@ namespace Cognitive3D
 
             if (skyshader == null)
             {
-                Debug.LogError("360 media setup couldn't find panoramic skybox shader!");
+                Debug.LogError("Cognitive3D 360 Setup: Couldn't find panoramic skybox shader!");
                 //TODO set up inverted sky sphere mesh for older versions of unity
                 return;
             }
@@ -99,7 +99,7 @@ namespace Cognitive3D
             //create render texture next to video asset
             //set render texture resolution
             RenderTexture rt = new RenderTexture((int)selectedClip.width, (int)selectedClip.height, 0);
-            AssetDatabase.CreateAsset(rt, p + "skyboxrt.renderTexture");
+            AssetDatabase.CreateAsset(rt, p + "Cognitive3D_skyboxrt.renderTexture");
 
             //create skybox material next to video asset
             Material material = new Material(skyshader);
@@ -117,45 +117,69 @@ namespace Cognitive3D
             }
             //set skybox material texture to render texture
             material.SetTexture("_MainTex", rt);
-            AssetDatabase.CreateAsset(material, p + "skyboxmat.mat");
+            AssetDatabase.CreateAsset(material, p + "Cognitive3D_skyboxmat.mat");
 
             //apply skybox material to skybox
             RenderSettings.skybox = material;
 
-            //instantiate latlong/cube sphere
+            //instantiate latlong/cube sphere prefab
             GameObject sphere;
             if (latlong)
             {
-                sphere = (GameObject)Instantiate(Resources.Load("invertedsphereslices"));
+                sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedsphereslices"));
             }
             else
             {
-                sphere = (GameObject)Instantiate(Resources.Load("invertedspherecube"));
+                sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedspherecube"));
             }
+            sphere.gameObject.name = "360 Video Player";
 
             //setup video source to write to render texture
-            UnityEngine.Video.VideoPlayer vp = new GameObject("Video Player").AddComponent<UnityEngine.Video.VideoPlayer>();
+            var vp = sphere.GetComponentInChildren<UnityEngine.Video.VideoPlayer>();
+            if (vp == null)
+            {
+                var videoPlayerGo = new GameObject("Video Player");
+                videoPlayerGo.transform.SetParent(sphere.transform);
+                vp = videoPlayerGo.AddComponent<UnityEngine.Video.VideoPlayer>();
+            }
             vp.clip = selectedClip;
             vp.source = UnityEngine.Video.VideoSource.VideoClip;
             vp.targetTexture = rt;
 
-            //attach media component to sphere
-            //add meshcollider to sphere
-            sphere = sphere.transform.GetChild(0).gameObject;
-            sphere.GetComponent<MeshRenderer>().enabled = false;
-            var media = sphere.AddComponent<MediaComponent>();
+            //check that a media component is present on the sphere
+            GameObject internalGo;
+            var media = sphere.GetComponentInChildren<MediaComponent>();
+            if (media == null)
+            {
+                internalGo = new GameObject("Internal");
+                internalGo.transform.SetParent(sphere.transform);
+                media = internalGo.AddComponent<MediaComponent>();
+            }
+            else
+            {
+                internalGo = media.gameObject;
+            }
             media.MediaSource = EditorCore.MediaSources[_choiceIndex].uploadId;
             media.VideoPlayer = vp;
-            if (!sphere.GetComponent<MeshCollider>())
-                sphere.AddComponent<MeshCollider>();
 
-            if (!sphere.GetComponent<DynamicObject>())
-                sphere.AddComponent<DynamicObject>();
+            //check other required components
+            if (!internalGo.GetComponent<MeshCollider>())
+            {
+                internalGo.AddComponent<MeshCollider>();
+            }
+            if (!internalGo.GetComponent<DynamicObject>())
+            {
+                internalGo.AddComponent<DynamicObject>();
+            }
 
+            //find the main camera and move it to the origin
             var camMain = Camera.main;
             if (camMain == null)
             {
-                Debug.LogError("could not find camera.main!");
+                Debug.LogError("Cognitive3D 360 Setup: Could not find Camera.Main! Creating a new camera");
+                var cameraGo = new GameObject("Main Camera");
+                cameraGo.tag = "MainCamera";
+                cameraGo.AddComponent<Camera>();
             }
             else
             {
@@ -163,7 +187,7 @@ namespace Cognitive3D
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-            Selection.activeGameObject = sphere;
+            Selection.activeGameObject = internalGo;
 
             Close();
         }

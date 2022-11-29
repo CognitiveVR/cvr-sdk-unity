@@ -19,11 +19,11 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
             SendBatteryLevel();
-            Cognitive3D_Manager.OnQuit += Cognitive3D_Manager_OnQuit;
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnQuit;
         }
 
         void Cognitive3D_Manager_OnQuit()
@@ -61,7 +61,7 @@ namespace Cognitive3D.Components
 
         void OnDestroy()
         {
-            Cognitive3D_Manager.OnQuit -= Cognitive3D_Manager_OnQuit;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnQuit;
         }
     }
 }

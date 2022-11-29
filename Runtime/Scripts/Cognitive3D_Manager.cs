@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive VR Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public const string SDK_VERSION = "1.0.2";
+        public const string SDK_VERSION = "1.0.3";
 
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -205,12 +205,6 @@ namespace Cognitive3D
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
             StartCoroutine(Tick());
             Util.logDebug("Cognitive3D Initialized");
-
-            var components = GetComponentsInChildren<Cognitive3D.Components.AnalyticsComponentBase>();
-            for (int i = 0; i < components.Length; i++)
-            {
-                components[i].Cognitive3D_Init();
-            }
 
             //TODO support for 360 skysphere media recording
             gazeBase = gameObject.GetComponent<PhysicsGaze>();

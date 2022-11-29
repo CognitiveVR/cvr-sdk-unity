@@ -15,10 +15,9 @@ namespace Cognitive3D.Components
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
 
-        public override void Cognitive3D_Init()
+        protected override void OnSessionBegin()
         {
-            //if (initError != Error.None) { return; }
-            base.Cognitive3D_Init();
+            base.OnSessionBegin();
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
 #endif            

@@ -628,38 +628,66 @@ namespace Cognitive3D
                 }
             }
 
+            if (leftcontroller != null && rightcontroller != null)
+            {
+                //found dynamic objects for controllers - prefer to use those
+                return;
+            }
+
+            //otherwise use SDK specific controller references
+            
 #if C3D_STEAMVR2
             //interaction system setup
-                var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
-                if (player)
-                {
-                    leftcontroller = player.hands[0].gameObject;
-                    rightcontroller = player.hands[1].gameObject;
-                }
+            var player = FindObjectOfType<Valve.VR.InteractionSystem.Player>();
+            if (player)
+            {
+                leftcontroller = player.hands[0].gameObject;
+                rightcontroller = player.hands[1].gameObject;
+            }
 #elif C3D_OCULUS
             //basic setup
-                var manager = FindObjectOfType<OVRCameraRig>();
-                if (manager != null)
-                {
-                    leftcontroller = manager.leftHandAnchor.gameObject;
-                    rightcontroller = manager.rightHandAnchor.gameObject;
-                }
+            var manager = FindObjectOfType<OVRCameraRig>();
+            if (manager != null)
+            {
+                leftcontroller = manager.leftHandAnchor.gameObject;
+                rightcontroller = manager.rightHandAnchor.gameObject;
+            }
 #elif C3D_VIVEWAVE
             //TODO investigate if automatically detecting vive wave controllers is possible
 #elif C3D_PICOVR
             //basic setup
-                var manager = FindObjectOfType<Pvr_Controller>();
-                if (manager != null)
-                {
-                    if (manager.controller0 != null)
-                        leftcontroller = manager.controller0;
-                    if (manager.controller1 != null)
-                        rightcontroller = manager.controller1;
-                }
+            var manager = FindObjectOfType<Pvr_Controller>();
+            if (manager != null)
+            {
+                if (manager.controller0 != null)
+                    leftcontroller = manager.controller0;
+                if (manager.controller1 != null)
+                    rightcontroller = manager.controller1;
+            }
 #elif C3D_PICOXR
-            
             //TODO investigate if automatically detecting pico controllers is possible using PicoXR package
 #endif
+            if (leftcontroller != null && rightcontroller != null)
+            {
+                //found controllers from VR SDKs
+                return;
+            }
+
+            //find tracked pose drivers in scene
+            var trackedPoseDrivers = FindObjectsOfType<UnityEngine.SpatialTracking.TrackedPoseDriver>();
+            foreach (var driver in trackedPoseDrivers)
+            {
+                if (driver.deviceType == UnityEngine.SpatialTracking.TrackedPoseDriver.DeviceType.GenericXRController && driver.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.RightPose)
+                {
+                    //right hand
+                    rightcontroller = driver.gameObject;
+                }
+                else if (driver.deviceType == UnityEngine.SpatialTracking.TrackedPoseDriver.DeviceType.GenericXRController && driver.poseSource == UnityEngine.SpatialTracking.TrackedPoseDriver.TrackedPose.LeftPose)
+                {
+                    //left hand
+                    leftcontroller = driver.gameObject;
+                }
+            }
         }
 
         void ControllerUpdate()
