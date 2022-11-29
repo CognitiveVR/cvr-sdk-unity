@@ -8,7 +8,7 @@
 	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
 	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
 	"dependencies": {
-		"com.unity.xr.legacyinputhelpers": "2.1.7"
+		"com.unity.xr.legacyinputhelpers": "2.1.7"		
 	},
 	"keywords": [
 		"xr",
@@ -27,6 +27,11 @@
 			"displayName": "Ready Room",
 			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
 			"path": "Samples~/Ready Room"
+		},
+				{
+			"displayName": "Demo Scene",
+			"description": "Scene with Custom Events, Dynamic Objects and Sensor examples",
+			"path": "Samples~/Demo Scene"
 		}
 	]
 }

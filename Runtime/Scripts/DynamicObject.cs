@@ -464,7 +464,7 @@ namespace Cognitive3D
         if (string.IsNullOrEmpty(CustomId))
         {
             string s = System.Guid.NewGuid().ToString();
-            CustomId = "editor_" + s;
+            CustomId = s;
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
     }

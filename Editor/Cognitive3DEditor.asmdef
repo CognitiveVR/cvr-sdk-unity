@@ -9,7 +9,8 @@
         "GliaAssembly",
         "GliaEditorAssembly",
         "Wave.Native",
-        "Wave.Essence"
+        "Wave.Essence",
+        "UnityEngine.SpatialTracking"
     ],
     "includePlatforms": [
         "Editor"
