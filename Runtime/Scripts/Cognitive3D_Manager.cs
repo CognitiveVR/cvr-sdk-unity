@@ -227,7 +227,6 @@ namespace Cognitive3D
             InvokeSessionBeginEvent();
 
             SetSessionProperties();
-            OnPreSessionEnd += Core_EndSessionEvent;
             FlushData();
             StartCoroutine(AutomaticSendData());
         }
@@ -437,17 +436,10 @@ namespace Cognitive3D
             }
         }
 
-        private void Core_EndSessionEvent()
-        {
-
-        }
-
         void OnDestroy()
         {
             if (instance != this) { return; }
             if (!Application.isPlaying) { return; }
-
-            InvokeQuitEvent();
 
             if (IsInitialized)
             {
@@ -489,11 +481,6 @@ namespace Cognitive3D
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));            
 
-            if (IsQuitEventBound())
-            {
-                new CustomEvent("Session End").SetProperty("sessionlength", playtime).Send();
-                return;
-            }
             new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from Oculus Menu" },
@@ -501,10 +488,6 @@ namespace Cognitive3D
                 }).Send();
             Application.CancelQuit();
             //TODO update and test with Application.wantsToQuit and Application.qutting
-
-            InvokeQuitEvent();
-            QuitEventClear();
-            
 
             FlushData();
             ResetSessionData();
@@ -562,15 +545,6 @@ namespace Cognitive3D
         /// </summary>
         public static event onTick OnTick;
         private static void InvokeTickEvent() { if (OnTick != null) { OnTick(); } }
-
-        public delegate void onQuit();
-        /// <summary>
-        /// called from Unity's built in OnApplicationQuit. Cancelling quit gets weird - do all application quit stuff in Manager
-        /// </summary>
-        public static event onQuit OnQuit;
-        private static void InvokeQuitEvent() { if (OnQuit != null) { OnQuit(); } }
-        private static bool IsQuitEventBound() { return OnQuit != null; }
-        private static void QuitEventClear() { OnQuit = null; }
 
         public delegate void onLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
         /// <summary>
