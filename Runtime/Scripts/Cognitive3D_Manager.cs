@@ -464,6 +464,8 @@ namespace Cognitive3D
             if (paused)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
+                // Currently when you quit from oculus menu, you get pause instead of application quit. Mislabeled events will be fixed
+                // on dashboard side
                 new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from Oculus Menu" },
