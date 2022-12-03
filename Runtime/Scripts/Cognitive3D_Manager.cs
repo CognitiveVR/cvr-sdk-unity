@@ -452,7 +452,7 @@ namespace Cognitive3D
 
         void OnApplicationPause(bool paused)
         {
-#if C3D_OCULUS && UNITY_ANDROID
+#if C3D_OCULUS && UNITY_ANDROID && !UNITY_EDITOR
             if (paused)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
@@ -483,7 +483,7 @@ namespace Cognitive3D
 
             new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
-                    { "Reason", "Quit from Oculus Menu" },
+                    { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
             Application.CancelQuit();
