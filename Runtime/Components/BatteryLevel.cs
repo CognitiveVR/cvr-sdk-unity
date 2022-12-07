@@ -14,10 +14,12 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {
+
+#if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
+
         private float lastDataTimestamp;
         private const float sendInterval = 1.0f;
 
-#if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
         private void Start()
         {
             SendBatteryLevel();
