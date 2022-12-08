@@ -1,13 +1,8 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// WARNING - NOT FULLY TESTED!
-/// 
-/// send battery level of mobile device post initialization and on quit
-/// on unsupported platforms (pc, laptop, vive, iOS) does not send battery level
+/// Sends HMD Battery level as a sensor at a set interval
 /// </summary>
-
-//TODO add picovr sdk Pvr_UnitySDKAPI.System.UPvr_GetHmdBatteryStatus()
 
 namespace Cognitive3D.Components
 {
