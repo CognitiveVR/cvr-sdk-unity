@@ -103,6 +103,8 @@ namespace Cognitive3D
             newManager.AddComponent<Cognitive3D.Components.RoomSize>();
             newManager.AddComponent<Cognitive3D.Components.ArmLength>();
             newManager.AddComponent<Cognitive3D.Components.Framerate>();
+            newManager.AddComponent<Cognitive3D.Components.HMDPresentEvent>();
+            newManager.AddComponent<Cognitive3D.Components.BatteryLevel>();
             //TODO add additional components based on selected SDKs
         }
 
