@@ -12,7 +12,8 @@
         "Wave.Essence",
         "Wave.XRSDK",
         "Wave.Native",
-        "XRPF"
+        "XRPF",
+        "Microsoft.MixedReality.Toolkit"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
