@@ -165,9 +165,20 @@ namespace Cognitive3D
             }
             else
             {
-                if (responsecode == 401) { Util.logError("Network Post Data response code is 401. Is APIKEY set?"); return; }
-                if (responsecode == 404) { Util.logError("Network Post Data response code is 404. Invalid URL?"); return; }
-                if (responsecode == -1) { Util.logError("Network Post Data could not parse response code. Check upload URL"); return; }
+                if (responsecode < 500)
+                {
+                    switch (responsecode)
+                    {
+                        case 400: Util.logError("Network Post Data response code is 400. Bad Request"); break;
+                        case 401: Util.logError("Network Post Data response code is 401. Is APIKEY set?"); break;
+                        case 404: Util.logError("Network Post Data response code is 404. Bad Request"); break;
+                        case -1: Util.logError("Network Post Data could not parse response code. Check upload URL"); break;
+                        default: Util.logError("Network Post Data response code is " + responsecode); break;
+                    }
+                    return;
+                }
+
+
 
                 if (CacheRequest != null)
                 {
