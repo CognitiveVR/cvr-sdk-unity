@@ -403,7 +403,10 @@ namespace Cognitive3D
             while (IsInitialized)
             {
                 yield return automaticSendInterval;
-                CoreInterface.Flush(false);
+                if (!string.IsNullOrEmpty(TrackingSceneId))
+                {
+                    CoreInterface.Flush(false);
+                }
             }
         }
 
@@ -511,6 +514,7 @@ namespace Cognitive3D
         /// </summary>
         public static void FlushData()
         {
+            if (string.IsNullOrEmpty(TrackingSceneId)) { return; }
             DynamicManager.SendData(true);
             CoreInterface.Flush(true);
         }
