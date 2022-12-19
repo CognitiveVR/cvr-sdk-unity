@@ -209,20 +209,9 @@ namespace CognitiveVR
         static HP.Omnicept.Unity.GliaBehaviour gb;
         static float confidenceThresholdForAcceptedValue = 0.50f;
 
-        static bool IsConfidentOfEyeTrackingData(HP.Omnicept.Messaging.Messages.EyeTracking data)
-        {
-            return (
-                data.CombinedGaze.Confidence > confidenceThresholdForAcceptedValue &&
-                data.LeftEye.PupilDilationConfidence > confidenceThresholdForAcceptedValue &&
-                data.LeftEye.OpennessConfidence > confidenceThresholdForAcceptedValue &&
-                data.RightEye.PupilDilationConfidence > confidenceThresholdForAcceptedValue &&
-                data.RightEye.OpennessConfidence > confidenceThresholdForAcceptedValue
-                );
-        }
-
         static void DoEyeTracking(HP.Omnicept.Messaging.Messages.EyeTracking data)
         {
-            if (IsConfidentOfEyeTrackingData(data))
+            if (data.CombinedGaze.Confidence > confidenceThresholdForAcceptedValue)
             {
                 lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
             }
