@@ -854,6 +854,7 @@ namespace Cognitive3D
 
             if (gliaBehaviour != null)
             {
+                gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
 #endif

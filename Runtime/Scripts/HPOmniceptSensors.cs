@@ -12,11 +12,10 @@ namespace Cognitive3D.Components
     // Must have HPGlia Package imported into the project
     public class HPOmniceptSensors : AnalyticsComponentBase
     {
-        private double microSecondsToSeconds = 1000000;
-        private double milliSecondsToSeconds = 1000;
-
 #if C3D_OMNICEPT
         
+        private double microSecondsToSeconds = 1000000;
+        private double milliSecondsToSeconds = 1000;
         /*
         * Called on first frame update, sets up properties and event listeners
         */
