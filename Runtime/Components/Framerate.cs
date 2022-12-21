@@ -23,6 +23,7 @@ namespace Cognitive3D.Components
 #endif            
             {
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             }
             timeleft = FramerateTrackingInterval;
         }
@@ -65,6 +66,11 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
             return "Record framerate over time as a sensor";
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
         }
 
         void OnDestroy()
