@@ -47,10 +47,10 @@ namespace Cognitive3D
         private float startTime;
 
         /// <summary>
-        /// Report any known state about the transaction in key-value pairs
+        /// Report a multiple pieces of known state about the custom event
         /// </summary>
-        /// <returns>The transaction itself (to support a builder-style implementation)</returns>
-        /// <param name="properties">A key-value object representing the transaction state we want to report. This can be a nested object structure.</param>
+        /// <param name="properties">Key/Value pairs for the properties</param>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent SetProperties(List<KeyValuePair<string, object>> properties)
         {
             if (properties == null) { return this; }
@@ -80,7 +80,11 @@ namespace Cognitive3D
             return this;
         }
 
-
+        /// <summary>
+        /// Report a multiple pieces of known state about the custom event
+        /// </summary>
+        /// <param name="properties">Key/Value pairs for the properties</param>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent SetProperties(Dictionary<string, object> properties)
         {
             if (properties == null) { return this; }
@@ -111,11 +115,11 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Report a single piece of known state about the transaction
+        /// Report a single piece of known state about the Custom Event
         /// </summary>
-        /// <returns>The transaction itself (to support a builder-style implementation)</returns>
-        /// <param name="key">Key for transaction state property</param>
-        /// <param name="value">Value for transaction state property</param>
+        /// <param name="key">Key for custom event state property</param>
+        /// <param name="value">Value for custom event state property</param>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent SetProperty(string key, object value)
         {
             if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
@@ -142,21 +146,35 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Associates this event with a dynamic object, by Id
+        /// Associates this event with a Dynamic Object, by object reference
         /// </summary>
-        /// <param name="sourceObjectId">The dynamic object that 'caused' this event</param>
+        /// <param name="sourceObjectId">The Dynamic Object related to this event</param>
+        /// <returns>The Custom Event object</returns>
+        public CustomEvent SetDynamicObject(DynamicObject dynamicObject)
+        {
+            if (dynamicObject != null)
+            {
+                dynamicObjectId = dynamicObject.GetId();
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Associates this event with a Dynamic Object, by Id
+        /// </summary>
+        /// <param name="sourceObjectId">The Dynamic Object id related to this event</param>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent SetDynamicObject(string sourceObjectId)
         {
             dynamicObjectId = sourceObjectId;
             return this;
         }
-		
-		/// <summary>
-        /// Appends the latest value of each sensor to this event
-        /// At the time this function is called
+
+        /// <summary>
+        /// Appends the latest value of each sensor to this event at the time this is called
         /// This will replace existing sensors of the same name
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent AppendSensors()
         {
             if (SensorRecorder.LastSensorValues.Count == 0) { Cognitive3D.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
@@ -199,8 +217,8 @@ namespace Cognitive3D
         /// <summary>
         /// Appends the latest value of each specified sensor to this event
         /// </summary>
-        /// <param name="sensorNames">all the sensors to append</param>
-        /// <returns></returns>
+        /// <param name="sensorNames">All the sensors to append</param>
+        /// <returns>The Custom Event object</returns>
         public CustomEvent AppendSensors(params string[] sensorNames)
         {
             if (_properties == null) { _properties = new List<KeyValuePair<string, object>>(); }
@@ -237,10 +255,9 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
+        /// Record the end of this Custom Event at a position in the world
         /// </summary>
-        /// <param name="timeout">How long to keep the transaction 'open' without new activity</param>
-        /// <param name="mode">The type of activity which will keep the transaction open</param>
+        /// <param name="position">The position the Custom Event occured</param>
         public void Send(Vector3 position)
         {
             float duration = Time.realtimeSinceStartup - startTime;
@@ -253,10 +270,8 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Send telemetry to report the beginning of a transaction, including any state properties which have been set.
+        /// Record the end of this Custom Event at the HMD position
         /// </summary>
-        /// <param name="timeout">How long to keep the transaction 'open' without new activity</param>
-        /// <param name="mode">The type of activity which will keep the transaction open</param>
         public void Send()
         {
             float duration = Time.realtimeSinceStartup - startTime;
@@ -273,6 +288,8 @@ namespace Cognitive3D
 
             SendCustomEvent(category, _properties, position, dynamicObjectId);
         }
+
+        #region Static API
 
         internal static void Initialize()
         {
@@ -299,6 +316,34 @@ namespace Cognitive3D
                 OnCustomEventSend.Invoke(false);
         }
 
+        /// <summary>
+        /// Record a Custom Event immediately at the HMD position. Use this method to avoid creating a Custom Event object
+        /// </summary>
+        /// <param name="category">The name of this event</param>
+        public static void SendCustomEvent(string category)
+        {
+            if (Cognitive3D_Manager.IsInitialized == false)
+            {
+                Cognitive3D.Util.logWarning("Custom Events cannot be sent before Session Begin!");
+                return;
+            }
+            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Custom Event sent without SceneId"); return; }
+
+            Vector3 position = Vector3.zero;
+            if (GameplayReferences.HMD != null)
+            {
+                position = GameplayReferences.HMD.position;
+            }
+
+            CoreInterface.RecordCustomEvent(category, position);
+        }
+
+        /// <summary>
+        /// Sends a Custom Event immediately. Use this method to avoid creating a Custom Event object
+        /// </summary>
+        /// <param name="category">The name of this event</param>
+        /// <param name="position">The position where the event occured</param>
+        /// <param name="dynamicObjectId">Optionally indicates the event is related to a Dynamic Object with this Id</param>
         public static void SendCustomEvent(string category, Vector3 position, string dynamicObjectId = "")
         {
             if (Cognitive3D_Manager.IsInitialized == false)
@@ -311,7 +356,13 @@ namespace Cognitive3D
             CoreInterface.RecordCustomEvent(category, position, dynamicObjectId);
         }
 
-        //writes json to display the transaction in sceneexplorer
+        /// <summary>
+        /// Sends a Custom Event immediately. Use this method to avoid creating a Custom Event object
+        /// </summary>
+        /// <param name="category">The name of this event</param>
+        /// <param name="properties">A list of key/value pairs for additional context</param>
+        /// <param name="position">The position where the event occured</param>
+        /// <param name="dynamicObjectId">Optionally indicates the event is related to a Dynamic Object with this Id</param>
         public static void SendCustomEvent(string category, List<KeyValuePair<string, object>> properties, Vector3 position, string dynamicObjectId = "")
         {
             if (Cognitive3D_Manager.IsInitialized == false)
@@ -323,5 +374,7 @@ namespace Cognitive3D
 
             CoreInterface.RecordCustomEvent(category, properties, position, dynamicObjectId);
         }
+
+        #endregion
     }
 }

@@ -6,7 +6,7 @@ using Valve.VR;
 #endif
 
 /// <summary>
-/// sends transactions when a player removes or wears HMD
+/// Sends a Custom Event when a player removes or wears HMD
 /// NOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD
 /// </summary>
 
@@ -98,7 +98,7 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            return "Sends transactions when a player removes or wears HMD";
+            return "Sends a Custom Event when a player removes or wears HMD";
         }
     }
 }

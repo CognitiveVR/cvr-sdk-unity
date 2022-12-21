@@ -71,11 +71,12 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
         void OnDestroy()
         {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager_OnPreSessionEnd();
         }
     }
 }

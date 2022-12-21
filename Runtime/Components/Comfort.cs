@@ -2,7 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// sends low framerate transaction
+/// Sends a Custom Event when low framerate is encountered
 /// sends comfort score (fps + average hmd rotation)
 /// </summary>
 
@@ -113,9 +113,9 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
 #if C3D_OCULUS
-            return "Sends event when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
+            return "Sends Custom Event when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate). Also includes cpu and gpu levels and device power saving mode";
 #else
-            return "Sends transaction when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
+            return "Sends Custom Event when framerate falls below a threshold\nSends comfort score (FPS + Average HMD rotation rate)";
 #endif
         }
 
