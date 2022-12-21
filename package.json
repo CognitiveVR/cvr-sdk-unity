@@ -1,0 +1,37 @@
+{
+	"name": "com.cognitive3d.c3d-sdk",
+	"version": "1.0.3",
+	"displayName": "Cognitive3D Unity SDK",
+	"description": "Analytics Platform for VR/AR/MR",
+	"unity": "2019.4",
+	"documentationUrl": "https://docs.cognitive3d.com/",
+	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
+	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
+	"dependencies": {
+		"com.unity.xr.legacyinputhelpers": "2.1.7"		
+	},
+	"keywords": [
+		"xr",
+		"vr",
+		"c3d",
+		"analytics",
+		"cognitive"
+	],
+	"author": {
+		"name": "Cognitive3D",
+		"email": "support@cognitive3d.com",
+		"url": "https://cognitive3d.com"
+	},
+	"samples": [
+		{
+			"displayName": "Ready Room",
+			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
+			"path": "Samples~/Ready Room"
+		},
+				{
+			"displayName": "Demo Scene",
+			"description": "Scene with Custom Events, Dynamic Objects and Sensor examples",
+			"path": "Samples~/Demo Scene"
+		}
+	]
+}

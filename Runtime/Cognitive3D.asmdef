@@ -1,0 +1,33 @@
+{
+    "name": "Cognitive3D",
+    "rootNamespace": "",
+    "references": [
+        "SteamVR",
+        "Unity.XR.OpenVR",
+        "Varjo.XR",
+        "Oculus.VR",
+        "Oculus.Platform",
+        "GliaAssembly",
+        "SRAnipalAssembly",
+        "Wave.Essence",
+        "Wave.XRSDK",
+        "Wave.Native",
+        "XRPF",
+        "Microsoft.MixedReality.Toolkit"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.xrpf.privacyframework",
+            "expression": "",
+            "define": "XRPF"
+        }
+    ],
+    "noEngineReferences": false
+}
