@@ -142,10 +142,14 @@ namespace Cognitive3D
 #elif C3D_OMNICEPT
         static Vector3 lastDirection = Vector3.forward;
         static HP.Omnicept.Unity.GliaBehaviour gb;
+        static float confidenceThresholdForAcceptedValue = 0.50f;
 
         static void DoEyeTracking(HP.Omnicept.Messaging.Messages.EyeTracking data)
         {
-            lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
+            if (data.CombinedGaze.Confidence > confidenceThresholdForAcceptedValue)
+            {
+                lastDirection = GameplayReferences.HMD.TransformDirection(new Vector3(-data.CombinedGaze.X, data.CombinedGaze.Y, data.CombinedGaze.Z));
+            }
         }
 
         static Vector3 GetLookDirection()
