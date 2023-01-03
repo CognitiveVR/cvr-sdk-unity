@@ -1585,7 +1585,10 @@ namespace Cognitive3D.Serialization
                     sb.Append(",");
                 }
                 if (CachedSnapshots.Values.Count > 0)
+                if (CachedSnapshots[k].Count > 0)
+                {
                     sb.Remove(sb.Length - 1, 1); //remove last comma from data array
+                }
                 sb.Append("]");
                 sb.Append("}");
                 sb.Append(",");
