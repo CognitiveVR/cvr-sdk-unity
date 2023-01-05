@@ -2,7 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// sends recenter hmd transaction
+/// Sends a Custom Event when the user recenters their hmd
 /// </summary>
 
 //TODO add support for other recenter events, if there is a general way to do this
@@ -17,12 +17,15 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             if (OVRManager.display != null)
+            {
                 OVRManager.display.RecenteredPose += RecenterEventTracker_RecenteredPose;
+                Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+            }
         }
 
         private void RecenterEventTracker_RecenteredPose()
         {
-            new CustomEvent("cvr.recenter").Send();
+            CustomEvent.SendCustomEvent("cvr.recenter");
         }
 #endif
 
@@ -38,18 +41,23 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
 #if C3D_OCULUS
-            return "Sends transaction when the HMD recenters";
+            return "Sends a Custom Event when the HMD recenters";
 #else
             return "Current platform does not support this component\nRequires Oculus Utilities";
 #endif
-
         }
 
+#if C3D_OCULUS
         void OnDestroy()
         {
-#if C3D_OCULUS
-            OVRManager.display.RecenteredPose -= RecenterEventTracker_RecenteredPose;
-#endif
+            Cognitive3D_Manager_OnPostSessionEnd();
         }
+
+        private void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            OVRManager.display.RecenteredPose -= RecenterEventTracker_RecenteredPose;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+#endif
     }
 }

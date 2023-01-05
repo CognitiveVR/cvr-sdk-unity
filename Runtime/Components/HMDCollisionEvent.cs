@@ -2,8 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// sends transactions when the HMD collides with something in the game world
-/// collision layers are set in Cognitive3D_Preferences
+/// Sends a Custom Event when the HMD collides with something in the game world
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -11,6 +10,9 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Collision Event")]
     public class HMDCollisionEvent : AnalyticsComponentBase
     {
+        /// <summary>
+        /// The layer mask to check for HMD collisions
+        /// </summary>
         public LayerMask CollisionLayerMask = 1;
 
         bool HMDColliding;

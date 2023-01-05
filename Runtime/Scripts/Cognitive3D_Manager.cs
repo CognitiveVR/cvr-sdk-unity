@@ -10,15 +10,14 @@ using Valve.VR;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
 
 /// <summary>
-/// initializes Cognitive3D analytics. Add components to track additional events
+/// Initializes Cognitive3D Analytics. Add components to track additional events
+/// Persists between scenes
+/// init components
+/// update ticks + events
+/// level change events
+/// quit and destroy events
 /// </summary>
 
-//init components
-//update ticks + events
-//level change events
-//quit and destroy events
-
-//TODO move Omnicept, Steam and Oculus specific features into components
 //TODO CONSIDER static framecount variable to avoid Time.frameCount access
 
 namespace Cognitive3D
@@ -48,7 +47,6 @@ namespace Cognitive3D
         }
         YieldInstruction playerSnapshotInverval;
         YieldInstruction automaticSendInterval;
-        YieldInstruction GPSUpdateInverval;
 
         public static bool IsQuitting = false;
 
@@ -383,7 +381,7 @@ namespace Cognitive3D
 #region Updates and Loops
 
         /// <summary>
-        /// start after successful session initialization
+        /// Calls the Tick event on a 0.1 second interval while the session is active. Started in BeginSession
         /// </summary>
         IEnumerator Tick()
         {
@@ -395,7 +393,7 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// 
+        /// Calls a global 'send data' event on a set interval
         /// </summary>
         /// <returns></returns>
         IEnumerator AutomaticSendData()
@@ -407,6 +405,9 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Calls update while session is initialized
+        /// </summary>
         void Update()
         {
             if (!IsInitialized)
@@ -421,7 +422,7 @@ namespace Cognitive3D
 #region Application Quit, Session End and OnDestroy
         /// <summary>
         /// End the Cognitive3D session. sends any outstanding data to dashboard and sceneexplorer
-        /// requires calling Initialize to create a new session id and begin recording analytics again
+        /// requires calling BeginSession to begin recording analytics again with a new session id
         /// </summary>
         public void EndSession()
         {
@@ -431,7 +432,6 @@ namespace Cognitive3D
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
                 Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
                 FlushData();
-                UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
                 ResetSessionData();
             }
         }
@@ -445,9 +445,6 @@ namespace Cognitive3D
             {
                 ResetSessionData();
             }
-
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-            UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
         }
 
         void OnApplicationPause(bool paused)
@@ -517,43 +514,44 @@ namespace Cognitive3D
 
         public delegate void onSessionBegin();
         /// <summary>
-        /// Cognitive3D Core.Init callback
+        /// Called just after a session has begun
         /// </summary>
         public static event onSessionBegin OnSessionBegin;
         private static void InvokeSessionBeginEvent() { if (OnSessionBegin != null) { OnSessionBegin.Invoke(); } }
 
         public delegate void onSessionEnd();
         /// <summary>
-        /// Cognitive3D Core.Init callback
+        /// Called just before the session ends. Send any last data at this point
         /// </summary>
         public static event onSessionEnd OnPreSessionEnd;
         private static void InvokeEndSessionEvent() { if (OnPreSessionEnd != null) { OnPreSessionEnd.Invoke(); } }
 
+        /// <summary>
+        /// Called just after the session ends. Clean up any callbacks or internal states at this point
+        /// </summary>
         public static event onSessionEnd OnPostSessionEnd;
         private static void InvokePostEndSessionEvent() { if (OnPostSessionEnd != null) { OnPostSessionEnd.Invoke(); } }
 
         public delegate void onUpdate(float deltaTime);
         /// <summary>
-        /// Update. Called through Manager's update function
+        /// Update that only runs when a Cognitive3D session is active
         /// </summary>
         public static event onUpdate OnUpdate;
         private static void InvokeUpdateEvent(float deltaTime) { if (OnUpdate != null) { OnUpdate(deltaTime); } }
 
         public delegate void onTick();
         /// <summary>
-        /// repeatedly called if the sceneid is valid. interval is Cognitive3D_Preferences.Instance.PlayerSnapshotInterval
+        /// Called on a 0.1 second interval
         /// </summary>
         public static event onTick OnTick;
         private static void InvokeTickEvent() { if (OnTick != null) { OnTick(); } }
 
         public delegate void onLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
         /// <summary>
-        /// from Unity's SceneManager.SceneLoaded event. happens after manager sends outstanding data and updates new SceneId
+        /// From Unity's SceneManager.SceneLoaded event. Happens after the Manager sends outstanding data and has updated the new SceneId
         /// </summary>
         public static event onLevelLoaded OnLevelLoaded;
         private static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
-
-        //public delegate void onDataSend();
 
         internal static ILocalExitpoll ExitpollHandler;
         internal static ICache DataCache;
@@ -661,21 +659,17 @@ namespace Cognitive3D
                 {
                     if (scene == null || string.IsNullOrEmpty(scene.SceneId))
                     {
-                        //what scene is being loaded
                         float duration = Time.time - SceneStartTime;
                         SceneStartTime = Time.time;
                         new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
                     }
                     else
                     {
-                        //what scene is being loaded
                         float duration = Time.time - SceneStartTime;
                         SceneStartTime = Time.time;
                         new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
                     }
                 }
-
-                //just to send this scene change event
                 if (WriteSceneChangeEvent && TrackingScene != null)
                 {
                     FlushData();
@@ -724,14 +718,14 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// has the Cognitive3D session started?
+        /// Has the Cognitive3D session started?
         /// </summary>
         public static bool IsInitialized { get; private set; }
 
         /// <summary>
-        /// Reset all of the static vars to their default values. Used when a session ends
+        /// Reset all of the static vars to their default values. Calls delegates for cleaning up the session
         /// </summary>
-        private static void ResetSessionData()
+        private void ResetSessionData()
         {
             InvokeEndSessionEvent();
             CoreInterface.Reset();
@@ -747,10 +741,12 @@ namespace Cognitive3D
             if (NetworkManager != null)
             {
                 GameObject.Destroy(NetworkManager.gameObject);
-                //NetworkManager.OnDestroy();
             }
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
+
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
 
             CognitiveStatics.Reset();
         }
@@ -850,6 +846,10 @@ namespace Cognitive3D
             return "?c3dAtkd=AK-" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(ap)));
         }
 
+        /// <summary>
+        /// Sets a name for the session to be displayed on the dashboard. If not set, an autogenerated name will be used
+        /// </summary>
+        /// <param name="sessionName"></param>
         public static void SetSessionName(string sessionName)
         {
             HasCustomSessionName = true;

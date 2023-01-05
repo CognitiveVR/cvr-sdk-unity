@@ -413,9 +413,6 @@ namespace Cognitive3D
         /// </summary>
         public void OnPanelError()
         {
-            //SendResponsesAsTransaction(); //for personalization api
-            //var responses = FormatResponses();
-            //SendQuestionResponses(responses); //for exitpoll microservice
             CurrentExitPollPanel = null;
             Cleanup(false);
             Cognitive3D.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");

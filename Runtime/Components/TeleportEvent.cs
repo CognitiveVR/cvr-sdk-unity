@@ -2,7 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// sends a transaction when a player's HMD root transform changes positions. likely a teleport
+/// Sends a Custom Event when a player's HMD root transform changes positions
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -28,6 +28,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
             lastRootPosition = root.position;
         }
 
@@ -46,12 +47,18 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            return "Sends a transaction when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
+            return "Sends a Custom Event when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
+        }
+
+        private void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
         }
 
         void OnDestroy()
         {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager_OnPostSessionEnd();
         }
     }
 }
