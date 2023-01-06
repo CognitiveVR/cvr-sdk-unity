@@ -39,6 +39,9 @@ namespace Cognitive3D
         //TODO merge LastSensorValues into sensorData collection
         public static Dictionary<string, float> LastSensorValues = new Dictionary<string, float>();
 
+        static bool hasDisplayedSceneIdWarning;
+        static bool hasDisplayedInitializeWarning;
+
         //called each time a session starts
         internal static void Initialize()
         {
@@ -68,10 +71,22 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
-                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                if (!hasDisplayedInitializeWarning)
+                {
+                    hasDisplayedInitializeWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder session has not started!");
+                }
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder invalid SceneId");
+                }
+                return;
+            }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -102,10 +117,22 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
-                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                if (!hasDisplayedInitializeWarning)
+                {
+                    hasDisplayedInitializeWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder session has not started!");
+                }
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder invalid SceneId");
+                }
+                return;
+            }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))
@@ -135,10 +162,22 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
-                Cognitive3D.Util.logWarning("Sensor cannot be sent before Session Begin!");
+                if (!hasDisplayedInitializeWarning)
+                {
+                    hasDisplayedInitializeWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder session has not started!");
+                }
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Sensor recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("SensorRecorder invalid SceneId");
+                }
+                return;
+            }
 
             //check next valid write time
             if (sensorData.ContainsKey(category))

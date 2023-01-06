@@ -678,6 +678,8 @@ namespace Cognitive3D
         private static void OnUpdate(float deltaTime)
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (string.IsNullOrEmpty(Cognitive3D_Manager.TrackingSceneId)) { return; }
+
 
             //limits the number of dynamic object data that can be processed each update loop
             int numTicks = 0;
@@ -803,8 +805,6 @@ namespace Cognitive3D
                             props += "\"enabled\":false";
                         }
                     }
-
-                    //Cognitive3D.DynamicObjectCore.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale);
                     CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale,Util.Timestamp(Time.frameCount));
                 }
 
@@ -833,6 +833,7 @@ namespace Cognitive3D
         internal static void SendData(bool copyDataToCache)
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (string.IsNullOrEmpty(Cognitive3D_Manager.TrackingSceneId)) { return; }
 
             int dirtycount = 0;
             //set all active dynamics as dirty
