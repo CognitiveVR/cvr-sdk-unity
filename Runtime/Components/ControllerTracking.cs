@@ -7,7 +7,7 @@ namespace Cognitive3D.Components
         InputDevice rightController;
         InputDevice leftController;
 
-        void Start()
+        protected override void OnSessionBegin()
         {
             if (rightController.isValid == false || leftController.isValid == false)
             {
