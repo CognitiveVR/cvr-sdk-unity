@@ -9,18 +9,15 @@ namespace Cognitive3D.Components
 
         protected override void OnSessionBegin()
         {
-            if (rightController.isValid == false || leftController.isValid == false)
-            {
-                rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
-                leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
 #if XRPF
-                if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
-                {
-                    InputTracking.trackingLost += OnTrackingLost;
-                }
-                Cognitive3D_Manager.OnPreSessionEnd += Cleanup;
+            {
+                InputTracking.trackingLost += OnTrackingLost;
             }
+            Cognitive3D_Manager.OnPreSessionEnd += Cleanup;
         }
 
         public void OnTrackingLost(XRNodeState xrNodeState)
