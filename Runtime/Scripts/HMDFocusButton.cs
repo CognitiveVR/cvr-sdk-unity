@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
+    [AddComponentMenu("Cognitive3D/Internal/HMD Focus Button")]
     public class HMDFocusButton : MonoBehaviour, IGazeFocus
     {
         bool hasBeenFocused = false;

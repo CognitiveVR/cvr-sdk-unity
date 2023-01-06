@@ -9,6 +9,7 @@ namespace Cognitive3D
 {
     namespace ActiveSession
     {
+        [AddComponentMenu("Cognitive3D/Active Session View/Meta Canvas")]
         public class MetaCanvas : MonoBehaviour
         {
             public Text CurrentSessionLength;

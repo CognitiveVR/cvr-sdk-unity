@@ -1,7 +1,9 @@
 using UnityEngine.XR;
+using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
         InputDevice rightController;

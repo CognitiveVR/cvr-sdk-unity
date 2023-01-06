@@ -8,6 +8,7 @@ using System;
 
 namespace Cognitive3D.ActiveSession
 {
+    [AddComponentMenu("Cognitive3D/Active Session View/Render Eyetracking")]
     public class RenderEyetracking : MonoBehaviour
     {
         //reticle

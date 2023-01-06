@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
+	[AddComponentMenu("Cognitive3D/Active Session View/Dynamic Sortable")]
 	public class DynamicSortable : MonoBehaviour
 	{
 		public int Sequence; //stored here in case list ever gets sorted to some different order

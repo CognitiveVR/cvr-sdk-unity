@@ -10,6 +10,7 @@ namespace Cognitive3D.Components
     // Takes care of handling sensor data from the 
     // HP Omnicept HMD
     // Must have HPGlia Package imported into the project
+    [AddComponentMenu("Cognitive3D/Components/HP Omnicept Sensors")]
     public class HPOmniceptSensors : AnalyticsComponentBase
     {
 #if C3D_OMNICEPT

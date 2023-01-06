@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
+    [AddComponentMenu("Cognitive3D/Active Session View/Data Batch Canvas")]
     public class DataBatchCanvas : MonoBehaviour
     {
         public Text EventSendText;

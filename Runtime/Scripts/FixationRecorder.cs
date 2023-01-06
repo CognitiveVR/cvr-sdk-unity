@@ -18,7 +18,7 @@ namespace Cognitive3D
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
 
     [HelpURL("https://docs.cognitive3d.com/fixations/")]
-    [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
+    [AddComponentMenu("Cognitive3D/Internal/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
         private enum GazeRaycastResult
