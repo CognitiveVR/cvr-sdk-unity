@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
+    [AddComponentMenu("Cognitive3D/Internal/HMD Pointer")]
     public class HMDPointer : MonoBehaviour
     {
         public Transform MarkerTransform;

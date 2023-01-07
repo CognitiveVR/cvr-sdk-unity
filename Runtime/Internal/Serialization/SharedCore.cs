@@ -1540,17 +1540,16 @@ namespace Cognitive3D.Serialization
         {
             if (currentSensorSnapshots == 0) { return; }
 
+            //write metadata for serialized object
             StringBuilder sb = new StringBuilder(1024);
             sb.Append("{");
             JsonUtil.SetString("name", DeviceId, sb);
             sb.Append(",");
-
             if (!string.IsNullOrEmpty(LobbyId))
             {
                 JsonUtil.SetString("lobbyId", LobbyId, sb);
                 sb.Append(",");
             }
-
             JsonUtil.SetString("sessionid", SessionId, sb);
             sb.Append(",");
             JsonUtil.SetInt("timestamp", (int)SessionTimestamp, sb);
@@ -1560,9 +1559,9 @@ namespace Cognitive3D.Serialization
             sensorJsonPart++;
             JsonUtil.SetString("formatversion", "2.0", sb);
             sb.Append(",");
-
-
             sb.Append("\"data\":[");
+
+            //serialize each sensor into separate objects
             foreach (var k in CachedSnapshots.Keys)
             {
                 sb.Append("{");
@@ -1578,30 +1577,42 @@ namespace Cognitive3D.Serialization
                         sb.Append(",");
                     }
                 }
+
+                //put each data point (already a timestamp/value pair) into an array
                 sb.Append("\"data\":[");
                 foreach (var v in CachedSnapshots[k])
                 {
                     sb.Append(v);
                     sb.Append(",");
                 }
-                if (CachedSnapshots.Values.Count > 0)
-                    sb.Remove(sb.Length - 1, 1); //remove last comma from data array
+
+                //remove last comma from data array
+                if (CachedSnapshots[k].Count > 0)
+                {
+                    sb.Remove(sb.Length - 1, 1);
+                }
+
+                //end object
                 sb.Append("]");
                 sb.Append("}");
                 sb.Append(",");
             }
+
+            //remove last comma from the array of sensor objects
             if (CachedSnapshots.Keys.Count > 0)
             {
-                sb.Remove(sb.Length - 1, 1); //remove last comma from sensor object
+                sb.Remove(sb.Length - 1, 1);
             }
+
+            //close serialized object
             sb.Append("]}");
 
+            //cleanup and send web request
             foreach (var k in CachedSnapshots)
             {
                 k.Value.Clear();
             }
             currentSensorSnapshots = 0;
-
             WebPost("sensor", sb.ToString(), writeToCache);
         }
 

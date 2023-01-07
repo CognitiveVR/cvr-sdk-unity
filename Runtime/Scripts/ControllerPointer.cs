@@ -10,6 +10,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
+    [AddComponentMenu("Cognitive3D/Internal/Controller Pointer")]
     public class ControllerPointer : MonoBehaviour, IControllerPointer
     {
         static Material DefaultPointerMat;

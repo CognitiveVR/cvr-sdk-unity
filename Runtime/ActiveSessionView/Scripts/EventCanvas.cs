@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
+    [AddComponentMenu("Cognitive3D/Active Session View/Event Canvas")]
     public class EventCanvas : MonoBehaviour
     {
         public RectTransform EventFeedRoot;
@@ -21,7 +22,7 @@ namespace Cognitive3D.ActiveSession
 
         void Start()
         {
-            Cognitive3D.CustomEvent.OnCustomEventRecorded += Instrumentation_OnCustomEventRecorded;
+            Cognitive3D.CustomEvent.OnCustomEventRecorded += CustomEvent_OnCustomEventRecorded;
             for (int i = 0; i < EventEntryPool.Length; i++)
             {
                 var go = Instantiate(EventFeedPrefab, EventFeedRoot);
@@ -32,7 +33,7 @@ namespace Cognitive3D.ActiveSession
         }
 
         int eventCount = 0;
-        private void Instrumentation_OnCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
+        private void CustomEvent_OnCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
         {
             var entrygo = GetPrefab(EventFeedRoot);
             var entry = entrygo.GetComponent<EventFeedEntry>();
@@ -61,7 +62,7 @@ namespace Cognitive3D.ActiveSession
 
         private void OnDestroy()
         {
-            Cognitive3D.CustomEvent.OnCustomEventRecorded -= Instrumentation_OnCustomEventRecorded;
+            Cognitive3D.CustomEvent.OnCustomEventRecorded -= CustomEvent_OnCustomEventRecorded;
         }
 
         public GameObject GetPrefab(Transform parent)

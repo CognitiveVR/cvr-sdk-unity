@@ -12,6 +12,7 @@ using UnityEditor;
 #if UNITY_EDITOR
 namespace Cognitive3D
 {
+    [AddComponentMenu("Cognitive3D/Internal/Custom Render Exporter")]
     public class CustomRenderExporter : MonoBehaviour
     {
         public class CustomRender

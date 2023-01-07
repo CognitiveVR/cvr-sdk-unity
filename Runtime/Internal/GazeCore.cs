@@ -42,6 +42,7 @@ namespace Cognitive3D
                 OnSkyGazeRecord.Invoke(timestamp, ignored, ignored2, hmdpoint, hmdrotation);
         }
 
+        static bool hasDisplayedSceneIdWarning = false;
         static Transform cameraRoot;
         internal static bool GetFloorPosition(ref Vector3 floorPos)
         {
@@ -72,7 +73,15 @@ namespace Cognitive3D
                 Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("GazeCore RecordGazePoint invalid SceneId");
+                }
+                return;
+            }
 
             Vector3 floorPos = new Vector3();
             //if floor position is enabled and if the hmd is over a surface
@@ -101,7 +110,15 @@ namespace Cognitive3D
                 Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("GazeCore RecordGazePoint invalid SceneId");
+                }
+                return;
+            }
 
             Vector3 floorPos = new Vector3();
             //if floor position is enabled and if the hmd is over a surface
@@ -130,7 +147,15 @@ namespace Cognitive3D
                 Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("GazeCore RecordGazePoint invalid SceneId");
+                }
+                return;
+            }
 
             Vector3 floorPos = new Vector3();
             //if floor position is enabled and if the hmd is over a surface
@@ -160,7 +185,15 @@ namespace Cognitive3D
                 Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
                 return;
             }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Gaze recorded without SceneId"); return; }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("GazeCore RecordGazePoint invalid SceneId");
+                }
+                return;
+            }
 
             Vector3 floorPos = new Vector3();
             //if floor position is enabled and if the hmd is over a surface

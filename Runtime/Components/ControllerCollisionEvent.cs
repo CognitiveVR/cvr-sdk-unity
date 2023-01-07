@@ -2,8 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// sends transactions when either the controller collides with something in the game world
-/// collision layers are set in Cognitive3D_Preferences
+/// Sends a Custom Event when either the controller collides with something in the game world
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -14,6 +13,9 @@ namespace Cognitive3D.Components
         bool LeftControllerColliding;
         bool RightControllerColliding;
         
+        /// <summary>
+        /// The layer mask to check for controller collisions
+        /// </summary>
         public LayerMask CollisionLayerMask = 1;
 
         protected override void OnSessionBegin()
@@ -49,15 +51,15 @@ namespace Cognitive3D.Components
                 if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                 {
                     hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
-                    if (hit && !LeftControllerColliding)
+                    if (hit && !RightControllerColliding)
                     {
-                        LeftControllerColliding = true;
+                        RightControllerColliding = true;
                         new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
                     }
-                    else if (!hit && LeftControllerColliding)
+                    else if (!hit && RightControllerColliding)
                     {
                         new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
-                        LeftControllerColliding = false;
+                        RightControllerColliding = false;
                     }
                 }
             }
@@ -66,7 +68,7 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
 #if C3D_OCULUS || C3D_STEAMVR || C3D_STEAMVR2|| C3D_PICOVR || C3D_PICOXR
-            return "Sends transactions when either controller collides in the game world";
+            return "Sends a Custom Event when either controller collides in the game world";
 #else
             return "Current platform does not support this component";
 #endif

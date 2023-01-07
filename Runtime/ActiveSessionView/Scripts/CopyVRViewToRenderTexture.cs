@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 
 namespace Cognitive3D.ActiveSession
 {
+    [AddComponentMenu("Cognitive3D/Active Session View/Copy VR View To Render Texture")]
     public class CopyVRViewToRenderTexture : MonoBehaviour
     {
         Camera mainCamera;

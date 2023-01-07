@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
+using System.Threading.Tasks;
 
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
@@ -165,9 +166,20 @@ namespace Cognitive3D
             }
             else
             {
-                if (responsecode == 401) { Util.logError("Network Post Data response code is 401. Is APIKEY set?"); return; }
-                if (responsecode == 404) { Util.logError("Network Post Data response code is 404. Invalid URL?"); return; }
-                if (responsecode == -1) { Util.logError("Network Post Data could not parse response code. Check upload URL"); return; }
+                if (responsecode < 500)
+                {
+                    switch (responsecode)
+                    {
+                        case 400: Util.logError("Network Post Data response code is 400. Bad Request"); break;
+                        case 401: Util.logError("Network Post Data response code is 401. Is APIKEY set?"); break;
+                        case 404: Util.logError("Network Post Data response code is 404. Bad Request"); break;
+                        case -1: Util.logError("Network Post Data could not parse response code. Check upload URL"); break;
+                        default: Util.logError("Network Post Data response code is " + responsecode); break;
+                    }
+                    return;
+                }
+
+
 
                 if (CacheRequest != null)
                 {
@@ -332,7 +344,51 @@ namespace Cognitive3D
                 Util.logDevelopment(url + " " + stringcontent);
         }
 
-        internal void Post(string url, string stringcontent)
+        private async Task AsyncWaitForFullResponse(UnityWebRequest www, string contents, FullResponse callback, bool autoDispose)
+        {
+            float time = 0;
+            float timeout = 10;
+            //yield return new WaitUntil(() => www.isDone);
+            while (time < timeout)
+            {
+                await Task.Yield();
+                if (www == null) { break; }
+                if (www.isDone) break;
+                time += Time.deltaTime;
+            }
+
+            if (www == null)
+            {
+                Debug.LogError("WaitForFullResponse request is null!");
+                return;
+            }
+
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode);
+            lastDataResponse = (int)www.responseCode;
+            if (callback != null)
+            {
+                var headers = www.GetResponseHeaders();
+                int responsecode = (int)www.responseCode;
+                if (responsecode == 200)
+                {
+                    //check cvr header to make sure not blocked by capture portal
+                    if (!headers.ContainsKey("cvr-request-time"))
+                    {
+                        if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+                            Util.logDevelopment("capture portal error! " + www.url);
+                        responsecode = 307;
+                        lastDataResponse = responsecode;
+                    }
+                }
+                callback.Invoke(www.url, contents, responsecode, www.error, www.downloadHandler.text);
+            }
+            if (autoDispose)
+                www.Dispose();
+            activeRequests.Remove(www);
+        }
+
+        internal async void Post(string url, string stringcontent)
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
@@ -343,7 +399,7 @@ namespace Cognitive3D
             request.SendWebRequest();
 
             activeRequests.Add(request);
-            instance.StartCoroutine(instance.WaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true));
+            await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);

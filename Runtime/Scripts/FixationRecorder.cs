@@ -18,7 +18,7 @@ namespace Cognitive3D
     //https://www.codeproject.com/Tips/602081/%2FTips%2F602081%2FStandard-Deviation-Extension-for-Enumerable
 
     [HelpURL("https://docs.cognitive3d.com/fixations/")]
-    [AddComponentMenu("Cognitive3D/Common/Fixation Recorder")]
+    [AddComponentMenu("Cognitive3D/Internal/Fixation Recorder")]
     public class FixationRecorder : MonoBehaviour
     {
         private enum GazeRaycastResult
@@ -775,6 +775,8 @@ namespace Cognitive3D
         //if active fixation is world space, in world space, this indicates the last several positions for the average fixation position
         //if active fixation is local space, these are in local space
         List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
+        bool hasDisplayedSceneIdWarning = false;
+        bool hasDisplayedHMDNullWarning = false;
 
         int index = 0;
         int GetIndex(int offset)
@@ -854,6 +856,7 @@ namespace Cognitive3D
 
             if (gliaBehaviour != null)
             {
+                gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
 #endif
@@ -862,8 +865,24 @@ namespace Cognitive3D
         private void Update()
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
-            if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Fixation will not function"); return; }
-            if (Cognitive3D_Manager.TrackingScene == null) { Cognitive3D.Util.logDevelopment("Missing SceneId. Skip Fixation Recorder update"); return; }
+            if (GameplayReferences.HMD == null)
+            {
+                if (!hasDisplayedHMDNullWarning)
+                {
+                    hasDisplayedHMDNullWarning = true;
+                    Cognitive3D.Util.logWarning("FixationRecorder Update HMD is null! Fixation will not function");
+                }
+                return;
+            }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("FixationRecorder Update invalid SceneId");
+                }
+                return;
+            }
 
             PostGazeCallback();
         }

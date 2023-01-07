@@ -82,6 +82,7 @@ namespace Cognitive3D
                     }
 				}
 
+				uploadRequest.Dispose();
 				uploadRequest = null;
 
 				if (attemptedUploads > numberOfBatches)

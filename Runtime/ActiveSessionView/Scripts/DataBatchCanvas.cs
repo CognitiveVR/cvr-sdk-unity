@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
+    [AddComponentMenu("Cognitive3D/Active Session View/Data Batch Canvas")]
     public class DataBatchCanvas : MonoBehaviour
     {
         public Text EventSendText;
@@ -22,7 +23,7 @@ namespace Cognitive3D.ActiveSession
 
         private void Core_InitEvent()
         {
-            CustomEvent.OnCustomEventSend += Instrumentation_OnCustomEventSend;
+            CustomEvent.OnCustomEventSend += CustomEvent_OnCustomEventSend;
             GazeCore.OnGazeSend += GazeCore_OnGazeSend;
             FixationRecorder.OnFixationSend += FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
@@ -165,14 +166,14 @@ namespace Cognitive3D.ActiveSession
             GazeTimeSinceSend = 0;
         }
 
-        private void Instrumentation_OnCustomEventSend(bool ignored)
+        private void CustomEvent_OnCustomEventSend(bool ignored)
         {
             EventTimeSinceSend = 0;
         }
 
         private void OnDestroy()
         {
-            CustomEvent.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
+            CustomEvent.OnCustomEventSend -= CustomEvent_OnCustomEventSend;
             GazeCore.OnGazeSend -= GazeCore_OnGazeSend;
             FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
@@ -181,7 +182,7 @@ namespace Cognitive3D.ActiveSession
 
         private void Core_EndSessionEvent()
         {
-            CustomEvent.OnCustomEventSend -= Instrumentation_OnCustomEventSend;
+            CustomEvent.OnCustomEventSend -= CustomEvent_OnCustomEventSend;
             GazeCore.OnGazeSend -= GazeCore_OnGazeSend;
             FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;

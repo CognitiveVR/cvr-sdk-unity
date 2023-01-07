@@ -7,6 +7,7 @@ using Cognitive3D;
 //easier to visualize all the valid options, easier to override stuff
 namespace Cognitive3D
 {
+    [AddComponentMenu("Cognitive3D/Common/ExitPoll Holder")]
     public class ExitPollHolder : MonoBehaviour
     {
         public ExitPollParameters Parameters = new ExitPollParameters();

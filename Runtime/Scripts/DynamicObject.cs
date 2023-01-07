@@ -15,6 +15,7 @@ namespace Cognitive3D
 #if C3D_VIVEWAVE
     [DefaultExecutionOrder(+10)] //this must run after PoseTrackerManager on controllers is enabled
 #endif
+    [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
     public class DynamicObject : MonoBehaviour
     {
         public enum CommonDynamicMesh

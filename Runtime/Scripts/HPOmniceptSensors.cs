@@ -10,13 +10,13 @@ namespace Cognitive3D.Components
     // Takes care of handling sensor data from the 
     // HP Omnicept HMD
     // Must have HPGlia Package imported into the project
+    [AddComponentMenu("Cognitive3D/Components/HP Omnicept Sensors")]
     public class HPOmniceptSensors : AnalyticsComponentBase
     {
-        private double microSecondsToSeconds = 1000000;
-        private double milliSecondsToSeconds = 1000;
-
 #if C3D_OMNICEPT
         
+        private double microSecondsToSeconds = 1000000;
+        private double milliSecondsToSeconds = 1000;
         /*
         * Called on first frame update, sets up properties and event listeners
         */

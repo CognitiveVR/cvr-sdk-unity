@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
 #if C3D_OCULUS

@@ -1,43 +1,45 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using Cognitive3D;
 
 /// <summary>
-/// WARNING - NOT FULLY TESTED!
-/// 
-/// send battery level of mobile device post initialization and on quit
-/// on unsupported platforms (pc, laptop, vive, iOS) does not send battery level
+/// Sends HMD Battery level as a sensor at a set interval
 /// </summary>
-
-//TODO add picovr sdk Pvr_UnitySDKAPI.System.UPvr_GetHmdBatteryStatus()
-//SystemInfo.batteryLevel works. returns -1 for invalid systems
-//could also check left/right hand battery level with InputDevice.TryGetFeature commonusage.batteryLevel
 
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {
-        protected override void OnSessionBegin()
+
+#if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
+
+        private float lastDataTimestamp;
+        private const float sendInterval = 1.0f;
+
+        private void Start()
         {
-            base.OnSessionBegin();
             SendBatteryLevel();
-            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnQuit;
+            lastDataTimestamp = Time.time;
         }
 
-        void Cognitive3D_Manager_OnQuit()
+        private void Update()
         {
-            SendBatteryLevel();
+            if (Time.time >= lastDataTimestamp + sendInterval)
+            {
+                SendBatteryLevel();
+                lastDataTimestamp = Time.time;
+            }
         }
-
+#endif
         void SendBatteryLevel()
         {
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
-                new CustomEvent("cvr.battery").SetProperty("batterylevel", SystemInfo.batteryLevel * 100).Send();
+                if (SystemInfo.batteryLevel != -1)
+                {
+                    Cognitive3D.SensorRecorder.RecordDataPoint("HMD Battery Level", SystemInfo.batteryLevel * 100);
+                }
             }
         }
 
@@ -57,11 +59,6 @@ namespace Cognitive3D.Components
 #else
             return "Current platform does not support this component. Must be set to Android";
 #endif
-        }
-
-        void OnDestroy()
-        {
-            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnQuit;
         }
     }
 }

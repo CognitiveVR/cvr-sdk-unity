@@ -13,6 +13,7 @@ using Valve.VR;
 
 namespace Cognitive3D.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/Controller Input Tracker")]
     public class ControllerInputTracker : AnalyticsComponentBase
     {
         const float UpdateRate = 0.1f;

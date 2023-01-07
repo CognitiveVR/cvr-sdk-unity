@@ -17,6 +17,7 @@ namespace Cognitive3D
         Any
     }
 
+    [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
         public Image fillImage;
