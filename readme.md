@@ -10,9 +10,9 @@ Quickstart
 =========
 ## Installation
 
-* Open Package Manager from the Window menu
-* Click the '+' in the top left and select 'Add Package from git URL'
-* Input 'https://github.com/cognitivevr/cvr-sdk-unity.git'
+* Open **Package Manager** from the Window menu
+* Click the + in the top left and select **Add Package from git URL**
+* Input `https://github.com/cognitivevr/cvr-sdk-unity.git`
 
 ## Cognitive3D Scene Setup Window
 
