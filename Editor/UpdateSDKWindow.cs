@@ -24,7 +24,7 @@ namespace Cognitive3D
 
         static string FormatSummary(string summary)
         {
-            string formattedSummary = string.Empty;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder(summary.Length + 50);
             var lines = summary.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
@@ -32,13 +32,13 @@ namespace Cognitive3D
                 {
                     lines[i] = lines[i].Replace("##", "<b>") + "</b>";
                 }
-                formattedSummary += lines[i];
+                sb.Append(lines[i]);
                 if (i != lines.Length)
                 {
-                    formattedSummary += '\n';
+                    sb.Append('\n');
                 }
             }
-            return formattedSummary;
+            return sb.ToString();
         }
 
         Vector2 scrollPos;
