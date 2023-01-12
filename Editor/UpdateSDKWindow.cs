@@ -9,14 +9,14 @@ namespace Cognitive3D
 {
     public class UpdateSDKWindow : EditorWindow
     {
-        static string newVersion;
+        string newVersion;
         bool reminderSet = false;
         string sdkSummary;
 
         public static void Init(string version, string summary)
         {
-            newVersion = version;
-            UpdateSDKWindow window = (UpdateSDKWindow)EditorWindow.GetWindow(typeof(UpdateSDKWindow),true,"Cognitive3D Update");
+            UpdateSDKWindow window = (UpdateSDKWindow)EditorWindow.GetWindow(typeof(UpdateSDKWindow), true, "Cognitive3D Update");
+            window.newVersion = version;
             window.sdkSummary = summary;
             window.Show();
         }
