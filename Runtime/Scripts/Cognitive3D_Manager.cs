@@ -208,7 +208,7 @@ namespace Cognitive3D
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
-                if (SendBatteryLevelOnStartAndEnd) { startEvent.SetProperty("Battery Level", SystemInfo.batteryLevel * 100); }
+                if (SendBatteryLevelOnStartAndEnd) { startEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
             }
             startEvent.Send();
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
@@ -481,7 +481,7 @@ namespace Cognitive3D
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
-                if (SendBatteryLevelOnStartAndEnd) { pauseEvent.SetProperty("Battery Level", SystemInfo.batteryLevel * 100); }
+                if (SendBatteryLevelOnStartAndEnd) { pauseEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
             }
             pauseEvent.Send();
             FlushData();
