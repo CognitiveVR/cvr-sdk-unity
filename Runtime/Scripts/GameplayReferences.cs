@@ -103,9 +103,9 @@ namespace Cognitive3D
                 if (v.x > maxX)
                     maxX = v.x;
                 if (v.z < minZ)
-                    maxZ = v.z;
-                if (v.z > maxZ)
                     minZ = v.z;
+                if (v.z > maxZ)
+                    maxZ = v.z;
             }
             return new Vector3(maxX - minX, 0, maxZ - minZ);
         }

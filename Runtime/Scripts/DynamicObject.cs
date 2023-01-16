@@ -379,6 +379,17 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.PicoNeo3ControllerRight;
             }
+
+            //default to oculus touch - basically a standard layout for VR controllers
+            if (inName.IndexOf("right", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return CommonDynamicMesh.OculusQuestTouchRight;
+            }
+            if (inName.IndexOf("left", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return CommonDynamicMesh.OculusQuestTouchLeft;
+            }
+
             return CommonDynamicMesh.Unknown;
         }
 
@@ -447,6 +458,18 @@ namespace Cognitive3D
             {
                 return ControllerDisplayType.vivefocuscontrollerright;
             }
+
+
+            //default to oculus touch - basically a standard layout for VR controllers
+            if (inName.IndexOf("right",System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return ControllerDisplayType.oculusquesttouchright;
+            }
+            if (inName.IndexOf("left", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return ControllerDisplayType.oculusquesttouchleft;
+            }
+
             return ControllerDisplayType.unknown;
         }
 

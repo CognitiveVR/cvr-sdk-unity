@@ -15,7 +15,7 @@ namespace Cognitive3D.Components
         private float lastDataTimestamp;
         private const float sendInterval = 1.0f;
 
-        private void Start()
+        protected override void OnSessionBegin()
         {
             SendBatteryLevel();
             lastDataTimestamp = Time.time;
@@ -23,6 +23,7 @@ namespace Cognitive3D.Components
 
         private void Update()
         {
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
             if (Time.time >= lastDataTimestamp + sendInterval)
             {
                 SendBatteryLevel();
@@ -55,7 +56,7 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
 #if UNITY_ANDROID
-            return "Send the battery level of Android device after initialization and on quit";
+            return "Sends the battery level of Android device on an interval as a sensor";
 #else
             return "Current platform does not support this component. Must be set to Android";
 #endif
