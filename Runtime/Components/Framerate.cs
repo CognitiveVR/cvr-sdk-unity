@@ -11,7 +11,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : AnalyticsComponentBase
     {
-        [ClampSetting(0.1f,10f)]
+        [ClampSetting(1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
@@ -23,7 +23,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
 #if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif            
             {
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
