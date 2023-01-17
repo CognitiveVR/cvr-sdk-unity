@@ -3,7 +3,7 @@ using System.Collections;
 using Cognitive3D;
 
 /// <summary>
-/// sends fps as a sensor
+/// Sends Frames Per Second (FPS) as a sensor
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -14,6 +14,10 @@ namespace Cognitive3D.Components
         [ClampSetting(0.1f,10f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
         public float FramerateTrackingInterval = 1;
+        //counts up the deltatime to determine when the interval ends
+        private float currentTime;
+        //the number of frames in the interval
+        private int intervalFrameCount;
 
         protected override void OnSessionBegin()
         {
@@ -25,47 +29,29 @@ namespace Cognitive3D.Components
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
                 Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             }
-            timeleft = FramerateTrackingInterval;
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            UpdateFramerate();
-
-            timeleft -= deltaTime;
-            if (timeleft <= 0.0f)
+            intervalFrameCount++;
+            currentTime += deltaTime;
+            if (currentTime > FramerateTrackingInterval)
             {
                 IntervalEnd();
-                timeleft = FramerateTrackingInterval;
             }
-        }
-
-        float timeleft;
-        float accum;
-        int frames;
-        void UpdateFramerate()
-        {
-            accum += Time.timeScale / Time.deltaTime;
-            ++frames;
         }
 
         void IntervalEnd()
         {
-            // Interval ended - update GUI text and start new interval
-            if (frames != 0)
-            {
-                float lastFps = accum / frames;
-                SensorRecorder.RecordDataPoint("FPS", lastFps);
-            }
-            else
-            {
-                Util.logError("Framerate interval ended with 0 frames!");
-            }
+            float framesPerSecond = intervalFrameCount / currentTime;
+            SensorRecorder.RecordDataPoint("FPS", framesPerSecond);
+            intervalFrameCount = 0;
+            currentTime = 0;
         }
 
         public override string GetDescription()
         {
-            return "Record framerate over time as a sensor";
+            return "Record Frames per Second (FPS) as a sensor";
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()

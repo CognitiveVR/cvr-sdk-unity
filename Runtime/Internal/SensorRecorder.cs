@@ -88,6 +88,12 @@ namespace Cognitive3D
                 return;
             }
 
+            if (float.IsNaN(value))
+            {
+                Cognitive3D.Util.logWarning("SensorRecorder category:"+ category + " is value: NaN");
+                return;
+            }
+
             //check next valid write time
             if (sensorData.ContainsKey(category))
             {
