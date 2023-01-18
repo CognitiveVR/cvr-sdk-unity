@@ -432,7 +432,7 @@ namespace Cognitive3D
                 return;
             }
 
-            InvokeUpdateEvent(Time.deltaTime);
+            InvokeUpdateEvent(Time.unscaledDeltaTime);
         }
         #endregion
 
