@@ -614,7 +614,7 @@ namespace Cognitive3D.Serialization
         internal static void RecordFixation(Fixation newFixation)
         {
             if (!IsInitialized) { return; }
-            Fixations.Add(newFixation);
+            Fixations.Add(new Fixation(newFixation));
             if (Fixations.Count > FixationThreshold)
             {
                 SerializeFixations(false);
