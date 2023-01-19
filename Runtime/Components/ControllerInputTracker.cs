@@ -435,7 +435,7 @@ namespace Cognitive3D.Components
                 RightHand = tempTransform.GetComponent<DynamicObject>();
             }
 
-            Cognitive3D_Manager.SetSessionProperty("c3d.device.controller.inputs", true);
+            Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
 
             DynamicObject.ControllerDisplayType displayType;
             InputDevice tempDevice;

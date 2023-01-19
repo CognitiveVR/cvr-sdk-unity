@@ -13,7 +13,8 @@
         "Wave.XRSDK",
         "Wave.Native",
         "XRPF",
-        "Microsoft.MixedReality.Toolkit"
+        "Microsoft.MixedReality.Toolkit",
+        "Unity.XR.Management"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

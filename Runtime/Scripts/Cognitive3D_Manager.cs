@@ -253,6 +253,12 @@ namespace Cognitive3D
             {
                 SendHardwareDataAsSessionProperty();
             }
+            var generalSettings = UnityEngine.XR.Management.XRGeneralSettings.Instance;
+            if (generalSettings != null && generalSettings.Manager != null)
+            {
+                var activeLoader = generalSettings.Manager.activeLoader;
+                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+            }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 #region XRPF_PROPERTIES
