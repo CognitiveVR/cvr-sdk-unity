@@ -157,11 +157,10 @@ namespace Cognitive3D
                 return false;
             }
 #else
-            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
-            if (inputDevices.Count > 0)
+            UnityEngine.XR.InputDevice inputDevice = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (inputDevice.isValid)
             {
-                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
+                UnityEngine.XR.InputDevice hMDDevice = inputDevice;
                 UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
                 if (XRIS == null)
                 {
