@@ -257,7 +257,14 @@ namespace Cognitive3D
             if (generalSettings != null && generalSettings.Manager != null)
             {
                 var activeLoader = generalSettings.Manager.activeLoader;
-                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+                if (activeLoader != null)
+                {
+                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+                }
+                else
+                {
+                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
+                }
             }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
