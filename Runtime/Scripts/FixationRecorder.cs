@@ -28,7 +28,7 @@ namespace Cognitive3D
             HitWorld
         }
 
-#region EyeTracker
+        #region EyeTracker
 #if C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
@@ -578,18 +578,6 @@ namespace Cognitive3D
             }
             return false;
         }
-
-        void OnDestroy()
-        {
-            //should be on destroy or on session end
-            var gliaBehaviour = GameplayReferences.GliaBehaviour;
-
-            if (gliaBehaviour != null)
-            {
-                //eye tracking
-                gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
-            }
-        }
 #elif C3D_MRTK
         const int CachedEyeCaptures = 30;
         bool CombinedWorldGazeRay(out Ray ray)
@@ -825,6 +813,8 @@ namespace Cognitive3D
         internal CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(4096);
         internal List<Vector2> SaccadeScreenPoints = new List<Vector2>(16);
 
+        //used internally to stop update from firing if Initialize is not called from Cognitive3D_Manager BeginSession
+        bool IsInitialized = false;
 
         void Reset()
         {
@@ -833,6 +823,7 @@ namespace Cognitive3D
             FocusSizeFromCenter.AddKey(new Keyframe(0.5f, 2, 5, 0));
         }
 
+        //called by Cognitive3D_Manager when the session is started
         internal void Initialize()
         {
             if (FocusSizeFromCenter == null) { Reset(); }
@@ -860,11 +851,15 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
 #endif
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+            IsInitialized = true;
         }
 
         private void Update()
         {
+            if (!IsInitialized) { return; }
             if (!Cognitive3D_Manager.IsInitialized) { return; }
+
             if (GameplayReferences.HMD == null)
             {
                 if (!hasDisplayedHMDNullWarning)
@@ -1099,6 +1094,21 @@ namespace Cognitive3D
         {
             if (OnFixationSend != null)
                 OnFixationSend.Invoke(false);
+        }
+
+        //clean up any eye tracking callbacks and set 'IsInitialized' to false
+        void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+#if C3D_OMNICEPT
+            var gliaBehaviour = GameplayReferences.GliaBehaviour;
+
+            if (gliaBehaviour != null)
+            {
+                gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
+            }
+#endif
+            IsInitialized = false;
         }
     }
 }
