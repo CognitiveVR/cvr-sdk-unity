@@ -20,12 +20,8 @@ namespace Cognitive3D.Components
         /*
         * Called on first frame update, sets up properties and event listeners
         */
-        void Start()
-        {
-            Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-            Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-            Cognitive3D_Manager.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
-        
+        protected override void OnSessionBegin()
+        {        
             if (GameplayReferences.GliaBehaviour != null)
             {
                 GameplayReferences.GliaBehaviour.OnEyeTracking.AddListener(RecordEyePupillometry);

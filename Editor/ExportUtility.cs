@@ -668,6 +668,10 @@ namespace Cognitive3D
             currentTask = 0;
             foreach (var v in Canvases)
             {
+                if (v.renderMode == RenderMode.ScreenSpaceOverlay || v.renderMode == RenderMode.ScreenSpaceCamera)
+                {
+                    continue;
+                }
                 currentProgress += progressPerSmallTask;
                 currentTask++;
                 EditorUtility.DisplayProgressBar("Export GLTF", "Bake Canvases " + currentTask + "/" + Canvases.Length, currentProgress);

@@ -103,9 +103,9 @@ namespace Cognitive3D
                 if (v.x > maxX)
                     maxX = v.x;
                 if (v.z < minZ)
-                    maxZ = v.z;
-                if (v.z > maxZ)
                     minZ = v.z;
+                if (v.z > maxZ)
+                    maxZ = v.z;
             }
             return new Vector3(maxX - minX, 0, maxZ - minZ);
         }
@@ -157,11 +157,10 @@ namespace Cognitive3D
                 return false;
             }
 #else
-            List<UnityEngine.XR.InputDevice> inputDevices = new List<UnityEngine.XR.InputDevice>();
-            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(UnityEngine.XR.InputDeviceCharacteristics.HeadMounted, inputDevices);
-            if (inputDevices.Count > 0)
+            UnityEngine.XR.InputDevice inputDevice = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (inputDevice.isValid)
             {
-                UnityEngine.XR.InputDevice hMDDevice = inputDevices[0];
+                UnityEngine.XR.InputDevice hMDDevice = inputDevice;
                 UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
                 if (XRIS == null)
                 {

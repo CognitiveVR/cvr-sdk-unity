@@ -6,13 +6,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
-        InputDevice rightController;
-        InputDevice leftController;
-
         protected override void OnSessionBegin()
         {
-            rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
-            leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
 #if XRPF
              if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif

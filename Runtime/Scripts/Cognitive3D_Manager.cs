@@ -253,6 +253,12 @@ namespace Cognitive3D
             {
                 SendHardwareDataAsSessionProperty();
             }
+            var generalSettings = UnityEngine.XR.Management.XRGeneralSettings.Instance;
+            if (generalSettings != null && generalSettings.Manager != null)
+            {
+                var activeLoader = generalSettings.Manager.activeLoader;
+                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+            }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 #region XRPF_PROPERTIES
@@ -313,6 +319,10 @@ namespace Cognitive3D
 #elif C3D_VIVEWAVE
         SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
         SetSessionProperty("c3d.app.sdktype", "Vive Wave");
+#elif C3D_OMNICEPT
+        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        Cognitive3D_Manager.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL
@@ -428,7 +438,7 @@ namespace Cognitive3D
                 return;
             }
 
-            InvokeUpdateEvent(Time.deltaTime);
+            InvokeUpdateEvent(Time.unscaledDeltaTime);
         }
         #endregion
 
