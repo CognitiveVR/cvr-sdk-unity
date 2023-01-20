@@ -1411,6 +1411,7 @@ namespace Cognitive3D
                         //check and wait for response
                         onclick = () => SaveKeys();
                         onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+                        onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
                     }
 
                     buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;

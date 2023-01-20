@@ -836,12 +836,20 @@ namespace Cognitive3D
             EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             SaveEditorVersion();
 
+#if USE_ATTRIBUTION
+            //check package manager for current version
+            listRequest = UnityEditor.PackageManager.Client.List();
+            EditorApplication.update += WaitList;
+#else
+            //check github releases for current version
             checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
             checkForUpdatesRequest.SendWebRequest();
             EditorApplication.update += UpdateCheckForUpdates;
+#endif
         }
 
         static UnityEngine.Networking.UnityWebRequest checkForUpdatesRequest;
+        static UnityEditor.PackageManager.Requests.ListRequest listRequest;
         static void CheckForUpdates()
         {
             System.DateTime remindDate; //current date must be this or beyond to show popup window
@@ -856,9 +864,16 @@ namespace Cognitive3D
                     EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                     SaveEditorVersion();
 
+#if USE_ATTRIBUTION
+                    //check package manager for current version
+                    listRequest = UnityEditor.PackageManager.Client.List();
+                    EditorApplication.update += WaitList;
+#else
+                    //check github releases for current version
                     checkForUpdatesRequest = UnityEngine.Networking.UnityWebRequest.Get(CognitiveStatics.GITHUB_SDKVERSION);
                     checkForUpdatesRequest.SendWebRequest();
                     EditorApplication.update += UpdateCheckForUpdates;
+#endif
                 }
             }
             else
@@ -867,6 +882,53 @@ namespace Cognitive3D
             }
         }
 
+        //wait for package manager 
+        static void WaitList()
+        {
+            if (!listRequest.IsCompleted) { return; }
+            EditorApplication.update -= WaitList;
+
+            if (listRequest.Error != null)
+            {
+                Debug.LogError("Checking current version Cognitive3D package. " + listRequest.Error);
+                return;
+            }
+
+            UnityEditor.PackageManager.PackageInfo c3dpackage = null;
+            foreach (var v in listRequest.Result)
+            {
+                if (v.name == "com.cognitive3d.c3d-sdk")
+                {
+                    c3dpackage = v;
+                    break;
+                }
+            }
+            if (c3dpackage == null) { Debug.LogError("Checking current version Cognitive3D package. com.cognitive3d.c3d-sdk package not found!"); return; }
+
+            System.Version installedVersion = null;
+            System.Version packageManagerVersion = null;
+            try
+            {
+                installedVersion = new Version(c3dpackage.version);
+                packageManagerVersion = new Version(c3dpackage.versions.latest);
+            }
+            catch
+            {
+                Debug.LogWarning("Checking current version Cognitive3D package. Invalid version found");
+                UpdateSDKWindow.InitPackageManager("");
+            }
+
+            if (packageManagerVersion > installedVersion)
+            {
+                UpdateSDKWindow.InitPackageManager(c3dpackage.versions.latest);
+            }
+            else
+            {
+                Debug.Log("Cognitive3D Version: " + installedVersion + ". Up to date!");
+            }
+        }
+
+        //wait for github release response
         static void UpdateCheckForUpdates()
         {
             if (!checkForUpdatesRequest.isDone)
