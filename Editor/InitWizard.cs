@@ -941,21 +941,32 @@ namespace Cognitive3D
                 Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.ControllerInputTracker>();
             }
 
+            DynamicObject.ControllerType controllerType = DynamicObject.ControllerType.Quest2;
+#if C3D_STEAMVR2
+                controllerType = DynamicObject.ControllerType.ViveWand;
+#elif C3D_OCULUS
+                controllerType = DynamicObject.ControllerType.Quest2;
+#elif C3D_PICOXR
+                controllerType = DynamicObject.ControllerType.PicoNeo3;
+#elif C3D_VIVEWAVE
+                controllerType = DynamicObject.ControllerType.ViveFocus;
+#endif
+            
             if (left != null)
             {
                 var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
+                dyn.FallbackControllerType = controllerType;
             }
             if (right != null)
             {
                 var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
+                dyn.FallbackControllerType = controllerType;
             }
         }
 
@@ -1111,7 +1122,7 @@ namespace Cognitive3D
             //TODO some icon to indicate controller
             GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
             GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
-            if (!dynamic.HasCollider())
+            if (!dynamic.IsController && !dynamic.HasCollider())
             {
                 GUI.Label(collider, new GUIContent(EditorCore.Alert, "Tracking Gaze requires a collider"), "image_centered");
             }

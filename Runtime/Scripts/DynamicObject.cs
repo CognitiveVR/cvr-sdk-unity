@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using UnityEngine.SceneManagement;
 
 //container for data and simple instance implementations (enable,disable) for dynamic object
 //also includes fields for initialization
@@ -18,7 +17,23 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
     public class DynamicObject : MonoBehaviour
     {
-        public enum CommonDynamicMesh
+        //developer facing high level controller type selection
+        public enum ControllerType
+        {
+            Quest2 = 1,
+            QuestPro = 2,
+            ViveWand = 3,
+            WindowsMRController = 4,
+            SteamIndex = 5,
+            PicoNeo3 = 6,
+            PicoNeo4 = 7,
+            ViveFocus = 8,
+            //Generic = 0, //basically a non-branded oculus touch controller
+            //Hand = 9, //might suggest that this includes skeletal hand tracking, which needs some more design
+        }
+        
+        //used internally to have a consistent mesh name string
+        internal enum CommonDynamicMesh
         {
             ViveController = 0,
             OculusRiftTouchLeft = 1,
@@ -41,6 +56,41 @@ namespace Cognitive3D
             PicoNeo3ControllerRight = 18,
             Unknown = 19,
             ViveFocusControllerLeft = 20,
+            GenericLeft = 21,
+            GenericRight = 22,
+            SteamIndexLeft = 23,
+            SteamIndexRight = 24,
+            PicoNeo4ControllerLeft = 25,
+            PicoNeo4ControllerRight = 26,
+            QuestProTouchLeft = 27,
+            QuestProTouchRight = 28,
+        }
+
+        //used internally to have a consistent button input image
+        internal enum ControllerDisplayType
+        {
+            vivecontroller = 1, //wand
+            vivefocuscontrollerright = 2,
+            vivefocuscontrollerleft = 14,
+            oculustouchleft = 3,
+            oculustouchright = 4,
+            oculusquesttouchleft = 5,
+            oculusquesttouchright = 6,
+            windows_mixed_reality_controller_left = 7,
+            windows_mixed_reality_controller_right = 8,
+            pico_neo_2_eye_controller_left = 9,
+            pico_neo_2_eye_controller_right = 10,
+            pico_neo_3_eye_controller_left = 11,
+            pico_neo_3_eye_controller_right = 12,
+            unknown = 13,
+            pico_neo_4_eye_controller_left = 15,
+            pico_neo_4_eye_controller_right = 16,
+            generic_left = 17,
+            generic_right = 18,
+            steam_index_left = 19,
+            steam_index_right = 20,
+            quest_pro_touch_left = 21,
+            quest_pro_touch_right = 22,
         }
 
 
@@ -79,7 +129,10 @@ namespace Cognitive3D
 
 
         //only used to indicate that the mesh needs to be exported/uploaded. false for controllers
-        public bool UseCustomMesh = true;
+        public bool UseCustomMesh
+        {
+            get { return !IsController; }
+        }
         public string MeshName;
 
         public float PositionThreshold = 0.01f;
@@ -89,23 +142,8 @@ namespace Cognitive3D
         //used to select svg on SE to display button inputs
         public bool IsController;
         public bool IsRight;
-        public enum ControllerDisplayType
-        {
-            vivecontroller = 1, //wand
-            vivefocuscontrollerright = 2,
-            oculustouchleft = 3,
-            oculustouchright = 4,
-            oculusquesttouchleft = 5,
-            oculusquesttouchright = 6,
-            windows_mixed_reality_controller_left = 7,
-            windows_mixed_reality_controller_right = 8,
-            pico_neo_2_eye_controller_left = 9,
-            pico_neo_2_eye_controller_right = 10,
-            pico_neo_3_eye_controller_left = 11,
-            pico_neo_3_eye_controller_right = 12,
-            unknown = 13,
-            vivefocuscontrollerleft = 14,
-        }
+        public bool IdentifyControllerAtRuntime = true;
+        public ControllerType FallbackControllerType;
 
         public DynamicObjectIdPool IdPool;
 
@@ -149,17 +187,32 @@ namespace Cognitive3D
             if (IsController)
             {
                 GameplayReferences.SetController(this, IsRight);
-                InputDevice device;
-                if (!GameplayReferences.GetControllerInfo(IsRight, out device))
+                if (IdentifyControllerAtRuntime)
                 {
-                    GameplayReferences.OnControllerValidityChange += DelayEnable;
-                    //register to some 'controller validity changed' event and try later
-                    return;
+                    InputDevice device;
+                    if (!GameplayReferences.GetControllerInfo(IsRight, out device))
+                    {
+                        GameplayReferences.OnControllerValidityChange += DelayEnable;
+                        //register to some 'controller validity changed' event and try later
+                        return;
+                    }
+                    else
+                    {
+                        controllerName = GetControllerPopupName(device.name, IsRight).ToString();
+                        appliedMeshName = GetControllerMeshName(device.name, IsRight).ToString();
+
+                        if (controllerName == ControllerDisplayType.unknown.ToString() ||
+                            appliedMeshName == CommonDynamicMesh.Unknown.ToString())
+                        {
+                            //failed to identify the controller - use the fallback
+                            SetControllerFromFallback(FallbackControllerType, IsRight, out controllerName, out appliedMeshName);
+                        }
+                    }
                 }
                 else
                 {
-                    controllerName = GetControllerPopupName(device.name, IsRight).ToString();
-                    appliedMeshName = GetControllerMeshName(device.name, IsRight).ToString();
+                    //just quickly look up controller by type, isRight and set controllerName, appliedMeshName
+                    SetControllerFromFallback(FallbackControllerType, IsRight, out controllerName, out appliedMeshName);
                 }
             }
 
@@ -192,6 +245,105 @@ namespace Cognitive3D
             if (SyncWithPlayerGazeTick)
             {
                 Cognitive3D_Manager.OnTick += SyncWithGazeTick;
+            }
+        }
+
+        private void SetControllerFromFallback(ControllerType fallbackControllerType, bool isRight, out string controllerName, out string controllerMesh)
+        {
+            switch (fallbackControllerType)
+            {
+                case ControllerType.Quest2:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.oculusquesttouchright.ToString();
+                        controllerMesh = CommonDynamicMesh.OculusQuestTouchRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.oculusquesttouchleft.ToString();
+                        controllerMesh = CommonDynamicMesh.OculusQuestTouchLeft.ToString();
+                    }
+                    break;
+                case ControllerType.QuestPro:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.quest_pro_touch_right.ToString();
+                        controllerMesh = CommonDynamicMesh.QuestProTouchRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.quest_pro_touch_left.ToString();
+                        controllerMesh = CommonDynamicMesh.QuestProTouchLeft.ToString();
+                    }
+                    break;
+                case ControllerType.ViveWand:
+                    controllerName = ControllerDisplayType.vivecontroller.ToString();
+                    controllerMesh = CommonDynamicMesh.ViveController.ToString();
+                    break;
+                case ControllerType.WindowsMRController:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.windows_mixed_reality_controller_right.ToString();
+                        controllerMesh = CommonDynamicMesh.WindowsMixedRealityRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.windows_mixed_reality_controller_left.ToString();
+                        controllerMesh = CommonDynamicMesh.WindowsMixedRealityLeft.ToString();
+                    }
+                    break;
+                case ControllerType.SteamIndex:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.steam_index_right.ToString();
+                        controllerMesh = CommonDynamicMesh.SteamIndexRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.steam_index_left.ToString();
+                        controllerMesh = CommonDynamicMesh.SteamIndexLeft.ToString();
+                    }
+                    break;
+                case ControllerType.PicoNeo3:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.pico_neo_3_eye_controller_right.ToString();
+                        controllerMesh = CommonDynamicMesh.PicoNeo3ControllerRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.pico_neo_3_eye_controller_left.ToString();
+                        controllerMesh = CommonDynamicMesh.PicoNeo3ControllerLeft.ToString();
+                    }
+                    break;
+                case ControllerType.PicoNeo4:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.pico_neo_4_eye_controller_right.ToString();
+                        controllerMesh = CommonDynamicMesh.PicoNeo4ControllerRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.pico_neo_4_eye_controller_left.ToString();
+                        controllerMesh = CommonDynamicMesh.PicoNeo4ControllerLeft.ToString();
+                    }
+                    break;
+                case ControllerType.ViveFocus:
+                    if (isRight)
+                    {
+                        controllerName = ControllerDisplayType.vivefocuscontrollerright.ToString();
+                        controllerMesh = CommonDynamicMesh.ViveFocusControllerRight.ToString();
+                    }
+                    else
+                    {
+                        controllerName = ControllerDisplayType.vivefocuscontrollerleft.ToString();
+                        controllerMesh = CommonDynamicMesh.ViveFocusControllerLeft.ToString();
+                    }
+                    break;
+                default:
+                    controllerName = "unknown";
+                    controllerMesh = "Unknown";
+                    break;
             }
         }
 
@@ -312,82 +464,48 @@ namespace Cognitive3D
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
         }
 
-        internal static CommonDynamicMesh GetControllerMeshName(string inName, bool isRight)
+        private static CommonDynamicMesh GetControllerMeshName(string xrDeviceName, bool isRight)
         {
-            if (inName.Contains("Vive Wand")
-                || inName.Contains("Vive. Controller MV"))
+            if (xrDeviceName.Contains("Vive Wand")
+                || xrDeviceName.Contains("Vive. Controller MV"))
             {
                 return CommonDynamicMesh.ViveController;
             }
-            if (inName.Equals("Oculus Touch Controller - Left")
-                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
+            if (xrDeviceName.Equals("Oculus Touch Controller - Left")
+                || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
                 return CommonDynamicMesh.OculusQuestTouchLeft;
             }
-            if (inName.Equals("Oculus Touch Controller - Right")
-                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
+            if (xrDeviceName.Equals("Oculus Touch Controller - Right")
+                || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
                 return CommonDynamicMesh.OculusQuestTouchRight;
             }
-            if (inName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || (inName.Equals("HTC Vive Controller OpenXR") && isRight == false))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
             {
                 return CommonDynamicMesh.ViveFocusControllerLeft;
             }
-            if (inName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || (inName.Equals("HTC Vive Controller OpenXR") && isRight == true))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == true))
             {
                 return CommonDynamicMesh.ViveFocusControllerRight;
             }
-            /*if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.ViveTracker;
-            }
-            if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.ViveFocusController;
-            }
-            if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.OculusRiftTouchLeft;
-            }
-            if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.OculusRiftTouchRight;
-            }
-            if (inName.Contains(""))
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == false)
             {
                 return CommonDynamicMesh.WindowsMixedRealityLeft;
             }
-            if (inName.Contains(""))
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == true)
             {
                 return CommonDynamicMesh.WindowsMixedRealityRight;
             }
-            if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.PicoNeoControllerLeft;
-            }
-            if (inName.Contains(""))
-            {
-                return CommonDynamicMesh.PicoNeoControllerRight;
-            }*/
-            if (inName.Equals("PicoXR Controller-Left"))
+            if (xrDeviceName.Equals("PicoXR Controller-Left"))
             {
                 return CommonDynamicMesh.PicoNeo3ControllerLeft;
             }
-            if (inName.Equals("PicoXR Controller-Right"))
+            if (xrDeviceName.Equals("PicoXR Controller-Right"))
             {
                 return CommonDynamicMesh.PicoNeo3ControllerRight;
-            }
-
-            //default to oculus touch - basically a standard layout for VR controllers
-            if (inName.IndexOf("right", System.StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return CommonDynamicMesh.OculusQuestTouchRight;
-            }
-            if (inName.IndexOf("left", System.StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return CommonDynamicMesh.OculusQuestTouchLeft;
             }
 
             return CommonDynamicMesh.Unknown;
@@ -395,81 +513,49 @@ namespace Cognitive3D
 
         //the svg popup that displays the button presses
         //used by controller input tracker to determine how to record input names
-        internal static ControllerDisplayType GetControllerPopupName(string inName, bool isRight)
+        internal static ControllerDisplayType GetControllerPopupName(string xrDeviceName, bool isRight)
         {
-            if (inName.Contains("Vive Wand")
-                || inName.Contains("Vive. Controller MV"))
+            if (xrDeviceName.Contains("Vive Wand")
+                || xrDeviceName.Contains("Vive. Controller MV"))
             {
                 return ControllerDisplayType.vivecontroller;
             }
-            /*if (inName.Contains(""))
-            {
-                return ControllerDisplayType.vivefocuscontroller;
-            }
-            if (inName.Contains(""))
-            {
-                return ControllerDisplayType.oculustouchleft;
-            }
-            if (inName.Contains(""))
-            {
-                return ControllerDisplayType.oculustouchright;
-            }*/
-            if (inName.Equals("Oculus Touch Controller - Left")
-                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
+            if (xrDeviceName.Equals("Oculus Touch Controller - Left")
+                || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
                 return ControllerDisplayType.oculusquesttouchleft;
             }
-            if (inName.Equals("Oculus Touch Controller - Right")
-                || (inName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
+            if (xrDeviceName.Equals("Oculus Touch Controller - Right")
+                || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
                 return ControllerDisplayType.oculusquesttouchright;
             }
-            /*if (inName.Contains(""))
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == false)
             {
                 return ControllerDisplayType.windows_mixed_reality_controller_left;
             }
-            if (inName.Contains(""))
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == true)
             {
                 return ControllerDisplayType.windows_mixed_reality_controller_right;
             }
-            if (inName.Contains(""))
-            {
-                return ControllerDisplayType.pico_neo_2_eye_controller_left;
-            }
-            if (inName.Contains(""))
-            {
-                return ControllerDisplayType.pico_neo_2_eye_controller_right;
-            }*/
-            if (inName.Equals("PicoXR Controller-Left"))
+            if (xrDeviceName.Equals("PicoXR Controller-Left"))
             {
                 return ControllerDisplayType.pico_neo_3_eye_controller_left;
             }
-            if(inName.Equals("PicoXR Controller-Right"))
+            if(xrDeviceName.Equals("PicoXR Controller-Right"))
             {
                 return ControllerDisplayType.pico_neo_3_eye_controller_right;
             }
-            if (inName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || (inName.Equals("HTC Vive Controller OpenXR") && isRight == false))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
             {
                 return ControllerDisplayType.vivefocuscontrollerleft;
             }
-            if (inName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || (inName.Equals("HTC Vive Controller OpenXR") && isRight == true))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == true))
             {
                 return ControllerDisplayType.vivefocuscontrollerright;
             }
-
-
-            //default to oculus touch - basically a standard layout for VR controllers
-            if (inName.IndexOf("right",System.StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return ControllerDisplayType.oculusquesttouchright;
-            }
-            if (inName.IndexOf("left", System.StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return ControllerDisplayType.oculusquesttouchleft;
-            }
-
             return ControllerDisplayType.unknown;
         }
 

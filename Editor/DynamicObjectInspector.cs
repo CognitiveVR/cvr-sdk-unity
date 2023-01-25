@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
-using System.Reflection;
 
 namespace Cognitive3D
 {
@@ -91,24 +90,36 @@ namespace Cognitive3D
 
             //display script on component
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
+            EditorGUILayout.PropertyField(script, true);
             EditorGUI.EndDisabledGroup();
 
             //use custom mesh and mesh text field
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
-            foreach (var t in targets)
+            if (targets.Length == 1)
             {
-                var dyn = t as DynamicObject;
-                if (dyn.UseCustomMesh)
+                var dyn = targets[0] as DynamicObject;
+                if (!dyn.UseCustomMesh)
                 {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.TextField(new GUIContent("Mesh Name"), "Generated at Runtime");
+                    EditorGUI.EndDisabledGroup();
+                }
+                else
+                {
+                    EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
                     dyn.MeshName = ValidateMeshName(dyn.MeshName);
-                    //if gui changed (including from this re-validation of a mesh name) it will mark this as dirty at the end
+                }
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(meshname, new GUIContent("Mesh Name"));
+                foreach (var t in targets)
+                {
+                    var dyn = t as DynamicObject;
+                    dyn.MeshName = ValidateMeshName(dyn.MeshName);
                 }
             }
 
-            GUILayout.EndHorizontal();
-
+            //dynamic id sources - custom id, generate at runtime, id pool asset
             if (idType == -1)
             {
                 var dyn = target as DynamicObject;
@@ -224,46 +235,47 @@ namespace Cognitive3D
                 Cognitive3D_Preferences.Instance.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), Cognitive3D_Preferences.Instance.TextureResize, textureQualityNames, textureQualities);
                 GUILayout.Space(5);
 
-                //Snapshot Threshold
-                GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
-
-                //controller stuff
-                GUILayout.BeginHorizontal();
-
+                //Controller Settings
                 if (targets.Length == 1)
                 {
+                    GUILayout.Label("Controller Settings", EditorStyles.boldLabel);
+                    EditorGUI.indentLevel++;
                     var dyn = targets[0] as DynamicObject;
-                    dyn.IsController = EditorGUILayout.Toggle("Is Controller",dyn.IsController);
+                    dyn.IsController = EditorGUILayout.Toggle(new GUIContent("Is Controller","Visualize on SceneExplorer with a common mesh.\nInclude metadata to display button inputs."),dyn.IsController);
                     EditorGUI.BeginDisabledGroup(!dyn.IsController);
                     dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand",dyn.IsRight);
+                    dyn.IdentifyControllerAtRuntime = EditorGUILayout.Toggle(new GUIContent("Identify Controller at Runtime","Use Unity's API to try to identify the InputDevice name"), dyn.IdentifyControllerAtRuntime);
+                    dyn.FallbackControllerType = (DynamicObject.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type","Used if this controller cannot be identified at runtime"),dyn.FallbackControllerType);
                     EditorGUI.EndDisabledGroup();
+                    EditorGUI.indentLevel--;
                 }
 
-                GUILayout.EndHorizontal();
+                //Snapshot Threshold
+                GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
 
-                EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the dynamic object on the same frame as gaze. This may smooth movement of this object in SceneExplorer relative to the player's position"));
+                EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the Dynamic Object on the same frame as gaze. This will smooth the movement of this object in SceneExplorer relative to the player"));
                 EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);
-                EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This is the Snapshot interval in the Tracker Options Window"), GUILayout.MinWidth(50));
+                EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This indicates the time interval to check if this Dynamic Object has moved"), GUILayout.MinWidth(50));
                 updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
                 EditorGUI.EndDisabledGroup();
 
-                EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot. Checked each 'Tick'"));
+                EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot"));
                 positionThreshold.floatValue = Mathf.Max(0, positionThreshold.floatValue);
 
-                EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot. Checked each 'Tick'"));
+                EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot"));
                 rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
 
-                EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot. Checked each 'Tick'"));
+                EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot"));
                 scaleThreshold.floatValue = Mathf.Max(0, scaleThreshold.floatValue);
-
                 EditorGUI.EndDisabledGroup();
+                EditorGUI.indentLevel--;
             } //advanced foldout
 
             advancedGUIChanged = EditorGUI.EndChangeCheck();
 
             if (basicGUIChanged || advancedGUIChanged)
             {
-                //activating the foldout will call 'gui changed' UGH
                 foreach (var t in targets)
                 {
                     var dyn = t as DynamicObject;
