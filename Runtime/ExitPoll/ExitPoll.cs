@@ -182,7 +182,7 @@ namespace Cognitive3D
                 else
                     Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer || parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
             {
                 GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
                 if (prefab != null)
