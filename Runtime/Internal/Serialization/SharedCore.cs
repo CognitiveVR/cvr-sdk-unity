@@ -2072,10 +2072,9 @@ namespace Cognitive3D.Serialization
             //properties should already be formatted, just need to append them here
             if (!string.IsNullOrEmpty(entry.Properties))
             {
-                //properties are an array of a single object? weird
-                builder.Append(",\"properties\":[{");
+                builder.Append(",\"properties\":[");
                 builder.Append(entry.Properties);
-                builder.Append("}]");
+                builder.Append("]");
             }
 
             builder.Append("}"); //close manifest entry
@@ -2101,10 +2100,9 @@ namespace Cognitive3D.Serialization
             //properties should already be formatted, just need to append them here
             if (!string.IsNullOrEmpty(snap.Properties))
             {
-                //properties are an array of a single object? weird
-                builder.Append(",\"properties\":[{");
+                builder.Append(",\"properties\":[");
                 builder.Append(snap.Properties);
-                builder.Append("}]");
+                builder.Append("]");
             }
 
             if (!string.IsNullOrEmpty(snap.Buttons))
