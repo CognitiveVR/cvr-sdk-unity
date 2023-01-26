@@ -699,6 +699,17 @@ namespace Cognitive3D
                 return _filterIcon;
             }
         }
+        
+        private static Texture2D _refreshIcon;
+        public static Texture2D RefreshIcon
+        {
+            get
+            {
+                if (_refreshIcon == null)
+                    _refreshIcon = Resources.Load<Texture2D>("RefreshIcon");
+                return _refreshIcon;
+            }
+        }
 
 #endregion
 
@@ -747,9 +758,12 @@ namespace Cognitive3D
             }
 
             MediaSource[] sources = Util.GetJsonArray<MediaSource>(text);
-            Debug.Log("Response contains " + sources.Length + " media sources");
-            UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
-            MediaSources = sources;
+            Util.logDevelopment("Response contains " + sources.Length + " media sources");
+            if (sources.Length > 0)
+            {
+                UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
+                MediaSources = sources;
+            }
         }
 
         [Serializable]

@@ -13,6 +13,10 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Media Component")]
     public class MediaComponent : MonoBehaviour
     {
+        /// <summary>
+        /// only used by the inspector to display a friendly name for the media
+        /// </summary>
+        public string MediaName;
         public string MediaSource;
         public bool IsVideo
         {
