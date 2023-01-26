@@ -593,9 +593,9 @@ namespace Cognitive3D
 
 #region Controllers
 
-        static GameObject leftcontroller;
-        static GameObject rightcontroller;
-        static GameObject mainCameraObject;
+        GameObject leftcontroller;
+        GameObject rightcontroller;
+        GameObject mainCameraObject;
 
         static string controllerDisplayName; //used to set SE display
 
