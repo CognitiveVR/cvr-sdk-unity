@@ -26,11 +26,6 @@
             "name": "com.unity.render-pipelines.high-definition",
             "expression": "",
             "define": "C3D_HDRP"
-        },
-        {
-            "name": "Unity",
-            "expression": "2019.4",
-            "define": "USE_ATTRIBUTION"
         }
     ],
     "noEngineReferences": false

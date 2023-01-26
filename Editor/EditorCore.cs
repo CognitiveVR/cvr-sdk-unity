@@ -925,20 +925,19 @@ namespace Cognitive3D
             {
                 installedVersion = new Version(c3dpackage.version);
                 packageManagerVersion = new Version(c3dpackage.versions.latest);
+                if (packageManagerVersion > installedVersion)
+                {
+                    UpdateSDKWindow.InitPackageManager(c3dpackage.versions.latest);
+                }
+                else
+                {
+                    Debug.Log("Cognitive3D Version: " + installedVersion + ". Up to date!");
+                }
             }
             catch
             {
                 Debug.LogWarning("Checking current version Cognitive3D package. Invalid version found");
                 UpdateSDKWindow.InitPackageManager("");
-            }
-
-            if (packageManagerVersion > installedVersion)
-            {
-                UpdateSDKWindow.InitPackageManager(c3dpackage.versions.latest);
-            }
-            else
-            {
-                Debug.Log("Cognitive3D Version: " + installedVersion + ". Up to date!");
             }
         }
 

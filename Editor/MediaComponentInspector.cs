@@ -93,11 +93,11 @@ namespace Cognitive3D
                 
                 //gui style that has less border so the refresh icon is more clear
                 int border = 2;
-                GUIStyle s = new GUIStyle("button");
-                s.padding = new RectOffset(border, border, border, border);
+                GUIStyle minimalPaddingButton = new GUIStyle("button");
+                minimalPaddingButton.padding = new RectOffset(border, border, border, border);
 
                 //refresh button
-                if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"),s, GUILayout.Width(19),
+                if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"),minimalPaddingButton, GUILayout.Width(19),
                         GUILayout.Height(19)))
                 {
                     EditorCore.RefreshMediaSources();
