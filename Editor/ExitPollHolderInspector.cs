@@ -227,7 +227,7 @@ namespace Cognitive3D
         private string GetPointerDescription(ExitPollParameters parameters)
         {
             string thingToSpawn = "";
-            if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
+            if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer || parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
             {
                 thingToSpawn = "Spawn ExitPollControllerPointer";
             }
