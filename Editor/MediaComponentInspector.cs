@@ -15,7 +15,6 @@ namespace Cognitive3D
         /// </summary>
         private bool hasRefreshedMedia = false;
         private bool setupFoldout = false;
-
         public override void OnInspectorGUI()
         {
             MediaComponent m = (MediaComponent)target;
@@ -91,10 +90,15 @@ namespace Cognitive3D
                     GUILayout.Button("Save", GUILayout.Width(40));
                     EditorGUI.EndDisabledGroup();
                 }
+                
+                //gui style that has less border so the refresh icon is more clear
+                int border = 2;
+                GUIStyle s = new GUIStyle("button");
+                s.padding = new RectOffset(border, border, border, border);
 
                 //refresh button
-                if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"), GUILayout.Width(20),
-                        GUILayout.Height(20)))
+                if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"),s, GUILayout.Width(19),
+                        GUILayout.Height(19)))
                 {
                     EditorCore.RefreshMediaSources();
                     hasRefreshedMedia = true;
