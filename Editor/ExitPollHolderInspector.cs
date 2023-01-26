@@ -120,37 +120,7 @@ namespace Cognitive3D
 
             EditorGUI.indentLevel++;
             p.PointerType = (ExitPoll.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-            if (p.PointerType == ExitPoll.PointerType.CustomPointer)
-            {
-                p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Pointer Prefab Override", p.PointerOverride, typeof(GameObject), true);
-            }
-            else if (p.PointerType == ExitPoll.PointerType.SceneObject)
-            {
-                p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Pointer Instance", p.PointerOverride, typeof(GameObject), true);
-
-                if (p.PointerOverride != null && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(p.PointerOverride)))
-                {
-                    displayPrefabPointerWarning = true;
-                }
-                else if (p.PointerOverride != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(p.PointerOverride)))
-                {
-                    displayPrefabPointerWarning = false;
-                }
-
-                if (displayPrefabPointerWarning)
-                {
-                    var rect = GUILayoutUtility.GetLastRect();
-                    rect.width = 20;
-                    GUI.Label(rect, new GUIContent(EditorCore.Alert, "This should reference to a scene asset!\nSelect Custom Pointer if you want to spawn a prefab"));
-                    p.PointerOverride = null;
-                }
-            }
-
-            p.PointerParent = (ExitPoll.PointerSource)EditorGUILayout.EnumPopup("Exit Poll Pointer Parent", p.PointerParent);
-            if (p.PointerParent == ExitPoll.PointerSource.Other)
-            {
-                p.PointerParentOverride = (Transform)EditorGUILayout.ObjectField("Exit Poll Pointer Parent Override", p.PointerParentOverride, typeof(Transform), true);
-            }
+            // p.PointerParent = (ExitPoll.PointerSource)EditorGUILayout.EnumPopup("Exit Poll Pointer Parent", p.PointerParent);
 
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
             EditorGUI.indentLevel--;
@@ -160,6 +130,21 @@ namespace Cognitive3D
 
             EditorGUI.indentLevel++;
             p.ExitpollSpawnType = (ExitPoll.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
+            
+            // Setting parent based on pointer type
+            if (p.PointerType == ExitPoll.PointerType.HMDPointer)
+            {
+                p.PointerParent = ExitPoll.PointerSource.HMD;
+            }
+            if (p.PointerType == ExitPoll.PointerType.LeftControllerPointer)
+            {
+                p.PointerParent = ExitPoll.PointerSource.LeftHand;
+            }
+            if (p.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            {
+                p.PointerParent = ExitPoll.PointerSource.RightHand;
+            }
+
             if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 GUILayout.BeginHorizontal();
@@ -250,28 +235,6 @@ namespace Cognitive3D
             {
                 thingToSpawn = "Spawn ExitPollHMDPointer";
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
-            {
-                if (parameters.PointerOverride != null)
-                {
-                    thingToSpawn = "Spawn " + parameters.PointerOverride.name;
-                }
-                else
-                {
-                    thingToSpawn = "Spawn Nothing";
-                }
-            }
-            else if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
-            {
-                if (parameters.PointerOverride != null)
-                {
-                    thingToSpawn = "Select " + parameters.PointerOverride.name + " from scene";
-                }
-                else
-                {
-                    thingToSpawn = "Select Nothing from scene";
-                }
-            }
 
             string howToAttach = "";
             if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
@@ -286,30 +249,10 @@ namespace Cognitive3D
             {
                 howToAttach = " and attach to Right Controller";
             }
-            if (parameters.PointerParent == ExitPoll.PointerSource.Other)
-            {
-                if (parameters.PointerParentOverride != null)
-                    howToAttach = " and Attach to " + parameters.PointerParentOverride.name + " in scene";
-                else
-                    howToAttach = " and Attach to Nothing in scene";
-            }
 
             string result = "";
-            if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
-            {
-                if (parameters.PointerParent == ExitPoll.PointerSource.Other && parameters.PointerParentOverride == null)
-                {
-                    result = "\nPointer parenting will not change after ExitPoll closes";
-                }
-                else
-                {
-                    result = "\nPointer will be un-attached after ExitPoll closes";
-                }
-            }
-            else
-            {
-                result = "\nPointer will be destroyed after ExitPoll closes";
-            }
+            result = "\nPointer will be destroyed after ExitPoll closes";
+
             
             return thingToSpawn + howToAttach + result;
         }
