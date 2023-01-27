@@ -120,7 +120,6 @@ namespace Cognitive3D
 
             EditorGUI.indentLevel++;
             p.PointerType = (ExitPoll.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-            // p.PointerParent = (ExitPoll.PointerSource)EditorGUILayout.EnumPopup("Exit Poll Pointer Parent", p.PointerParent);
 
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
             EditorGUI.indentLevel--;

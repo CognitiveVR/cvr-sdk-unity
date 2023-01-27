@@ -668,7 +668,7 @@ namespace Cognitive3D
         {
             if (pointerInstance != null)
             {
-                pointerInstance.transform.SetParent(null);
+                GameObject.Destroy(pointerInstance);
             }
 
             if (myparameters.OnComplete != null && completedSuccessfully == true)
