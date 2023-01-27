@@ -213,7 +213,7 @@ namespace Cognitive3D
                 var group = ContentRoot.GetComponent<HorizontalLayoutGroup>();
                 if (group != null)
                 {
-                    group.spacing = Mathf.Lerp(MaximumSpacing, MinimumSpacing, (maxValue - minValue + 1) / maxValue + 1);
+                    group.spacing = Mathf.Lerp(MaximumSpacing, MinimumSpacing, (maxValue - minValue + 1) / (maxValue + 1));
                 }
             }
         }
