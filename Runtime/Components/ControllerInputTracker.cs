@@ -301,6 +301,15 @@ namespace Cognitive3D.Components
 
         private void LateUpdate()
         {
+            Transform tempTransform;
+            if (LeftHand == null && GameplayReferences.GetControllerTransform(false,out tempTransform))
+            {
+                LeftHand = tempTransform.GetComponent<DynamicObject>();
+            }
+            if (RightHand == null && GameplayReferences.GetControllerTransform(true, out tempTransform))
+            {
+                RightHand = tempTransform.GetComponent<DynamicObject>();
+            }
             //assuming controller updates happen before/in update loop?
 
             if (Time.time > nextUpdateTime)
