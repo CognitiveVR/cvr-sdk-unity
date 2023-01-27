@@ -593,9 +593,9 @@ namespace Cognitive3D
 
 #region Controllers
 
-        static GameObject leftcontroller;
-        static GameObject rightcontroller;
-        static GameObject mainCameraObject;
+        GameObject leftcontroller;
+        GameObject rightcontroller;
+        GameObject mainCameraObject;
 
         static string controllerDisplayName; //used to set SE display
 
@@ -604,7 +604,8 @@ namespace Cognitive3D
         bool steamvr2actionset = false;
 #endif
 
-        bool initialPlayerSetup = false;
+        //static so it resets on recompile, which will allow PlayerSetupStart to run again
+        static bool initialPlayerSetup;
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
@@ -941,21 +942,32 @@ namespace Cognitive3D
                 Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.ControllerInputTracker>();
             }
 
+            DynamicObject.ControllerType controllerType = DynamicObject.ControllerType.Quest2;
+#if C3D_STEAMVR2
+                controllerType = DynamicObject.ControllerType.ViveWand;
+#elif C3D_OCULUS
+                controllerType = DynamicObject.ControllerType.Quest2;
+#elif C3D_PICOXR
+                controllerType = DynamicObject.ControllerType.PicoNeo3;
+#elif C3D_VIVEWAVE
+                controllerType = DynamicObject.ControllerType.ViveFocus;
+#endif
+            
             if (left != null)
             {
                 var dyn = left.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
+                dyn.FallbackControllerType = controllerType;
             }
             if (right != null)
             {
                 var dyn = right.GetComponent<DynamicObject>();
-                dyn.UseCustomMesh = false;
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
+                dyn.FallbackControllerType = controllerType;
             }
         }
 
@@ -1111,7 +1123,7 @@ namespace Cognitive3D
             //TODO some icon to indicate controller
             GUI.Label(mesh, dynamic.MeshName, "dynamiclabel");
             GUI.Label(gameobject, dynamic.gameObject.name, "dynamiclabel");
-            if (!dynamic.HasCollider())
+            if (!dynamic.IsController && !dynamic.HasCollider())
             {
                 GUI.Label(collider, new GUIContent(EditorCore.Alert, "Tracking Gaze requires a collider"), "image_centered");
             }
@@ -1411,6 +1423,7 @@ namespace Cognitive3D
                         //check and wait for response
                         onclick = () => SaveKeys();
                         onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+                        onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
                     }
 
                     buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
