@@ -605,7 +605,7 @@ namespace Cognitive3D
 #endif
 
         //static so it resets on recompile, which will allow PlayerSetupStart to run again
-        static bool initialPlayerSetup = false;
+        static bool initialPlayerSetup;
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {

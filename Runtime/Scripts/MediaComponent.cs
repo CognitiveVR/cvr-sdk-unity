@@ -16,7 +16,7 @@ namespace Cognitive3D
         /// <summary>
         /// only used by the inspector to display a friendly name for the media
         /// </summary>
-        public string MediaName;
+        internal string MediaName;
         public string MediaSource;
         public bool IsVideo
         {

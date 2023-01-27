@@ -13,8 +13,8 @@ namespace Cognitive3D
         /// <summary>
         /// indicates that the developer has pressed the refresh button. used to display a warning if no media is returned
         /// </summary>
-        private bool hasRefreshedMedia = false;
-        private bool setupFoldout = false;
+        private bool hasRefreshedMedia;
+        private bool setupFoldout;
         public override void OnInspectorGUI()
         {
             MediaComponent m = (MediaComponent)target;
