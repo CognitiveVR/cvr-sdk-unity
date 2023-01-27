@@ -463,7 +463,8 @@ namespace Cognitive3D
         private static CommonDynamicMesh GetControllerMeshName(string xrDeviceName, bool isRight)
         {
             if (xrDeviceName.Contains("Vive Wand")
-                || xrDeviceName.Contains("Vive. Controller MV"))
+                || xrDeviceName.Contains("Vive. Controller MV")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
             {
                 return CommonDynamicMesh.ViveController;
             }
@@ -512,7 +513,8 @@ namespace Cognitive3D
         internal static ControllerDisplayType GetControllerPopupName(string xrDeviceName, bool isRight)
         {
             if (xrDeviceName.Contains("Vive Wand")
-                || xrDeviceName.Contains("Vive. Controller MV"))
+                || xrDeviceName.Contains("Vive. Controller MV")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
             {
                 return ControllerDisplayType.vivecontroller;
             }

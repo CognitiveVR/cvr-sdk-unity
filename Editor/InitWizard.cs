@@ -604,7 +604,8 @@ namespace Cognitive3D
         bool steamvr2actionset = false;
 #endif
 
-        bool initialPlayerSetup = false;
+        //static so it resets on recompile, which will allow PlayerSetupStart to run again
+        static bool initialPlayerSetup = false;
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
