@@ -26,6 +26,10 @@ namespace Cognitive3D.Components
                     Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x * 100, roomsize.z * 100));
                 }
             }
+            else
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.roomsize", "Invalid");
+            }
         }
 
         public override bool GetWarning()
