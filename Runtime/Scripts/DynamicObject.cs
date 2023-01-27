@@ -56,14 +56,12 @@ namespace Cognitive3D
             PicoNeo3ControllerRight = 18,
             Unknown = 19,
             ViveFocusControllerLeft = 20,
-            GenericLeft = 21,
-            GenericRight = 22,
-            SteamIndexLeft = 23,
-            SteamIndexRight = 24,
-            PicoNeo4ControllerLeft = 25,
-            PicoNeo4ControllerRight = 26,
-            QuestProTouchLeft = 27,
-            QuestProTouchRight = 28,
+            SteamIndexLeft = 21,
+            SteamIndexRight = 22,
+            PicoNeo4ControllerLeft = 23,
+            PicoNeo4ControllerRight = 24,
+            QuestProTouchLeft = 25,
+            QuestProTouchRight = 26,
         }
 
         //used internally to have a consistent button input image
@@ -85,12 +83,10 @@ namespace Cognitive3D
             unknown = 13,
             pico_neo_4_eye_controller_left = 15,
             pico_neo_4_eye_controller_right = 16,
-            generic_left = 17,
-            generic_right = 18,
-            steam_index_left = 19,
-            steam_index_right = 20,
-            quest_pro_touch_left = 21,
-            quest_pro_touch_right = 22,
+            steam_index_left = 17,
+            steam_index_right = 18,
+            quest_pro_touch_left = 19,
+            quest_pro_touch_right = 20,
         }
 
 

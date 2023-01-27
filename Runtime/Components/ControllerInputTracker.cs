@@ -482,6 +482,7 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.oculustouchright:
                         break;
+                    case DynamicObject.ControllerDisplayType.quest_pro_touch_left:
                     case DynamicObject.ControllerDisplayType.oculusquesttouchleft:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
@@ -588,6 +589,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.oculusquesttouchleft:
 
                         break;
+                    case DynamicObject.ControllerDisplayType.quest_pro_touch_right:
                     case DynamicObject.ControllerDisplayType.oculusquesttouchright:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));

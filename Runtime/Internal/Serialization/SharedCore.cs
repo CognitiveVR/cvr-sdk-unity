@@ -1687,11 +1687,11 @@ namespace Cognitive3D.Serialization
             dome.isController = true;
             if (data.IsRightHand)
             {
-                dome.Properties = "\"controller\": \"right\"";
+                dome.Properties = "{\"controller\": \"right\"}";
             }
             else
             {
-                dome.Properties = "\"controller\": \"left\"";
+                dome.Properties = "{\"controller\": \"left\"}";
             }
             dome.HasProperties = true;
 
