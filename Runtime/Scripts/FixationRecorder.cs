@@ -679,6 +679,65 @@ namespace Cognitive3D
             }
             return false;
         }
+#elif C3D_OCULUS
+        const int CachedEyeCaptures = 30;
+        private static OVRPlugin.EyeGazesState _currentEyeGazesState;
+        readonly float ConfidenceThreshold = 0.5f;
+        bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+
+            //TODO this if one eye is invalid, should attempt to check gaze from the other eye
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+
+            if (!eyeGaze.IsValid)
+                return false;
+
+            var Confidence = eyeGaze.Confidence;
+            if (Confidence < ConfidenceThreshold)
+                return false;
+
+            var pose = eyeGaze.Pose.ToOVRPose();
+            pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+            ray.origin = pose.position;
+            ray.direction = pose.orientation * Vector3.forward;
+            return true;
+        }
+
+        bool LeftEyeOpen()
+        {
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+            return eyeGaze.Confidence > ConfidenceThreshold;
+        }
+        bool RightEyeOpen()
+        {
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+                
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            return eyeGaze.Confidence > ConfidenceThreshold;
+        }
+
+        long EyeCaptureTimestamp()
+        {
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120;
 
@@ -850,6 +909,8 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
+#elif C3D_OCULUS
+            OVRPlugin.StartEyeTracking();
 #endif
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
             IsInitialized = true;

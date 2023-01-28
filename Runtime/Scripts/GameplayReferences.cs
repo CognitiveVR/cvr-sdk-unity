@@ -22,6 +22,8 @@ namespace Cognitive3D
                 return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled;
 #elif C3D_VIVEWAVE
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
+#elif C3D_OCULUS
+                return OVRPlugin.eyeTrackingSupported;
 #else
                 return false;
 #endif

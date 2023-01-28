@@ -179,6 +179,30 @@ namespace Cognitive3D
             Wave.Essence.Eye.EyeManager.Instance.GetCombindedEyeDirectionNormalized(out lastDirection);
             return lastDirection;
         }
+#elif C3D_OCULUS
+        static Vector3 lastDirection = Vector3.forward;
+        private static OVRPlugin.EyeGazesState _currentEyeGazesState;
+        private static float ConfidenceThreshold = 0.5f;
+        static Vector3 GetLookDirection()
+        {
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return lastDirection;
+
+            //TODO this if one eye is invalid, should attempt to check gaze from the other eye
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+
+            if (!eyeGaze.IsValid)
+                return lastDirection;
+
+            var Confidence = eyeGaze.Confidence;
+            if (Confidence < ConfidenceThreshold)
+                return lastDirection;
+
+            var pose = eyeGaze.Pose.ToOVRPose();
+            pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+            lastDirection = pose.orientation * Vector3.forward;
+            return lastDirection;
+        }
 #else
         static Vector3 lastDirection = Vector3.forward;
         static Vector3 GetLookDirection()
