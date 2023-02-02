@@ -11,6 +11,7 @@ namespace Cognitive3D
     public class Setup360Window : EditorWindow
     {
         UnityEngine.Video.VideoClip selectedClip;
+        UnityEngine.Camera userCamera;
         bool latlong = true;
 
         public static void Init()
@@ -35,7 +36,8 @@ namespace Cognitive3D
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip), true);
+            selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField("Video Clip", selectedClip, typeof(UnityEngine.Video.VideoClip), true);
+            userCamera = (UnityEngine.Camera)EditorGUILayout.ObjectField("Main Camera", userCamera, typeof(UnityEngine.Camera), true);
 
             if (EditorCore.MediaSources.Length == 0)
             {
@@ -133,6 +135,7 @@ namespace Cognitive3D
                 sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedspherecube"));
             }
             sphere.gameObject.name = "360 Video Player";
+            sphere.transform.parent = userCamera ? userCamera.transform : Camera.main.transform;
 
             //setup video source to write to render texture
             var vp = sphere.GetComponentInChildren<UnityEngine.Video.VideoPlayer>();
