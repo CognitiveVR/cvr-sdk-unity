@@ -135,6 +135,7 @@ namespace Cognitive3D
                 sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedspherecube"));
             }
             sphere.gameObject.name = "360 Video Player";
+            sphere.transform.position = userCamera.transform.position;
             Cognitive3D.Components.GazeSphere360 myGaze = sphere.AddComponent<Cognitive3D.Components.GazeSphere360>();
             myGaze.userCamera = userCamera;
 
