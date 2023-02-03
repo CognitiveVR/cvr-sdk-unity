@@ -135,7 +135,8 @@ namespace Cognitive3D
                 sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedspherecube"));
             }
             sphere.gameObject.name = "360 Video Player";
-            sphere.transform.parent = userCamera ? userCamera.transform : Camera.main.transform;
+            Cognitive3D.Components.GazeSphere360 myGaze = sphere.AddComponent<Cognitive3D.Components.GazeSphere360>();
+            myGaze.userCamera = userCamera;
 
             //setup video source to write to render texture
             var vp = sphere.GetComponentInChildren<UnityEngine.Video.VideoPlayer>();
@@ -173,20 +174,6 @@ namespace Cognitive3D
             if (!internalGo.GetComponent<DynamicObject>())
             {
                 internalGo.AddComponent<DynamicObject>();
-            }
-
-            //find the main camera and move it to the origin
-            var camMain = Camera.main;
-            if (camMain == null)
-            {
-                Debug.LogError("Cognitive3D 360 Setup: Could not find Camera.Main! Creating a new camera");
-                var cameraGo = new GameObject("Main Camera");
-                cameraGo.tag = "MainCamera";
-                cameraGo.AddComponent<Camera>();
-            }
-            else
-            {
-                camMain.transform.position = Vector3.zero;
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
