@@ -59,7 +59,6 @@ namespace Cognitive3D
             HMD,
             RightHand,
             LeftHand,
-            Other
         }
         public enum SpawnType
         {
@@ -69,9 +68,8 @@ namespace Cognitive3D
         public enum PointerType
         {
             HMDPointer,
-            ControllerPointer,
-            CustomPointer,
-            SceneObject
+            RightControllerPointer,
+            LeftControllerPointer,
         }
 
         private static GameObject _exitPollHappySad;
@@ -176,14 +174,7 @@ namespace Cognitive3D
             if (!Cognitive3D_Manager.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
 
             myparameters = parameters;
-
-            //spawn pointers if override isn't set
-            if (parameters.PointerType == ExitPoll.PointerType.SceneObject)
-            {
-                //spawn nothing. something in the scene is already set   
-                pointerInstance = parameters.PointerOverride;
-            }
-            else if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 GameObject prefab = Resources.Load<GameObject>("HMDPointer");
                 if (prefab != null)
@@ -191,20 +182,13 @@ namespace Cognitive3D
                 else
                     Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.ControllerPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer || parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
             {
                 GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
                 if (prefab != null)
                     pointerInstance = GameObject.Instantiate(prefab);
                 else
                     Debug.LogError("Spawning Exitpoll Controller Pointer, but cannot find prefab \"ControllerPointer\" in Resources!");
-            }
-            else if (parameters.PointerType == ExitPoll.PointerType.CustomPointer)
-            {
-                if (parameters.PointerOverride != null)
-                    pointerInstance = GameObject.Instantiate(parameters.PointerOverride);
-                else
-                    Debug.LogError("Spawning Exitpoll Pointer, but cannot pointer override prefab is null!");
             }
             
             if (pointerInstance != null)
@@ -232,15 +216,6 @@ namespace Cognitive3D
                     if (GameplayReferences.GetControllerTransform(false, out t))
                     {
                         pointerInstance.transform.SetParent(t);
-                        pointerInstance.transform.localPosition = Vector3.zero;
-                        pointerInstance.transform.localRotation = Quaternion.identity;
-                    }
-                }
-                else if (parameters.PointerParent == ExitPoll.PointerSource.Other)
-                {
-                    if (parameters.PointerParentOverride != null)
-                    {
-                        pointerInstance.transform.SetParent(parameters.PointerParentOverride);
                         pointerInstance.transform.localPosition = Vector3.zero;
                         pointerInstance.transform.localRotation = Quaternion.identity;
                     }
@@ -693,29 +668,7 @@ namespace Cognitive3D
         {
             if (pointerInstance != null)
             {
-                if (myparameters.PointerType != ExitPoll.PointerType.SceneObject)
-                {
-                    GameObject.Destroy(pointerInstance);
-                }
-                else //if pointertype == SceneObject
-                {
-                    if (myparameters.PointerParent != ExitPoll.PointerSource.Other)
-                    {
-                        //unparent
-                        pointerInstance.transform.SetParent(null);
-                    }
-                    else
-                    {
-                        if (myparameters.PointerParentOverride == null)
-                        {
-                            //not parented at startup. don't unparent
-                        }
-                        else
-                        {
-                            pointerInstance.transform.SetParent(null);
-                        }
-                    }
-                }
+                GameObject.Destroy(pointerInstance);
             }
 
             if (myparameters.OnComplete != null && completedSuccessfully == true)

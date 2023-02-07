@@ -13,11 +13,21 @@ namespace Cognitive3D
         bool reminderSet = false;
         string sdkSummary;
 
-        public static void Init(string version, string summary)
+        //display window with changelog. changelog is provivded by github web response body
+        public static void Init(string latestVersion, string changelog)
         {
             UpdateSDKWindow window = (UpdateSDKWindow)EditorWindow.GetWindow(typeof(UpdateSDKWindow), true, "Cognitive3D Update");
-            window.sdkSummary = FormatSummary(summary);
-            window.newVersion = version;
+            window.sdkSummary = FormatSummary(changelog);
+            window.newVersion = latestVersion;
+            window.minSize = new Vector2(400, 300);
+            window.Show();
+        }
+
+        //display window. no changelog seems available from packageinfo. point developer to package manager
+        public static void InitPackageManager(string latestVersion)
+        {
+            UpdateSDKWindow window = (UpdateSDKWindow)EditorWindow.GetWindow(typeof(UpdateSDKWindow), true, "Cognitive3D Update");
+            window.newVersion = latestVersion;
             window.minSize = new Vector2(400, 300);
             window.Show();
         }
@@ -53,20 +63,23 @@ namespace Cognitive3D
 
             GUIHorizontalLine();
 
+#if USE_ATTRIBUTION
+
+#else
             //summary
             scrollPos = GUILayout.BeginScrollView(scrollPos);
             GUILayout.Label(sdkSummary);
             GUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
+#endif
 
             //centered download button
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUI.color = EditorCore.GreenButton;
-            //TODO open github page or open package manager, depending on package install type
-            if (GUILayout.Button("Download Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
+            if (GUILayout.Button("Update to Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {
-                Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);
+                ClickUpdateButton();
             }
             //TODO add a button to open documentation page - how to update SDK with package manager or download+reimport package from github
             GUI.color = Color.white;
@@ -90,6 +103,15 @@ namespace Cognitive3D
                 Close();
             }
             GUILayout.EndHorizontal();
+        }
+
+        void ClickUpdateButton()
+        {
+#if USE_ATTRIBUTION
+            UnityEditor.PackageManager.UI.Window.Open("com.cognitive3d.c3d-sdk");
+#else
+            Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);
+#endif
         }
 
         void GUIHorizontalLine()

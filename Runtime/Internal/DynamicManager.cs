@@ -429,9 +429,21 @@ namespace Cognitive3D
                     {
                         if (j != 0)
                             sb.Append(",");
+                        sb.Append("{\"");
                         sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
-                        sb.Append(":");
-                        sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                        sb.Append("\":");
+
+                        if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                        {
+                            sb.Append("\"");
+                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                            sb.Append("\"");
+                        }
+                        else
+                        {
+                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                        }
+                        sb.Append("}");
                     }
                     props = sb.ToString();
                 }
@@ -441,11 +453,11 @@ namespace Cognitive3D
                     ActiveDynamicObjectsArray[i].hasEnabled = true;
                     if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                     {
-                        props += ",\"enabled\":true";
+                        props += ",{\"enabled\":true}";
                     }
                     else
                     {
-                        props += "\"enabled\":true";
+                        props += "{\"enabled\":true}";
                     }
                     writeScale = true;
                     ActiveDynamicObjectsArray[i].LastScale = scale;
@@ -463,7 +475,11 @@ namespace Cognitive3D
                     }
                 }
 
-                ActiveDynamicObjectsArray[i].HasProperties = false;
+                if (ActiveDynamicObjectsArray[i].HasProperties)
+                {
+                    ActiveDynamicObjectsArray[i].HasProperties = false;
+                    ActiveDynamicObjectsArray[i].Properties = null;
+                }
                 CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
             }
         }
@@ -628,9 +644,21 @@ namespace Cognitive3D
                         {
                             if (j != 0)
                                 sb.Append(",");
+                            sb.Append("{\"");
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
-                            sb.Append(":");
-                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                            sb.Append("\":");
+
+                            if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                            {
+                                sb.Append("\"");
+                                sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                                sb.Append("\"");
+                            }
+                            else
+                            {
+                                sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
+                            }
+                            sb.Append("}");
                         }
                         props = sb.ToString();
                     }
@@ -640,11 +668,11 @@ namespace Cognitive3D
                         ActiveDynamicObjectsArray[i].hasEnabled = true;
                         if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                         {
-                            props += ",\"enabled\":true";
+                            props += ",{\"enabled\":true}";
                         }
                         else
                         {
-                            props += "\"enabled\":true";
+                            props += "{\"enabled\":true}";
                         }
                         writeScale = true;
                         ActiveDynamicObjectsArray[i].LastScale = scale;
@@ -654,15 +682,19 @@ namespace Cognitive3D
                     {
                         if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                         {
-                            props += ",\"enabled\":false";
+                            props += ",{\"enabled\":false}";
                         }
                         else
                         {
-                            props += "\"enabled\":false";
+                            props += "{\"enabled\":false}";
                         }
                     }
 
-                    ActiveDynamicObjectsArray[i].HasProperties = false;
+                    if (ActiveDynamicObjectsArray[i].HasProperties)
+                    {
+                        ActiveDynamicObjectsArray[i].HasProperties = false;
+                        ActiveDynamicObjectsArray[i].Properties = null;
+                    }
                     CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
                 }
             }
@@ -772,9 +804,21 @@ namespace Cognitive3D
                         {
                             if (j != 0)
                                 sb.Append(",");
+                            sb.Append("{\"");
                             sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Key);
-                            sb.Append(":");
-                            sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Value);
+                            sb.Append("\":");
+
+                            if (ActiveDynamicObjectsArray[index].Properties[j].Value is string)
+                            {
+                                sb.Append("\"");
+                                sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Value);
+                                sb.Append("\"");
+                            }
+                            else
+                            {
+                                sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Value);
+                            }
+                            sb.Append("}");
                         }
                         props = sb.ToString();
                     }
@@ -784,11 +828,11 @@ namespace Cognitive3D
                         ActiveDynamicObjectsArray[index].hasEnabled = true;
                         if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
-                            props += ",\"enabled\":true";
+                            props += ",{\"enabled\":true}";
                         }
                         else
                         {
-                            props += "\"enabled\":true";
+                            props += "{\"enabled\":true}";
                         }
                         writeScale = true;
                         ActiveDynamicObjectsArray[index].LastScale = scale;
@@ -798,12 +842,17 @@ namespace Cognitive3D
                     {
                         if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
-                            props += ",\"enabled\":false";
+                            props += ",{\"enabled\":false}";
                         }
                         else
                         {
-                            props += "\"enabled\":false";
+                            props += "{\"enabled\":false}";
                         }
+                    }
+                    if (ActiveDynamicObjectsArray[index].HasProperties)
+                    {
+                        ActiveDynamicObjectsArray[index].HasProperties = false;
+                        ActiveDynamicObjectsArray[index].Properties = null;
                     }
                     CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale,Util.Timestamp(Time.frameCount));
                 }

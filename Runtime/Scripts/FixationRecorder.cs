@@ -89,12 +89,7 @@ namespace Cognitive3D
             }
 
             UnityEngine.XR.InputDevice device;
-            if (!GameplayReferences.GetEyeTrackingDevice(out device))
-            {
-                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED TRACKING DEVICE");
-                return false;
-            }
-
+            device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
             Vector3 headPos;
             if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
             {

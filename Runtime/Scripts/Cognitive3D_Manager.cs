@@ -26,7 +26,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public const string SDK_VERSION = "1.0.5";
+        public const string SDK_VERSION = "1.0.6";
 
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -257,7 +257,14 @@ namespace Cognitive3D
             if (generalSettings != null && generalSettings.Manager != null)
             {
                 var activeLoader = generalSettings.Manager.activeLoader;
-                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+                if (activeLoader != null)
+                {
+                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+                }
+                else
+                {
+                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
+                }
             }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
