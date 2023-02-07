@@ -14,7 +14,8 @@
         "Wave.Native",
         "XRPF",
         "Microsoft.MixedReality.Toolkit",
-        "Unity.XR.Management"
+        "Unity.XR.Management",
+        "Unity.XR.PICO"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
