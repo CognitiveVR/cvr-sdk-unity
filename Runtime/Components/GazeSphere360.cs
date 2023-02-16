@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Cognitive3D.Components
 {
-    public class GazeSphere360 : AnalyticsComponentBase
+    public class GazeSphere360 : MonoBehaviour
     {
         public Camera userCamera;
 
@@ -12,11 +10,6 @@ namespace Cognitive3D.Components
         void Update()
         {
             this.gameObject.transform.position = userCamera.transform.position;
-        }
-
-        public override string GetDescription()
-        {
-            return "Updates 360 video sphere to always enclose camera.";
         }
     }
 }

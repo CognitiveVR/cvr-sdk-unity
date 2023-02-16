@@ -75,7 +75,7 @@ namespace Cognitive3D
             GUILayout.EndHorizontal();
 
 
-            EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex].name));
+            EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex].name) || userCamera == null);
             if (GUILayout.Button("Create"))
             {
                 CreateAssets();
