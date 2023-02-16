@@ -172,7 +172,7 @@ namespace Cognitive3D
                     {
                         case 400: Util.logError("Network Post Data response code is 400. Bad Request"); break;
                         case 401: Util.logError("Network Post Data response code is 401. Is APIKEY set?"); break;
-                        case 404: Util.logError("Network Post Data response code is 404. Bad Request"); break;
+                        case 404: Util.logError("There is no scene associated with this SceneID on the dashboard. Please upload the scene using the Scene Setup Window."); break;
                         case -1: Util.logError("Network Post Data could not parse response code. Check upload URL"); break;
                         default: Util.logError("Network Post Data response code is " + responsecode); break;
                     }
