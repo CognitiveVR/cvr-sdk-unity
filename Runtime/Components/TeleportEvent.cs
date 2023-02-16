@@ -41,8 +41,6 @@ namespace Cognitive3D.Components
                 Vector3 newPosition = root.position;
                 new CustomEvent("cvr.teleport").SetProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).Send(newPosition);
                 Util.logDebug("teleport");
-                Debug.Log("Teleport Detected");
-
                 lastRootPosition = root.position;
             }
         }
