@@ -16,8 +16,10 @@ namespace Cognitive3D.Components
             get
             {
                 if (_root == null)
+                {
                     if (GameplayReferences.HMD == null) _root = transform;
-                    else { _root = GameplayReferences.HMD.root; }
+                    else { _root = GameplayReferences.HMD.transform; }
+                }
                 return _root;
             }
         }
@@ -37,9 +39,9 @@ namespace Cognitive3D.Components
             if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
             {
                 Vector3 newPosition = root.position;
-
                 new CustomEvent("cvr.teleport").SetProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).Send(newPosition);
                 Util.logDebug("teleport");
+                Debug.Log("Teleport Detected");
 
                 lastRootPosition = root.position;
             }
