@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /// <summary>
 /// Sends a Custom Event when a player's HMD root transform changes positions
@@ -10,20 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Teleport Event")]
     public class TeleportEvent : AnalyticsComponentBase
     {
-        Transform _root;
-        Transform root
-        {
-            get
-            {
-                if (_root == null)
-                {
-                    if (GameplayReferences.HMD == null) _root = transform;
-                    else { _root = GameplayReferences.HMD.transform; }
-                }
-                return _root;
-            }
-        }
-
+        public Transform teleportPlayer;
         Vector3 lastRootPosition;
 
         protected override void OnSessionBegin()
@@ -31,17 +17,17 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
-            lastRootPosition = root.position;
+            lastRootPosition = teleportPlayer.position;
         }
 
         void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            if (Vector3.SqrMagnitude(lastRootPosition - root.position) > 0.1f)
+            if (Vector3.SqrMagnitude(lastRootPosition - teleportPlayer.position) > 0.1f)
             {
-                Vector3 newPosition = root.position;
+                Vector3 newPosition = teleportPlayer.position;
                 new CustomEvent("cvr.teleport").SetProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).Send(newPosition);
                 Util.logDebug("teleport");
-                lastRootPosition = root.position;
+                lastRootPosition = teleportPlayer.position;
             }
         }
 
