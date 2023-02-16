@@ -196,7 +196,7 @@ namespace Cognitive3D
             }
             if (TrackingScene == null)
             {
-                Util.logWarning("CogntitiveVRManager No Tracking Scene Set!");
+                Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
             }
 
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
