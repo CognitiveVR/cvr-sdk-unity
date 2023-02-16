@@ -106,6 +106,20 @@ namespace Cognitive3D.Components
                 SensorRecorder.RecordDataPoint(hpCognitiveLoadConfidenceTag, data.StandardDeviation, hmdTimestamp);
             }
          }
+        public override string GetDescription()
+        {
+            return "Records Heart Rate, Heart Rate Variability, Pupillometry and Cognitive Load on an interval";
+        }
+#else
+        public override string GetDescription()
+        {
+            return "Requires HP Omnicept Runtime to be selected in Scene Setup Window";
+        }
+
+        public override bool GetWarning()
+        {
+            return true;
+        }
 #endif
     }
 }
