@@ -17,7 +17,10 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
-            lastRootPosition = teleportPlayer.position;
+            if (teleportPlayer != null)
+            {
+                lastRootPosition = teleportPlayer.position;
+            }
         }
 
         void Cognitive3D_Manager_OnUpdate(float deltaTime)
