@@ -22,18 +22,26 @@ namespace Cognitive3D.Components
 
         void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            if (Vector3.SqrMagnitude(lastRootPosition - teleportPlayer.position) > 0.1f)
+            if (teleportPlayer != null)
             {
-                Vector3 newPosition = teleportPlayer.position;
-                new CustomEvent("cvr.teleport").SetProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).Send(newPosition);
-                Util.logDebug("teleport");
-                lastRootPosition = teleportPlayer.position;
+                if (Vector3.SqrMagnitude(lastRootPosition - teleportPlayer.position) > 0.1f)
+                {
+                    Vector3 newPosition = teleportPlayer.position;
+                    new CustomEvent("cvr.teleport").SetProperty("distance", Vector3.Distance(newPosition, lastRootPosition)).Send(newPosition);
+                    Util.logDebug("teleport");
+                    lastRootPosition = teleportPlayer.position;
+                }
             }
         }
 
         public override string GetDescription()
         {
             return "Sends a Custom Event when a player's HMD root transform changes positions. If the player moves without an immediate teleport, do not use this component!";
+        }
+
+        public override bool GetError()
+        {
+            return (teleportPlayer == null);
         }
 
         private void Cognitive3D_Manager_OnPostSessionEnd()
