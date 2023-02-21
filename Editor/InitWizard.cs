@@ -272,7 +272,7 @@ namespace Cognitive3D
         {
             new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
-            new SDKDefine("Oculus Integration 32.0","C3D_OCULUS", "Adds Social Features" ),
+            new SDKDefine("Oculus Integration 46.0","C3D_OCULUS", "Adds Social Features, Eye tracking (for supported hardware)" ),
             new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
             new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
             new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
