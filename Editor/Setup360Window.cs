@@ -11,6 +11,7 @@ namespace Cognitive3D
     public class Setup360Window : EditorWindow
     {
         UnityEngine.Video.VideoClip selectedClip;
+        UnityEngine.Camera userCamera;
         bool latlong = true;
 
         public static void Init()
@@ -35,7 +36,8 @@ namespace Cognitive3D
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField(selectedClip, typeof(UnityEngine.Video.VideoClip), true);
+            selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField("Video Clip", selectedClip, typeof(UnityEngine.Video.VideoClip), true);
+            userCamera = (UnityEngine.Camera)EditorGUILayout.ObjectField("Main Camera", userCamera, typeof(UnityEngine.Camera), true);
 
             if (EditorCore.MediaSources.Length == 0)
             {
@@ -73,7 +75,7 @@ namespace Cognitive3D
             GUILayout.EndHorizontal();
 
 
-            EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex].name));
+            EditorGUI.BeginDisabledGroup(selectedClip == null || string.IsNullOrEmpty(EditorCore.MediaSources[_choiceIndex].name) || userCamera == null);
             if (GUILayout.Button("Create"))
             {
                 CreateAssets();
@@ -133,6 +135,9 @@ namespace Cognitive3D
                 sphere = (GameObject)PrefabUtility.InstantiatePrefab(Resources.Load("invertedspherecube"));
             }
             sphere.gameObject.name = "360 Video Player";
+            sphere.transform.position = userCamera.transform.position;
+            Cognitive3D.Components.GazeSphere360 myGaze = sphere.AddComponent<Cognitive3D.Components.GazeSphere360>();
+            myGaze.userCamera = userCamera;
 
             //setup video source to write to render texture
             var vp = sphere.GetComponentInChildren<UnityEngine.Video.VideoPlayer>();
@@ -170,20 +175,6 @@ namespace Cognitive3D
             if (!internalGo.GetComponent<DynamicObject>())
             {
                 internalGo.AddComponent<DynamicObject>();
-            }
-
-            //find the main camera and move it to the origin
-            var camMain = Camera.main;
-            if (camMain == null)
-            {
-                Debug.LogError("Cognitive3D 360 Setup: Could not find Camera.Main! Creating a new camera");
-                var cameraGo = new GameObject("Main Camera");
-                cameraGo.tag = "MainCamera";
-                cameraGo.AddComponent<Camera>();
-            }
-            else
-            {
-                camMain.transform.position = Vector3.zero;
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

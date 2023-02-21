@@ -26,7 +26,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public const string SDK_VERSION = "1.0.5";
+        public const string SDK_VERSION = "1.0.6";
 
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -196,7 +196,7 @@ namespace Cognitive3D
             }
             if (TrackingScene == null)
             {
-                Util.logWarning("CogntitiveVRManager No Tracking Scene Set!");
+                Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
             }
 
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
