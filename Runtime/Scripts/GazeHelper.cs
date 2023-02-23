@@ -183,19 +183,22 @@ namespace Cognitive3D
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return lastDirection;
 
-            //TODO this if one eye is invalid, should attempt to check gaze from the other eye
-            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
-
-            if (!eyeGaze.IsValid)
+            var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+            if (eyeGazeRight.IsValid && eyeGazeRight.Confidence > ConfidenceThreshold)
+            {
+                var pose = eyeGazeRight.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                lastDirection = pose.orientation * Vector3.forward;
                 return lastDirection;
-
-            var Confidence = eyeGaze.Confidence;
-            if (Confidence < ConfidenceThreshold)
+            }            
+            else if (eyeGazeLeft.IsValid && eyeGazeLeft.Confidence > ConfidenceThreshold)
+            {
+                var pose = eyeGazeLeft.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                lastDirection = pose.orientation * Vector3.forward;
                 return lastDirection;
-
-            var pose = eyeGaze.Pose.ToOVRPose();
-            pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
-            lastDirection = pose.orientation * Vector3.forward;
+            }
             return lastDirection;
         }
 #else

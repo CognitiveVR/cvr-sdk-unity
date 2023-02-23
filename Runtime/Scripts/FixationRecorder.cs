@@ -684,21 +684,25 @@ namespace Cognitive3D
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
 
-            //TODO this if one eye is invalid, should attempt to check gaze from the other eye
-            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
-
-            if (!eyeGaze.IsValid)
-                return false;
-
-            var Confidence = eyeGaze.Confidence;
-            if (Confidence < ConfidenceThreshold)
-                return false;
-
-            var pose = eyeGaze.Pose.ToOVRPose();
-            pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
-            ray.origin = pose.position;
-            ray.direction = pose.orientation * Vector3.forward;
-            return true;
+            var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+            if (eyeGazeRight.IsValid && eyeGazeRight.Confidence > ConfidenceThreshold)
+            {
+                var pose = eyeGazeRight.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                ray.origin = pose.position;
+                ray.direction = pose.orientation * Vector3.forward;
+                return true;
+            }            
+            else if (eyeGazeLeft.IsValid && eyeGazeLeft.Confidence > ConfidenceThreshold)
+            {
+                var pose = eyeGazeLeft.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                ray.origin = pose.position;
+                ray.direction = pose.orientation * Vector3.forward;
+                return true;
+            }
+            return false;
         }
 
         bool LeftEyeOpen()
@@ -706,14 +710,17 @@ namespace Cognitive3D
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+            if (!eyeGaze.IsValid)
+                return false;
             return eyeGaze.Confidence > ConfidenceThreshold;
         }
         bool RightEyeOpen()
         {
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
-                
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            if (!eyeGaze.IsValid)
+                return false;
             return eyeGaze.Confidence > ConfidenceThreshold;
         }
 
@@ -816,7 +823,6 @@ namespace Cognitive3D
 
         //if active fixation is world space, in world space, this indicates the last several positions for the average fixation position
         //if active fixation is local space, these are in local space
-        List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
         bool hasDisplayedSceneIdWarning = false;
         bool hasDisplayedHMDNullWarning = false;
 
