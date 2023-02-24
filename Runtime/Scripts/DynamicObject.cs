@@ -138,8 +138,8 @@ namespace Cognitive3D
         //used to select svg on SE to display button inputs
         public bool IsController;
         public bool IsRight;
-        internal bool IdentifyControllerAtRuntime = true;
-        internal ControllerType FallbackControllerType;
+        public bool IdentifyControllerAtRuntime = true;
+        public ControllerType FallbackControllerType;
 
         public DynamicObjectIdPool IdPool;
 
