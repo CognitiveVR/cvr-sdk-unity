@@ -445,15 +445,15 @@ namespace Cognitive3D.Components
             }
 
             Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
-
-            DynamicObject.ControllerDisplayType displayType;
             InputDevice tempDevice;
 
             //left hand
             if (GameplayReferences.GetControllerInfo(false,out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,false);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                LeftHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -538,15 +538,18 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
+                    default:
+                        Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
                 }
             }
 
             //right hand
             if (GameplayReferences.GetControllerInfo(true, out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,true);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                RightHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -629,12 +632,13 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
+                    default:
+                        Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
                 }
             }
 
