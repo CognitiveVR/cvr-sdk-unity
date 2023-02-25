@@ -168,7 +168,7 @@ namespace Cognitive3D
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";
-            public long LastRevision; //utc timestamp on upload
+            public string LastRevision; //utc timestamp on upload
             public int VersionNumber = 1; //post session data
             public int VersionId; //attribution. exitpoll?
 
