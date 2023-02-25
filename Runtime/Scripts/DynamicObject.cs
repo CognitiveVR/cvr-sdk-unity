@@ -494,12 +494,34 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                return CommonDynamicMesh.OculusQuestTouchLeft;
+                bool isQuestPro = false;
+#if C3D_OCULUS
+                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+#endif
+                if (isQuestPro)
+                {
+                    return CommonDynamicMesh.QuestProTouchLeft;
+                }
+                else
+                {
+                    return CommonDynamicMesh.OculusQuestTouchLeft;
+                }
             }
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                return CommonDynamicMesh.OculusQuestTouchRight;
+                bool isQuestPro = false;
+#if C3D_OCULUS
+                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+#endif
+                if (isQuestPro)
+                {
+                    return CommonDynamicMesh.QuestProTouchRight;
+                }
+                else
+                {
+                    return CommonDynamicMesh.OculusQuestTouchRight;
+                }
             }
             if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
                 || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
@@ -544,12 +566,34 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                return ControllerDisplayType.oculusquesttouchleft;
+                bool isQuestPro = false;
+#if C3D_OCULUS
+                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+#endif
+                if (isQuestPro)
+                {
+                    return ControllerDisplayType.quest_pro_touch_left;
+                }
+                else
+                {
+                    return ControllerDisplayType.oculusquesttouchleft;
+                }
             }
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                return ControllerDisplayType.oculusquesttouchright;
+                bool isQuestPro = false;
+#if C3D_OCULUS
+                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+#endif
+                if (isQuestPro)
+                {
+                    return ControllerDisplayType.quest_pro_touch_right;
+                }
+                else
+                {
+                    return ControllerDisplayType.oculusquesttouchright;
+                }
             }
             if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == false)
             {
