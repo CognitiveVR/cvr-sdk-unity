@@ -66,7 +66,7 @@ namespace Cognitive3D
         {
             if (initDelay > 0) { initDelay--; return; }
             EditorApplication.update -= UpdateInitWizard;
-            InitWizard.Init();
+            ProjectSetupWindow.Init();
         }
 
         static void ModeChanged(PlayModeStateChange playModeState)
@@ -349,30 +349,6 @@ namespace Cognitive3D
             }
         }
 
-        static Color AcceptVibrant
-        {
-            get
-            {
-                if (EditorGUIUtility.isProSkin)
-                {
-                    return Color.green;
-                }
-                return Color.green;
-            }
-        }
-
-        static Color DeclineVibrant
-        {
-            get
-            {
-                if (EditorGUIUtility.isProSkin)
-                {
-                    return Color.red;
-                }
-                return Color.red;
-            }
-        }
-
         public static void GUIHorizontalLine(float size = 10)
         {
             GUILayout.Space(size);
@@ -380,86 +356,16 @@ namespace Cognitive3D
             GUILayout.Space(size);
         }
 
-        public static bool AcceptButtonLarge(string text)
-        {
-            GUI.color = AcceptVibrant;
-            if (GUILayout.Button(text, GUILayout.Height(40)))
-                return true;
-            GUI.color = Color.white;
-            return false;
-        }
-
-        public static bool DeclineButtonLarge(string text)
-        {
-            GUI.color = DeclineVibrant;
-            if (GUILayout.Button(text, GUILayout.Height(40)))
-                return true;
-            GUI.color = Color.white;
-            return false;
-        }
-
-        public static void DisableButtonLarge(string text)
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            GUILayout.Button(text, GUILayout.Height(40));
-            EditorGUI.EndDisabledGroup();
-        }
-
-        public static bool DisableableAcceptButtonLarget(string text, bool disable)
-        {
-            if (disable)
-            {
-                DisableButtonLarge(text);
-                return false;
-            }
-            return AcceptButtonLarge(text);
-        }
-
-        //https://forum.unity.com/threads/how-to-copy-and-paste-in-a-custom-editor-textfield.261087/
-        /// <summary>
-        /// Add copy-paste functionality to any text field
-        /// Returns changed text or NULL.
-        /// Usage: text = HandleCopyPaste (controlID) ?? text;
-        /// </summary>
-        public static string HandleCopyPaste(int controlID)
-        {
-            if (controlID == GUIUtility.keyboardControl)
-            {
-                if (Event.current.type == EventType.KeyUp && (Event.current.modifiers == EventModifiers.Control || Event.current.modifiers == EventModifiers.Command))
-                {
-                    if (Event.current.keyCode == KeyCode.C)
-                    {
-                        Event.current.Use();
-                        TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                        editor.Copy();
-                    }
-                    else if (Event.current.keyCode == KeyCode.V)
-                    {
-                        Event.current.Use();
-                        TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                        editor.Paste();
-                        return editor.text;
-                    }
-                }
-            }
-            return null;
-        }
-
         /// <summary>
         /// TextField with copy-paste support
         /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength, string styleOverride)
+        public static string TextField(Rect rect, string value, int maxlength, string styleOverride = null)
         {
             int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
             if (textFieldID == 0)
             {
                 return value;
             }
-
-#if !UNITY_2019_4_OR_NEWER
-            //enables copy/paste from text fields in old versions of unity
-            value = HandleCopyPaste(textFieldID) ?? value;
-#endif
             if (styleOverride == null)
             {
                 return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
@@ -469,27 +375,6 @@ namespace Cognitive3D
                 return GUI.TextField(rect, value, maxlength, styleOverride);
             }
         }
-
-        /// <summary>
-        /// TextField with copy-paste support
-        /// Overload when no styleoverride is passed in
-        /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength)
-        {
-            int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
-            if (textFieldID == 0)
-            {
-                return value;
-            }
-
-#if !UNITY_2019_4_OR_NEWER
-            //enables copy/paste from text fields in old versions of unity
-            value = HandleCopyPaste(textFieldID) ?? value;
-#endif
-            return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
-        }
-
-
 
         #endregion
 

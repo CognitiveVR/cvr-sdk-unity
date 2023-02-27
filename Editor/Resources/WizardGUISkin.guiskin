@@ -2006,9 +2006,9 @@ MonoBehaviour:
     m_FontSize: 12
     m_FontStyle: 0
     m_Alignment: 3
-    m_WordWrap: 1
+    m_WordWrap: 0
     m_RichText: 1
-    m_TextClipping: 0
+    m_TextClipping: 1
     m_ImagePosition: 0
     m_ContentOffset: {x: 0, y: 0}
     m_FixedWidth: 0

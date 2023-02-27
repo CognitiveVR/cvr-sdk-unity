@@ -7,59 +7,52 @@ namespace Cognitive3D
 {
     public class MenuItems
     {
-        [MenuItem("Cognitive3D/Select Cognitive3D Analytics Manager", priority = 50)]
-        static void Cognitive3DManager()
+        [MenuItem("Cognitive3D/Preferences", priority = 5)]
+        static void Cognitive3DOptions()
         {
-            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
-            if (found != null)
-            {
-                Selection.activeGameObject = found.gameObject;
-                return;
-            }
-            else
-            {
-                EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
-            }
+            Selection.activeObject = EditorCore.GetPreferences();
+        }
+        [MenuItem("Cognitive3D/Help", priority = 10)]
+        static void Cognitive3DHelp()
+        {
+            HelpWindow.Init();
+        }
+        [MenuItem("Cognitive3D/Project Setup", priority = 15)]
+        static void Cognitive3DProjectSetup()
+        {
+            ProjectSetupWindow.Init();
+        }
+        [MenuItem("Cognitive3D/Scene Setup", priority = 20)]
+        static void Cognitive3DSceneSetup()
+        {
+            SceneSetupWindow.Init();
+        }
+        [MenuItem("Cognitive3D/Manage Dynamic Objects", priority = 25)]
+        static void Cognitive3DManageDynamicObjects()
+        {
+            DynamicObjectsWindow.Init();
+        }
+        [MenuItem("Cognitive3D/360 Setup", priority = 30)]
+        static void Cognitive3D360Setup()
+        {
+            Setup360Window.Init();
         }
 
-        [MenuItem("Cognitive3D/Open Web Dashboard...", priority = 10)]
+
+        [MenuItem("Cognitive3D/Open Web Dashboard...", priority = 55)]
         static void Cognitive3DDashboard()
         {
             Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
         }
-
-        [MenuItem("Cognitive3D/Check for Updates...", priority = 5)]
+        [MenuItem("Cognitive3D/Documentation...", priority = 60)]
+        static void Cognitive3DDocumentation()
+        {
+            Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Documentation);
+        }
+        [MenuItem("Cognitive3D/Check for Updates...", priority = 65)]
         static void CognitiveCheckUpdates()
         {
             EditorCore.ForceCheckUpdates();
-        }
-
-        [MenuItem("Cognitive3D/Scene Setup And Upload", priority = 60)]
-        static void Cognitive3DSceneSetup()
-        {
-            //open window
-            InitWizard.Init();
-        }
-
-        [MenuItem("Cognitive3D/360 Setup", priority = 65)]
-        static void Cognitive3D360Setup()
-        {
-            //open window
-            Setup360Window.Init();
-        }
-
-        [MenuItem("Cognitive3D/Manage Dynamic Objects", priority = 55)]
-        static void Cognitive3DManageDynamicObjects()
-        {
-            //open window
-            ManageDynamicObjects.Init();
-        }
-
-        [MenuItem("Cognitive3D/Preferences", priority = 0)]
-        static void Cognitive3DOptions()
-        {
-            //select asset
-            Selection.activeObject = EditorCore.GetPreferences();
         }
     }
 }

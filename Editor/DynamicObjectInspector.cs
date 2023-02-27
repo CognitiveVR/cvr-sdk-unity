@@ -305,12 +305,12 @@ namespace Cognitive3D
                 Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                    AggregationManifest manifest = new AggregationManifest();
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
                         new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                         new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                         new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                    ManageDynamicObjects.UploadManifest(manifest, null);
+                    DynamicObjectsWindow.UploadManifest(manifest, null);
                 });
             }
             else if (dyn.IdPool != null)
@@ -318,15 +318,15 @@ namespace Cognitive3D
                 Debug.Log("Cognitive3D Dynamic Object: Upload id pool to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    AggregationManifest manifest = new AggregationManifest();
                     for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
                     {
-                        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
                             new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                             new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                             new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
                     }
-                    ManageDynamicObjects.UploadManifest(manifest, null);
+                    DynamicObjectsWindow.UploadManifest(manifest, null);
                 });
             }
         }
