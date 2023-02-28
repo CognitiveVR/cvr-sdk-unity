@@ -27,7 +27,7 @@ namespace Cognitive3D
         {
             SceneSetupWindow.Init();
         }
-        [MenuItem("Cognitive3D/Manage Dynamic Objects", priority = 25)]
+        [MenuItem("Cognitive3D/Dynamic Objects", priority = 25)]
         static void Cognitive3DManageDynamicObjects()
         {
             DynamicObjectsWindow.Init();

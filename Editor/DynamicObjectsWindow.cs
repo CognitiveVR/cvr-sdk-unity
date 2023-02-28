@@ -60,14 +60,15 @@ namespace Cognitive3D
     }
 
     //temporary popup window for mass renaming dynamic object components
+    //TODO format to keep consistent look with onboarding screens
     public class RenameDynamicWindow : EditorWindow
     {
         static DynamicObjectsWindow sourceWindow;
         static string defaultMeshName;
         static System.Action<string> action;
-        public static void Init(DynamicObjectsWindow dynamicsWindow, string defaultName, System.Action<string> renameAction)
+        public static void Init(DynamicObjectsWindow dynamicsWindow, string defaultName, System.Action<string> renameAction, string title)
         {
-            RenameDynamicWindow window = (RenameDynamicWindow)EditorWindow.GetWindow(typeof(RenameDynamicWindow), true, "Rename");
+            RenameDynamicWindow window = (RenameDynamicWindow)EditorWindow.GetWindow(typeof(RenameDynamicWindow), true, title);
             window.ShowUtility();
             sourceWindow = dynamicsWindow;
             defaultMeshName = defaultName;
@@ -177,6 +178,8 @@ namespace Cognitive3D
             if (responseCode == 200)
             {
                 //dev key is fine
+                DynamicObjectsWindow window = (DynamicObjectsWindow)EditorWindow.GetWindow(typeof(DynamicObjectsWindow));
+                window.GetDashboardManifest();
             }
             else
             {
@@ -373,7 +376,7 @@ namespace Cognitive3D
             Rect idrect = new Rect(350, 55, 80, 30);
             GUI.Label(idrect, "Id", "dynamicheader");
 
-            Rect exported = new Rect(440, 55, 90, 30);
+            Rect exported = new Rect(440, 55, 55, 30);
             string exportedStyle = (SortMethod == SortByMethod.Exported || SortMethod == SortByMethod.ReverseExported) ? "dynamicheaderbold" : "dynamicheader";
             if (GUI.Button(exported, "Exported", exportedStyle))
             {
@@ -388,10 +391,12 @@ namespace Cognitive3D
             string uploadedStyle = (SortMethod == SortByMethod.Uploaded || SortMethod == SortByMethod.ReverseUploaded) ? "dynamicheaderbold" : "dynamicheader";
             if (GUI.Button(uploaded,"Uploaded", uploadedStyle))
             {
-
+                if (SortMethod != SortByMethod.Uploaded)
+                    SortMethod = SortByMethod.Uploaded;
+                else
+                    SortMethod = SortByMethod.ReverseUploaded;
+                SortByUploaded();
             }
-
-            //IMPROVEMENT get list of uploaded mesh names from dashboard
 
             //gear icon
             Rect tools = new Rect(570, 55, 30, 30);
@@ -419,7 +424,7 @@ namespace Cognitive3D
                 gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Open Dynamic Export Folder"), false, OnOpenDynamicExportFolder);
 
-                gm.AddItem(new GUIContent("Fetch Dynamics"), false, OnFetchDashboardDynamics);
+                gm.AddItem(new GUIContent("Get Dynamic IDs from Dashboard"), false, GetDashboardManifest);
 
                 gm.ShowAsContext();
                 //gm.AddItem("rename selected", false, OnRenameSelected);
@@ -459,11 +464,6 @@ namespace Cognitive3D
             }
 
             int selectionCount = 0;
-            /*foreach(var v in Selection.gameObjects)
-            {
-                if (v.GetComponentInChildren<DynamicObject>())
-                    selectionCount++;
-            }*/
             foreach (var entry in Entries)
             {
                 if (entry.selected)
@@ -471,17 +471,6 @@ namespace Cognitive3D
                     selectionCount++;
                 }
             }
-
-            //IMPROVEMENT enable mesh upload from selected dynamic object id pool that has exported mesh files
-            //if (Selection.activeObject.GetType() == typeof(DynamicObjectIdPool))
-            //{
-            //    var pool = Selection.activeObject as DynamicObjectIdPool;
-            //    if (EditorCore.HasDynamicExportFiles(pool.MeshName))
-            //    {
-            //        selectionCount++;
-            //    }       
-            //}
-
             //texture resolution
 
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
@@ -522,8 +511,8 @@ namespace Cognitive3D
 
         Vector2 dynamicScrollPosition;
 
+        //in 2020+, overload allows for finding disabled objects in the scene as well
         DynamicObject[] _cachedDynamics;
-        //in 2020+, overload allows for disabled objects
         DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
 
         public static List<DynamicObject> GetDynamicObjectsInScene()
@@ -580,7 +569,7 @@ namespace Cognitive3D
                     break;
                 }
             }
-            RenameDynamicWindow.Init(this, defaultvalue, RenameGameObject);
+            RenameDynamicWindow.Init(this, defaultvalue, RenameGameObject, "Rename GameObjects");
         }
 
         void OnRenameMeshSelected()
@@ -597,7 +586,7 @@ namespace Cognitive3D
                     break;
                 }
             }
-            RenameDynamicWindow.Init(this, defaultvalue, RenameMesh);
+            RenameDynamicWindow.Init(this, defaultvalue, RenameMesh, "Rename Meshes");
         }
 
         void OnOpenDynamicExportFolder()
@@ -605,53 +594,62 @@ namespace Cognitive3D
             EditorUtility.RevealInFinder(EditorCore.GetDynamicExportDirectory());
         }
 
-        UnityEngine.Networking.UnityWebRequest getDashboardDynamics;
-        void OnFetchDashboardDynamics()
-        {
-            var currentscene = Cognitive3D_Preferences.FindCurrentScene();
-
-            string url = "https://data.cognitive3d.com/v0/versions/" + currentscene.VersionId + "/objects";
-            Debug.Log(url);
-            getDashboardDynamics = UnityEngine.Networking.UnityWebRequest.Get(url);
-            getDashboardDynamics.SetRequestHeader("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-            getDashboardDynamics.SendWebRequest();
-            //consider await/async this operation
-            EditorApplication.update += WaitForDashboardDynamics;
-        }
-
         List<DashboardObject> dashboardObjects = new List<DashboardObject>();
-        void WaitForDashboardDynamics()
+        void GetDashboardManifest()
         {
-            if (!getDashboardDynamics.isDone) { return; }
-            EditorApplication.update -= WaitForDashboardDynamics;
-            string text = getDashboardDynamics.downloadHandler.text;
-            
-            try
+            var currentSceneSettings = Cognitive3D_Preferences.FindCurrentScene();
+            if (currentSceneSettings == null)
             {
-                dashboardObjects.Clear();
-                dashboardObjects.AddRange(Util.GetJsonArray<DashboardObject>(text));
+                return;
             }
-            catch (System.Exception e)
-            {
-                Debug.LogException(e);
-                Debug.Log(text);
-            }
+            string url = CognitiveStatics.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
 
-            //foreach entry, loop through dynamic object entries on this list and display as 'uploaded' if found
-            foreach(var dashboardObject in dashboardObjects)
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
             {
-                Entry found = Entries.Find(delegate (Entry obj)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            }
+            EditorNetwork.Get(url, GetManifestResponse, headers, false);
+        }
+
+        void GetManifestResponse(int responsecode, string error, string text)
+        {
+            if (responsecode == 200)
+            {
+                try
                 {
-                    if (obj.objectReference == null) { return false; }
-                    if (!obj.objectReference.UseCustomId) { return false; }
-                    return obj.objectReference.GetId() == dashboardObject.sdkId;
-                });
-                if (found == null) { continue; }
+                    dashboardObjects.Clear();
+                    dashboardObjects.AddRange(Util.GetJsonArray<DashboardObject>(text));
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogException(e);
+                    Debug.Log(text);
+                }
 
-                found.hasBeenUploaded = true;
+                //foreach entry, loop through dynamic object entries on this list and display as 'uploaded' if found
+                foreach (var dashboardObject in dashboardObjects)
+                {
+                    Entry found = Entries.Find(delegate (Entry obj)
+                    {
+                        if (obj.objectReference == null) { return false; }
+                        if (!obj.objectReference.UseCustomId) { return false; }
+                        return obj.objectReference.GetId() == dashboardObject.sdkId;
+                    });
+                    if (found == null) { continue; }
+
+                    found.hasBeenUploaded = true;
+                }
+                Repaint();
+                EditorCore.RefreshSceneVersion(null);
+            }
+            else
+            {
+                Util.logWarning("GetManifestResponse " + responsecode + " " + error);
             }
         }
 
+        #region Sorting
         enum SortByMethod
         {
             GameObjectName,
@@ -674,7 +672,9 @@ namespace Cognitive3D
                 return string.Compare(x.gameobjectName, y.gameobjectName);
             });
             if (SortMethod == SortByMethod.ReverseGameObjectName)
+            {
                 Entries.Reverse();
+            }
         }
 
         void SortByMeshName()
@@ -684,7 +684,9 @@ namespace Cognitive3D
                 return string.Compare(x.meshName, y.meshName);
             });
             if (SortMethod == SortByMethod.ReverseMeshName)
+            {
                 Entries.Reverse();
+            }
         }
 
         void SortByExported()
@@ -703,23 +705,48 @@ namespace Cognitive3D
             }
         }
 
+        void SortByUploaded()
+        {
+            Entries.Sort(delegate (Entry x, Entry y)
+            {
+                if (!x.hasBeenUploaded && !y.hasBeenUploaded) { return 0; }
+                if (x.hasBeenUploaded && y.hasBeenUploaded) { return 0; }
+                if (x.hasBeenUploaded && !y.hasBeenUploaded) { return -1; }
+                if (!x.hasBeenUploaded && y.hasBeenUploaded) { return 1; }
+                return -1;
+            });
+            if (SortMethod == SortByMethod.ReverseUploaded)
+            {
+                Entries.Reverse();
+            }
+        }
+        #endregion
+
+        #region Filtering
+
         void OnToggleMeshFilter()
         {
             filterMeshes = !filterMeshes;
             if (searchBarString != string.Empty)
+            {
                 FilterList(searchBarString);
+            }
         }
         void OnToggleGameObjectFilter()
         {
             filterGameObjects = !filterGameObjects;
             if (searchBarString != string.Empty)
+            {
                 FilterList(searchBarString);
+            }
         }
         void OnToggleIdFilter()
         {
             filterIds = !filterIds;
             if (searchBarString != string.Empty)
+            {
                 FilterList(searchBarString);
+            }
         }
 
         bool CommonMeshesContainsSearch(string search)
@@ -782,6 +809,9 @@ namespace Cognitive3D
                 entry.visible = true;
             }
         }
+        #endregion
+
+        #region Utilities
 
         void RenameMesh(string newMeshName)
         {
@@ -810,6 +840,8 @@ namespace Cognitive3D
                 entry.objectReference.gameObject.name = newGameObjectName;
             }
         }
+
+        #endregion
 
         void DrawDynamicObjectEntry(Entry dynamic, Rect rect, bool darkbackground)
         {
@@ -912,9 +944,11 @@ namespace Cognitive3D
                 GUI.Label(idRect, "Generated", dynamiclabel);
             }
 
+            //has mesh exported
             if (dynamic.objectReference == null)
             {
                 //likely a pool
+                //TODO check export directory for files that match the mesh name
             }
             else
             {
@@ -929,13 +963,30 @@ namespace Cognitive3D
                 }
             }
 
-            if (dynamic.hasBeenUploaded)
+            //has been uploaded
+            if (dynamic.objectReference == null)
             {
-                GUI.Label(uploaded, EditorCore.Checkmark, image_centered);
+                //id pool
+                GUI.Label(uploaded, new GUIContent(EditorCore.EmptyCheckmark, "IDs in this pool have not been uploaded to dashboard"), image_centered);
+                //TODO check if any/all ids have been uploaded from id pool asset
+            }
+            else if (dynamic.objectReference.IdPool != null)
+            {
+                //dynamic with id pool reference
+                GUI.Label(uploaded, new GUIContent("", "Objects using an ID pool. Check that the Pool asset IDs have been uploaded to aggregate these objects"), image_centered);
+            }
+            else if (dynamic.objectReference.UseCustomId == false)
+            {
+                //generated at runtime
+                GUI.Label(uploaded, new GUIContent("", "Objects with generated IDs are not aggregated between sessions"), image_centered);
+            }
+            else if (dynamic.hasBeenUploaded)
+            {
+                GUI.Label(uploaded, new GUIContent(EditorCore.Checkmark,"This object's data will be aggregated across sessions"), image_centered);
             }
             else
             {
-                GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
+                GUI.Label(uploaded, new GUIContent(EditorCore.EmptyCheckmark, "ID does not exist on Dashboard and will not be aggregated across sessions"), image_centered);
             }   
         }
 
@@ -1116,58 +1167,6 @@ namespace Cognitive3D
                 });
             });
         }
-
-        //currently unused
-        //get dynamic object aggregation manifest for the current scene
-        void GetManifest()
-        {
-            var currentSceneSettings = Cognitive3D_Preferences.FindCurrentScene();
-            if (currentSceneSettings == null)
-            {
-                return;
-            }
-            if (string.IsNullOrEmpty(currentSceneSettings.SceneId))
-            {
-                Util.logWarning("Get Manifest current scene doesn't have an id!");
-                return;
-            }
-
-            string url = CognitiveStatics.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            if (EditorCore.IsDeveloperKeyValid)
-                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-            EditorNetwork.Get(url, GetManifestResponse, headers, false);//AUTH
-        }
-
-
-        //currently unused
-        void GetManifestResponse(int responsecode, string error, string text)
-        {
-            if (responsecode == 200)
-            {
-                //BuildManifest(getRequest.text);
-                var allEntries = Util.GetJsonArray<AggregationManifest.AggregationManifestEntry>(text);
-
-                Debug.Log("Number of Dynamic Objects in current Manifest: " + allEntries.Length);
-
-                var Manifest = new AggregationManifest();
-
-                Manifest.objects = new List<AggregationManifest.AggregationManifestEntry>(allEntries);
-                Repaint();
-
-                //also hit settings to get the current version of the scene
-                EditorCore.RefreshSceneVersion(null);
-            }
-            else
-            {
-                Util.logWarning("GetManifestResponse " + responsecode + " " + error);
-            }
-        }
-
-        //only need id, mesh and name
-        //static AggregationManifest Manifest;
-        //static SceneVersionCollection SceneVersionCollection;
 
         /// <summary>
         /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
