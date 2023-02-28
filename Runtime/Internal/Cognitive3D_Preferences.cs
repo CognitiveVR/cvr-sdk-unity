@@ -105,6 +105,7 @@ namespace Cognitive3D
         public bool LocalStorage = true;
         public bool UploadCacheOnEndPlay = true;
 
+        public bool IncludeDisabledDynamicObjects = true;
         public int TextureResize = 1;
         public bool ExportSceneLODLowest = true;
         public bool ExportAOMaps = false;

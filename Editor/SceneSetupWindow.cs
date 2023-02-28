@@ -755,8 +755,9 @@ namespace Cognitive3D
                     //fifth upload manifest
                     System.Action completedRefreshSceneVersion = delegate ()
                     {
+                        //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
                         AggregationManifest manifest = new AggregationManifest();
-                        DynamicObjectsWindow.AddOrReplaceDynamic(manifest, DynamicObjectsWindow.GetDynamicObjectsInScene());
+                        DynamicObjectsWindow.AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
                         DynamicObjectsWindow.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
                     };
 
@@ -893,6 +894,11 @@ namespace Cognitive3D
                         onclick.Invoke();
                 }
             }
+        }
+
+        List<DynamicObject> GetDynamicObjectsInScene()
+        {
+            return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
         }
 
 #if C3D_STEAMVR2

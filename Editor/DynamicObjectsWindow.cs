@@ -426,8 +426,10 @@ namespace Cognitive3D
 
                 gm.AddItem(new GUIContent("Get Dynamic IDs from Dashboard"), false, GetDashboardManifest);
 
+#if UNITY_2020_1_OR_NEWER
+                gm.AddItem(new GUIContent("Include Disabled Dynamic Objects"), Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects, ToggleIncludeDisabledObjects);
+#endif
                 gm.ShowAsContext();
-                //gm.AddItem("rename selected", false, OnRenameSelected);
             }
 
 
@@ -513,11 +515,20 @@ namespace Cognitive3D
 
         //in 2020+, overload allows for finding disabled objects in the scene as well
         DynamicObject[] _cachedDynamics;
-        DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
-
-        public static List<DynamicObject> GetDynamicObjectsInScene()
+        DynamicObject[] GetDynamicObjects
         {
-            return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+            get
+            {
+                if (_cachedDynamics == null || _cachedDynamics.Length == 0)
+                {
+#if UNITY_2020_1_OR_NEWER
+                    _cachedDynamics = FindObjectsOfType<DynamicObject>(includeDisabledObjects);
+#else
+                    _cachedDynamics = FindObjectsOfType<DynamicObject>();
+#endif
+                }
+                return _cachedDynamics;
+            }
         }
 
         List<DynamicObject> selectedDynamicsOnFocus = new List<DynamicObject>();
@@ -547,7 +558,9 @@ namespace Cognitive3D
             Entries = null;
             GetEntryList(GetDynamicObjects, EditorCore.GetDynamicObjectPoolAssets);
             if (!string.IsNullOrEmpty(searchBarString))
+            {
                 FilterList(searchBarString);
+            }
         }
 
         public void RefreshList()
@@ -592,6 +605,13 @@ namespace Cognitive3D
         void OnOpenDynamicExportFolder()
         {
             EditorUtility.RevealInFinder(EditorCore.GetDynamicExportDirectory());
+        }
+
+        //selecting disabled scene objects is supported in 2020+
+        void ToggleIncludeDisabledObjects()
+        {
+            Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects = !Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects;
+            RefreshList();
         }
 
         List<DashboardObject> dashboardObjects = new List<DashboardObject>();
@@ -649,7 +669,7 @@ namespace Cognitive3D
             }
         }
 
-        #region Sorting
+#region Sorting
         enum SortByMethod
         {
             GameObjectName,
@@ -720,9 +740,9 @@ namespace Cognitive3D
                 Entries.Reverse();
             }
         }
-        #endregion
+#endregion
 
-        #region Filtering
+#region Filtering
 
         void OnToggleMeshFilter()
         {
@@ -809,9 +829,9 @@ namespace Cognitive3D
                 entry.visible = true;
             }
         }
-        #endregion
+#endregion
 
-        #region Utilities
+#region Utilities
 
         void RenameMesh(string newMeshName)
         {
@@ -841,7 +861,7 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
         void DrawDynamicObjectEntry(Entry dynamic, Rect rect, bool darkbackground)
         {
@@ -860,8 +880,8 @@ namespace Cognitive3D
                         {
                             if (!Selection.Contains(dynamic.objectReference.gameObject))
                             {
-                                GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
-                                Selection.gameObjects.CopyTo(gos, 0);
+                                Object[] gos = new Object[Selection.objects.Length + 1];
+                                Selection.objects.CopyTo(gos, 0);
                                 gos[gos.Length - 1] = dynamic.objectReference.gameObject;
                                 Selection.objects = gos;
                             }
@@ -881,10 +901,26 @@ namespace Cognitive3D
                         }
                         else
                         {
-                            Object[] gos = new Object[Selection.objects.Length + 1];
-                            Selection.objects.CopyTo(gos, 0);
-                            gos[gos.Length - 1] = dynamic.poolReference;
-                            Selection.objects = gos;
+                            if (!Selection.Contains(dynamic.poolReference))
+                            {
+                                Object[] gos = new Object[Selection.objects.Length + 1];
+                                Selection.objects.CopyTo(gos, 0);
+                                gos[gos.Length - 1] = dynamic.poolReference;
+                                Selection.objects = gos;
+                            }
+                            else
+                            {
+                                var entryList = new List<Object>(Selection.objects);
+                                foreach (var v in entryList)
+                                {
+                                    if (dynamic.poolReference == v)
+                                    {
+                                        entryList.Remove(v);
+                                        break;
+                                    }
+                                }
+                                Selection.objects = entryList.ToArray();
+                            }
                         }
                     }
                     else
@@ -913,7 +949,7 @@ namespace Cognitive3D
             var toggleIcon = dynamic.selected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
             if (dynamic.isIdPool)
             {
-                //TODO handle selecting project assets
+                dynamic.selected = Selection.Contains(dynamic.poolReference);
             }
             else
             {
@@ -927,6 +963,7 @@ namespace Cognitive3D
             //GUI.Label(mesh, dynamic.objectReference.UseCustomMesh?dynamic.meshName:dynamic.objectReference.CommonMesh.ToString(), dynamiclabel);
             GUI.Label(mesh, dynamic.meshName, dynamiclabel);
 
+            //id type identification
             if (dynamic.isIdPool)
             {
                 GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", dynamiclabel);

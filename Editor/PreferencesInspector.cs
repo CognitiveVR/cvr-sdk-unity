@@ -119,6 +119,7 @@ namespace Cognitive3D
             p.Gateway = EditorGUILayout.TextField(new GUIContent("Gateway", "In almost every case, this should be\ndata.cognitive3d.com"), p.Gateway);
 
             EditorGUILayout.LabelField("Scene Data", EditorStyles.boldLabel);
+            p.IncludeDisabledDynamicObjects = EditorGUILayout.Toggle("Include Disabled Dynamic Objects", p.IncludeDisabledDynamicObjects);
             var v = Cognitive3D_Preferences.FindCurrentScene();
             if (v == null || string.IsNullOrEmpty(v.SceneId))
             {
