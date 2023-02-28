@@ -9,6 +9,17 @@ using Cognitive3D;
 
 namespace Cognitive3D
 {
+    //deserialize list of dynamic objects from dashboard
+    [System.Serializable]
+    public class DashboardObject
+    {
+        public string sdkId;
+        public string name;
+        public string meshName;
+        public long updatedAt; //timestamp
+        //TODO CONSIDER the list of files, to compare against the uploaded and exported content
+    }
+
     [System.Serializable]
     public class AggregationManifest
     {
@@ -115,15 +126,17 @@ namespace Cognitive3D
             public DynamicObject objectReference;
             public DynamicObjectIdPool poolReference;
             public string gameobjectName;
-            public Entry(string meshName, bool exportedMesh, DynamicObject reference, string name, bool initiallySelected)
+            public bool hasBeenUploaded;
+            public Entry(string meshName, bool exportedMesh, DynamicObject reference, string name, bool initiallySelected, bool uploaded)
             {
                 objectReference = reference;
                 gameobjectName = name;
                 this.meshName = meshName;
                 hasExportedMesh = exportedMesh;
                 selected = initiallySelected;
+                hasBeenUploaded = uploaded;
             }
-            public Entry(bool exportedMesh, DynamicObjectIdPool reference, bool initiallySelected)
+            public Entry(bool exportedMesh, DynamicObjectIdPool reference, bool initiallySelected, bool uploaded)
             {
                 isIdPool = true;
                 poolReference = reference;
@@ -132,6 +145,7 @@ namespace Cognitive3D
                 meshName = poolReference.MeshName;
                 hasExportedMesh = exportedMesh;
                 selected = initiallySelected;
+                hasBeenUploaded = uploaded;
             }
         }
 
@@ -162,7 +176,7 @@ namespace Cognitive3D
             lastResponseCode = responseCode;
             if (responseCode == 200)
             {
-                //dev key is fine 
+                //dev key is fine
             }
             else
             {
@@ -180,14 +194,25 @@ namespace Cognitive3D
                 foreach (var o in objects)
                 {
                     bool selected = selectedDynamicsOnFocus.Contains(o);
+                    var found = dashboardObjects.Find(delegate (DashboardObject obj)
+                        {
+                            if (!o.UseCustomId) { return false; }
+                            return obj.sdkId == o.GetId();
+                        });
+                    bool uploaded = found != null;
 
-
-                    Entries.Add(new Entry(o.MeshName, (EditorCore.GetExportedDynamicObjectNames().Contains(o.MeshName) || !o.UseCustomMesh), o, o.gameObject.name, selected));
+                    Entries.Add(new Entry(o.MeshName, (EditorCore.GetExportedDynamicObjectNames().Contains(o.MeshName) || !o.UseCustomMesh), o, o.gameObject.name, selected, uploaded));
                 }
                 foreach (var p in pools)
                 {
                     bool selected = selectedPoolsOnFocus.Contains(p);
-                    Entries.Add(new Entry(EditorCore.GetExportedDynamicObjectNames().Contains(p.MeshName), p, selected));
+                    //var found = dashboardObjects.Find(delegate (DashboardObject obj)
+                    //{
+                    //    if (!p.UseCustomId) { return false; }
+                    //    return obj.sdkId == p.GetId();
+                    //});
+                    bool uploaded = false;
+                    Entries.Add(new Entry(EditorCore.GetExportedDynamicObjectNames().Contains(p.MeshName), p, selected, uploaded));
                 }
                 selectedDynamicsOnFocus = new List<DynamicObject>();
                 selectedPoolsOnFocus = new List<DynamicObjectIdPool>();
@@ -298,6 +323,7 @@ namespace Cognitive3D
                 allselected = false;
             var toggleIcon = allselected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
             bool pressed = GUI.Button(toggleRect, toggleIcon, "image_centered");
+            //select all in hiearchy
             if (pressed)
             {
                 if (allselected)
@@ -308,6 +334,7 @@ namespace Cognitive3D
                         entry.selected = false;
                         //entry.selected
                     }
+                    SelectDynamicEntries(null);
                 }
                 else
                 {
@@ -317,6 +344,7 @@ namespace Cognitive3D
                         if (!entry.visible) { entry.selected = false; continue; }
                         entry.selected = true;
                     }
+                    SelectDynamicEntries(Entries);
                 }
             }
 
@@ -390,6 +418,8 @@ namespace Cognitive3D
                 }
                 gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Open Dynamic Export Folder"), false, OnOpenDynamicExportFolder);
+
+                gm.AddItem(new GUIContent("Fetch Dynamics"), false, OnFetchDashboardDynamics);
 
                 gm.ShowAsContext();
                 //gm.AddItem("rename selected", false, OnRenameSelected);
@@ -493,6 +523,7 @@ namespace Cognitive3D
         Vector2 dynamicScrollPosition;
 
         DynamicObject[] _cachedDynamics;
+        //in 2020+, overload allows for disabled objects
         DynamicObject[] GetDynamicObjects { get { if (_cachedDynamics == null || _cachedDynamics.Length == 0) { _cachedDynamics = FindObjectsOfType<DynamicObject>(); } return _cachedDynamics; } }
 
         public static List<DynamicObject> GetDynamicObjectsInScene()
@@ -572,6 +603,53 @@ namespace Cognitive3D
         void OnOpenDynamicExportFolder()
         {
             EditorUtility.RevealInFinder(EditorCore.GetDynamicExportDirectory());
+        }
+
+        UnityEngine.Networking.UnityWebRequest getDashboardDynamics;
+        void OnFetchDashboardDynamics()
+        {
+            var currentscene = Cognitive3D_Preferences.FindCurrentScene();
+
+            string url = "https://data.cognitive3d.com/v0/versions/" + currentscene.VersionId + "/objects";
+            Debug.Log(url);
+            getDashboardDynamics = UnityEngine.Networking.UnityWebRequest.Get(url);
+            getDashboardDynamics.SetRequestHeader("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            getDashboardDynamics.SendWebRequest();
+            //consider await/async this operation
+            EditorApplication.update += WaitForDashboardDynamics;
+        }
+
+        List<DashboardObject> dashboardObjects = new List<DashboardObject>();
+        void WaitForDashboardDynamics()
+        {
+            if (!getDashboardDynamics.isDone) { return; }
+            EditorApplication.update -= WaitForDashboardDynamics;
+            string text = getDashboardDynamics.downloadHandler.text;
+            
+            try
+            {
+                dashboardObjects.Clear();
+                dashboardObjects.AddRange(Util.GetJsonArray<DashboardObject>(text));
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                Debug.Log(text);
+            }
+
+            //foreach entry, loop through dynamic object entries on this list and display as 'uploaded' if found
+            foreach(var dashboardObject in dashboardObjects)
+            {
+                Entry found = Entries.Find(delegate (Entry obj)
+                {
+                    if (obj.objectReference == null) { return false; }
+                    if (!obj.objectReference.UseCustomId) { return false; }
+                    return obj.objectReference.GetId() == dashboardObject.sdkId;
+                });
+                if (found == null) { continue; }
+
+                found.hasBeenUploaded = true;
+            }
         }
 
         enum SortByMethod
@@ -739,19 +817,35 @@ namespace Cognitive3D
             //CONSIDER also allowing selection with e.type == EventType.MouseDrag
             if (e.isMouse && e.type == EventType.MouseDown)
             {
-                if (e.mousePosition.x < rect.x + 40 || e.mousePosition.x > rect.x + rect.width - 80 || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
+                if (e.mousePosition.x < rect.x + 00 || e.mousePosition.x > rect.x + rect.width - 80 || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
                 {
                 }
                 else
                 {
-                    if (e.shift) //add to selection
+                    if (e.shift) //add/remove selection
                     {
                         if (!dynamic.isIdPool)
                         {
-                            GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
-                            Selection.gameObjects.CopyTo(gos, 0);
-                            gos[gos.Length - 1] = dynamic.objectReference.gameObject;
-                            Selection.objects = gos;
+                            if (!Selection.Contains(dynamic.objectReference.gameObject))
+                            {
+                                GameObject[] gos = new GameObject[Selection.transforms.Length + 1];
+                                Selection.gameObjects.CopyTo(gos, 0);
+                                gos[gos.Length - 1] = dynamic.objectReference.gameObject;
+                                Selection.objects = gos;
+                            }
+                            else
+                            {
+                                var entryList = new List<Object>(Selection.objects);
+                                foreach (var v in entryList)
+                                {
+                                    if (dynamic.objectReference.gameObject == v)
+                                    {
+                                        entryList.Remove(v);
+                                        break;
+                                    }
+                                }
+                                Selection.objects = entryList.ToArray();
+                            }
                         }
                         else
                         {
@@ -785,7 +879,16 @@ namespace Cognitive3D
             Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
 
             var toggleIcon = dynamic.selected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
-            dynamic.selected = GUI.Toggle(selectedRect, dynamic.selected, toggleIcon, image_centered);
+            if (dynamic.isIdPool)
+            {
+                //TODO handle selecting project assets
+            }
+            else
+            {
+                if (dynamic.objectReference == null) { return; }
+                dynamic.selected = Selection.Contains(dynamic.objectReference.gameObject);
+            }
+            GUI.Toggle(selectedRect, dynamic.selected, toggleIcon, image_centered);
 
             //gameobject name or id pool count
             GUI.Label(gameobjectRect, dynamic.gameobjectName, dynamiclabel);
@@ -825,7 +928,15 @@ namespace Cognitive3D
                     GUI.Label(exported, EditorCore.EmptyCheckmark, image_centered);
                 }
             }
-            GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
+
+            if (dynamic.hasBeenUploaded)
+            {
+                GUI.Label(uploaded, EditorCore.Checkmark, image_centered);
+            }
+            else
+            {
+                GUI.Label(uploaded, EditorCore.EmptyCheckmark, image_centered);
+            }   
         }
 
         void DrawFooter()
@@ -1235,6 +1346,21 @@ namespace Cognitive3D
                 Debug.LogWarning(debug);
                 EditorUtility.DisplayDialog("Error", "One or more Dynamic Objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
             }
+        }
+
+        void SelectDynamicEntries(List<Entry> entries)
+        {
+            if (entries == null)
+            {
+                Selection.objects = null;
+                return;
+            }
+            List<GameObject> entryGameObjects = new List<GameObject>();
+            foreach(var v in entries)
+            {
+                entryGameObjects.Add(v.objectReference.gameObject);
+            }
+            Selection.objects = entryGameObjects.ToArray();
         }
     }
 }
