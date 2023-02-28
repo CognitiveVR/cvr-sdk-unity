@@ -549,6 +549,14 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.PicoNeo3ControllerRight;
             }
+            if (xrDeviceName.Equals("PICO Controller-Left"))
+            {
+                return CommonDynamicMesh.PicoNeo4ControllerLeft;
+            }
+            if (xrDeviceName.Equals("PICO Controller-Right"))
+            {
+                return CommonDynamicMesh.PicoNeo4ControllerRight;
+            }
 
             return CommonDynamicMesh.Unknown;
         }
@@ -610,6 +618,14 @@ namespace Cognitive3D
             if(xrDeviceName.Equals("PicoXR Controller-Right"))
             {
                 return ControllerDisplayType.pico_neo_3_eye_controller_right;
+            }
+            if (xrDeviceName.Equals("PICO Controller-Left"))
+            {
+                return ControllerDisplayType.pico_neo_4_eye_controller_left;
+            }
+            if (xrDeviceName.Equals("PICO Controller-Right"))
+            {
+                return ControllerDisplayType.pico_neo_4_eye_controller_right;
             }
             if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
                 || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
