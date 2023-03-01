@@ -586,7 +586,7 @@ namespace Cognitive3D
                 currentPage++;
             }*/
 
-            if (GUI.Button(new Rect(100, 455, 140, 35), "Export Scene"))
+            if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -624,17 +624,9 @@ namespace Cognitive3D
         }
 
         int numberOfLights = 0;
-        bool delayUnderstandButton = true;
-        double understandRevealTime;
 
         void UploadSummaryUpdate()
         {
-            if (delayUnderstandButton)
-            {
-                delayUnderstandButton = false;
-                understandRevealTime = EditorApplication.timeSinceStartup + 3;
-            }
-
             GUI.Label(steptitlerect, "UPLOAD", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "This will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
 
@@ -823,10 +815,6 @@ namespace Cognitive3D
                     };
 
                     buttonDisabled = !EditorCore.HasSceneExportFolder(Cognitive3D_Preferences.FindCurrentScene());
-                    if (understandRevealTime > EditorApplication.timeSinceStartup && !buttonDisabled)
-                    {
-                        buttonDisabled = true;
-                    }
                     text = "Upload";
                     break;
                 case Page.SetupComplete:
@@ -888,7 +876,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (GUI.Button(buttonrect, text, "button_disabled"))
+                if (GUI.Button(buttonrect, text))
                 {
                     if (onclick != null)
                         onclick.Invoke();

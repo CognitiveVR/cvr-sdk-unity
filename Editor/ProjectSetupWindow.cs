@@ -74,7 +74,7 @@ namespace Cognitive3D
                     DoneUpdate();
                     break;
                 case Page.DynamicSetup:
-                    DoneUpdate();
+                    DynamicUpdate();
                     break;
                 default: break;
             }
@@ -295,7 +295,7 @@ namespace Cognitive3D
                 return;
             }
 
-            var GliaAssets = AssetDatabase.FindAssets("GliaBehaviour");
+            var GliaAssets = AssetDatabase.FindAssets("lib-client-csharp");
             if (GliaAssets.Length > 0)
             {
                 DisplayRecommendationPopup("C3D_OMNICEPT","Omnicept SDK");
@@ -606,6 +606,9 @@ namespace Cognitive3D
 
         #region WaitForCompile
 
+        //static so it will reset on recompile
+        static double compileStartTime = -1;
+
         void WaitForCompile()
         {
             GUI.Label(steptitlerect, "WAIT FOR COMPILE", "steptitle");
@@ -614,7 +617,35 @@ namespace Cognitive3D
 
             EditorCore.SetPlayerDefine(selectedsdks);
 
+            if (compileStartTime < 0)
+            {
+                compileStartTime = EditorApplication.timeSinceStartup;
+            }
+
+            //calculate fill amount
+            float fillAmount = (float)(EditorApplication.timeSinceStartup - compileStartTime) / 10f;
+            fillAmount = Mathf.Clamp(fillAmount, 0.02f, 1f);
+            var progressBackground = new Rect(30, 150, 440, 30);
+            var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);
+
+            //calculate duration text
+            double compileTimeInSeconds = EditorApplication.timeSinceStartup - compileStartTime;
+            int compileTimeMinutes = 0;
+            while (compileTimeInSeconds > 59.99f)
+            {
+                compileTimeMinutes++;
+                compileTimeInSeconds = compileTimeInSeconds - 59.99f;
+            }
+            string compileDuration = compileTimeMinutes+":"+Mathf.Floor((float)compileTimeInSeconds).ToString("00");
+
+            //display ui elements
+            GUI.Box(progressBackground, "", "box");
+            GUI.Box(progressPartial, "", "button");
+            GUI.Label(progressBackground, compileDuration, "image_centered");
+
+            //done
             if (EditorApplication.isCompiling) { return; }
+            compileStartTime = -1;
 
             var found = Object.FindObjectOfType<Cognitive3D_Manager>();
             if (found == null) //add Cognitive3D_manager
@@ -631,33 +662,38 @@ namespace Cognitive3D
         void DoneUpdate()
         {
             GUI.Label(steptitlerect, "DONE!", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "The <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ManagerName) + "</color> in your scene will record user position, gaze and basic device information.\n\nYou can view sessions from the Dashboard.", "boldlabel");
-            if (GUI.Button(new Rect(150, 150, 200, 40), "Open Dashboard", "button_bluetext"))
+            GUI.Label(new Rect(30, 45, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
+            if (GUI.Button(new Rect(150, 150, 200, 40), "Quick Setup"))
             {
-                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
+                //close this
+                //open the scene setup window
             }
 
-            GUI.Label(new Rect(30, 385, 440, 440), "Make sure your users understand your experience with a simple training scene. Add the Ready Room sample to your project", "boldlabel");
-            if (GUI.Button(new Rect(150, 440, 200, 40), "Ready Room Setup", "button_bluetext"))
+            GUI.Label(new Rect(30, 205, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment", "normallabel");
+            if (GUI.Button(new Rect(150, 320, 200, 40), "Advanced Setup"))
             {
-                //can i open a specific package from the package manager window
-                var readyRoomScenes = AssetDatabase.FindAssets("t:scene readyroom");
-                if (readyRoomScenes.Length == 1)
-                {
-                    //ask if want save
-                    if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-                    {
-                        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(readyRoomScenes[0]));
-                        Close();
-                    }
-                }
+                //show dynamic page
+                currentPage = Page.DynamicSetup;
             }
+        }
 
-            GUI.Label(new Rect(30, 205, 440, 440), "-Want to ask users about their experience?\n-Need to add more Dynamic Objects?\n-Have some Sensors?\n-Tracking user's gaze on a video or image?\n-Multiplayer?\n", "boldlabel");
-            if (GUI.Button(new Rect(150, 320, 200, 40), "Open Documentation", "button_bluetext"))
-            {
-                Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Documentation);
-            }
+        void DynamicUpdate()
+        {
+            //GUI.Label(steptitlerect, "Advanced Setup", "steptitle");
+
+            //value added - engage with things in objectives, gaze/fixation times, moving objects provide more context
+            //examples - billboards, tools
+            //process - add a component
+
+            //explain the next screen - overview of all the dynamics in the project
+
+            GUI.Label(new Rect(30, 20, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users.\n\nSome examples include Billboards, Vehicles or Tools.", "normallabel");
+            GUI.Label(new Rect(30, 195, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
+
+            GUI.Label(new Rect(30, 300, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
+
+            //display some text about what dynamics are and how to define them with a component
+            //also brief on the upcoming dynamic objects screen
         }
 
         void DrawFooter()
@@ -735,8 +771,17 @@ namespace Cognitive3D
                     buttonDisabled = true;
                     break;
                 case Page.DynamicSetup:
-                    onclick = () => Close();
-                    text = "Close";
+                    onclick = () =>
+                    {
+                        DynamicObjectsWindow.Init();
+                        Close();
+                    };
+                    
+                    text = "Dynamic Object Window";
+                    buttonrect = new Rect(280, 510, 210, 30);
+                    break;
+                case Page.NextSteps:
+                    buttonrect = new Rect(600, 0, 0, 0);
                     break;
             }
 
@@ -772,12 +817,17 @@ namespace Cognitive3D
             {
                 case Page.Welcome: buttonDisabled = true; break;
                 case Page.APIKeys:
+                    onclick = () => currentPage = Page.Welcome;
+                    break;
                 case Page.Glia:
                 case Page.SRAnipal:
-                case Page.Recompile:
                 case Page.Wave:
+                case Page.Recompile:
+                case Page.NextSteps:
+                    onclick = () => currentPage = Page.SDKSelection;
+                    break;
                 case Page.DynamicSetup:
-                    onclick = null;
+                    onclick = () => currentPage = Page.NextSteps;
                     break;
             }
 
@@ -787,7 +837,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (GUI.Button(buttonrect, text, "button_disabled"))
+                if (GUI.Button(buttonrect, text))
                 {
                     if (onclick != null)
                         onclick.Invoke();

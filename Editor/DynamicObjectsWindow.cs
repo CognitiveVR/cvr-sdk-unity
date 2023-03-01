@@ -1092,7 +1092,7 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    errorMessage = "<color=#880000ff>This scene <color=red>" + scene.name.ToUpper() + "</color> does not have a valid SceneId.\n\nPlease upload this scene using the Scene Setup Window</color>";
+                    errorMessage = "<color=#880000ff>This scene '<color=red>" + scene.name + "</color>' has not been uploaded.\n\nPlease upload this scene using the</color>";
                 }
 
                 if (!EditorCore.IsDeveloperKeyValid)
@@ -1105,11 +1105,11 @@ namespace Cognitive3D
                 //EditorGUI.EndDisabledGroup();
 
                 GUI.color = new Color(1, 0.9f, 0.9f);
-                GUI.DrawTexture(new Rect(0, 410, 650, 150), EditorGUIUtility.whiteTexture);
+                GUI.DrawTexture(new Rect(0, 450, 650, 150), EditorGUIUtility.whiteTexture);
                 GUI.color = Color.white;
-                GUI.Label(new Rect(30, 430, 530, 30), errorMessage, "normallabel");
+                GUI.Label(new Rect(50, 470, 530, 30), errorMessage, "normallabel");
 
-                if (GUI.Button(new Rect(380, 510, 120, 30), "Scene Setup"))
+                if (GUI.Button(new Rect(300, 503, 180, 30), "Scene Setup Window"))
                 {
                     SceneSetupWindow.Init();
                 }
