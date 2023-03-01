@@ -146,6 +146,27 @@ namespace Cognitive3D
             }
         }
 
+        public static List<string> GetPlayerDefines()
+        {
+            string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            string[] ExistingSymbols = s.Split(';');
+            return new List<string>(ExistingSymbols);
+        }
+
+        public static bool HasC3DDefine()
+        {
+            List<string> ExistingSymbols = GetPlayerDefines();
+
+            foreach (var v in ExistingSymbols)
+            {
+                if (v.StartsWith("C3D_"))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static void SetPlayerDefine(List<string> C3DSymbols)
         {
             //get all scripting define symbols
@@ -708,9 +729,37 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-#endregion
+        #endregion
 
-#region SDK Updates
+        #region Packages
+
+        static System.Action<UnityEditor.PackageManager.PackageCollection> GetPackageResponseAction;
+        static UnityEditor.PackageManager.Requests.ListRequest GetPackageListRequest;
+        public static void GetPackages(System.Action<UnityEditor.PackageManager.PackageCollection> responseAction)
+        {
+            GetPackageResponseAction = responseAction;
+            GetPackageListRequest = UnityEditor.PackageManager.Client.List();
+            EditorApplication.update += WaitGetPackageList;
+        }
+
+        //TODO consider merging this with WaitList below. need to refactor to handle various actions from the result
+        static void WaitGetPackageList()
+        {
+            if (!GetPackageListRequest.IsCompleted) { return; }
+            EditorApplication.update -= WaitGetPackageList;
+
+            if (GetPackageListRequest.Error != null)
+            {
+                Debug.LogError("Checking current version Cognitive3D package. " + GetPackageListRequest.Error);
+                return;
+            }
+
+            GetPackageResponseAction.Invoke(GetPackageListRequest.Result);
+        }
+
+        #endregion
+
+        #region SDK Updates
         //data about the last sdk release on github
         public class ReleaseInfo
         {

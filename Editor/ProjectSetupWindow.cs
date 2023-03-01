@@ -264,8 +264,106 @@ namespace Cognitive3D
             new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
         };
 
+        bool hasDoneSDKRecommendation;
+        void OnGetPackages(UnityEditor.PackageManager.PackageCollection packages)
+        {
+            //search from specific sdks (single headset support) to general runtimes (openvr, etc)
+            foreach(var package in packages)
+            {
+                if (package.name == "com.unity.xr.picoxr")
+                {
+                    DisplayRecommendationPopup("C3D_PICOXR","Pico Unity Integration SDK");
+                    return;
+                }
+                if (package.name == "com.varjo.xr")
+                {
+                    DisplayRecommendationPopup("C3D_VARJOXR", "Varjo XR Package");
+                    return;
+                }
+                if (package.name == "com.htc.upm.wave.xrsdk")
+                {
+                    DisplayRecommendationPopup("C3D_WAVE", "Vive Wave Package");
+                    return;
+                }
+            }
+
+            //specific assets
+            var SRAnipalAssets = AssetDatabase.FindAssets("SRanipal.dll");
+            if (SRAnipalAssets.Length > 0)
+            {
+                DisplayRecommendationPopup("C3D_SRANIPAL","SRanipal");
+                return;
+            }
+
+            var GliaAssets = AssetDatabase.FindAssets("GliaBehaviour");
+            if (GliaAssets.Length > 0)
+            {
+                DisplayRecommendationPopup("C3D_OMNICEPT","Omnicept SDK");
+                return;
+            }
+
+            var OculusIntegrationAssets = AssetDatabase.FindAssets("OVRPlugin.cs");
+            if (OculusIntegrationAssets.Length > 0)
+            {
+                DisplayRecommendationPopup("C3D_OCULUS","Oculus Integration");
+                return;
+            }
+
+            var HololensAssets = AssetDatabase.FindAssets("WindowsMRAssembly");
+            if (HololensAssets.Length > 0)
+            {
+                DisplayRecommendationPopup("C3D_MRTK","Hololens Package");
+                return;
+            }
+
+            //general packages
+            foreach (var package in packages)
+            {
+                if (package.name == "com.openvr")
+                {
+                    DisplayRecommendationPopup("C3D_STEAMVR2", "SteamVR Package");
+                    return;
+                }
+            }
+
+            //default fallback
+            DisplayRecommendationPopup("C3D_DEFAULT", string.Empty);
+        }
+
+        //TODO CONSIDER write a static list of features that each SDK enables (eye tracking, room size, social features, sensors, etc)
+        //TODO rewrite description on this popup
+        void DisplayRecommendationPopup(string selection, string friendlyName)
+        {
+            string description = friendlyName + " was found in your project. Selecting this will enable some additional feature support";
+
+            if (string.IsNullOrEmpty(friendlyName))
+            {
+                description = "No supported SDKs or packages were found in your project. We recommend default for a general implementation";
+            }
+
+            var result = EditorUtility.DisplayDialog("Recommended Setup", description, "Ok", "Manually Select");
+            if (result)
+            {
+                //ok
+                selectedsdks = new List<string>() { selection };
+            }
+            else
+            {
+                //cancel or close popup
+                selectedsdks = new List<string>() { "C3D_DEFAULT" };
+            }
+        }
+
         void SelectSDKUpdate()
         {
+            if (!hasDoneSDKRecommendation)
+            {
+                hasDoneSDKRecommendation = true;
+                if (!EditorCore.HasC3DDefine())
+                {
+                    EditorCore.GetPackages(OnGetPackages);
+                }
+            }
             //additional SDK features
 
             GUI.Label(steptitlerect, "ADDITIONAL SDK SUPPORT", "steptitle");
