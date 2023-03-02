@@ -537,11 +537,15 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.ViveFocusControllerRight;
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == false)
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR")
+                && isRight == false)
             {
                 return CommonDynamicMesh.WindowsMixedRealityLeft;
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == true)
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR")
+                && isRight == true)
             {
                 return CommonDynamicMesh.WindowsMixedRealityRight;
             }
@@ -607,11 +611,15 @@ namespace Cognitive3D
                     return ControllerDisplayType.oculusquesttouchright;
                 }
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == false)
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR")
+                && isRight == false)
             {
                 return ControllerDisplayType.windows_mixed_reality_controller_left;
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR") && isRight == true)
+            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR")
+                && isRight == true)
             {
                 return ControllerDisplayType.windows_mixed_reality_controller_right;
             }
