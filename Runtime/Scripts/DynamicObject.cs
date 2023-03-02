@@ -523,9 +523,9 @@ namespace Cognitive3D
                     return CommonDynamicMesh.OculusQuestTouchRight;
                 }
             }
-            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
                 || xrDeviceName.Equals("HTC Vive Controller OpenXR")
-                || xrDeviceName.Contains("WVR_CR_Right"))
+                || xrDeviceName.Contains("WVR_CR_Left"))
                 && !isRight)
             {
                 return CommonDynamicMesh.ViveFocusControllerLeft;
@@ -639,13 +639,15 @@ namespace Cognitive3D
             {
                 return ControllerDisplayType.pico_neo_4_eye_controller_right;
             }
-            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
+            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || xrDeviceName.Contains("WVR_CR_Left")))
             {
                 return ControllerDisplayType.vivefocuscontrollerleft;
             }
-            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == true))
+            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || xrDeviceName.Contains("WVR_CR_Right")))
             {
                 return ControllerDisplayType.vivefocuscontrollerright;
             }
