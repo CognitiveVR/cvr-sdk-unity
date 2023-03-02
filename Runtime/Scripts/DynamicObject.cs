@@ -523,29 +523,29 @@ namespace Cognitive3D
                     return CommonDynamicMesh.OculusQuestTouchRight;
                 }
             }
-            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR"))
-                || (xrDeviceName.Contains("WVR_CR_Left"))
-                && isRight == false)
+            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || xrDeviceName.Contains("WVR_CR_Right"))
+                && !isRight)
             {
                 return CommonDynamicMesh.ViveFocusControllerLeft;
             }
-            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR"))
-                || (xrDeviceName.Contains("WVR_CR_Right"))
-                && isRight == true)
+            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || xrDeviceName.Contains("WVR_CR_Right"))
+                && isRight)
             {
                 return CommonDynamicMesh.ViveFocusControllerRight;
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
-                || xrDeviceName.Equals("Windows MR Controller OpenXR")
-                && isRight == false)
+            if ((xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR"))
+                && !isRight)
             {
                 return CommonDynamicMesh.WindowsMixedRealityLeft;
             }
-            if (xrDeviceName.Contains("OpenVR Controller(WindowsMR")
-                || xrDeviceName.Equals("Windows MR Controller OpenXR")
-                && isRight == true)
+            if ((xrDeviceName.Contains("OpenVR Controller(WindowsMR")
+                || xrDeviceName.Equals("Windows MR Controller OpenXR"))
+                && isRight)
             {
                 return CommonDynamicMesh.WindowsMixedRealityRight;
             }
