@@ -524,12 +524,16 @@ namespace Cognitive3D
                 }
             }
             if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == false))
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+                || (xrDeviceName.Contains("WVR_CR_Left"))
+                && isRight == false)
             {
                 return CommonDynamicMesh.ViveFocusControllerLeft;
             }
             if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || (xrDeviceName.Equals("HTC Vive Controller OpenXR") && isRight == true))
+                || (xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+                || (xrDeviceName.Contains("WVR_CR_Right"))
+                && isRight == true)
             {
                 return CommonDynamicMesh.ViveFocusControllerRight;
             }
@@ -557,7 +561,6 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.PicoNeo4ControllerRight;
             }
-
             return CommonDynamicMesh.Unknown;
         }
 
@@ -567,7 +570,8 @@ namespace Cognitive3D
         {
             if (xrDeviceName.Contains("Vive Wand")
                 || xrDeviceName.Contains("Vive. Controller MV")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || xrDeviceName.Contains("WVR_CR"))
             {
                 return ControllerDisplayType.vivecontroller;
             }
