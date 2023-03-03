@@ -107,8 +107,6 @@ namespace Cognitive3D
 
     public class DynamicObjectsWindow : EditorWindow
     {
-        Rect steptitlerect = new Rect(30, 0, 100, 440);
-
         //cached gui styles
         GUIStyle dynamiclabel;
         GUIStyle dynamicentry_odd;
@@ -251,17 +249,18 @@ namespace Cognitive3D
 
             var currentscene = Cognitive3D_Preferences.FindCurrentScene();
 
+            Rect steptitlerect = new Rect(0, 0, 600, 25);
             if (string.IsNullOrEmpty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name))
             {
-                GUI.Label(steptitlerect, "SCENE:   Scene Not Saved", "steptitle");
+                GUI.Label(steptitlerect, "SCENE:   Not Saved", "image_centered");
             }
             else if (currentscene == null || string.IsNullOrEmpty(currentscene.SceneId))
             {
-                GUI.Label(steptitlerect, "SCENE:   Scene Not Uploaded", "steptitle");
+                GUI.Label(steptitlerect, "SCENE:   Not Uploaded", "image_centered");
             }
             else
             {
-                GUI.Label(steptitlerect, "SCENE:   " + currentscene.SceneName + " Version: " + currentscene.VersionNumber, "steptitle");
+                GUI.Label(steptitlerect, "SCENE:   " + currentscene.SceneName + " Version: " + currentscene.VersionNumber, "image_centered");
             }
 
             //GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.");
@@ -522,7 +521,7 @@ namespace Cognitive3D
                 if (_cachedDynamics == null || _cachedDynamics.Length == 0)
                 {
 #if UNITY_2020_1_OR_NEWER
-                    _cachedDynamics = FindObjectsOfType<DynamicObject>(includeDisabledObjects);
+                    _cachedDynamics = FindObjectsOfType<DynamicObject>(Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects);
 #else
                     _cachedDynamics = FindObjectsOfType<DynamicObject>();
 #endif
@@ -535,7 +534,11 @@ namespace Cognitive3D
         List<DynamicObjectIdPool> selectedPoolsOnFocus = new List<DynamicObjectIdPool>();
         private void OnFocus()
         {
+#if UNITY_2020_1_OR_NEWER
+            _cachedDynamics = FindObjectsOfType<DynamicObject>(Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects);
+#else
             _cachedDynamics = FindObjectsOfType<DynamicObject>();
+#endif
             EditorCore.ExportedDynamicObjects = null;
             EditorCore._cachedPoolAssets = null;
 
@@ -1083,36 +1086,43 @@ namespace Cognitive3D
             }
             else
             {
-                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
-                string errorMessage;
-
-                if (lastResponseCode != 200)
-                {
-                    errorMessage = "<color=#880000ff>The Developer Key is Invalid or Expired.\n\nPlease visit the project on our dashboard and update the key in the Scene Setup Window</color>";
-                }
-                else
-                {
-                    errorMessage = "<color=#880000ff>This scene '<color=red>" + scene.name + "</color>' has not been uploaded.\n\nPlease upload this scene using the</color>";
-                }
-
-                if (!EditorCore.IsDeveloperKeyValid)
-                {
-                    errorMessage = "Developer Key not set";
-                }
-
-                //EditorGUI.BeginDisabledGroup(true);
-                //GUI.Button(new Rect(80, 510, 350, 30), new GUIContent("Upload Ids to SceneExplorer for Aggregation", tooltip));
-                //EditorGUI.EndDisabledGroup();
-
                 GUI.color = new Color(1, 0.9f, 0.9f);
                 GUI.DrawTexture(new Rect(0, 450, 650, 150), EditorGUIUtility.whiteTexture);
                 GUI.color = Color.white;
-                GUI.Label(new Rect(50, 470, 530, 30), errorMessage, "normallabel");
 
-                if (GUI.Button(new Rect(300, 503, 180, 30), "Scene Setup Window"))
+                string errorMessage;
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+                if (lastResponseCode != 200 || !EditorCore.IsDeveloperKeyValid)
                 {
-                    SceneSetupWindow.Init();
+                    errorMessage = "<color=#880000ff>The Developer Key is Invalid or Expired. Please visit the project on our dashboard and update the key in the Project Setup Window</color>";
+                    //TODO add a button to the dashboard? add a button to the project setup window too?
                 }
+                else
+                {
+                    //assume the user has done the project setup step first
+                    errorMessage = "After completing the Scene Setup Window, you will be able to manage Dynamic Objects directly from here. Once you are done adding Dynamic Object components to GameObjects and Prefabs, press";
+                    if (GUI.Button(new Rect(430, 510, 100, 30), "Continue"))
+                    {
+                        //add popup asking to export all dynamic object meshes
+                        bool doExport = EditorUtility.DisplayDialog("Export Dynamic Object Meshes", "Do you want to export meshes for all Dynamic Objects now?", "Ok", "No");
+                        if (doExport)
+                        {
+                            List<DynamicObject> exportList = new List<DynamicObject>();
+                            foreach (var entry in Entries)
+                            {
+                                var dyn = entry.objectReference;
+                                if (dyn == null) { continue; }
+                                //check if export files exist
+                                exportList.Add(dyn);
+                            }
+                            ExportUtility.ExportDynamicObjects(exportList);
+                        }
+                        SceneSetupWindow.Init();
+                        Close();
+                    }
+                }
+
+                GUI.Label(new Rect(30, 470, 540, 30), errorMessage, "normallabel");
             }
         }
 

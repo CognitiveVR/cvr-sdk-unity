@@ -8,8 +8,6 @@ namespace Cognitive3D
 {
     internal class ProjectSetupWindow : EditorWindow
     {
-        Rect steptitlerect = new Rect(30, 0, 100, 440);
-
         internal static void Init()
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -79,18 +77,16 @@ namespace Cognitive3D
                 default: break;
             }
 
-            //header
-            //GUI.Label(steptitlerect, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
-
             DrawFooter();
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
 
         void WelcomeUpdate()
         {
-            //GUI.Label(new Rect(30, 45, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
-            GUI.Label(new Rect(30, 45, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
-            if (GUI.Button(new Rect(130, 175, 240, 30), "Open Documentation Site"))
+            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup. This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
+                "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
+            GUI.Label(new Rect(30, 300, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
+            if (GUI.Button(new Rect(130, 350, 240, 30), "Open Documentation Site"))
             {
                 Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
             }
@@ -102,12 +98,10 @@ namespace Cognitive3D
         string developerkey = "";
         void AuthenticateUpdate()
         {
-            GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys.", "boldlabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys" +
+                "\n\nThese should be kept private to your organization.\n\nThe Developer Key is saved to Unity Editor Prefs (specific to the current user) and is never included in a build.\n\nThe Application Key is saved in Cognitive3D_Preferences asset.\n\nThese are available on the Project Dashboard. ", "normallabel");
 
-            GUI.Label(new Rect(30, 100, 440, 440), "These should be kept private to your organization.\n\nThe Developer Key is saved to Unity Editor Prefs (specific to the current user) and is never included in a build.\n\nThe Application Key is saved in Cognitive3D_Preferences asset.\n\nThese are available on the Project Dashboard. ", "normallabel");
-
-            if (GUI.Button(new Rect(130, 290, 240, 30), "Open Dashboard"))
+            if (GUI.Button(new Rect(130, 250, 240, 30), "Open Dashboard"))
             {
                 Application.OpenURL("https://app.cognitive3d.com");
             }
@@ -137,7 +131,7 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(440, 345, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
                 string previous = developerkey;
-                developerkey = EditorGUI.TextField(new Rect(30, 345, 400, 40), developerkey, "textfield_warning");
+                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
                 if (previous != developerkey)
                     lastDevKeyResponseCode = 0;
             }
@@ -334,7 +328,7 @@ namespace Cognitive3D
         //TODO rewrite description on this popup
         void DisplayRecommendationPopup(string selection, string friendlyName)
         {
-            string description = friendlyName + " was found in your project. Selecting this will enable some additional feature support";
+            string description = friendlyName + " was found in your project. Selecting this will enable additional feature support";
 
             if (string.IsNullOrEmpty(friendlyName))
             {
@@ -366,10 +360,7 @@ namespace Cognitive3D
             }
             //additional SDK features
 
-            GUI.Label(steptitlerect, "ADDITIONAL SDK SUPPORT", "steptitle");
-            //GUI.Label(new Rect(30, 45, 440, 440), "Please select any SDKs you are using in this project.", "boldlabel");
-
-            GUI.Label(new Rect(30, 45, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
 
             Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
             sdkScrollPos = GUI.BeginScrollView(new Rect(30, 200, 440, 270), sdkScrollPos, innerScrollSize, false, false);
@@ -442,11 +433,7 @@ namespace Cognitive3D
                 return;
             }
             GliaStart();
-
-            GUI.Label(steptitlerect, "OMNICEPT ASSEMBLY SETUP", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
-
-            GUI.Label(new Rect(30, 100, 440, 440), "To automatically access Omnicept's Glia API, the Cognitive3D SDK needs to reference the Glia Assembly, which doesn't exist by default." +
+            GUI.Label(new Rect(30, 30, 440, 440), "To automatically access Omnicept's Glia API, the Cognitive3D SDK needs to reference the Glia Assembly, which doesn't exist by default." +
                 "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
             if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
@@ -489,7 +476,6 @@ namespace Cognitive3D
                 //full checkmark
                 GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
             }
-
         }
 
         #endregion
@@ -517,12 +503,7 @@ namespace Cognitive3D
                 return;
             }
             SRAnipalStart();
-
-            GUI.Label(steptitlerect, "SRANIPAL ASSEMBLY SETUP", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "boldlabel");
-
-            
-
+            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "normallabel");
             GUI.Label(new Rect(30, 100, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
     "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
@@ -567,8 +548,7 @@ namespace Cognitive3D
             }
 
 #if C3D_VIVEWAVE
-            GUI.Label(steptitlerect, "VIVE WAVE SETUP", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Add EyeManager to the scene.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "Add EyeManager to the scene.", "normallabel");
             var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
             bool eyeManagerExists = eyeManager != null;
 
@@ -611,10 +591,7 @@ namespace Cognitive3D
 
         void WaitForCompile()
         {
-            GUI.Label(steptitlerect, "WAIT FOR COMPILE", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Applying selected SDKs and compiling.", "boldlabel");
-            GUI.Label(new Rect(30, 100, 440, 440), "This may take a moment.", "normallabel");
-
+            GUI.Label(new Rect(30, 30, 440, 440), "Applying selected SDKs and compiling. This will take a moment.", "normallabel");
             EditorCore.SetPlayerDefine(selectedsdks);
 
             if (compileStartTime < 0)
@@ -655,18 +632,15 @@ namespace Cognitive3D
 
         void DoneUpdate()
         {
-            GUI.Label(steptitlerect, "DONE!", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
-            if (GUI.Button(new Rect(150, 150, 200, 40), "Quick Setup"))
+            GUI.Label(new Rect(30, 50, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
+            if (GUI.Button(new Rect(150, 100, 200, 40), "Quick Setup"))
             {
                 SceneSetupWindow.Init();
                 Close();
-                //close this
-                //open the scene setup window
             }
 
-            GUI.Label(new Rect(30, 205, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment", "normallabel");
-            if (GUI.Button(new Rect(150, 320, 200, 40), "Advanced Setup"))
+            GUI.Label(new Rect(30, 200, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment", "normallabel");
+            if (GUI.Button(new Rect(150, 250, 200, 40), "Advanced Setup"))
             {
                 //show dynamic page
                 currentPage = Page.DynamicSetup;
@@ -675,18 +649,13 @@ namespace Cognitive3D
 
         void DynamicUpdate()
         {
-            //GUI.Label(steptitlerect, "Advanced Setup", "steptitle");
-
-            //value added - engage with things in objectives, gaze/fixation times, moving objects provide more context
-            //examples - billboards, tools
-            //process - add a component
-
             //explain the next screen - overview of all the dynamics in the project
 
-            GUI.Label(new Rect(30, 20, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users.\n\nSome examples include Billboards, Vehicles or Tools.", "normallabel");
-            GUI.Label(new Rect(30, 195, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users." +
+                "\n\nSome examples include Billboards, Vehicles or Tools.", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
 
-            GUI.Label(new Rect(30, 300, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
+            GUI.Label(new Rect(30, 250, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
 
             //display some text about what dynamics are and how to define them with a component
             //also brief on the upcoming dynamic objects screen
@@ -778,6 +747,20 @@ namespace Cognitive3D
                     break;
                 case Page.NextSteps:
                     buttonrect = new Rect(600, 0, 0, 0);
+                    break;
+                case Page.SRAnipal:
+                    appearDisabled = !sranipalAssemblyExists;
+                    if (appearDisabled)
+                    {
+                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
+                    }
+                    break;
+                case Page.Glia:
+                    appearDisabled = !gliaAssemblyExists;
+                    if (appearDisabled)
+                    {
+                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
+                    }
                     break;
             }
 
