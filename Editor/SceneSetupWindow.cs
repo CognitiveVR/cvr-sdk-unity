@@ -24,6 +24,7 @@ namespace Cognitive3D
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -79,9 +80,38 @@ namespace Cognitive3D
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
 
+        void WelcomeUpdate()
+        {
+            GUI.Label(steptitlerect, "WELCOME (Version " + Cognitive3D_Manager.SDK_VERSION + ")", "steptitle");
+
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
+            GUI.Label(new Rect(30, 45, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Scene Setup.", "boldlabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
+
+            //video link
+            if (GUI.Button(new Rect(150, 160, 200, 150), "video"))
+            {
+
+            }
+
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
+            }
+
+            GUI.Label(new Rect(30, 340, 440, 440), "This window will guide you through setting up your player prefab to automatically record controller inputs and export the scene geometry to provide context for your data on SceneExplorer.", "normallabel");
+        }
+
         void ProjectErrorUpdate()
         {
-            //GUI.Label(new Rect(30, 45, 440, 440), "Project Setup not complete", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "Project Setup not complete. You must have a developer key set to register a new scene", "normallabel");
+
+            if (GUI.Button(new Rect(130, 175, 240, 30), "Open Project Setup Window"))
+            {
+                Close();
+                ProjectSetupWindow.Init();
+            }
 
             //should check that the dev key is valid. web request or check a cached value
             if (EditorCore.IsDeveloperKeyValid)
@@ -90,23 +120,11 @@ namespace Cognitive3D
             }
         }
 
-        void WelcomeUpdate()
-        {
-            GUI.Label(new Rect(30, 45, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
-            if (GUI.Button(new Rect(130, 175, 240, 30), "Open Documentation Site"))
-            {
-                //link to setup video. display a screenshot of the video
-                Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
-            }
-        }
-
 #region Controllers
 
         GameObject leftcontroller;
         GameObject rightcontroller;
         GameObject mainCameraObject;
-
-        static string controllerDisplayName; //used to set SE display
 
 #if C3D_STEAMVR2
         bool steamvr2bindings = false;
@@ -206,7 +224,7 @@ namespace Cognitive3D
 
             GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
 
-            GUI.Label(new Rect(30, 45, 440, 440), "Ensure the Player Game Objects are configured.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "Ensure the Player Game Objects are configured.", "normallabel");
 
             //hmd
             int hmdRectHeight = 170;
@@ -485,55 +503,15 @@ namespace Cognitive3D
 
         void ExportSceneUpdate()
         {
-            GUI.Label(steptitlerect, "EXPORT SCENE", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#8A9EB7FF>Dynamic Object</color> component will be exported as the <color=#8A9EB7FF>Scene</color>.", "boldlabel");
+            GUI.Label(steptitlerect, "EXPORT SCENE GEOMETRY", "steptitle");
+            GUI.Label(new Rect(30, 45, 440, 440), "All geometry without a <color=#1fa4f2>Dynamic Object</color> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nThis process usually only needs to be done once. If you make a major change to your scene geometry (for example, moving a wall), you should export the scene geometry again so the context of the player's behaviour is accurate.\n\nRefer to documentation for more details about exporting scene geometry", "normallabel");
 
-            GUI.Label(new Rect(200, 380, 200, 30), "Texture Resolution", "miniheader");
-
-            //texture resolution settings
+            //GUI.Label(new Rect(200, 380, 200, 30), "Texture Resolution", "miniheader");
 
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
-            //resolution settings here
-
-            if (GUI.Button(new Rect(30, 410, 140, 35), new GUIContent("1/4 Resolution", "Quarter resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 4;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 4)
-            {
-                GUI.Box(new Rect(30, 410, 140, 35), "", "box_sharp_alpha");
-            }
-            else
-            {
-                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundQuarter, "image_centered");
-            }
-
-            if (GUI.Button(new Rect(180, 410, 140, 35), new GUIContent("1/2 Resolution", "Half resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 2;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 2)
-            {
-                GUI.Box(new Rect(180, 410, 140, 35), "", "box_sharp_alpha");
-            }
-            else
-            {
-                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackgroundHalf, "image_centered");
-            }
-
-            if (GUI.Button(new Rect(330, 410, 140, 35), new GUIContent("1/1 Resolution", "Full resolution of scene textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 1;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 1)
-            {
-                GUI.Box(new Rect(330, 410, 140, 35), "", "box_sharp_alpha");
-            }
-            else
-            {
-                GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
-            }
+            //draw image
+            GUI.Box(new Rect(175, 270, 150, 150), EditorCore.SceneBackground, "image_centered");
 
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
@@ -545,48 +523,21 @@ namespace Cognitive3D
                 }
                 else if (sceneSize > 500)
                 {
-                    displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((Cognitive3D_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering export settings</color>" : "</color>");
+                    displayString = "<color=red>Warning. Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB.This scene will take a while to upload and view" + ((Cognitive3D_Preferences.Instance.TextureResize != 4) ? "\nConsider lowering texture resolution settings</color>" : "</color>");
                 }
                 else
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
-                GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
+                GUI.Label(new Rect(0, 400, 500, 15), displayString, "miniheadercenter");
             }
 
             if (numberOfLights > 50)
             {
-                GUI.Label(new Rect(0, 365, 500, 15), "<color=red>For visualization in SceneExplorer <50 lights are recommended</color>", "miniheadercenter");
+                GUI.Label(new Rect(0, 425, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
 
-            /*if (GUI.Button(new Rect(260, 455, 140, 35), "Export AR Scene"))
-            {
-                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
-                {
-                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
-                    {
-                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
-                        {
-                        }
-                        else
-                        {
-                            return;//cancel from save scene window
-                        }
-                    }
-                    else
-                    {
-                        return;//cancel from 'do you want to save' popup
-                    }
-                }
-                ExportUtility.ExportSceneAR();
-                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                EditorUtility.SetDirty(EditorCore.GetPreferences());
-
-                UnityEditor.AssetDatabase.SaveAssets();
-                currentPage++;
-            }*/
-
-            if (GUI.Button(new Rect(180, 455, 140, 35), "Export Scene"))
+            if (GUI.Button(new Rect(150, 455, 200, 35), "Export Scene Geometry"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -621,58 +572,182 @@ namespace Cognitive3D
                 EditorCore.RefreshSceneVersion(null);
             }
 
+            //texture resolution settings
+            Rect toolsRect = new Rect(360, 455, 35, 35);
+            if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
+            {
+                //drop down menu?
+                GenericMenu gm = new GenericMenu();
+                gm.AddItem(new GUIContent("Full Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 1, OnSelectFullResolution);
+                gm.AddItem(new GUIContent("Half Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 2, OnSelectHalfResolution);
+                gm.AddItem(new GUIContent("Quarter Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 4, OnSelectQuarterResolution);
+                gm.AddSeparator("");
+                gm.AddItem(new GUIContent("Export lowest LOD meshes"), Cognitive3D_Preferences.Instance.ExportSceneLODLowest, OnToggleLODMeshes);
+
+#if UNITY_2020_1_OR_NEWER
+                gm.AddItem(new GUIContent("Include Disabled Dynamic Objects"), Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects, ToggleIncludeDisabledObjects);
+#endif
+                gm.ShowAsContext();
+            }
+
+        }
+
+        void OnSelectFullResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 1;
+        }
+        void OnSelectHalfResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 2;
+        }
+        void OnSelectQuarterResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 4;
+        }
+        void OnToggleLODMeshes()
+        {
+            Cognitive3D_Preferences.Instance.ExportSceneLODLowest = !Cognitive3D_Preferences.Instance.ExportSceneLODLowest;
         }
 
         int numberOfLights = 0;
 
+        bool UploadSceneGeometry = true;
+        bool UploadThumbnail = true;
+        bool UploadDynamicMeshes = true;
+
+        bool SceneExistsOnDashboard;
+        bool SceneHasExportFiles;
+
         void UploadSummaryUpdate()
         {
             GUI.Label(steptitlerect, "UPLOAD", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "This will be uploaded to <color=#8A9EB7FF>" + EditorCore.DisplayValue(DisplayKey.ViewerName) + "</color>:", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
 
+            int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
             {
-                int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-                string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (string.IsNullOrEmpty(scenename))
-                {
-                    scenename = "SCENE NOT SAVED";
-                }
-                string settingsname = "1/1 Texture Resolution";
-                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Texture Resolution"; }
-                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Texture  Resolution"; }
-                GUI.Label(new Rect(30, 100, 440, 440), "- A new version of <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>. " +
-                "Version " + (settings.VersionNumber) + " will be archived.", "label_disabledtext_large");
+                SceneExistsOnDashboard = true;
+                sceneVersion = settings.VersionNumber;
+            }
 
-                GUI.Label(new Rect(30, 150, 440, 440), "- <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes.", "label_disabledtext_large");
+            SceneHasExportFiles = EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
-                GUI.Label(new Rect(30, 180, 440, 440), "- This <color=#62B4F3FF>Thumbnail</color> from the Scene View:", "label_disabledtext_large");
+            var uploadSceneRect = new Rect(30, 200, 30, 30);
+            if (!SceneHasExportFiles)
+            {
+                //disable 'upload scene geometry' toggle
+                GUI.Button(uploadSceneRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(60, 202, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
+                UploadSceneGeometry = false;
             }
             else
             {
-                int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count; ;
-                string scenename = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (string.IsNullOrEmpty(scenename))
+                //upload scene geometry
+                if (UploadSceneGeometry)
                 {
-                    scenename = "SCENE NOT SAVED";
+                    if (GUI.Button(uploadSceneRect, EditorCore.BlueCheckmark, "image_centered"))
+                    {
+                        UploadSceneGeometry = false;
+                    }
                 }
-                string settingsname = "1/1 Texture Resolution";
-                if (Cognitive3D_Preferences.Instance.TextureResize == 4) { settingsname = "1/4 Texture Resolution"; }
-                if (Cognitive3D_Preferences.Instance.TextureResize == 2) { settingsname = "1/2 Texture Resolution"; }
-                GUI.Label(new Rect(30, 100, 440, 440), "- <color=#62B4F3FF>" + scenename + "</color> with <color=#62B4F3FF>" + settingsname + "</color>.", "label_disabledtext_large");
+                else
+                {
+                    if (GUI.Button(uploadSceneRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    {
+                        UploadSceneGeometry = true;
+                    }
+                }
+                string uploadGeometryText = "Upload Scene Geometry";
+                if (SceneExistsOnDashboard)
+                {
+                    uploadGeometryText = "Upload Scene Geometry (Version " + (sceneVersion+1) + ")";
+                }
+                GUI.Label(new Rect(60, 202, 400, 30), uploadGeometryText, "normallabel");
+            }
 
-                GUI.Label(new Rect(30, 140, 440, 440), "- <color=#62B4F3FF>" + dynamicObjectCount + "</color> Dynamic Object Meshes.", "label_disabledtext_large");
+            var uploadThumbnailRect = new Rect(30, 240, 30, 30);
+            if (!EditorCore.HasSceneThumbnail(settings) && (!SceneExistsOnDashboard && !SceneHasExportFiles))
+            {
+                //disable 'upload scene geometry' toggle
+                GUI.Button(uploadThumbnailRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(60, 242, 300, 30), "Upload Scene Thumbnail (No image exists)", "normallabel");
+            }
+            else
+            {
+                //upload thumbnail
+                if (UploadThumbnail)
+                {
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.BlueCheckmark, "image_centered"))
+                    {
+                        UploadThumbnail = false;
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    {
+                        UploadThumbnail = true;
+                    }
+                }
+                GUI.Label(new Rect(60, 242, 300, 30), "Upload Scene Thumbnail", "normallabel");
+            }
 
-                GUI.Label(new Rect(30, 180, 440, 440), "- This <color=#62B4F3FF>Thumbnail</color> from the Scene View:", "label_disabledtext_large");
+            //upload dynamics
+            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
+            var uploadDynamicRect = new Rect(30, 280, 30, 30);
+
+            if (!SceneExistsOnDashboard && (!UploadSceneGeometry))
+            {
+                //can't upload dynamics
+                GUI.Button(uploadDynamicRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(60, 282, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene Exists)", "normallabel");
+            }
+            else
+            {
+                //upload dynamics toggle
+                if (UploadDynamicMeshes)
+                {
+                    if (GUI.Button(uploadDynamicRect, EditorCore.BlueCheckmark, "image_centered"))
+                    {
+                        UploadDynamicMeshes = false;
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(uploadDynamicRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    {
+                        UploadDynamicMeshes = true;
+                    }
+                }
+                GUI.Label(new Rect(60, 282, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
             }
 
 
-            var sceneRT = EditorCore.GetSceneRenderTexture();
-            if (sceneRT != null)
-                GUI.Box(new Rect(125, 230, 250, 250), sceneRT, "image_centeredboxed");
-        }
+            //debug
+            //GUI.Label(new Rect(30, 100, 440, 20), SceneHasExportFiles + " scene has export files");
+            //GUI.Label(new Rect(30, 120, 440, 20), SceneExistsOnDashboard + " exists on dashboard");
+            //GUI.Label(new Rect(30,110,440,20), UploadSceneGeometry + " upload scene geo");
+            //GUI.Label(new Rect(30, 140, 440, 20), (SceneExistsOnDashboard || UploadSceneGeometry) + " will be uploading scene files");
 
+            //scene thumbnail preview
+            var thumbnailRect = new Rect(175, 330, 150, 150);
+            if (UploadThumbnail)
+            {
+                GUI.Label(new Rect(195, 480, 150, 20), "Thumbnail from Scene View");
+                var sceneRT = EditorCore.GetSceneRenderTexture();
+                if (sceneRT != null)
+                    GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
+                else
+                    GUI.Box(thumbnailRect, "Scene view not found", "image_centeredboxed");
+            }
+            else
+            {
+                //if a new scene version is uploaded, can it use the previous thumbnail?
+                GUI.Box(thumbnailRect, "Thumbnail not uploaded", "image_centeredboxed");
+            }
+        }
+        
         void DoneUpdate()
         {
             GUI.Label(steptitlerect, "DONE!", "steptitle");
@@ -727,6 +802,9 @@ namespace Cognitive3D
             {
                 case Page.Welcome:
                     break;
+                case Page.PlayerSetup:
+                    onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
+                    break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
@@ -734,10 +812,10 @@ namespace Cognitive3D
                     {
                         onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without exporting your scene?", "Yes", "No")) { currentPage++; } };
                     }
+                    onclick += () => Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                     text = "Next";
                     break;
                 case Page.SceneUpload:
-
                     System.Action completedmanifestupload = delegate ()
                     {
                         ExportUtility.UploadAllDynamicObjectMeshes(true);
@@ -784,15 +862,25 @@ namespace Cognitive3D
                     //second save screenshot
                     System.Action completedRefreshSceneVersion1 = delegate ()
                     {
-                        EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                        if (UploadThumbnail)
+                        {
+                            EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                        }
+                        else
+                        {
+                            EditorCore.DeleteSceneThumbnail(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+                            completeScreenshot.Invoke();
+                            completeScreenshot = null;
+                        }
                     };
 
+                    //only do this if uploading new scene files
                     //first refresh scene version
                     onclick = () =>
                     {
                         if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) //scene not saved. "do want save?" popup
                         {
-                            if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
+                            if (EditorUtility.DisplayDialog("Upload Paused", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
                             {
                                 if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                                 {
@@ -814,12 +902,15 @@ namespace Cognitive3D
                         }
                     };
 
-                    buttonDisabled = !EditorCore.HasSceneExportFolder(Cognitive3D_Preferences.FindCurrentScene());
+                    buttonDisabled = !(SceneExistsOnDashboard || (SceneHasExportFiles && UploadSceneGeometry));
                     text = "Upload";
                     break;
                 case Page.SetupComplete:
                     onclick = () => Close();
                     text = "Close";
+                    break;
+                case Page.ProjectError:
+                    buttonrect = new Rect(600, 0, 0, 0);
                     break;
             }
 
@@ -858,7 +949,6 @@ namespace Cognitive3D
                     text = "Back";
                     break;
                 case Page.SceneExport:
-                    onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.SceneUpload:
                     break;
@@ -866,6 +956,9 @@ namespace Cognitive3D
                 case Page.SetupComplete:
                     buttonDisabled = true;
                     onclick = null;
+                    break;
+                case Page.ProjectError:
+                    buttonrect = new Rect(600, 0, 0, 0);
                     break;
                 default: break;
             }

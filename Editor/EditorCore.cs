@@ -950,6 +950,26 @@ namespace Cognitive3D
             return false;
         }
 
+        internal static bool HasSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings)
+        {
+            if (sceneSettings == null) { return false; }
+
+            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneSettings.SceneName + "screenshot" + Path.DirectorySeparatorChar;
+            var sceneScreenshotDirExists = Directory.Exists(sceneScreenshotDirectory);
+
+            if (!sceneScreenshotDirExists) { return false; }
+
+            //look in screenshot subdirectory
+
+            var files = Directory.GetFiles(sceneScreenshotDirectory);
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i].EndsWith("screenshot.png"))
+                { return true; }
+            }
+            return false;
+        }
+
         public static bool CreateTargetFolder(string fullName)
         {
             try
@@ -1108,6 +1128,29 @@ namespace Cognitive3D
             return sceneRT;
         }
 
+        public static void UploadSceneThumbnail(Cognitive3D_Preferences.SceneSettings settings)
+        {
+            string path = "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png";
+
+            if (!File.Exists(path))
+            {
+                Debug.Log("Cannot upload Scene Thumbnail, thumbnail asset doesn't exist");
+                return;
+            }
+
+            string url = CognitiveStatics.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
+            var bytes = File.ReadAllBytes(path);
+            WWWForm form = new WWWForm();
+            form.AddBinaryData("screenshot", bytes, "screenshot.png");
+            var headers = new Dictionary<string, string>();
+            foreach (var v in form.headers)
+            {
+                headers[v.Key] = v.Value;
+            }
+            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            EditorNetwork.Post(url, form, UploadCustomScreenshotResponse, headers, false);
+        }
+
         public static void UploadCustomScreenshot()
         {
             //check that scene has been uploaded
@@ -1247,9 +1290,18 @@ namespace Cognitive3D
             saveCameraScreenshot = null;
         }
 
+        public static void DeleteSceneThumbnail(string sceneName)
+        {
+            string filePath = "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png";
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            else
+                Debug.Log("can't delete file, doesn't exist " + filePath);
+        }
+
 #endregion
 
-#region Dynamic Object Thumbnails
+        #region Dynamic Object Thumbnails
         //returns unused layer int. returns -1 if no unused layer is found
         public static int FindUnusedLayer()
         {

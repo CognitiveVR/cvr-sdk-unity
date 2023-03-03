@@ -196,6 +196,11 @@ namespace Cognitive3D
 
         void DrawFooter()
         {
+            if (currentPage == Page.Main)
+            {
+                return;
+            }
+
             GUI.color = EditorCore.BlueishGrey;
             GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
@@ -216,7 +221,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (GUI.Button(buttonrect, text, "button_disabled"))
+                if (GUI.Button(buttonrect, text))
                 {
                     if (onclick != null)
                         onclick.Invoke();

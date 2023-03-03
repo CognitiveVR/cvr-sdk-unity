@@ -647,12 +647,6 @@ namespace Cognitive3D
             if (EditorApplication.isCompiling) { return; }
             compileStartTime = -1;
 
-            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
-            if (found == null) //add Cognitive3D_manager
-            {
-                EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
-            }
-
             currentPage++;
         }
 
@@ -665,6 +659,8 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 45, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
             if (GUI.Button(new Rect(150, 150, 200, 40), "Quick Setup"))
             {
+                SceneSetupWindow.Init();
+                Close();
                 //close this
                 //open the scene setup window
             }
