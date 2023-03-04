@@ -743,14 +743,19 @@ namespace Cognitive3D
         void DoneUpdate()
         {
             GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nYou can continue your integration to get more insights including:", "normallabel");
-            GUI.Label(new Rect(30, 130, 440, 440), "  Custom Events\n  ExitPoll Surveys\n  Ready Room User Onboarding\n  Dynamic Objects", "normallabel");
-            GUI.Label(new Rect(30, 230, 440, 440), "You can find more information on our Documentation or a quick overview in the Help Window", "normallabel");
-            if (GUI.Button(new Rect(150, 280, 200, 40), "Help Window"))
+            GUI.Label(new Rect(30, 130, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
+            GUI.Label(new Rect(30, 230, 440, 440), "You can find a quick overview in the Help Window and more complete examples in our Documentation", "normallabel");
+            if (GUI.Button(new Rect(30, 280, 210, 40), "Open Help"))
             {
                 HelpWindow.Init();
             }
 
-            GUI.Label(new Rect(30, 350, 440, 440), "To record a Session, just press Play, put on your headset and look around. Press Stop when you're finished and you'll be able to replay the session on our Dashboard after 60 seconds","normallabel");
+            if (GUI.Button(new Rect(260, 280, 200, 40), "Open Documentation"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/comprehensive-setup-guide/");
+            }
+
+            GUI.Label(new Rect(30, 350, 440, 440), "To record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard", "normallabel");
             if (GUI.Button(new Rect(150, 420, 200, 40), "Open Dashboard"))
             {
                 var sceneSettings = Cognitive3D_Preferences.FindCurrentScene();

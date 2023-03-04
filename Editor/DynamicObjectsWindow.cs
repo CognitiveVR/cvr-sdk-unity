@@ -1401,10 +1401,18 @@ namespace Cognitive3D
                 Selection.objects = null;
                 return;
             }
-            List<GameObject> entryGameObjects = new List<GameObject>();
+            List<Object> entryGameObjects = new List<Object>();
             foreach(var v in entries)
             {
-                entryGameObjects.Add(v.objectReference.gameObject);
+                if (v.objectReference == null)
+                {
+                    entryGameObjects.Add(v.poolReference);
+                }
+                else
+                {
+                    entryGameObjects.Add(v.objectReference.gameObject);
+                }
+                
             }
             Selection.objects = entryGameObjects.ToArray();
         }

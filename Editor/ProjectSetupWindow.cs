@@ -742,8 +742,8 @@ namespace Cognitive3D
                         Close();
                     };
                     
-                    text = "Dynamic Object Window";
-                    buttonrect = new Rect(280, 510, 210, 30);
+                    text = "Open Dynamic Objects";
+                    buttonrect = new Rect(280, 510, 200, 30);
                     break;
                 case Page.NextSteps:
                     buttonrect = new Rect(600, 0, 0, 0);
