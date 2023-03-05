@@ -574,11 +574,17 @@ namespace Cognitive3D
         {
             if (xrDeviceName.Contains("Vive Wand")
                 || xrDeviceName.Contains("Vive. Controller MV")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
-                || xrDeviceName.Contains("WVR_CR"))
+                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
             {
                 return ControllerDisplayType.vivecontroller;
             }
+
+#if !C3D_VIVEWAVE
+            if (xrDeviceName.Contains("WVR_CR"))
+            {
+                return ControllerDisplayType.vivecontroller;
+            }
+#endif
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
