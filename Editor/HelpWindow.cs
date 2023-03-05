@@ -175,7 +175,9 @@ namespace Cognitive3D
 
         void CustomEventUpdate()
         {
-
+            GUI.Label(steptitlerect, "CUSTOM EVENTS");
+            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Custom Event</color> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/customevents/");
         }
         void ExitPollUpdate()
         {
@@ -214,6 +216,27 @@ namespace Cognitive3D
             string text = "Back";
             System.Action onclick = () => currentPage = Page.Main;
             Rect buttonrect = new Rect(10, 510, 80, 30);
+
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }
+
+        void DrawSpecificDocsButton(string url)
+        {
+            bool buttonDisabled = false;
+            string text = "Specific Docs";
+            System.Action onclick = () => Application.OpenURL(url);
+            Rect buttonrect = new Rect(100, 400, 300, 30);
 
             if (buttonDisabled)
             {
