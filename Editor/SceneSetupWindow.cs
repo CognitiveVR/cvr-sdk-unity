@@ -86,7 +86,7 @@ namespace Cognitive3D
             //video link
             if (GUI.Button(new Rect(150, 260, 200, 150), "video"))
             {
-
+                Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
 
             var found = Object.FindObjectOfType<Cognitive3D_Manager>();
