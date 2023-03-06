@@ -154,12 +154,14 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "WHAT IS A SCENE?", "steptitle");
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
             GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneHighlight, "image_centered");
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneHighlight, "image_centered");
             GUI.color = Color.white;
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
-            GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsBackground, "image_centered");
+            GUI.Label(new Rect(30, 270, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/scenes/");
+            DrawSceneWindowButton();
         }
 
         void CustomEventUpdate()
@@ -248,6 +250,29 @@ namespace Cognitive3D
             System.Action onclick = () =>
             {
                 DynamicObjectsWindow.Init();
+                this.Close();
+            };
+            Rect buttonrect = new Rect(150, 460, 200, 30);
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }        
+        void DrawSceneWindowButton()
+        {
+            bool buttonDisabled = false;
+            string text = "Scene Setup";
+            System.Action onclick = () =>
+            {
+                SceneSetupWindow.Init();
                 this.Close();
             };
             Rect buttonrect = new Rect(150, 460, 200, 30);
