@@ -139,37 +139,26 @@ namespace Cognitive3D
         void DynamicUpdate()
         {
             GUI.Label(steptitlerect, "WHAT IS A DYNAMIC OBJECT?", "steptitle");
-
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during an experience which you wish to track.", "boldlabel");
-
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
-
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
-
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsBackground, "image_centered");
             GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-
-            GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsHightlight, "image_centered");
-
+            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsHightlight, "image_centered");
             GUI.color = Color.white;
-
-            GUI.Label(new Rect(30, 350, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. These objects must also have colliders attached so we can track user gaze.", "normallabel");
+            GUI.Label(new Rect(30, 280, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. These objects must also have colliders attached so we can track user gaze.", "normallabel");
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/dynamic-objects/");
+            DrawDynamicManagerButton();
         }
 
         void SceneUpate()
         {
             GUI.Label(steptitlerect, "WHAT IS A SCENE?", "steptitle");
-
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
-
-
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneBackground, "image_centered");
-
             GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.SceneHighlight, "image_centered");
             GUI.color = Color.white;
-
             GUI.Box(new Rect(100, 70, 300, 300), EditorCore.ObjectsBackground, "image_centered");
-
             GUI.Label(new Rect(30, 350, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
         }
 
@@ -234,10 +223,34 @@ namespace Cognitive3D
         void DrawSpecificDocsButton(string url)
         {
             bool buttonDisabled = false;
-            string text = "Specific Docs";
+            string text = "Documentation";
             System.Action onclick = () => Application.OpenURL(url);
-            Rect buttonrect = new Rect(100, 400, 300, 30);
+            Rect buttonrect = new Rect(100, 420, 300, 30);
 
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }
+
+        void DrawDynamicManagerButton()
+        {
+            bool buttonDisabled = false;
+            string text = "Dynamic Manager";
+            System.Action onclick = () =>
+            {
+                DynamicObjectsWindow.Init();
+                this.Close();
+            };
+            Rect buttonrect = new Rect(150, 460, 200, 30);
             if (buttonDisabled)
             {
                 GUI.Button(buttonrect, text, "button_disabledtext");
