@@ -152,19 +152,6 @@ namespace Cognitive3D
         public bool SyncWithPlayerGazeTick;
         private bool hasInitialized;
 
-#if C3D_VIVEWAVE
-        bool hasCompletedDelay = false;
-        IEnumerator Start()
-        {
-            //vive wave controller loader spawns a prefab (which calls enable) before setting correct values
-            if (!IsController) { yield break; }
-            if (hasCompletedDelay) { yield break; }
-            yield return null;
-            hasCompletedDelay = true;
-            OnEnable();
-        }
-#endif
-
         void DelayEnable(InputDevice device, XRNode node, bool isValid)
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
@@ -175,11 +162,6 @@ namespace Cognitive3D
         {
             //already initialized, skip
             if (hasInitialized) { return; }
-
-#if C3D_VIVEWAVE
-            if (IsController && !hasCompletedDelay)
-                return;
-#endif
             StartingScale = transform.lossyScale;
             string registerMeshName = MeshName;
 
