@@ -168,6 +168,12 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "CUSTOM EVENTS");
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Custom Event</color> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
+            GUI.Box(new Rect(25, 40, 450, 300), EditorCore.CodeSnippet, "image_centered");
+            //video link
+            if (GUI.Button(new Rect(100, 300, 300, 100), "video"))
+            {
+                Application.OpenURL("https://vimeo.com/cognitive3d/videos");
+            }
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/customevents/");
         }
         void ExitPollUpdate()

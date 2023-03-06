@@ -532,6 +532,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _codeSnippet;
+        public static Texture2D CodeSnippet
+        {
+            get
+            {
+                if (_codeSnippet == null)
+                    _codeSnippet = Resources.Load<Texture2D>("CodeSnippet");
+                return _codeSnippet;
+            }
+        }
+
         private static Texture2D _sceneBackground;
         public static Texture2D SceneBackground
         {
