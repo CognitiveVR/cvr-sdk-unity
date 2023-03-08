@@ -139,7 +139,7 @@ namespace Cognitive3D
         void DynamicUpdate()
         {
             GUI.Label(steptitlerect, "WHAT IS A DYNAMIC OBJECT?", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Dynamic Object </color> is an object that moves around during an experience which you wish to track.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "A <b>Dynamic Object </b> is an object that moves around during an experience which you wish to track.", "boldlabel");
             GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
             GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsBackground, "image_centered");
             GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
@@ -153,7 +153,7 @@ namespace Cognitive3D
         void SceneUpate()
         {
             GUI.Label(steptitlerect, "WHAT IS A SCENE?", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Scene</color> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
+            GUI.Label(new Rect(30, 45, 440, 440), "A <b>Scene</b> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "boldlabel");
             GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
             GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
             GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneHighlight, "image_centered");
@@ -167,8 +167,9 @@ namespace Cognitive3D
         void CustomEventUpdate()
         {
             GUI.Label(steptitlerect, "CUSTOM EVENTS");
-            GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Custom Event</color> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
-            GUI.Label(new Rect(50, 150, 300, 440), "<color=#3d55d1>new</color> <color=#519e6c>CustomEvent</color>(<color=#ad865e>\"Event Name\"</color>).<color=#e8be41>Send()</color>", "code_snippet");
+            GUI.Label(new Rect(25, 45, 450, 440), "A <b>Custom Event</b> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
+            EditorGUI.DrawRect(new Rect(25, 120, 450, 80), Color.black);
+            GUI.Label(new Rect(60, 150, 300, 440), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
             if (GUI.Button(new Rect(100, 300, 300, 100), "video"))
             {
