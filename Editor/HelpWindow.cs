@@ -166,7 +166,7 @@ namespace Cognitive3D
 
         void CustomEventUpdate()
         {
-            GUI.Label(steptitlerect, "CUSTOM EVENTS");
+            GUI.Label(steptitlerect, "CUSTOM EVENTS", "steptitle");
             GUI.Label(new Rect(25, 45, 450, 440), "A <b>Custom Event</b> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
             EditorGUI.DrawRect(new Rect(25, 120, 450, 80), Color.black);
             GUI.Label(new Rect(60, 150, 300, 440), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
@@ -179,7 +179,11 @@ namespace Cognitive3D
         }
         void ExitPollUpdate()
         {
-
+            GUI.Label(steptitlerect, "EXIT POLL SURVEY", "steptitle");
+            GUI.Label(new Rect(25, 45, 450, 440), "An <b>Exit Poll Survey</b> is a way to gather feedback from your users and aggregate results in the dashboard.", "boldlabel");
+            GUI.Label(new Rect(25, 110, 450, 440), "You can create an exit poll in the dashboard and access it from the Unity Editor via a hook.", "boldlabel");
+            GUI.Box(new Rect(122, 180, 256, 230), EditorCore.ExitPollExample, "image_centered"); // the numbers are quite strange because of the aspect ratio
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/exitpoll/");
         }
         void SensorsUpdate()
         {
@@ -232,7 +236,7 @@ namespace Cognitive3D
         void DrawSpecificDocsButton(string url)
         {
             bool buttonDisabled = false;
-            string text = "Documentation";
+            string text = "Full Documentation";
             System.Action onclick = () => Application.OpenURL(url);
             Rect buttonrect = new Rect(100, 420, 300, 30);
 

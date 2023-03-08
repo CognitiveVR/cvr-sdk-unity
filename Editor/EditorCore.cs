@@ -542,6 +542,18 @@ namespace Cognitive3D
                 return _sceneBackground;
             }
         }
+
+        private static Texture2D _exitpollExample;
+        public static Texture2D ExitPollExample
+        {
+            get
+            {
+                if (_exitpollExample == null)
+                    _exitpollExample = Resources.Load<Texture2D>("exit_poll_example");
+                return _exitpollExample;
+            }
+        }
+
         private static Texture2D _sceneBackgroundHalf;
         public static Texture2D SceneBackgroundHalf
         {
