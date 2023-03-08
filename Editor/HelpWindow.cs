@@ -168,7 +168,7 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "CUSTOM EVENTS");
             GUI.Label(new Rect(30, 45, 440, 440), "A <color=#8A9EB7FF>Custom Event</color> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
-            GUI.Box(new Rect(25, 40, 450, 300), EditorCore.CodeSnippet, "image_centered");
+            GUI.Label(new Rect(50, 150, 300, 440), "<color=#3d55d1>new</color> <color=#519e6c>CustomEvent</color>(<color=#ad865e>\"Event Name\"</color>).<color=#e8be41>Send()</color>", "code_snippet");
             //video link
             if (GUI.Button(new Rect(100, 300, 300, 100), "video"))
             {
