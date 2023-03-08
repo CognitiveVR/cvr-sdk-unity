@@ -168,8 +168,9 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "CUSTOM EVENTS", "steptitle");
             GUI.Label(new Rect(25, 45, 450, 440), "A <b>Custom Event</b> is a way to highlight specific interactions and incidents during the session.", "boldlabel");
-            EditorGUI.DrawRect(new Rect(25, 120, 450, 80), Color.black);
-            GUI.Label(new Rect(60, 150, 300, 440), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
+            GUI.Label(new Rect(25, 110, 450, 440), "You will be able to view the events in the session timeline or in real-time in the Scene Explorer.", "boldlabel");
+            EditorGUI.DrawRect(new Rect(25, 180, 450, 80), Color.black);
+            GUI.Label(new Rect(60, 210, 300, 440), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
             if (GUI.Button(new Rect(100, 300, 300, 100), "video"))
             {
@@ -187,11 +188,19 @@ namespace Cognitive3D
         }
         void SensorsUpdate()
         {
-
+            GUI.Label(steptitlerect, "SENSORS", "steptitle");
+            GUI.Label(new Rect(25, 45, 450, 440), "A <b>Sensor</b> is a way to access and track a value or property throughout the session.", "boldlabel");
+            GUI.Label(new Rect(25, 110, 450, 440), "You can send sensor values for values like FPS, heartrate, HMD Battery Level, and view it as a graph on the dashboards.", "boldlabel");
+            EditorGUI.DrawRect(new Rect(25, 200, 450, 100), Color.black);
+            GUI.Label(new Rect(60, 230, 230, 440), "float sensorData = Random.Range(1, 100f);\nCognitive3D.SensorRecorder\n\t.RecordDataPoint(\"SensorName\", sensorData);", "code_snippet");
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/sensors/");
         }
         void MediaUpdate()
         {
-
+            GUI.Label(steptitlerect, "SCENE MEDIA", "steptitle");
+            GUI.Label(new Rect(25, 45, 450, 440), "<b>Scene Media</b> allows you detect and aggregate gaze data on media objects like images, videos, and 360 degree videos.", "boldlabel");
+            GUI.Label(new Rect(25, 110, 450, 440), "\nYou can upload media files in the <b>Media Library</b> tab on the dashboard. You can then add media to your scene and associate them with files on the dashboard to record gaze.", "boldlabel");
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/media/");
         }
         void ReadyRoomUpdate()
         {
