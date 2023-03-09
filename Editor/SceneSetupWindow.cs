@@ -16,6 +16,7 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
+        Rect steptitlerect = new Rect(30, 0, 100, 440);
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -80,11 +81,12 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the Cognitive3D Scene Setup. This window will guide you through setting up your player prefab to automatically record controller inputs and export the scene geometry to provide context for your data on SceneExplorer.", "normallabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "There is written documentation and a video guide to help you configure your project for Cognitive3D Analytics.", "normallabel");
+            GUI.Label(steptitlerect, "INTRODUCTION", "steptitle");
+            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the Cognitive3D <b>Scene Setup</b>. This window will guide you through setting up your player prefab to automatically record controller inputs and export the scene geometry to provide context for your data on SceneExplorer.", "normallabel");
+            GUI.Label(new Rect(30, 140, 440, 440), "For more information on our features, you can visit the documentation section of our website or look at the help menu.", "normallabel");
 
             //video link
-            if (GUI.Button(new Rect(150, 260, 200, 150), "video"))
+            if (GUI.Button(new Rect(150, 220, 200, 150), "video"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
@@ -94,6 +96,8 @@ namespace Cognitive3D
             {
                 EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
             }
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/minimal-setup-guide/");
+            DrawHelpWindowButton();
         }
 
         void ProjectErrorUpdate()
@@ -977,6 +981,50 @@ namespace Cognitive3D
             {
                 return;
             }
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }
+
+        void DrawSpecificDocsButton(string url)
+        {
+            bool buttonDisabled = false;
+            string text = "Full Documentation";
+            System.Action onclick = () => Application.OpenURL(url);
+            Rect buttonrect = new Rect(100, 440, 300, 30);
+
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }
+
+        void DrawHelpWindowButton()
+        {
+            bool buttonDisabled = false;
+            string text = "Open Help Menu";
+            System.Action onclick = () =>
+            {
+                HelpWindow.Init();
+            };
+            Rect buttonrect = new Rect(150, 400, 200, 30);
             if (buttonDisabled)
             {
                 GUI.Button(buttonrect, text, "button_disabledtext");
