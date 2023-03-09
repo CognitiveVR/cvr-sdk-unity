@@ -445,15 +445,15 @@ namespace Cognitive3D.Components
             }
 
             Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
-
-            DynamicObject.ControllerDisplayType displayType;
             InputDevice tempDevice;
 
             //left hand
             if (GameplayReferences.GetControllerInfo(false,out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,false);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                LeftHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -475,7 +475,7 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("menu"));
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
                         break;
@@ -534,19 +534,35 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
                         break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
+                        break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
+                    default:
+                        Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
                 }
             }
 
             //right hand
             if (GameplayReferences.GetControllerInfo(true, out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,true);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                RightHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -568,7 +584,7 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("menu"));
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("abtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("bbtn"));
                         break;
@@ -619,7 +635,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
-
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
@@ -629,12 +644,26 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
+                        RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
+                    default:
+                        Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
                 }
             }
 
