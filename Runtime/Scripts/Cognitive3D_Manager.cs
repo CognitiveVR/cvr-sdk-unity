@@ -326,10 +326,16 @@ namespace Cognitive3D
 #elif C3D_VIVEWAVE
         SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
         SetSessionProperty("c3d.app.sdktype", "Vive Wave");
+#elif C3D_VARJOVR
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.app.sdktype", "Varjo VR");
+#elif C3D_VARJOXR
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.app.sdktype", "Varjo XR");
 #elif C3D_OMNICEPT
-        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-        Cognitive3D_Manager.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL

@@ -107,17 +107,21 @@ namespace Cognitive3D
 
         public int NumberOfBatches()
         {
-            //save current posiiton
-            var currentPosition = read_reader.BaseStream.Position;
+            var currentPosition = 0L;
 
-            //reset reader to start. read all lines
             int i = 0;
-            read_reader.BaseStream.Position = 0;
-            while (read_reader.ReadLine() != null) { i++; }
+            //save current posiiton
+            if (read_reader.BaseStream.CanRead)
+            {
+                currentPosition = read_reader.BaseStream.Position;
 
-            //return to current position
-            read_reader.BaseStream.Position = currentPosition;
+                //reset reader to start. read all lines
+                read_reader.BaseStream.Position = 0;
+                while (read_reader.ReadLine() != null) { i++; }
 
+                //return to current position
+                read_reader.BaseStream.Position = currentPosition;
+            }
             //return batch number
             return i / 2;
         }
