@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D;
+using UnityEditor.SceneManagement;
 
 namespace Cognitive3D
 {
     internal class HelpWindow : EditorWindow
     {
         Rect steptitlerect = new Rect(30, 0, 100, 440);
-
         internal static void Init()
         {
             HelpWindow window = (HelpWindow)EditorWindow.GetWindow(typeof(HelpWindow), true, "Help (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -204,7 +204,11 @@ namespace Cognitive3D
         }
         void ReadyRoomUpdate()
         {
-
+            GUI.Label(steptitlerect, "READY ROOM", "steptitle");
+            GUI.Label(new Rect(25, 45, 450, 440), "<b>Ready Room</b> provides a tutorial scene for users of an application to get familiar with the VR experiences. This is particularly useful if members of your target audience are new to VR or you want to ensure all equipment and software is configured correctly.", "boldlabel");
+            GUI.Label(new Rect(25, 150, 450, 440), "\nYou can set up ready room by importing the \"Ready Room\" sample from the Cognitive3D Unity SDK package in Package Manager.", "boldlabel");
+            DrawPackageManagerButton();
+            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/ready-room/");
         }
 
         void DrawFooter()
@@ -310,5 +314,27 @@ namespace Cognitive3D
             }
         }
 
+        void DrawPackageManagerButton()
+        {
+            bool buttonDisabled = false;
+            string text = "Open Package Manager";
+            System.Action onclick = () =>
+            {
+                UnityEditor.PackageManager.UI.Window.Open("com.cognitive3d.c3d-sdk");
+            };
+            Rect buttonrect = new Rect(150, 360, 200, 30);
+            if (buttonDisabled)
+            {
+                GUI.Button(buttonrect, text, "button_disabledtext");
+            }
+            else
+            {
+                if (GUI.Button(buttonrect, text))
+                {
+                    if (onclick != null)
+                        onclick.Invoke();
+                }
+            }
+        }
     }
 }
