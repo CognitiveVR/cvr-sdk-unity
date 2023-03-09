@@ -8,7 +8,9 @@ namespace Cognitive3D.Components
 {
     public class GazeSphere360 : MonoBehaviour
     {
-        public Camera userCamera;
+        [SerializeField]
+        private Camera userCamera;
+        public Camera UserCamera { get { return userCamera; } set { userCamera = value; } }
 
         void Update()
         {

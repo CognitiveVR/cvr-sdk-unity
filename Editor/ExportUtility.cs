@@ -400,7 +400,7 @@ namespace Cognitive3D
                 AssetDatabase.SaveAssets();
             }
 
-            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString();
+            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
