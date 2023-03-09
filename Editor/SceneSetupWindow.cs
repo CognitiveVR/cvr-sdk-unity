@@ -133,6 +133,7 @@ namespace Cognitive3D
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
+            GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
 
@@ -491,11 +492,12 @@ namespace Cognitive3D
 
         void ExportSceneUpdate()
         {
-            GUI.Label(new Rect(30, 30, 440, 440), "All geometry without a <color=#1fa4f2>Dynamic Object</color> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nThis process usually only needs to be done once. If you make a major change to your scene geometry (for example, moving a wall), you should export and upload the scene geometry again so the context of the player's behaviour is accurate.\n\nRefer to documentation for more details about exporting scene geometry.", "normallabel");
+            GUI.Label(steptitlerect, "SCENE EXPORT", "steptitle");
+            GUI.Label(new Rect(30, 30, 440, 440), "All geometry without a <b>Dynamic Object</b> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nThis process usually only needs to be done once. If you make a major change to your scene geometry (for example, moving a wall), you should export and upload the scene geometry again so the context of the player's behaviour is accurate.\n\nRefer to documentation for more details about exporting scene geometry.", "normallabel");
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
             //draw example scene image
-            GUI.Box(new Rect(175, 270, 150, 150), EditorCore.SceneBackground, "image_centered");
+            GUI.Box(new Rect(175, 230, 150, 150), EditorCore.SceneBackground, "image_centered");
 
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
@@ -513,7 +515,7 @@ namespace Cognitive3D
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
-                GUI.Label(new Rect(0, 400, 500, 15), displayString, "miniheadercenter");
+                GUI.Label(new Rect(0, 365, 500, 15), displayString, "miniheadercenter");
             }
 
             if (numberOfLights > 50)
@@ -521,7 +523,7 @@ namespace Cognitive3D
                 GUI.Label(new Rect(0, 425, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
 
-            if (GUI.Button(new Rect(150, 455, 200, 35), "Export Scene Geometry"))
+            if (GUI.Button(new Rect(150, 440, 200, 35), "Export Scene Geometry"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -557,7 +559,7 @@ namespace Cognitive3D
             }
 
             //texture resolution settings
-            Rect toolsRect = new Rect(360, 455, 35, 35);
+            Rect toolsRect = new Rect(360, 440, 35, 35);
             if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
             {
                 //drop down menu?
@@ -608,6 +610,7 @@ namespace Cognitive3D
 
         void UploadSummaryUpdate()
         {
+            GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
 
             int sceneVersion = 0;
