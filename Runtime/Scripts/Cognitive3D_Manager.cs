@@ -26,7 +26,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public const string SDK_VERSION = "1.0.6";
+        public const string SDK_VERSION = "1.0.7";
 
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -196,7 +196,7 @@ namespace Cognitive3D
             }
             if (TrackingScene == null)
             {
-                Util.logWarning("CogntitiveVRManager No Tracking Scene Set!");
+                Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
             }
 
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
@@ -326,10 +326,16 @@ namespace Cognitive3D
 #elif C3D_VIVEWAVE
         SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
         SetSessionProperty("c3d.app.sdktype", "Vive Wave");
+#elif C3D_VARJOVR
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.app.sdktype", "Varjo VR");
+#elif C3D_VARJOXR
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.app.sdktype", "Varjo XR");
 #elif C3D_OMNICEPT
-        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.enabled", true);
-        Cognitive3D_Manager.SetSessionProperty("c3d.device.eyetracking.type","Tobii");
-        Cognitive3D_Manager.SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.type","Tobii");
+        SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL

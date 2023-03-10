@@ -320,7 +320,7 @@ namespace Cognitive3D
             else
             {
                 controllerTransforms[0] = dyn.transform;
-                controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+                controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
                 return controllerDevices[0].isValid;
             }
         }

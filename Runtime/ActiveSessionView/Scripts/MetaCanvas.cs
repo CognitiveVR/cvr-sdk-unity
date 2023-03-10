@@ -17,7 +17,7 @@ namespace Cognitive3D
             public Text SceneId;
             public Text OfflineBatches;
 
-            void Start()
+            void Awake()
             {
                 Cognitive3D_Manager.OnSessionBegin += Core_InitEvent;
                 Cognitive3D_Manager.OnLevelLoaded += Core_LevelLoadedEvent;
@@ -32,6 +32,7 @@ namespace Cognitive3D
             {
                 Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
                 SessionName.text = Cognitive3D_Manager.SessionID;
+                SceneId.text = Cognitive3D_Manager.TrackingSceneId;
             }
 
             int lastSecondTime = 0;

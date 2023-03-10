@@ -229,7 +229,7 @@ namespace Cognitive3D
                 string name = "c3d.sensor." + sensorName;
 
                 float sensorValue = 0;
-                if (SensorRecorder.LastSensorValues.TryGetValue(name, out sensorValue))
+                if (SensorRecorder.LastSensorValues.TryGetValue(sensorName, out sensorValue))
                 {
                     bool foundExistingKey = false;
                     for (int i = 0; i < propertyCount; i++)
