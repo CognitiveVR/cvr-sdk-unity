@@ -18,6 +18,13 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
+        /// <summary>
+        /// //////////// TEST
+        /// </summary>
+        /// 
+        public GameObject pole;
+
+        //////////////////////////////
 
         [ClampSetting(1f, 5f)]
         [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
@@ -42,15 +49,10 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
-#endif            
-            {
-                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            }
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
-            Transform trackingSpace = GameObject.Find("TrackingSpace").transform;
+            trackingSpace = GameObject.Find("TrackingSpace").transform;
 #endif
             //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_PoseEventHandler;
 
@@ -95,6 +97,7 @@ namespace Cognitive3D.Components
         void CheckBoundary()
         {
 #if C3D_OCULUS
+            boundaryPointsArray = new Vector3[10]; // usually it is only 4
             boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
             intervalFrameCount = 0;
             currentTime = 0;
