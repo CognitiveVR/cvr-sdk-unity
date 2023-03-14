@@ -102,7 +102,7 @@ namespace Cognitive3D
                 EditorGUI.indentLevel++;
                 p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
                 var rect = GUILayoutUtility.GetLastRect();
-                rect.width = 20;
+                rect.width = 16;
                 GUI.Label(rect, new GUIContent(EditorCore.Error, "Hook should not be empty!"));
                 EditorGUI.indentLevel--;
             }

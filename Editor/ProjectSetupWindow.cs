@@ -86,7 +86,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup. This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
                 "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
             GUI.Label(new Rect(30, 300, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
-            if (GUI.Button(new Rect(130, 350, 240, 30), "Open Documentation Site"))
+            if (GUI.Button(new Rect(150, 350, 200, 30), "Open Online Documentation"))
             {
                 Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
             }
@@ -110,13 +110,13 @@ namespace Cognitive3D
             if (string.IsNullOrEmpty(developerkey)) //empty
             {
                 GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.CircleEmpty32, "image_centered");
                 lastDevKeyResponseCode = 0;
                 developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else if (lastDevKeyResponseCode == 200) //valid key
             {
-                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
                 string previous = developerkey;
                 developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 if (previous != developerkey)
@@ -124,12 +124,12 @@ namespace Cognitive3D
             }
             else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
             {
-                GUI.Label(new Rect(440, 345, 24, 40), new GUIContent(EditorCore.Question, "Not validated"), "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Info, "Not validated"), "image_centered");
                 developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else //invalid key
             {
-                GUI.Label(new Rect(440, 345, 24, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
                 string previous = developerkey;
                 developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
                 if (previous != developerkey)
@@ -147,11 +147,11 @@ namespace Cognitive3D
             if (string.IsNullOrEmpty(apikey))
             {
                 GUI.Label(new Rect(30, 440, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 440, 24, 40), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(440, 440, 30, 40), EditorCore.CircleEmpty32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(440, 440, 24, 40), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(440, 440, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
             }
 
         }
@@ -367,8 +367,10 @@ namespace Cognitive3D
 
             for (int i = 0; i < SDKNamesDefines.Count; i++)
             {
+
+
                 bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
-                GUIContent content = new GUIContent(SDKNamesDefines[i].Name);
+                GUIContent content = new GUIContent("  "+SDKNamesDefines[i].Name);
                 float separator = 0;
                 if (i > 8)
                 {
@@ -398,7 +400,7 @@ namespace Cognitive3D
                         }
                     }
                 }
-                GUI.Label(new Rect(420, i * 32 + separator, 24, 30), selected ? EditorCore.Checkmark : EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, i * 32 + separator, 24, 30), selected ? EditorCore.BoxCheckmark32 : EditorCore.BoxEmpty32, "image_centered");
                 if (i == 9)
                 {
                     int kerning = 4;
@@ -468,13 +470,13 @@ namespace Cognitive3D
             if (gliaAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
         }
 
@@ -529,13 +531,13 @@ namespace Cognitive3D
             if (sranipalAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
                 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }    
         }
 

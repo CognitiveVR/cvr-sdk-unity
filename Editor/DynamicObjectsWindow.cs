@@ -305,7 +305,7 @@ namespace Cognitive3D
                 gm.AddItem(new GUIContent("Ids"), filterIds, OnToggleIdFilter);
                 gm.ShowAsContext();
             }
-            if (GUI.Button(searchClearRect, "X", "ghostlabel"))
+            if (GUI.Button(searchClearRect, EditorCore.ClearIcon, "ghostlabel"))
             {
                 searchBarString = string.Empty;
                 FilterList(searchBarString);
@@ -323,7 +323,7 @@ namespace Cognitive3D
             }
             if (visibleCount == 0)
                 allselected = false;
-            var toggleIcon = allselected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
+            var toggleIcon = allselected ? EditorCore.BoxCheckmark32 : EditorCore.BoxEmpty32;
             bool pressed = GUI.Button(toggleRect, toggleIcon, "image_centered");
             //select all in hiearchy
             if (pressed)
@@ -949,7 +949,7 @@ namespace Cognitive3D
             Rect exported = new Rect(rect.x + 420, rect.y, 24, rect.height);
             Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
 
-            var toggleIcon = dynamic.selected ? EditorCore.BlueCheckmark : EditorCore.EmptyBlueCheckmark;
+            var toggleIcon = dynamic.selected ? EditorCore.BoxCheckmark32 : EditorCore.BoxEmpty32;
             if (dynamic.isIdPool)
             {
                 dynamic.selected = Selection.Contains(dynamic.poolReference);
@@ -995,11 +995,11 @@ namespace Cognitive3D
                 //has been exported
                 if (!dynamic.objectReference.UseCustomMesh || EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName))
                 {
-                    GUI.Label(exported, EditorCore.Checkmark, image_centered);
+                    GUI.Label(exported, EditorCore.CircleCheckmark32, image_centered);
                 }
                 else
                 {
-                    GUI.Label(exported, EditorCore.EmptyCheckmark, image_centered);
+                    GUI.Label(exported, EditorCore.CircleEmpty32, image_centered);
                 }
             }
 
@@ -1007,7 +1007,7 @@ namespace Cognitive3D
             if (dynamic.objectReference == null)
             {
                 //id pool
-                GUI.Label(uploaded, new GUIContent(EditorCore.EmptyCheckmark, "IDs in this pool have not been uploaded to dashboard"), image_centered);
+                GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty32, "IDs in this pool have not been uploaded to dashboard"), image_centered);
                 //TODO check if any/all ids have been uploaded from id pool asset
             }
             else if (dynamic.objectReference.IdPool != null)
@@ -1022,11 +1022,11 @@ namespace Cognitive3D
             }
             else if (dynamic.hasBeenUploaded)
             {
-                GUI.Label(uploaded, new GUIContent(EditorCore.Checkmark,"This object's data will be aggregated across sessions"), image_centered);
+                GUI.Label(uploaded, new GUIContent(EditorCore.CircleCheckmark32,"This object's data will be aggregated across sessions"), image_centered);
             }
             else
             {
-                GUI.Label(uploaded, new GUIContent(EditorCore.EmptyCheckmark, "ID does not exist on Dashboard and will not be aggregated across sessions"), image_centered);
+                GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty32, "ID does not exist on Dashboard and will not be aggregated across sessions"), image_centered);
             }   
         }
 

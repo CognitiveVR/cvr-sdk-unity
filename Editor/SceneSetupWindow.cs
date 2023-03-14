@@ -86,7 +86,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 140, 440, 440), "For more information on our features, you can visit the documentation section of our website or look at the help menu.", "normallabel");
 
             //video link
-            if (GUI.Button(new Rect(150, 220, 200, 150), "video"))
+            if (GUI.Button(new Rect(150, 260, 200, 150), "video"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
@@ -96,8 +96,6 @@ namespace Cognitive3D
             {
                 EditorCore.SpawnManager(EditorCore.DisplayValue(DisplayKey.ManagerName));
             }
-            DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/minimal-setup-guide/");
-            DrawHelpWindowButton();
         }
 
         void ProjectErrorUpdate()
@@ -225,14 +223,14 @@ namespace Cognitive3D
             //hmd
             int hmdRectHeight = 170;
 
-            GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
-            if (GUI.Button(new Rect(80, hmdRectHeight, 290, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
+            GUI.Label(new Rect(60, hmdRectHeight, 50, 30), "HMD", "boldlabel");
+            if (GUI.Button(new Rect(130, hmdRectHeight, 310, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = mainCameraObject;
             }
 
             int pickerID_HMD = 5689466;
-            if (GUI.Button(new Rect(370, hmdRectHeight, 100, 30), "Select..."))
+            if (GUI.Button(new Rect(440, hmdRectHeight, 30, 30), EditorCore.SearchIconWhite))
             {
                 GUI.skin = null;
                 EditorGUIUtility.ShowObjectPicker<GameObject>(
@@ -249,11 +247,12 @@ namespace Cognitive3D
 
             if (Camera.main != null && mainCameraObject != null && mainCameraObject == Camera.main.gameObject)
             {
-                GUI.Label(new Rect(320, hmdRectHeight, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(30, hmdRectHeight, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(320, hmdRectHeight, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, hmdRectHeight, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(400, hmdRectHeight, 30, 30), EditorCore.Alert, "image_centered");
             }
             //TODO warning icon if multiple objects tagged with mainCamera in scene
 
@@ -279,18 +278,18 @@ namespace Cognitive3D
             int offset = -35; //indicates how much vertical offset to add to setup features so controller selection has space
 
             //left hand label
-            GUI.Label(new Rect(30, 245 + offset, 50, 30), "Left", "boldlabel");
+            GUI.Label(new Rect(60, 245 + offset, 50, 30), "Left", "boldlabel");
 
             string leftname = "Missing";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(80, 245 + offset, 290, 30), leftname, "button_blueoutline"))
+            if (GUI.Button(new Rect(130, 245 + offset, 310, 30), leftname, "button_blueoutline"))
             {
                 Selection.activeGameObject = leftcontroller;
             }
 
             int pickerID = 5689465;
-            if (GUI.Button(new Rect(370, 245 + offset, 100, 30), "Select..."))
+            if (GUI.Button(new Rect(440, 245 + offset, 30, 30), EditorCore.SearchIconWhite))
             {
                 GUI.skin = null;
                 EditorGUIUtility.ShowObjectPicker<GameObject>(
@@ -307,27 +306,28 @@ namespace Cognitive3D
 
             if (leftControllerIsValid)
             {
-                GUI.Label(new Rect(320, 245 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(30, 245 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(320, 245 + offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, 245 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(400, 245 + offset, 30, 30), EditorCore.Alert, "image_centered");
             }
 
             //right hand label
-            GUI.Label(new Rect(30, 285 + offset, 50, 30), "Right", "boldlabel");
+            GUI.Label(new Rect(60, 285 + offset, 50, 30), "Right", "boldlabel");
 
             string rightname = "Missing";
             if (rightcontroller != null)
                 rightname = rightcontroller.gameObject.name;
 
-            if (GUI.Button(new Rect(80, 285 + offset, 290, 30), rightname, "button_blueoutline"))
+            if (GUI.Button(new Rect(130, 285 + offset, 310, 30), rightname, "button_blueoutline"))
             {
                 Selection.activeGameObject = rightcontroller;
             }
 
             pickerID = 5689469;
-            if (GUI.Button(new Rect(370, 285 + offset, 100, 30), "Select..."))
+            if (GUI.Button(new Rect(440, 285 + offset, 30, 30), EditorCore.SearchIconWhite))
             {
                 GUI.skin = null;
                 EditorGUIUtility.ShowObjectPicker<GameObject>(
@@ -344,11 +344,12 @@ namespace Cognitive3D
 
             if (rightControllerIsValid)
             {
-                GUI.Label(new Rect(320, 285 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(30, 285 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(320, 285 + offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(30, 285 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(400, 285 + offset, 30, 30), EditorCore.Alert, "image_centered");
             }
 
             //drag and drop
@@ -377,7 +378,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(125, 360 + offset, 250, 30), "Setup Player GameObjects"))
+            if (GUI.Button(new Rect(150, 360 + offset, 200, 30), "Setup Player GameObjects"))
             {
                 if (mainCameraObject != null)
                 {
@@ -391,11 +392,11 @@ namespace Cognitive3D
 
             if (AllControllerSetupComplete)
             {
-                GUI.Label(new Rect(360, 360 + offset, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(120, 360 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(360, 360 + offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(120, 360 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
             }
 
 #if C3D_STEAMVR2
@@ -631,7 +632,7 @@ namespace Cognitive3D
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
-                GUI.Button(uploadSceneRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Button(uploadSceneRect, EditorCore.CircleEmpty32, "image_centered");
                 GUI.Label(new Rect(60, 202, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
@@ -640,14 +641,14 @@ namespace Cognitive3D
                 //upload scene geometry
                 if (UploadSceneGeometry)
                 {
-                    if (GUI.Button(uploadSceneRect, EditorCore.BlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadSceneRect, EditorCore.BoxCheckmark32, "image_centered"))
                     {
                         UploadSceneGeometry = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadSceneRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadSceneRect, EditorCore.BoxEmpty32, "image_centered"))
                     {
                         UploadSceneGeometry = true;
                     }
@@ -664,7 +665,7 @@ namespace Cognitive3D
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //disable 'upload scene geometry' toggle
-                GUI.Button(uploadThumbnailRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Button(uploadThumbnailRect, EditorCore.CircleEmpty32, "image_centered");
                 GUI.Label(new Rect(60, 242, 300, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
             }
             else
@@ -672,14 +673,14 @@ namespace Cognitive3D
                 //upload thumbnail
                 if (UploadThumbnail)
                 {
-                    if (GUI.Button(uploadThumbnailRect, EditorCore.BlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxCheckmark32, "image_centered"))
                     {
                         UploadThumbnail = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadThumbnailRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty32, "image_centered"))
                     {
                         UploadThumbnail = true;
                     }
@@ -694,7 +695,7 @@ namespace Cognitive3D
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //can't upload dynamics
-                GUI.Button(uploadDynamicRect, EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Button(uploadDynamicRect, EditorCore.CircleEmpty32, "image_centered");
                 GUI.Label(new Rect(60, 282, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
             }
             else
@@ -702,14 +703,14 @@ namespace Cognitive3D
                 //upload dynamics toggle
                 if (UploadDynamicMeshes)
                 {
-                    if (GUI.Button(uploadDynamicRect, EditorCore.BlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxCheckmark32, "image_centered"))
                     {
                         UploadDynamicMeshes = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadDynamicRect, EditorCore.EmptyBlueCheckmark, "image_centered"))
+                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty32, "image_centered"))
                     {
                         UploadDynamicMeshes = true;
                     }
@@ -757,7 +758,7 @@ namespace Cognitive3D
                 HelpWindow.Init();
             }
 
-            if (GUI.Button(new Rect(260, 280, 200, 40), "Open Documentation"))
+            if (GUI.Button(new Rect(260, 280, 200, 40), "Open Online Documentation"))
             {
                 Application.OpenURL("https://docs.cognitive3d.com/unity/comprehensive-setup-guide/");
             }
@@ -984,50 +985,6 @@ namespace Cognitive3D
             {
                 return;
             }
-            if (buttonDisabled)
-            {
-                GUI.Button(buttonrect, text, "button_disabledtext");
-            }
-            else
-            {
-                if (GUI.Button(buttonrect, text))
-                {
-                    if (onclick != null)
-                        onclick.Invoke();
-                }
-            }
-        }
-
-        void DrawSpecificDocsButton(string url)
-        {
-            bool buttonDisabled = false;
-            string text = "Full Documentation";
-            System.Action onclick = () => Application.OpenURL(url);
-            Rect buttonrect = new Rect(100, 440, 300, 30);
-
-            if (buttonDisabled)
-            {
-                GUI.Button(buttonrect, text, "button_disabledtext");
-            }
-            else
-            {
-                if (GUI.Button(buttonrect, text))
-                {
-                    if (onclick != null)
-                        onclick.Invoke();
-                }
-            }
-        }
-
-        void DrawHelpWindowButton()
-        {
-            bool buttonDisabled = false;
-            string text = "Open Help Menu";
-            System.Action onclick = () =>
-            {
-                HelpWindow.Init();
-            };
-            Rect buttonrect = new Rect(150, 400, 200, 30);
             if (buttonDisabled)
             {
                 GUI.Button(buttonrect, text, "button_disabledtext");
