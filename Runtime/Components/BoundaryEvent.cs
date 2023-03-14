@@ -43,7 +43,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
 #if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif            
             {
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
