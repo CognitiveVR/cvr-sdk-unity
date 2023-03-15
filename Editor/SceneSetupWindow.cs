@@ -16,7 +16,7 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
-        Rect steptitlerect = new Rect(30, 0, 100, 440);
+        Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -494,7 +494,7 @@ namespace Cognitive3D
         void ExportSceneUpdate()
         {
             GUI.Label(steptitlerect, "SCENE EXPORT", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "All geometry without a <b>Dynamic Object</b> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nThis process usually only needs to be done once. If you make a major change to your scene geometry (for example, moving a wall), you should export and upload the scene geometry again so the context of the player's behaviour is accurate.\n\nRefer to documentation for more details about exporting scene geometry.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "All geometry without a <b>Dynamic Object</b> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nRefer to Online Documentation for more details about exporting scene geometry.", "normallabel");
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
             //draw example scene image
@@ -521,10 +521,10 @@ namespace Cognitive3D
 
             if (numberOfLights > 50)
             {
-                GUI.Label(new Rect(0, 425, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
+                GUI.Label(new Rect(0, 405, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
 
-            if (GUI.Button(new Rect(150, 440, 200, 35), "Export Scene Geometry"))
+            if (GUI.Button(new Rect(150, 440, 200, 30), "Export Scene Geometry"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -595,6 +595,8 @@ namespace Cognitive3D
         {
             Cognitive3D_Preferences.Instance.ExportSceneLODLowest = !Cognitive3D_Preferences.Instance.ExportSceneLODLowest;
         }
+
+        //Unity 2020.1+
         void OnToggleIncludeDisabledDynamics()
         {
             Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects = !Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects;
@@ -614,6 +616,8 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
 
+            int heightOffset = 150;
+
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             if (settings != null && !string.IsNullOrEmpty(settings.SceneId)) //has been uploaded. this is a new version
@@ -628,12 +632,12 @@ namespace Cognitive3D
 
             SceneHasExportFiles = EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
-            var uploadSceneRect = new Rect(30, 200, 30, 30);
+            var uploadSceneRect = new Rect(30, heightOffset, 30, 30);
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadSceneRect, EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(60, 202, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+2, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
             else
@@ -658,15 +662,15 @@ namespace Cognitive3D
                 {
                     uploadGeometryText = "Upload Scene Geometry (Version " + (sceneVersion+1) + ")";
                 }
-                GUI.Label(new Rect(60, 202, 400, 30), uploadGeometryText, "normallabel");
+                GUI.Label(new Rect(60, heightOffset+2, 400, 30), uploadGeometryText, "normallabel");
             }
 
-            var uploadThumbnailRect = new Rect(30, 240, 30, 30);
+            var uploadThumbnailRect = new Rect(30, heightOffset+40, 30, 30);
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadThumbnailRect, EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(60, 242, 300, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
             }
             else
             {
@@ -685,18 +689,18 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, 242, 300, 30), "Upload Scene Thumbnail", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail", "normallabel");
             }
 
             //upload dynamics
             int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-            var uploadDynamicRect = new Rect(30, 280, 30, 30);
+            var uploadDynamicRect = new Rect(30, heightOffset+80, 30, 30);
 
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //can't upload dynamics
                 GUI.Button(uploadDynamicRect, EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(60, 282, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+82, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
             }
             else
             {
@@ -715,7 +719,7 @@ namespace Cognitive3D
                         UploadDynamicMeshes = true;
                     }
                 }
-                GUI.Label(new Rect(60, 282, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
             }
 
 
@@ -726,10 +730,10 @@ namespace Cognitive3D
             //GUI.Label(new Rect(30, 140, 440, 20), (SceneExistsOnDashboard || UploadSceneGeometry) + " will be uploading scene files");
 
             //scene thumbnail preview
-            var thumbnailRect = new Rect(175, 330, 150, 150);
+            var thumbnailRect = new Rect(175, heightOffset+130, 150, 150);
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(185, 480, 150, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(185, heightOffset+280, 150, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
@@ -745,26 +749,18 @@ namespace Cognitive3D
 
         void UploadProgressUpdate()
         {
-            GUI.Label(new Rect(30, 30, 440, 25), "Uploading Scene Geometry","normallabel");
+            GUI.Label(steptitlerect, "SCENE UPLOADING", "steptitle");
+
+            //GUI.Label(new Rect(30, 30, 440, 25), "Uploading Scene Geometry","normallabel");
         }
 
         void DoneUpdate()
         {
-            GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nYou can continue your integration to get more insights including:", "normallabel");
-            GUI.Label(new Rect(30, 130, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
-            GUI.Label(new Rect(30, 230, 440, 440), "You can find a quick overview in the Help Window and more complete examples in our Documentation", "normallabel");
-            if (GUI.Button(new Rect(30, 280, 210, 40), "Open Help"))
-            {
-                HelpWindow.Init();
-            }
+            GUI.Label(steptitlerect, "NEXT STEPS", "steptitle");
 
-            if (GUI.Button(new Rect(260, 280, 200, 40), "Open Online Documentation"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/comprehensive-setup-guide/");
-            }
-
-            GUI.Label(new Rect(30, 350, 440, 440), "To record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard", "normallabel");
-            if (GUI.Button(new Rect(150, 420, 200, 40), "Open Dashboard"))
+            //1 play a session, see it on the dashboard
+            GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nTo record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard", "normallabel");
+            if (GUI.Button(new Rect(150, 170, 200, 30), "Open Dashboard"))
             {
                 var sceneSettings = Cognitive3D_Preferences.FindCurrentScene();
                 if (sceneSettings == null)
@@ -773,6 +769,15 @@ namespace Cognitive3D
                     return;
                 }
                 Application.OpenURL(CognitiveStatics.SCENELINK(sceneSettings.SceneId, sceneSettings.VersionNumber));
+            }
+
+            //2 overview of features in help window
+            GUI.Label(new Rect(30, 250, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
+            GUI.Label(new Rect(30, 300, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
+            
+            if (GUI.Button(new Rect(150, 400, 200, 30), "Open Help"))
+            {
+                HelpWindow.Init();
             }
         }
 
@@ -784,6 +789,15 @@ namespace Cognitive3D
             
             DrawBackButton();
             DrawNextButton();
+
+            if (currentPage == Page.SceneExport)
+            {
+                Rect buttonrect = new Rect(150, 510, 200, 30);
+                if (GUI.Button(buttonrect, "Open Online Documentation"))
+                {
+                    Application.OpenURL("https://docs.cognitive3d.com/unity/scenes/");
+                }
+            }
         }
 
         void DrawNextButton()

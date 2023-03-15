@@ -168,6 +168,8 @@ namespace Cognitive3D
             needsRefreshDevKey = false;
         }
 
+        string ErrorColorString = "<color=#880000ff>";
+
         static bool needsRefreshDevKey = true;
         static int lastResponseCode = 200;
         static void GetDevKeyResponse(int responseCode, string error, string text)
@@ -262,9 +264,6 @@ namespace Cognitive3D
             {
                 GUI.Label(steptitlerect, "SCENE:   " + currentscene.SceneName + " Version: " + currentscene.VersionNumber, "image_centered");
             }
-
-            //GUI.Label(new Rect(30, 45, 440, 440), "These are the active <color=#8A9EB7FF>Dynamic Object components</color> currently found in your scene.");
-
 
             if (GetDynamicObjects.Length == 0)
             {
@@ -1071,14 +1070,14 @@ namespace Cognitive3D
             if (enabled)
             {
                 EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId) || selectionCount == 0);
-                if (GUI.Button(new Rect(80, 510, 215, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
+                if (GUI.Button(new Rect(95, 510, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
                 {
                     ExportAndUpload(true);
                 }
                 EditorGUI.EndDisabledGroup();
 
                 EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId));
-                if (GUI.Button(new Rect(305, 510, 210, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
+                if (GUI.Button(new Rect(305, 510, 200, 30), new GUIContent("Upload All Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
                 {
                     ExportAndUpload(false);
                 }
@@ -1091,16 +1090,15 @@ namespace Cognitive3D
                 GUI.color = Color.white;
 
                 string errorMessage;
-                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
                 if (lastResponseCode != 200 || !EditorCore.IsDeveloperKeyValid)
                 {
-                    errorMessage = "<color=#880000ff>The Developer Key is Invalid or Expired. Please visit the project on our dashboard and update the key in the Project Setup Window</color>";
+                    errorMessage = ErrorColorString + "The Developer Key is Invalid or Expired. Please visit the project on our dashboard and update the key in the Project Setup Window</color>";
                     //TODO add a button to the dashboard? add a button to the project setup window too?
                 }
                 else
                 {
                     //assume the user has done the project setup step first
-                    errorMessage = "After completing the Scene Setup Window, you will be able to manage Dynamic Objects directly from here. Once you are done adding Dynamic Object components to GameObjects and Prefabs, press";
+                    errorMessage = "You can manage Dynamic Objects directly from here. Once you are done adding Dynamic Object components to GameObjects and Prefabs, press Continue";
                     if (GUI.Button(new Rect(430, 510, 100, 30), "Continue"))
                     {
                         //add popup asking to export all dynamic object meshes
