@@ -18,30 +18,15 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
-        /// <summary>
-        /// //////////// TEST
-        /// </summary>
-        /// 
-        public GameObject pole;
-
-        //////////////////////////////
-
-        [ClampSetting(1f, 5f)]
-        [Tooltip("Number of seconds used to average to determine framerate. Lower means more smaller samples and more detail")]
-        public float BoundaryTrackingInterval = 1;
+        private float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
-        //the number of frames in the interval
-        private int intervalFrameCount;
 #if C3D_OCULUS
         Vector3[] boundaryPointsArray;
         List<float> xCoordinates;
-        List<float> yCoordinates;
         List<float> zCoordinates;
         float minX;
         float maxX;
-        float minY;
-        float maxY;
         float minZ;
         float maxZ;
         Transform trackingSpace;
@@ -85,7 +70,6 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
 #if C3D_OCULUS
-            intervalFrameCount++;
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
@@ -97,40 +81,36 @@ namespace Cognitive3D.Components
         void CheckBoundary()
         {
 #if C3D_OCULUS
-            boundaryPointsArray = new Vector3[10]; // usually it is only 4
-            boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-            intervalFrameCount = 0;
+            boundaryPointsArray = new Vector3[4];
+            if (OVRManager.boundary != null)
+                boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
             currentTime = 0;
 
             xCoordinates = new List<float>();
-            yCoordinates = new List<float>();
             zCoordinates = new List<float>();
 
             foreach (Vector3 point in boundaryPointsArray)
             {
                 Vector3 transformedPoint = trackingSpace.TransformPoint(point);
+
                 xCoordinates.Add(transformedPoint.x);
-                yCoordinates.Add(transformedPoint.y);
                 zCoordinates.Add(transformedPoint.z);
             }
 
             xCoordinates.Sort();
-            yCoordinates.Sort();
             zCoordinates.Sort();
 
             minX = xCoordinates[0];
             maxX = xCoordinates[xCoordinates.Count - 1];
-            minY = yCoordinates[0];
-            maxY = yCoordinates[yCoordinates.Count - 1];
             minZ = zCoordinates[0];
             maxZ = zCoordinates[zCoordinates.Count - 1];
 
             Vector3 hmdPosition = GameplayReferences.HMD.position;
 
-            if (hmdPosition.x < minX || hmdPosition.x > maxX
-                || hmdPosition.y < minY || hmdPosition.y > maxY
-                || hmdPosition.z < minZ || hmdPosition.z > maxZ
-                )
+
+            // Unity uses y-up coordinate system - the boundary "up" doesn't matters
+            if ((hmdPosition.x < minX) || (hmdPosition.x > maxX)
+                || (hmdPosition.z < minZ) || (hmdPosition.z > maxZ))
             {
                 new CustomEvent("c3d.user.exited.boundary").Send();
             }
