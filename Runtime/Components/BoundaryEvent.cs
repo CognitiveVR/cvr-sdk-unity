@@ -30,7 +30,9 @@ namespace Cognitive3D.Components
         float minZ;
         float maxZ;
         Transform trackingSpace;
-#endif        
+        Vector3 hmdPosition;
+        bool exited = false;
+#endif
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -83,9 +85,40 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
             boundaryPointsArray = new Vector3[4];
             if (OVRManager.boundary != null)
-                boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-            currentTime = 0;
+            {
+                if (boundaryPointsArray != OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
+                {
+                    boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
+                    RecalculateBounds();
+                }
+            }
 
+            // Unity uses y-up coordinate system - the boundary "up" doesn't matters
+            if ((hmdPosition.x < minX) || (hmdPosition.x > maxX)
+                || (hmdPosition.z < minZ) || (hmdPosition.z > maxZ))
+            {
+                if (!exited)
+                {
+                    new CustomEvent("c3d.user.exited.boundary").Send();
+                    exited = true;
+                }
+            }
+            else
+            {
+                exited = false;
+            }
+            currentTime = 0;
+#endif
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
+        private void RecalculateBounds()
+        {
             xCoordinates = new List<float>();
             zCoordinates = new List<float>();
 
@@ -99,28 +132,11 @@ namespace Cognitive3D.Components
 
             xCoordinates.Sort();
             zCoordinates.Sort();
-
             minX = xCoordinates[0];
             maxX = xCoordinates[xCoordinates.Count - 1];
             minZ = zCoordinates[0];
             maxZ = zCoordinates[zCoordinates.Count - 1];
-
-            Vector3 hmdPosition = GameplayReferences.HMD.position;
-
-
-            // Unity uses y-up coordinate system - the boundary "up" doesn't matters
-            if ((hmdPosition.x < minX) || (hmdPosition.x > maxX)
-                || (hmdPosition.z < minZ) || (hmdPosition.z > maxZ))
-            {
-                new CustomEvent("c3d.user.exited.boundary").Send();
-            }
-#endif
-        }
-
-        private void Cognitive3D_Manager_OnPreSessionEnd()
-        {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            hmdPosition = GameplayReferences.HMD.position;
         }
 
         void OnDestroy()
