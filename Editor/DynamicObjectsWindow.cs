@@ -160,9 +160,20 @@ namespace Cognitive3D
 
         public static void Init()
         {
+            DynamicObjectsWindow window = (DynamicObjectsWindow)EditorWindow.GetWindow(typeof(DynamicObjectsWindow), true, "Dynamic Objects (" + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(600, 550);
+            window.maxSize = new Vector2(600, 550);
+            window.Show();
+            EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
+            needsRefreshDevKey = false;
+        }
+
+        public static void Init(Rect position)
+        {
             DynamicObjectsWindow window = (DynamicObjectsWindow)EditorWindow.GetWindow(typeof(DynamicObjectsWindow), true, "Dynamic Objects (" +Cognitive3D_Manager.SDK_VERSION +")");
             window.minSize = new Vector2(600, 550);
             window.maxSize = new Vector2(600, 550);
+            window.position = new Rect(position.x+5, position.y+5, 600, 550);
             window.Show();
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
             needsRefreshDevKey = false;

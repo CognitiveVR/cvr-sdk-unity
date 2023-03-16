@@ -22,6 +22,20 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
+        internal static void Init(Rect position)
+        {
+            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.position = new Rect(position.x + 5, position.y + 5, 500, 550);
+            window.Show();
+
+            window.LoadKeys();
+            window.GetSelectedSDKs();
+
+            ExportUtility.ClearUploadSceneSettings();
+        }
+
         enum Page
         {
             Welcome,
@@ -579,13 +593,13 @@ namespace Cognitive3D
             if (eyeManagerExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.Checkmark, "image_centered");
+                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
 #endif
         }
@@ -643,14 +657,14 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "NEXT STEPS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
-            if (GUI.Button(new Rect(150, 100, 200, 40), "Quick Setup"))
+            if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Setup"))
             {
-                SceneSetupWindow.Init();
+                SceneSetupWindow.Init(position);
                 Close();
             }
 
             GUI.Label(new Rect(30, 200, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment", "normallabel");
-            if (GUI.Button(new Rect(150, 250, 200, 40), "Advanced Setup"))
+            if (GUI.Button(new Rect(150, 250, 200, 30), "Advanced Setup"))
             {
                 //show dynamic page
                 currentPage = Page.DynamicSetup;
@@ -660,16 +674,13 @@ namespace Cognitive3D
         void DynamicUpdate()
         {
             GUI.Label(steptitlerect, "DYNAMIC OBJECTS", "steptitle");
-            //explain the next screen - overview of all the dynamics in the project
-
-            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users." +
-                "\n\nSome examples include Billboards, Vehicles or Tools.", "normallabel");
-            GUI.Label(new Rect(30, 200, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
-
-            GUI.Label(new Rect(30, 250, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
-
             //display some text about what dynamics are and how to define them with a component
             //also brief on the upcoming dynamic objects screen
+
+            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users.", "normallabel");
+            GUI.Label(new Rect(30, 130, 440, 440), "Some examples include Billboards, Vehicles or Tools.", "normallabel");
+            GUI.Label(new Rect(30, 170, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
+            GUI.Label(new Rect(30, 300, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
         }
 
         void DrawFooter()
@@ -749,7 +760,7 @@ namespace Cognitive3D
                 case Page.DynamicSetup:
                     onclick = () =>
                     {
-                        DynamicObjectsWindow.Init();
+                        DynamicObjectsWindow.Init(position);
                         Close();
                     };
                     

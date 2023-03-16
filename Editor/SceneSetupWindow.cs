@@ -27,6 +27,17 @@ namespace Cognitive3D
 
             ExportUtility.ClearUploadSceneSettings();
         }
+        internal static void Init(Rect position)
+        {
+            SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.position = new Rect(position.x+5, position.y+5, 500, 550);
+            window.Show();
+            initialPlayerSetup = false;
+
+            ExportUtility.ClearUploadSceneSettings();
+        }
 
         enum Page
         {
@@ -79,14 +90,20 @@ namespace Cognitive3D
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
 
+        private void OnFocus()
+        {
+            hasCheckedForSteamVRActionsSet = false;
+        }
+
         void WelcomeUpdate()
         {
             GUI.Label(steptitlerect, "INTRODUCTION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the Cognitive3D <b>Scene Setup</b>. This window will guide you through setting up your player prefab to automatically record controller inputs and export the scene geometry to provide context for your data on SceneExplorer.", "normallabel");
-            GUI.Label(new Rect(30, 140, 440, 440), "For more information on our features, you can visit the documentation section of our website or look at the help menu.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the Cognitive3D <b>Scene Setup</b>. This window will guide you through basic configuration to ensure your scene is ready to record data.\n\nThis will include:", "normallabel");
+            GUI.Label(new Rect(30, 140, 440, 440), "- Ensure player prefab is configured\n- Set up controller inputs\n- Export Scene Geometry to SceneExplorer","normallabel");
+            GUI.Label(new Rect(30, 220, 440, 440), "For a guided walkthrough, you can follow the video below:", "normallabel");
 
             //video link
-            if (GUI.Button(new Rect(150, 260, 200, 150), "video"))
+            if (GUI.Button(new Rect(150, 300, 200, 150), "video"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
@@ -100,15 +117,16 @@ namespace Cognitive3D
 
         void ProjectErrorUpdate()
         {
-            GUI.Label(new Rect(30, 45, 440, 440), "Project Setup not complete. You must have a developer key set to register a new scene", "normallabel");
+            GUI.Label(steptitlerect, "PROJECT SETUP NOT COMPLETE", "steptitle");
+            GUI.Label(new Rect(30, 30, 440, 440), "You must have a Developer Key to set up a new scene.", "normallabel");
 
-            if (GUI.Button(new Rect(130, 175, 240, 30), "Open Project Setup Window"))
+            if (GUI.Button(new Rect(150, 100, 200, 30), "Open Project Setup Window"))
             {
                 Close();
-                ProjectSetupWindow.Init();
+                ProjectSetupWindow.Init(position);
             }
 
-            //should check that the dev key is valid. web request or check a cached value
+            //skip this screen if the developer key is valid
             if (EditorCore.IsDeveloperKeyValid)
             {
                 currentPage = Page.Welcome;
@@ -121,12 +139,6 @@ namespace Cognitive3D
         GameObject rightcontroller;
         GameObject mainCameraObject;
 
-#if C3D_STEAMVR2
-        bool steamvr2bindings = false;
-        bool steamvr2actionset = false;
-#endif
-
-        //static so it resets on recompile, which will allow PlayerSetupStart to run again
         static bool initialPlayerSetup;
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
@@ -218,12 +230,13 @@ namespace Cognitive3D
         void ControllerUpdate()
         {
             PlayerSetupStart();
-            GUI.Label(new Rect(30, 30, 440, 440), "Ensure the Player Game Objects are configured.\n\nCognitive3D requires a camera with the MainCamera tag to function properly", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
+            GUI.Label(new Rect(30, 100, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
 
             //hmd
-            int hmdRectHeight = 170;
+            int hmdRectHeight = 150;
 
-            GUI.Label(new Rect(60, hmdRectHeight, 50, 30), "HMD", "boldlabel");
+            GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
             if (GUI.Button(new Rect(130, hmdRectHeight, 310, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = mainCameraObject;
@@ -245,16 +258,38 @@ namespace Cognitive3D
                 }
             }
 
-            if (Camera.main != null && mainCameraObject != null && mainCameraObject == Camera.main.gameObject)
+            Rect hmdAlertRect = new Rect(400, hmdRectHeight, 30, 30);
+            if (mainCameraObject == null)
             {
-                GUI.Label(new Rect(30, hmdRectHeight, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Camera GameObject not set"), "image_centered");
+            }
+            else if (mainCameraObject.CompareTag("MainCamera") == false)
+            {
+                GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Selected Camera is not tagged 'MainCamera'"), "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(30, hmdRectHeight, 30, 30), EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(400, hmdRectHeight, 30, 30), EditorCore.Alert, "image_centered");
+                //warning icon if multiple objects tagged with mainCamera in scene
+                int mainCameraCount = 0;
+                for (int i = 0; i < Camera.allCamerasCount; i++)
+                {
+                    if (Camera.allCameras[i].CompareTag("MainCamera"))
+                    {
+                        mainCameraCount++;
+                    }
+                }
+                if (mainCameraCount > 1)
+                {
+                    GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Multiple cameras are tagged 'MainCamera'. This may cause runtime issues"), "image_centered");
+                }
             }
-            //TODO warning icon if multiple objects tagged with mainCamera in scene
+
+            //controllers
+#if C3D_STEAMVR2
+            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+#else
+            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>Tracked Pose Driver</b> components", "normallabel");
+#endif
 
             bool leftControllerIsValid = false;
             bool rightControllerIsValid = false;
@@ -262,6 +297,7 @@ namespace Cognitive3D
             leftControllerIsValid = leftcontroller != null;
             rightControllerIsValid = rightcontroller != null;
 
+            AllControllerSetupComplete = false;
             if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
             {
                 var rdyn = rightcontroller.GetComponent<DynamicObject>();
@@ -274,22 +310,21 @@ namespace Cognitive3D
                     }
                 }
             }
-
-            int offset = -35; //indicates how much vertical offset to add to setup features so controller selection has space
+            int handOffset = 240;
 
             //left hand label
-            GUI.Label(new Rect(60, 245 + offset, 50, 30), "Left", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 15, 50, 30), "Left", "boldlabel");
 
             string leftname = "Missing";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(130, 245 + offset, 310, 30), leftname, "button_blueoutline"))
+            if (GUI.Button(new Rect(130, handOffset + 15, 310, 30), leftname, "button_blueoutline"))
             {
                 Selection.activeGameObject = leftcontroller;
             }
 
             int pickerID = 5689465;
-            if (GUI.Button(new Rect(440, 245 + offset, 30, 30), EditorCore.SearchIconWhite))
+            if (GUI.Button(new Rect(440, handOffset + 15, 30, 30), EditorCore.SearchIconWhite))
             {
                 GUI.skin = null;
                 EditorGUIUtility.ShowObjectPicker<GameObject>(
@@ -304,30 +339,25 @@ namespace Cognitive3D
                 }
             }
 
-            if (leftControllerIsValid)
+            if (!leftControllerIsValid)
             {
-                GUI.Label(new Rect(30, 245 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(30, 245 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(400, 245 + offset, 30, 30), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(400, handOffset + 15, 30, 30), EditorCore.Alert, "image_centered");
             }
 
             //right hand label
-            GUI.Label(new Rect(60, 285 + offset, 50, 30), "Right", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 50, 50, 30), "Right", "boldlabel");
 
             string rightname = "Missing";
             if (rightcontroller != null)
                 rightname = rightcontroller.gameObject.name;
 
-            if (GUI.Button(new Rect(130, 285 + offset, 310, 30), rightname, "button_blueoutline"))
+            if (GUI.Button(new Rect(130, handOffset + 50, 310, 30), rightname, "button_blueoutline"))
             {
                 Selection.activeGameObject = rightcontroller;
             }
 
             pickerID = 5689469;
-            if (GUI.Button(new Rect(440, 285 + offset, 30, 30), EditorCore.SearchIconWhite))
+            if (GUI.Button(new Rect(440, handOffset + 50, 30, 30), EditorCore.SearchIconWhite))
             {
                 GUI.skin = null;
                 EditorGUIUtility.ShowObjectPicker<GameObject>(
@@ -342,18 +372,13 @@ namespace Cognitive3D
                 }
             }
 
-            if (rightControllerIsValid)
+            if (!rightControllerIsValid)
             {
-                GUI.Label(new Rect(30, 285 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(30, 285 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
-                GUI.Label(new Rect(400, 285 + offset, 30, 30), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(400, handOffset + 50, 30, 30), EditorCore.Alert, "image_centered");
             }
 
             //drag and drop
-            if (new Rect(30, 285 + offset, 440, 30).Contains(Event.current.mousePosition)) //right hand
+            if (new Rect(30, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -361,7 +386,7 @@ namespace Cognitive3D
                     rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, 245 + offset, 440, 30).Contains(Event.current.mousePosition)) //left hand
+            else if (new Rect(30, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -378,13 +403,8 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(150, 360 + offset, 200, 30), "Setup Player GameObjects"))
+            if (GUI.Button(new Rect(150, 340, 200, 30), "Setup Controller GameObjects"))
             {
-                if (mainCameraObject != null)
-                {
-                    mainCameraObject.tag = "MainCamera";
-                }
-
                 SetupControllers(leftcontroller, rightcontroller);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
@@ -392,52 +412,84 @@ namespace Cognitive3D
 
             if (AllControllerSetupComplete)
             {
-                GUI.Label(new Rect(120, 360 + offset, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(120, 360 + offset, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleEmpty32, "image_centered");
             }
-
 #if C3D_STEAMVR2
-            int steamvr2offset = -30;
-            GUI.Label(new Rect(135, 390 + steamvr2offset, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
-            if (GUI.Button(new Rect(125, 410 + steamvr2offset, 250, 30), "Append Cognitive Action Set"))
+
+            if (GUI.Button(new Rect(150, 380, 200, 30), "Open SteamVR Input"))
             {
-                steamvr2actionset = true;
+                //may show a popup asking to generate default action.json
+                Valve.VR.SteamVR_Input_EditorWindow.ShowWindow();
+            }
+
+            //GUI.Label(new Rect(100, 372, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
+            if (GUI.Button(new Rect(150, 420, 200, 30), "Append Cognitive Action Set"))
+            {
                 AppendSteamVRActionSet();
-                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-                Event.current.Use();
-            }
-            if (steamvr2actionset)
-            {
-                GUI.Label(new Rect(360, 410 + steamvr2offset, 64, 30), EditorCore.Checkmark, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(360, 410 + steamvr2offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
-            }
-
-            if (GUI.Button(new Rect(125, 450 + steamvr2offset, 250, 30), "Add Default Bindings"))
-            {
-                steamvr2bindings = true;
                 SetDefaultBindings();
-                Event.current.Use();
+                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
             }
-            if (steamvr2bindings)
+
+            if (GUI.Button(new Rect(150, 460, 200, 30), "Save and Generate Action Sets"))
             {
-                GUI.Label(new Rect(360, 450 + steamvr2offset, 64, 30), EditorCore.Checkmark, "image_centered");
+                Valve.VR.SteamVR_Input.actionFile.SaveHelperLists();
+                Valve.VR.SteamVR_Input.actionFile.Save(SteamVR_Input.GetActionsFilePath());
+                Valve.VR.SteamVR_Input_ActionManifest_Manager.CleanBindings(true);
+                Debug.Log("<b>[SteamVR Input]</b> Saved actions manifest successfully.");
+                Valve.VR.SteamVR_Input_Generator.BeginGeneration();
+            }
+            if (DoesC3DInputActionSetExist())
+            {
+                GUI.Label(new Rect(120, 460, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(360, 450 + steamvr2offset, 64, 30), EditorCore.EmptyCheckmark, "image_centered");
-            }
-
-            if (steamvr2bindings && steamvr2actionset && AllControllerSetupComplete)
-            {
-                GUI.Label(new Rect(105, 480 + steamvr2offset, 300, 20), "Need to open SteamVR Input window and press 'Save and generate' button");
+                GUI.Label(new Rect(120, 460, 30, 30), EditorCore.CircleEmpty32, "image_centered");
             }
 #endif
+        }
+
+        bool hasCheckedForSteamVRActionsSet;
+        bool hasFoundSteamVRActionSet;
+        //used with steamvr
+        bool DoesC3DInputActionSetExist()
+        {
+            if (!hasCheckedForSteamVRActionsSet)
+            {
+                hasFoundSteamVRActionSet = false;
+                hasCheckedForSteamVRActionsSet = true;
+                string className = "Valve.VR.SteamVR_Input_ActionSet_C3D_Input";
+
+                System.Reflection.Assembly steamvrActionAssembly = null;
+                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var a in assemblies)
+                {
+                    if (a.GetName().Name == "SteamVR_Actions")
+                    {
+                        steamvrActionAssembly = a;
+                        break;
+                    }
+                }
+                if (steamvrActionAssembly == null)
+                {
+                    return false;
+                }
+                var t = steamvrActionAssembly.GetType(className);
+                if (t == null)
+                {
+                    return false;
+                }
+                hasFoundSteamVRActionSet = true;
+                return true;
+            }
+            else
+            {
+                return hasFoundSteamVRActionSet;
+            }
         }
 
         public static void SetupControllers(GameObject left, GameObject right)
@@ -814,14 +866,38 @@ namespace Cognitive3D
                 case Page.Welcome:
                     break;
                 case Page.PlayerSetup:
+#if C3D_STEAMVR2
                     appearDisabled = !AllControllerSetupComplete;
                     if (!AllControllerSetupComplete)
                     {
                         if (appearDisabled)
                         {
-                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
+                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
                         }
                     }
+                    else
+                    {
+                        appearDisabled = !hasFoundSteamVRActionSet;
+                        if (!hasFoundSteamVRActionSet)
+                        {
+                            if (appearDisabled)
+                            {
+                                onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary SteamVR Input Action Set files?", "Yes", "No")) { currentPage++; } };
+                            }
+                        }
+                    }
+
+#else
+                    appearDisabled = !AllControllerSetupComplete;
+                    if (!AllControllerSetupComplete)
+                    {
+                        //onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
+                        if (appearDisabled)
+                        {
+                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
+                        }
+                    }
+#endif
                     onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.SceneExport:
@@ -1042,11 +1118,11 @@ namespace Cognitive3D
                 actionfile.action_sets.Add(cognitiveActionSet);
 
                 SaveActionFile(actionfile);
-                Debug.Log("InitWizard::AppendSteamVRActionSet Added Cognitive3D Action Set");
+                Debug.Log("SceneSetup.AppendSteamVRActionSet Added Cognitive3D Action Set");
             }
             else
             {
-                Debug.LogError("InitWizard::AppendSteamVRActionSet SteamVR LoadActionFile failed!");
+                Debug.LogError("SceneSetup.AppendSteamVRActionSet SteamVR LoadActionFile failed!");
             }
         }
 
@@ -1137,12 +1213,12 @@ namespace Cognitive3D
                 actionlist.sources.Add(bindingSource_right_pad);
 
                 bindingfile.bindings.Add("/actions/c3d_input", actionlist);
-                Debug.Log("InitWizard::SetDefaultBindings save Cognitive3D input bindings");
+                Debug.Log("SceneSetup.SetDefaultBindings save Cognitive3D input bindings");
                 SaveBindingFile(bindingfile);
             }
             else
             {
-                Debug.Log("InitWizard::SetDefaultBindings failed to load steamvr actions");
+                Debug.Log("SceneSetup.SetDefaultBindings failed to load steamvr actions");
             }
         }
 

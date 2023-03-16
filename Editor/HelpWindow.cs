@@ -314,7 +314,7 @@ namespace Cognitive3D
         void DrawSpecificDocsButton(string url)
         {
             Rect buttonrect = new Rect(150, 510, 200, 30);
-            if (GUI.Button(buttonrect, "Open Online Documentation"))
+            if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation",url)))
             {
                 Application.OpenURL(url);
             }

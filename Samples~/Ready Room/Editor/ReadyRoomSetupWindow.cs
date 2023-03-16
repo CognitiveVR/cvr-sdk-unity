@@ -608,7 +608,7 @@ namespace Cognitive3D
 
             if (assessment.IsValid())
             {
-                GUI.Label(isActiveRect, Cognitive3D.EditorCore.Checkmark, "image_centered");
+                GUI.Label(isActiveRect, Cognitive3D.EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
