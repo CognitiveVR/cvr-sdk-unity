@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
-            trackingSpace = GameObject.Find("TrackingSpace").transform;
+            trackingSpace = GameObject.FindObjectOfType<OVRCameraRig>().trackingSpace;
 #endif
             //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_PoseEventHandler;
 
@@ -132,10 +132,17 @@ namespace Cognitive3D.Components
 
             xCoordinates.Sort();
             zCoordinates.Sort();
-            minX = xCoordinates[0];
-            maxX = xCoordinates[xCoordinates.Count - 1];
-            minZ = zCoordinates[0];
-            maxZ = zCoordinates[zCoordinates.Count - 1];
+
+            if (xCoordinates.Count > 0)
+            {
+                minX = xCoordinates[0];
+                maxX = xCoordinates[xCoordinates.Count - 1];
+            }
+            if (zCoordinates.Count > 0)
+            {
+                minZ = zCoordinates[0];
+                maxZ = zCoordinates[zCoordinates.Count - 1];
+            }
             hmdPosition = GameplayReferences.HMD.position;
         }
 
