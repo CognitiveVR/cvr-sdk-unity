@@ -211,7 +211,7 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "CUSTOM EVENTS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "A <b>Custom Event</b> is a feature to highlight specific interactions and incidents during the session.", "normallabel");
-            GUI.Label(new Rect(30, 110, 440, 440), "You are able to view thes Custom Events in the session details page or real-time in Scene Explorer.", "normallabel");
+            GUI.Label(new Rect(30, 110, 440, 440), "You are able to view these Custom Events in the session details page or real-time in Scene Explorer.", "normallabel");
             EditorGUI.DrawRect(new Rect(30, 180, 440, 80), DarkGrey);
             EditorGUI.SelectableLabel(new Rect(40, 190, 420, 60), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
@@ -235,6 +235,8 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Sensors</b> are a feature to record a value or property over time.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "If you have the hardware to support it, you can record Sensor data for Heart Rate, GSR, ECG,  and view it as a graph on the dashboard.\n\nSeveral types of data are recorded by default, such as FPS and Battery Temperature.", "normallabel");
             EditorGUI.DrawRect(new Rect(30, 250, 440, 110), DarkGrey);
+            //required for sensor code snippet to have unique controlid
+            EditorGUI.SelectableLabel(new Rect(4000, 190, 420, 60), "ignore", "code_snippet");
             EditorGUI.SelectableLabel(new Rect(40, 260, 420, 90), "float sensorData = Random.Range(1, 100f);\nCognitive3D.SensorRecorder\n    .RecordDataPoint(\"SensorName\", sensorData);", "code_snippet");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/sensors/");
         }

@@ -785,7 +785,7 @@ namespace Cognitive3D
             var thumbnailRect = new Rect(175, heightOffset+130, 150, 150);
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(185, heightOffset+280, 150, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset+280, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
@@ -845,9 +845,10 @@ namespace Cognitive3D
             if (currentPage == Page.SceneExport)
             {
                 Rect buttonrect = new Rect(150, 510, 200, 30);
-                if (GUI.Button(buttonrect, "Open Online Documentation"))
+                string url = "https://docs.cognitive3d.com/unity/scenes/";
+                if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation", url)))
                 {
-                    Application.OpenURL("https://docs.cognitive3d.com/unity/scenes/");
+                    Application.OpenURL(url);
                 }
             }
         }

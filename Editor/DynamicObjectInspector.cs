@@ -241,7 +241,7 @@ namespace Cognitive3D
 
                 //Thumbnail Button
                 EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                if (GUILayout.Button("Thumbnail from\nSceneView", "ButtonMid", GUILayout.Height(30)))
+                if (GUILayout.Button("Save Thumbnail\nfrom SceneView", "ButtonMid", GUILayout.Height(30)))
                 {
                     foreach (var v in serializedObject.targetObjects)
                     {

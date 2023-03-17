@@ -102,9 +102,10 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup. This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
                 "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
             GUI.Label(new Rect(30, 300, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
-            if (GUI.Button(new Rect(150, 350, 200, 30), "Open Online Documentation"))
+            string url = "https://docs.cognitive3d.com/unity/minimal-setup-guide";
+            if (GUI.Button(new Rect(150, 350, 200, 30), new GUIContent("Open Online Documentation",url)))
             {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/minimal-setup-guide");
+                Application.OpenURL(url);
             }
         }
 
