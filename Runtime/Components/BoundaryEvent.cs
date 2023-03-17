@@ -2,6 +2,7 @@
 using System.Collections;
 using System;
 using System.Collections.Generic;
+
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -18,17 +19,14 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
+
+        public GameObject pole;
+
         private float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
 #if C3D_OCULUS
         Vector3[] boundaryPointsArray;
-        List<float> xCoordinates;
-        List<float> zCoordinates;
-        float minX;
-        float maxX;
-        float minZ;
-        float maxZ;
         Transform trackingSpace;
         Vector3 hmdPosition;
         bool exited = false;
@@ -89,13 +87,11 @@ namespace Cognitive3D.Components
                 if (boundaryPointsArray != OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
                 {
                     boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-                    RecalculateBounds();
                 }
             }
 
             // Unity uses y-up coordinate system - the boundary "up" doesn't matters
-            if ((hmdPosition.x < minX) || (hmdPosition.x > maxX)
-                || (hmdPosition.z < minZ) || (hmdPosition.z > maxZ))
+            if (!IsPointInPolygon4(boundaryPointsArray, hmdPosition))
             {
                 if (!exited)
                 {
@@ -111,39 +107,28 @@ namespace Cognitive3D.Components
 #endif
         }
 
+        private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
+        {
+            bool result = false;
+            int j = polygon.Length - 1;
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                if (polygon[i].z < testPoint.z && polygon[j].z >= testPoint.z || polygon[j].z < testPoint.z && polygon[i].z >= testPoint.z)
+                {
+                    if (polygon[i].x + (testPoint.z - polygon[i].z) / (polygon[j].z - polygon[i].z) * (polygon[j].x - polygon[i].x) < testPoint.x)
+                    {
+                        result = !result;
+                    }
+                }
+                j = i;
+            }
+            return result;
+        }
+
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
-        }
-
-        private void RecalculateBounds()
-        {
-            xCoordinates = new List<float>();
-            zCoordinates = new List<float>();
-
-            foreach (Vector3 point in boundaryPointsArray)
-            {
-                Vector3 transformedPoint = trackingSpace.TransformPoint(point);
-
-                xCoordinates.Add(transformedPoint.x);
-                zCoordinates.Add(transformedPoint.z);
-            }
-
-            xCoordinates.Sort();
-            zCoordinates.Sort();
-
-            if (xCoordinates.Count > 0)
-            {
-                minX = xCoordinates[0];
-                maxX = xCoordinates[xCoordinates.Count - 1];
-            }
-            if (zCoordinates.Count > 0)
-            {
-                minZ = zCoordinates[0];
-                maxZ = zCoordinates[zCoordinates.Count - 1];
-            }
-            hmdPosition = GameplayReferences.HMD.position;
         }
 
         void OnDestroy()
