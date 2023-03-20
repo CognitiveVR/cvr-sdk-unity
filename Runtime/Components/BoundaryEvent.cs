@@ -19,9 +19,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
-
-        public GameObject pole;
-
         private float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
@@ -82,16 +79,22 @@ namespace Cognitive3D.Components
         {
 #if C3D_OCULUS
             boundaryPointsArray = new Vector3[4];
+            Vector3[] transformedBoundaryPoints = new Vector3[4];
             if (OVRManager.boundary != null)
             {
                 if (boundaryPointsArray != OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
                 {
                     boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
+                    for (int i = 0; i < boundaryPointsArray.Length; i++)
+                    {
+                        Vector3 newPoint = trackingSpace.TransformPoint(boundaryPointsArray[i]);
+                        transformedBoundaryPoints[i] = newPoint;
+                    }
                 }
             }
 
             // Unity uses y-up coordinate system - the boundary "up" doesn't matters
-            if (!IsPointInPolygon4(boundaryPointsArray, hmdPosition))
+            if (!IsPointInPolygon4(transformedBoundaryPoints, hmdPosition))
             {
                 if (!exited)
                 {
