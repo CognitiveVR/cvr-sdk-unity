@@ -19,18 +19,21 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
+        public GameObject post;
         private float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
 #if C3D_OCULUS
         Vector3[] boundaryPointsArray;
+        Vector3[] transformedBoundaryPoints;
         Transform trackingSpace;
-        Vector3 hmdPosition;
         bool exited = false;
 #endif
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            boundaryPointsArray = new Vector3[4];
+            transformedBoundaryPoints = new Vector3[4];
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
@@ -78,23 +81,22 @@ namespace Cognitive3D.Components
         void CheckBoundary()
         {
 #if C3D_OCULUS
-            boundaryPointsArray = new Vector3[4];
-            Vector3[] transformedBoundaryPoints = new Vector3[4];
             if (OVRManager.boundary != null)
             {
-                if (boundaryPointsArray != OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
+                if (HasBoundaryChanged())
                 {
                     boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
                     for (int i = 0; i < boundaryPointsArray.Length; i++)
                     {
                         Vector3 newPoint = trackingSpace.TransformPoint(boundaryPointsArray[i]);
                         transformedBoundaryPoints[i] = newPoint;
+                        Instantiate(post, newPoint, new Quaternion(0, 0, 0, 0));
                     }
                 }
             }
 
             // Unity uses y-up coordinate system - the boundary "up" doesn't matters
-            if (!IsPointInPolygon4(transformedBoundaryPoints, hmdPosition))
+            if (!IsPointInPolygon4(transformedBoundaryPoints, GameplayReferences.HMD.position))
             {
                 if (!exited)
                 {
@@ -110,6 +112,19 @@ namespace Cognitive3D.Components
 #endif
         }
 
+        private bool HasBoundaryChanged()
+        {
+            Vector3[] temporaryArray;
+            temporaryArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
+            for (int i = 0; i < boundaryPointsArray.Length; i++)
+            {
+                if (Vector3.SqrMagnitude(boundaryPointsArray[i] - temporaryArray[i]) >= 1)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
             bool result = false;
