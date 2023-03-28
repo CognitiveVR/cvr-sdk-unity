@@ -1598,27 +1598,47 @@ namespace Cognitive3D
 
         public static void CheckForExpiredDeveloperKey(EditorNetwork.Response callback)
         {
-            if (EditorPrefs.HasKey("developerkey"))
+            if (IsDeveloperKeyValid)
             {
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
                 EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify", callback, headers, true);
-
-
-                /*//check if dev key is expired
-                var devkeyrequest = new UnityEngine.Networking.UnityWebRequest("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify");
-                devkeyrequest.SetRequestHeader("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
-                devkeyrequest.Send();
-                EditorApplication.update += DevKeyCheckUpdate;*/
             }
             else
             {
-                callback.Invoke(0, "invalid url", "");
+                callback.Invoke(0, "Invalid Developer Key", "");
             }
-            //invoke the callback with the response code
         }
 
-#endregion
+        internal static void CheckForApplicationKey(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/applicationKey", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        internal static void CheckSubscription(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/subscriptions", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        #endregion
 
         public static Vector3 TransformPointUnscaled(Transform transform, Vector3 position)
         {

@@ -615,12 +615,10 @@ namespace Cognitive3D
             Rect toolsRect = new Rect(360, 440, 35, 35);
             if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
             {
-                //drop down menu?
                 GenericMenu gm = new GenericMenu();
                 gm.AddItem(new GUIContent("Full Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 1, OnSelectFullResolution);
                 gm.AddItem(new GUIContent("Half Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 2, OnSelectHalfResolution);
                 gm.AddItem(new GUIContent("Quarter Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 4, OnSelectQuarterResolution);
-                gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Export lowest LOD meshes"), Cognitive3D_Preferences.Instance.ExportSceneLODLowest, OnToggleLODMeshes);
 
 #if UNITY_2020_1_OR_NEWER

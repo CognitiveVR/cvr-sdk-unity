@@ -36,10 +36,17 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnReload()
+        {
+            SubscriptionExpirationDate = null;
+        }
+
         enum Page
         {
             Welcome,
             APIKeys,
+            Organization,
             SDKSelection,
             Glia,
             SRAnipal,
@@ -67,6 +74,9 @@ namespace Cognitive3D
                     break;
                 case Page.APIKeys:
                     AuthenticateUpdate();
+                    break;
+                case Page.Organization:
+                    OrganizationUpdate();
                     break;
                 case Page.SDKSelection:
                     SelectSDKUpdate();
@@ -98,12 +108,13 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(steptitlerect, "INTRODUCTION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup. This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
+            GUI.Label(new Rect(30, 30, 440, 80), EditorCore.LogoTexture, "image_centered");
+
+            GUI.Label(new Rect(30, 120, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup! This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
                 "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
-            GUI.Label(new Rect(30, 300, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
+            GUI.Label(new Rect(30, 390, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
             string url = "https://docs.cognitive3d.com/unity/minimal-setup-guide";
-            if (GUI.Button(new Rect(150, 350, 200, 30), new GUIContent("Open Online Documentation",url)))
+            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Open Online Documentation",url)))
             {
                 Application.OpenURL(url);
             }
@@ -116,8 +127,10 @@ namespace Cognitive3D
         void AuthenticateUpdate()
         {
             GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " authorization keys" +
-                "\n\nThese should be kept private to your organization.\n\nThe Developer Key is saved to Unity Editor Prefs (specific to the current user) and is never included in a build.\n\nThe Application Key is saved in Cognitive3D_Preferences asset.\n\nThese are available on the Project Dashboard. ", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " Developer Key." +
+                "\n\nThe Developer Key is saved to Unity Editor Preferences (specific to the current user) and is never included in a build." +
+                "\n\nThis should be kept private to your organization."+
+                "\n\nThis is available on the Project Dashboard.", "normallabel");
 
             if (GUI.Button(new Rect(130, 280, 240, 30), "Open Dashboard"))
             {
@@ -158,38 +171,127 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(30, 390, 400, 30), "This Developer Key is invalid or expired. Please ensure the developer key is valid on the dashboard. Developer Keys expire automatically after 90 days.", "miniwarning");
             }
+        }
 
-            //api key
-            GUI.Label(new Rect(30, 410, 100, 30), "Application Key", "miniheader");
-            apikey = EditorCore.TextField(new Rect(30, 440, 400, 40), apikey, 32);
-            if (string.IsNullOrEmpty(apikey))
+        string OrganizationName;
+        string SubscriptionPlan;
+        long SubscriptionExpirationDateLong;
+        static System.DateTime? SubscriptionExpirationDate;
+        bool SubscriptionTrial;
+
+        void OrganizationUpdate()
+        {
+            GUI.Label(steptitlerect, "ORGANIZATION", "steptitle");
+
+            GUI.Label(new Rect(60, 30, 440, 440), "Organization Name: " + OrganizationName, "normallabel");
+            GUI.Label(new Rect(60, 60, 440, 440), "Current Subscription Plan: " + SubscriptionPlan + (SubscriptionTrial ? " (Trial)" : ""), "normallabel");
+
+            string expirationDateString = string.Empty;
+            if (string.IsNullOrEmpty(expirationDateString) && SubscriptionExpirationDateLong > 0L)
             {
-                GUI.Label(new Rect(30, 440, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 440, 30, 40), EditorCore.CircleEmpty32, "image_centered");
+                if (!SubscriptionExpirationDate.HasValue)
+                {
+                    SubscriptionExpirationDate = UnixTimeStampToDateTime(SubscriptionExpirationDateLong);
+                }
+                expirationDateString = SubscriptionExpirationDate.Value.Date.ToString("dd MMMM yyyy");
             }
             else
             {
-                GUI.Label(new Rect(440, 440, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
+                expirationDateString = "Never";
+            }
+
+            GUI.Label(new Rect(60, 90, 440, 440), "Expiration Date: " + expirationDateString, "normallabel");
+
+            GUI.Label(new Rect(30, 150, 440, 440), "The Application Key is saved in Cognitive3D_Preferences asset. It is used to identify where session data should be collected.\n\nThis is included with a build, but otherwise should be kept private to your organization.", "normallabel");
+
+            //api key
+            GUI.Label(new Rect(30, 315, 100, 30), "Application Key", "miniheader");
+            apikey = EditorCore.TextField(new Rect(30, 345, 400, 40), apikey, 32);
+            if (string.IsNullOrEmpty(apikey))
+            {
+                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
+                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleEmpty32, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
             }
 
         }
 
-        void SaveKeys()
+        private void SaveDevKey()
         {
             EditorPrefs.SetString("developerkey", developerkey);
-            EditorCore.GetPreferences().ApplicationKey = apikey;
+        }
 
+        private void SaveApplicationKey()
+        {
+            EditorCore.GetPreferences().ApplicationKey = apikey;
             EditorUtility.SetDirty(EditorCore.GetPreferences());
             AssetDatabase.SaveAssets();
         }
 
-        void LoadKeys()
+        private void LoadKeys()
         {
             developerkey = EditorPrefs.GetString("developerkey");
             apikey = EditorCore.GetPreferences().ApplicationKey;
-            if (apikey == null)
+        }
+
+        [System.Serializable]
+        private class ApplicationKeyResponseData
+        {
+            public string apiKey;
+            public bool valid;
+        }
+
+        private void GetApplicationKeyResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200)
             {
-                apikey = "";
+                Debug.LogError("GetApplicationKeyResponse response code: " + responseCode);
+                return;
+            }
+            ApplicationKeyResponseData responseData = JsonUtility.FromJson<ApplicationKeyResponseData>(text);
+            apikey = responseData.apiKey;
+        }
+
+        [System.Serializable]
+        private class SubscriptionResponseData
+        {
+            public long beginning;
+            public long expiration;
+            public string planType;
+            public bool isFreeTrial;
+        }
+
+        private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dateTime = dateTime.AddSeconds(unixTimeStamp/1000).ToLocalTime();
+            return dateTime;
+        }
+
+        private void GetSubscriptionResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200)
+            {
+                Debug.LogError("GetSubscriptionResponse response code: " + responseCode);
+                return;
+            }
+
+            SubscriptionResponseData[] data = Util.GetJsonArray<SubscriptionResponseData>(text);
+            if (data == null || data.Length == 0)
+            {
+                Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
+            }
+            else
+            {
+                foreach(var v in data)
+                {
+                    SubscriptionPlan = v.planType;
+                    SubscriptionTrial = v.isFreeTrial;
+                    SubscriptionExpirationDateLong = v.expiration;
+                }
             }
         }
 
@@ -376,18 +478,18 @@ namespace Cognitive3D
                     EditorCore.GetPackages(OnGetPackages);
                 }
             }
-            //additional SDK features
 
             GUI.Label(steptitlerect, "SDK FEATURES", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
 
+            int startHeight = 150;
+            int scrollAreaHeight = 320;
+
             Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, 200, 440, 270), sdkScrollPos, innerScrollSize, false, false);
+            sdkScrollPos = GUI.BeginScrollView(new Rect(30, startHeight, 440, scrollAreaHeight), sdkScrollPos, innerScrollSize, false, false);
 
             for (int i = 0; i < SDKNamesDefines.Count; i++)
             {
-
-
                 bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
                 GUIContent content = new GUIContent("  "+SDKNamesDefines[i].Name);
                 float separator = 0;
@@ -701,7 +803,7 @@ namespace Cognitive3D
             {
                 //dev key is fine
                 currentPage++;
-                SaveKeys();
+                SaveDevKey();
             }
             else
             {
@@ -726,20 +828,24 @@ namespace Cognitive3D
                     if (lastDevKeyResponseCode == 200)
                     {
                         //next. use default action
-                        onclick += () => SaveKeys();
+                        onclick += () => SaveDevKey();
                     }
                     else
                     {
                         //check and wait for response
-                        onclick = () => SaveKeys();
+                        onclick = () => SaveDevKey();
                         onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-                        onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
+                        if (!EditorCore.GetPreferences().IsApplicationKeyValid)
+                        {
+                            onclick += () => EditorCore.CheckForApplicationKey(developerkey, GetApplicationKeyResponse); 
+                        }
+                        onclick += () => EditorCore.CheckSubscription(developerkey, GetSubscriptionResponse);
                     }
 
-                    buttonDisabled = apikey == null || apikey.Length == 0 || developerkey == null || developerkey.Length == 0;
+                    buttonDisabled = developerkey == null || developerkey.Length == 0;
                     if (buttonDisabled)
                     {
-                        text = "Keys Required";
+                        text = "Key Required";
                     }
 
                     if (buttonDisabled == false && lastDevKeyResponseCode != 200)
@@ -748,6 +854,19 @@ namespace Cognitive3D
                     }
 
                     if (buttonDisabled == false && lastDevKeyResponseCode == 200)
+                    {
+                        text = "Next";
+                    }
+                    break;
+                case Page.Organization:
+                    onclick += () => SaveApplicationKey();
+                    onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
+                    buttonDisabled = apikey == null || string.IsNullOrEmpty(apikey);
+                    if (buttonDisabled)
+                    {
+                        text = "Key Required";
+                    }
+                    else
                     {
                         text = "Next";
                     }

@@ -11,7 +11,7 @@ namespace Cognitive3D
 {
     //deserialize list of dynamic objects from dashboard
     [System.Serializable]
-    public class DashboardObject
+    internal class DashboardObject
     {
         public string sdkId;
         public string name;
@@ -21,7 +21,7 @@ namespace Cognitive3D
     }
 
     [System.Serializable]
-    public class AggregationManifest
+    internal class AggregationManifest
     {
         [System.Serializable]
         public class AggregationManifestEntry
@@ -61,7 +61,7 @@ namespace Cognitive3D
 
     //temporary popup window for mass renaming dynamic object components
     //TODO format to keep consistent look with onboarding screens
-    public class RenameDynamicWindow : EditorWindow
+    internal class RenameDynamicWindow : EditorWindow
     {
         static DynamicObjectsWindow sourceWindow;
         static string defaultMeshName;
@@ -105,7 +105,7 @@ namespace Cognitive3D
         }
     }
 
-    public class DynamicObjectsWindow : EditorWindow
+    internal class DynamicObjectsWindow : EditorWindow
     {
         //cached gui styles
         GUIStyle dynamiclabel;
@@ -166,6 +166,7 @@ namespace Cognitive3D
             window.Show();
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
             needsRefreshDevKey = false;
+            window.footerHelpPage = 0;
         }
 
         public static void Init(Rect position)
@@ -177,6 +178,7 @@ namespace Cognitive3D
             window.Show();
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
             needsRefreshDevKey = false;
+            window.footerHelpPage = 0;
         }
 
         string ErrorColorString = "<color=#880000ff>";
@@ -220,11 +222,6 @@ namespace Cognitive3D
                 foreach (var p in pools)
                 {
                     bool selected = selectedPoolsOnFocus.Contains(p);
-                    //var found = dashboardObjects.Find(delegate (DashboardObject obj)
-                    //{
-                    //    if (!p.UseCustomId) { return false; }
-                    //    return obj.sdkId == p.GetId();
-                    //});
                     bool uploaded = false;
                     Entries.Add(new Entry(EditorCore.GetExportedDynamicObjectNames().Contains(p.MeshName), p, selected, uploaded));
                 }
@@ -414,13 +411,21 @@ namespace Cognitive3D
                 //drop down menu?
                 GenericMenu gm = new GenericMenu();
 
-                bool enabled = false;
+                bool hasSelectedAnyEntry = false;
                 foreach (var entry in Entries)
                 {
-                    if (entry.selected) { enabled = true; break; }
+                    if (entry.selected) { hasSelectedAnyEntry = true; break; }
                 }
 
-                if (!enabled)
+                //export resolution options
+                gm.AddItem(new GUIContent("Full Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 1, OnSelectFullResolution);
+                gm.AddItem(new GUIContent("Half Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 2, OnSelectHalfResolution);
+                gm.AddItem(new GUIContent("Quarter Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 4, OnSelectQuarterResolution);
+                gm.AddItem(new GUIContent("Export lowest LOD meshes"), Cognitive3D_Preferences.Instance.ExportSceneLODLowest, OnToggleLODMeshes);
+
+                //dynamic object tools
+                gm.AddSeparator("");
+                if (!hasSelectedAnyEntry)
                 {
                     gm.AddDisabledItem(new GUIContent("Rename Selected Mesh"));
                     gm.AddDisabledItem(new GUIContent("Rename Selected GameObject"));
@@ -430,9 +435,10 @@ namespace Cognitive3D
                     gm.AddItem(new GUIContent("Rename Selected Mesh"), false, OnRenameMeshSelected);
                     gm.AddItem(new GUIContent("Rename Selected GameObject"), false, OnRenameGameObjectSelected);
                 }
+                
+                //asset management tools
                 gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Open Dynamic Export Folder"), false, OnOpenDynamicExportFolder);
-
                 gm.AddItem(new GUIContent("Get Dynamic IDs from Dashboard"), false, GetDashboardManifest);
 
 #if UNITY_2020_1_OR_NEWER
@@ -442,8 +448,16 @@ namespace Cognitive3D
             }
 
 
+            //make the scroll area slightly shorter to fit onboarding instructions into footer
+            int scrollareaHeight = 400;
+            if (!IsCurrentSceneValid())
+            {
+                scrollareaHeight = 365;
+            }
+
+
             Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
-            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, 365), dynamicScrollPosition, innerScrollSize, false, true);
+            dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, scrollareaHeight), dynamicScrollPosition, innerScrollSize, false, true);
 
             Rect dynamicrect;
             int GuiOffset = 0;
@@ -457,7 +471,7 @@ namespace Cognitive3D
                 usedRows++;
             }
             GUI.EndScrollView();
-            GUI.Box(new Rect(30, 80, 525, 365), "", "box_sharp_alpha");
+            GUI.Box(new Rect(30, 80, 525, scrollareaHeight), "", "box_sharp_alpha");
 
             //buttons
 
@@ -482,42 +496,26 @@ namespace Cognitive3D
                     selectionCount++;
                 }
             }
-            //texture resolution
-
-            if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
-
-            //resolution settings here
-            EditorGUI.BeginDisabledGroup(DisableButtons);
-            if (GUI.Button(new Rect(80, 455, 140, 35), new GUIContent("1/4 Resolution", DisableButtons ? "" : "Quarter resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 4 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 4;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 4)
-            {
-                GUI.Box(new Rect(80, 455, 140, 35), "", "box_sharp_alpha");
-            }
-
-            if (GUI.Button(new Rect(230, 455, 140, 35), new GUIContent("1/2 Resolution", DisableButtons ? "" : "Half resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 2 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 2;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 2)
-            {
-                GUI.Box(new Rect(230, 455, 140, 35), "", "box_sharp_alpha");
-            }
-
-            if (GUI.Button(new Rect(380, 455, 140, 35), new GUIContent("1/1 Resolution", DisableButtons ? "" : "Full resolution of dynamic object textures"), Cognitive3D_Preferences.Instance.TextureResize == 1 ? "button_blueoutline" : "button_disabledtext"))
-            {
-                Cognitive3D_Preferences.Instance.TextureResize = 1;
-            }
-            if (Cognitive3D_Preferences.Instance.TextureResize != 1)
-            {
-                GUI.Box(new Rect(380, 455, 140, 35), "", "box_sharp_alpha");
-            }
-            EditorGUI.EndDisabledGroup();
 
             DrawFooter();
             Repaint(); //manually repaint gui each frame to make sure it's responsive
+        }
+
+        void OnSelectFullResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 1;
+        }
+        void OnSelectHalfResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 2;
+        }
+        void OnSelectQuarterResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 4;
+        }
+        void OnToggleLODMeshes()
+        {
+            Cognitive3D_Preferences.Instance.ExportSceneLODLowest = !Cognitive3D_Preferences.Instance.ExportSceneLODLowest;
         }
 
         Vector2 dynamicScrollPosition;
@@ -1036,10 +1034,11 @@ namespace Cognitive3D
             }
             else
             {
-                GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty32, "ID does not exist on Dashboard and will not be aggregated across sessions"), image_centered);
+                GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty32, "ID does not exist on Dashboard and will not be aggregated across sessions.\nPress 'Upload' to have this object's data aggregated"), image_centered);
             }   
         }
 
+        int footerHelpPage;
         void DrawFooter()
         {
             GUI.color = EditorCore.BlueishGrey;
@@ -1060,7 +1059,9 @@ namespace Cognitive3D
                     selectionCount += entry.idPoolCount;
                 }
                 else
+                {
                     selectionCount++;
+                }
             }
 
             var currentScene = Cognitive3D_Preferences.FindCurrentScene();
@@ -1077,8 +1078,7 @@ namespace Cognitive3D
                 versionnumber = currentScene.VersionNumber;
             }
 
-            bool enabled = !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
-            if (enabled)
+            if (IsCurrentSceneValid())
             {
                 EditorGUI.BeginDisabledGroup(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId) || selectionCount == 0);
                 if (GUI.Button(new Rect(95, 510, 200, 30), new GUIContent("Upload " + selectionCount + " Selected Meshes", DisableButtons ? "" : "Export and Upload to " + scenename + " version " + versionnumber)))
@@ -1103,38 +1103,61 @@ namespace Cognitive3D
                 string errorMessage;
                 if (lastResponseCode != 200 || !EditorCore.IsDeveloperKeyValid)
                 {
-                    errorMessage = ErrorColorString + "The Developer Key is Invalid or Expired. Please visit the project on our dashboard and update the key in the Project Setup Window</color>";
-                    //TODO add a button to the dashboard? add a button to the project setup window too?
-                }
-                else
-                {
-                    //assume the user has done the project setup step first
-                    errorMessage = "You can manage Dynamic Objects directly from here. Once you are done adding Dynamic Object components to GameObjects and Prefabs, press Continue";
-                    if (GUI.Button(new Rect(430, 510, 100, 30), "Continue"))
+                    errorMessage = "The Developer Key is Invalid or Expired. Please update the key in the Project Setup Window";
+                    if (GUI.Button(new Rect(390, 510, 200, 30), "Project Setup Window"))
                     {
-                        //add popup asking to export all dynamic object meshes
-                        bool doExport = EditorUtility.DisplayDialog("Export Dynamic Object Meshes", "Do you want to export meshes for all Dynamic Objects now?", "Ok", "No");
-                        if (doExport)
-                        {
-                            List<DynamicObject> exportList = new List<DynamicObject>();
-                            foreach (var entry in Entries)
-                            {
-                                var dyn = entry.objectReference;
-                                if (dyn == null) { continue; }
-                                //check if export files exist
-                                exportList.Add(dyn);
-                            }
-                            ExportUtility.ExportDynamicObjects(exportList);
-                        }
-                        SceneSetupWindow.Init();
+                        ProjectSetupWindow.Init();
                         Close();
                     }
                 }
+                else
+                {
+                    if (footerHelpPage == 0)
+                    {
+                        errorMessage = "You can review and export Dynamic Objects directly from here. This window is accessible from the Cognitive3D menu.";
+                        if (GUI.Button(new Rect(390+120, 510, 80, 30), "Next"))
+                        {
+                            footerHelpPage++;
+                        }
+                    }
+                    else
+                    {
+                        errorMessage = "Add some Dynamic Object components to GameObjects and Prefabs. Press 'Scene Setup Window' and select 'Export' on the popup window.";
+                        if (GUI.Button(new Rect(390, 510, 200, 30), "Scene Setup Window"))
+                        {
+                            bool doExport = EditorUtility.DisplayDialog("Export Dynamic Object Meshes", "Do you want to export meshes for all Dynamic Objects now?", "Export", "Skip");
+                            if (doExport)
+                            {
+                                List<DynamicObject> exportList = new List<DynamicObject>();
+                                foreach (var entry in Entries)
+                                {
+                                    var dyn = entry.objectReference;
+                                    if (dyn == null) { continue; }
+                                    //check if export files exist
+                                    exportList.Add(dyn);
+                                }
+                                ExportUtility.ExportDynamicObjects(exportList);
+                            }
+                            SceneSetupWindow.Init();
+                            Close();
+                        }
 
-                GUI.Label(new Rect(30, 470, 540, 30), errorMessage, "normallabel");
+                        if (GUI.Button(new Rect(30, 510, 80, 30), "Back"))
+                        {
+                            footerHelpPage--;
+                        }
+                    }
+                }
+
+                GUI.Label(new Rect(30, 460, 540, 30), errorMessage, "normallabel");
             }
         }
 
+        bool IsCurrentSceneValid()
+        {
+            var currentScene = Cognitive3D_Preferences.FindCurrentScene();
+            return !(currentScene == null || string.IsNullOrEmpty(currentScene.SceneId)) && lastResponseCode == 200;
+        }
 
         /// <summary>
         /// logic to get scene version, then prompt user if they want to export meshes or use existing export in folder
