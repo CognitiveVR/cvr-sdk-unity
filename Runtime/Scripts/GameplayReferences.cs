@@ -298,7 +298,7 @@ namespace Cognitive3D
 
         //dynamic objects set as controllers call 'set controller' on enable passing a reference to that transform. input device isn't guaranteed to be valid at this point
 
-        static Transform[] controllerTransforms = new Transform[2];
+        public static Transform[] controllerTransforms = new Transform[2];
         static InputDevice[] controllerDevices = new InputDevice[2];
 
 
