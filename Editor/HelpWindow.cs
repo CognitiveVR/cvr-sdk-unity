@@ -51,10 +51,6 @@ namespace Cognitive3D
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            var e = Event.current;
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Equals) { currentPage++; }
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Minus) { currentPage--; }
-
             DrawFooter();
 
             switch (currentPage)
@@ -183,10 +179,7 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "DYNAMIC OBJECTS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "A <b>Dynamic Object </b> is a specific object in your experience which you wish to track.", "normallabel");
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsBackground, "image_centered");
-            GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsHightlight, "image_centered");
+            GUI.Box(new Rect(150, 90, 200, 150), EditorCore.DynamicsFeature, "image_centered");
             GUI.color = Color.white;
             GUI.Label(new Rect(30, 280, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. Dynamic Objects can move, be spawned or destroyed.\n\nThese objects must also have colliders attached so we can track user gaze.", "normallabel");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/dynamic-objects/");
@@ -197,11 +190,8 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "SCENES", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "A <b>Scene</b> is an approximation of your Unity scene and is uploaded to the Dashboard. It is all the non-moving and non-interactive things.", "normallabel");
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneBackground, "image_centered");
-            GUI.color = new Color(1, 1, 1, Mathf.Sin(Time.realtimeSinceStartup * 4) * 0.4f + 0.6f);
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.SceneHighlight, "image_centered");
+            GUI.Box(new Rect(150, 90, 200, 150), EditorCore.SceneFeature, "image_centered");
             GUI.color = Color.white;
-            GUI.Box(new Rect(150, 90, 200, 200), EditorCore.ObjectsBackground, "image_centered");
             GUI.Label(new Rect(30, 270, 440, 440), "This will provide context to the data collected in your experience.\n\nIf you decide to change the scene in your Unity project (such as moving a wall), the data you collect may no longer represent your experience. You can upload a new Scene Version by running this setup again.", "normallabel");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/scenes/");
             DrawSceneWindowButton();
@@ -215,7 +205,7 @@ namespace Cognitive3D
             EditorGUI.DrawRect(new Rect(30, 180, 440, 80), DarkGrey);
             EditorGUI.SelectableLabel(new Rect(40, 190, 420, 60), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
-            if (GUI.Button(new Rect(150, 300, 200, 150), "video"))
+            if (GUI.Button(new Rect(115, 300, 270, 150), EditorCore.OnboardingVideo, "image_centered"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
@@ -226,18 +216,19 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "EXITPOLL SURVEY", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "An <b>ExitPoll</b> survey is a feature to gather feedback from your users and aggregate results in the dashboard.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "On the Dashboard, you can create an ExitPoll <b>Question Set</b> and display it using customizable prefabs in Unity.\n\nYou can even change the Question Set after your application is distributed.", "normallabel");
-            GUI.Box(new Rect(122, 230, 256, 230), EditorCore.ExitPollExample, "image_centered"); // the numbers are quite strange because of the aspect ratio
+            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.ExitPollFeature, "image_centered");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/exitpoll/");
         }
         void SensorsUpdate()
         {
             GUI.Label(steptitlerect, "SENSORS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Sensors</b> are a feature to record a value or property over time.", "normallabel");
-            GUI.Label(new Rect(30, 110, 440, 440), "If you have the hardware to support it, you can record Sensor data for Heart Rate, GSR, ECG,  and view it as a graph on the dashboard.\n\nSeveral types of data are recorded by default, such as FPS and Battery Temperature.", "normallabel");
-            EditorGUI.DrawRect(new Rect(30, 250, 440, 110), DarkGrey);
+            GUI.Label(new Rect(30, 90, 440, 440), "If you have the hardware to support it, you can record Sensor data for Heart Rate, GSR, ECG,  and view it as a graph on the dashboard.\n\nSeveral types of data are recorded by default, such as FPS and Battery Temperature.", "normallabel");
+            EditorGUI.DrawRect(new Rect(30, 230, 440, 110), DarkGrey);
+            GUI.Box(new Rect(150, 345, 200, 150), EditorCore.SensorsFeature, "image_centered");
             //required for sensor code snippet to have unique controlid
             EditorGUI.SelectableLabel(new Rect(4000, 190, 420, 60), "ignore", "code_snippet");
-            EditorGUI.SelectableLabel(new Rect(40, 260, 420, 90), "float sensorData = Random.Range(1, 100f);\nCognitive3D.SensorRecorder\n    .RecordDataPoint(\"SensorName\", sensorData);", "code_snippet");
+            EditorGUI.SelectableLabel(new Rect(40, 240, 420, 90), "float sensorData = Random.Range(1, 100f);\nCognitive3D.SensorRecorder\n    .RecordDataPoint(\"SensorName\", sensorData);", "code_snippet");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/sensors/");
         }
         void MediaUpdate()
@@ -245,6 +236,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE MEDIA", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Scene Media</b> allows you detect and aggregate gaze data on media objects like images, videos, and 360 degree videos.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "On the Dashboard, you can upload media files in the <b>Media Library</b> tab and define Points of Interest.\n\nYou can then add media to your scene and associate them with files on the dashboard to record gaze.", "normallabel");
+            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.MediaFeature, "image_centered");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/media/");
         }
         void ReadyRoomUpdate()
@@ -252,6 +244,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "READY ROOM", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Ready Room</b> provides a tutorial framework scene for users of an application to get familiar with the VR experiences. This is particularly useful if members of your target audience are new to VR or you want to ensure all equipment and software is configured correctly.", "normallabel");
             GUI.Label(new Rect(30, 150, 440, 440), "You can set up ready room by importing the \"Ready Room\" sample from the Cognitive3D Unity SDK package in Package Manager.", "normallabel");
+            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.ReadyRoomFeature, "image_centered");
 
             if (!searchedForReadyRoom)
             {

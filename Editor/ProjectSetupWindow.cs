@@ -63,10 +63,6 @@ namespace Cognitive3D
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            var e = Event.current;
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Equals) { currentPage++; }
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Minus) { currentPage--; }
-
             switch (currentPage)
             {
                 case Page.Welcome:

@@ -552,80 +552,94 @@ namespace Cognitive3D
             }
         }
 
-        private static Texture2D _sceneBackground;
-        public static Texture2D SceneBackground
+        private static Texture2D exitpollFeature;
+        internal static Texture2D ExitPollFeature
         {
             get
             {
-                if (_sceneBackground == null)
+                if (exitpollFeature == null)
                 {
-                    _sceneBackground = Resources.Load<Texture2D>("scene_grey");
+                    exitpollFeature = Resources.Load<Texture2D>("FeatureImages/ExitPoll");
                 }
-                return _sceneBackground;
+                return exitpollFeature;
             }
         }
 
-        private static Texture2D _exitpollExample;
-        public static Texture2D ExitPollExample
+        private static Texture2D sceneFeature;
+        internal static Texture2D SceneFeature
         {
             get
             {
-                if (_exitpollExample == null)
+                if (sceneFeature == null)
                 {
-                    _exitpollExample = Resources.Load<Texture2D>("exit_poll_example");
+                    sceneFeature = Resources.Load<Texture2D>("FeatureImages/SceneExplorer");
                 }
-                return _exitpollExample;
+                return sceneFeature;
             }
         }
 
-        private static Texture2D _sceneBackgroundHalf;
-        public static Texture2D SceneBackgroundHalf
+        private static Texture2D dynamicsFeature;
+        internal static Texture2D DynamicsFeature
         {
             get
             {
-                if (_sceneBackgroundHalf == null)
+                if (dynamicsFeature == null)
                 {
-                    _sceneBackgroundHalf = Resources.Load<Texture2D>("scene_grey_half");
+                    dynamicsFeature = Resources.Load<Texture2D>("FeatureImages/Dynamics");
                 }
-                return _sceneBackgroundHalf;
-            }
-        }
-        private static Texture2D _sceneBackgroundQuarter;
-        public static Texture2D SceneBackgroundQuarter
-        {
-            get
-            {
-                if (_sceneBackgroundQuarter == null)
-                {
-                    _sceneBackgroundQuarter = Resources.Load<Texture2D>("scene_grey_quarter");
-                }
-                return _sceneBackgroundQuarter;
+                return dynamicsFeature;
             }
         }
 
-        private static Texture2D _objectsHighlight;
-        public static Texture2D ObjectsHightlight
+        private static Texture2D sensorsFeature;
+        internal static Texture2D SensorsFeature
         {
             get
             {
-                if (_objectsHighlight == null)
+                if (sensorsFeature == null)
                 {
-                    _objectsHighlight = Resources.Load<Texture2D>("objects_blue");
+                    sensorsFeature = Resources.Load<Texture2D>("FeatureImages/Sensors");
                 }
-                return _objectsHighlight;
+                return sensorsFeature;
             }
         }
 
-        private static Texture2D _objectsBackground;
-        public static Texture2D ObjectsBackground
+        private static Texture2D mediaFeature;
+        internal static Texture2D MediaFeature
         {
             get
             {
-                if (_objectsBackground == null)
+                if (mediaFeature == null)
                 {
-                    _objectsBackground = Resources.Load<Texture2D>("objects_grey");
+                    mediaFeature = Resources.Load<Texture2D>("FeatureImages/Media");
                 }
-                return _objectsBackground;
+                return mediaFeature;
+            }
+        }
+
+        private static Texture2D readyRoomFeature;
+        internal static Texture2D ReadyRoomFeature
+        {
+            get
+            {
+                if (readyRoomFeature == null)
+                {
+                    readyRoomFeature = Resources.Load<Texture2D>("FeatureImages/Ready Room");
+                }
+                return readyRoomFeature;
+            }
+        }
+
+        private static Texture2D onboardingVideo;
+        internal static Texture2D OnboardingVideo
+        {
+            get
+            {
+                if (onboardingVideo == null)
+                {
+                    onboardingVideo = Resources.Load<Texture2D>("FeatureImages/Onboarding Video");
+                }
+                return onboardingVideo;
             }
         }
 

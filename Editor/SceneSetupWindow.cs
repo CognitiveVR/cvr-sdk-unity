@@ -103,7 +103,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 220, 440, 440), "For a guided walkthrough, you can follow the video below:", "normallabel");
 
             //video link
-            if (GUI.Button(new Rect(150, 300, 200, 150), "video"))
+            if (GUI.Button(new Rect(115, 300, 270, 150), EditorCore.OnboardingVideo, "image_centered"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
@@ -550,7 +550,7 @@ namespace Cognitive3D
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
 
             //draw example scene image
-            GUI.Box(new Rect(175, 230, 150, 150), EditorCore.SceneBackground, "image_centered");
+            GUI.Box(new Rect(150, 210, 200, 150), EditorCore.SceneFeature, "image_centered");
 
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
