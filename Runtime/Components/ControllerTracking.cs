@@ -50,12 +50,14 @@ namespace Cognitive3D.Components
 
         void ControllerTrackingIntervalEnd()
         {
-            Transform leftController = GameplayReferences.controllerTransforms[0];
-            Transform rightController = GameplayReferences.controllerTransforms[1];
+            Transform leftController;
+            Transform rightController;
+            GameplayReferences.GetControllerTransform(false, out leftController);
+            GameplayReferences.GetControllerTransform(true, out rightController);
             float leftControllerToHead = leftController.position.y - GameplayReferences.HMD.position.y;
             float rightControllerToHead = rightController.position.y - GameplayReferences.HMD.position.y;
-            SensorRecorder.RecordDataPoint("Left Controller Distance from Head", leftControllerToHead);
-            SensorRecorder.RecordDataPoint("Right Controller Distance from Head", rightControllerToHead);
+            SensorRecorder.RecordDataPoint("Left Controller Elevation from Head", leftControllerToHead);
+            SensorRecorder.RecordDataPoint("Right Controller Elevation from Head", rightControllerToHead);
             currentTime = 0;
         }
 
