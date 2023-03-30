@@ -56,10 +56,6 @@ namespace Cognitive3D
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
 
-            var e = Event.current;
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Equals) { currentPage++; }
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Minus) { currentPage--; }
-
             switch (currentPage)
             {
                 case Page.ProjectError:
@@ -287,6 +283,8 @@ namespace Cognitive3D
             //controllers
 #if C3D_STEAMVR2
             GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+#elif C3D_OCULUS
+            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #else
             GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
@@ -612,7 +610,7 @@ namespace Cognitive3D
             }
 
             //texture resolution settings
-            Rect toolsRect = new Rect(360, 440, 35, 35);
+            Rect toolsRect = new Rect(360, 440, 30, 30);
             if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
             {
                 GenericMenu gm = new GenericMenu();

@@ -327,7 +327,7 @@ namespace Cognitive3D
         void DrawSceneWindowButton()
         {
             Rect buttonrect = new Rect(150, 460, 200, 30);
-            if (GUI.Button(buttonrect, "Scene Setup"))
+            if (GUI.Button(buttonrect, "Open Scene Setup Window"))
             {
                 SceneSetupWindow.Init();
                 //this.Close();

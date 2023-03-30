@@ -514,18 +514,7 @@ namespace Cognitive3D
                 return _searchIcon;
             }
         }
-        private static Texture2D _searchIconBlue;
-        public static Texture2D SearchIconBlue
-        {
-            get
-            {
-                if (_searchIconBlue == null)
-                {
-                    _searchIconBlue = Resources.Load<Texture2D>("Icons/search blue");
-                }
-                return _searchIconBlue;
-            }
-        }
+
         private static Texture2D _searchIconwhite;
         public static Texture2D SearchIconWhite
         {
@@ -536,19 +525,6 @@ namespace Cognitive3D
                     _searchIconwhite = Resources.Load<Texture2D>("Icons/search white");
                 }
                 return _searchIconwhite;
-            }
-        }
-
-        private static Texture2D _sceneHighlight;
-        public static Texture2D SceneHighlight
-        {
-            get
-            {
-                if (_sceneHighlight == null)
-                {
-                    _sceneHighlight = Resources.Load<Texture2D>("scene_blue");
-                }
-                return _sceneHighlight;
             }
         }
 
@@ -650,7 +626,7 @@ namespace Cognitive3D
             {
                 if (_settingsIcon == null)
                 {
-                    _settingsIcon = Resources.Load<Texture2D>("Icons/gear");
+                    _settingsIcon = Resources.Load<Texture2D>("Icons/gear blue");
                 }
                 return _settingsIcon;
             }

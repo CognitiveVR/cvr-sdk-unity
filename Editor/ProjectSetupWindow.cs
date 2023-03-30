@@ -252,7 +252,14 @@ namespace Cognitive3D
         }
 
         [System.Serializable]
-        private class SubscriptionResponseData
+        private class OrganizationData
+        {
+            public string organizationName;
+            public SubscriptionData[] subscriptions;
+        }
+
+        [System.Serializable]
+        private class SubscriptionData
         {
             public long beginning;
             public long expiration;
@@ -275,18 +282,23 @@ namespace Cognitive3D
                 return;
             }
 
-            SubscriptionResponseData[] data = Util.GetJsonArray<SubscriptionResponseData>(text);
-            if (data == null || data.Length == 0)
+            OrganizationData organizationDetails = JsonUtility.FromJson< OrganizationData>(text);
+            if (organizationDetails == null)
             {
                 Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
             }
             else
             {
-                foreach(var v in data)
+                OrganizationName = organizationDetails.organizationName;
+                if (organizationDetails.subscriptions.Length == 0)
                 {
-                    SubscriptionPlan = v.planType;
-                    SubscriptionTrial = v.isFreeTrial;
-                    SubscriptionExpirationDateLong = v.expiration;
+                    SubscriptionPlan = "No Subscription";
+                }
+                else
+                {
+                    SubscriptionPlan = organizationDetails.subscriptions[0].planType;
+                    SubscriptionTrial = organizationDetails.subscriptions[0].isFreeTrial;
+                    SubscriptionExpirationDateLong = organizationDetails.subscriptions[0].expiration;
                 }
             }
         }
