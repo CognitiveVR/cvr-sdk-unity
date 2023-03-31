@@ -1019,7 +1019,7 @@ namespace Cognitive3D
         {
             if (sceneSettings == null) { return false; }
 
-            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneSettings.SceneName + "screenshot" + Path.DirectorySeparatorChar;
+            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar + sceneSettings.SceneName + "screenshot" + Path.DirectorySeparatorChar;
             var sceneScreenshotDirExists = Directory.Exists(sceneScreenshotDirectory);
 
             if (!sceneScreenshotDirExists) { return false; }
@@ -1031,6 +1031,59 @@ namespace Cognitive3D
             {
                 if (files[i].EndsWith("screenshot.png"))
                 { return true; }
+            }
+            return false;
+        }
+
+        class CachedSceneThumbnail
+        {
+            public Cognitive3D_Preferences.SceneSettings SceneSettings;
+            public Texture2D SceneThumbnail;
+            public CachedSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings, Texture2D sceneThumbnail)
+            {
+                SceneSettings = sceneSettings;
+                SceneThumbnail = sceneThumbnail;
+            }
+        }
+        static CachedSceneThumbnail cachedSceneThumbnail;
+
+        internal static bool GetSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings, ref Texture2D thumbnail, bool refresh)
+        {
+            //clear cached thumbnail if necessary
+            if (refresh)
+            {
+                cachedSceneThumbnail = null;
+            }
+            if (cachedSceneThumbnail != null && sceneSettings == cachedSceneThumbnail.SceneSettings)
+            {
+                thumbnail = cachedSceneThumbnail.SceneThumbnail;
+                return true;
+            }
+
+            //check if scene export directory exists
+            if (sceneSettings == null) { return false; }
+            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneSettings.SceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar;
+            var sceneScreenshotDirExists = Directory.Exists(sceneScreenshotDirectory);
+            if (!sceneScreenshotDirExists) { return false; }
+
+            //look in screenshot subdirectory
+            var files = Directory.GetFiles(sceneScreenshotDirectory);
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i].EndsWith("screenshot.png"))
+                {
+                    var bytes = File.ReadAllBytes(files[i]);
+                    thumbnail = new Texture2D(1,1);
+                    if (thumbnail.LoadImage(bytes, false))
+                    {                        
+                        cachedSceneThumbnail = new CachedSceneThumbnail(sceneSettings, thumbnail);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
             return false;
         }
