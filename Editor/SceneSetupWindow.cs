@@ -546,17 +546,23 @@ namespace Cognitive3D
             }
         }
 
-#endregion
+        #endregion
 
+        Texture2D isoSceneImage;
 
         void ExportSceneUpdate()
         {
             GUI.Label(steptitlerect, "SCENE EXPORT", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "All geometry without a <b>Dynamic Object</b> component will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.\n\nRefer to Online Documentation for more details about exporting scene geometry.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "All geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.", "normallabel");
+            GUI.Label(new Rect(30, 440, 440, 440), "Refer to Online Documentation for more details about exporting scene geometry.", "normallabel");
             if (Cognitive3D_Preferences.Instance.TextureResize > 4) { Cognitive3D_Preferences.Instance.TextureResize = 4; }
+            if (isoSceneImage == null)
+            {
+                isoSceneImage = EditorCore.GetSceneIsometricThumbnail();
+            }
 
             //draw example scene image
-            GUI.Box(new Rect(150, 210, 200, 150), EditorCore.SceneFeature, "image_centered");
+            GUI.Box(new Rect(150, 130, 200, 150), isoSceneImage, "image_centered");
 
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
@@ -575,18 +581,22 @@ namespace Cognitive3D
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
                 GUI.Label(new Rect(0, 365, 500, 15), displayString, "miniheadercenter");
+                GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
             }
             else
             {
                 GUI.Label(new Rect(0, 365, 500, 15), "Scene Not Exported", "miniheadercenter");
+                GUI.Label(new Rect(0, 340, 500, 15), "Scene Not Exported", "miniheadercenter");
             }
 
             if (numberOfLights > 50)
             {
                 GUI.Label(new Rect(0, 405, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
+                GUI.Label(new Rect(0, 370, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
 
             if (GUI.Button(new Rect(150, 440, 200, 30), "Export Scene Geometry"))
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Export Scene Geometry"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
                 {
@@ -623,6 +633,7 @@ namespace Cognitive3D
 
             //texture resolution settings
             Rect toolsRect = new Rect(360, 440, 30, 30);
+            Rect toolsRect = new Rect(360, 290, 30, 30);
             if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
             {
                 GenericMenu gm = new GenericMenu();

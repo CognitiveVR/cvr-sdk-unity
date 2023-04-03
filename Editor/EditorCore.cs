@@ -1478,6 +1478,20 @@ namespace Cognitive3D
             SaveDynamicThumbnail(target, pos, rot);
         }
 
+        public static Texture2D GetSceneIsometricThumbnail()
+        {
+            //center on the player if a prefab exists in the scene. otherwise origin
+            Vector3 pos = new Vector3(20,17,20);
+            Quaternion rot = Quaternion.Euler(30, -135, 0);
+
+            if (Camera.main != null)
+            {
+                pos += Camera.main.transform.position;
+            }
+
+            return GenerateSceneIsoThumbnail(pos, rot);
+        }
+
         /// <summary>
         /// recursively get child transforms, skipping nested dynamic objects
         /// </summary>
@@ -1564,6 +1578,38 @@ namespace Cognitive3D
 
             //save
             File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", tex.EncodeToPNG());
+        }
+
+        static Texture2D GenerateSceneIsoThumbnail(Vector3 position, Quaternion rotation)
+        {
+            GameObject go = new GameObject("temp scene iso camera");
+            var renderCam = go.AddComponent<Camera>();
+            renderCam.fieldOfView = 15;
+            renderCam.nearClipPlane = 0.5f;
+            var rt = new RenderTexture(512, 512, 16);
+            renderCam.targetTexture = rt;
+            Texture2D tex = new Texture2D(rt.width, rt.height);
+
+            //position camera
+            go.transform.position = position;
+            go.transform.rotation = rotation;
+
+            //set dynamic gameobject layers
+            try
+            {
+                //render to texture
+                renderCam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+                tex.Apply();
+                RenderTexture.active = null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            GameObject.DestroyImmediate(renderCam.gameObject);
+            return tex;
         }
 
         /// <summary>
