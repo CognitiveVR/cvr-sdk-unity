@@ -236,7 +236,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE MEDIA", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Scene Media</b> allows you detect and aggregate gaze data on media objects like images, videos, and 360 degree videos.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "On the Dashboard, you can upload media files in the <b>Media Library</b> tab and define Points of Interest.\n\nYou can then add media to your scene and associate them with files on the dashboard to record gaze.", "normallabel");
-            GUI.Box(new Rect(50, 200, 400, 300), EditorCore.MediaFeature, "image_centered");
+            GUI.Box(new Rect(0, 220, 500, 260), EditorCore.MediaFeature, "image_centered");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/media/");
         }
         void ReadyRoomUpdate()
