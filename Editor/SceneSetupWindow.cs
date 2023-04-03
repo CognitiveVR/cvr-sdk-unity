@@ -97,6 +97,10 @@ namespace Cognitive3D
         private void OnFocus()
         {
             hasCheckedForSteamVRActionsSet = false;
+            if (isoSceneImage != null)
+            {
+                DestroyImmediate(isoSceneImage);
+            }
         }
 
         void WelcomeUpdate()
@@ -580,22 +584,18 @@ namespace Cognitive3D
                 {
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
-                GUI.Label(new Rect(0, 365, 500, 15), displayString, "miniheadercenter");
                 GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
             }
             else
             {
-                GUI.Label(new Rect(0, 365, 500, 15), "Scene Not Exported", "miniheadercenter");
                 GUI.Label(new Rect(0, 340, 500, 15), "Scene Not Exported", "miniheadercenter");
             }
 
             if (numberOfLights > 50)
             {
-                GUI.Label(new Rect(0, 405, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
                 GUI.Label(new Rect(0, 370, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
 
-            if (GUI.Button(new Rect(150, 440, 200, 30), "Export Scene Geometry"))
             if (GUI.Button(new Rect(150, 290, 200, 30), "Export Scene Geometry"))
             {
                 if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
