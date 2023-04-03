@@ -93,55 +93,55 @@ namespace Cognitive3D
             //list of buttons
             //also checkboxes for 'has developer seen this content'
 
+            int startListHeight = 140;
             int checkmarkLeft = 110;
             int leftEdge = 150;
             int width = 200;
-            int heightOffset = 100;
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset, 40, 30), HasBeenViewed(Page.Scene) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 100, width, 30), "Scenes"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight, 40, 30), HasBeenViewed(Page.Scene) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight, width, 30), "Scenes"))
             {
                 currentPage = Page.Scene;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset+40, 40, 30), HasBeenViewed(Page.Dynamic) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 140, width, 30), "Dynamic Objects"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 40, 40, 30), HasBeenViewed(Page.Dynamic) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+40, width, 30), "Dynamic Objects"))
             {
                 currentPage = Page.Dynamic;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset+80, 40, 30), HasBeenViewed(Page.CustomEvent) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 180, width, 30), "Custom Events"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 80, 40, 30), HasBeenViewed(Page.CustomEvent) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+80, width, 30), "Custom Events"))
             {
                 currentPage = Page.CustomEvent;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset+120, 40, 30), HasBeenViewed(Page.ExitPoll) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 220, width, 30), "ExitPoll Survey"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 120, 40, 30), HasBeenViewed(Page.ExitPoll) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+120, width, 30), "ExitPoll Survey"))
             {
                 currentPage = Page.ExitPoll;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset+160, 40, 30), HasBeenViewed(Page.Sensors) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 260, width, 30), "Sensors"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 160, 40, 30), HasBeenViewed(Page.Sensors) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+160, width, 30), "Sensors"))
             {
                 currentPage = Page.Sensors;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset+200, 40, 30), HasBeenViewed(Page.Media) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 300, width, 30), "Media"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 200, 40, 30), HasBeenViewed(Page.Media) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+200, width, 30), "Media"))
             {
                 currentPage = Page.Media;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, heightOffset + 240, 40, 30), HasBeenViewed(Page.ReadyRoom)? EditorCore.CircleCheckmark32: EditorCore.CircleEmpty32);
-            if (GUI.Button(new Rect(leftEdge, 340, width, 30), "Ready Room"))
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 240, 40, 30), HasBeenViewed(Page.ReadyRoom)? EditorCore.CircleCheckmark32: EditorCore.CircleEmpty32);
+            if (GUI.Button(new Rect(leftEdge, startListHeight+240, width, 30), "Ready Room"))
             {
                 currentPage = Page.ReadyRoom;
                 AddToSeenPages(currentPage);
@@ -181,7 +181,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "A <b>Dynamic Object </b> is a specific object in your experience which you wish to track.", "normallabel");
             GUI.Box(new Rect(150, 90, 200, 150), EditorCore.DynamicsFeature, "image_centered");
             GUI.color = Color.white;
-            GUI.Label(new Rect(30, 280, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. Dynamic Objects can move, be spawned or destroyed.\n\nThese objects must also have colliders attached so we can track user gaze.", "normallabel");
+            GUI.Label(new Rect(30, 260, 440, 440), "You can add or remove Dynamic Objects without uploading a new Scene Version.\n\nYou must attach a Dynamic Object Component onto each object you wish to track in your project. Dynamic Objects can move, be spawned or destroyed.\n\nThese objects must also have colliders attached so we can track user gaze.", "normallabel");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/dynamic-objects/");
             DrawDynamicManagerButton();
         }
@@ -214,9 +214,9 @@ namespace Cognitive3D
         void ExitPollUpdate()
         {
             GUI.Label(steptitlerect, "EXITPOLL SURVEY", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "An <b>ExitPoll</b> survey is a feature to gather feedback from your users and aggregate results in the dashboard.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "An <b>ExitPoll</b> survey is a feature to gather feedback from your users and aggregate results on the dashboard.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "On the Dashboard, you can create an ExitPoll <b>Question Set</b> and display it using customizable prefabs in Unity.\n\nYou can even change the Question Set after your application is distributed.", "normallabel");
-            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.ExitPollFeature, "image_centered");
+            GUI.Box(new Rect(150, 250, 200, 150), EditorCore.ExitPollFeature, "image_centered");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/exitpoll/");
         }
         void SensorsUpdate()
@@ -236,15 +236,15 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE MEDIA", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Scene Media</b> allows you detect and aggregate gaze data on media objects like images, videos, and 360 degree videos.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "On the Dashboard, you can upload media files in the <b>Media Library</b> tab and define Points of Interest.\n\nYou can then add media to your scene and associate them with files on the dashboard to record gaze.", "normallabel");
-            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.MediaFeature, "image_centered");
+            GUI.Box(new Rect(50, 200, 400, 300), EditorCore.MediaFeature, "image_centered");
             DrawSpecificDocsButton("https://docs.cognitive3d.com/unity/media/");
         }
         void ReadyRoomUpdate()
         {
             GUI.Label(steptitlerect, "READY ROOM", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Ready Room</b> provides a tutorial framework scene for users of an application to get familiar with the VR experiences. This is particularly useful if members of your target audience are new to VR or you want to ensure all equipment and software is configured correctly.", "normallabel");
-            GUI.Label(new Rect(30, 150, 440, 440), "You can set up ready room by importing the \"Ready Room\" sample from the Cognitive3D Unity SDK package in Package Manager.", "normallabel");
-            GUI.Box(new Rect(150, 230, 200, 150), EditorCore.ReadyRoomFeature, "image_centered");
+            GUI.Label(new Rect(30, 150, 440, 440), "You can start setting up a Ready Room by importing the \"Ready Room\" sample from the Cognitive3D Unity SDK package in Package Manager.", "normallabel");
+            GUI.Box(new Rect(150, 250, 200, 150), EditorCore.ReadyRoomFeature, "image_centered");
 
             if (!searchedForReadyRoom)
             {
@@ -309,10 +309,13 @@ namespace Cognitive3D
         void DrawSpecificDocsButton(string url)
         {
             Rect buttonrect = new Rect(150, 510, 200, 30);
-            if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation",url)))
+            if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation       ",url)))
             {
                 Application.OpenURL(url);
             }
+            Rect onlineRect = buttonrect;
+            onlineRect.x += 82;
+            GUI.Label(onlineRect, EditorCore.ExternalIcon);
         }
 
         void DrawDynamicManagerButton()

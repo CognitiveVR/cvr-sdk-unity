@@ -657,6 +657,32 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D externalIcon;
+        public static Texture2D ExternalIcon
+        {
+            get
+            {
+                if (externalIcon == null)
+                {
+                    externalIcon = Resources.Load<Texture2D>("Icons/external");
+                }
+                return externalIcon;
+            }
+        }
+
+        private static Texture2D clouduploadIcon;
+        public static Texture2D CloudUploadIcon
+        {
+            get
+            {
+                if (clouduploadIcon == null)
+                {
+                    clouduploadIcon = Resources.Load<Texture2D>("Icons/cloud upload");
+                }
+                return clouduploadIcon;
+            }
+        }
+
         private static Texture2D _refreshIconWhite;
         private static Texture2D _refreshIconBlack;
         public static Texture2D RefreshIcon

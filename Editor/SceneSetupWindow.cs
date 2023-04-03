@@ -576,6 +576,10 @@ namespace Cognitive3D
                 }
                 GUI.Label(new Rect(0, 365, 500, 15), displayString, "miniheadercenter");
             }
+            else
+            {
+                GUI.Label(new Rect(0, 365, 500, 15), "Scene Not Exported", "miniheadercenter");
+            }
 
             if (numberOfLights > 50)
             {
@@ -672,7 +676,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
 
-            int heightOffset = 150;
+            int heightOffset = 120;
 
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -726,7 +730,7 @@ namespace Cognitive3D
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty32, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 340, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
             }
             else
             {
@@ -819,8 +823,9 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "NEXT STEPS", "steptitle");
 
             //1 play a session, see it on the dashboard
-            GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nTo record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard", "normallabel");
-            if (GUI.Button(new Rect(150, 170, 200, 30), "Open Dashboard"))
+            GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nTo record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard.", "normallabel");
+            Rect buttonRect = new Rect(150, 170, 200, 30);
+            if (GUI.Button(buttonRect, "Open Dashboard       "))
             {
                 var sceneSettings = Cognitive3D_Preferences.FindCurrentScene();
                 if (sceneSettings == null)
@@ -830,12 +835,15 @@ namespace Cognitive3D
                 }
                 Application.OpenURL(CognitiveStatics.SCENELINK(sceneSettings.SceneId, sceneSettings.VersionNumber));
             }
+            Rect onlineRect = buttonRect;
+            onlineRect.x += 82;
+            GUI.Label(onlineRect, EditorCore.ExternalIcon);
 
             //2 overview of features in help window
             GUI.Label(new Rect(30, 250, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
             GUI.Label(new Rect(30, 300, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
             
-            if (GUI.Button(new Rect(150, 400, 200, 30), "Open Help"))
+            if (GUI.Button(new Rect(150, 400, 200, 30), "Open Help Window"))
             {
                 HelpWindow.Init();
             }
@@ -854,10 +862,13 @@ namespace Cognitive3D
             {
                 Rect buttonrect = new Rect(150, 510, 200, 30);
                 string url = "https://docs.cognitive3d.com/unity/scenes/";
-                if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation", url)))
+                if (GUI.Button(buttonrect, new GUIContent("Open Online Documentation       ", url)))
                 {
                     Application.OpenURL(url);
                 }
+                Rect onlineRect = buttonrect;
+                onlineRect.x += 82;
+                GUI.Label(onlineRect, EditorCore.ExternalIcon);
             }
         }
 
@@ -1045,7 +1056,7 @@ namespace Cognitive3D
                         }
                     };
                     buttonDisabled = !(SceneExistsOnDashboard || (SceneHasExportFiles && UploadSceneGeometry));
-                    text = "Upload";
+                    text = "Upload       ";
                     break;
                 case Page.SetupComplete:
                     onclick = () => Close();
@@ -1078,6 +1089,13 @@ namespace Cognitive3D
                     if (onclick != null)
                         onclick.Invoke();
                 }
+            }
+
+            if (currentPage == Page.SceneUpload)
+            {
+                Rect onlineRect = buttonrect;
+                onlineRect.x += 25;
+                GUI.Label(onlineRect, EditorCore.CloudUploadIcon);
             }
         }
 

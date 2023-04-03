@@ -104,16 +104,20 @@ namespace Cognitive3D
 
         void WelcomeUpdate()
         {
-            GUI.Label(new Rect(30, 30, 440, 80), EditorCore.LogoTexture, "image_centered");
+            GUI.Label(new Rect(30, 10, 440, 80), EditorCore.LogoTexture, "image_centered");
 
-            GUI.Label(new Rect(30, 120, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup! This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
+            GUI.Label(new Rect(30, 110, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup! This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
                 "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
-            GUI.Label(new Rect(30, 390, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
             string url = "https://docs.cognitive3d.com/unity/minimal-setup-guide";
-            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Open Online Documentation",url)))
+            Rect buttonRect = new Rect(150, 300, 200, 30);
+            if (GUI.Button(buttonRect, new GUIContent("Open Online Documentation       ", url)))
             {
                 Application.OpenURL(url);
             }
+            Rect onlineRect = buttonRect;
+            onlineRect.x += 82;
+            GUI.Label(onlineRect, EditorCore.ExternalIcon);
+            GUI.Label(new Rect(30, 380, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
         }
 
         #region Auth Keys
@@ -124,14 +128,18 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " Developer Key." +
-                "\n\nThe Developer Key is saved to Unity Editor Preferences (specific to the current user) and is never included in a build." +
-                "\n\nThis should be kept private to your organization."+
+                "\n\nThe Developer Key is saved to Unity Editor Preferences (specific to the current user) and is never included in a build. " +
+                "This should be kept private to your organization."+
                 "\n\nThis is available on the Project Dashboard.", "normallabel");
-
-            if (GUI.Button(new Rect(130, 280, 240, 30), "Open Dashboard"))
+            Rect buttonRect = new Rect(150, 260, 200, 30);
+            if (GUI.Button(buttonRect, "Open Dashboard       "))
             {
                 Application.OpenURL("https://app.cognitive3d.com");
             }
+            Rect onlineRect = buttonRect;
+            onlineRect.x += 82;
+            GUI.Label(onlineRect, EditorCore.ExternalIcon);
+
             //dev key
             GUI.Label(new Rect(30, 315, 100, 30), "Developer Key", "miniheader");
             if (string.IsNullOrEmpty(developerkey)) //empty
@@ -179,8 +187,8 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "ORGANIZATION", "steptitle");
 
-            GUI.Label(new Rect(60, 30, 440, 440), "Organization Name: " + OrganizationName, "normallabel");
-            GUI.Label(new Rect(60, 60, 440, 440), "Current Subscription Plan: " + SubscriptionPlan + (SubscriptionTrial ? " (Trial)" : ""), "normallabel");
+            GUI.Label(new Rect(60, 40, 440, 440), "Organization Name: " + OrganizationName, "normallabel");
+            GUI.Label(new Rect(60, 70, 440, 440), "Current Subscription Plan: " + SubscriptionPlan + (SubscriptionTrial ? " (Trial)" : ""), "normallabel");
 
             string expirationDateString = string.Empty;
             if (string.IsNullOrEmpty(expirationDateString) && SubscriptionExpirationDateLong > 0L)
@@ -196,7 +204,7 @@ namespace Cognitive3D
                 expirationDateString = "Never";
             }
 
-            GUI.Label(new Rect(60, 90, 440, 440), "Expiration Date: " + expirationDateString, "normallabel");
+            GUI.Label(new Rect(60, 100, 440, 440), "Expiration Date: " + expirationDateString, "normallabel");
 
             GUI.Label(new Rect(30, 150, 440, 440), "The Application Key is saved in Cognitive3D_Preferences asset. It is used to identify where session data should be collected.\n\nThis is included with a build, but otherwise should be kept private to your organization.", "normallabel");
 
@@ -768,14 +776,14 @@ namespace Cognitive3D
         {
             GUI.Label(steptitlerect, "NEXT STEPS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
-            if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Setup"))
+            if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Scene Setup"))
             {
                 SceneSetupWindow.Init(position);
                 Close();
             }
 
-            GUI.Label(new Rect(30, 200, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment", "normallabel");
-            if (GUI.Button(new Rect(150, 250, 200, 30), "Advanced Setup"))
+            GUI.Label(new Rect(30, 250, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment.", "normallabel");
+            if (GUI.Button(new Rect(150, 320, 200, 30), "Advanced Scene Setup"))
             {
                 //show dynamic page
                 currentPage = Page.DynamicSetup;
@@ -788,10 +796,10 @@ namespace Cognitive3D
             //display some text about what dynamics are and how to define them with a component
             //also brief on the upcoming dynamic objects screen
 
-            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with things in your experience. This includes gaze times and the position of moving objects. These can be used to enhance Objectives and quickly evaluate your users.", "normallabel");
-            GUI.Label(new Rect(30, 130, 440, 440), "Some examples include Billboards, Vehicles or Tools.", "normallabel");
-            GUI.Label(new Rect(30, 170, 440, 440), "To mark a GameObject in your Scene as a Dynamic Object, simply add the Dynamic Object component.", "normallabel");
-            GUI.Label(new Rect(30, 300, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard. For now, simply add Dynamic Object components then continue with the Scene Setup window.", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with various objects in your experience. This includes the positions of moving objects and if/how a user gazes on an object. These can be used with <b>Objectives</b> and quickly evaluate your users' performance.", "normallabel");
+            GUI.Label(new Rect(30, 140, 440, 440), "Some examples include Billboards, Vehicles or Tools.", "normallabel");
+            GUI.Label(new Rect(30, 240, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard.", "normallabel");
+            GUI.Label(new Rect(30, 320, 440, 440), "For now, simply add <b>Dynamic Object components</b> to your key GameObjects.", "normallabel");
         }
 
         void DrawFooter()
@@ -892,7 +900,7 @@ namespace Cognitive3D
                         Close();
                     };
                     
-                    text = "Open Dynamic Objects";
+                    text = "Open Dynamic Objects Window";
                     buttonrect = new Rect(280, 510, 200, 30);
                     break;
                 case Page.NextSteps:

@@ -1114,7 +1114,7 @@ namespace Cognitive3D
                 {
                     if (footerHelpPage == 0)
                     {
-                        errorMessage = "You can review and export Dynamic Objects directly from here. This window is accessible from the Cognitive3D menu.";
+                        errorMessage = "This window is also accessible from the Cognitive3D menu.\nYou can review and upload Dynamic Objects from here.";
                         if (GUI.Button(new Rect(390+120, 510, 80, 30), "Next"))
                         {
                             footerHelpPage++;
@@ -1122,8 +1122,8 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        errorMessage = "Add some Dynamic Object components to GameObjects and Prefabs. Press 'Scene Setup Window' and select 'Export' on the popup window.";
-                        if (GUI.Button(new Rect(390, 510, 200, 30), "Scene Setup Window"))
+                        errorMessage = "You will be prompted to export mesh representations when you continue to the Scene Setup Window.";
+                        if (GUI.Button(new Rect(390, 510, 200, 30), "Open Scene Setup Window"))
                         {
                             bool doExport = EditorUtility.DisplayDialog("Export Dynamic Object Meshes", "Do you want to export meshes for all Dynamic Objects now?", "Export", "Skip");
                             if (doExport)
