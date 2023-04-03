@@ -632,7 +632,6 @@ namespace Cognitive3D
             }
 
             //texture resolution settings
-            Rect toolsRect = new Rect(360, 440, 30, 30);
             Rect toolsRect = new Rect(360, 290, 30, 30);
             if (GUI.Button(toolsRect, EditorCore.SettingsIcon,"image_centered")) //rename dropdown
             {
