@@ -122,8 +122,8 @@ namespace Cognitive3D
 
         #region Auth Keys
 
-        string apikey = "";
-        string developerkey = "";
+        string apikey = string.Empty;
+        string developerkey = string.Empty;
         void AuthenticateUpdate()
         {
             GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
@@ -144,14 +144,14 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 315, 100, 30), "Developer Key", "miniheader");
             if (string.IsNullOrEmpty(developerkey)) //empty
             {
-                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 345, 24, 40), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Info, "Not validated"), "image_centered");
                 lastDevKeyResponseCode = 0;
                 developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
+                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
             }
             else if (lastDevKeyResponseCode == 200) //valid key
             {
-                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.CircleCheckmark32, "Valid key"), "image_centered");
                 string previous = developerkey;
                 developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 if (previous != developerkey)
@@ -237,7 +237,7 @@ namespace Cognitive3D
 
         private void LoadKeys()
         {
-            developerkey = EditorPrefs.GetString("developerkey");
+            developerkey = EditorPrefs.GetString("c3d_developerkey");
             apikey = EditorCore.GetPreferences().ApplicationKey;
         }
 

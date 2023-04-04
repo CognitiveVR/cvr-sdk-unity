@@ -69,7 +69,7 @@ namespace Cognitive3D
             }
         }
 
-        public string ApplicationKey;
+        public string ApplicationKey = string.Empty;
         public string AttributionKey;
 
         public bool EnableLogging = true;

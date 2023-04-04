@@ -134,7 +134,7 @@ namespace Cognitive3D
         {
             get
             {
-                return EditorPrefs.HasKey("developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("developerkey"));
+                return EditorPrefs.HasKey("c3d_developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("c3d_developerkey"));
             }
         }
 
@@ -142,7 +142,7 @@ namespace Cognitive3D
         {
             get
             {
-                return EditorPrefs.GetString("developerkey");
+                return EditorPrefs.GetString("c3d_developerkey");
             }
         }
 
@@ -1696,7 +1696,7 @@ namespace Cognitive3D
             if (IsDeveloperKeyValid)
             {
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("c3d_developerkey"));
                 EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify", callback, headers, true);
             }
             else
