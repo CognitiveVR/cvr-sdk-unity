@@ -286,7 +286,7 @@ namespace Cognitive3D
             Rect filterRect = new Rect(600 / 2 - searchBarWidth / 2 - 20, 25, 20, 20);
             Rect searchBarRect = new Rect(600 / 2 - searchBarWidth / 2, 25, searchBarWidth, 20);
             Rect searchClearRect = new Rect(600 / 2 + searchBarWidth / 2, 25, 20, 20);
-            string temp = EditorCore.TextField(searchBarRect, searchBarString, 64);
+            string temp = GUI.TextField(searchBarRect, searchBarString, 64);
             if (temp == string.Empty)
             {
                 GUI.Label(searchBarRect, "<size=15>Search</size>", "ghostlabel");

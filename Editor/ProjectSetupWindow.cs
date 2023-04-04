@@ -147,26 +147,26 @@ namespace Cognitive3D
                 GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
                 GUI.Label(new Rect(440, 345, 24, 40), EditorCore.CircleEmpty32, "image_centered");
                 lastDevKeyResponseCode = 0;
-                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
+                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else if (lastDevKeyResponseCode == 200) //valid key
             {
                 GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
                 string previous = developerkey;
-                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
+                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 if (previous != developerkey)
                     lastDevKeyResponseCode = 0;
             }
             else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
             {
                 GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Info, "Not validated"), "image_centered");
-                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
+                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
             }
             else //invalid key
             {
                 GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
                 string previous = developerkey;
-                developerkey = EditorCore.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
+                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
                 if (previous != developerkey)
                     lastDevKeyResponseCode = 0;
             }
@@ -210,7 +210,7 @@ namespace Cognitive3D
 
             //api key
             GUI.Label(new Rect(30, 315, 100, 30), "Application Key", "miniheader");
-            apikey = EditorCore.TextField(new Rect(30, 345, 400, 40), apikey, 32);
+            apikey = GUI.TextField(new Rect(30, 345, 400, 40), apikey, 32);
             if (string.IsNullOrEmpty(apikey))
             {
                 GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
@@ -412,7 +412,7 @@ namespace Cognitive3D
                 }
                 if (package.name == "com.htc.upm.wave.xrsdk")
                 {
-                    DisplayRecommendationPopup("C3D_WAVE", "Vive Wave Package");
+                    DisplayRecommendationPopup("C3D_VIVEWAVE", "Vive Wave Package");
                     return;
                 }
             }
@@ -576,7 +576,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "To automatically access Omnicept's Glia API, the Cognitive3D SDK needs to reference the Glia Assembly, which doesn't exist by default." +
                 "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
-            if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Create Assemblies"))
             {
                 var assets = AssetDatabase.FindAssets("GliaAssembly");
                 if (assets.Length == 0)
@@ -608,13 +608,13 @@ namespace Cognitive3D
             if (gliaAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
         }
 
@@ -644,12 +644,11 @@ namespace Cognitive3D
             }
             SRAnipalStart();
             GUI.Label(steptitlerect, "SDK VALIDATION", "steptitle");
-            GUI.Label(new Rect(30, 45, 440, 440), "Check for Assembly Definition Files.", "normallabel");
-            GUI.Label(new Rect(30, 100, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
+            GUI.Label(new Rect(30, 30, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
     "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
 
             //button to add assemblies to sranipal folder
-            if (GUI.Button(new Rect(130, 290, 240, 30), "Create Assemblies"))
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Create Assemblies"))
             {
                 var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
                 if (assets.Length == 0)
@@ -670,13 +669,13 @@ namespace Cognitive3D
             if (sranipalAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
                 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }    
         }
 
@@ -689,15 +688,16 @@ namespace Cognitive3D
             }
 
 #if C3D_VIVEWAVE
-            GUI.Label(new Rect(30, 45, 440, 440), "Add EyeManager to the scene.", "normallabel");
+            GUI.Label(steptitlerect, "REQUIRED PREFAB", "steptitle");
+            //GUI.Label(new Rect(30, 30, 440, 440), "Add EyeManager to the scene.", "normallabel");
             var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
             bool eyeManagerExists = eyeManager != null;
 
-            GUI.Label(new Rect(30, 100, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
+            GUI.Label(new Rect(30, 30, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
     "\n\nUse the button below to add the WaveEyeManager to the scene if it does not already exist.", "normallabel");
 
             //button to add assemblies to sranipal folder
-            if (GUI.Button(new Rect(130, 290, 240, 30), "Create EyeManager"))
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Create EyeManager"))
             {
                 if (eyeManager == null)
                 {
@@ -712,13 +712,13 @@ namespace Cognitive3D
             if (eyeManagerExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(360, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
 #endif
         }
@@ -861,7 +861,7 @@ namespace Cognitive3D
                     buttonDisabled = developerkey == null || developerkey.Length == 0;
                     if (buttonDisabled)
                     {
-                        text = "Key Required";
+                        text = "Key Missing";
                     }
 
                     if (buttonDisabled == false && lastDevKeyResponseCode != 200)
@@ -880,7 +880,7 @@ namespace Cognitive3D
                     buttonDisabled = apikey == null || string.IsNullOrEmpty(apikey);
                     if (buttonDisabled)
                     {
-                        text = "Key Required";
+                        text = "Key Missing";
                     }
                     else
                     {

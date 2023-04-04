@@ -295,10 +295,8 @@ namespace Cognitive3D
             //controllers
 #if C3D_STEAMVR2
             GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
-#elif C3D_OCULUS
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>Tracked Pose Driver</b> components", "normallabel");
+            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
             bool leftControllerIsValid = false;
@@ -351,7 +349,7 @@ namespace Cognitive3D
 
             if (!leftControllerIsValid)
             {
-                GUI.Label(new Rect(400, handOffset + 15, 30, 30), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(400, handOffset + 15, 30, 30), new GUIContent(EditorCore.Alert,"Left Controller not set"), "image_centered");
             }
 
             //right hand label
@@ -384,7 +382,7 @@ namespace Cognitive3D
 
             if (!rightControllerIsValid)
             {
-                GUI.Label(new Rect(400, handOffset + 50, 30, 30), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(400, handOffset + 50, 30, 30), new GUIContent(EditorCore.Alert, "Right Controller not set"), "image_centered");
             }
 
             //drag and drop
@@ -413,7 +411,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(150, 340, 200, 30), "Setup Controller GameObjects"))
+            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

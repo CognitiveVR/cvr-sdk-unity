@@ -377,26 +377,6 @@ namespace Cognitive3D
             GUILayout.Space(size);
         }
 
-        /// <summary>
-        /// TextField with copy-paste support
-        /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength, string styleOverride = null)
-        {
-            int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
-            if (textFieldID == 0)
-            {
-                return value;
-            }
-            if (styleOverride == null)
-            {
-                return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
-            }
-            else
-            {
-                return GUI.TextField(rect, value, maxlength, styleOverride);
-            }
-        }
-
         #endregion
 
         #region Icons and Textures
