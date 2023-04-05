@@ -8,7 +8,7 @@ namespace Cognitive3D
 {
     internal class ProjectSetupWindow : EditorWindow
     {
-        Rect steptitlerect = new Rect(30, 5, 100, 440);
+        readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -57,7 +57,7 @@ namespace Cognitive3D
         }
         Page currentPage;
 
-        static int lastDevKeyResponseCode = 0;
+        int lastDevKeyResponseCode = 0;
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -95,7 +95,8 @@ namespace Cognitive3D
                 case Page.DynamicSetup:
                     DynamicUpdate();
                     break;
-                default: break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             DrawFooter();
@@ -252,7 +253,7 @@ namespace Cognitive3D
         {
             if (responseCode != 200)
             {
-                Debug.LogError("GetApplicationKeyResponse response code: " + responseCode);
+                Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
                 return;
             }
             ApplicationKeyResponseData responseData = JsonUtility.FromJson<ApplicationKeyResponseData>(text);
@@ -278,7 +279,7 @@ namespace Cognitive3D
         private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
         {
             System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dateTime = dateTime.AddSeconds(unixTimeStamp/1000).ToLocalTime();
+            dateTime = dateTime.AddSeconds(unixTimeStamp/1000.0).ToLocalTime();
             return dateTime;
         }
 
@@ -286,7 +287,7 @@ namespace Cognitive3D
         {
             if (responseCode != 200)
             {
-                Debug.LogError("GetSubscriptionResponse response code: " + responseCode);
+                Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
                 return;
             }
 
@@ -313,7 +314,7 @@ namespace Cognitive3D
 
         #endregion
 
-        bool hasDoneInitialSDKSelection = false;
+        bool hasDoneInitialSDKSelection;
         void GetSelectedSDKs()
         {
             if (hasDoneInitialSDKSelection == false)
@@ -378,7 +379,7 @@ namespace Cognitive3D
             }
         }
 
-        List<SDKDefine> SDKNamesDefines = new List<SDKDefine>()
+        readonly List<SDKDefine> SDKNamesDefines = new List<SDKDefine>
         {
             new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
@@ -482,12 +483,12 @@ namespace Cognitive3D
             if (result)
             {
                 //ok
-                selectedsdks = new List<string>() { selection };
+                selectedsdks = new List<string> { selection };
             }
             else
             {
                 //cancel or close popup
-                selectedsdks = new List<string>() { "C3D_DEFAULT" };
+                selectedsdks = new List<string> { "C3D_DEFAULT" };
             }
         }
 
@@ -558,8 +559,8 @@ namespace Cognitive3D
         #region Glia Setup
         //added to tell developer to add assemblies so C3D can use Glia api
 
-        bool hasDoneGliaStartCheck = false;
-        bool gliaAssemblyExists = false;
+        bool hasDoneGliaStartCheck;
+        bool gliaAssemblyExists;
 
         void GliaStart()
         {
@@ -630,8 +631,8 @@ namespace Cognitive3D
         #region SRAnipal Setup
         //added to tell developer to add assemblies so C3D can use sranipal api
 
-        bool hasDoneSRAnipalStartCheck = false;
-        bool sranipalAssemblyExists = false;
+        bool hasDoneSRAnipalStartCheck;
+        bool sranipalAssemblyExists;
 
         void SRAnipalStart()
         {
@@ -734,8 +735,8 @@ namespace Cognitive3D
 
         #region WaitForCompile
 
-        //static so it will reset on recompile
-        static double compileStartTime = -1;
+        [System.NonSerialized]
+        double compileStartTime = -1;
 
         void WaitForCompile()
         {
@@ -830,7 +831,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.LogError("Developer Key invalid or expired");
+                Debug.LogError("Developer Key invalid or expired: " + error);
             }
         }
 
@@ -927,6 +928,8 @@ namespace Cognitive3D
                         onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
                     }
                     break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             if (appearDisabled)
