@@ -27,10 +27,10 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            boundaryPointsArray = new Vector3[4];
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
+            boundaryPointsArray = new Vector3[4];
             trackingSpace = GameObject.FindObjectOfType<OVRCameraRig>().trackingSpace;
 #endif
             //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_PoseEventHandler;
@@ -100,6 +100,7 @@ namespace Cognitive3D.Components
 #endif
         }
 
+#if C3D_OCULUS
         private bool HasBoundaryChanged()
         {
             Vector3[] temporaryArray;
@@ -113,6 +114,8 @@ namespace Cognitive3D.Components
             }
             return false;
         }
+#endif
+
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
             bool result = false;
