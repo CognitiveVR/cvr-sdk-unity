@@ -418,7 +418,7 @@ namespace Cognitive3D
             }
 
             //specific assets
-            var SRAnipalAssets = AssetDatabase.FindAssets("SRanipal.dll");
+            var SRAnipalAssets = AssetDatabase.FindAssets("SRanipal");
             if (SRAnipalAssets.Length > 0)
             {
                 DisplayRecommendationPopup("C3D_SRANIPAL","SRanipal");
@@ -432,7 +432,7 @@ namespace Cognitive3D
                 return;
             }
 
-            var OculusIntegrationAssets = AssetDatabase.FindAssets("OVRPlugin.cs");
+            var OculusIntegrationAssets = AssetDatabase.FindAssets("t:assemblydefinitionasset oculus.vr");
             if (OculusIntegrationAssets.Length > 0)
             {
                 DisplayRecommendationPopup("C3D_OCULUS","Oculus Integration");
@@ -454,6 +454,13 @@ namespace Cognitive3D
                     DisplayRecommendationPopup("C3D_STEAMVR2", "SteamVR Package");
                     return;
                 }
+            }
+
+            var SteamVRAssets = AssetDatabase.FindAssets("t:assemblydefinitionasset steamvr");
+            if (SteamVRAssets.Length > 0)
+            {
+                DisplayRecommendationPopup("C3D_STEAMVR2", "SteamVR Package");
+                return;
             }
 
             //default fallback

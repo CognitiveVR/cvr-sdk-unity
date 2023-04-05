@@ -44,7 +44,7 @@ namespace Cognitive3D
                 EditorPrefs.SetString("cognitive_sdk_version", Cognitive3D_Manager.SDK_VERSION);
             }
 
-            if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup)
+            if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup && !EditorCore.HasC3DDefine())
             {
                 Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup = true;
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);

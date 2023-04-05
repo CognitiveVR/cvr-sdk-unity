@@ -101,6 +101,14 @@ namespace Cognitive3D
             {
                 DestroyImmediate(isoSceneImage);
             }
+
+            UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode -= EditorSceneManager_activeSceneChangedInEditMode;
+            UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode += EditorSceneManager_activeSceneChangedInEditMode;
+        }
+
+        private void EditorSceneManager_activeSceneChangedInEditMode(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
+        {
+            initialPlayerSetup = false;
         }
 
         void WelcomeUpdate()
@@ -151,7 +159,6 @@ namespace Cognitive3D
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
-            GUI.Label(steptitlerect, "PLAYER SETUP", "steptitle");
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
 
@@ -428,20 +435,72 @@ namespace Cognitive3D
             }
 #if C3D_STEAMVR2
 
-            if (GUI.Button(new Rect(150, 380, 200, 30), "Open SteamVR Input"))
+            //generate default input file if it doesn't already exist
+            bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
+            if (GUI.Button(new Rect(150, 380, 200, 30), "Load SteamVR Inputs"))
             {
-                //may show a popup asking to generate default action.json
-                Valve.VR.SteamVR_Input_EditorWindow.ShowWindow();
+                if (SteamVR_Input.actionFile == null)
+                {
+                    bool initializeSuccess = SteamVR_Input.InitializeFile(false, false);
+
+                    if (initializeSuccess == false)
+                    {
+                        //copy
+                        SteamVR_CopyExampleInputFiles.CopyFiles(true);
+                        System.Threading.Thread.Sleep(1000);
+                        SteamVR_Input.InitializeFile();
+
+                        //save
+                        SteamVR_Input.actionFile.SaveHelperLists();
+                        SteamVR_Input.actionFile.Save(SteamVR_Input.GetActionsFilePath());
+                        SteamVR_Input_ActionManifest_Manager.CleanBindings(true);
+                        Debug.Log("<b>[SteamVR Input]</b> Saved actions manifest successfully.");
+                        SteamVR_Input_Generator.BeginGeneration();
+                    }
+                }
             }
 
-            //GUI.Label(new Rect(100, 372, 300, 20), "You must have an 'actions.json' file generated from SteamVR");
+            if (hasInputActionFile)
+            {
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+            }
+
+            //check that the action file has c3d input actions
+            bool hasAppendedActionSet = false;
+            SteamVR_Input_ActionFile actionfile;
+            if (LoadActionFile(out actionfile))
+            {
+                var cognitiveActionSet = new SteamVR_Input_ActionFile_ActionSet() { name = "/actions/C3D_Input", usage = "single" };
+                if (actionfile.action_sets.Contains(cognitiveActionSet))
+                {
+                    hasAppendedActionSet = true;
+                }
+            }
+
             if (GUI.Button(new Rect(150, 420, 200, 30), "Append Cognitive Action Set"))
             {
+                if (SteamVR_Input_EditorWindow.IsOpen())
+                {
+                    SteamVR_Input_EditorWindow.GetOpenWindow().Close();
+                }
                 AppendSteamVRActionSet();
                 SetDefaultBindings();
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
             }
+            if (hasAppendedActionSet)
+            {
+                GUI.Label(new Rect(120, 420, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+            }
+            else
+            {
+                GUI.Label(new Rect(120, 420, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+            }
 
+            //generate files for c3d action set
             if (GUI.Button(new Rect(150, 460, 200, 30), "Save and Generate Action Sets"))
             {
                 Valve.VR.SteamVR_Input.actionFile.SaveHelperLists();
@@ -450,7 +509,7 @@ namespace Cognitive3D
                 Debug.Log("<b>[SteamVR Input]</b> Saved actions manifest successfully.");
                 Valve.VR.SteamVR_Input_Generator.BeginGeneration();
             }
-            if (DoesC3DInputActionSetExist())
+            if (hasInputActionFile && hasAppendedActionSet && DoesC3DInputActionSetExist())
             {
                 GUI.Label(new Rect(120, 460, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
@@ -1207,7 +1266,6 @@ namespace Cognitive3D
             string actionsFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/actions.json";
             if (!File.Exists(actionsFilePath))
             {
-                Debug.LogErrorFormat("<b>[SteamVR]</b> Actions file doesn't exist: {0}", actionsFilePath);
                 actionFile = new SteamVR_Input_ActionFile();
                 return false;
             }
