@@ -165,7 +165,7 @@ namespace Cognitive3D
             window.maxSize = new Vector2(600, 550);
             window.Show();
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-            needsRefreshDevKey = false;
+            window.needsRefreshDevKey = false;
             window.footerHelpPage = 0;
         }
 
@@ -177,11 +177,11 @@ namespace Cognitive3D
             window.position = new Rect(position.x+5, position.y+5, 600, 550);
             window.Show();
             EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-            needsRefreshDevKey = false;
+            window.needsRefreshDevKey = false;
             window.footerHelpPage = 0;
         }
 
-        static bool needsRefreshDevKey = true;
+        bool needsRefreshDevKey = true;
         static int lastResponseCode = 200;
         static void GetDevKeyResponse(int responseCode, string error, string text)
         {
@@ -787,7 +787,7 @@ namespace Cognitive3D
                 //IMPROVEMENT filter should be applied to id pools
 
                 entry.visible = false;
-                if (filterMeshes && entry.objectReference.UseCustomMesh && entry.meshName.ToLower().Contains(compareString))
+                if (filterMeshes && entry.objectReference.UseCustomMesh && entry.meshName.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
                 {
                     entry.visible = true;
                 }
@@ -795,7 +795,7 @@ namespace Cognitive3D
                 {
                     entry.visible = true;
                 }
-                else if (filterGameObjects && entry.gameobjectName.ToLower().Contains(compareString))
+                else if (filterGameObjects && entry.gameobjectName.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
                 {
                     entry.visible = true;
                 }

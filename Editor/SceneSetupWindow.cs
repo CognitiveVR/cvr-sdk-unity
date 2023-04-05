@@ -1159,7 +1159,8 @@ namespace Cognitive3D
                 case Page.ProjectError:
                     buttonrect = new Rect(600, 0, 0, 0);
                     break;
-                default: break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             if (!buttonAppear)

@@ -36,12 +36,6 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        [UnityEditor.Callbacks.DidReloadScripts]
-        private static void OnReload()
-        {
-            SubscriptionExpirationDate = null;
-        }
-
         enum Page
         {
             Welcome,
@@ -57,7 +51,7 @@ namespace Cognitive3D
         }
         Page currentPage;
 
-        int lastDevKeyResponseCode = 0;
+        int lastDevKeyResponseCode;
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -181,7 +175,7 @@ namespace Cognitive3D
         string OrganizationName;
         string SubscriptionPlan;
         long SubscriptionExpirationDateLong;
-        static System.DateTime? SubscriptionExpirationDate;
+        System.DateTime? SubscriptionExpirationDate;
         bool SubscriptionTrial;
 
         void OrganizationUpdate()
@@ -928,6 +922,8 @@ namespace Cognitive3D
                         onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
                     }
                     break;
+                case Page.Wave:
+                    break;
                 default:
                     throw new System.NotSupportedException();
             }
@@ -969,13 +965,20 @@ namespace Cognitive3D
                 case Page.Glia:
                 case Page.SRAnipal:
                 case Page.Wave:
-                case Page.Recompile:
                 case Page.NextSteps:
                     onclick = () => currentPage = Page.SDKSelection;
                     break;
                 case Page.DynamicSetup:
                     onclick = () => currentPage = Page.NextSteps;
                     break;
+                case Page.Organization:
+                case Page.SDKSelection:
+                    break;
+                case Page.Recompile:
+                    buttonDisabled = true;
+                    break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             if (buttonDisabled)
