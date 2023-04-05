@@ -29,9 +29,9 @@ namespace Cognitive3D
             public string name;
             public string mesh;
             public string id;
-            public float[] scaleCustom = new float[3] { 1, 1, 1 };
-            public float[] position = new float[3] { 0, 0, 0 };
-            public float[] rotation = new float[4] { 0, 0, 0, 1 };
+            public float[] scaleCustom = new float[] { 1, 1, 1 };
+            public float[] position = new float[] { 0, 0, 0 };
+            public float[] rotation = new float[] { 0, 0, 0, 1 };
             public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom)
             {
                 name = _name;
@@ -64,18 +64,18 @@ namespace Cognitive3D
     internal class RenameDynamicWindow : EditorWindow
     {
         static DynamicObjectsWindow sourceWindow;
-        static string defaultMeshName;
+        string defaultMeshName;
         static System.Action<string> action;
         public static void Init(DynamicObjectsWindow dynamicsWindow, string defaultName, System.Action<string> renameAction, string title)
         {
             RenameDynamicWindow window = (RenameDynamicWindow)EditorWindow.GetWindow(typeof(RenameDynamicWindow), true, title);
             window.ShowUtility();
             sourceWindow = dynamicsWindow;
-            defaultMeshName = defaultName;
+            window.defaultMeshName = defaultName;
             action = renameAction;
         }
 
-        bool hasDoneInitialFocus = false;
+        bool hasDoneInitialFocus;
         void OnGUI()
         {
             GUI.SetNextControlName("initialFocus");
@@ -181,8 +181,6 @@ namespace Cognitive3D
             window.footerHelpPage = 0;
         }
 
-        string ErrorColorString = "<color=#880000ff>";
-
         static bool needsRefreshDevKey = true;
         static int lastResponseCode = 200;
         static void GetDevKeyResponse(int responseCode, string error, string text)
@@ -197,7 +195,7 @@ namespace Cognitive3D
             else
             {
                 EditorUtility.DisplayDialog("Your developer key has expired", "Please log in to the dashboard, select your project, and generate a new developer key.\n\nNote:\nDeveloper keys allow you to upload and modify Scenes, and the keys expire after 90 days.\nApplication keys authorize your app to send data to our server, and they never expire.", "Ok");
-                Debug.LogError("Developer Key invalid or expired");
+                Debug.LogError("Developer Key invalid: " + error);
             }
         }
 
@@ -465,7 +463,6 @@ namespace Cognitive3D
             for (int i = 0; i < Entries.Count; i++)
             {
                 if (Entries[i].visible == false) { continue; }
-                //if (poolAssets[i] == null) { RefreshSceneDynamics(); GUI.EndScrollView(); return; }
                 dynamicrect = new Rect(30, (usedRows + GuiOffset) * 30, 560, 30);
                 DrawDynamicObjectEntry(Entries[i], dynamicrect, (usedRows + GuiOffset) % 2 == 0);
                 usedRows++;
@@ -474,19 +471,6 @@ namespace Cognitive3D
             GUI.Box(new Rect(30, 80, 525, scrollareaHeight), "", "box_sharp_alpha");
 
             //buttons
-
-            string scenename = "Not Saved";
-            int versionnumber = 0;
-            //string buttontextstyle = "button_bluetext";
-            if (currentscene == null || string.IsNullOrEmpty(currentscene.SceneId))
-            {
-                //buttontextstyle = "button_disabledtext";
-            }
-            else
-            {
-                scenename = currentscene.SceneName;
-                versionnumber = currentscene.VersionNumber;
-            }
 
             int selectionCount = 0;
             foreach (var entry in Entries)
@@ -700,7 +684,7 @@ namespace Cognitive3D
         {
             Entries.Sort(delegate (Entry x, Entry y)
             {
-                return string.Compare(x.gameobjectName, y.gameobjectName);
+                return string.Compare(x.gameobjectName, y.gameobjectName, true, System.Globalization.CultureInfo.InvariantCulture);
             });
             if (SortMethod == SortByMethod.ReverseGameObjectName)
             {
@@ -712,7 +696,7 @@ namespace Cognitive3D
         {
             Entries.Sort(delegate (Entry x, Entry y)
             {
-                return string.Compare(x.meshName, y.meshName);
+                return string.Compare(x.meshName, y.meshName, true, System.Globalization.CultureInfo.InvariantCulture);
             });
             if (SortMethod == SortByMethod.ReverseMeshName)
             {
@@ -784,7 +768,7 @@ namespace Cognitive3D
         {
             foreach (var commonMesh in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
             {
-                if (commonMesh.ToLower().Contains(search))
+                if (commonMesh.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(search))
                 {
                     return true;
                 }
@@ -794,7 +778,7 @@ namespace Cognitive3D
 
         public void FilterList(string inputstring)
         {
-            string compareString = inputstring.ToLower();
+            string compareString = inputstring.ToLower(System.Globalization.CultureInfo.InvariantCulture);
             foreach (var entry in Entries)
             {
                 if (entry == null) { continue; }
@@ -826,7 +810,7 @@ namespace Cognitive3D
                         }
                     }
                 }
-                else if (filterIds && !entry.isIdPool && entry.objectReference.CustomId.ToLower().Contains(compareString))
+                else if (filterIds && !entry.isIdPool && entry.objectReference.CustomId.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
                 {
                     entry.visible = true;
                 }
@@ -882,6 +866,7 @@ namespace Cognitive3D
             {
                 if (e.mousePosition.x < rect.x + 00 || e.mousePosition.x > rect.x + rect.width - 80 || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
                 {
+                    //outside of the button rect
                 }
                 else
                 {
@@ -971,7 +956,6 @@ namespace Cognitive3D
 
             //gameobject name or id pool count
             GUI.Label(gameobjectRect, dynamic.gameobjectName, dynamiclabel);
-            //GUI.Label(mesh, dynamic.objectReference.UseCustomMesh?dynamic.meshName:dynamic.objectReference.CommonMesh.ToString(), dynamiclabel);
             GUI.Label(mesh, dynamic.meshName, dynamiclabel);
 
             //id type identification
@@ -993,12 +977,7 @@ namespace Cognitive3D
             }
 
             //has mesh exported
-            if (dynamic.objectReference == null)
-            {
-                //likely a pool
-                //TODO check export directory for files that match the mesh name
-            }
-            else
+            if (dynamic.objectReference != null)
             {
                 //has been exported
                 if (!dynamic.objectReference.UseCustomMesh || EditorCore.GetExportedDynamicObjectNames().Contains(dynamic.meshName))
@@ -1045,8 +1024,6 @@ namespace Cognitive3D
             GUI.DrawTexture(new Rect(0, 500, 600, 50), EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
 
-            //string tooltip = "";
-
             //all, unless selected
             int selectionCount = 0;
             int selectedEntries = 0;
@@ -1067,12 +1044,7 @@ namespace Cognitive3D
             var currentScene = Cognitive3D_Preferences.FindCurrentScene();
             string scenename = "Not Saved";
             int versionnumber = 0;
-            //string buttontextstyle = "button_bluetext";
-            if (currentScene == null || string.IsNullOrEmpty(currentScene.SceneId))
-            {
-                //buttontextstyle = "button_disabledtext";
-            }
-            else
+            if (currentScene != null && string.IsNullOrEmpty(currentScene.SceneId))
             {
                 scenename = currentScene.SceneName;
                 versionnumber = currentScene.VersionNumber;
@@ -1210,7 +1182,7 @@ namespace Cognitive3D
                 }
 
                 //upload meshes and ids
-                EditorCore.RefreshSceneVersion(delegate ()
+                EditorCore.RefreshSceneVersion(delegate
                 {
                     if (ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true))
                     {
@@ -1236,7 +1208,7 @@ namespace Cognitive3D
                             {
                                 foreach (var poolid in entry.poolReference.Ids)
                                 {
-                                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[3] { 1, 1, 1 }, new float[3] { 0, 0, 0 }, new float[4] { 0, 0, 0, 1 }));
+                                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[] { 1, 1, 1 }, new float[] { 0, 0, 0 }, new float[] { 0, 0, 0, 1 }));
                                 }
                             }
                         }
@@ -1252,9 +1224,6 @@ namespace Cognitive3D
         /// </summary>
         public static void UploadManifest(AggregationManifest manifest, System.Action callback, System.Action nodynamicscallback = null)
         {
-            //if (Manifest == null) { Manifest = new AggregationManifest(); }
-            //if (SceneVersionCollection == null) { Debug.LogError("SceneVersionCollection is null! Make sure RefreshSceneVersion was called before this"); return; }
-
             if (manifest.objects.Count == 0)
             {
                 Debug.LogWarning("Aggregation Manifest has nothing in list!");
@@ -1264,7 +1233,6 @@ namespace Cognitive3D
                 }
                 return;
             }
-
 
             int manifestCount = 0;
             //write up manifets into parts (if needed)
@@ -1297,15 +1265,14 @@ namespace Cognitive3D
                     }
                 }
             }
-            //Debug.Log("send " + manifestCount + " manifest requests");
         }
 
         static bool ManifestToJson(AggregationManifest manifest, out string json)
         {
-            json = "{\"objects\":[";
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append("{\"objects\":[");
 
             List<string> usedIds = new List<string>();
-
             bool containsValidEntry = false;
             foreach (var entry in manifest.objects)
             {
@@ -1313,19 +1280,50 @@ namespace Cognitive3D
                 if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
                 if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id (" + entry.id + ") that already exists in the scene. This may not be aggregated correctly"); }
                 usedIds.Add(entry.id);
-                json += "{";
-                json += "\"id\":\"" + entry.id + "\",";
-                json += "\"mesh\":\"" + entry.mesh + "\",";
-                json += "\"name\":\"" + entry.name + "\",";
-                json += "\"scaleCustom\":[" + entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "],";
-                json += "\"initialPosition\":[" + entry.position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "],";
-                json += "\"initialRotation\":[" + entry.rotation[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + entry.rotation[3].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]";
-                json += "},";
+                sb.Append("{");
+                sb.Append("\"id\":\"");
+                sb.Append(entry.id);
+                sb.Append("\",");
+
+                sb.Append("\"mesh\":\"");
+                sb.Append(entry.mesh);
+                sb.Append("\",");
+
+                sb.Append("\"name\":\"");
+                sb.Append(entry.name);
+                sb.Append("\",");
+
+                sb.Append("\"scaleCustom\":[");
+                sb.Append(entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append("],");
+
+                sb.Append("\"initialPosition\":[");
+                sb.Append(entry.position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append("],");
+
+                sb.Append("\"initialRotation\":[");
+                sb.Append(entry.rotation[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.rotation[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.rotation[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append(",");
+                sb.Append(entry.rotation[3].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append("]");
+                sb.Append("},");
                 containsValidEntry = true;
             }
-
-            json = json.Remove(json.Length - 1, 1);
-            json += "]}";
+            sb.Remove(sb.Length - 1, 1);
+            sb.Append("]}");
+            json = sb.ToString();
 
             return containsValidEntry;
         }
@@ -1362,7 +1360,7 @@ namespace Cognitive3D
 
         static void PostManifestResponse(int responsecode, string error, string text)
         {
-            Util.logDebug("Manifest upload complete. response: " + text + (!string.IsNullOrEmpty(error) ? " error: " + error : ""));
+            Util.logDebug("Manifest upload complete. responseCode: " + responsecode+" text: " + text + (!string.IsNullOrEmpty(error) ? " error: " + error : ""));
             if (PostManifestResponseAction != null)
             {
                 PostManifestResponseAction.Invoke();
@@ -1389,9 +1387,9 @@ namespace Cognitive3D
                     if (!string.IsNullOrEmpty(dynamic.MeshName))
                     {
                         manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),
-                            new float[3] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
-                            new float[3] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
-                            new float[4] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));
+                            new float[] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
+                            new float[] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
+                            new float[] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));
                     }
                     else
                     {
@@ -1416,12 +1414,14 @@ namespace Cognitive3D
 
             if (meshNameMissing)
             {
-                string debug = "Dynamic Objects missing mesh name:\n";
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append("Dynamic Objects missing mesh name:\n");
                 foreach (var v in missingMeshGameObjects)
                 {
-                    debug += v + "\n";
+                    sb.Append(v);
+                    sb.Append("\n");
                 }
-                Debug.LogWarning(debug);
+                Debug.LogWarning(sb.ToString());
                 EditorUtility.DisplayDialog("Error", "One or more Dynamic Objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
             }
         }
