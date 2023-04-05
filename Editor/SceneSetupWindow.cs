@@ -437,7 +437,7 @@ namespace Cognitive3D
 
             //generate default input file if it doesn't already exist
             bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(150, 380, 200, 30), "Load SteamVR Inputs"))
+            if (GUI.Button(new Rect(150, 380, 200, 30), "Append Input Bindings"))
             {
                 if (SteamVR_Input.actionFile == null)
                 {
@@ -449,73 +449,23 @@ namespace Cognitive3D
                         SteamVR_CopyExampleInputFiles.CopyFiles(true);
                         System.Threading.Thread.Sleep(1000);
                         SteamVR_Input.InitializeFile();
-
-                        //save
-                        SteamVR_Input.actionFile.SaveHelperLists();
-                        SteamVR_Input.actionFile.Save(SteamVR_Input.GetActionsFilePath());
-                        SteamVR_Input_ActionManifest_Manager.CleanBindings(true);
-                        Debug.Log("<b>[SteamVR Input]</b> Saved actions manifest successfully.");
-                        SteamVR_Input_Generator.BeginGeneration();
                     }
                 }
-            }
-
-            if (hasInputActionFile)
-            {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleEmpty32, "image_centered");
-            }
-
-            //check that the action file has c3d input actions
-            bool hasAppendedActionSet = false;
-            SteamVR_Input_ActionFile actionfile;
-            if (LoadActionFile(out actionfile))
-            {
-                var cognitiveActionSet = new SteamVR_Input_ActionFile_ActionSet() { name = "/actions/C3D_Input", usage = "single" };
-                if (actionfile.action_sets.Contains(cognitiveActionSet))
-                {
-                    hasAppendedActionSet = true;
-                }
-            }
-
-            if (GUI.Button(new Rect(150, 420, 200, 30), "Append Cognitive Action Set"))
-            {
                 if (SteamVR_Input_EditorWindow.IsOpen())
                 {
                     SteamVR_Input_EditorWindow.GetOpenWindow().Close();
                 }
                 AppendSteamVRActionSet();
                 SetDefaultBindings();
-                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-            }
-            if (hasAppendedActionSet)
-            {
-                GUI.Label(new Rect(120, 420, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(120, 420, 30, 30), EditorCore.CircleEmpty32, "image_centered");
-            }
-
-            //generate files for c3d action set
-            if (GUI.Button(new Rect(150, 460, 200, 30), "Save and Generate Action Sets"))
-            {
-                Valve.VR.SteamVR_Input.actionFile.SaveHelperLists();
-                Valve.VR.SteamVR_Input.actionFile.Save(SteamVR_Input.GetActionsFilePath());
-                Valve.VR.SteamVR_Input_ActionManifest_Manager.CleanBindings(true);
-                Debug.Log("<b>[SteamVR Input]</b> Saved actions manifest successfully.");
                 Valve.VR.SteamVR_Input_Generator.BeginGeneration();
             }
-            if (hasInputActionFile && hasAppendedActionSet && DoesC3DInputActionSetExist())
+            if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(120, 460, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(120, 460, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleEmpty32, "image_centered");
             }
 #endif
         }
@@ -1240,6 +1190,7 @@ namespace Cognitive3D
                 //if actions.json already contains cognitive action set
                 if (actionfile.action_sets.Contains(cognitiveActionSet))
                 {
+                    Debug.Log(SteamVR_Input.GetActionsFileName());
                     Debug.Log("SteamVR action set already contains Cognitive Action Set. Skip adding action set to actions.json");
                     return;
                 }
@@ -1253,7 +1204,7 @@ namespace Cognitive3D
                 actionfile.action_sets.Add(cognitiveActionSet);
 
                 SaveActionFile(actionfile);
-                Debug.Log("SceneSetup.AppendSteamVRActionSet Added Cognitive3D Action Set");
+                Util.logDevelopment("SceneSetup.AppendSteamVRActionSet Added Cognitive3D Action Set");
             }
             else
             {
@@ -1279,11 +1230,7 @@ namespace Cognitive3D
         {
             string actionsFilePath = SteamVR_Input.GetActionsFileFolder(true) +"/actions.json";
             string newJSON = JsonConvert.SerializeObject(actionFile, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
             File.WriteAllText(actionsFilePath, newJSON);
-
-            Debug.Log("saved " + SteamVR_Settings.instance.actionsFilePath + " with Cognitive3D input action set");
-
             return true;
         }
 
@@ -1347,12 +1294,12 @@ namespace Cognitive3D
                 actionlist.sources.Add(bindingSource_right_pad);
 
                 bindingfile.bindings.Add("/actions/c3d_input", actionlist);
-                Debug.Log("SceneSetup.SetDefaultBindings save Cognitive3D input bindings");
+                Util.logDevelopment("SceneSetup.SetDefaultBindings save Cognitive3D input bindings");
                 SaveBindingFile(bindingfile);
             }
             else
             {
-                Debug.Log("SceneSetup.SetDefaultBindings failed to load steamvr actions");
+                Debug.LogError("SceneSetup.SetDefaultBindings failed to load steamvr binding file");
             }
         }
 
@@ -1398,5 +1345,10 @@ namespace Cognitive3D
             return true;
         }
 #endif
+
+        private void OnDestroy()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode -= EditorSceneManager_activeSceneChangedInEditMode;
+        }
     }
 }
