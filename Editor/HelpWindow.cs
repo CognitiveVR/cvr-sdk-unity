@@ -11,8 +11,8 @@ namespace Cognitive3D
 {
     internal class HelpWindow : EditorWindow
     {
-        Color DarkGrey = new Color(0.21f, 0.21f, 0.21f);
-        Rect steptitlerect = new Rect(30, 5, 100, 440);
+        readonly Color CommentAreaDarkGrey = new Color(0.21f, 0.21f, 0.21f);
+        readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             HelpWindow window = (HelpWindow)EditorWindow.GetWindow(typeof(HelpWindow), true, "Help (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -80,7 +80,7 @@ namespace Cognitive3D
                     ReadyRoomUpdate();
                     break;
                 default:
-                    break;
+                    throw new System.NotSupportedException();
             }
 
             Repaint(); //manually repaint gui each frame to make sure it's responsive
@@ -167,7 +167,7 @@ namespace Cognitive3D
         {
             int temp;
             temp = EditorPrefs.GetInt("c3d-help");
-            seenEditorPages = new BitArray(new int[] { temp });
+            seenEditorPages = new BitArray(new [] { temp });
         }
 
         bool HasBeenViewed(Page page)
@@ -202,7 +202,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "CUSTOM EVENTS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "A <b>Custom Event</b> is a feature to highlight specific interactions and incidents during the session.", "normallabel");
             GUI.Label(new Rect(30, 110, 440, 440), "You are able to view these Custom Events in the session details page or real-time in Scene Explorer.", "normallabel");
-            EditorGUI.DrawRect(new Rect(30, 180, 440, 80), DarkGrey);
+            EditorGUI.DrawRect(new Rect(30, 180, 440, 80), CommentAreaDarkGrey);
             EditorGUI.SelectableLabel(new Rect(40, 190, 420, 60), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
             if (GUI.Button(new Rect(115, 300, 270, 150), EditorCore.OnboardingVideo, "image_centered"))
@@ -224,7 +224,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SENSORS", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "<b>Sensors</b> are a feature to record a value or property over time.", "normallabel");
             GUI.Label(new Rect(30, 90, 440, 440), "If you have the hardware to support it, you can record Sensor data for Heart Rate, GSR, ECG,  and view it as a graph on the dashboard.\n\nSeveral types of data are recorded by default, such as FPS and Battery Temperature.", "normallabel");
-            EditorGUI.DrawRect(new Rect(30, 230, 440, 110), DarkGrey);
+            EditorGUI.DrawRect(new Rect(30, 230, 440, 110), CommentAreaDarkGrey);
             GUI.Box(new Rect(150, 345, 200, 150), EditorCore.SensorsFeature, "image_centered");
             //required for sensor code snippet to have unique controlid
             EditorGUI.SelectableLabel(new Rect(4000, 190, 420, 60), "ignore", "code_snippet");
@@ -324,7 +324,6 @@ namespace Cognitive3D
             if (GUI.Button(buttonrect, "Open Dynamic Object Window"))
             {
                 DynamicObjectsWindow.Init();
-                //this.Close();
             }
         }        
         void DrawSceneWindowButton()
@@ -333,7 +332,6 @@ namespace Cognitive3D
             if (GUI.Button(buttonrect, "Open Scene Setup Window"))
             {
                 SceneSetupWindow.Init();
-                //this.Close();
             }
         }
 
