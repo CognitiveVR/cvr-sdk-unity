@@ -107,7 +107,7 @@ namespace Cognitive3D
             UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode += EditorSceneManager_activeSceneChangedInEditMode;
         }
 
-        private void EditorSceneManager_activeSceneChangedInEditMode(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
+        private void EditorSceneManager_activeSceneChangedInEditMode(UnityEngine.SceneManagement.Scene ignore1, UnityEngine.SceneManagement.Scene ignore2)
         {
             initialPlayerSetup = false;
         }

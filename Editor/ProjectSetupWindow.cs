@@ -822,6 +822,7 @@ namespace Cognitive3D
                 //dev key is fine
                 currentPage++;
                 SaveDevKey();
+                Util.logDevelopment(text);
             }
             else
             {

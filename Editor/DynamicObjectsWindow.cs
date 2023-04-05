@@ -191,6 +191,7 @@ namespace Cognitive3D
                 //dev key is fine
                 DynamicObjectsWindow window = (DynamicObjectsWindow)EditorWindow.GetWindow(typeof(DynamicObjectsWindow));
                 window.GetDashboardManifest();
+                Util.logDevelopment(text);
             }
             else
             {
@@ -609,7 +610,7 @@ namespace Cognitive3D
             RefreshList();
         }
 
-        List<DashboardObject> dashboardObjects = new List<DashboardObject>();
+        readonly List<DashboardObject> dashboardObjects = new List<DashboardObject>();
         void GetDashboardManifest()
         {
             var currentSceneSettings = Cognitive3D_Preferences.FindCurrentScene();
