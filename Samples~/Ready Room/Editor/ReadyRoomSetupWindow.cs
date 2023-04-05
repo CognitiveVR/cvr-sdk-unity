@@ -71,7 +71,7 @@ namespace Cognitive3D
                 case "custom": CustomUpdate(); break;
                 case "scene menu": SceneMenuUpdate(); break;
                 case "overview": OverviewUpdate(); break;
-                default: break;
+                default: throw new System.NotSupportedException();
             }
 
             DrawFooter();

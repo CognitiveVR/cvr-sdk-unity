@@ -16,14 +16,14 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
-        Rect steptitlerect = new Rect(30, 5, 100, 440);
+        readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            initialPlayerSetup = false;
+            window.initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -38,7 +38,7 @@ namespace Cognitive3D
             window.maxSize = new Vector2(500, 550);
             window.position = new Rect(position.x+5, position.y+5, 500, 550);
             window.Show();
-            initialPlayerSetup = false;
+            window.initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -87,7 +87,8 @@ namespace Cognitive3D
                 case Page.SetupComplete:
                     DoneUpdate();
                     break;
-                default: break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             DrawFooter();
@@ -155,7 +156,8 @@ namespace Cognitive3D
         GameObject rightcontroller;
         GameObject mainCameraObject;
 
-        static bool initialPlayerSetup;
+        [System.NonSerialized]
+        bool initialPlayerSetup;
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
@@ -241,7 +243,7 @@ namespace Cognitive3D
             }
         }
 
-        bool AllControllerSetupComplete = false;
+        bool AllControllerSetupComplete;
         void ControllerUpdate()
         {
             PlayerSetupStart();
@@ -563,6 +565,8 @@ namespace Cognitive3D
 
         void ExportSceneUpdate()
         {
+            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
             GUI.Label(steptitlerect, "SCENE EXPORT", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "All geometry will be exported and uploaded to our dashboard. This will provide context for the spatial data points we automatically collect.", "normallabel");
             GUI.Label(new Rect(30, 440, 440, 440), "Refer to Online Documentation for more details about exporting scene geometry.", "normallabel");
@@ -598,7 +602,7 @@ namespace Cognitive3D
                 GUI.Label(new Rect(0, 340, 500, 15), "Scene Not Exported", "miniheadercenter");
             }
 
-            if (numberOfLights > 50)
+            if (numberOfLightsInScene > 50)
             {
                 GUI.Label(new Rect(0, 370, 500, 15), "<color=red>For visualization in SceneExplorer, fewer than 50 lights are recommended</color>", "miniheadercenter");
             }
@@ -609,10 +613,7 @@ namespace Cognitive3D
                 {
                     if (EditorUtility.DisplayDialog("Export Paused", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
                     {
-                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
-                        {
-                        }
-                        else
+                        if (!UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                         {
                             return;//cancel from save scene window
                         }
@@ -630,8 +631,6 @@ namespace Cognitive3D
                 System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                 DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
-
-                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 
                 UnityEditor.AssetDatabase.SaveAssets();
@@ -679,7 +678,7 @@ namespace Cognitive3D
             Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects = !Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects;
         }
 
-        int numberOfLights = 0;
+        int numberOfLightsInScene;
 
         bool UploadSceneGeometry = true;
         bool UploadThumbnail = true;
@@ -934,7 +933,7 @@ namespace Cognitive3D
                         }
                     }
 #endif
-                    onclick += () => { numberOfLights = FindObjectsOfType<Light>().Length; };
+                    onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
@@ -950,7 +949,7 @@ namespace Cognitive3D
                     buttonAppear = false;
                     break;
                 case Page.SceneUpload:
-                    System.Action completedmanifestupload = delegate ()
+                    System.Action completedmanifestupload = delegate
                     {
                         if (UploadDynamicMeshes)
                         {
@@ -960,7 +959,7 @@ namespace Cognitive3D
                     };
 
                     //fifth upload manifest
-                    System.Action completedRefreshSceneVersion = delegate ()
+                    System.Action completedRefreshSceneVersion = delegate
                     {
                         if (UploadDynamicMeshes)
                         {
@@ -976,8 +975,8 @@ namespace Cognitive3D
                     };
 
                     //fourth upload dynamics
-                    System.Action<int> completeSceneUpload = delegate (int responseCode) {
-
+                    System.Action<int> completeSceneUpload = delegate (int responseCode)
+                    {
                         if (responseCode == 200 || responseCode == 201)
                         {
                             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
@@ -990,13 +989,18 @@ namespace Cognitive3D
                     };
 
                     //third upload scene
-                    System.Action completeScreenshot = delegate () {
-
+                    System.Action completeScreenshot = delegate
+                    {
                         Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
+                        if (current == null)
+                        {
+                            Debug.LogError("Trying to upload to a scene with no settings");
+                            return;
+                        }
 
                         if (UploadSceneGeometry)
                         {
-                            if (current == null || string.IsNullOrEmpty(current.SceneId))
+                            if (string.IsNullOrEmpty(current.SceneId))
                             {
                                 //new scene
                                 if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
@@ -1031,7 +1035,7 @@ namespace Cognitive3D
                     };
 
                     //second save screenshot
-                    System.Action completedRefreshSceneVersion1 = delegate ()
+                    System.Action completedRefreshSceneVersion1 = delegate
                     {
                         if (UploadThumbnail)
                         {
@@ -1082,6 +1086,8 @@ namespace Cognitive3D
                 case Page.ProjectError:
                     buttonrect = new Rect(600, 0, 0, 0);
                     break;
+                default:
+                    throw new System.NotSupportedException();
             }
 
             if (!buttonAppear)

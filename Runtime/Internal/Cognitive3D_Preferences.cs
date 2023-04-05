@@ -170,7 +170,7 @@ namespace Cognitive3D
             public string SceneId = "";
             public string ScenePath = "";
             public string LastRevision; //utc timestamp on upload
-            public int VersionNumber = 0; //post session data
+            public int VersionNumber; //post session data
             public int VersionId; //attribution. exitpoll?
 
             public SceneSettings(string name, string path)
