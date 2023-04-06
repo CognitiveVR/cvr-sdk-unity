@@ -31,7 +31,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
             boundaryPointsArray = new Vector3[4];
-            trackingSpace = GameObject.FindObjectOfType<OVRCameraRig>().trackingSpace;
+            trackingSpace = TryGetTrackingSpace();
 #endif
             //Cognitive3D_Manager.PoseEvent += Cognitive3D_Manager_PoseEventHandler;
 
@@ -102,12 +102,12 @@ namespace Cognitive3D.Components
             }
             else 
             {
-                trackingSpace = GameObject.FindObjectOfType<OVRCameraRig>().trackingSpace;
+                trackingSpace = TryGetTrackingSpace();
             }
 #endif
         }
 
-#if C3D_OCULUS
+#if true
         private bool HasBoundaryChanged()
         {
             Vector3[] temporaryArray;
@@ -120,6 +120,16 @@ namespace Cognitive3D.Components
                 }
             }
             return false;
+        }
+
+        private Transform TryGetTrackingSpace()
+        {
+            OVRCameraRig cameraRig = GameObject.FindObjectOfType<OVRCameraRig>();
+            if (cameraRig != null)
+            {
+                return cameraRig.trackingSpace;
+            }
+            return null;
         }
 #endif
 
@@ -141,7 +151,7 @@ namespace Cognitive3D.Components
             return result;
         }
 
-        private void Cognitive3D_Manager_OnPreSessionEnd()
+    private void Cognitive3D_Manager_OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
