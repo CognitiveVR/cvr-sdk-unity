@@ -107,7 +107,7 @@ namespace Cognitive3D.Components
 #endif
         }
 
-#if true
+#if C3D_OCULUS
         private bool HasBoundaryChanged()
         {
             Vector3[] temporaryArray;
