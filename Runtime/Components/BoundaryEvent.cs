@@ -100,6 +100,10 @@ namespace Cognitive3D.Components
                 }
                 currentTime = 0;
             }
+            else 
+            {
+                trackingSpace = GameObject.FindObjectOfType<OVRCameraRig>().trackingSpace;
+            }
 #endif
         }
 
