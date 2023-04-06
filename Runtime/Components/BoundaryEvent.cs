@@ -84,19 +84,22 @@ namespace Cognitive3D.Components
             }
 
             // Unity uses y-up coordinate system - the boundary "up" doesn't matters
-            if (!IsPointInPolygon4(boundaryPointsArray, trackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
+            if (trackingSpace != null)
             {
-                if (!exited)
+                if (!IsPointInPolygon4(boundaryPointsArray, trackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
-                    new CustomEvent("c3d.user.exited.boundary").Send();
-                    exited = true;
+                    if (!exited)
+                    {
+                        new CustomEvent("c3d.user.exited.boundary").Send();
+                        exited = true;
+                    }
                 }
+                else
+                {
+                    exited = false;
+                }
+                currentTime = 0;
             }
-            else
-            {
-                exited = false;
-            }
-            currentTime = 0;
 #endif
         }
 
