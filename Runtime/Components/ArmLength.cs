@@ -41,7 +41,7 @@ namespace Cognitive3D.Components
 
             var wait = new WaitForSeconds(Interval);
 
-            while (samples % (SampleCount/SAMPLE_INTERVAL) == 0)
+            while (samples < SampleCount)
             {
                 yield return wait;
 
@@ -66,20 +66,30 @@ namespace Cognitive3D.Components
                 }
 
                 if (includedSample)
+                {
                     samples++;
-            }
+                }
 
-            if (maxSqrDistance > 0)
+                if (samples % (SampleCount / SAMPLE_INTERVAL) == 0)
+                {
+                    SendMaxDistance(maxSqrDistance);
+                }
+            }
+        }
+
+        private void SendMaxDistance(float maxDistance)
+        {
+            if (maxDistance > 0)
             {
                 //send arm length
-                float distance = Mathf.Sqrt(maxSqrDistance);
+                float distance = Mathf.Sqrt(maxDistance);
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
                 {
                     //dashboard expects centimeters
                     Cognitive3D_Manager.SetParticipantProperty("armlength", distance * 100);
-                }    
+                }
             }
         }
 
