@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
-    public class GazeSphere360 : MonoBehaviour
+    internal class GazeSphere360 : MonoBehaviour
     {
         [SerializeField]
         private Camera userCamera;
@@ -14,7 +14,7 @@ namespace Cognitive3D.Components
 
         void Update()
         {
-            this.gameObject.transform.position = userCamera.transform.position;
+            transform.position = userCamera.transform.position;
         }
     }
 }
