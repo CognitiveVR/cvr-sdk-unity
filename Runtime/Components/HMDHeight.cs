@@ -26,6 +26,7 @@ namespace Cognitive3D.Components
         [Tooltip("Distance from HMD Eye height to user's full height")]
         public float ForeheadHeight = 0.11f; //meters
 
+        private const float SAMPLE_INTERVAL = 5;
         float[] heights;
 
         protected override void OnSessionBegin()
@@ -51,9 +52,16 @@ namespace Cognitive3D.Components
 
                 hmdAccumHeight += GameplayReferences.HMD.localPosition.y;
                 heights[i] = GameplayReferences.HMD.localPosition.y;
+                if (i % (SampleCount/SAMPLE_INTERVAL) == 0)
+                {
+                    RecordAndSendMedian(heights, i);
+                }
             }
+        }
 
-            float medianHeight = Median(heights);
+        private void RecordAndSendMedian(float[] heights, int lastIndex)
+        {
+            float medianHeight = Median(heights, lastIndex);
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
@@ -63,13 +71,18 @@ namespace Cognitive3D.Components
             }
         }
 
-        private float Median(float[] items)
+        private float Median(float[] items, int lastIndex)
         {
-            var i = (int)Mathf.Ceil((float)(items.Length - 1) / 2);
+            float[] tempArray = new float[lastIndex + 1];
+            for (int j = 0; j < lastIndex; j++)
+            {
+                tempArray[j] = items[j];
+            }
+            var i = (int)Mathf.Ceil((float)(lastIndex) / 2);
             if (i >= 0)
             {
-                System.Array.Sort(items);
-                return items[i];
+                System.Array.Sort(tempArray);
+                return tempArray[i];
             }
             return 0;
         }

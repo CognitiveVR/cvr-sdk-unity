@@ -21,6 +21,8 @@ namespace Cognitive3D.Components
         [ClampSetting(0.1f)]
         public float Interval = 1;
 
+        private const float SAMPLE_INTERVAL = 5;
+
         [ClampSetting(0, 50)]
         [Tooltip("Distance from HMD to average shoulder height")]
         public float EyeToShoulderHeight = 0.186f; //meters
@@ -39,7 +41,7 @@ namespace Cognitive3D.Components
 
             var wait = new WaitForSeconds(Interval);
 
-            while (samples < SampleCount)
+            while (samples % (SampleCount/SAMPLE_INTERVAL) == 0)
             {
                 yield return wait;
 
