@@ -358,7 +358,7 @@ namespace Cognitive3D
 
             if (!leftControllerIsValid)
             {
-                GUI.Label(new Rect(400, handOffset + 15, 30, 30), new GUIContent(EditorCore.Alert,"Left Controller not set"), "image_centered");
+                GUI.Label(new Rect(400, handOffset + 15, 30, 30), new GUIContent(EditorCore.Alert, "Left Controller not set"), "image_centered");
             }
 
             //right hand label
@@ -433,7 +433,7 @@ namespace Cognitive3D
             }
             else
             {
-                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(118, 340, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
