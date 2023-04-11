@@ -467,7 +467,7 @@ namespace Cognitive3D
             }
             else
             {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(118, 380, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
         }
