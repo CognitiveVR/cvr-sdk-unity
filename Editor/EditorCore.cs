@@ -397,7 +397,7 @@ namespace Cognitive3D
             {
                 if (_circleCheckmark32 == null)
                 {
-                    _circleCheckmark32 = Resources.Load<Texture2D>("Icons/circle grey check 32");
+                    _circleCheckmark32 = Resources.Load<Texture2D>("Icons/circle check 32");
                 }
                 return _circleCheckmark32;
             }

@@ -120,7 +120,7 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 220, 440, 440), "For a guided walkthrough, you can follow the video below:", "normallabel");
 
             //video link
-            if (GUI.Button(new Rect(115, 300, 270, 150), EditorCore.OnboardingVideo, "image_centered"))
+            if (GUI.Button(new Rect(115, 300, 270, 150), "", "video_centered"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }

@@ -1069,7 +1069,7 @@ namespace Cognitive3D
             }
             else
             {
-                GUI.color = new Color(1, 0.9f, 0.9f);
+                GUI.color = EditorCore.BlueishGrey;
                 GUI.DrawTexture(new Rect(0, 450, 650, 150), EditorGUIUtility.whiteTexture);
                 GUI.color = Color.white;
 

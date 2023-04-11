@@ -205,7 +205,7 @@ namespace Cognitive3D
             EditorGUI.DrawRect(new Rect(30, 180, 440, 80), CommentAreaDarkGrey);
             EditorGUI.SelectableLabel(new Rect(40, 190, 420, 60), "new CustomEvent(\"Event Name\").Send()", "code_snippet");
             //video link
-            if (GUI.Button(new Rect(115, 300, 270, 150), EditorCore.OnboardingVideo, "image_centered"))
+            if (GUI.Button(new Rect(115, 300, 270, 150), "", "video_centered"))
             {
                 Application.OpenURL("https://vimeo.com/cognitive3d/videos");
             }
