@@ -10,7 +10,7 @@ using System.IO;
 
 namespace Cognitive3D
 {
-	public interface ICache
+	internal interface ICache
 	{
 		//how many requests are in the cache (url lines + content lines)
 		int NumberOfBatches();
