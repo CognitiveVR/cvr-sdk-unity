@@ -282,13 +282,12 @@ namespace Cognitive3D
 
             //filter
             int searchBarWidth = 300;
-            Rect filterRect = new Rect(600 / 2 - searchBarWidth / 2 - 20, 25, 20, 20);
+            Rect filterRect = new Rect(600 / 2 - searchBarWidth / 2 - 22, 25, 20, 20);
             Rect searchBarRect = new Rect(600 / 2 - searchBarWidth / 2, 25, searchBarWidth, 20);
             Rect searchClearRect = new Rect(600 / 2 + searchBarWidth / 2, 25, 20, 20);
             string temp = GUI.TextField(searchBarRect, searchBarString, 64);
-            if (temp == string.Empty)
+            if (string.IsNullOrEmpty(temp))
             {
-                GUI.Label(searchBarRect, "<size=15>Search</size>", "ghostlabel");
                 if (searchBarString != string.Empty)
                 {
                     ShowAllList();
@@ -302,19 +301,29 @@ namespace Cognitive3D
                 //re-filter the list
                 FilterList(searchBarString);
             }
-            if (GUI.Button(filterRect, EditorCore.FilterIcon, "label"))
+            if (GUI.Button(filterRect, new GUIContent(EditorCore.FilterIcon, "Search by Type"), "ghostlabel"))
             {
                 //generic menu
                 GenericMenu gm = new GenericMenu();
+                gm.AddItem(new GUIContent("Search by Type:"), false,null);
+                gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Meshes"), filterMeshes, OnToggleMeshFilter);
                 gm.AddItem(new GUIContent("GameObject Names"), filterGameObjects, OnToggleGameObjectFilter);
                 gm.AddItem(new GUIContent("Ids"), filterIds, OnToggleIdFilter);
                 gm.ShowAsContext();
             }
-            if (GUI.Button(searchClearRect, EditorCore.ClearIcon, "ghostlabel"))
+
+            if (string.IsNullOrEmpty(temp))
             {
-                searchBarString = string.Empty;
-                FilterList(searchBarString);
+                GUI.Button(searchClearRect, new GUIContent(EditorCore.SearchIcon, "Search"), "ghostlabel");
+            }
+            else
+            {
+                if (GUI.Button(searchClearRect, new GUIContent(EditorCore.ClearIcon, "Clear Search"), "ghostlabel"))
+                {
+                    searchBarString = string.Empty;
+                    FilterList(searchBarString);
+                }
             }
 
             //headers
@@ -792,9 +801,13 @@ namespace Cognitive3D
                 {
                     entry.visible = true;
                 }
-                else if (filterMeshes && !entry.objectReference.UseCustomMesh && CommonMeshesContainsSearch(compareString))
+                else if (filterMeshes && !entry.objectReference.UseCustomMesh && entry.objectReference.IsController && entry.objectReference.IdentifyControllerAtRuntime)
                 {
-                    entry.visible = true;
+                    //controller without a custom mesh - generate at runtime                    
+                    if ("generated at runtime".Contains(compareString))
+                    {
+                        entry.visible = true;
+                    }
                 }
                 else if (filterGameObjects && entry.gameobjectName.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
                 {
@@ -957,7 +970,21 @@ namespace Cognitive3D
 
             //gameobject name or id pool count
             GUI.Label(gameobjectRect, dynamic.gameobjectName, dynamiclabel);
-            GUI.Label(mesh, dynamic.meshName, dynamiclabel);
+            if (dynamic.objectReference != null)
+            {
+                if (dynamic.objectReference.IsController && dynamic.objectReference.IdentifyControllerAtRuntime)
+                {
+                    GUI.Label(mesh, "Generated at Runtime", dynamiclabel);
+                }
+                else
+                {
+                    GUI.Label(mesh, dynamic.meshName, dynamiclabel);
+                }
+            }
+            else
+            {
+                GUI.Label(mesh, dynamic.meshName, dynamiclabel);
+            }
 
             //id type identification
             if (dynamic.isIdPool)
