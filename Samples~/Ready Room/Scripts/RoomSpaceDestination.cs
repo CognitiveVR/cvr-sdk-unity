@@ -4,7 +4,7 @@ using UnityEngine;
 
 //marks an area that should be 'visited' by the player within the room boundaries
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class RoomSpaceDestination : MonoBehaviour
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
-    [CustomEditor(typeof(Cognitive3D.AssessmentManager))]
+    [CustomEditor(typeof(Cognitive3D.ReadyRoom.AssessmentManager))]
     public class AssessmentManagerEditor : Editor
     {
         public override void OnInspectorGUI()

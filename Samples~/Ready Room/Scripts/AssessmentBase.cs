@@ -5,7 +5,7 @@ using UnityEngine;
 //Base class for tasks in Ready Room
 //You can directly call CompleteAssessment or create a subclass for additional logic
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class AssessmentBase : MonoBehaviour
     {

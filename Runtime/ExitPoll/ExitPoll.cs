@@ -8,7 +8,7 @@ namespace Cognitive3D
     namespace Json
     {
         [System.Serializable]
-        public class ExitPollSetJson
+        internal class ExitPollSetJson
         {
             public string customerId;
             public string id;

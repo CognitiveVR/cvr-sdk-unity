@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class RoomBoundsDisplay : MonoBehaviour
     {

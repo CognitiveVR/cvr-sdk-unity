@@ -7,13 +7,13 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    interface ILocalExitpoll
+    internal interface ILocalExitpoll
     {
         bool GetExitpoll(string hookname, out string text);
         void WriteExitpoll(string hookname, string text);
     }
 
-    public class ExitPollLocalDataHandler : ILocalExitpoll
+    internal class ExitPollLocalDataHandler : ILocalExitpoll
     {
         string localExitPollPath;
 

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Cognitive3D
 {
-    public class DualFileCache : ICache
+    internal class DualFileCache : ICache
     {
         string eol_char = System.Environment.NewLine;
         //stack of line lengths of the READ file (excluding line breaks)
