@@ -370,10 +370,6 @@ namespace Cognitive3D
             {
                 replacingSceneId = true;
             }
-            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
-            {
-
-            }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
             {
                 sceneList.Clear();
