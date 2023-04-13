@@ -407,8 +407,16 @@ namespace Cognitive3D
 
         private void SceneManager_SceneUnloaded(UnityEngine.SceneManagement.Scene scene)
         {
-            //TODO for unload scene async, may need to change tracking scene id
-            //a situation where a scene without an ID is loaded additively, then a scene with an id is unloaded, the sceneid will persist
+            SetTrackingScene("", true); 
+            var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
+            if (!string.IsNullOrEmpty(loadingScene.SceneId))
+            {
+
+            }
+            else
+            {
+
+            }
         }
 
 #region Updates and Loops
