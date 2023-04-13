@@ -98,49 +98,49 @@ namespace Cognitive3D
             int leftEdge = 150;
             int width = 200;
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight, 40, 30), HasBeenViewed(Page.Scene) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight, 40, 30), HasBeenViewed(Page.Scene) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight, width, 30), "Scenes", HasBeenViewed(Page.Scene) ? "button_purple" : "button"))
             {
                 currentPage = Page.Scene;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 40, 40, 30), HasBeenViewed(Page.Dynamic) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 40, 40, 30), HasBeenViewed(Page.Dynamic) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+40, width, 30), "Dynamic Objects", HasBeenViewed(Page.Dynamic) ? "button_purple" : "button"))
             {
                 currentPage = Page.Dynamic;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 80, 40, 30), HasBeenViewed(Page.CustomEvent) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 80, 40, 30), HasBeenViewed(Page.CustomEvent) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+80, width, 30), "Custom Events", HasBeenViewed(Page.CustomEvent)?"button_purple":"button"))
             {
                 currentPage = Page.CustomEvent;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 120, 40, 30), HasBeenViewed(Page.ExitPoll) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 120, 40, 30), HasBeenViewed(Page.ExitPoll) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+120, width, 30), "ExitPoll Survey", HasBeenViewed(Page.ExitPoll) ? "button_purple" : "button"))
             {
                 currentPage = Page.ExitPoll;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 160, 40, 30), HasBeenViewed(Page.Sensors) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 160, 40, 30), HasBeenViewed(Page.Sensors) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+160, width, 30), "Sensors", HasBeenViewed(Page.Sensors) ? "button_purple" : "button"))
             {
                 currentPage = Page.Sensors;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 200, 40, 30), HasBeenViewed(Page.Media) ? EditorCore.CircleCheckmark32 : EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 200, 40, 30), HasBeenViewed(Page.Media) ? EditorCore.CircleCheckmark : EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+200, width, 30), "Media", HasBeenViewed(Page.Media) ? "button_purple" : "button"))
             {
                 currentPage = Page.Media;
                 AddToSeenPages(currentPage);
             }
 
-            GUI.Label(new Rect(checkmarkLeft, startListHeight + 240, 40, 30), HasBeenViewed(Page.ReadyRoom)? EditorCore.CircleCheckmark32: EditorCore.CircleEmpty32);
+            GUI.Label(new Rect(checkmarkLeft, startListHeight + 240, 40, 30), HasBeenViewed(Page.ReadyRoom)? EditorCore.CircleCheckmark: EditorCore.CircleEmpty);
             if (GUI.Button(new Rect(leftEdge, startListHeight+240, width, 30), "Ready Room", HasBeenViewed(Page.ReadyRoom) ? "button_purple" : "button"))
             {
                 currentPage = Page.ReadyRoom;

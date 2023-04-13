@@ -429,7 +429,7 @@ namespace Cognitive3D
 
             if (AllControllerSetupComplete)
             {
-                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
@@ -463,7 +463,7 @@ namespace Cognitive3D
             }
             if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
@@ -596,10 +596,12 @@ namespace Cognitive3D
                     displayString = "Exported File Size: " + string.Format("{0:0}", sceneSize) + " MB";
                 }
                 GUI.Label(new Rect(0, 340, 500, 15), displayString, "miniheadercenter");
+                GUI.Label(new Rect(120, 290, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
                 GUI.Label(new Rect(0, 340, 500, 15), "Scene Not Exported", "miniheadercenter");
+                GUI.Label(new Rect(120, 290, 30, 30), EditorCore.Alert, "image_centered");
             }
 
             if (numberOfLightsInScene > 50)
@@ -645,6 +647,7 @@ namespace Cognitive3D
                 gm.AddItem(new GUIContent("Full Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 1, OnSelectFullResolution);
                 gm.AddItem(new GUIContent("Half Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 2, OnSelectHalfResolution);
                 gm.AddItem(new GUIContent("Quarter Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 4, OnSelectQuarterResolution);
+                gm.AddSeparator("");
                 gm.AddItem(new GUIContent("Export lowest LOD meshes"), Cognitive3D_Preferences.Instance.ExportSceneLODLowest, OnToggleLODMeshes);
 
 #if UNITY_2020_1_OR_NEWER
@@ -712,7 +715,7 @@ namespace Cognitive3D
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
-                GUI.Button(uploadSceneRect, EditorCore.BoxEmpty32, "image_centered");
+                GUI.Button(uploadSceneRect, EditorCore.BoxEmpty, "image_centered");
                 GUI.Label(new Rect(60, heightOffset+2, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
@@ -721,14 +724,14 @@ namespace Cognitive3D
                 //upload scene geometry
                 if (UploadSceneGeometry)
                 {
-                    if (GUI.Button(uploadSceneRect, EditorCore.BoxCheckmark32, "image_centered"))
+                    if (GUI.Button(uploadSceneRect, EditorCore.BoxCheckmark, "image_centered"))
                     {
                         UploadSceneGeometry = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadSceneRect, EditorCore.BoxEmpty32, "image_centered"))
+                    if (GUI.Button(uploadSceneRect, EditorCore.BoxEmpty, "image_centered"))
                     {
                         UploadSceneGeometry = true;
                     }
@@ -745,7 +748,7 @@ namespace Cognitive3D
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //disable 'upload scene geometry' toggle
-                GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty32, "image_centered");
+                GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty, "image_centered");
                 GUI.Label(new Rect(60, heightOffset+42, 340, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
             }
             else
@@ -753,14 +756,14 @@ namespace Cognitive3D
                 //upload thumbnail
                 if (UploadThumbnail)
                 {
-                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxCheckmark32, "image_centered"))
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxCheckmark, "image_centered"))
                     {
                         UploadThumbnail = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty32, "image_centered"))
+                    if (GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty, "image_centered"))
                     {
                         UploadThumbnail = true;
                     }
@@ -775,7 +778,7 @@ namespace Cognitive3D
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 //can't upload dynamics
-                GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty32, "image_centered");
+                GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered");
                 GUI.Label(new Rect(60, heightOffset+82, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
             }
             else
@@ -783,14 +786,14 @@ namespace Cognitive3D
                 //upload dynamics toggle
                 if (UploadDynamicMeshes)
                 {
-                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxCheckmark32, "image_centered"))
+                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
                     {
                         UploadDynamicMeshes = false;
                     }
                 }
                 else
                 {
-                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty32, "image_centered"))
+                    if (GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered"))
                     {
                         UploadDynamicMeshes = true;
                     }

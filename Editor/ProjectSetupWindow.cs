@@ -146,7 +146,7 @@ namespace Cognitive3D
             }
             else if (lastDevKeyResponseCode == 200) //valid key
             {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.CircleCheckmark32, "Valid key"), "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.CircleCheckmark, "Valid key"), "image_centered");
                 string previous = developerkey;
                 developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 if (previous != developerkey)
@@ -209,11 +209,11 @@ namespace Cognitive3D
             if (string.IsNullOrEmpty(apikey))
             {
                 GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleEmpty, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleCheckmark, "image_centered");
             }
 
         }
@@ -539,7 +539,7 @@ namespace Cognitive3D
                         }
                     }
                 }
-                GUI.Label(new Rect(30, i * 32 + separator, 24, 30), selected ? EditorCore.BoxCheckmark32 : EditorCore.BoxEmpty32, "image_centered");
+                GUI.Label(new Rect(30, i * 32 + separator, 24, 30), selected ? EditorCore.BoxCheckmark : EditorCore.BoxEmpty, "image_centered");
                 if (i == 9)
                 {
                     int kerning = 4;
@@ -610,13 +610,13 @@ namespace Cognitive3D
             if (gliaAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
         }
 
@@ -671,13 +671,13 @@ namespace Cognitive3D
             if (sranipalAssemblyExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
                 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }    
         }
 
@@ -714,13 +714,13 @@ namespace Cognitive3D
             if (eyeManagerExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
 #endif
         }

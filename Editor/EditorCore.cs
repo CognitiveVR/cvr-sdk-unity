@@ -390,55 +390,64 @@ namespace Cognitive3D
                 return _logo;
             }
         }
-        private static Texture2D _circleCheckmark32;
-        public static Texture2D CircleCheckmark32
+        private static Texture2D _circleCheckmark;
+        public static Texture2D CircleCheckmark
         {
             get
             {
-                if (_circleCheckmark32 == null)
+                if (_circleCheckmark == null)
                 {
-                    _circleCheckmark32 = Resources.Load<Texture2D>("Icons/circle check 32");
+                    _circleCheckmark = Resources.Load<Texture2D>("Icons/circle check");
                 }
-                return _circleCheckmark32;
+                return _circleCheckmark;
             }
         }
 
-        private static Texture2D _emptyCircle32;
-        public static Texture2D CircleEmpty32
+        [System.Obsolete("Use EditorCore.CircleCheckmark instead")]
+        public static Texture2D Checkmark
         {
             get
             {
-                if (_emptyCircle32 == null)
-                {
-                    _emptyCircle32 = Resources.Load<Texture2D>("Icons/circle grey empty 32");
-                }
-                return _emptyCircle32;
+                return CircleCheckmark;
             }
         }
 
-        private static Texture2D _boxCheckmark32;
-        public static Texture2D BoxCheckmark32
+        private static Texture2D _emptyCircle;
+        public static Texture2D CircleEmpty
         {
             get
             {
-                if (_boxCheckmark32 == null)
+                if (_emptyCircle == null)
                 {
-                    _boxCheckmark32 = Resources.Load<Texture2D>("Icons/box check 32");
+                    _emptyCircle = Resources.Load<Texture2D>("Icons/circle grey empty");
                 }
-                return _boxCheckmark32;
+                return _emptyCircle;
             }
         }
 
-        private static Texture2D _boxEmpty32;
-        public static Texture2D BoxEmpty32
+        private static Texture2D _boxCheckmark;
+        public static Texture2D BoxCheckmark
         {
             get
             {
-                if (_boxEmpty32 == null)
+                if (_boxCheckmark == null)
                 {
-                    _boxEmpty32 = Resources.Load<Texture2D>("Icons/box empty 32");
+                    _boxCheckmark = Resources.Load<Texture2D>("Icons/box check");
                 }
-                return _boxEmpty32;
+                return _boxCheckmark;
+            }
+        }
+
+        private static Texture2D _boxEmpty;
+        public static Texture2D BoxEmpty
+        {
+            get
+            {
+                if (_boxEmpty == null)
+                {
+                    _boxEmpty = Resources.Load<Texture2D>("Icons/box empty");
+                }
+                return _boxEmpty;
             }
         }
 
@@ -450,7 +459,7 @@ namespace Cognitive3D
             {
                 if (_alert == null)
                 {
-                    _alert = Resources.Load<Texture2D>("Icons/alert 32");
+                    _alert = Resources.Load<Texture2D>("Icons/alert");
                 }
                 return _alert;
             }
@@ -463,7 +472,7 @@ namespace Cognitive3D
             {
                 if (_error == null)
                 {
-                    _error = Resources.Load<Texture2D>("Icons/error 32");
+                    _error = Resources.Load<Texture2D>("Icons/error");
                 }
                 return _error;
             }
@@ -476,7 +485,7 @@ namespace Cognitive3D
             {
                 if (_info == null)
                 {
-                    _info = Resources.Load<Texture2D>("Icons/info 32");
+                    _info = Resources.Load<Texture2D>("Icons/info");
                 }
                 return _info;
             }
@@ -673,7 +682,7 @@ namespace Cognitive3D
                 {
                     if (_refreshIconWhite == null)
                     {
-                        _refreshIconWhite = Resources.Load<Texture2D>("Icons/refresh white 32");
+                        _refreshIconWhite = Resources.Load<Texture2D>("Icons/refresh white");
                     }
                     return _refreshIconWhite;
                 }
@@ -681,7 +690,7 @@ namespace Cognitive3D
                 {
                     if (_refreshIconBlack == null)
                     {
-                        _refreshIconBlack = Resources.Load<Texture2D>("Icons/refresh black 32");
+                        _refreshIconBlack = Resources.Load<Texture2D>("Icons/refresh black");
                     }
                     return _refreshIconBlack;
                 }
