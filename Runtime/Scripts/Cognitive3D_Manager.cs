@@ -59,7 +59,7 @@ namespace Cognitive3D
         [Tooltip("Send HMD Battery Level on the Start and End of the application")]
         public bool SendBatteryLevelOnStartAndEnd;
 
-        private List<string> sceneIDList = new List<string>();
+        private List<UnityEngine.SceneManagement.Scene> sceneList = new List<UnityEngine.SceneManagement.Scene>();
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -376,14 +376,14 @@ namespace Cognitive3D
             }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
             {
-                sceneIDList.Clear();
+                sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
             if (replacingSceneId)
             {
                 //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
                 FlushData();
-                sceneIDList.Insert(0, loadingScene.SceneId);
+                sceneList.Insert(0, scene);
                 SetTrackingScene(scene.name, true);
             }
             else
@@ -398,13 +398,20 @@ namespace Cognitive3D
         {
             SetTrackingScene("", true); 
             var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
-            if (!string.IsNullOrEmpty(loadingScene.SceneId))
+            string unloadingSceneID = "";
+            if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
             {
-
+                unloadingSceneID = loadingScene.SceneId;
             }
-            else
+            if (unloadingSceneID != "")
             {
-
+                int index = sceneList.IndexOf(scene);
+                sceneList.RemoveAt(index);
+                if (index == 0)
+                {
+                    UnityEngine.SceneManagement.Scene currentScene = sceneList[0];
+                    SetTrackingScene(currentScene.name, true);
+                }
             }
         }
 
