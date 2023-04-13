@@ -27,7 +27,7 @@ namespace Cognitive3D
     public class Cognitive3D_Manager : MonoBehaviour
     {
         public const string SDK_VERSION = "1.0.8";
-
+    
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
         {
@@ -58,6 +58,8 @@ namespace Cognitive3D
 
         [Tooltip("Send HMD Battery Level on the Start and End of the application")]
         public bool SendBatteryLevelOnStartAndEnd;
+
+        private List<string> sceneIDList = new List<string>();
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -362,44 +364,31 @@ namespace Cognitive3D
         {
             var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
+            //if scene loaded has new scene id
 
-            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
+            if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
             {
-                //if scene loaded has new scene id
-                if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
-                {
-                    replacingSceneId = true;
-                }
-            }
-            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single || replacingSceneId)
-            {
-                //DynamicObject.ClearObjectIds();
                 replacingSceneId = true;
             }
-            
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Additive)
+            {
+
+            }
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
+            {
+                sceneIDList.Clear();
+                //DynamicObject.ClearObjectIds();
+            }
             if (replacingSceneId)
             {
                 //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
                 FlushData();
+                sceneIDList.Insert(0, loadingScene.SceneId);
+                SetTrackingScene(scene.name, true);
             }
-
-            if (replacingSceneId)
+            else
             {
-                if (loadingScene != null)
-                {
-                    if (!string.IsNullOrEmpty(loadingScene.SceneId))
-                    {
-                        SetTrackingScene(scene.name,true);
-                    }
-                    else
-                    {
-                        SetTrackingScene("", true);
-                    }
-                }
-                else
-                {
-                    SetTrackingScene("", true);
-                }
+                SetTrackingScene("", true);
             }
 
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
