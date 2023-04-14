@@ -16,7 +16,7 @@ namespace Cognitive3D.Components
     {
         private readonly int SampleCount = 50;
         private readonly float Interval = 1;
-        private readonly const float SAMPLE_INTERVAL = 10;
+        private const float SAMPLE_INTERVAL = 10;
         private readonly float EyeToShoulderHeight = 0.186f; //meters
         Transform tempInfo = null;
 
