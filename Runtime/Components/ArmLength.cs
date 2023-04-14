@@ -14,10 +14,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
     public class ArmLength : AnalyticsComponentBase
     {
-        private int SampleCount = 50;
-        private float Interval = 1;
-        private const float SAMPLE_INTERVAL = 10;
-        private float EyeToShoulderHeight = 0.186f; //meters
+        private readonly int SampleCount = 50;
+        private readonly float Interval = 1;
+        private readonly const float SAMPLE_INTERVAL = 10;
+        private readonly float EyeToShoulderHeight = 0.186f; //meters
         Transform tempInfo = null;
 
         protected override void OnSessionBegin()
@@ -61,7 +61,7 @@ namespace Cognitive3D.Components
                     samples++;
                 }
 
-                if (samples % SAMPLE_INTERVAL == 0)
+                if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
                 {
                     SendMaxDistance(maxSqrDistance);
                 }

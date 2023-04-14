@@ -10,10 +10,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight : AnalyticsComponentBase
     {
-        private int SampleCount = 50;
-        private float StartDelay = 10;
-        private float Interval = 1;
-        private float ForeheadHeight = 0.11f; //meters
+        private readonly int SampleCount = 50;
+        private readonly float StartDelay = 10;
+        private readonly float Interval = 1;
+        private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
 
@@ -34,7 +34,7 @@ namespace Cognitive3D.Components
             {
                 yield return wait;
                 heights[i] = GameplayReferences.HMD.localPosition.y;
-                if (i % SAMPLE_INTERVAL == 0)
+                if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
                 {
                     RecordAndSendMedian(heights, i);
                 }
