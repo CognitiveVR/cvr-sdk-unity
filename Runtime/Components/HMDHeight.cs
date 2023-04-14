@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 /// <summary>
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
@@ -11,48 +10,31 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight : AnalyticsComponentBase
     {
-        [ClampSetting(5, 100)]
-        [Tooltip("Number of samples taken. The median is assumed to be HMD height")]
-        public int SampleCount = 50;
-
-        [ClampSetting(0)]
-        [Tooltip("number of seconds before starting to sample HMD height")]
-        public float StartDelay = 10;
-
-        [ClampSetting(1)]
-        public float Interval = 1;
-
-        [ClampSetting(0, 20)]
-        [Tooltip("Distance from HMD Eye height to user's full height")]
-        public float ForeheadHeight = 0.11f; //meters
-
-        private const float SAMPLE_INTERVAL = 5;
-        float[] heights;
+        private int SampleCount = 50;
+        private float StartDelay = 10;
+        private float Interval = 1;
+        private float ForeheadHeight = 0.11f; //meters
+        private const float SAMPLE_INTERVAL = 10;
+        private float[] heights;
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-
             heights = new float[SampleCount];
-
             StartCoroutine(Tick());
         }
 
         IEnumerator Tick()
         {
             yield return new WaitForSeconds(StartDelay);
-
-            float hmdAccumHeight = 0;
             YieldInstruction wait = new WaitForSeconds(Interval);
 
             //median
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-
-                hmdAccumHeight += GameplayReferences.HMD.localPosition.y;
                 heights[i] = GameplayReferences.HMD.localPosition.y;
-                if (i % (SampleCount/SAMPLE_INTERVAL) == 0)
+                if (i % SAMPLE_INTERVAL == 0)
                 {
                     RecordAndSendMedian(heights, i);
                 }
