@@ -10,7 +10,9 @@
         "GliaEditorAssembly",
         "Wave.Native",
         "Wave.Essence",
-        "UnityEngine.SpatialTracking"
+        "UnityEngine.SpatialTracking",
+        "SteamVR_Input_Editor",
+		"SteamVR_Actions"
     ],
     "includePlatforms": [
         "Editor"

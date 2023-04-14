@@ -123,7 +123,6 @@ namespace Cognitive3D
 
             sb.AppendLine("Texture Export Quality: " + p.TextureResize);
             sb.AppendLine("Export Lowest LOD from LODGroup Components: " + p.ExportSceneLODLowest);
-            sb.AppendLine("Export AO Maps: " + p.ExportAOMaps);
 
             sb.AppendLine("Scene Settings:");
 

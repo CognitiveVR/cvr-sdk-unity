@@ -118,10 +118,8 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("Network", EditorStyles.boldLabel);
             p.Gateway = EditorGUILayout.TextField(new GUIContent("Gateway", "In almost every case, this should be\ndata.cognitive3d.com"), p.Gateway);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Scene Export", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-
+            EditorGUILayout.LabelField("Scene Data", EditorStyles.boldLabel);
+            p.IncludeDisabledDynamicObjects = EditorGUILayout.Toggle("Include Disabled Dynamic Objects", p.IncludeDisabledDynamicObjects);
             var v = Cognitive3D_Preferences.FindCurrentScene();
             if (v == null || string.IsNullOrEmpty(v.SceneId))
             {
@@ -131,142 +129,11 @@ namespace Cognitive3D
             {
                 EditorGUILayout.LabelField("Current Scene: " + v.SceneName + "     Version: " + v.VersionNumber);
             }
-            EditorGUILayout.Space();
-
-            GUIContent[] textureQualityNames = new GUIContent[] { new GUIContent("Full"), new GUIContent("Half"), new GUIContent("Quarter")/*, new GUIContent("Eighth"), new GUIContent("Sixteenth"), new GUIContent("Thirty Second"), new GUIContent("Sixty Fourth") */};
-            int[] textureQualities = new int[] { 1, 2, 4/*, 8, 16, 32, 64 */};
-            p.TextureResize = EditorGUILayout.IntPopup(new GUIContent("Texture Export Quality", "Reduce textures when uploading to scene explorer"), p.TextureResize, textureQualityNames, textureQualities);
-            p.ExportSceneLODLowest = EditorGUILayout.Toggle("Export Lowest LOD from LODGroup components", p.ExportSceneLODLowest);
-            p.ExportAOMaps = EditorGUILayout.Toggle("Export AO Maps", p.ExportAOMaps);
-            GUILayout.BeginHorizontal();
-
-            //TODO move this logic into editorcore and reference from both setup window and here
-            if (GUILayout.Button("Export","ButtonLeft"))
-            {
-                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
-                {
-                    if (EditorUtility.DisplayDialog("Export Failed", "Cannot export scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
-                    {
-                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
-                        {
-                        }
-                        else
-                        {
-                            return;//cancel from save scene window
-                        }
-                    }
-                    else
-                    {
-                        return;//cancel from 'do you want to save' popup
-                    }
-                }
-                ExportUtility.ExportGLTFScene();
-
-                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = EditorCore.GetSubDirectoryPath(fullName);
-                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-                string debugContent = DebugInformationWindow.GetDebugContents();
-                System.IO.File.WriteAllText(objPath + "debug.log", debugContent);
-                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                UnityEditor.AssetDatabase.SaveAssets();
-            }
-
-            bool hasUploadFiles = EditorCore.HasSceneExportFolder(Cognitive3D_Preferences.FindCurrentScene());
-            
-            EditorGUI.BeginDisabledGroup(!hasUploadFiles);
-            if (GUILayout.Button("Upload", "ButtonRight"))
-            {
-                System.Action completedmanifestupload = delegate ()
-                {
-                    ExportUtility.UploadAllDynamicObjectMeshes(true);
-                };
-
-                System.Action completedRefreshSceneVersion2 = delegate ()
-                {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                    ManageDynamicObjects.AddOrReplaceDynamic(manifest, ManageDynamicObjects.GetDynamicObjectsInScene());
-                    ManageDynamicObjects.UploadManifest(manifest,completedmanifestupload);
-                };
-
-                //upload dynamics
-                System.Action completeSceneUpload = delegate () {
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion2); //likely completed in previous step, but just in case
-                };
-
-                //upload scene
-                System.Action completedRefreshSceneVersion1 = delegate () {
-                    Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
-
-                    if (current == null || string.IsNullOrEmpty(current.SceneId))
-                    {
-                        //new scene
-                        if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to SceneExplorer?", "Ok", "Cancel"))
-                        {
-                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
-                        }
-                    }
-                    else
-                    {
-                        //new version
-                        if (EditorUtility.DisplayDialog("Upload New Version","Upload a new version of this existing scene? Will archive previous version","Ok","Cancel"))
-                        {
-                            ExportUtility.UploadDecimatedScene(current, completeSceneUpload);
-                        }
-                    }
-                };
-
-                //get the latest verion of the scene
-                if (string.IsNullOrEmpty(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
-                {
-                    if (EditorUtility.DisplayDialog("Upload Failed", "Cannot upload scene that is not saved.\n\nDo you want to save now?", "Save", "Cancel"))
-                    {
-                        if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
-                        {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
-                        }
-                        else
-                        {
-                            return;//cancel from save scene window
-                        }
-                    }
-                    else
-                    {
-                        return;//cancel from 'do you want to save' popup
-                    }
-                }
-                else
-                {
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
-                }
-                
-            }
-
-            GUIContent ButtonContent = new GUIContent("Upload Screenshot");
-            if (v == null)
-            {
-                GUILayout.Button(ButtonContent);
-            }
-            else
-            {
-                if (GUILayout.Button(ButtonContent))
-                {
-                    EditorCore.UploadCustomScreenshot();
-                }
-            }
-            EditorGUI.EndDisabledGroup();
-
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.indentLevel--;
-            GUILayout.EndHorizontal();
-
             if (GUILayout.Button(new GUIContent("Refresh Loaded Scene Versions", "Get the latest versionnumber and versionid for this scene"))) //ask scene explorer for all the versions of this active scene. happens automatically post scene upload
             {
                 EditorCore.RefreshSceneVersion(null);
             }
 
-            EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sceneSettings"),true);
             serializedObject.ApplyModifiedProperties();

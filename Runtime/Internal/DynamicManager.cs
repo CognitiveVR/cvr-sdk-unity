@@ -11,7 +11,7 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     //used to update and record all dynamic object changes
-    internal static class DynamicManager
+    public static class DynamicManager
     {
         //this can track up to 1024 dynamic objects in a single scene AT THE SAME TIME before it needs to expand
         internal static DynamicData[] ActiveDynamicObjectsArray = new DynamicData[1024];

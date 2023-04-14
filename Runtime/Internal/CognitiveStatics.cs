@@ -53,6 +53,11 @@ namespace Cognitive3D
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
+        internal static string SCENELINK(string sceneid, int versionNumber)
+        {
+            return "https://app.cognitive3d.com/scenes/" + sceneid + "/v/" + versionNumber + "/insights";
+        }
+
         //GET github api to get latest release data
         internal const string GITHUB_SDKVERSION = "https://api.github.com/repos/CognitiveVR/cvr-sdk-unity/releases/latest";
 

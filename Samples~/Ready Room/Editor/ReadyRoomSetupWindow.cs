@@ -71,6 +71,7 @@ namespace Cognitive3D.ReadyRoom
                 case "custom": CustomUpdate(); break;
                 case "scene menu": SceneMenuUpdate(); break;
                 case "overview": OverviewUpdate(); break;
+                default: throw new System.NotSupportedException();
             }
 
             DrawFooter();
@@ -574,7 +575,6 @@ namespace Cognitive3D.ReadyRoom
             Rect up = new Rect(rect.x + 407, rect.y, 18, height - 1);
             Rect down = new Rect(rect.x + 407, rect.y + offset + 1, 18, height - 1);
 
-            bool needsRefresh = false;
             if (e.mousePosition.x < rect.x || e.mousePosition.x > rect.x + rect.width || e.mousePosition.y < rect.y || e.mousePosition.y > rect.y + rect.height)
             {
             }
@@ -589,7 +589,6 @@ namespace Cognitive3D.ReadyRoom
                     {
                         all.Remove(assessment);
                         all.Insert(index - 1, assessment);
-                        needsRefresh = true;
                     }
                 }
                 if (GUI.Button(down, "v"))
@@ -600,7 +599,6 @@ namespace Cognitive3D.ReadyRoom
                     {
                         all.Remove(assessment);
                         all.Insert(index + 1, assessment);
-                        needsRefresh = true;
                     }
                 }
             }
@@ -610,7 +608,7 @@ namespace Cognitive3D.ReadyRoom
 
             if (assessment.IsValid())
             {
-                GUI.Label(isActiveRect, Cognitive3D.EditorCore.Checkmark, "image_centered");
+                GUI.Label(isActiveRect, Cognitive3D.EditorCore.CircleCheckmark32, "image_centered");
             }
             else
             {
@@ -745,9 +743,9 @@ namespace Cognitive3D.ReadyRoom
         }
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
 #else
-            if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "Oculus SDK was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
+            if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "Oculus SDK was not selected. Please run Project Setup first.", "Open Project Setup", "Ok"))
             {
-                Cognitive3D.InitWizard.Init();
+                ProjectSetupWindow.Init();
             }
 #endif
         }
@@ -770,9 +768,9 @@ namespace Cognitive3D.ReadyRoom
         }
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
 #else
-            if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "SteamVR2 SDK was not selected. Please run Scene Setup first.", "Open Scene Setup", "Ok"))
+            if (UnityEditor.EditorUtility.DisplayDialog("Can't complete setup", "SteamVR2 SDK was not selected. Please run Project Setup first.", "Open Project Setup", "Ok"))
             {
-                Cognitive3D.InitWizard.Init();
+                ProjectSetupWindow.Init();
             }
 #endif
         }
