@@ -368,7 +368,6 @@ namespace Cognitive3D
 
             if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
             {
-                Debug.Log("I SHOULDNT BE HERE");
                 replacingSceneId = true;
             }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
@@ -389,22 +388,18 @@ namespace Cognitive3D
 
         private void SceneManager_SceneUnloaded(UnityEngine.SceneManagement.Scene scene)
         {
-            SetTrackingScene("", true); 
-            var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
+            var unloadingScene = Cognitive3D_Preferences.FindScene(scene.name);
             string unloadingSceneID = "";
-            if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
+            if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
             {
-                unloadingSceneID = loadingScene.SceneId;
+                unloadingSceneID = unloadingScene.SceneId;
             }
             if (unloadingSceneID != "")
             {
                 int index = sceneList.IndexOf(scene);
                 sceneList.RemoveAt(index);
-                if (index == 0)
-                {
-                    UnityEngine.SceneManagement.Scene currentScene = sceneList[0];
-                    SetTrackingScene(currentScene.name, true);
-                }
+                UnityEngine.SceneManagement.Scene currentScene = sceneList[index - 1];
+                SetTrackingScene(currentScene.name, true);
             }
         }
 
