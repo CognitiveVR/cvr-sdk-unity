@@ -368,6 +368,7 @@ namespace Cognitive3D
 
             if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
             {
+                Debug.Log("I SHOULDNT BE HERE");
                 replacingSceneId = true;
             }
             if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
@@ -381,10 +382,6 @@ namespace Cognitive3D
                 FlushData();
                 sceneList.Insert(0, scene);
                 SetTrackingScene(scene.name, true);
-            }
-            else
-            {
-                SetTrackingScene("", true);
             }
 
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
