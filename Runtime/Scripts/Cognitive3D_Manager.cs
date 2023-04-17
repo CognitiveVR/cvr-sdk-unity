@@ -387,6 +387,10 @@ namespace Cognitive3D
                 sceneList.Insert(0, scene);
                 SetTrackingScene(scene.name, true);
             }
+            else
+            {
+                SetTrackingScene("", true);
+            }
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
