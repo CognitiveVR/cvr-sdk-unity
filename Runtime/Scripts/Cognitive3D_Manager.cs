@@ -3,7 +3,8 @@ using Cognitive3D;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-#if  C3D_STEAMVR2
+using UnityEngine.SceneManagement;
+#if C3D_STEAMVR2
 using Valve.VR;
 #endif
 
@@ -131,15 +132,15 @@ namespace Cognitive3D
                 return;
             }
 
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-            UnityEngine.SceneManagement.SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
+            SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+            SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
 
             CognitiveStatics.Initialize();
 
-            DeviceId = UnityEngine.SystemInfo.deviceUniqueIdentifier;
+            DeviceId = SystemInfo.deviceUniqueIdentifier;
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
@@ -184,11 +185,15 @@ namespace Cognitive3D
             //TODO support skipping spatial gaze data but still recording session properties for XRPF
 
             //get all loaded scenes. if one has a sceneid, use that
-            var count = UnityEngine.SceneManagement.SceneManager.sceneCount;
-            UnityEngine.SceneManagement.Scene scene = new UnityEngine.SceneManagement.Scene();
+            var count = SceneManager.sceneCount;
+            Scene scene = new Scene();
             for(int i = 0; i<count;i++)
             {
-                scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                scene = SceneManager.GetSceneAt(i);
+                if (!sceneList.Contains(scene))
+                {
+                    sceneList.Insert(0, scene);
+                }
                 var cogscene = Cognitive3D_Preferences.FindSceneByPath(scene.path);
                 if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
                 {
@@ -360,7 +365,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="mode"></param>
-        private void SceneManager_SceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode mode)
         {
             var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
             bool replacingSceneId = false;
@@ -370,7 +375,7 @@ namespace Cognitive3D
             {
                 replacingSceneId = true;
             }
-            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
+            if (mode == LoadSceneMode.Single)
             {
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
@@ -382,14 +387,15 @@ namespace Cognitive3D
                 sceneList.Insert(0, scene);
                 SetTrackingScene(scene.name, true);
             }
-
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-        private void SceneManager_SceneUnloaded(UnityEngine.SceneManagement.Scene scene)
+        // TODO: CLARIFY 
+        private void SceneManager_SceneUnloaded(Scene scene)
         {
             var unloadingScene = Cognitive3D_Preferences.FindScene(scene.name);
             string unloadingSceneID = "";
+            Scene currentScene;
             if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
             {
                 unloadingSceneID = unloadingScene.SceneId;
@@ -398,7 +404,7 @@ namespace Cognitive3D
             {
                 int index = sceneList.IndexOf(scene);
                 sceneList.RemoveAt(index);
-                UnityEngine.SceneManagement.Scene currentScene = sceneList[index - 1];
+                currentScene = sceneList[0];
                 SetTrackingScene(currentScene.name, true);
             }
         }
@@ -582,12 +588,12 @@ namespace Cognitive3D
         public static event onTick OnTick;
         private static void InvokeTickEvent() { if (OnTick != null) { OnTick(); } }
 
-        public delegate void onLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId);
+        public delegate void onLevelLoaded(Scene scene, LoadSceneMode mode, bool newSceneId);
         /// <summary>
         /// From Unity's SceneManager.SceneLoaded event. Happens after the Manager sends outstanding data and has updated the new SceneId
         /// </summary>
         public static event onLevelLoaded OnLevelLoaded;
-        private static void InvokeLevelLoadedEvent(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
+        private static void InvokeLevelLoadedEvent(Scene scene, LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
 
         internal static ILocalExitpoll ExitpollHandler;
         internal static ICache DataCache;
@@ -781,8 +787,8 @@ namespace Cognitive3D
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
 
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-            UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+            SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
 
             CognitiveStatics.Reset();
         }
