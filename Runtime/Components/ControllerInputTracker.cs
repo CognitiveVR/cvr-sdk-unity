@@ -513,6 +513,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
@@ -527,6 +528,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
@@ -616,6 +618,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
@@ -630,6 +633,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("pico_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
