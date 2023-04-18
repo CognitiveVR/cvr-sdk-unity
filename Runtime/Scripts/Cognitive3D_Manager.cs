@@ -394,7 +394,6 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-        // TODO: CLARIFY 
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             if (DoesSceneHaveID(scene))
@@ -430,9 +429,9 @@ namespace Cognitive3D
             string unloadingSceneID = "";
             if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
             {
-                unloadingSceneID = unloadingScene.SceneId;
+                return true;
             }
-            return (unloadingSceneID != "");
+            return false;
         }
 
 #region Updates and Loops
