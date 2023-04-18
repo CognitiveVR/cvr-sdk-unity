@@ -60,7 +60,7 @@ namespace Cognitive3D
         [Tooltip("Send HMD Battery Level on the Start and End of the application")]
         public bool SendBatteryLevelOnStartAndEnd;
 
-        private List<UnityEngine.SceneManagement.Scene> sceneList = new List<UnityEngine.SceneManagement.Scene>();
+        private readonly List<Scene> sceneList = new List<Scene>();
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -397,7 +397,6 @@ namespace Cognitive3D
         // TODO: CLARIFY 
         private void SceneManager_SceneUnloaded(Scene scene)
         {
-            Scene currentScene;
             if (DoesSceneHaveID(scene))
             {
                 int index = sceneList.IndexOf(scene);
