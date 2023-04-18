@@ -187,16 +187,16 @@ namespace Cognitive3D
             //get all loaded scenes. if one has a sceneid, use that
             var count = SceneManager.sceneCount;
             Scene scene = new Scene();
-            for(int i = 0; i<count;i++)
+            for(int i = 0; i < count;i++)
             {
                 scene = SceneManager.GetSceneAt(i);
-                if (!sceneList.Contains(scene))
-                {
-                    sceneList.Insert(0, scene);
-                }
                 var cogscene = Cognitive3D_Preferences.FindSceneByPath(scene.path);
                 if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
                 {
+                    if (!sceneList.Contains(scene))
+                    {
+                        sceneList.Insert(0, scene);
+                    } 
                     SetTrackingScene(cogscene, false);
                     break;
                 }
@@ -367,14 +367,7 @@ namespace Cognitive3D
         /// <param name="mode"></param>
         private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            var loadingScene = Cognitive3D_Preferences.FindScene(scene.name);
-            bool replacingSceneId = false;
-            //if scene loaded has new scene id
-
-            if (loadingScene != null && !string.IsNullOrEmpty(loadingScene.SceneId))
-            {
-                replacingSceneId = true;
-            }
+            bool replacingSceneId = DoesSceneHaveID(scene);
             if (mode == LoadSceneMode.Single)
             {
                 sceneList.Clear();
@@ -389,7 +382,14 @@ namespace Cognitive3D
             }
             else
             {
-                SetTrackingScene("", true);
+                if (IsNextSceneValid())
+                {
+                    SetTrackingScene(sceneList[0].name, true);
+                }
+                else
+                {
+                    SetTrackingScene("", true);
+                }
             }
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
@@ -397,20 +397,43 @@ namespace Cognitive3D
         // TODO: CLARIFY 
         private void SceneManager_SceneUnloaded(Scene scene)
         {
+            Scene currentScene;
+            if (DoesSceneHaveID(scene))
+            {
+                int index = sceneList.IndexOf(scene);
+                sceneList.RemoveAt(index);
+            }
+            if (IsNextSceneValid())
+            {
+                SetTrackingScene(sceneList[0].name, true);
+            }
+            else
+            {
+                SetTrackingScene("", true);
+            }
+        }
+
+        private bool IsNextSceneValid()
+        {
+            if (sceneList.Count > 0)
+            {
+                Scene currentScene = sceneList[0];
+                if (DoesSceneHaveID(currentScene))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        private bool DoesSceneHaveID(Scene scene)
+        {
             var unloadingScene = Cognitive3D_Preferences.FindScene(scene.name);
             string unloadingSceneID = "";
-            Scene currentScene;
             if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
             {
                 unloadingSceneID = unloadingScene.SceneId;
             }
-            if (unloadingSceneID != "")
-            {
-                int index = sceneList.IndexOf(scene);
-                sceneList.RemoveAt(index);
-                currentScene = sceneList[0];
-                SetTrackingScene(currentScene.name, true);
-            }
+            return (unloadingSceneID != "");
         }
 
 #region Updates and Loops
