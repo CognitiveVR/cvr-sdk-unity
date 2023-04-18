@@ -426,7 +426,6 @@ namespace Cognitive3D
         private bool DoesSceneHaveID(Scene scene)
         {
             var unloadingScene = Cognitive3D_Preferences.FindScene(scene.name);
-            string unloadingSceneID = "";
             if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
             {
                 return true;
