@@ -20,7 +20,7 @@ namespace Cognitive3D.Components
         //the number of frames in the interval
         private int intervalFrameCount;
 
-        List<float> deltaTimes = new List<float>(120);
+        readonly List<float> deltaTimes = new List<float>(120);
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
