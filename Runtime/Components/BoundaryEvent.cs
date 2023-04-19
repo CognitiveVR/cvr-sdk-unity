@@ -27,9 +27,9 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+#if C3D_OCULUS
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-#if C3D_OCULUS
             boundaryPointsArray = new Vector3[4];
             trackingSpace = TryGetTrackingSpace();
 #endif
@@ -63,18 +63,15 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-#if C3D_OCULUS
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
                 CheckBoundary();
             }
-#endif
         }
 
         void CheckBoundary()
         {
-#if C3D_OCULUS
             if (OVRManager.boundary != null)
             {
                 if (HasBoundaryChanged())
@@ -104,7 +101,6 @@ namespace Cognitive3D.Components
             {
                 trackingSpace = TryGetTrackingSpace();
             }
-#endif
         }
 
 #if C3D_OCULUS

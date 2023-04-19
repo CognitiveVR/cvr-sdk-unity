@@ -27,24 +27,24 @@ namespace Cognitive3D.Components
         private void RecordPitch()
         {
             if (GameplayReferences.HMD == null) { return; }
-            Vector3 forwardPoint = Cognitive3D.GameplayReferences.HMD.position + Cognitive3D.GameplayReferences.HMD.forward;
-            float opposite = Cognitive3D.GameplayReferences.HMD.position.y - forwardPoint.y;
+            Vector3 forwardPoint = GameplayReferences.HMD.position + GameplayReferences.HMD.forward;
+            float opposite = GameplayReferences.HMD.position.y - forwardPoint.y;
             float hypotenuse = 1f;
             float pitch = Mathf.Asin(opposite / hypotenuse) * Mathf.Rad2Deg;
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
+            SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
         //records yaw with 0 as the center and 180 as directly behind the player (from the starting position)
         private void RecordYaw()
         {
             if (GameplayReferences.HMD == null) { return; }
-            float yaw = Cognitive3D.GameplayReferences.HMD.rotation.eulerAngles.y;
+            float yaw = GameplayReferences.HMD.rotation.eulerAngles.y;
             if (yaw > 180)
             {
                 yaw -= 360;
             }
 
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.hmd.yaw", yaw);
+            SensorRecorder.RecordDataPoint("c3d.hmd.yaw", yaw);
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
