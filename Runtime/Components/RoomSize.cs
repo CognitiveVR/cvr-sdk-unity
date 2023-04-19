@@ -22,13 +22,13 @@ namespace Cognitive3D.Components
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
                 {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsize", roomsize.x * roomsize.z * 100);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescription", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x * 100, roomsize.z * 100));
+                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
                 }
             }
             else
             {
-                Cognitive3D_Manager.SetSessionProperty("c3d.roomsize", "Invalid");
+                Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
             }
         }
 
