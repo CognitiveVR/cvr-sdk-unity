@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     [CustomEditor(typeof(SceneSelectMenu))]
     public class SceneSelectMenuEditor : Editor

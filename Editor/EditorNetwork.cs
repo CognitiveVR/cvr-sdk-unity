@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 namespace Cognitive3D
 {
-    public class EditorNetwork
+    internal class EditorNetwork
     {
         public delegate void Response(int responsecode, string error, string text);
 
@@ -18,6 +18,7 @@ namespace Cognitive3D
             public bool IsBlocking;
             public string RequestName;
             public string RequestInfo;
+            public System.Action<float> ProgressAction;
             public EditorWebRequest(UnityWebRequest request, Response response, bool blocking, string requestName, string requestInfo)
             {
                 Request = request;
@@ -25,6 +26,15 @@ namespace Cognitive3D
                 IsBlocking = blocking;
                 RequestName = requestName;
                 RequestInfo = requestInfo;
+            }
+            public EditorWebRequest(UnityWebRequest request, Response response, bool blocking, string requestName, string requestInfo, System.Action<float>progressAction)
+            {
+                Request = request;
+                Response = response;
+                IsBlocking = blocking;
+                RequestName = requestName;
+                RequestInfo = requestInfo;
+                ProgressAction = progressAction;
             }
         }
 
@@ -72,10 +82,8 @@ namespace Cognitive3D
         }
 
         //post a request immediately and listen for a response callback
-        public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "")
+        public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
         {
-            //if (headers == null) { headers = new Dictionary<string, string>(); }
-            //if (!headers.ContainsKey("X-HTTP-Method-Override")) { headers.Add("X-HTTP-Method-Override", "POST"); }
             var p = UnityWebRequest.Put(url, bytecontent);
             p.method = "POST";
             p.SetRequestHeader("X-HTTP-Method-Override", "POST");
@@ -85,7 +93,7 @@ namespace Cognitive3D
             }
             p.SendWebRequest();
 
-            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo, progressCallback));
 
             EditorApplication.update -= EditorUpdate;
             EditorApplication.update += EditorUpdate;
@@ -114,6 +122,10 @@ namespace Cognitive3D
             if (EditorWebRequests.Count == 0) { EditorApplication.update -= EditorUpdate; return; }
             for (int i = EditorWebRequests.Count - 1; i >= 0; i--)
             {
+                if (EditorWebRequests[i].ProgressAction != null)
+                {
+                    EditorWebRequests[i].ProgressAction.Invoke(EditorWebRequests[i].Request.uploadProgress);
+                }
                 if (EditorWebRequests[i].IsBlocking)
                 {
                     if (EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress))

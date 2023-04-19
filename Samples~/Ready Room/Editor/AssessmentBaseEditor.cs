@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     [CustomEditor(typeof(AssessmentBase), true)]
     public class AssessmentBaseEditor : Editor

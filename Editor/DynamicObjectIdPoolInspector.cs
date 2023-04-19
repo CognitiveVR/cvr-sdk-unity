@@ -55,21 +55,21 @@ namespace Cognitive3D
             {
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new Cognitive3D.ManageDynamicObjects.AggregationManifest();
+                    AggregationManifest manifest = new AggregationManifest();
                     foreach (Object opool in idpools)
                     {
                         var pool = (DynamicObjectIdPool)opool;
                         foreach (var id in pool.Ids)
                         {
                             //TODO pools need a reference to a gameobject to aggregate data correctly
-                            manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id,
+                            manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id,
                                 new float[3] { 1, 1, 1 },
                                 new float[3] { 0, 0, 0 },
                                 new float[4] { 0,0,0,1 }));
                         }
                     }
 
-                    ManageDynamicObjects.UploadManifest(manifest, null);
+                    DynamicObjectsWindow.UploadManifest(manifest, null);
                 });
             }
             EditorGUI.EndDisabledGroup();

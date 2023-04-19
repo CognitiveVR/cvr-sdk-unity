@@ -44,7 +44,7 @@ namespace Cognitive3D
                 EditorPrefs.SetString("cognitive_sdk_version", Cognitive3D_Manager.SDK_VERSION);
             }
 
-            if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup)
+            if (!Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup && !EditorCore.HasC3DDefine())
             {
                 Cognitive3D_Preferences.Instance.EditorHasDisplayedPopup = true;
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
@@ -66,7 +66,7 @@ namespace Cognitive3D
         {
             if (initDelay > 0) { initDelay--; return; }
             EditorApplication.update -= UpdateInitWizard;
-            InitWizard.Init();
+            ProjectSetupWindow.Init();
         }
 
         static void ModeChanged(PlayModeStateChange playModeState)
@@ -134,7 +134,7 @@ namespace Cognitive3D
         {
             get
             {
-                return EditorPrefs.HasKey("developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("developerkey"));
+                return EditorPrefs.HasKey("c3d_developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("c3d_developerkey"));
             }
         }
 
@@ -142,8 +142,29 @@ namespace Cognitive3D
         {
             get
             {
-                return EditorPrefs.GetString("developerkey");
+                return EditorPrefs.GetString("c3d_developerkey");
             }
+        }
+
+        public static List<string> GetPlayerDefines()
+        {
+            string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            string[] ExistingSymbols = s.Split(';');
+            return new List<string>(ExistingSymbols);
+        }
+
+        public static bool HasC3DDefine()
+        {
+            List<string> ExistingSymbols = GetPlayerDefines();
+
+            foreach (var v in ExistingSymbols)
+            {
+                if (v.StartsWith("C3D_"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static void SetPlayerDefine(List<string> C3DSymbols)
@@ -349,147 +370,12 @@ namespace Cognitive3D
             }
         }
 
-        static Color AcceptVibrant
-        {
-            get
-            {
-                if (EditorGUIUtility.isProSkin)
-                {
-                    return Color.green;
-                }
-                return Color.green;
-            }
-        }
-
-        static Color DeclineVibrant
-        {
-            get
-            {
-                if (EditorGUIUtility.isProSkin)
-                {
-                    return Color.red;
-                }
-                return Color.red;
-            }
-        }
-
         public static void GUIHorizontalLine(float size = 10)
         {
             GUILayout.Space(size);
             GUILayout.Box("", new GUILayoutOption[] { GUILayout.ExpandWidth(true), GUILayout.Height(1) });
             GUILayout.Space(size);
         }
-
-        public static bool AcceptButtonLarge(string text)
-        {
-            GUI.color = AcceptVibrant;
-            if (GUILayout.Button(text, GUILayout.Height(40)))
-                return true;
-            GUI.color = Color.white;
-            return false;
-        }
-
-        public static bool DeclineButtonLarge(string text)
-        {
-            GUI.color = DeclineVibrant;
-            if (GUILayout.Button(text, GUILayout.Height(40)))
-                return true;
-            GUI.color = Color.white;
-            return false;
-        }
-
-        public static void DisableButtonLarge(string text)
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            GUILayout.Button(text, GUILayout.Height(40));
-            EditorGUI.EndDisabledGroup();
-        }
-
-        public static bool DisableableAcceptButtonLarget(string text, bool disable)
-        {
-            if (disable)
-            {
-                DisableButtonLarge(text);
-                return false;
-            }
-            return AcceptButtonLarge(text);
-        }
-
-        //https://forum.unity.com/threads/how-to-copy-and-paste-in-a-custom-editor-textfield.261087/
-        /// <summary>
-        /// Add copy-paste functionality to any text field
-        /// Returns changed text or NULL.
-        /// Usage: text = HandleCopyPaste (controlID) ?? text;
-        /// </summary>
-        public static string HandleCopyPaste(int controlID)
-        {
-            if (controlID == GUIUtility.keyboardControl)
-            {
-                if (Event.current.type == EventType.KeyUp && (Event.current.modifiers == EventModifiers.Control || Event.current.modifiers == EventModifiers.Command))
-                {
-                    if (Event.current.keyCode == KeyCode.C)
-                    {
-                        Event.current.Use();
-                        TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                        editor.Copy();
-                    }
-                    else if (Event.current.keyCode == KeyCode.V)
-                    {
-                        Event.current.Use();
-                        TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                        editor.Paste();
-                        return editor.text;
-                    }
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// TextField with copy-paste support
-        /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength, string styleOverride)
-        {
-            int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
-            if (textFieldID == 0)
-            {
-                return value;
-            }
-
-#if !UNITY_2019_4_OR_NEWER
-            //enables copy/paste from text fields in old versions of unity
-            value = HandleCopyPaste(textFieldID) ?? value;
-#endif
-            if (styleOverride == null)
-            {
-                return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
-            }
-            else
-            {
-                return GUI.TextField(rect, value, maxlength, styleOverride);
-            }
-        }
-
-        /// <summary>
-        /// TextField with copy-paste support
-        /// Overload when no styleoverride is passed in
-        /// </summary>
-        public static string TextField(Rect rect, string value, int maxlength)
-        {
-            int textFieldID = GUIUtility.GetControlID("TextField".GetHashCode(), FocusType.Keyboard) + 1;
-            if (textFieldID == 0)
-            {
-                return value;
-            }
-
-#if !UNITY_2019_4_OR_NEWER
-            //enables copy/paste from text fields in old versions of unity
-            value = HandleCopyPaste(textFieldID) ?? value;
-#endif
-            return GUI.TextField(rect, value, maxlength, GUI.skin.textField);
-        }
-
-
 
         #endregion
 
@@ -504,39 +390,67 @@ namespace Cognitive3D
                 return _logo;
             }
         }
+        private static Texture2D _circleCheckmark;
+        public static Texture2D CircleCheckmark
+        {
+            get
+            {
+                if (_circleCheckmark == null)
+                {
+                    _circleCheckmark = Resources.Load<Texture2D>("Icons/circle check");
+                }
+                return _circleCheckmark;
+            }
+        }
 
-        private static Texture2D _checkmark;
+        [System.Obsolete("Use EditorCore.CircleCheckmark instead")]
         public static Texture2D Checkmark
         {
             get
             {
-                if (_checkmark == null)
-                    _checkmark = Resources.Load<Texture2D>("checkmark_icon");
-                return _checkmark;
+                return CircleCheckmark;
             }
         }
 
-        private static Texture2D _controller;
-        public static Texture2D Controller
+        private static Texture2D _emptyCircle;
+        public static Texture2D CircleEmpty
         {
             get
             {
-                if (_controller == null)
-                    _controller = Resources.Load<Texture2D>("controller_icon");
-                return _controller;
+                if (_emptyCircle == null)
+                {
+                    _emptyCircle = Resources.Load<Texture2D>("Icons/circle grey empty");
+                }
+                return _emptyCircle;
             }
         }
 
-        private static Texture2D _blueCheckmark;
-        public static Texture2D BlueCheckmark
+        private static Texture2D _boxCheckmark;
+        public static Texture2D BoxCheckmark
         {
             get
             {
-                if (_blueCheckmark == null)
-                    _blueCheckmark = Resources.Load<Texture2D>("blue_checkmark_icon");
-                return _blueCheckmark;
+                if (_boxCheckmark == null)
+                {
+                    _boxCheckmark = Resources.Load<Texture2D>("Icons/box check");
+                }
+                return _boxCheckmark;
             }
         }
+
+        private static Texture2D _boxEmpty;
+        public static Texture2D BoxEmpty
+        {
+            get
+            {
+                if (_boxEmpty == null)
+                {
+                    _boxEmpty = Resources.Load<Texture2D>("Icons/box empty");
+                }
+                return _boxEmpty;
+            }
+        }
+
 
         private static Texture2D _alert;
         public static Texture2D Alert
@@ -544,7 +458,9 @@ namespace Cognitive3D
             get
             {
                 if (_alert == null)
-                    _alert = Resources.Load<Texture2D>("alert_icon");
+                {
+                    _alert = Resources.Load<Texture2D>("Icons/alert");
+                }
                 return _alert;
             }
         }
@@ -555,19 +471,10 @@ namespace Cognitive3D
             get
             {
                 if (_error == null)
-                    _error = Resources.Load<Texture2D>("error_icon");
+                {
+                    _error = Resources.Load<Texture2D>("Icons/error");
+                }
                 return _error;
-            }
-        }
-
-        private static Texture2D _question;
-        public static Texture2D Question
-        {
-            get
-            {
-                if (_question == null)
-                    _question = Resources.Load<Texture2D>("question_icon");
-                return _question;
             }
         }
 
@@ -577,7 +484,9 @@ namespace Cognitive3D
             get
             {
                 if (_info == null)
-                    _info = Resources.Load<Texture2D>("info_icon");
+                {
+                    _info = Resources.Load<Texture2D>("Icons/info");
+                }
                 return _info;
             }
         }
@@ -588,94 +497,114 @@ namespace Cognitive3D
             get
             {
                 if (_searchIcon == null)
-                    _searchIcon = EditorGUIUtility.FindTexture("search focused"); //TODO use an asset in package, not unity engine
+                {
+                    _searchIcon = Resources.Load<Texture2D>("Icons/search");
+                }
                 return _searchIcon;
             }
         }
 
-        private static Texture2D _emptycheckmark;
-        public static Texture2D EmptyCheckmark
+        private static Texture2D _searchIconwhite;
+        public static Texture2D SearchIconWhite
         {
             get
             {
-                if (_emptycheckmark == null)
-                    _emptycheckmark = Resources.Load<Texture2D>("grey_circle");
-                return _emptycheckmark;
+                if (_searchIconwhite == null)
+                {
+                    _searchIconwhite = Resources.Load<Texture2D>("Icons/search white");
+                }
+                return _searchIconwhite;
             }
         }
 
-        private static Texture2D _emptybluecheckmark;
-        public static Texture2D EmptyBlueCheckmark
+        private static Texture2D exitpollFeature;
+        internal static Texture2D ExitPollFeature
         {
             get
             {
-                if (_emptybluecheckmark == null)
-                    _emptybluecheckmark = Resources.Load<Texture2D>("blue_circle");
-                return _emptybluecheckmark;
-            }
-        }        
-
-        private static Texture2D _sceneHighlight;
-        public static Texture2D SceneHighlight
-        {
-            get
-            {
-                if (_sceneHighlight == null)
-                    _sceneHighlight = Resources.Load<Texture2D>("scene_blue");
-                return _sceneHighlight;
+                if (exitpollFeature == null)
+                {
+                    exitpollFeature = Resources.Load<Texture2D>("FeatureImages/ExitPoll");
+                }
+                return exitpollFeature;
             }
         }
 
-        private static Texture2D _sceneBackground;
-        public static Texture2D SceneBackground
+        private static Texture2D sceneFeature;
+        internal static Texture2D SceneFeature
         {
             get
             {
-                if (_sceneBackground == null)
-                    _sceneBackground = Resources.Load<Texture2D>("scene_grey");
-                return _sceneBackground;
-            }
-        }
-        private static Texture2D _sceneBackgroundHalf;
-        public static Texture2D SceneBackgroundHalf
-        {
-            get
-            {
-                if (_sceneBackgroundHalf == null)
-                    _sceneBackgroundHalf = Resources.Load<Texture2D>("scene_grey_half");
-                return _sceneBackgroundHalf;
-            }
-        }
-        private static Texture2D _sceneBackgroundQuarter;
-        public static Texture2D SceneBackgroundQuarter
-        {
-            get
-            {
-                if (_sceneBackgroundQuarter == null)
-                    _sceneBackgroundQuarter = Resources.Load<Texture2D>("scene_grey_quarter");
-                return _sceneBackgroundQuarter;
+                if (sceneFeature == null)
+                {
+                    sceneFeature = Resources.Load<Texture2D>("FeatureImages/SceneExplorer");
+                }
+                return sceneFeature;
             }
         }
 
-        private static Texture2D _objectsHighlight;
-        public static Texture2D ObjectsHightlight
+        private static Texture2D dynamicsFeature;
+        internal static Texture2D DynamicsFeature
         {
             get
             {
-                if (_objectsHighlight == null)
-                    _objectsHighlight = Resources.Load<Texture2D>("objects_blue");
-                return _objectsHighlight;
+                if (dynamicsFeature == null)
+                {
+                    dynamicsFeature = Resources.Load<Texture2D>("FeatureImages/Dynamics");
+                }
+                return dynamicsFeature;
             }
         }
 
-        private static Texture2D _objectsBackground;
-        public static Texture2D ObjectsBackground
+        private static Texture2D sensorsFeature;
+        internal static Texture2D SensorsFeature
         {
             get
             {
-                if (_objectsBackground == null)
-                    _objectsBackground = Resources.Load<Texture2D>("objects_grey");
-                return _objectsBackground;
+                if (sensorsFeature == null)
+                {
+                    sensorsFeature = Resources.Load<Texture2D>("FeatureImages/Sensors");
+                }
+                return sensorsFeature;
+            }
+        }
+
+        private static Texture2D mediaFeature;
+        internal static Texture2D MediaFeature
+        {
+            get
+            {
+                if (mediaFeature == null)
+                {
+                    mediaFeature = Resources.Load<Texture2D>("FeatureImages/Media");
+                }
+                return mediaFeature;
+            }
+        }
+
+        private static Texture2D readyRoomFeature;
+        internal static Texture2D ReadyRoomFeature
+        {
+            get
+            {
+                if (readyRoomFeature == null)
+                {
+                    readyRoomFeature = Resources.Load<Texture2D>("FeatureImages/Ready Room");
+                }
+                return readyRoomFeature;
+            }
+        }
+
+        private static Texture2D onboardingVideo;
+        internal static Texture2D OnboardingVideo
+        {
+            get
+            {
+                if (onboardingVideo == null)
+                {
+                    onboardingVideo = Resources.Load<Texture2D>("FeatureImages/Onboarding Video");
+                }
+                return onboardingVideo;
             }
         }
 
@@ -685,7 +614,9 @@ namespace Cognitive3D
             get
             {
                 if (_settingsIcon == null)
-                    _settingsIcon = EditorGUIUtility.FindTexture("_Popup"); //TODO use an asset in package, not unity engine
+                {
+                    _settingsIcon = Resources.Load<Texture2D>("Icons/gear blue");
+                }
                 return _settingsIcon;
             }
         }
@@ -695,19 +626,74 @@ namespace Cognitive3D
             get
             {
                 if (_filterIcon == null)
-                    _filterIcon = EditorGUIUtility.FindTexture("d_FilterByType"); //TODO use an asset in package, not unity engine
+                {
+                    _filterIcon = Resources.Load<Texture2D>("Icons/group");
+                }
                 return _filterIcon;
             }
         }
-        
-        private static Texture2D _refreshIcon;
+
+        private static Texture2D _clearIcon;
+        public static Texture2D ClearIcon
+        {
+            get
+            {
+                if (_clearIcon == null)
+                {
+                    _clearIcon = Resources.Load<Texture2D>("Icons/clear");
+                }
+                return _clearIcon;
+            }
+        }
+
+        private static Texture2D externalIcon;
+        public static Texture2D ExternalIcon
+        {
+            get
+            {
+                if (externalIcon == null)
+                {
+                    externalIcon = Resources.Load<Texture2D>("Icons/external");
+                }
+                return externalIcon;
+            }
+        }
+
+        private static Texture2D clouduploadIcon;
+        public static Texture2D CloudUploadIcon
+        {
+            get
+            {
+                if (clouduploadIcon == null)
+                {
+                    clouduploadIcon = Resources.Load<Texture2D>("Icons/cloud upload");
+                }
+                return clouduploadIcon;
+            }
+        }
+
+        private static Texture2D _refreshIconWhite;
+        private static Texture2D _refreshIconBlack;
         public static Texture2D RefreshIcon
         {
             get
             {
-                if (_refreshIcon == null)
-                    _refreshIcon = Resources.Load<Texture2D>("RefreshIcon");
-                return _refreshIcon;
+                if (EditorGUIUtility.isProSkin)
+                {
+                    if (_refreshIconWhite == null)
+                    {
+                        _refreshIconWhite = Resources.Load<Texture2D>("Icons/refresh white");
+                    }
+                    return _refreshIconWhite;
+                }
+                else
+                {
+                    if (_refreshIconBlack == null)
+                    {
+                        _refreshIconBlack = Resources.Load<Texture2D>("Icons/refresh black");
+                    }
+                    return _refreshIconBlack;
+                }
             }
         }
 
@@ -823,9 +809,37 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-#endregion
+        #endregion
 
-#region SDK Updates
+        #region Packages
+
+        static System.Action<UnityEditor.PackageManager.PackageCollection> GetPackageResponseAction;
+        static UnityEditor.PackageManager.Requests.ListRequest GetPackageListRequest;
+        public static void GetPackages(System.Action<UnityEditor.PackageManager.PackageCollection> responseAction)
+        {
+            GetPackageResponseAction = responseAction;
+            GetPackageListRequest = UnityEditor.PackageManager.Client.List();
+            EditorApplication.update += WaitGetPackageList;
+        }
+
+        //TODO consider merging this with WaitList below. need to refactor to handle various actions from the result
+        static void WaitGetPackageList()
+        {
+            if (!GetPackageListRequest.IsCompleted) { return; }
+            EditorApplication.update -= WaitGetPackageList;
+
+            if (GetPackageListRequest.Error != null)
+            {
+                Debug.LogError("Checking current version Cognitive3D package. " + GetPackageListRequest.Error);
+                return;
+            }
+
+            GetPackageResponseAction.Invoke(GetPackageListRequest.Result);
+        }
+
+        #endregion
+
+        #region SDK Updates
         //data about the last sdk release on github
         public class ReleaseInfo
         {
@@ -1016,6 +1030,79 @@ namespace Cognitive3D
             return false;
         }
 
+        internal static bool HasSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings)
+        {
+            if (sceneSettings == null) { return false; }
+
+            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar + sceneSettings.SceneName + "screenshot" + Path.DirectorySeparatorChar;
+            var sceneScreenshotDirExists = Directory.Exists(sceneScreenshotDirectory);
+
+            if (!sceneScreenshotDirExists) { return false; }
+
+            //look in screenshot subdirectory
+
+            var files = Directory.GetFiles(sceneScreenshotDirectory);
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i].EndsWith("screenshot.png"))
+                { return true; }
+            }
+            return false;
+        }
+
+        class CachedSceneThumbnail
+        {
+            public Cognitive3D_Preferences.SceneSettings SceneSettings;
+            public Texture2D SceneThumbnail;
+            public CachedSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings, Texture2D sceneThumbnail)
+            {
+                SceneSettings = sceneSettings;
+                SceneThumbnail = sceneThumbnail;
+            }
+        }
+        static CachedSceneThumbnail cachedSceneThumbnail;
+
+        internal static bool GetSceneThumbnail(Cognitive3D_Preferences.SceneSettings sceneSettings, ref Texture2D thumbnail, bool refresh)
+        {
+            //clear cached thumbnail if necessary
+            if (refresh)
+            {
+                cachedSceneThumbnail = null;
+            }
+            if (cachedSceneThumbnail != null && sceneSettings == cachedSceneThumbnail.SceneSettings)
+            {
+                thumbnail = cachedSceneThumbnail.SceneThumbnail;
+                return true;
+            }
+
+            //check if scene export directory exists
+            if (sceneSettings == null) { return false; }
+            string sceneScreenshotDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneSettings.SceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar;
+            var sceneScreenshotDirExists = Directory.Exists(sceneScreenshotDirectory);
+            if (!sceneScreenshotDirExists) { return false; }
+
+            //look in screenshot subdirectory
+            var files = Directory.GetFiles(sceneScreenshotDirectory);
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i].EndsWith("screenshot.png"))
+                {
+                    var bytes = File.ReadAllBytes(files[i]);
+                    thumbnail = new Texture2D(1,1);
+                    if (thumbnail.LoadImage(bytes, false))
+                    {                        
+                        cachedSceneThumbnail = new CachedSceneThumbnail(sceneSettings, thumbnail);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static bool CreateTargetFolder(string fullName)
         {
             try
@@ -1174,6 +1261,29 @@ namespace Cognitive3D
             return sceneRT;
         }
 
+        public static void UploadSceneThumbnail(Cognitive3D_Preferences.SceneSettings settings)
+        {
+            string path = "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png";
+
+            if (!File.Exists(path))
+            {
+                Debug.Log("Cannot upload Scene Thumbnail, thumbnail asset doesn't exist");
+                return;
+            }
+
+            string url = CognitiveStatics.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
+            var bytes = File.ReadAllBytes(path);
+            WWWForm form = new WWWForm();
+            form.AddBinaryData("screenshot", bytes, "screenshot.png");
+            var headers = new Dictionary<string, string>();
+            foreach (var v in form.headers)
+            {
+                headers[v.Key] = v.Value;
+            }
+            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            EditorNetwork.Post(url, form, UploadCustomScreenshotResponse, headers, false);
+        }
+
         public static void UploadCustomScreenshot()
         {
             //check that scene has been uploaded
@@ -1313,9 +1423,18 @@ namespace Cognitive3D
             saveCameraScreenshot = null;
         }
 
+        public static void DeleteSceneThumbnail(string sceneName)
+        {
+            string filePath = "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot" + Path.DirectorySeparatorChar + "screenshot.png";
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            else
+                Debug.Log("can't delete file, doesn't exist " + filePath);
+        }
+
 #endregion
 
-#region Dynamic Object Thumbnails
+        #region Dynamic Object Thumbnails
         //returns unused layer int. returns -1 if no unused layer is found
         public static int FindUnusedLayer()
         {
@@ -1346,6 +1465,20 @@ namespace Cognitive3D
             Quaternion rot;
             CalcCameraTransform(target, out pos, out rot);
             SaveDynamicThumbnail(target, pos, rot);
+        }
+
+        public static Texture2D GetSceneIsometricThumbnail()
+        {
+            //center on the player if a prefab exists in the scene. otherwise origin
+            Vector3 pos = new Vector3(20,17,20);
+            Quaternion rot = Quaternion.Euler(30, -135, 0);
+
+            if (Camera.main != null)
+            {
+                pos += Camera.main.transform.position;
+            }
+
+            return GenerateSceneIsoThumbnail(pos, rot);
         }
 
         /// <summary>
@@ -1434,6 +1567,38 @@ namespace Cognitive3D
 
             //save
             File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", tex.EncodeToPNG());
+        }
+
+        static Texture2D GenerateSceneIsoThumbnail(Vector3 position, Quaternion rotation)
+        {
+            GameObject go = new GameObject("temp scene iso camera");
+            var renderCam = go.AddComponent<Camera>();
+            renderCam.fieldOfView = 15;
+            renderCam.nearClipPlane = 0.5f;
+            var rt = new RenderTexture(512, 512, 16);
+            renderCam.targetTexture = rt;
+            Texture2D tex = new Texture2D(rt.width, rt.height);
+
+            //position camera
+            go.transform.position = position;
+            go.transform.rotation = rotation;
+
+            //set dynamic gameobject layers
+            try
+            {
+                //render to texture
+                renderCam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+                tex.Apply();
+                RenderTexture.active = null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            GameObject.DestroyImmediate(renderCam.gameObject);
+            return tex;
         }
 
         /// <summary>
@@ -1537,27 +1702,47 @@ namespace Cognitive3D
 
         public static void CheckForExpiredDeveloperKey(EditorNetwork.Response callback)
         {
-            if (EditorPrefs.HasKey("developerkey"))
+            if (IsDeveloperKeyValid)
             {
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("c3d_developerkey"));
                 EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify", callback, headers, true);
-
-
-                /*//check if dev key is expired
-                var devkeyrequest = new UnityEngine.Networking.UnityWebRequest("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/apiKeys/verify");
-                devkeyrequest.SetRequestHeader("Authorization", "APIKEY:DEVELOPER " + EditorPrefs.GetString("developerkey"));
-                devkeyrequest.Send();
-                EditorApplication.update += DevKeyCheckUpdate;*/
             }
             else
             {
-                callback.Invoke(0, "invalid url", "");
+                callback.Invoke(0, "Invalid Developer Key", "");
             }
-            //invoke the callback with the response code
         }
 
-#endregion
+        internal static void CheckForApplicationKey(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/applicationKey", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        internal static void CheckSubscription(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/subscriptions", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        #endregion
 
         public static Vector3 TransformPointUnscaled(Transform transform, Vector3 position)
         {

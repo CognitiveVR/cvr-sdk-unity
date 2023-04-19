@@ -6,7 +6,7 @@ using UnityEngine;
 //Instance created from assessment base on Start
 //holds ordered collection of assessments to complete in the ready room
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class AssessmentManager : MonoBehaviour
     {

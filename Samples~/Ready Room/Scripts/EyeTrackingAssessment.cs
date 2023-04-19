@@ -4,7 +4,7 @@ using UnityEngine;
 
 //complete when the user looks at each target
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class EyeTrackingAssessment : AssessmentBase
     {

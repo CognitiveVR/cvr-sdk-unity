@@ -13,7 +13,7 @@ using UnityEditor;
 namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Custom Render Exporter")]
-    public class CustomRenderExporter : MonoBehaviour
+    internal class CustomRenderExporter : MonoBehaviour
     {
         public class CustomRender
         {
@@ -301,7 +301,7 @@ namespace Cognitive3D
 {
     [CustomEditor(typeof(CustomRenderExporter))]
     [CanEditMultipleObjects]
-    public class CustomRenderExporterEditor : Editor
+    internal class CustomRenderExporterEditor : Editor
     {
         public override void OnInspectorGUI()
         {
