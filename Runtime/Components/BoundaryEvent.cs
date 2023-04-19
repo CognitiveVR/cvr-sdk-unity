@@ -61,6 +61,7 @@ namespace Cognitive3D.Components
         }
 #endif
 
+#if C3D_OCULUS
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             currentTime += deltaTime;
@@ -103,7 +104,6 @@ namespace Cognitive3D.Components
             }
         }
 
-#if C3D_OCULUS
         private bool HasBoundaryChanged()
         {
             Vector3[] temporaryArray;
