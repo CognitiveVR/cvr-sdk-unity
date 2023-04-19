@@ -16,7 +16,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary Event")]
     public class BoundaryEvent : AnalyticsComponentBase
     {
-        private float BoundaryTrackingInterval = 1;
+        private readonly float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
 #if C3D_OCULUS
@@ -149,7 +149,10 @@ namespace Cognitive3D.Components
 
     private void Cognitive3D_Manager_OnPreSessionEnd()
         {
+#if C3D_OCULUS
+
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+#endif
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 

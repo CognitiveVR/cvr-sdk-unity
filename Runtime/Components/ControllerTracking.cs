@@ -6,7 +6,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
-        private float ControllerTrackingInterval = 1;
+        private readonly float ControllerTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
 
