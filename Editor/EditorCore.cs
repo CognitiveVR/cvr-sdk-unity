@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Build;
 using System;
-using Cognitive3D;
 using System.IO;
+using UnityEditor.SceneManagement;
 
 //contains functions for button/label styles
 //references to editor prefs
@@ -15,7 +13,6 @@ using System.IO;
 
 namespace Cognitive3D
 {
-    using Path = System.IO.Path;
     public enum DisplayKey
     {
         FullName,
@@ -53,7 +50,7 @@ namespace Cognitive3D
                 EditorApplication.update += UpdateInitWizard;
             }
 
-            if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
+            if (Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
             {
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
@@ -73,7 +70,7 @@ namespace Cognitive3D
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)
             {
-                if (Cognitive3D.Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
+                if (Cognitive3D_Preferences.Instance.LocalStorage && Cognitive3D_Preferences.Instance.UploadCacheOnEndPlay)
                     EditorApplication.update += DelayUploadCache;
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 uploadDelayFrames = 10;
@@ -87,9 +84,9 @@ namespace Cognitive3D
             if (uploadDelayFrames < 0)
             {
                 EditorApplication.update -= DelayUploadCache;
-                Cognitive3D.ICache ic = new Cognitive3D.DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
-                    new Cognitive3D.EditorDataUploader(ic);
+                    new EditorDataUploader(ic);
             }
         }
 
@@ -246,7 +243,7 @@ namespace Cognitive3D
                 filepath = "Assets" + directory.Substring(Application.dataPath.Length);
                 return true;
             }
-            foreach (var dir in System.IO.Directory.GetDirectories(System.IO.Path.Combine(Application.dataPath, directory)))
+            foreach (var dir in Directory.GetDirectories(Path.Combine(Application.dataPath, directory)))
             {
                 RecursiveDirectorySearch(dir, out filepath, searchDir);
                 if (filepath != "") { return true; }
@@ -278,7 +275,7 @@ namespace Cognitive3D
         /// make a get request for all scene versions of this scene
         /// </summary>
         /// <param name="refreshSceneVersionComplete"></param>
-        public static void RefreshSceneVersion(System.Action refreshSceneVersionComplete)
+        public static void RefreshSceneVersion(Action refreshSceneVersionComplete)
         {
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
@@ -716,7 +713,7 @@ namespace Cognitive3D
         {
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+            string currentSceneName = EditorSceneManager.GetActiveScene().name;
             var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
             if (currentSettings != null)
             {
@@ -755,7 +752,7 @@ namespace Cognitive3D
             Util.logDevelopment("Response contains " + sources.Length + " media sources");
             if (sources.Length > 0)
             {
-                UnityEditor.ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
+                ArrayUtility.Insert<MediaSource>(ref sources, 0, new MediaSource());
                 MediaSources = sources;
             }
         }
@@ -806,7 +803,7 @@ namespace Cognitive3D
                     if (line.StartsWith("//")) { continue; }
                     string replacement = System.Text.RegularExpressions.Regex.Replace(line, @"\t|\n|\r", "");
                     var split = replacement.Split('|');
-                    foreach (var keyvalue in (DisplayKey[])System.Enum.GetValues(typeof(DisplayKey)))
+                    foreach (var keyvalue in (DisplayKey[])Enum.GetValues(typeof(DisplayKey)))
                     {
                         if (split[0].ToUpper() == key.ToString().ToUpper())
                         {
@@ -821,9 +818,9 @@ namespace Cognitive3D
 
         #region Packages
 
-        static System.Action<UnityEditor.PackageManager.PackageCollection> GetPackageResponseAction;
+        static Action<UnityEditor.PackageManager.PackageCollection> GetPackageResponseAction;
         static UnityEditor.PackageManager.Requests.ListRequest GetPackageListRequest;
-        public static void GetPackages(System.Action<UnityEditor.PackageManager.PackageCollection> responseAction)
+        public static void GetPackages(Action<UnityEditor.PackageManager.PackageCollection> responseAction)
         {
             GetPackageResponseAction = responseAction;
             GetPackageListRequest = UnityEditor.PackageManager.Client.List();
@@ -858,10 +855,10 @@ namespace Cognitive3D
 
         private static void SaveEditorVersion()
         {
-            if (EditorPrefs.GetString("c3d_version") != Cognitive3D.Cognitive3D_Manager.SDK_VERSION)
+            if (EditorPrefs.GetString("c3d_version") != Cognitive3D_Manager.SDK_VERSION)
             {
-                EditorPrefs.SetString("c3d_version", Cognitive3D.Cognitive3D_Manager.SDK_VERSION);
-                EditorPrefs.SetString("c3d_updateDate", System.DateTime.UtcNow.ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_version", Cognitive3D_Manager.SDK_VERSION);
+                EditorPrefs.SetString("c3d_updateDate", DateTime.UtcNow.ToString("dd-MM-yyyy"));
             }
         }
 
@@ -869,7 +866,7 @@ namespace Cognitive3D
         {
             EditorPrefs.SetString("c3d_skipVersion", "");
             EditorApplication.update -= UpdateCheckForUpdates;
-            EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+            EditorPrefs.SetString("c3d_updateRemindDate", DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             SaveEditorVersion();
 
 #if USE_ATTRIBUTION
@@ -893,11 +890,11 @@ namespace Cognitive3D
             System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
             System.Globalization.DateTimeStyles styles = System.Globalization.DateTimeStyles.None;
 
-            if (System.DateTime.TryParseExact(EditorPrefs.GetString("c3d_updateRemindDate", "01/01/1971"), "dd-MM-yyyy", culture, styles, out remindDate))
+            if (DateTime.TryParseExact(EditorPrefs.GetString("c3d_updateRemindDate", "01/01/1971"), "dd-MM-yyyy", culture, styles, out remindDate))
             {
-                if (System.DateTime.UtcNow > remindDate)
+                if (DateTime.UtcNow > remindDate)
                 {
-                    EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                    EditorPrefs.SetString("c3d_updateRemindDate", DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                     SaveEditorVersion();
 
 #if USE_ATTRIBUTION
@@ -914,7 +911,7 @@ namespace Cognitive3D
             }
             else
             {
-                EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                EditorPrefs.SetString("c3d_updateRemindDate", DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
             }
         }
 
@@ -990,8 +987,8 @@ namespace Cognitive3D
 
                         if (version != skipVersion) //new version, not the skipped one
                         {
-                            System.Version installedVersion = new Version(Cognitive3D_Manager.SDK_VERSION);
-                            System.Version githubVersion = new Version(version);
+                            Version installedVersion = new Version(Cognitive3D_Manager.SDK_VERSION);
+                            Version githubVersion = new Version(version);
                             if (githubVersion > installedVersion)
                             {
                                 UpdateSDKWindow.Init(version, summary);
@@ -1003,7 +1000,7 @@ namespace Cognitive3D
                         }
                         else if (skipVersion == version) //skip this version. limit this check to once a day
                         {
-                            EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
+                            EditorPrefs.SetString("c3d_updateRemindDate", DateTime.UtcNow.AddDays(1).ToString("dd-MM-yyyy"));
                         }
                     }
                 }
@@ -1220,7 +1217,7 @@ namespace Cognitive3D
             long b = 0;
             foreach (string name in a)
             {
-                System.IO.FileInfo info = new System.IO.FileInfo(name);
+                FileInfo info = new FileInfo(name);
                 b += info.Length;
             }
             return b;
@@ -1260,7 +1257,7 @@ namespace Cognitive3D
             if (sceneRT == null)
                 sceneRT = new RenderTexture(256, 256, 24);
 
-            var cameras = UnityEditor.SceneView.GetAllSceneCameras();
+            var cameras = SceneView.GetAllSceneCameras();
             if (cameras != null && cameras.Length > 0 && cameras[0] != null)
             {
                 cameras[0].targetTexture = sceneRT;
