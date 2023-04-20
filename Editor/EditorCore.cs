@@ -99,14 +99,22 @@ namespace Cognitive3D
             Selection.activeGameObject = newManager;
             Undo.RegisterCreatedObjectUndo(newManager, "Create " + gameobjectName);
             newManager.AddComponent<Cognitive3D_Manager>();
-            newManager.AddComponent<Cognitive3D.Components.HMDHeight>();
-            newManager.AddComponent<Cognitive3D.Components.RoomSize>();
-            newManager.AddComponent<Cognitive3D.Components.ArmLength>();
-            newManager.AddComponent<Cognitive3D.Components.Framerate>();
-            newManager.AddComponent<Cognitive3D.Components.HMDPresentEvent>();
-            newManager.AddComponent<Cognitive3D.Components.BatteryLevel>();
-            newManager.AddComponent<Cognitive3D.Components.ControllerTracking>();
-            //TODO add additional components based on selected SDKs
+            newManager.AddComponent<Components.HMDHeight>();
+            newManager.AddComponent<Components.ArmLength>();
+            newManager.AddComponent<Components.HMDOrientation>();
+            newManager.AddComponent<Components.RoomSize>();
+            newManager.AddComponent<Components.Framerate>();
+            newManager.AddComponent<Components.BatteryLevel>();
+            newManager.AddComponent<Components.HMDPresentEvent>();
+            newManager.AddComponent<Components.ControllerTracking>();
+            newManager.AddComponent<Components.BoundaryEvent>();
+            newManager.AddComponent<Components.TeleportEvent>();
+            newManager.AddComponent<Components.HMDCollisionEvent>();
+
+            // adding additional components based on selected SDKs
+#if C3D_OCULUS
+            newManager.AddComponent<Components.OculusHardware>();
+#endif
         }
 
         public static DynamicObjectIdPool[] _cachedPoolAssets;
