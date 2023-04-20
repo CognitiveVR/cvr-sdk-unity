@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Cognitive3D.Components
 {
-    [AddComponentMenu("Cognitive3D/Components/Arm Length")]
+    [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
         protected override void OnSessionBegin()
