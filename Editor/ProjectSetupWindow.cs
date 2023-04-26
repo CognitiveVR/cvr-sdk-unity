@@ -251,7 +251,20 @@ namespace Cognitive3D
                 return;
             }
             ApplicationKeyResponseData responseData = JsonUtility.FromJson<ApplicationKeyResponseData>(text);
-            apikey = responseData.apiKey;
+
+            //display popup if application key is set but doesn't match the response
+            if (!string.IsNullOrEmpty(apikey) && apikey != responseData.apiKey)
+            {
+                var result = EditorUtility.DisplayDialog("Application Key Mismatch", "Do you want to use the latest Application Key available on the Dashboard?", "Ok", "No");
+                if (result)
+                {
+                    apikey = responseData.apiKey;
+                }
+            }
+            else
+            {
+                apikey = responseData.apiKey;
+            }
         }
 
         [System.Serializable]
@@ -822,7 +835,6 @@ namespace Cognitive3D
                 //dev key is fine
                 currentPage++;
                 SaveDevKey();
-                Util.logDevelopment(text);
             }
             else
             {
@@ -854,10 +866,7 @@ namespace Cognitive3D
                         //check and wait for response
                         onclick = () => SaveDevKey();
                         onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-                        if (!EditorCore.GetPreferences().IsApplicationKeyValid)
-                        {
-                            onclick += () => EditorCore.CheckForApplicationKey(developerkey, GetApplicationKeyResponse); 
-                        }
+                        onclick += () => EditorCore.CheckForApplicationKey(developerkey, GetApplicationKeyResponse);
                         onclick += () => EditorCore.CheckSubscription(developerkey, GetSubscriptionResponse);
                     }
 
