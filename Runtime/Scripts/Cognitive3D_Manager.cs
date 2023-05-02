@@ -550,17 +550,6 @@ namespace Cognitive3D
             return true;
         }
 
-        private void OnApplicationQuit()
-        {
-
-        }
-
-        IEnumerator SlowQuit()
-        {
-            yield return new WaitForSeconds(0.5f);
-            Application.Quit();
-        }
-
 #endregion
 
         //data has been sent. this is used to visualize on active session view
@@ -571,7 +560,6 @@ namespace Cognitive3D
         /// </summary>
         public static void FlushData()
         {
-            Debug.Log("Flush Data. Step ");
             if (string.IsNullOrEmpty(TrackingSceneId)) { return; }
             DynamicManager.SendData(true);
             CoreInterface.Flush(true);
