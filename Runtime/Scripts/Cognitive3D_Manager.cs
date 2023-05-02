@@ -535,7 +535,11 @@ namespace Cognitive3D
         bool hasCanceled = false;
         bool WantsToQuit()
         {
-            if (hasCanceled) { return true; }
+            if (hasCanceled)
+            {
+                Application.wantsToQuit -= WantsToQuit;
+                return true;
+            }
             if (!IsInitialized) { return false; }
             IsQuitting = true;
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
@@ -555,7 +559,6 @@ namespace Cognitive3D
             yield return new WaitForSeconds(0.5f);
             FlushData();
             ResetSessionData();
-            Application.wantsToQuit -= WantsToQuit;
             hasCanceled = true;
             Application.Quit();
         }
