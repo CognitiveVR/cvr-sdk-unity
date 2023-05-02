@@ -556,9 +556,9 @@ namespace Cognitive3D
 
         IEnumerator SlowQuit()
         {
-            yield return new WaitForSeconds(0.5f);
             FlushData();
             ResetSessionData();
+            yield return new WaitForSeconds(0.5f);
             hasCanceled = true;
             Application.Quit();
         }
