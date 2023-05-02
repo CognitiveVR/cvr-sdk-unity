@@ -49,8 +49,6 @@ namespace Cognitive3D
         YieldInstruction playerSnapshotInverval;
         YieldInstruction automaticSendInterval;
 
-        public static bool IsQuitting = false;
-
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool BeginSessionAutomatically = true;
 
@@ -485,6 +483,7 @@ namespace Cognitive3D
         /// </summary>
         public void EndSession()
         {
+            Application.wantsToQuit -= WantsToQuit;
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
@@ -537,11 +536,9 @@ namespace Cognitive3D
         {
             if (hasCanceled)
             {
-                Application.wantsToQuit -= WantsToQuit;
                 return true;
             }
-            if (!IsInitialized) { return false; }
-            IsQuitting = true;
+            if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
             new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
@@ -552,8 +549,6 @@ namespace Cognitive3D
             StartCoroutine(SlowQuit());
             return false;
         }
-
-
         IEnumerator SlowQuit()
         {
             FlushData();
