@@ -533,41 +533,31 @@ namespace Cognitive3D
             FlushData();
         }
 
-        bool hasCanceled = false;
         bool WantsToQuit()
         {
-            if (hasCanceled)
-            {
-                Application.wantsToQuit -= WantsToQuit;
-            }
-            return hasCanceled;
-        }
-
-        void OnApplicationQuit()
-        {
-            if (!IsInitialized) { return; }
-
+            if (!IsInitialized) { return false; }
             IsQuitting = true;
-            if (hasCanceled) { return; }
-
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-
             new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
-
             FlushData();
             ResetSessionData();
-            StartCoroutine(SlowQuit());
+            Application.wantsToQuit -= WantsToQuit;
+            return true;
+        }
+
+        private void OnApplicationQuit()
+        {
+
         }
 
         IEnumerator SlowQuit()
         {
             yield return new WaitForSeconds(0.5f);
-            hasCanceled = true;
             Application.Quit();
         }
 
@@ -581,6 +571,7 @@ namespace Cognitive3D
         /// </summary>
         public static void FlushData()
         {
+            Debug.Log("Flush Data. Step ");
             if (string.IsNullOrEmpty(TrackingSceneId)) { return; }
             DynamicManager.SendData(true);
             CoreInterface.Flush(true);
@@ -795,7 +786,6 @@ namespace Cognitive3D
         /// Has the Cognitive3D session started?
         /// </summary>
         public static bool IsInitialized { get; private set; }
-
         /// <summary>
         /// Reset all of the static vars to their default values. Calls delegates for cleaning up the session
         /// </summary>
