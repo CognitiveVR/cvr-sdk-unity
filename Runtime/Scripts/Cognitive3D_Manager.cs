@@ -532,9 +532,10 @@ namespace Cognitive3D
             pauseEvent.Send();
             FlushData();
         }
-
+        bool hasCanceled = false;
         bool WantsToQuit()
         {
+            if (hasCanceled) { return true; }
             if (!IsInitialized) { return false; }
             IsQuitting = true;
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
@@ -544,10 +545,19 @@ namespace Cognitive3D
                     { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
+            StartCoroutine(SlowQuit());
+            return false;
+        }
+
+
+        IEnumerator SlowQuit()
+        {
+            yield return new WaitForSeconds(0.5f);
             FlushData();
             ResetSessionData();
             Application.wantsToQuit -= WantsToQuit;
-            return true;
+            hasCanceled = true;
+            Application.Quit();
         }
 
 #endregion
