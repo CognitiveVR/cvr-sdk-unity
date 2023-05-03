@@ -49,8 +49,6 @@ namespace Cognitive3D
         YieldInstruction playerSnapshotInverval;
         YieldInstruction automaticSendInterval;
 
-        public static bool IsQuitting = false;
-
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool BeginSessionAutomatically = true;
 
@@ -134,6 +132,7 @@ namespace Cognitive3D
 
             SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
+            Application.wantsToQuit += WantsToQuit;
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
@@ -266,11 +265,11 @@ namespace Cognitive3D
                 var activeLoader = generalSettings.Manager.activeLoader;
                 if (activeLoader != null)
                 {
-                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
                 }
                 else
                 {
-                    Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
                 }
             }
             SetSessionProperty("c3d.app.inEditor", Application.isEditor);
@@ -484,11 +483,12 @@ namespace Cognitive3D
         /// </summary>
         public void EndSession()
         {
+            Application.wantsToQuit -= WantsToQuit;
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
-                Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
+                Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
                 FlushData();
                 ResetSessionData();
             }
@@ -531,35 +531,30 @@ namespace Cognitive3D
             pauseEvent.Send();
             FlushData();
         }
-
         bool hasCanceled = false;
-        void OnApplicationQuit()
+        bool WantsToQuit()
         {
-            if (!IsInitialized) { return; }
-
-            IsQuitting = true;
-            if (hasCanceled) { return; }
-
+            if (hasCanceled)
+            {
+                return true;
+            }
+            if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
-            Cognitive3D.Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));            
-
+            Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
             new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
-            Application.CancelQuit();
-            //TODO update and test with Application.wantsToQuit and Application.qutting
-
-            FlushData();
-            ResetSessionData();
             StartCoroutine(SlowQuit());
+            return false;
         }
-
         IEnumerator SlowQuit()
         {
+            FlushData();
+            ResetSessionData();
             yield return new WaitForSeconds(0.5f);
-            hasCanceled = true;            
+            hasCanceled = true;
             Application.Quit();
         }
 
@@ -787,7 +782,6 @@ namespace Cognitive3D
         /// Has the Cognitive3D session started?
         /// </summary>
         public static bool IsInitialized { get; private set; }
-
         /// <summary>
         /// Reset all of the static vars to their default values. Calls delegates for cleaning up the session
         /// </summary>
@@ -806,14 +800,13 @@ namespace Cognitive3D
             TrackingScene = null;
             if (NetworkManager != null)
             {
-                GameObject.Destroy(NetworkManager.gameObject);
+                Destroy(NetworkManager.gameObject);
             }
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
 
             SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
-
             CognitiveStatics.Reset();
         }
 
