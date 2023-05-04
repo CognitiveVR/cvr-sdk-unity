@@ -104,7 +104,6 @@ namespace Cognitive3D
             newManager.AddComponent<Components.BatteryLevel>();
             newManager.AddComponent<Components.HMDPresentEvent>();
             newManager.AddComponent<Components.ControllerTracking>();
-            newManager.AddComponent<Components.BoundaryEvent>();
             newManager.AddComponent<Components.TeleportEvent>();
             newManager.AddComponent<Components.HMDCollisionEvent>();
 
