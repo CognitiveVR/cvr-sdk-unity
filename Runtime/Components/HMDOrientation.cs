@@ -24,6 +24,7 @@ namespace Cognitive3D.Components
         }
 
         //TODO include cos and tan to figure out if the person is looking more than 90 degrees up or down
+        //TODO handle situations where tracking space isn't along the x/z plane
         private void RecordPitch()
         {
             if (GameplayReferences.HMD == null) { return; }
