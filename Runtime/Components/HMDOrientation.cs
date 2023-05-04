@@ -38,7 +38,7 @@ namespace Cognitive3D.Components
         private void RecordYaw()
         {
             if (GameplayReferences.HMD == null) { return; }
-            float yaw = GameplayReferences.HMD.rotation.eulerAngles.y;
+            float yaw = GameplayReferences.HMD.localRotation.eulerAngles.y;
             if (yaw > 180)
             {
                 yaw -= 360;
