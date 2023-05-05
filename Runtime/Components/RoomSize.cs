@@ -28,6 +28,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             boundaryPointsArray = new Vector3[4];
             trackingSpace = TryGetTrackingSpace();
+            boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
 #endif
 
 #if C3D_STEAMVR2
@@ -59,8 +60,6 @@ namespace Cognitive3D.Components
                 if (HasBoundaryChanged())
                 {
                     boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-                    Vector3 newRoomSize = new Vector3(0, 0, 0);
-                    GameplayReferences.GetRoomSize(ref newRoomSize);
                     CalculateAndRecordRoomsize(false);
                 }
             }
@@ -161,22 +160,22 @@ namespace Cognitive3D.Components
                 {
                     Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
                     Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
+                    SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
+                    if (!firstTime)
+                    {
+                        new CustomEvent("c3d.User changed boundary").SetProperties(new Dictionary<string, object>
+                        {
+                            {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
+                            {   "New Room Size" , roomsize.x * roomsize.z }
+                        }).Send();
+                    }
+                    lastRoomSize = roomsize;
                 }
             }
             else
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
             }
-            SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
-            if (!firstTime)
-            {
-                new CustomEvent("c3d.User changed guardian").SetProperties(new Dictionary<string, object>
-                    {
-                        {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
-                        {   "New Room Size" , roomsize.x * roomsize.z }
-                    }).Send();
-            }
-            lastRoomSize = roomsize;
         }
 
         public override bool GetWarning()
@@ -188,7 +187,7 @@ namespace Cognitive3D.Components
         {
             if (GameplayReferences.SDKSupportsRoomSize)
             {
-                return "Calculates properties related to player guardian";
+                return "Calculates properties and handles events related to player boundary";
             }
             else
             {
