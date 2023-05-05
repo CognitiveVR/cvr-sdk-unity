@@ -112,6 +112,7 @@ namespace Cognitive3D.Components
         }
 #endif
 
+        // Online reference
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
             bool result = false;
@@ -129,25 +130,6 @@ namespace Cognitive3D.Components
             }
             return result;
         }
-
-        private void Cognitive3D_Manager_OnPreSessionEnd()
-        {
-#if C3D_OCULUS
-
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
-#endif
-            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
-        }
-
-        void OnDestroy()
-        {
-            Cognitive3D_Manager_OnPreSessionEnd();
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).RemoveListener(OnChaperoneChanged);
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).RemoveListener(OnChaperoneChanged);
-#endif
-        }
-
 
         private void CalculateAndRecordRoomsize(bool firstTime)
         {
@@ -176,6 +158,25 @@ namespace Cognitive3D.Components
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
             }
+        }
+
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+#if C3D_OCULUS
+
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+#endif
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
+        void OnDestroy()
+        {
+            Cognitive3D_Manager_OnPreSessionEnd();
+#if C3D_STEAMVR2
+            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).RemoveListener(OnChaperoneChanged);
+            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).RemoveListener(OnChaperoneChanged);
+#endif
         }
 
         public override bool GetWarning()
