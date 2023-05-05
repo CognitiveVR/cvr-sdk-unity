@@ -13,10 +13,10 @@ namespace Cognitive3D.Components
         private readonly float BoundaryTrackingInterval = 1;
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
+        Vector3 lastRoomSize = new Vector3();
 #if C3D_OCULUS
         Vector3[] boundaryPointsArray;
         Transform trackingSpace;
-        Vector3 lastPosition = new Vector3(0, 0, 0);
         bool exited = false;
 #endif
 
@@ -45,7 +45,6 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
@@ -59,9 +58,9 @@ namespace Cognitive3D.Components
             {
                 if (HasBoundaryChanged())
                 {
+                    boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
                     Vector3 newRoomSize = new Vector3(0, 0, 0);
                     GameplayReferences.GetRoomSize(ref newRoomSize);
-                    boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
                     CalculateAndRecordRoomsize(false);
                 }
             }
@@ -154,7 +153,6 @@ namespace Cognitive3D.Components
         private void CalculateAndRecordRoomsize(bool firstTime)
         {
             Vector3 roomsize = new Vector3();
-            Vector3 lastRoomSize = new Vector3();
             if (GameplayReferences.GetRoomSize(ref roomsize))
             {
 #if XRPF
@@ -169,14 +167,14 @@ namespace Cognitive3D.Components
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
             }
-
+            SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
             if (!firstTime)
             {
-                new CustomEvent("User changed guardian").SetProperties(new Dictionary<string, object>
+                new CustomEvent("c3d.User changed guardian").SetProperties(new Dictionary<string, object>
                     {
-                        {  "Previous Room Size" , lastRoomSize },
-                        {   "New Room Size" , roomsize }
-                    });
+                        {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
+                        {   "New Room Size" , roomsize.x * roomsize.z }
+                    }).Send();
             }
             lastRoomSize = roomsize;
         }
