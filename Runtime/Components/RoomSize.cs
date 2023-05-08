@@ -37,10 +37,10 @@ namespace Cognitive3D.Components
 
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
-                new CustomEvent("cvr.boundary").Send();
+                new CustomEvent("c3d.user.exited.boundary").Send();
             }
 #endif
-            CalculateAndRecordRoomsize(true);
+            CalculateAndRecordRoomsize(false);
         }
 
 #if C3D_OCULUS
@@ -60,7 +60,7 @@ namespace Cognitive3D.Components
                 if (HasBoundaryChanged())
                 {
                     boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-                    CalculateAndRecordRoomsize(false);
+                    CalculateAndRecordRoomsize(true);
                 }
             }
 
@@ -131,7 +131,7 @@ namespace Cognitive3D.Components
             return result;
         }
 
-        private void CalculateAndRecordRoomsize(bool firstTime)
+        private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent)
         {
             Vector3 roomsize = new Vector3();
             if (GameplayReferences.GetRoomSize(ref roomsize))
@@ -143,7 +143,7 @@ namespace Cognitive3D.Components
                     Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
                     Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
                     SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
-                    if (!firstTime)
+                    if (recordRoomSizeChangeAsEvent)
                     {
                         new CustomEvent("c3d.User changed boundary").SetProperties(new Dictionary<string, object>
                         {
