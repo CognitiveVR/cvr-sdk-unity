@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Cognitive3D.Components
 {
-    [AddComponentMenu("Cognitive3D/Components/Arm Length")]
+    [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
         protected override void OnSessionBegin()
@@ -24,6 +24,7 @@ namespace Cognitive3D.Components
         }
 
         //TODO include cos and tan to figure out if the person is looking more than 90 degrees up or down
+        //TODO handle situations where tracking space isn't along the x/z plane
         private void RecordPitch()
         {
             if (GameplayReferences.HMD == null) { return; }
@@ -38,7 +39,7 @@ namespace Cognitive3D.Components
         private void RecordYaw()
         {
             if (GameplayReferences.HMD == null) { return; }
-            float yaw = GameplayReferences.HMD.rotation.eulerAngles.y;
+            float yaw = GameplayReferences.HMD.localRotation.eulerAngles.y;
             if (yaw > 180)
             {
                 yaw -= 360;
