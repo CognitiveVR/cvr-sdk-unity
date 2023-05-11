@@ -90,29 +90,6 @@ namespace Cognitive3D
             }
         }
 
-        public static void SpawnManager(string gameobjectName)
-        {
-            GameObject newManager = new GameObject(gameobjectName);
-            Selection.activeGameObject = newManager;
-            Undo.RegisterCreatedObjectUndo(newManager, "Create " + gameobjectName);
-            newManager.AddComponent<Cognitive3D_Manager>();
-            newManager.AddComponent<Components.HMDHeight>();
-            newManager.AddComponent<Components.ArmLength>();
-            newManager.AddComponent<Components.HMDOrientation>();
-            newManager.AddComponent<Components.RoomSize>();
-            newManager.AddComponent<Components.Framerate>();
-            newManager.AddComponent<Components.BatteryLevel>();
-            newManager.AddComponent<Components.HMDPresentEvent>();
-            newManager.AddComponent<Components.ControllerTracking>();
-            newManager.AddComponent<Components.TeleportEvent>();
-            newManager.AddComponent<Components.HMDCollisionEvent>();
-
-            // adding additional components based on selected SDKs
-#if C3D_OCULUS
-            newManager.AddComponent<Components.OculusHardware>();
-#endif
-        }
-
         public static DynamicObjectIdPool[] _cachedPoolAssets;
         /// <summary>
         /// search the project database and return an array of all DynamicObjectPool assets
