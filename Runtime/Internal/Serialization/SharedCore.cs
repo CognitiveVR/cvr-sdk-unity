@@ -27,7 +27,9 @@ namespace Cognitive3D.Serialization
             if (!IsInitialized) { return; }
 
             SerializeEvents(copyToCache);
-            SerializeGaze(copyToCache);
+            SerializeGaze(eyeTracked, copyToCache);
+            SerializeGaze(centerpoint, copyToCache);
+            SerializeGaze(headRegression, copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
 
@@ -1219,182 +1221,217 @@ namespace Cognitive3D.Serialization
         #endregion
 
         #region Gaze
-        static StringBuilder gazebuilder;
-        static int gazeCount;
-        static int gazeJsonPart;
+
+        internal class GazeStream {
+            public StringBuilder gazeBuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 1200).Append("{\"data\":[");
+            public int gazeCount;
+            public int gazeJsonPart;
+            public string trackingType;
+
+            public GazeStream(string trackingType) {
+                this.trackingType = trackingType;
+            }
+        }
+
+        static GazeStream eyeTracked;
+        static GazeStream centerpoint;
+        static GazeStream headRegression;
 
         static void InitializeGaze()
         {
-            gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 1200);
-            gazebuilder.Append("{\"data\":[");
+            eyeTracked = new GazeStream("eye_tracked");
+            centerpoint = new GazeStream("centerpoint");
+            headRegression = new GazeStream("head_regression_prediction");
         }
 
         static void ResetGaze()
         {
-            gazebuilder = null;
-            gazeJsonPart = 1;
-            gazeCount = 0;
+            eyeTracked = new GazeStream("eye_tracked");
+            centerpoint = new GazeStream("centerpoint");
+            headRegression = new GazeStream("head_regression_prediction");
         }
 
-        internal static void RecordGazeSky(float[] hmdposition, float[] hmdrotation, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
+        internal static GazeStream selectCorrectGazeBuilder(string trackingType)
+        {
+            switch (trackingType)
+            {
+                case "eye_tracked": return eyeTracked;
+                case "centerpoint": return centerpoint;
+                case "head_regression_prediction": return headRegression;
+            }
+
+            return null;
+        }
+
+        internal static void RecordGazeSky(string trackingType, float[] hmdposition, float[] hmdrotation, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             if (!IsInitialized) { return; }
-            gazebuilder.Append("{");
+            GazeStream gazeStream = selectCorrectGazeBuilder(trackingType);
+            StringBuilder gb = gazeStream.gazeBuilder;
+            gb.Append("{");
 
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdposition, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
+            JsonUtil.SetDouble("time", timestamp, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("p", hmdposition, gb);
+            gb.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gb);
             if (useGeo)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gb);
+                gb.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gb);
             }
             if (includeFloor)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("f", floorPos, gb);
             }
 
-            gazebuilder.Append("}");
-            gazeCount++;
-            if (gazeCount >= GazeThreshold)
+            gb.Append("}");
+            gazeStream.gazeCount++;
+            if (gazeStream.gazeCount >= GazeThreshold)
             {
-                SerializeGaze(false);
+                SerializeGaze(gazeStream, false);
                 //SendGazeData(false);
             }
             else
             {
-                gazebuilder.Append(",");
+                gb.Append(",");
             }
         }
 
 
-        internal static void RecordGazeMedia(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, string mediaId, double timestamp, int mediaTimeMs, float[] uvs, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
+        internal static void RecordGazeMedia(string trackingType, float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, string mediaId, double timestamp, int mediaTimeMs, float[] uvs, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             if (!IsInitialized) { return; }
-            gazebuilder.Append("{");
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("o", objectid, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("mediaId", mediaId, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetInt("mediatime", mediaTimeMs, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector2("uvs", uvs, gazebuilder);
+            GazeStream gazeStream = selectCorrectGazeBuilder(trackingType);
+            StringBuilder gb = gazeStream.gazeBuilder;
+            gb.Append("{");
+            JsonUtil.SetDouble("time", timestamp, gb);
+            gb.Append(",");
+            JsonUtil.SetString("o", objectid, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("p", hmdpoint, gb);
+            gb.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("g", localgazepoint, gb);
+            gb.Append(",");
+            JsonUtil.SetString("mediaId", mediaId, gb);
+            gb.Append(",");
+            JsonUtil.SetInt("mediatime", mediaTimeMs, gb);
+            gb.Append(",");
+            JsonUtil.SetVector2("uvs", uvs, gb);
             if (useGeo)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gb);
+                gb.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gb);
             }
             if (includeFloor)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("f", floorPos, gb);
             }
 
-            gazebuilder.Append("}");
-            gazeCount++;
-            if (gazeCount >= GazeThreshold)
+            gb.Append("}");
+            gazeStream.gazeCount++;
+            if (gazeStream.gazeCount >= GazeThreshold)
             {
-                SerializeGaze(false);
+                SerializeGaze(gazeStream, false);
                 //SendGazeData(false);
             }
             else
             {
-                gazebuilder.Append(",");
+                gb.Append(",");
             }
         }
 
-        internal static void RecordGazeWorld(float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
+        internal static void RecordGazeWorld(string trackingType, float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             if (!IsInitialized) { return; }
-            gazebuilder.Append("{");
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", gazepoint, gazebuilder);
+            GazeStream gazeStream = selectCorrectGazeBuilder(trackingType);
+            StringBuilder gb = gazeStream.gazeBuilder;
+            gb.Append("{");
+            JsonUtil.SetDouble("time", timestamp, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("p", hmdpoint, gb);
+            gb.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("g", gazepoint, gb);
             if (useGeo)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gb);
+                gb.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gb);
             }
             if (includeFloor)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("f", floorPos, gb);
             }
-            gazebuilder.Append("}");
+            gb.Append("}");
 
-            gazeCount++;
-            if (gazeCount >= GazeThreshold)
+            gazeStream.gazeCount++;
+            if (gazeStream.gazeCount >= GazeThreshold)
             {
-                SerializeGaze(false);
+                SerializeGaze(gazeStream, false);
             }
             else
             {
-                gazebuilder.Append(",");
+                gb.Append(",");
             }
         }
 
-        internal static void RecordGazeDynamic(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
+        internal static void RecordGazeDynamic(string trackingType, float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string objectid, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             if (!IsInitialized) { return; }
-            gazebuilder.Append("{");
-            JsonUtil.SetDouble("time", timestamp, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetString("o", objectid, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
-            gazebuilder.Append(",");
-            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
+            GazeStream gazeStream = selectCorrectGazeBuilder(trackingType);
+            StringBuilder gb = gazeStream.gazeBuilder;
+            gb.Append("{");
+            JsonUtil.SetDouble("time", timestamp, gb);
+            gb.Append(",");
+            JsonUtil.SetString("o", objectid, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("p", hmdpoint, gb);
+            gb.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gb);
+            gb.Append(",");
+            JsonUtil.SetVector("g", localgazepoint, gb);
             if (useGeo)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
-                gazebuilder.Append(",");
-                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gb);
+                gb.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gb);
             }
             if (includeFloor)
             {
-                gazebuilder.Append(",");
-                JsonUtil.SetVector("f", floorPos, gazebuilder);
+                gb.Append(",");
+                JsonUtil.SetVector("f", floorPos, gb);
             }
-            gazebuilder.Append("}");
+            gb.Append("}");
 
-            gazeCount++;
-            if (gazeCount >= GazeThreshold)
+            gazeStream.gazeCount++;
+            if (gazeStream.gazeCount >= GazeThreshold)
             {
-                SerializeGaze(false);
+                SerializeGaze(gazeStream, false);
             }
             else
             {
-                gazebuilder.Append(",");
+                gb.Append(",");
             }
         }
 
-        static void SerializeGaze(bool writeToCache)
+        static void SerializeGaze(GazeStream gazeStream, bool writeToCache)
         {
-            if (gazeCount == 0 && newSessionProperties.Count == 0) { return; }
+            if (gazeStream.gazeCount == 0 && newSessionProperties.Count == 0) { return; }
+
+            StringBuilder gazebuilder = gazeStream.gazeBuilder;
 
             //TODO allow option to send session properties but not gaze. Look at this for XRPF implementation
 
@@ -1405,7 +1442,7 @@ namespace Cognitive3D.Serialization
 
             gazebuilder.Append("],");
 
-            gazeCount = 0;
+            gazeStream.gazeCount = 0;
 
             //header
             JsonUtil.SetString("userid", DeviceId, gazebuilder);
@@ -1421,8 +1458,8 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, gazebuilder);
             gazebuilder.Append(",");
-            JsonUtil.SetInt("part", gazeJsonPart, gazebuilder);
-            gazeJsonPart++;
+            JsonUtil.SetInt("part", gazeStream.gazeJsonPart, gazebuilder);
+            gazeStream.gazeJsonPart++;
             gazebuilder.Append(",");
 
             //TODO check if HMDName is used anywhere
@@ -1485,7 +1522,19 @@ namespace Cognitive3D.Serialization
             }
 
             gazebuilder.Append("}");
-            WebPost("gaze", gazebuilder.ToString(), writeToCache);
+            switch (gazeStream.trackingType)
+            {
+                case "eye_tracked":
+                    WebPost("gaze", gazebuilder.ToString(), writeToCache);
+                    break;
+                case "centerpoint":
+                    WebPost("gaze_centerpoint", gazebuilder.ToString(), writeToCache);
+                    break;
+                case "head_regression_prediction":
+                    WebPost("gaze_regression_prediction", gazebuilder.ToString(), writeToCache);
+                    break;
+            }
+            
             gazebuilder.Length = 9;
         }
 

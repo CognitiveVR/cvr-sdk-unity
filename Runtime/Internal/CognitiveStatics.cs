@@ -76,6 +76,8 @@ namespace Cognitive3D
             if (!string.IsNullOrEmpty(ApplicationKey)) { return; }
             dynamicUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/dynamics/");
             gazeUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/gaze/");
+            gazeCenterpointUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/gaze_centerpoint/");
+            gazeHeadRegressionUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/gaze_regression_prediction/");
             eventUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/events/");
             sensorUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/sensors/");
             fixationUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/fixations/");
@@ -83,6 +85,8 @@ namespace Cognitive3D
         }
         private static string dynamicUrl;
         private static string gazeUrl;
+        private static string gazeCenterpointUrl;
+        private static string gazeHeadRegressionUrl;
         private static string eventUrl;
         private static string sensorUrl;
         private static string fixationUrl;
@@ -103,6 +107,18 @@ namespace Cognitive3D
         internal static string POSTGAZEDATA(string sceneid, int versionnumber)
         {
             return string.Concat(gazeUrl, sceneid, "?version=", versionnumber.ToString());
+        }
+
+        //POST gaze centerpoint json data to scene explorer
+        internal static string POSTCENTERPOINTGAZEDATA(string sceneid, int versionnumber)
+        {
+            return string.Concat(gazeCenterpointUrl, sceneid, "?version=", versionnumber.ToString());
+        }
+
+        //POST gaze head regression json data to scene explorer
+        internal static string POSTHEADREGRESSIONGAZEDATA(string sceneid, int versionnumber)
+        {
+            return string.Concat(gazeHeadRegressionUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
         //POST event json data to scene explorer

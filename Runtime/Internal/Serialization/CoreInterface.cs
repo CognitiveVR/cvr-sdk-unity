@@ -106,9 +106,10 @@ namespace Cognitive3D
 
         #region Gaze
 
-        internal static void RecordWorldGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        internal static void RecordWorldGaze(string trackingType, Vector3 position, Quaternion rotation, Vector3 gazePoint, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeWorld(
+                trackingType,
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
@@ -118,9 +119,10 @@ namespace Cognitive3D
                 new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
                 useGeo);
         }
-        internal static void RecordDynamicGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        internal static void RecordDynamicGaze(string trackingType, Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeDynamic(
+                trackingType,
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
@@ -131,9 +133,10 @@ namespace Cognitive3D
                 new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
                 useGeo);
         }
-        internal static void RecordMediaGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        internal static void RecordMediaGaze(string trackingType, Vector3 position, Quaternion rotation, Vector3 gazePoint, string dynamicId,string mediaId, double time, int mediatime, Vector2 uv, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeMedia(
+                trackingType,
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
@@ -148,9 +151,10 @@ namespace Cognitive3D
                 useGeo
                 );
         }
-        internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        internal static void RecordSkyGaze(string trackingType, Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeSky(
+                trackingType,
                 new float[] { position.x, position.y, position.z },
                 new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
                 time,
@@ -248,6 +252,14 @@ namespace Cognitive3D
                     break;
                 case "gaze":
                     url = CognitiveStatics.POSTGAZEDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    GazeCore.GazeSendEvent();
+                    break;
+                case "gaze_centerpoint":
+                    url = CognitiveStatics.POSTCENTERPOINTGAZEDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    GazeCore.GazeSendEvent();
+                    break;
+                case "head_regression_prediction":
+                    url = CognitiveStatics.POSTHEADREGRESSIONGAZEDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     GazeCore.GazeSendEvent();
                     break;
                 case "fixation":

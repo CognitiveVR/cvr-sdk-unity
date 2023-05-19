@@ -9,10 +9,32 @@ namespace Cognitive3D
 {
     public static class GazeHelper
     {
+        /*
+         * EYE-TRACKED gaze direction
+         */
         public static Ray GetCurrentWorldGazeRay()
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
+
+        /*
+         * NAIVE HEAD-FORWARD gaze direction
+         */
+        public static Ray GetCurrentWorldGazeRayWithoutEyeTracking()
+        {
+            return new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward);
+        }
+
+        /*
+         * HEAD MOVEMENT PREDICTIVE gaze direction
+         */
+        public static Ray GetCurrentWorldGazeRayPredictive()
+        {
+            return new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward);
+        }
+
+
+
 #if C3D_SRANIPAL
 
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;

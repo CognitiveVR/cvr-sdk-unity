@@ -66,7 +66,7 @@ namespace Cognitive3D
         }
 
         ///sky position
-        internal static void RecordGazePoint(double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
+        internal static void RecordGazePoint(string trackingType, double timestamp, Vector3 hmdpoint, Quaternion hmdrotation) //looking at the camera far plane
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -97,13 +97,13 @@ namespace Cognitive3D
                 }
             }
 
-            CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp, floorPos, validFloor, geo, useGeo);
+            CoreInterface.RecordSkyGaze(trackingType, hmdpoint, hmdrotation, timestamp, floorPos, validFloor, geo, useGeo);
 
             SkyGazeRecordEvent(timestamp, string.Empty, Vector3.zero, hmdpoint, hmdrotation);
         }
 
         //gaze on dynamic object
-        internal static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
+        internal static void RecordGazePoint(string trackingType, double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a dynamic object
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -134,13 +134,13 @@ namespace Cognitive3D
                 }
             }
 
-            CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor, geo, useGeo);
+            CoreInterface.RecordDynamicGaze(trackingType, hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor, geo, useGeo);
 
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
         //world position
-        internal static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
+        internal static void RecordGazePoint(string trackingType, double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -171,14 +171,14 @@ namespace Cognitive3D
                 }
             }
 
-            CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor, geo, useGeo);
+            CoreInterface.RecordWorldGaze(trackingType, hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor, geo, useGeo);
 
             WorldGazeRecordEvent(timestamp, string.Empty, gazepoint, hmdpoint, hmdrotation);
         }
 
         //looking at a media dynamic object
         //mediatime is milliseconds since the start of the video
-        internal static void RecordGazePoint(double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, string mediasource, int mediatimeMs, Vector2 uvs)
+        internal static void RecordGazePoint(string trackingType, double timestamp, string objectid, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation, string mediasource, int mediatimeMs, Vector2 uvs)
         {
             if (Cognitive3D_Manager.IsInitialized == false)
             {
@@ -209,7 +209,7 @@ namespace Cognitive3D
                 }
             }
 
-            CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor, geo, useGeo);
+            CoreInterface.RecordMediaGaze(trackingType, hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor, geo, useGeo);
 
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
