@@ -25,12 +25,79 @@ namespace Cognitive3D
             return new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward);
         }
 
+        // TODO - this is my frantic hackathon garbage, do not allow to be merged anywhere without thorough review (derya)
         /*
          * HEAD MOVEMENT PREDICTIVE gaze direction
          */
         public static Ray GetCurrentWorldGazeRayPredictive()
         {
-            return new Ray(GameplayReferences.HMD.position, GameplayReferences.HMD.forward);
+            Vector3 angleNow = PhysicsGaze.sampleNow.headAngle;
+            Vector3 angle200msAgo = PhysicsGaze.sample200MsAgo.headAngle;
+
+            double scaled_headrotx = scaleRotation(angleNow.x);
+            double scaled_headroty = scaleRotation(angleNow.y);
+            double scaled_headrotz = scaleRotation(angleNow.z);
+            double scaled_headrotx_200ms_delta = scaled_headrotx - scaleRotation(angle200msAgo.x);
+            double scaled_headroty_200ms_delta = scaled_headroty - scaleRotation(angle200msAgo.y);
+            double scaled_headrotz_200ms_delta = scaled_headrotz - scaleRotation(angle200msAgo.z);
+
+            /*
+                x <- lm(scaled_gazerotx ~ scaled_headrotx + scaled_headroty + scaled_headrotz + scaled_headrotx_200ms_delta + scaled_headroty_200ms_delta + scaled_headrotz_200ms_delta, data = dat)
+
+                                              Estimate
+                (Intercept)                 138.5635724
+                scaled_headrotx               0.1614473
+                scaled_headroty               0.0007960
+                scaled_headrotz              -0.0007333
+                scaled_headrotx_200ms_delta   1.2913775
+                scaled_headroty_200ms_delta  -0.0166752
+                scaled_headrotz_200ms_delta   0.0175271
+             */
+
+            double scaled_predicted_x = 138.5635724 + (0.1614473) * scaled_headrotx + (0.0007960) * scaled_headroty + (-0.0007333) * scaled_headrotz +
+                (1.2913775) * scaled_headrotx_200ms_delta + (-0.0166752) * scaled_headroty_200ms_delta + (0.0175271) * scaled_headrotz_200ms_delta;
+            double predicted_x = unscaleRotation(scaled_predicted_x);
+
+            /*
+                y <- lm(scaled_gazeroty ~ scaled_headrotx + scaled_headroty + scaled_headrotz + scaled_headrotx_200ms_delta + scaled_headroty_200ms_delta + scaled_headrotz_200ms_delta, data = dat)
+
+                                              Estimate
+                (Intercept)                 134.076373
+                scaled_headrotx               0.009656
+                scaled_headroty               0.123380
+                scaled_headrotz               0.038370
+                scaled_headrotx_200ms_delta  -0.012187
+                scaled_headroty_200ms_delta   0.518784
+                scaled_headrotz_200ms_delta  -0.294554
+             */
+
+            double scaled_predicted_y = 134.076373 + (0.009656) * scaled_headrotx + (0.123380) * scaled_headroty + (0.038370) * scaled_headrotz +
+                (-0.012187) * scaled_headrotx_200ms_delta + (0.518784) * scaled_headroty_200ms_delta + (-0.294554) * scaled_headrotz_200ms_delta;
+            double predicted_y = unscaleRotation(scaled_predicted_y);
+
+            // predicted angle as per rotation model
+            Vector3 predicted_angle = new Vector3((float)predicted_x, (float)predicted_y, 0);
+
+            // convert to direction vector
+            Vector3 predicted_direction = (Quaternion.Euler(predicted_angle) * Vector3.forward).normalized;
+
+            // relative to head
+            Vector3 direction_from_HMD = GameplayReferences.HMD.transform.TransformDirection(predicted_direction).normalized;
+
+            return new Ray(GameplayReferences.HMD.position, direction_from_HMD);
+        }
+
+        // model used angles with 160 added to them
+        private static double ANGLE_SCALE = 160;
+        private static double scaleRotation(double rotDegrees)
+        {
+            return (rotDegrees + ANGLE_SCALE) % 360;
+        }
+        private static double unscaleRotation(double rotDegrees)
+        {
+            var ret = rotDegrees - ANGLE_SCALE;
+            while (ret < 0) ret += 360d;
+            return ret;
         }
 
 
