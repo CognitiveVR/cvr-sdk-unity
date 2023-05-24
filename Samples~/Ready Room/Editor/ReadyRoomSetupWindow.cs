@@ -608,7 +608,7 @@ namespace Cognitive3D.ReadyRoom
 
             if (assessment.IsValid())
             {
-                GUI.Label(isActiveRect, Cognitive3D.EditorCore.CircleCheckmark32, "image_centered");
+                GUI.Label(isActiveRect, Cognitive3D.EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {

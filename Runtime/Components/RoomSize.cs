@@ -10,11 +10,12 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        private readonly float BoundaryTrackingInterval = 1;
+        
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
         Vector3 lastRoomSize = new Vector3();
 #if C3D_OCULUS
+        private readonly float BoundaryTrackingInterval = 1;
         Vector3[] boundaryPointsArray;
         Transform trackingSpace;
         bool exited = false;

@@ -83,7 +83,6 @@ namespace Cognitive3D
             }
         }
 
-        bool displayPrefabPointerWarning = false;
         public override void OnInspectorGUI()
         {
             //TODO editor properties - allow multiple selection
