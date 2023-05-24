@@ -77,14 +77,6 @@ namespace Cognitive3D.ReadyRoom
             }
         }
 
-
-
-        public delegate void onAssessmentBegin();
-        public delegate void onAssessmentComplete();
-        /// <summary>
-        /// called after the assessment has disabled itself.
-        /// </summary>
-        public static event onAssessmentComplete OnAssessmentComplete;
         internal static void InvokeCompleteAssessmentEvent()
         {
             Instance.ActivateNextAssessment();

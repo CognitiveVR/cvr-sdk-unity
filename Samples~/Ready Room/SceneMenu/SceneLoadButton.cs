@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 //same focus logic as virtual button
 //should ignore the OnFill UnityEvent
 //instead calls SceneManager.LoadScene based on the scene that was passed to this button
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class SceneLoadButton : VirtualButton, ISceneInfoHolder
     {
