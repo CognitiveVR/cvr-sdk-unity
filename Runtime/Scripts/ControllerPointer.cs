@@ -13,7 +13,7 @@ namespace Cognitive3D
     {
         Material DefaultPointerMat;
         Material FocusPointerMat;
-
+        private bool focused;
         public bool DisplayLineRenderer = true;
         public LineRenderer LineRendererOverride;
         readonly Vector3[] pointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
@@ -71,20 +71,32 @@ namespace Cognitive3D
                     float distance = (hit.point - pos).z;
                     Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, distance) };
                     lr.SetPositions(hitPointsArray);
+                    focused = true;
                 }
                 else
                 {
-                    lr.material = DefaultPointerMat;
-                    lr.textureMode = LineTextureMode.Tile;
-                    lr.SetPositions(pointsArray);
+                    if (focused)
+                    {
+                        ResetLineRenderer();
+                        focused = false;
+                    }
                 }
             }
             else
             {
-                lr.material = DefaultPointerMat;
-                lr.textureMode = LineTextureMode.Tile;
-                lr.SetPositions(pointsArray);
+                if (focused)
+                {
+                    ResetLineRenderer();
+                    focused = false;
+                }
             }
+        }
+
+        private void ResetLineRenderer()
+        {
+            lr.material = DefaultPointerMat;
+            lr.textureMode = LineTextureMode.Tile;
+            lr.SetPositions(pointsArray);
         }
     }
 }
