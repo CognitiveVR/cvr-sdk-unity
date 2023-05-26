@@ -11,12 +11,12 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Controller Pointer")]
     public class ControllerPointer : MonoBehaviour, IControllerPointer
     {
-        static Material DefaultPointerMat;
-        static Material FocusPointerMat;
+        Material DefaultPointerMat;
+        Material FocusPointerMat;
 
         public bool DisplayLineRenderer = true;
         public LineRenderer LineRendererOverride;
-        Vector3[] pointsArray;
+        readonly Vector3[] pointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
 
         [Tooltip("When added to a controller, this offset is applied on start")]
         public Vector3 LocalPositionOffset = new Vector3(0, 0, 0);
@@ -38,7 +38,6 @@ namespace Cognitive3D
             lr = go.AddComponent<LineRenderer>();
             go.transform.parent = transform;
             lr.transform.localPosition = new Vector3(0, 0, 0);
-            pointsArray = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
             lr.SetPositions(pointsArray);
             lr.useWorldSpace = false;
             lr.widthMultiplier = 0.03f;
