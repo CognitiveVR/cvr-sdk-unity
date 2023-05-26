@@ -32,10 +32,7 @@ namespace Cognitive3D
 
                 EditorGUILayout.PropertyField(displayRenderer, new GUIContent("Display Line Renderer"));
                 EditorGUILayout.PropertyField(lineOverride, new GUIContent("Line Renderer Override"));
-                EditorGUILayout.PropertyField(samppleResolution, new GUIContent("Sample Resolution"));
-                EditorGUILayout.PropertyField(angle, new GUIContent("Angle"));
                 EditorGUILayout.PropertyField(localPositionOffset, new GUIContent("Local Position Offset"));
-                EditorGUILayout.PropertyField(requiredHmdParallel, new GUIContent("Require HMD Parallel"));
 
                 serializedObject.ApplyModifiedProperties();
                 serializedObject.Update();
