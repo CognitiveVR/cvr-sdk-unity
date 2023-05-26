@@ -13,19 +13,13 @@ namespace Cognitive3D
     {
         static Material DefaultPointerMat;
         static Material FocusPointerMat;
-        public static bool ForceLineVisible;
 
         public bool DisplayLineRenderer = true;
         public LineRenderer LineRendererOverride;
+        Vector3[] pointsArray;
 
-        [Tooltip("How many points along the curve to sample. Can lead to a smoother line renderer")]
-        public int SampleResolution = 10;
-        [Tooltip("The angle from this transform that should indicate 'forward'")]
-        public Vector3 Angle = new Vector3(0, 0, 0);
         [Tooltip("When added to a controller, this offset is applied on start")]
         public Vector3 LocalPositionOffset = new Vector3(0, 0, 0);
-        [Tooltip("If true, requires the HMD to be roughly pointed at a button to set focus")]
-        public bool RequireHMDParallel = true;
 
         LineRenderer lr;
         private void Start()
@@ -44,7 +38,7 @@ namespace Cognitive3D
             lr = go.AddComponent<LineRenderer>();
             go.transform.parent = transform;
             lr.transform.localPosition = new Vector3(0, 0, 0);
-            Vector3[] pointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
+            pointsArray = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
             lr.SetPositions(pointsArray);
             lr.useWorldSpace = false;
             lr.widthMultiplier = 0.03f;
@@ -75,12 +69,22 @@ namespace Cognitive3D
                     button.SetPointerFocus();
                     lr.material = FocusPointerMat;
                     lr.textureMode = LineTextureMode.Tile;
+                    float distance = (hit.point - pos).z;
+                    Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, distance) };
+                    lr.SetPositions(hitPointsArray);
                 }
                 else
                 {
                     lr.material = DefaultPointerMat;
                     lr.textureMode = LineTextureMode.Tile;
+                    lr.SetPositions(pointsArray);
                 }
+            }
+            else
+            {
+                lr.material = DefaultPointerMat;
+                lr.textureMode = LineTextureMode.Tile;
+                lr.SetPositions(pointsArray);
             }
         }
     }
