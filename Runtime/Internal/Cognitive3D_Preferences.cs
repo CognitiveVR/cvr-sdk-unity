@@ -69,7 +69,7 @@ namespace Cognitive3D
             }
         }
 
-        public string ApplicationKey;
+        public string ApplicationKey = string.Empty;
         public string AttributionKey;
 
         public bool EnableLogging = true;
@@ -105,9 +105,9 @@ namespace Cognitive3D
         public bool LocalStorage = true;
         public bool UploadCacheOnEndPlay = true;
 
+        public bool IncludeDisabledDynamicObjects = true;
         public int TextureResize = 1;
         public bool ExportSceneLODLowest = true;
-        public bool ExportAOMaps = false;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
@@ -161,6 +161,7 @@ namespace Cognitive3D
             return returnSettings;
         }
 
+        //this is created for a scene as part of the scene export step - VersionNumber may equal 0 before the scene has been uploaded
         [Serializable]
         public class SceneSettings
         {
@@ -168,8 +169,8 @@ namespace Cognitive3D
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";
-            public long LastRevision; //utc timestamp on upload
-            public int VersionNumber = 1; //post session data
+            public string LastRevision; //utc timestamp on upload
+            public int VersionNumber; //post session data
             public int VersionId; //attribution. exitpoll?
 
             public SceneSettings(string name, string path)

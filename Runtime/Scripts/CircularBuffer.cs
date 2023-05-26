@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public class CircularBuffer<T> : IEnumerable, IEnumerable<T>
+    internal class CircularBuffer<T> : IEnumerable, IEnumerable<T>
     {
         private T[] _buffer;
         private int _head;

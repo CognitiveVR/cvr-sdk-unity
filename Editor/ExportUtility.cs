@@ -228,7 +228,7 @@ namespace Cognitive3D
         #endregion
 
         #region Upload Scene
-        static System.Action UploadComplete;
+        static System.Action<int> UploadComplete;
         //displays popup window confirming upload, then uploads the files
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace Cognitive3D
         /// reads files from export directory and sends POST request to backend
         /// invokes uploadComplete if upload actually starts and PostSceneUploadResponse callback gets 200/201 responsecode
         /// </summary>
-        public static void UploadDecimatedScene(Cognitive3D_Preferences.SceneSettings settings, System.Action uploadComplete)
+        public static void UploadDecimatedScene(Cognitive3D_Preferences.SceneSettings settings, System.Action<int> uploadComplete, System.Action<float> progressCallback)
         {
             //if uploadNewScene POST
             //else PUT to sceneexplorer/sceneid
@@ -342,7 +342,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene");//AUTH
+                EditorNetwork.Post(CognitiveStatics.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
             }
             else //upload as new scene
             {
@@ -355,7 +355,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene");//AUTH
+                EditorNetwork.Post(CognitiveStatics.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
             }
 
             UploadComplete = uploadComplete;
@@ -377,6 +377,7 @@ namespace Cognitive3D
                 {
                     EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
                 }
+                UploadComplete.Invoke(responseCode);
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;
@@ -387,6 +388,7 @@ namespace Cognitive3D
             {
                 Debug.LogError("Scene Upload Error:" + text);
                 EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene. \n\nSee Console for more details", "Ok");
+                UploadComplete.Invoke(responseCode);
                 UploadSceneSettings = null;
                 UploadComplete = null;
                 return;
@@ -400,14 +402,14 @@ namespace Cognitive3D
                 AssetDatabase.SaveAssets();
             }
 
-            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToBinary();
+            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
 
             if (UploadComplete != null)
             {
-                UploadComplete.Invoke();
+                UploadComplete.Invoke(responseCode);
             }
             UploadComplete = null;
 

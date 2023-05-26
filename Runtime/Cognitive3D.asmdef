@@ -15,7 +15,8 @@
         "XRPF",
         "Microsoft.MixedReality.Toolkit",
         "Unity.XR.Management",
-        "Unity.XR.PICO"
+        "Unity.XR.PICO",
+        "Unity.XR.Oculus"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

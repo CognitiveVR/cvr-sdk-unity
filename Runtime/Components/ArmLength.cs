@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -15,16 +14,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
     public class ArmLength : AnalyticsComponentBase
     {
-        [ClampSetting(5, 100)]
-        [Tooltip("Number of samples taken. The max is assumed to be maximum arm length")]
-        public int SampleCount = 50;
-        [ClampSetting(0.1f)]
-        public float Interval = 1;
-
-        [ClampSetting(0, 50)]
-        [Tooltip("Distance from HMD to average shoulder height")]
-        public float EyeToShoulderHeight = 0.186f; //meters
-
+        private readonly int SampleCount = 50;
+        private readonly float Interval = 1;
+        private const float SAMPLE_INTERVAL = 10;
+        private readonly float EyeToShoulderHeight = 0.186f; //meters
         Transform tempInfo = null;
 
         protected override void OnSessionBegin()
@@ -64,20 +57,30 @@ namespace Cognitive3D.Components
                 }
 
                 if (includedSample)
+                {
                     samples++;
-            }
+                }
 
-            if (maxSqrDistance > 0)
+                if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
+                {
+                    SendMaxDistance(maxSqrDistance);
+                }
+            }
+        }
+
+        private void SendMaxDistance(float maxDistance)
+        {
+            if (maxDistance > 0)
             {
                 //send arm length
-                float distance = Mathf.Sqrt(maxSqrDistance);
+                float distance = Mathf.Sqrt(maxDistance);
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
                 {
                     //dashboard expects centimeters
                     Cognitive3D_Manager.SetParticipantProperty("armlength", distance * 100);
-                }    
+                }
             }
         }
 

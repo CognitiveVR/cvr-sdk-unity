@@ -9,7 +9,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Teleport Event")]
     public class TeleportEvent : AnalyticsComponentBase
     {
-        public Transform teleportPlayer;
+        [SerializeField]
+        private Transform teleportPlayer;
+        public Transform TeleportPlayer { get { return teleportPlayer; } set { teleportPlayer = value; } }
+
         Vector3 lastRootPosition;
 
         protected override void OnSessionBegin()

@@ -137,7 +137,7 @@ namespace Cognitive3D
             sphere.gameObject.name = "360 Video Player";
             sphere.transform.position = userCamera.transform.position;
             Cognitive3D.Components.GazeSphere360 myGaze = sphere.AddComponent<Cognitive3D.Components.GazeSphere360>();
-            myGaze.userCamera = userCamera;
+            myGaze.UserCamera = userCamera;
 
             //setup video source to write to render texture
             var vp = sphere.GetComponentInChildren<UnityEngine.Video.VideoPlayer>();

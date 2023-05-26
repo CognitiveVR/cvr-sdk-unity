@@ -445,15 +445,15 @@ namespace Cognitive3D.Components
             }
 
             Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
-
-            DynamicObject.ControllerDisplayType displayType;
             InputDevice tempDevice;
 
             //left hand
             if (GameplayReferences.GetControllerInfo(false,out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,false);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                LeftHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -470,19 +470,17 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.oculusquesttouchleft:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("menu"));
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("ybtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.oculustouchleft:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
@@ -496,12 +494,10 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.oculusquesttouchright:
                         break;
                     case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left:
-                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        LeftLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
@@ -524,6 +520,7 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
@@ -534,19 +531,24 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
                         break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
+                        break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
+                    default:
+                        Util.logDebug("Unknown Left Controller Type: " + tempDevice.name);break;
                 }
             }
 
             //right hand
             if (GameplayReferences.GetControllerInfo(true, out tempDevice))
             {
-                displayType = DynamicObject.GetControllerPopupName(tempDevice.name,true);
-                switch (displayType)
+                DynamicObject.CommonDynamicMesh mesh;
+                DynamicObject.ControllerDisplayType display;
+                RightHand.GetControllerTypeData(out mesh, out display);
+                switch (display)
                 {
                     case DynamicObject.ControllerDisplayType.vivecontroller:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("vive_touchpad", 0, 0, 0, true));
@@ -563,12 +565,11 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.oculusquesttouchright:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("grip"));
-                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("start"));
+                        RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("menu"));
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("abtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("bbtn"));
                         break;
@@ -577,7 +578,6 @@ namespace Cognitive3D.Components
                     case DynamicObject.ControllerDisplayType.oculustouchright:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("rift_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("rift_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("rift_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("rift_grip"));
@@ -592,12 +592,10 @@ namespace Cognitive3D.Components
 
                         break;
                     case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right:
-                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisTouch.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisTouch.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxis.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondary2DAxisClick.name, new ButtonState("wmr_touchpad", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("wmr_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.triggerButton.name, new ButtonState("wmr_trigger"));
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
@@ -619,9 +617,9 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
-
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.trigger.name, new ButtonState("pico_trigger"));
@@ -629,12 +627,15 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("pico_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
-                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
+                        RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
+                        break;
+                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
-                    default: Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
+                    default:
+                        Util.logDebug("Unknown Right Controller Type: " + tempDevice.name); break;
                 }
             }
 
@@ -936,14 +937,22 @@ namespace Cognitive3D.Components
                 Vector2 leftJoystickVector;
                 if (leftHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
-                    int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    int axisPower;
+                    if (LeftLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
+                    {
+                         axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    }
+                    else
+                    {
+                        axisPower = LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent;
+                    }
                     var x = leftJoystickVector.x;
                     var y = leftJoystickVector.y;
 
                     Vector3 currentVector = new Vector3(x, y, axisPower);
                     if (Vector3.Magnitude(LeftJoystickVector - currentVector) > minMagnitude)
                     {
-                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName; });
+                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName; });
                         if (joystick != null)
                         {
                             joystick.X = x;
@@ -951,23 +960,23 @@ namespace Cognitive3D.Components
                         }
                         else
                         {
-                            OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
+                            OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
                         }
-                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);
+                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);;
                         LeftJoystickVector = currentVector;
                     }
                 }
                 //left secondary touchpad
                 if (leftHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out leftJoystickVector) && LeftLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
-                    int axisPower = Mathf.Max(LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
+                    int axisPower = LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent;
                     var x = leftJoystickVector.x;
                     var y = leftJoystickVector.y;
 
                     Vector3 currentVector = new Vector3(x, y, axisPower);
                     if (Vector3.Magnitude(LeftTouchpadVector - currentVector) > minMagnitude)
                     {
-                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonName; });
+                        var joystick = CurrentLeftButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonName; });
                         if (joystick != null)
                         {
                             joystick.X = x;
@@ -975,9 +984,9 @@ namespace Cognitive3D.Components
                         }
                         else
                         {
-                            OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
+                            OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
                         }
-                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);
+                        OnVectorChanged(LeftHand, false, LeftLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);
                         LeftTouchpadVector = currentVector;
                     }
                 }
@@ -1009,14 +1018,22 @@ namespace Cognitive3D.Components
                 Vector2 rightJoystickVector;
                 if (rightHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxis.name))
                 {
-                    int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    int axisPower;
+                    if (RightLastFrameButtonStates.ContainsKey(CommonUsages.primary2DAxisTouch.name))
+                    {
+                        axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent);
+                    }
+                    else
+                    {
+                        axisPower = RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonPercent;
+                    }
                     var x = rightJoystickVector.x;
                     var y = rightJoystickVector.y;
 
                     Vector3 currentVector = new Vector3(x, y, axisPower);
                     if (Vector3.Magnitude(RightJoystickVector - currentVector) > minMagnitude)
                     {
-                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName; });
+                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName; });
                         if (joystick != null)
                         {
                             joystick.X = x;
@@ -1024,7 +1041,7 @@ namespace Cognitive3D.Components
                         }
                         else
                         {
-                            OnVectorChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.primary2DAxisTouch.name].ButtonName, axisPower, rightJoystickVector, CurrentRightButtonStates);
+                            OnVectorChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, rightJoystickVector, CurrentRightButtonStates);
                         }
                         RightJoystickVector = currentVector;
                     }
@@ -1032,14 +1049,14 @@ namespace Cognitive3D.Components
                 //right secondary touchpad
                 if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondary2DAxis, out rightJoystickVector) && RightLastFrameButtonStates.ContainsKey(CommonUsages.secondary2DAxis.name))
                 {
-                    int axisPower = Mathf.Max(RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonPercent, RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent);
+                    int axisPower = RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonPercent;
                     var x = rightJoystickVector.x;
                     var y = rightJoystickVector.y;
 
                     Vector3 currentVector = new Vector3(x, y, axisPower);
                     if (Vector3.Magnitude(RightTouchpadVector - currentVector) > minMagnitude)
                     {
-                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonName; });
+                        var joystick = CurrentRightButtonStates.Find(delegate (ButtonState obj) { return obj.ButtonName == RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonName; });
                         if (joystick != null)
                         {
                             joystick.X = x;
@@ -1047,7 +1064,7 @@ namespace Cognitive3D.Components
                         }
                         else
                         {
-                            OnVectorChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.secondary2DAxisTouch.name].ButtonName, axisPower, rightJoystickVector, CurrentRightButtonStates);
+                            OnVectorChanged(RightHand, true, RightLastFrameButtonStates[CommonUsages.secondary2DAxisClick.name].ButtonName, axisPower, rightJoystickVector, CurrentRightButtonStates);
                         }
                         RightTouchpadVector = currentVector;
                     }

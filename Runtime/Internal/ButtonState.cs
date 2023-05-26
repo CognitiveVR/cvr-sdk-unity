@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public class ButtonState
+    internal class ButtonState
     {
         public string ButtonName;
         public int ButtonPercent = 0;

@@ -6,7 +6,7 @@ using UnityEngine;
 //Instance created from assessment base on Start
 //holds ordered collection of assessments to complete in the ready room
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class AssessmentManager : MonoBehaviour
     {
@@ -77,14 +77,6 @@ namespace Cognitive3D
             }
         }
 
-
-
-        public delegate void onAssessmentBegin();
-        public delegate void onAssessmentComplete();
-        /// <summary>
-        /// called after the assessment has disabled itself.
-        /// </summary>
-        public static event onAssessmentComplete OnAssessmentComplete;
         internal static void InvokeCompleteAssessmentEvent()
         {
             Instance.ActivateNextAssessment();

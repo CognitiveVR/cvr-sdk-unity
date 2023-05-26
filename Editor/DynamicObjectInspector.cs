@@ -49,6 +49,7 @@ namespace Cognitive3D
             bool basicGUIChanged = false;
             EditorGUI.BeginChangeCheck();
 
+            //consider adding an actual property for id source - instead of infering from useCustomId and objectPool references. should simplify property display in inspector
             var script = serializedObject.FindProperty("m_Script");
             var updateRate = serializedObject.FindProperty("UpdateRate");
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
@@ -119,73 +120,104 @@ namespace Cognitive3D
                 }
             }
 
+            int targetIdType = -1;
+            bool allSelectedShareIdType = true;
+
             //dynamic id sources - custom id, generate at runtime, id pool asset
-            if (idType == -1)
+            var primaryDynamic = targets[0] as DynamicObject;
+            if (primaryDynamic.UseCustomId)
             {
-                var dyn = target as DynamicObject;
-                if (dyn.UseCustomId) idType = 0;
-                else if (dyn.IdPool != null) idType = 2;
-                else idType = 1;
+                targetIdType = 0;
+                idType = 0;
             }
-            GUILayout.BeginHorizontal();
-            idType = EditorGUILayout.Popup(new GUIContent("Id Source"),idType, idTypeNames);
+            else if (primaryDynamic.IdPool != null)
+            {
+                targetIdType = 2;
+                idType = 2;
+            }
+            else
+            {
+                targetIdType = 1;
+                idType = 1;
+            }
 
-            if (idType == 0) //custom id
+            //check if all selected objects have the same idtype
+            foreach (var t in targets)
             {
-                EditorGUILayout.PropertyField(customId, new GUIContent(""));
-                useCustomId.boolValue = true;
-                idPool.objectReferenceValue = null;
+                var tdyn = (DynamicObject)t;
+                if (tdyn.UseCustomId) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
+                else if (tdyn.IdPool != null) {if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
+                else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
             }
-            else if (idType == 1) //generate id
-            {
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
-                EditorGUI.EndDisabledGroup();
-                customId.stringValue = string.Empty;
-                useCustomId.boolValue = false;
-                idPool.objectReferenceValue = null;
-            }
-            else if (idType == 2) //id pool
-            {
-                EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
-                customId.stringValue = string.Empty;
-                useCustomId.boolValue = false;
-            }
-            GUILayout.EndHorizontal();
 
-            if (idType == 2) //id pool
+            //if all id sources from selected objects are the same, display shared property fields
+            //otherwise display 'multiple values'
+            if (!allSelectedShareIdType)
             {
-                var dyn = target as DynamicObject;
-                if (dyn.IdPool == null)
+                EditorGUILayout.LabelField("Id Source", "Multiple Values");
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                idType = EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
+
+                if (idType == 0) //custom id
                 {
-                    if (GUILayout.Button("New Dynamic Object Id Pool")) //this can overwrite an existing id pool with the same name. should this just find a pool?
+                    EditorGUILayout.PropertyField(customId, new GUIContent(""));
+                    useCustomId.boolValue = true;
+                    idPool.objectReferenceValue = null;
+                }
+                else if (idType == 1) //generate id
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
+                    EditorGUI.EndDisabledGroup();
+                    customId.stringValue = string.Empty;
+                    useCustomId.boolValue = false;
+                    idPool.objectReferenceValue = null;
+                }
+                else if (idType == 2) //id pool
+                {
+                    EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
+                    customId.stringValue = string.Empty;
+                    useCustomId.boolValue = false;
+                }
+                GUILayout.EndHorizontal();
+
+                if (idType == 2) //id pool
+                {
+                    var dyn = target as DynamicObject;
+                    if (dyn.IdPool == null)
                     {
-                        string poolMeshName = dyn.MeshName;
-                        string assetPath = "Assets/" + poolMeshName + " Id Pool.asset";
-
-                        //check if asset exists
-                        var foundPool = (DynamicObjectIdPool)AssetDatabase.LoadAssetAtPath(assetPath, typeof(DynamicObjectIdPool));
-                        if (foundPool == null)
+                        if (GUILayout.Button("New Dynamic Object Id Pool")) //this can overwrite an existing id pool with the same name. should this just find a pool?
                         {
-                            var pool = GenerateNewIDPoolAsset(assetPath, dyn);
-                            idPool.objectReferenceValue = pool;
-                        }
-                        else
-                        {
-                            //popup - new pool asset, add to existing pool (if matching mesh name), cancel
-                            int result = EditorUtility.DisplayDialogComplex("Found Id Pool", "An existing Id Pool with the same mesh name was found. Do you want to use this Id Pool instead?", "New Asset", "Cancel", "Use Existing");
+                            string poolMeshName = dyn.MeshName;
+                            string assetPath = "Assets/" + poolMeshName + " Id Pool.asset";
 
-                            if (result == 0)//new asset with unique name
+                            //check if asset exists
+                            var foundPool = (DynamicObjectIdPool)AssetDatabase.LoadAssetAtPath(assetPath, typeof(DynamicObjectIdPool));
+                            if (foundPool == null)
                             {
-                                string finalAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(assetPath);
-                                var pool = GenerateNewIDPoolAsset(finalAssetPath, dyn);
+                                var pool = GenerateNewIDPoolAsset(assetPath, dyn);
                                 idPool.objectReferenceValue = pool;
                             }
-                            if (result == 2) //reference existing pool
+                            else
                             {
-                                idPool.objectReferenceValue = foundPool;
+                                //popup - new pool asset, add to existing pool (if matching mesh name), cancel
+                                int result = EditorUtility.DisplayDialogComplex("Found Id Pool", "An existing Id Pool with the same mesh name was found. Do you want to use this Id Pool instead?", "New Asset", "Cancel", "Use Existing");
+
+                                if (result == 0)//new asset with unique name
+                                {
+                                    string finalAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(assetPath);
+                                    var pool = GenerateNewIDPoolAsset(finalAssetPath, dyn);
+                                    idPool.objectReferenceValue = pool;
+                                }
+                                if (result == 2) //reference existing pool
+                                {
+                                    idPool.objectReferenceValue = foundPool;
+                                }
+                                if (result == 1) { }//cancel
                             }
-                            if (result == 1) { }//cancel
                         }
                     }
                 }
@@ -209,7 +241,7 @@ namespace Cognitive3D
 
                 //Thumbnail Button
                 EditorGUI.BeginDisabledGroup(!EditorCore.HasDynamicExportFiles(meshname.stringValue));
-                if (GUILayout.Button("Thumbnail from\nSceneView", "ButtonMid", GUILayout.Height(30)))
+                if (GUILayout.Button("Save Thumbnail\nfrom SceneView", "ButtonMid", GUILayout.Height(30)))
                 {
                     foreach (var v in serializedObject.targetObjects)
                     {
@@ -305,12 +337,12 @@ namespace Cognitive3D
                 Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
-                    manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                    AggregationManifest manifest = new AggregationManifest();
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
                         new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                         new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                         new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                    ManageDynamicObjects.UploadManifest(manifest, null);
+                    DynamicObjectsWindow.UploadManifest(manifest, null);
                 });
             }
             else if (dyn.IdPool != null)
@@ -318,15 +350,15 @@ namespace Cognitive3D
                 Debug.Log("Cognitive3D Dynamic Object: Upload id pool to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
-                    ManageDynamicObjects.AggregationManifest manifest = new ManageDynamicObjects.AggregationManifest();
+                    AggregationManifest manifest = new AggregationManifest();
                     for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
                     {
-                        manifest.objects.Add(new ManageDynamicObjects.AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
                             new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                             new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                             new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
                     }
-                    ManageDynamicObjects.UploadManifest(manifest, null);
+                    DynamicObjectsWindow.UploadManifest(manifest, null);
                 });
             }
         }

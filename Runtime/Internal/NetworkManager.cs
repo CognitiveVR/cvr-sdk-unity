@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Cognitive3D
 {
     [AddComponentMenu("")]
-    public class NetworkManager : MonoBehaviour
+    internal class NetworkManager : MonoBehaviour
     {
         //used by posting session data - get all details of the web response
         public delegate void FullResponse(string url, string uploadcontent, int responsecode, string error, string downloadcontent);

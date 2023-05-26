@@ -24,6 +24,10 @@ namespace Cognitive3D
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #elif C3D_OCULUS
                 return OVRPlugin.eyeTrackingSupported;
+#elif C3D_DEFAULT
+                var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+                Eyes eyedata;
+                return head.TryGetFeatureValue(CommonUsages.eyesData, out eyedata);
 #else
                 return false;
 #endif
@@ -322,7 +326,7 @@ namespace Cognitive3D
             else
             {
                 controllerTransforms[0] = dyn.transform;
-                controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+                controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
                 return controllerDevices[0].isValid;
             }
         }

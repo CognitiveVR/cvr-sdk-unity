@@ -77,10 +77,22 @@ namespace Cognitive3D
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUI.color = EditorCore.GreenButton;
+#if USE_ATTRIBUTION
             if (GUILayout.Button("Update to Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {
-                ClickUpdateButton();
+                UnityEditor.PackageManager.UI.Window.Open("com.cognitive3d.c3d-sdk");
             }
+#else
+            if (GUILayout.Button(new GUIContent("Update to Latest Version     ", "https://github.com/CognitiveVR/cvr-sdk-unity/releases"), GUILayout.Height(30), GUILayout.Width(200)))
+            {
+                Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);
+            }
+            var lastRect = GUILayoutUtility.GetLastRect();
+            Rect onlineRect = lastRect;
+            onlineRect.x += 164;
+            GUI.Label(onlineRect, EditorCore.ExternalIcon);
+#endif
+
             //TODO add a button to open documentation page - how to update SDK with package manager or download+reimport package from github
             GUI.color = Color.white;
             GUILayout.FlexibleSpace();
@@ -90,12 +102,12 @@ namespace Cognitive3D
 
             //reminder buttons
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Skip this version", GUILayout.MaxWidth(200)))
+            if (GUILayout.Button("Skip this version"))
             {
                 EditorPrefs.SetString("c3d_skipVersion", newVersion);
                 Close();
             }
-            if (GUILayout.Button("Remind me next week", GUILayout.MaxWidth(300)))
+            if (GUILayout.Button("Remind me next week"))
             {
                 reminderSet = true;
                 EditorPrefs.SetString("c3d_updateRemindDate", System.DateTime.UtcNow.AddDays(7).ToString("dd-MM-yyyy"));
@@ -103,15 +115,6 @@ namespace Cognitive3D
                 Close();
             }
             GUILayout.EndHorizontal();
-        }
-
-        void ClickUpdateButton()
-        {
-#if USE_ATTRIBUTION
-            UnityEditor.PackageManager.UI.Window.Open("com.cognitive3d.c3d-sdk");
-#else
-            Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);
-#endif
         }
 
         void GUIHorizontalLine()

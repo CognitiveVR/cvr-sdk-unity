@@ -7,7 +7,7 @@ using Valve.VR;
 
 //complete when the user moves to each destination in the VR Room Space
 
-namespace Cognitive3D
+namespace Cognitive3D.ReadyRoom
 {
     public class RoomSpaceAssessment : AssessmentBase
     {
