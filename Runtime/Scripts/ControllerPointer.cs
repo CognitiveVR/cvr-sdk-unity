@@ -68,10 +68,10 @@ namespace Cognitive3D
                     button.SetPointerFocus();
                     lr.material = FocusPointerMat;
                     lr.textureMode = LineTextureMode.Tile;
-                    float distance = (hit.point - pos).z;
-                    Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, distance) };
+                    Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, hit.distance) };
                     lr.SetPositions(hitPointsArray);
                     focused = true;
+                    Debug.LogError("HIT BUTTON");
                 }
                 else
                 {
