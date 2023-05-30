@@ -198,7 +198,7 @@ namespace Cognitive3D
                     //parent to hmd and zero position
                     pointerInstance.transform.SetParent(GameplayReferences.HMD);
                     pointerInstance.transform.localPosition = Vector3.zero;
-                    pointerInstance.transform.localRotation = Quaternion.identity;
+                    pointerInstance.transform.rotation = Quaternion.identity;
                 }
                 else if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
                 {
@@ -208,6 +208,7 @@ namespace Cognitive3D
                         pointerInstance.transform.SetParent(t);
                         pointerInstance.transform.localPosition = Vector3.zero;
                         pointerInstance.transform.localRotation = Quaternion.identity;
+                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
                     }
                 }
                 else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
@@ -218,6 +219,7 @@ namespace Cognitive3D
                         pointerInstance.transform.SetParent(t);
                         pointerInstance.transform.localPosition = Vector3.zero;
                         pointerInstance.transform.localRotation = Quaternion.identity;
+                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
                     }
                 }
             }

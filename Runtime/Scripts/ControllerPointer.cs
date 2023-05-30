@@ -16,31 +16,26 @@ namespace Cognitive3D
         private bool focused;
         public bool DisplayLineRenderer = true;
         public LineRenderer LineRendererOverride;
-        readonly Vector3[] pointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
-
-        [Tooltip("When added to a controller, this offset is applied on start")]
-        public Vector3 LocalPositionOffset = new Vector3(0, 0, 0);
+        Vector3[] pointsArray;
 
         LineRenderer lr;
         private void Start()
         {
-            transform.localPosition = LocalPositionOffset;
+/*            transform.localPosition = LocalPositionOffset;
             if (LineRendererOverride == null && DisplayLineRenderer)
             {
                 LineRendererOverride = ConstructDefaultLineRenderer();
                 LineRendererOverride.positionCount = 2;
-            }
+            }*/
         }
 
-        private LineRenderer ConstructDefaultLineRenderer()
+        public LineRenderer ConstructDefaultLineRenderer()
         {
-            GameObject go = new GameObject("LineRenderer");
-            lr = go.AddComponent<LineRenderer>();
-            go.transform.parent = transform;
-            lr.transform.localPosition = new Vector3(0, 0, 0);
-            lr.SetPositions(pointsArray);
+            lr = gameObject.AddComponent<LineRenderer>();
             lr.useWorldSpace = false;
             lr.widthMultiplier = 0.03f;
+            pointsArray = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, 20) };
+            lr.SetPositions(pointsArray);
             if (DefaultPointerMat == null)
             {
                 DefaultPointerMat = Resources.Load<Material>("ExitPollPointerLine");
