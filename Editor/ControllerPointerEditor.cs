@@ -25,17 +25,9 @@ namespace Cognitive3D
             {
                 var displayRenderer = serializedObject.FindProperty("DisplayLineRenderer");
                 var lineOverride = serializedObject.FindProperty("LineRendererOverride");
-                var samppleResolution = serializedObject.FindProperty("SampleResolution");
-                var angle = serializedObject.FindProperty("Angle");
-                var localPositionOffset = serializedObject.FindProperty("LocalPositionOffset");
-                var requiredHmdParallel = serializedObject.FindProperty("RequireHMDParallel");
 
                 EditorGUILayout.PropertyField(displayRenderer, new GUIContent("Display Line Renderer"));
                 EditorGUILayout.PropertyField(lineOverride, new GUIContent("Line Renderer Override"));
-                EditorGUILayout.PropertyField(samppleResolution, new GUIContent("Sample Resolution"));
-                EditorGUILayout.PropertyField(angle, new GUIContent("Angle"));
-                EditorGUILayout.PropertyField(localPositionOffset, new GUIContent("Local Position Offset"));
-                EditorGUILayout.PropertyField(requiredHmdParallel, new GUIContent("Require HMD Parallel"));
 
                 serializedObject.ApplyModifiedProperties();
                 serializedObject.Update();
