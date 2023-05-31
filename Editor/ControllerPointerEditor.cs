@@ -25,11 +25,9 @@ namespace Cognitive3D
             {
                 var displayRenderer = serializedObject.FindProperty("DisplayLineRenderer");
                 var lineOverride = serializedObject.FindProperty("LineRendererOverride");
-                var localPositionOffset = serializedObject.FindProperty("LocalPositionOffset");
 
                 EditorGUILayout.PropertyField(displayRenderer, new GUIContent("Display Line Renderer"));
                 EditorGUILayout.PropertyField(lineOverride, new GUIContent("Line Renderer Override"));
-                EditorGUILayout.PropertyField(localPositionOffset, new GUIContent("Local Position Offset"));
 
                 serializedObject.ApplyModifiedProperties();
                 serializedObject.Update();
