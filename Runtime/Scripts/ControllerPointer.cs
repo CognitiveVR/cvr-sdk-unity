@@ -19,15 +19,6 @@ namespace Cognitive3D
         Vector3[] pointsArray;
 
         LineRenderer lr;
-        private void Start()
-        {
-/*            transform.localPosition = LocalPositionOffset;
-            if (LineRendererOverride == null && DisplayLineRenderer)
-            {
-                LineRendererOverride = ConstructDefaultLineRenderer();
-                LineRendererOverride.positionCount = 2;
-            }*/
-        }
 
         public LineRenderer ConstructDefaultLineRenderer()
         {
