@@ -489,7 +489,6 @@ namespace Cognitive3D
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
                 Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-                FlushData();
                 ResetSessionData();
             }
         }
@@ -788,6 +787,7 @@ namespace Cognitive3D
         private void ResetSessionData()
         {
             InvokeEndSessionEvent();
+            FlushData();
             CoreInterface.Reset();
             if (NetworkManager != null)
                 NetworkManager.EndSession();
