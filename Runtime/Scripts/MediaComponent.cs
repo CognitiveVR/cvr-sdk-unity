@@ -16,8 +16,16 @@ namespace Cognitive3D
         /// <summary>
         /// only used by the inspector to display a friendly name for the media
         /// </summary>
+        
+        [SerializeField]
         internal string MediaName;
-        public string MediaSource;
+
+        [UnityEngine.Serialization.FormerlySerializedAs("MediaSource")]
+        public string MediaId;
+
+        [System.Obsolete("Use MediaId instead")]
+        public string MediaSource { get { return MediaId; } set { MediaId = value; } }
+
         public bool IsVideo
         {
             get
@@ -48,12 +56,12 @@ namespace Cognitive3D
                     if (VideoPlayer.frame == 0)
                     {
                         //stopped event
-                        CustomEvent.SendCustomEvent("cvr.media.stop", new List<KeyValuePair<string, object>>() {new KeyValuePair<string, object>( "videoTime", lastFrame ), new KeyValuePair<string, object>("mediaId", MediaSource ) },transform.position);
+                        CustomEvent.SendCustomEvent("cvr.media.stop", new List<KeyValuePair<string, object>>() {new KeyValuePair<string, object>( "videoTime", lastFrame ), new KeyValuePair<string, object>("mediaId", MediaId) },transform.position);
                     }
                     else
                     {
                         //paused event
-                        CustomEvent.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                        CustomEvent.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                     }
                     WasPlaying = false;
                 }
@@ -64,7 +72,7 @@ namespace Cognitive3D
                 if (VideoPlayer.isPlaying)
                 {
                     //play event
-                    CustomEvent.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                     WasPlaying = true;
                 }
             }
@@ -76,7 +84,7 @@ namespace Cognitive3D
                 if (!VideoPlayer.isPrepared) //started buffering. possibly stopped
                 {
                     wasPrepared = false;
-                    CustomEvent.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaSource ) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                 }
             }
             else

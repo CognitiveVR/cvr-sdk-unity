@@ -164,7 +164,7 @@ namespace Cognitive3D
             {
                 internalGo = media.gameObject;
             }
-            media.MediaSource = EditorCore.MediaSources[_choiceIndex].uploadId;
+            media.MediaId = EditorCore.MediaSources[_choiceIndex].uploadId;
             media.VideoPlayer = vp;
 
             //check other required components
