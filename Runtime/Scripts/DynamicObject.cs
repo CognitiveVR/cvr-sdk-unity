@@ -365,6 +365,16 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// sets the Id to a specific value. does not check for uniqueness. does not register this dynamic object id in this session
+        /// intended only for in-app editor tooling
+        /// </summary>
+        /// <param name="customId"></param>
+        public void SetCustomId(string customId)
+        {
+            this.CustomId = customId;
+        }
+
+        /// <summary>
         /// manually record position and rotation on this dynamic object
         /// </summary>
         public void RecordSnapshot()
