@@ -99,38 +99,16 @@ namespace Cognitive3D
 
         static Vector3 GetLookDirection()
         {
-            var ray = new Ray();
-
             if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
             {
                 //Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
                 return lastDirection;
             }
 
-            UnityEngine.XR.InputDevice device;
-            device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
-            Vector3 headPos;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
-            {
-                Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED HEAD POSITION");
-                return lastDirection;
-            }
-            Quaternion headRot = Quaternion.identity;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
-            {
-                Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED HEAD ROTATION");
-                return lastDirection;
-            }
-
             Vector3 direction;
             if (Unity.XR.PXR.PXR_EyeTracking.GetCombineEyeGazeVector(out direction) && direction.sqrMagnitude > 0.1f)
             {
-                Matrix4x4 matrix = Matrix4x4.identity;
-                matrix = Matrix4x4.TRS(Vector3.zero, headRot, Vector3.one);
-                direction = matrix.MultiplyPoint3x4(direction);
-                ray.origin = headPos;
-                ray.direction = direction;
-                lastDirection = direction;
+                lastDirection = Cognitive3D.GameplayReferences.HMD.rotation * direction;
             }
             return lastDirection;
         }

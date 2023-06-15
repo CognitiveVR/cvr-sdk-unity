@@ -16,9 +16,7 @@ namespace Cognitive3D
         void Update()
         {
             Ray ray = GazeHelper.GetCurrentWorldGazeRay();
-
-            Vector3 newPosition = transform.position;
-            newPosition = ray.GetPoint(Distance);
+            Vector3 newPosition = ray.GetPoint(Distance);
 
             transform.position = Vector3.Lerp(transform.position, newPosition, Speed);
             transform.LookAt(GameplayReferences.HMD.position);
