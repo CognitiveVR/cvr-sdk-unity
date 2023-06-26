@@ -863,7 +863,7 @@ namespace Cognitive3D
 
             //2 link to documentation on session tags
             GUI.Label(new Rect(30, 210, 440, 440), "The session list on the dashboard uses <b>tags</b> to help manage and filter sessions. You can find out more about session tags on our documentation page. ", "normallabel");
-            Rect tagsRect = new Rect(100, 280, 300, 30);
+            Rect tagsRect = new Rect(100, 285, 300, 30);
             if (GUI.Button(tagsRect, "Open Session Tags Documentation   "))
             {
                 Application.OpenURL(URL_SESSION_TAGS_DOCS);
