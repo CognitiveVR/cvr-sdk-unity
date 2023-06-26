@@ -862,7 +862,7 @@ namespace Cognitive3D
             GUI.Label(onlineRect, EditorCore.ExternalIcon);
 
             //2 link to documentation on session tags
-            GUI.Label(new Rect(30, 210, 440, 440), "The session list on the dashboard uses <b>tags</b> to help manage and filter sessions. You can find out more about session tags on our documentation page. ", "normallabel");
+            GUI.Label(new Rect(30, 210, 440, 440), "Please note that sessions run in the editor won't count towards aggregate metrics. For more information on this, please visit the documentation page on session tags.", "normallabel");
             Rect tagsRect = new Rect(100, 285, 300, 30);
             if (GUI.Button(tagsRect, "Open Session Tags Documentation   "))
             {
