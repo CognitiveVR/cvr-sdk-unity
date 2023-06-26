@@ -16,6 +16,7 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
@@ -845,7 +846,7 @@ namespace Cognitive3D
 
             //1 play a session, see it on the dashboard
             GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nTo record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard.", "normallabel");
-            Rect buttonRect = new Rect(150, 170, 200, 30);
+            Rect buttonRect = new Rect(150, 160, 200, 30);
             if (GUI.Button(buttonRect, "Open Dashboard       "))
             {
                 var sceneSettings = Cognitive3D_Preferences.FindCurrentScene();
@@ -860,11 +861,24 @@ namespace Cognitive3D
             onlineRect.x += 82;
             GUI.Label(onlineRect, EditorCore.ExternalIcon);
 
-            //2 overview of features in help window
-            GUI.Label(new Rect(30, 250, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
-            GUI.Label(new Rect(30, 300, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
+            //2 link to documentation on session tags
+            GUI.Label(new Rect(30, 210, 440, 440), "The session list on the dashboard uses <b>tags</b> to help manage and filter sessions. You can find out more about session tags on our documentation page. ", "normallabel");
+            Rect tagsRect = new Rect(100, 280, 300, 30);
+            if (GUI.Button(tagsRect, "Open Session Tags Documentation   "))
+            {
+                Application.OpenURL(URL_SESSION_TAGS_DOCS);
+            }
+            Rect tagsRectIcon = tagsRect;
+            tagsRectIcon.x += 130;
+            GUI.Label(tagsRectIcon, EditorCore.ExternalIcon);
+
+
+
+            //3 overview of features in help window
+            GUI.Label(new Rect(30, 325, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
+            GUI.Label(new Rect(30, 370, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
             
-            if (GUI.Button(new Rect(150, 400, 200, 30), "Open Help Window"))
+            if (GUI.Button(new Rect(150, 460, 200, 30), "Open Help Window"))
             {
                 HelpWindow.Init();
             }
