@@ -872,12 +872,9 @@ namespace Cognitive3D
             tagsRectIcon.x += 130;
             GUI.Label(tagsRectIcon, EditorCore.ExternalIcon);
 
-
-
             //3 overview of features in help window
             GUI.Label(new Rect(30, 325, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
             GUI.Label(new Rect(30, 370, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
-            
             if (GUI.Button(new Rect(150, 460, 200, 30), "Open Help Window"))
             {
                 HelpWindow.Init();
