@@ -8,6 +8,7 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Common/ExitPoll Holder")]
+    [HelpURL("https://docs.cognitive3d.com/unity/exitpoll/")]
     public class ExitPollHolder : MonoBehaviour
     {
         public ExitPollParameters Parameters = new ExitPollParameters();
