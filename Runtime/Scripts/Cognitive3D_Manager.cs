@@ -23,7 +23,7 @@ using Valve.VR;
 
 namespace Cognitive3D
 {
-    [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
+    [HelpURL("https://docs.cognitive3d.com/unity/minimal-setup-guide/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
