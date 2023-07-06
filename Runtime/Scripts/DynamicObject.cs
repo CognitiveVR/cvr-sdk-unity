@@ -405,7 +405,7 @@ namespace Cognitive3D
         /// intended only for in-app editor tooling
         /// </summary>
         /// <param name="meshName"></param>
-        public void SetCustomIdAndMesh(string customId, string meshName)
+        public void SetCustomIdAndMeshName(string customId, string meshName)
         {
             //remove existing dynamic data from dynamic manager
             OnDisable();
