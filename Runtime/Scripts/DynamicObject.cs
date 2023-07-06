@@ -15,6 +15,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(+10)] //this must run after PoseTrackerManager on controllers is enabled
 #endif
     [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
+    [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
     public class DynamicObject : MonoBehaviour
     {
         //developer facing high level controller type selection

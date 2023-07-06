@@ -88,29 +88,11 @@ namespace Cognitive3D
                 return false;
             }
 
-            UnityEngine.XR.InputDevice device;
-            device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
-            Vector3 headPos;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
-            {
-                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD POSITION");
-                return false;
-            }
-            Quaternion headRot = Quaternion.identity;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
-            {
-                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD ROTATION");
-                return false;
-            }
-
             Vector3 direction;
             if (Unity.XR.PXR.PXR_EyeTracking.GetCombineEyeGazeVector(out direction) && direction.sqrMagnitude > 0.1f)
             {
-                Matrix4x4 matrix = Matrix4x4.identity;
-                matrix = Matrix4x4.TRS(Vector3.zero, headRot, Vector3.one);
-                direction = matrix.MultiplyPoint3x4(direction);
-                ray.origin = headPos;
-                ray.direction = direction;
+                ray.origin = Cognitive3D.GameplayReferences.HMD.position;
+                ray.direction = Cognitive3D.GameplayReferences.HMD.rotation * direction;
                 return true;
             }
             return false;
