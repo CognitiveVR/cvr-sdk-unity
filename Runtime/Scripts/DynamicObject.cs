@@ -130,7 +130,8 @@ namespace Cognitive3D
         {
             get { return !IsController; }
         }
-        public string MeshName = string.Empty;
+        [SerializeField]
+        internal string MeshName = string.Empty;
 
         public float PositionThreshold = 0.01f;
         public float RotationThreshold = 0.1f;
@@ -366,7 +367,7 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// sets the Id to a specific value. does not check for uniqueness. does not register this dynamic object id in this session
+        /// sets the Id to a specific value. does not check for uniqueness. will unregister the previous id and re-register this id in this session
         /// intended only for in-app editor tooling
         /// </summary>
         /// <param name="customId"></param>
@@ -378,6 +379,41 @@ namespace Cognitive3D
             //update displayed customid
             this.UseCustomId = true;
             this.CustomId = customId;
+
+            //register new dynamic data with dynamic manager
+            OnEnable();
+        }
+
+        /// <summary>
+        /// sets the meshname to a specific value and re-registers the dynamic object data for this session
+        /// intended only for in-app editor tooling
+        /// </summary>
+        /// <param name="meshName"></param>
+        public void SetMeshName(string meshName)
+        {
+            //remove existing dynamic data from dynamic manager
+            OnDisable();
+
+            this.MeshName = meshName;
+
+            //register new dynamic data with dynamic manager
+            OnEnable();
+        }
+
+        /// <summary>
+        /// sets the meshname and customid to a specific value and re-registers the dynamic object data for this session
+        /// intended only for in-app editor tooling
+        /// </summary>
+        /// <param name="meshName"></param>
+        public void SetCustomIdAndMesh(string customId, string meshName)
+        {
+            //remove existing dynamic data from dynamic manager
+            OnDisable();
+
+            //update displayed customid
+            this.UseCustomId = true;
+            this.CustomId = customId;
+            this.MeshName = meshName;
 
             //register new dynamic data with dynamic manager
             OnEnable();
