@@ -129,7 +129,7 @@ namespace Cognitive3D
         {
             get { return !IsController; }
         }
-        public string MeshName;
+        public string MeshName = string.Empty;
 
         public float PositionThreshold = 0.01f;
         public float RotationThreshold = 0.1f;
