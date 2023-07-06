@@ -371,7 +371,15 @@ namespace Cognitive3D
         /// <param name="customId"></param>
         public void SetCustomId(string customId)
         {
+            //remove existing dynamic data from dynamic manager
+            OnDisable();
+
+            //update displayed customid
+            this.UseCustomId = true;
             this.CustomId = customId;
+
+            //register new dynamic data with dynamic manager
+            OnEnable();
         }
 
         /// <summary>
