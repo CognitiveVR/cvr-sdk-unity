@@ -268,7 +268,7 @@ namespace Cognitive3D
 #endif
 #if C3D_PICOVR
 //camera component is disabled, so it isn't returned with Camera.main
-                    foreach (var cam in Object.FindObjectsOfType<Camera>())
+                    foreach (var cam in UnityEngine.Object.FindObjectsOfType<Camera>())
                     {
                         if (cam.gameObject.CompareTag("MainCamera"))
                         {

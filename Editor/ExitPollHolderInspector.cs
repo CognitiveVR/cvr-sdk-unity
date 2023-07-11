@@ -219,6 +219,7 @@ namespace Cognitive3D
             if (GUI.changed)
             {
                 boolPanelPrefab = null;
+                EditorUtility.SetDirty(t);
             }
         }
 

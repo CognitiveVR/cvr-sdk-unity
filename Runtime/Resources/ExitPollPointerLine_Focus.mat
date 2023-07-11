@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ExitPollPointerLine
+  m_Name: ExitPollPointerLine_Focus
   m_Shader: {fileID: 4800000, guid: 52bc1ac02793e0744a80d928bcd54f6e, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -81,5 +81,5 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _TintColor: {r: 1, g: 0, b: 0, a: 0.166}
+    - _TintColor: {r: 0.08597367, g: 0.7924528, b: 0.21687356, a: 0.166}
   m_BuildTextureStacks: []

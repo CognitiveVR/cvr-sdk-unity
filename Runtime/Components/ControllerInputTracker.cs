@@ -26,11 +26,12 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             InputDevice device;
-            if (!GameplayReferences.GetControllerInfo(true, out device))
+            Transform ignore;
+            if (!GameplayReferences.GetControllerInfo(true, out device) || !GameplayReferences.GetControllerTransform(false,out ignore))
             {
                 GameplayReferences.OnControllerValidityChange += DelayEnable;
             }
-            else if (!GameplayReferences.GetControllerInfo(false, out device))
+            else if (!GameplayReferences.GetControllerInfo(false, out device) || !GameplayReferences.GetControllerTransform(true, out ignore))
             {
                 GameplayReferences.OnControllerValidityChange += DelayEnable;
             }
@@ -446,6 +447,9 @@ namespace Cognitive3D.Components
 
             Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
             InputDevice tempDevice;
+
+            LeftLastFrameButtonStates = new Dictionary<string, ButtonState>();
+            RightLastFrameButtonStates = new Dictionary<string, ButtonState>();
 
             //left hand
             if (GameplayReferences.GetControllerInfo(false,out tempDevice))
