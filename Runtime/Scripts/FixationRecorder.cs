@@ -657,6 +657,9 @@ namespace Cognitive3D
             return false;
         }
 #elif C3D_OCULUS
+
+        OVRFaceExpressions cachedFaceExpressions;
+
         const int CachedEyeCaptures = 30;
         private static OVRPlugin.EyeGazesState _currentEyeGazesState;
         readonly float ConfidenceThreshold = 0.5f;
@@ -666,9 +669,39 @@ namespace Cognitive3D
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
 
+            //EyeGazeState confidence always returns 1 from OVRPlugin. this is possibly a bug and may change in future release
+            //use blink expression weight for now to throw out unconfident data
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+
+            float lblinkweight;
+            float rblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+
             var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
-            if (eyeGazeRight.IsValid && eyeGazeRight.Confidence > ConfidenceThreshold)
+
+            if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold && eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
+            {
+                //average directions
+                var poseR = eyeGazeRight.Pose.ToOVRPose();
+                poseR = poseR.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                var poseL = eyeGazeRight.Pose.ToOVRPose();
+                poseL = poseL.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+
+                Quaternion q = Quaternion.Slerp(poseR.orientation, poseL.orientation, 0.5f);
+                ray.origin = Vector3.Lerp(poseR.position, poseL.position, 0.5f);
+                ray.direction = q * Vector3.forward;
+                return true;
+            }
+            else if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold)
             {
                 var pose = eyeGazeRight.Pose.ToOVRPose();
                 pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
@@ -676,7 +709,7 @@ namespace Cognitive3D
                 ray.direction = pose.orientation * Vector3.forward;
                 return true;
             }            
-            else if (eyeGazeLeft.IsValid && eyeGazeLeft.Confidence > ConfidenceThreshold)
+            else if (eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
             {
                 var pose = eyeGazeLeft.Pose.ToOVRPose();
                 pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
@@ -691,19 +724,40 @@ namespace Cognitive3D
         {
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+
+            float lblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
             if (!eyeGaze.IsValid)
                 return false;
-            return eyeGaze.Confidence > ConfidenceThreshold;
+            return lblinkweight > ConfidenceThreshold;
         }
         bool RightEyeOpen()
         {
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+            float rblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             if (!eyeGaze.IsValid)
                 return false;
-            return eyeGaze.Confidence > ConfidenceThreshold;
+            return rblinkweight > ConfidenceThreshold;
         }
 
         long EyeCaptureTimestamp()
@@ -894,6 +948,7 @@ namespace Cognitive3D
             }
 #elif C3D_OCULUS
             OVRPlugin.StartEyeTracking();
+            OVRPlugin.StartFaceTracking();
 #endif
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
             IsInitialized = true;

@@ -153,6 +153,7 @@ namespace Cognitive3D
             return lastDirection;
         }
 #elif C3D_OCULUS
+        static OVRFaceExpressions cachedFaceExpressions;
         static Vector3 lastDirection = Vector3.forward;
         private static OVRPlugin.EyeGazesState _currentEyeGazesState;
         private static float ConfidenceThreshold = 0.5f;
@@ -161,16 +162,43 @@ namespace Cognitive3D
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return lastDirection;
 
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return lastDirection;
+                }
+            }
+
+            float lblinkweight;
+            float rblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+
             var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
-            if (eyeGazeRight.IsValid && eyeGazeRight.Confidence > ConfidenceThreshold)
+
+            if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold && eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
+            {
+                //average directions
+                var poseR = eyeGazeRight.Pose.ToOVRPose();
+                poseR = poseR.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                var poseL = eyeGazeRight.Pose.ToOVRPose();
+                poseL = poseL.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+
+                Quaternion q = Quaternion.Slerp(poseR.orientation, poseL.orientation, 0.5f);
+                lastDirection = q * Vector3.forward;
+                return lastDirection;
+            }
+            else if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold)
             {
                 var pose = eyeGazeRight.Pose.ToOVRPose();
                 pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
                 lastDirection = pose.orientation * Vector3.forward;
                 return lastDirection;
             }            
-            else if (eyeGazeLeft.IsValid && eyeGazeLeft.Confidence > ConfidenceThreshold)
+            else if (eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
             {
                 var pose = eyeGazeLeft.Pose.ToOVRPose();
                 pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
