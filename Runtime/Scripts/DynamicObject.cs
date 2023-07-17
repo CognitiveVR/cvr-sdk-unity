@@ -404,6 +404,7 @@ namespace Cognitive3D
         /// sets the meshname and customid to a specific value and re-registers the dynamic object data for this session
         /// intended only for in-app editor tooling
         /// </summary>
+        /// <param name="customId"></param>
         /// <param name="meshName"></param>
         public void SetCustomIdAndMeshName(string customId, string meshName)
         {

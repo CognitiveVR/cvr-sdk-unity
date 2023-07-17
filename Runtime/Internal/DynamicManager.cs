@@ -34,6 +34,30 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Resets content of Dynamic Manager to avoid carrying internally stored data between game states when no session is active
+        /// Intended only for in-app editor tooling
+        /// </summary>
+        /// <param name="completeReset">Removes all Dynamic Objects internal data. This may cause persistent objects (eg, controllers) to not appear until they are re-enabled</param>
+        public static void Reset(bool completeReset)
+        {
+            if (completeReset)
+            {
+                ActiveDynamicObjectsArray = new DynamicData[1024];
+                DynamicObjectIdArray = new DynamicObjectId[16];
+            }
+            else
+            {
+                for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+                {
+                    if (ActiveDynamicObjectsArray[i].remove)
+                    {
+                        ActiveDynamicObjectsArray[i] = new DynamicData();
+                    }
+                }
+            }
+        }
+
         //happens after the network has sent the request, before any response. used by active session view
         public static event Cognitive3D_Manager.onSendData OnDynamicObjectSend;
         internal static void DynamicObjectSendEvent()
