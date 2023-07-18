@@ -595,8 +595,6 @@ namespace Cognitive3D
                 } 
             }
 
-            //TODO also check that oculus settings have eye tracking and face tracking 
-
             //a checkmark if the component already exists
             if (eyeManagerExists == false)
             {
@@ -609,6 +607,57 @@ namespace Cognitive3D
                 //full checkmark
                 GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
+
+
+            //eye tracking support
+            if (GUI.Button(new Rect(150, 330, 200, 30), "Enable Eye Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+            //face tracking support
+            if (GUI.Button(new Rect(150, 370, 200, 30), "Enable Face Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager,true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+
 #else
             currentPage++;
 #endif
