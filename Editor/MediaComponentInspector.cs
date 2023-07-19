@@ -31,9 +31,9 @@ namespace Cognitive3D
             
             //media source / media id
             EditorGUILayout.LabelField("Media Name",m.MediaName);
-            EditorGUILayout.LabelField("Media Id",m.MediaSource);
+            EditorGUILayout.LabelField("Media Id",m.MediaId);
 
-            if (string.IsNullOrEmpty(m.MediaSource))
+            if (string.IsNullOrEmpty(m.MediaId))
             {
                 setupFoldout = true;
             }
@@ -47,12 +47,12 @@ namespace Cognitive3D
                 EditorGUILayout.BeginHorizontal();
                 string[] displayOptions = new string[EditorCore.MediaSources.Length];
 
-                if (!string.IsNullOrEmpty(m.MediaSource) && _choiceIndex == 0 && displayOptions.Length > 0)
+                if (!string.IsNullOrEmpty(m.MediaId) && _choiceIndex == 0 && displayOptions.Length > 0)
                 {
                     //try once to select the correct media
                     for (int i = 0; i < EditorCore.MediaSources.Length; i++)
                     {
-                        if (EditorCore.MediaSources[i].uploadId == m.MediaSource)
+                        if (EditorCore.MediaSources[i].uploadId == m.MediaId)
                         {
                             _choiceIndex = i;
                         }
@@ -71,14 +71,14 @@ namespace Cognitive3D
                 //save button
                 if (EditorCore.MediaSources.Length > 0)
                 {
-                    if (m.MediaSource != EditorCore.MediaSources[_choiceIndex].uploadId)
+                    if (m.MediaId != EditorCore.MediaSources[_choiceIndex].uploadId)
                     {
                         GUI.color = Color.green;
                     }
 
                     if (GUILayout.Button("Save", GUILayout.Width(40)))
                     {
-                        m.MediaSource = EditorCore.MediaSources[_choiceIndex].uploadId;
+                        m.MediaId = EditorCore.MediaSources[_choiceIndex].uploadId;
                         m.MediaName = EditorCore.MediaSources[_choiceIndex].name;
                     }
 
