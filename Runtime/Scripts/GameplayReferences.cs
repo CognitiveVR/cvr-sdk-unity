@@ -22,6 +22,13 @@ namespace Cognitive3D
                 return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled;
 #elif C3D_VIVEWAVE
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
+#elif C3D_OCULUS
+
+                bool eyeTrackingSupportedAndEnabled = OVRPlugin.eyeTrackingSupported && OVRPlugin.eyeTrackingEnabled;
+                bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
+                bool faceExpressionsExists = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>() != null;
+
+                return eyeTrackingSupportedAndEnabled && faceTrackingSupportedAndEnabled && faceExpressionsExists;
 #elif C3D_DEFAULT
                 var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
                 Eyes eyedata;
@@ -266,7 +273,7 @@ namespace Cognitive3D
 #endif
 #if C3D_PICOVR
 //camera component is disabled, so it isn't returned with Camera.main
-                    foreach (var cam in Object.FindObjectsOfType<Camera>())
+                    foreach (var cam in UnityEngine.Object.FindObjectsOfType<Camera>())
                     {
                         if (cam.gameObject.CompareTag("MainCamera"))
                         {

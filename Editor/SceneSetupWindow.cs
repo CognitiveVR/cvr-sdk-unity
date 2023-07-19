@@ -16,6 +16,7 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
@@ -52,6 +53,9 @@ namespace Cognitive3D
             ProjectError,
             Welcome,
             PlayerSetup,
+            QuestProSetup,
+            //TODO pico eyetracker setup
+            //TODO wave eyetracker setup
             SceneExport,
             SceneUpload,
             SceneUploadProgress,
@@ -74,6 +78,9 @@ namespace Cognitive3D
                     break;
                 case Page.PlayerSetup:
                     ControllerUpdate();
+                    break;
+                case Page.QuestProSetup:
+                    QuestProSetup();
                     break;
                 case Page.SceneExport:
                     ExportSceneUpdate();
@@ -563,6 +570,100 @@ namespace Cognitive3D
 
         #endregion
 
+
+        void QuestProSetup()
+        {
+#if C3D_OCULUS
+
+            GUI.Label(steptitlerect, "EYETRACKING SETUP", "steptitle");
+            var eyeManager = Object.FindObjectOfType<OVRFaceExpressions>();
+            bool eyeManagerExists = eyeManager != null;
+
+            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs a OVRFaceExpressions component, which doesn't exist by default." +
+    "\n\nUse the button below to add a OVRFaceExpression component to the scene if it does not already exist." +
+    "\n\nIf you are not using the Eye Tracking feature, you can skip this step.", "normallabel");
+
+            //button to create new gameobject with component
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Create OVRFaceExpression"))
+            {
+                if (eyeManager == null)
+                {
+                    var m_EyeManager = new GameObject("OVRFaceExpressions");
+                    m_EyeManager.AddComponent<OVRFaceExpressions>();
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                    eyeManagerExists = true;
+                } 
+            }
+
+            //a checkmark if the component already exists
+            if (eyeManagerExists == false)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+
+            //eye tracking support
+            if (GUI.Button(new Rect(150, 330, 200, 30), "Enable Eye Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+            //face tracking support
+            if (GUI.Button(new Rect(150, 370, 200, 30), "Enable Face Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager,true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+
+#else
+            currentPage++;
+#endif
+        }
+
+
         Texture2D isoSceneImage;
 
         void ExportSceneUpdate()
@@ -845,7 +946,7 @@ namespace Cognitive3D
 
             //1 play a session, see it on the dashboard
             GUI.Label(new Rect(30, 30, 440, 440), "The " + EditorCore.DisplayValue(DisplayKey.ManagerName) + " in your scene will record user position, gaze and basic device information.\n\nTo record a Session, just <b>Press Play</b>, put on your headset and look around. <b>Press Stop</b> when you're finished and you'll be able to replay the session on our Dashboard.", "normallabel");
-            Rect buttonRect = new Rect(150, 170, 200, 30);
+            Rect buttonRect = new Rect(150, 160, 200, 30);
             if (GUI.Button(buttonRect, "Open Dashboard       "))
             {
                 var sceneSettings = Cognitive3D_Preferences.FindCurrentScene();
@@ -860,11 +961,21 @@ namespace Cognitive3D
             onlineRect.x += 82;
             GUI.Label(onlineRect, EditorCore.ExternalIcon);
 
-            //2 overview of features in help window
-            GUI.Label(new Rect(30, 250, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
-            GUI.Label(new Rect(30, 300, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
-            
-            if (GUI.Button(new Rect(150, 400, 200, 30), "Open Help Window"))
+            //2 link to documentation on session tags
+            GUI.Label(new Rect(30, 210, 440, 440), "Please note that sessions run in the editor won't count towards aggregate metrics. For more information, please see our documentation.", "normallabel");
+            Rect tagsRect = new Rect(100, 285, 300, 30);
+            if (GUI.Button(tagsRect, "Open Session Tags Documentation   "))
+            {
+                Application.OpenURL(URL_SESSION_TAGS_DOCS);
+            }
+            Rect tagsRectIcon = tagsRect;
+            tagsRectIcon.x += 130;
+            GUI.Label(tagsRectIcon, EditorCore.ExternalIcon);
+
+            //3 overview of features in help window
+            GUI.Label(new Rect(30, 325, 440, 440), "You can continue your integration to get more insights including:", "normallabel");
+            GUI.Label(new Rect(30, 370, 440, 440), " - Custom Events\n - ExitPoll Surveys\n - Ready Room User Onboarding\n - Dynamic Objects", "normallabel");
+            if (GUI.Button(new Rect(150, 460, 200, 30), "Open Help Window"))
             {
                 HelpWindow.Init();
             }
@@ -939,6 +1050,8 @@ namespace Cognitive3D
                     }
 #endif
                     onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
+                    break;
+                case Page.QuestProSetup:
                     break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
@@ -1147,9 +1260,11 @@ namespace Cognitive3D
             {
                 case Page.Welcome: buttonDisabled = true; break;
                 case Page.PlayerSetup:
-                    text = "Back";
+                    break;
+                case Page.QuestProSetup:
                     break;
                 case Page.SceneExport:
+                    onclick = () => currentPage = Page.PlayerSetup;
                     break;
                 case Page.SceneUpload:
                     break;

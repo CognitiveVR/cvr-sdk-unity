@@ -88,29 +88,11 @@ namespace Cognitive3D
                 return false;
             }
 
-            UnityEngine.XR.InputDevice device;
-            device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
-            Vector3 headPos;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out headPos))
-            {
-                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD POSITION");
-                return false;
-            }
-            Quaternion headRot = Quaternion.identity;
-            if (!device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out headRot))
-            {
-                Debug.Log("Cognitive3D::FixationRecorder CombineWorldGazeRay FAILED HEAD ROTATION");
-                return false;
-            }
-
             Vector3 direction;
             if (Unity.XR.PXR.PXR_EyeTracking.GetCombineEyeGazeVector(out direction) && direction.sqrMagnitude > 0.1f)
             {
-                Matrix4x4 matrix = Matrix4x4.identity;
-                matrix = Matrix4x4.TRS(Vector3.zero, headRot, Vector3.one);
-                direction = matrix.MultiplyPoint3x4(direction);
-                ray.origin = headPos;
-                ray.direction = direction;
+                ray.origin = Cognitive3D.GameplayReferences.HMD.position;
+                ray.direction = Cognitive3D.GameplayReferences.HMD.rotation * direction;
                 return true;
             }
             return false;
@@ -674,6 +656,126 @@ namespace Cognitive3D
             }
             return false;
         }
+#elif C3D_OCULUS
+
+        OVRFaceExpressions cachedFaceExpressions;
+
+        const int CachedEyeCaptures = 30;
+        private static OVRPlugin.EyeGazesState _currentEyeGazesState;
+        readonly float ConfidenceThreshold = 0.5f;
+        bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+
+            //EyeGazeState confidence always returns 1 from OVRPlugin. this is possibly a bug and may change in future release
+            //use blink expression weight for now to throw out unconfident data
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+
+            float lblinkweight;
+            float rblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+
+            var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+
+            if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold && eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
+            {
+                //average directions
+                var poseR = eyeGazeRight.Pose.ToOVRPose();
+                poseR = poseR.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                var poseL = eyeGazeRight.Pose.ToOVRPose();
+                poseL = poseL.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+
+                Quaternion q = Quaternion.Slerp(poseR.orientation, poseL.orientation, 0.5f);
+                ray.origin = Vector3.Lerp(poseR.position, poseL.position, 0.5f);
+                ray.direction = q * Vector3.forward;
+                return true;
+            }
+            else if (eyeGazeRight.IsValid && rblinkweight < ConfidenceThreshold)
+            {
+                var pose = eyeGazeRight.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                ray.origin = pose.position;
+                ray.direction = pose.orientation * Vector3.forward;
+                return true;
+            }            
+            else if (eyeGazeLeft.IsValid && lblinkweight < ConfidenceThreshold)
+            {
+                var pose = eyeGazeLeft.Pose.ToOVRPose();
+                pose = pose.ToWorldSpacePose(GameplayReferences.HMDCameraComponent);
+                ray.origin = pose.position;
+                ray.direction = pose.orientation * Vector3.forward;
+                return true;
+            }
+            return false;
+        }
+
+        bool LeftEyeOpen()
+        {
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+
+            float lblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
+            if (!eyeGaze.IsValid)
+                return false;
+            return lblinkweight > ConfidenceThreshold;
+        }
+        bool RightEyeOpen()
+        {
+            if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
+                return false;
+            if (cachedFaceExpressions == null)
+            {
+                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (cachedFaceExpressions == null)
+                {
+                    return false;
+                }
+            }
+            float rblinkweight;
+            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+            var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
+            if (!eyeGaze.IsValid)
+                return false;
+            return rblinkweight > ConfidenceThreshold;
+        }
+
+        long EyeCaptureTimestamp()
+        {
+            return (long)(Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
 #else
         const int CachedEyeCaptures = 120;
 
@@ -757,7 +859,6 @@ namespace Cognitive3D
 
         //if active fixation is world space, in world space, this indicates the last several positions for the average fixation position
         //if active fixation is local space, these are in local space
-        List<Vector3> CachedEyeCapturePositions = new List<Vector3>();
         bool hasDisplayedSceneIdWarning = false;
         bool hasDisplayedHMDNullWarning = false;
 
@@ -845,6 +946,9 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
+#elif C3D_OCULUS
+            OVRPlugin.StartEyeTracking();
+            OVRPlugin.StartFaceTracking();
 #endif
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
             IsInitialized = true;

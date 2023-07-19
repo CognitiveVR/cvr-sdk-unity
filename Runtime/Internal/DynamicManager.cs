@@ -155,7 +155,6 @@ namespace Cognitive3D
                             if (DynamicObjectIdArray[j].Id == id)
                             {
                                 //set the id in the manifest to be reusable
-                                Util.logDebug("remove dynamic object id " + id);
                                 DynamicObjectIdArray[j].Used = false;
                                 break;
                             }

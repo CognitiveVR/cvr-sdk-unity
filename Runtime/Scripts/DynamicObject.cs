@@ -15,6 +15,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(+10)] //this must run after PoseTrackerManager on controllers is enabled
 #endif
     [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
+    [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
     public class DynamicObject : MonoBehaviour
     {
         //developer facing high level controller type selection
@@ -362,6 +363,16 @@ namespace Cognitive3D
             if (!string.IsNullOrEmpty(CustomId))
                 return CustomId;
             return string.Empty;
+        }
+
+        /// <summary>
+        /// sets the Id to a specific value. does not check for uniqueness. does not register this dynamic object id in this session
+        /// intended only for in-app editor tooling
+        /// </summary>
+        /// <param name="customId"></param>
+        public void SetCustomId(string customId)
+        {
+            this.CustomId = customId;
         }
 
         /// <summary>

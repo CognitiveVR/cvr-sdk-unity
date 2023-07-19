@@ -23,11 +23,11 @@ using Valve.VR;
 
 namespace Cognitive3D
 {
-    [HelpURL("https://docs.cognitive3d.com/unity/get-started/")]
+    [HelpURL("https://docs.cognitive3d.com/unity/minimal-setup-guide/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.2.2";
+        public static readonly string SDK_VERSION = "1.3.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -309,8 +309,15 @@ namespace Cognitive3D
 
 #if C3D_OCULUS
         SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
-        SetSessionProperty("c3d.device.eyetracking.enabled", false);
-        SetSessionProperty("c3d.device.eyetracking.type", "None");
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
+        if (GameplayReferences.SDKSupportsEyeTracking)
+        {
+            SetSessionProperty("c3d.device.eyetracking.type", "OVR");
+        }
+        else
+        {
+            SetSessionProperty("c3d.device.eyetracking.type", "None");
+        }
         SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif C3D_HOLOLENS
         SetSessionProperty("c3d.device.eyetracking.enabled", false);
@@ -489,7 +496,6 @@ namespace Cognitive3D
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
                 new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
                 Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-                FlushData();
                 ResetSessionData();
             }
         }
@@ -788,6 +794,7 @@ namespace Cognitive3D
         private void ResetSessionData()
         {
             InvokeEndSessionEvent();
+            FlushData();
             CoreInterface.Reset();
             if (NetworkManager != null)
                 NetworkManager.EndSession();

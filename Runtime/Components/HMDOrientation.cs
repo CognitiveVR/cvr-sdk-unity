@@ -31,7 +31,7 @@ namespace Cognitive3D.Components
             Vector3 forwardPoint = GameplayReferences.HMD.position + GameplayReferences.HMD.forward;
             float opposite = GameplayReferences.HMD.position.y - forwardPoint.y;
             float hypotenuse = 1f;
-            float pitch = Mathf.Asin(opposite / hypotenuse) * Mathf.Rad2Deg;
+            float pitch = -Mathf.Asin(opposite / hypotenuse) * Mathf.Rad2Deg;
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 

@@ -1208,7 +1208,7 @@ namespace Cognitive3D
                         uploadList.Add(dyn.gameObject);
                     }
                 }
-
+                this.Focus();
                 //upload meshes and ids
                 EditorCore.RefreshSceneVersion(delegate
                 {
@@ -1241,7 +1241,13 @@ namespace Cognitive3D
                             }
                         }
                         AddOrReplaceDynamic(manifest, manifestList);
-                        UploadManifest(manifest, null);
+                        System.Action refreshWindowOnManifest = delegate
+                        {
+                            GetDashboardManifest();
+                        };
+
+                        UploadManifest(manifest, refreshWindowOnManifest);
+                        this.Focus();
                     }
                 });
             });
