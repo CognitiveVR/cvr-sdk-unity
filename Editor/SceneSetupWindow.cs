@@ -53,6 +53,9 @@ namespace Cognitive3D
             ProjectError,
             Welcome,
             PlayerSetup,
+            QuestProSetup,
+            //TODO pico eyetracker setup
+            //TODO wave eyetracker setup
             SceneExport,
             SceneUpload,
             SceneUploadProgress,
@@ -75,6 +78,9 @@ namespace Cognitive3D
                     break;
                 case Page.PlayerSetup:
                     ControllerUpdate();
+                    break;
+                case Page.QuestProSetup:
+                    QuestProSetup();
                     break;
                 case Page.SceneExport:
                     ExportSceneUpdate();
@@ -564,6 +570,100 @@ namespace Cognitive3D
 
         #endregion
 
+
+        void QuestProSetup()
+        {
+#if C3D_OCULUS
+
+            GUI.Label(steptitlerect, "EYETRACKING SETUP", "steptitle");
+            var eyeManager = Object.FindObjectOfType<OVRFaceExpressions>();
+            bool eyeManagerExists = eyeManager != null;
+
+            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs a OVRFaceExpressions component, which doesn't exist by default." +
+    "\n\nUse the button below to add a OVRFaceExpression component to the scene if it does not already exist." +
+    "\n\nIf you are not using the Eye Tracking feature, you can skip this step.", "normallabel");
+
+            //button to create new gameobject with component
+            if (GUI.Button(new Rect(150, 290, 200, 30), "Create OVRFaceExpression"))
+            {
+                if (eyeManager == null)
+                {
+                    var m_EyeManager = new GameObject("OVRFaceExpressions");
+                    m_EyeManager.AddComponent<OVRFaceExpressions>();
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                    eyeManagerExists = true;
+                } 
+            }
+
+            //a checkmark if the component already exists
+            if (eyeManagerExists == false)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+
+            //eye tracking support
+            if (GUI.Button(new Rect(150, 330, 200, 30), "Enable Eye Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+            //face tracking support
+            if (GUI.Button(new Rect(150, 370, 200, 30), "Enable Face Tracking Support"))
+            {
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                var ovrManager = Object.FindObjectOfType<OVRManager>();
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager,true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
+            {
+                //empty checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleEmpty, "image_centered");
+
+            }
+            else
+            {
+                //full checkmark
+                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+            }
+
+
+#else
+            currentPage++;
+#endif
+        }
+
+
         Texture2D isoSceneImage;
 
         void ExportSceneUpdate()
@@ -951,6 +1051,8 @@ namespace Cognitive3D
 #endif
                     onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
                     break;
+                case Page.QuestProSetup:
+                    break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
@@ -1158,9 +1260,11 @@ namespace Cognitive3D
             {
                 case Page.Welcome: buttonDisabled = true; break;
                 case Page.PlayerSetup:
-                    text = "Back";
+                    break;
+                case Page.QuestProSetup:
                     break;
                 case Page.SceneExport:
+                    onclick = () => currentPage = Page.PlayerSetup;
                     break;
                 case Page.SceneUpload:
                     break;

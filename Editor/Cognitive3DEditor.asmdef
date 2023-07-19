@@ -12,7 +12,8 @@
         "Wave.Essence",
         "UnityEngine.SpatialTracking",
         "SteamVR_Input_Editor",
-		"SteamVR_Actions"
+        "SteamVR_Actions",
+        "Oculus.VR.Editor"
     ],
     "includePlatforms": [
         "Editor"

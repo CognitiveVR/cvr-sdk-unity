@@ -309,8 +309,15 @@ namespace Cognitive3D
 
 #if C3D_OCULUS
         SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
-        SetSessionProperty("c3d.device.eyetracking.enabled", false);
-        SetSessionProperty("c3d.device.eyetracking.type", "None");
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
+        if (GameplayReferences.SDKSupportsEyeTracking)
+        {
+            SetSessionProperty("c3d.device.eyetracking.type", "OVR");
+        }
+        else
+        {
+            SetSessionProperty("c3d.device.eyetracking.type", "None");
+        }
         SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif C3D_HOLOLENS
         SetSessionProperty("c3d.device.eyetracking.enabled", false);
