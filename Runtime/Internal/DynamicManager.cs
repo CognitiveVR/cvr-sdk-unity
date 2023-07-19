@@ -162,32 +162,46 @@ namespace Cognitive3D
         }
 
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
+        //if there isn't an active session (such as in-app creator tools or between sessions) this will immediately remove the associated data
         internal static void RemoveDynamicObject(string id)
         {
-            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            if (!Cognitive3D_Manager.IsInitialized)
             {
-                if (String.CompareOrdinal(ActiveDynamicObjectsArray[i].Id, id) == 0)
+                for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
                 {
-                    //set the dynamic data to write 'enabled = false' property next update
-                    ActiveDynamicObjectsArray[i].dirty = true;
-                    ActiveDynamicObjectsArray[i].remove = true;
-
-                    if (!ActiveDynamicObjectsArray[i].UseCustomId)
+                    if (String.CompareOrdinal(ActiveDynamicObjectsArray[i].Id, id) == 0)
                     {
-                        for (int j = 0; j < DynamicObjectIdArray.Length; j++)
-                        {
-                            if (DynamicObjectIdArray[j].Id == id)
-                            {
-                                //set the id in the manifest to be reusable
-                                DynamicObjectIdArray[j].Used = false;
-                                break;
-                            }
-                        }
+                        ActiveDynamicObjectsArray[i] = new DynamicData();
                     }
-                    return; //there should only be one dynamic data with this id
                 }
             }
-            Util.logError("remove dynamic object id " + id + " not found");
+            else
+            {
+                for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+                {
+                    if (String.CompareOrdinal(ActiveDynamicObjectsArray[i].Id, id) == 0)
+                    {
+                        //set the dynamic data to write 'enabled = false' property next update
+                        ActiveDynamicObjectsArray[i].dirty = true;
+                        ActiveDynamicObjectsArray[i].remove = true;
+
+                        if (!ActiveDynamicObjectsArray[i].UseCustomId)
+                        {
+                            for (int j = 0; j < DynamicObjectIdArray.Length; j++)
+                            {
+                                if (DynamicObjectIdArray[j].Id == id)
+                                {
+                                    //set the id in the manifest to be reusable
+                                    DynamicObjectIdArray[j].Used = false;
+                                    break;
+                                }
+                            }
+                        }
+                        return; //there should only be one dynamic data with this id
+                    }
+                }
+                Util.logError("remove dynamic object id " + id + " not found");
+            }
         }
 
         #region Engagement Events
