@@ -10,10 +10,10 @@ using UnityEngine.Events;
 public class AnalyticsConverter : EditorWindow
 {
     // Use a dictionary to store the events and their file paths and line numbers.
-    private Dictionary<string, (string FilePath, int LineNumber)> unityEvents =
+    private readonly Dictionary<string, (string FilePath, int LineNumber)> unityEvents =
         new Dictionary<string, (string FilePath, int LineNumber)>();
 
-    private List<string> foundEvents = new List<string>();
+    private readonly List<string> foundEvents = new List<string>();
     private Vector2 scrollPos;
 
     [MenuItem("Cognitive3D/AnalyticsConverter")]
@@ -22,8 +22,8 @@ public class AnalyticsConverter : EditorWindow
         GetWindow<AnalyticsConverter>("Analytics Converter");
     }
 
-    private string selectedEvent = null;
-    private string generatedEvent = null;
+    private string selectedEvent;
+    private string generatedEvent;
 
     private void OnGUI()
     {
@@ -62,6 +62,11 @@ public class AnalyticsConverter : EditorWindow
                 // Clear the selected event.
                 selectedEvent = null;
             }
+
+            if (GUILayout.Button("Open Script"))
+            {
+                OpenScript(selectedEvent);
+            }
         }
 
         if (GUILayout.Button("Scan Scripts"))
@@ -77,7 +82,7 @@ public class AnalyticsConverter : EditorWindow
         // Get all C# script files in the project.
         string[] files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
 
-        Debug.Log("files count is " + files.Length);
+        Debug.Log("Scanning " + files.Length + " files");
         // Create a regex to match the Unity Analytics events.
         Regex regex = new Regex(@"Analytics\.CustomEvent\(.+\);");
 
@@ -116,9 +121,6 @@ public class AnalyticsConverter : EditorWindow
                     }
                 }
             }
-            else
-                Debug.Log("skipping excluded script");
-
         }
     }
 
@@ -229,32 +231,18 @@ public class AnalyticsConverter : EditorWindow
         }
     }
 
+    public void OpenScript(string unityEvent)
+    {
+        if (unityEvents.TryGetValue(unityEvent, out var fileInfo))
+        {
+            string filePath = fileInfo.FilePath;
 
-    //public void ReplaceUnityEvent(string unityEvent)
-    //{
-    //    // Check if the Unity Analytics event is in the dictionary.
-    //    if (unityEvents.TryGetValue(unityEvent, out var fileInfo))
-    //    {
-    //        // Get the file path and line number from the dictionary.
-    //        string filePath = fileInfo.FilePath;
-    //        int lineNumber = fileInfo.LineNumber;
-
-    //        // Convert the Unity event to a Cognitive3D event.
-    //        string cognitiveEvent = CreateCognitive3DEvent(unityEvent);
-
-    //        // Read all lines from the file.
-    //        string[] lines = File.ReadAllLines(filePath);
-
-    //        // Replace the Unity event with the Cognitive3D event in the corresponding line.
-    //        lines[lineNumber - 1] = lines[lineNumber - 1].Replace(unityEvent, cognitiveEvent);
-
-    //        // Write the updated lines back to the file.
-    //        File.WriteAllLines(filePath, lines);
-    //    }
-    //    else
-    //    {
-    //        new Cognitive3D.CustomEvent("test");
-    //        Debug.LogError("Unity Analytics event not found in the dictionary.");
-    //    }
-    //}
+            // Open the file with its default application.
+            System.Diagnostics.Process.Start(filePath);
+        }
+        else
+        {
+            Debug.LogError("Unity Analytics event not found in the dictionary.");
+        }
+    }
 }
