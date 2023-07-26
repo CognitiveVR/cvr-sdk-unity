@@ -10,6 +10,8 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
+        //oculus eye tracking support is cached because it needs to be checked in GazeHelper and calls non-trivial functions
+        static bool? cachedSDKSupportsEyeTracking;
         public static bool SDKSupportsEyeTracking
         {
             get
@@ -24,11 +26,14 @@ namespace Cognitive3D
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #elif C3D_OCULUS
 
+                if (cachedSDKSupportsEyeTracking.HasValue)
+                { return cachedSDKSupportsEyeTracking.Value; }
+
                 bool eyeTrackingSupportedAndEnabled = OVRPlugin.eyeTrackingSupported && OVRPlugin.eyeTrackingEnabled;
                 bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
                 bool faceExpressionsExists = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>() != null;
-
-                return eyeTrackingSupportedAndEnabled && faceTrackingSupportedAndEnabled && faceExpressionsExists;
+                cachedSDKSupportsEyeTracking = eyeTrackingSupportedAndEnabled && faceTrackingSupportedAndEnabled && faceExpressionsExists;
+                return cachedSDKSupportsEyeTracking.Value;
 #elif C3D_DEFAULT
                 var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
                 Eyes eyedata;
@@ -63,6 +68,7 @@ namespace Cognitive3D
 
         internal static void Initialize()
         {
+            cachedSDKSupportsEyeTracking = null;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
         }
