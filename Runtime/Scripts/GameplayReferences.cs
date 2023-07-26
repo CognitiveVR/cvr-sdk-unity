@@ -10,6 +10,11 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
+#if C3D_OCULUS
+        //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
+        static OVRFaceExpressions cachedOVRFaceExpressions;
+#endif
+
         public static bool SDKSupportsEyeTracking
         {
             get
@@ -24,11 +29,30 @@ namespace Cognitive3D
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #elif C3D_OCULUS
 
+                //attempt to exit early if features nor supported/enabled
                 bool eyeTrackingSupportedAndEnabled = OVRPlugin.eyeTrackingSupported && OVRPlugin.eyeTrackingEnabled;
-                bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
-                bool faceExpressionsExists = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>() != null;
+                if (!eyeTrackingSupportedAndEnabled)
+                {
+                    return false;
+                }
 
-                return eyeTrackingSupportedAndEnabled && faceTrackingSupportedAndEnabled && faceExpressionsExists;
+                if (cachedOVRFaceExpressions == null)
+                {
+                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
+                    if (cachedOVRFaceExpressions == null)
+                    {
+                        Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
+                    }
+                }
+
+                //this happen after creating the face expression component. seems to return false if this feature has no users
+                bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
+                if (!faceTrackingSupportedAndEnabled)
+                {
+                    return false;
+                }
+
+                return true;
 #elif C3D_DEFAULT
                 var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
                 Eyes eyedata;
