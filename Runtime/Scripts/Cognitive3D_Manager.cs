@@ -238,7 +238,14 @@ namespace Cognitive3D
                 fixationRecorder.Initialize();
             }
 
-            InvokeSessionBeginEvent();
+            try
+            {
+                InvokeSessionBeginEvent();
+            }
+            catch(System.Exception e)
+            {
+                Debug.LogException(e);
+            }
 
             SetSessionProperties();
             FlushData();
