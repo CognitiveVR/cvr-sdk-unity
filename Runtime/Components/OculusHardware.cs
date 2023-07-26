@@ -29,12 +29,18 @@ namespace Cognitive3D.Components
         }
 
         void RecordOculusStats()
-        {            
-            //battery level handled by a different component
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.battery.temp", Stats.AdaptivePerformance.BatteryTemp);
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.cpuLevel", Stats.AdaptivePerformance.CPULevel);
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.gpuLevel", Stats.AdaptivePerformance.GPULevel);
-            Cognitive3D.SensorRecorder.RecordDataPoint("c3d.isPowerSavingMode", (Stats.AdaptivePerformance.PowerSavingMode ? 1 : 0));
+        {
+            try
+            {
+                //battery level handled by a different component
+                Cognitive3D.SensorRecorder.RecordDataPoint("c3d.battery.temp", Stats.AdaptivePerformance.BatteryTemp);
+                Cognitive3D.SensorRecorder.RecordDataPoint("c3d.cpuLevel", Stats.AdaptivePerformance.CPULevel);
+                Cognitive3D.SensorRecorder.RecordDataPoint("c3d.gpuLevel", Stats.AdaptivePerformance.GPULevel);
+                Cognitive3D.SensorRecorder.RecordDataPoint("c3d.isPowerSavingMode", (Stats.AdaptivePerformance.PowerSavingMode ? 1 : 0));
+            }
+            catch(System.Exception e)
+            {
+            }
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
