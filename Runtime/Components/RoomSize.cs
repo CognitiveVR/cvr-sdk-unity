@@ -25,6 +25,10 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
 #if C3D_OCULUS
+            if (OVRManager.boundary == null)
+            {
+                return;
+            }
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             boundaryPointsArray = new Vector3[4];
