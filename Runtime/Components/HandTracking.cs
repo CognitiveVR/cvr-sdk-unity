@@ -5,6 +5,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
+
+#if C3D_OCULUS
         private OVRPlugin.Quatf WristRotation;
 
         /** THUMB **/
@@ -35,22 +37,26 @@ namespace Cognitive3D.Components
         private OVRPlugin.Quatf Pinky3Rotation; // Pinky Distal Phalange
 
         OVRPlugin.HandState state;
+#endif
 
         // Update is called once per frame
         void Update()
         {
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsBiometricDataAllowed)
-#endif            
+#endif
             {
-                RecordFingerBoneRotations(OVRPlugin.Hand.HandLeft);
-                RecordFingerBoneRotations(OVRPlugin.Hand.HandRight);
-                RecordWristRotation(OVRPlugin.Hand.HandLeft);
-                RecordWristRotation(OVRPlugin.Hand.HandRight);
+#if C3D_OCULUS
+                RecordFingerBoneRotationsOVR(OVRPlugin.Hand.HandLeft);
+                RecordFingerBoneRotationsOVR(OVRPlugin.Hand.HandRight);
+                RecordWristRotationOVR(OVRPlugin.Hand.HandLeft);
+                RecordWristRotationOVR(OVRPlugin.Hand.HandRight);
+#endif
             }
         }
 
-        void RecordFingerBoneRotations(OVRPlugin.Hand hand)
+#if C3D_OCULUS
+        void RecordFingerBoneRotationsOVR(OVRPlugin.Hand hand)
         {
             state = new OVRPlugin.HandState(); // potentiall move to OnSessionBegin?
             OVRPlugin.GetHandState(OVRPlugin.Step.Render, hand, ref state);
@@ -79,9 +85,11 @@ namespace Cognitive3D.Components
 
         }
 
-        void RecordWristRotation(OVRPlugin.Hand hand)
+        void RecordWristRotationOVR(OVRPlugin.Hand hand)
         {
             // WristRotation = // do something to get rotation. Ideally rotation of hand prefab? Wrist_root wasn't working, but maybe we can get it's global rotation?
         }
+#endif
+
     }
 }
