@@ -253,6 +253,7 @@ namespace Cognitive3D
         }
 
         bool AllControllerSetupComplete;
+        bool EnableHandTracking = false;
         void ControllerUpdate()
         {
             PlayerSetupStart();
@@ -429,7 +430,23 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
+            if (EnableHandTracking)
+            {
+                if (GUI.Button(new Rect(130, 340, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    EnableHandTracking = false;
+                }
+            } 
+            else
+            {
+                if (GUI.Button(new Rect(130, 340, 30, 30), EditorCore.BoxEmpty, "image_centered"))
+                {
+                    EnableHandTracking = true;
+                }
+            }
+            GUI.Label(new Rect(170, 342, 200, 40), "Enable Hand Tracking", "normallabel");
+
+            if (GUI.Button(new Rect(150, 380, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
@@ -438,11 +455,11 @@ namespace Cognitive3D
 
             if (AllControllerSetupComplete)
             {
-                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(118, 340, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(118, 380, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 

@@ -20,7 +20,7 @@ namespace Cognitive3D.Components
         private OVRPlugin.Quatf Index2Rotation; // Index Intermediate Phalange
         private OVRPlugin.Quatf Index3Rotation; // Index Distal Phalange
 
-        /** MIDDLE */
+        /** MIDDLE **/
         private OVRPlugin.Quatf Middle1Rotation; // Middle Proximal Phalange
         private OVRPlugin.Quatf Middle2Rotation; // Middle Intermediate Phalange
         private OVRPlugin.Quatf Middle3Rotation; // Middle Distal Phalange
@@ -82,7 +82,6 @@ namespace Cognitive3D.Components
             Pinky1Rotation = state.BoneRotations[(int)OVRPlugin.BoneId.Hand_Pinky1];
             Pinky2Rotation = state.BoneRotations[(int)OVRPlugin.BoneId.Hand_Pinky2];
             Pinky3Rotation = state.BoneRotations[(int)OVRPlugin.BoneId.Hand_Pinky3];
-
         }
 
         void RecordWristRotationOVR(OVRPlugin.Hand hand)
