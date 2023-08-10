@@ -449,6 +449,10 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(150, 380, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
+                if (EnableHandTracking)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.HandTracking>();
+                }
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
             }
