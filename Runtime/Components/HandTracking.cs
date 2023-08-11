@@ -4,13 +4,13 @@ using static OVRHand;
 using TMPro;
 using static OVRInput;
 using System;
+using System.Xml.Serialization;
 
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
-        bool isHandTracking = false;
         int startTime;
         int currentTime;
         public DynamicObject rightHand;
@@ -46,6 +46,16 @@ namespace Cognitive3D.Components
         public TextMeshProUGUI debug;
         public TextMeshProUGUI debug2;
 
+        private enum TrackingType
+        {
+            None = 0,
+            Controller = 1,
+            Hand = 2
+        }
+
+        private TrackingType currentTrackedDevice = TrackingType.None;
+        private TrackingType lastTrackedDevice = TrackingType.None;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -56,50 +66,54 @@ namespace Cognitive3D.Components
         // Update is called once per frame
         void Update()
         {
-            if (OVRInput.GetActiveController() == OVRInput.Controller.None)
-            {
-                debug2.text = "NO TRACKING";
-            }
-            else if (OVRInput.GetActiveController() == OVRInput.Controller.Hands
-                || OVRInput.GetActiveController() == OVRInput.Controller.LHand
-                || OVRInput.GetActiveController() == OVRInput.Controller.RHand)
-            {
-                debug2.text = "HAND";
-            }
-            else
-            {
-                debug2.text = "CONTROLLER";
-            }
-
-            currentTime = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds - startTime;
-            debug.text = currentTime.ToString();
+            UpdateTime();
+            DebugTrackedDevice();
             CaptureHandTrackingEvents();
-            if (isHandTracking)
+            if (GetCurrentTrackedDevice() == TrackingType.Hand)
             {
                 RecordFingerBoneRotationsOVR(OVRPlugin.Hand.HandLeft);
                 RecordFingerBoneRotationsOVR(OVRPlugin.Hand.HandRight);
                 RecordWristRotationOVR(OVRPlugin.Hand.HandLeft);
                 RecordWristRotationOVR(OVRPlugin.Hand.HandRight);
             }
+            SensorRecorder.RecordDataPoint("c3d.input.device", (int)GetCurrentTrackedDevice());
+        }
+
+        void DebugTrackedDevice()
+        {
+            debug2.text = GetCurrentTrackedDevice().ToString();        
+        }
+
+        TrackingType GetCurrentTrackedDevice()
+        {
+            if (OVRInput.GetActiveController() == OVRInput.Controller.None)
+            {
+                return TrackingType.None;
+            }
+            else if (OVRInput.GetActiveController() == OVRInput.Controller.Hands
+                || OVRInput.GetActiveController() == OVRInput.Controller.LHand
+                || OVRInput.GetActiveController() == OVRInput.Controller.RHand)
+            {
+                return TrackingType.Hand;
+            }
+            else
+            {
+                return TrackingType.Controller;
+            }
+        }
+
+        void UpdateTime()
+        {
+            currentTime = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds - startTime;
+            debug.text = currentTime.ToString();
         }
 
         void CaptureHandTrackingEvents()
         {
-            if (isHandTracking)
+            if (lastTrackedDevice != GetCurrentTrackedDevice())
             {
-                if (!OVRInput.IsControllerConnected(OVRInput.Controller.Hands))
-                {
-                    new CustomEvent("c3d.hands.stopped.tracking").Send();
-                    isHandTracking = false;
-                }
-            }
-            else
-            {
-                if (OVRInput.IsControllerConnected(OVRInput.Controller.Hands))
-                {
-                    new CustomEvent("c3d.hands.resumed.tracking").Send();
-                    isHandTracking = true;
-                }
+                new CustomEvent("c3d.tracking.device.changed.from." + lastTrackedDevice.ToString() + ".to." + GetCurrentTrackedDevice()).Send();
+                lastTrackedDevice = GetCurrentTrackedDevice();
             }
         }
 
