@@ -457,10 +457,10 @@ namespace Cognitive3D
 
 
             //make the scroll area slightly shorter to fit onboarding instructions into footer
-            int scrollareaHeight = 400;
+            int scrollareaHeight = 380;
             if (!IsCurrentSceneValid())
             {
-                scrollareaHeight = 365;
+                scrollareaHeight = 350;
             }
 
 
@@ -481,7 +481,6 @@ namespace Cognitive3D
             GUI.Box(new Rect(30, 80, 525, scrollareaHeight), "", "box_sharp_alpha");
 
             //buttons
-
             int selectionCount = 0;
             foreach (var entry in Entries)
             {
@@ -491,6 +490,7 @@ namespace Cognitive3D
                 }
             }
 
+            DrawIncrementDecrementButton();
             DrawFooter();
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
@@ -1043,6 +1043,30 @@ namespace Cognitive3D
             {
                 GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty, "ID does not exist on Dashboard and will not be aggregated across sessions.\nPress 'Upload' to have this object's data aggregated"), image_centered);
             }   
+        }
+
+        void CreateEmptyRow()
+        {
+            Entry dummy = new Entry("dummy", false, null, "dummy name", false, false);
+            Entries.Add(dummy);
+        }
+
+        void DeleteRow()
+        {
+            Entries.Remove(Entries[Entries.Count - 1]);
+        }
+
+        void DrawIncrementDecrementButton()
+        {
+            if (GUI.Button(new Rect(480, 460, 35, 35), EditorCore.PlusIcon))
+            {
+                CreateEmptyRow();
+            } // plus
+
+            if (GUI.Button(new Rect(515, 460, 35, 35), EditorCore.MinusIcon))
+            {
+                DeleteRow();
+            } // minus
         }
 
         int footerHelpPage;

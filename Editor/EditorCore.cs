@@ -485,6 +485,34 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _plusIcon;
+
+        public static Texture2D PlusIcon
+        {
+            get
+            {
+                if (_plusIcon == null)
+                {
+                    _plusIcon = Resources.Load<Texture2D>("Icons/plus-icon-white");
+                }
+                return _plusIcon;
+            }
+        }
+
+        private static Texture2D _minusIcon;
+
+        public static Texture2D MinusIcon
+        {
+            get
+            {
+                if (_minusIcon == null)
+                {
+                    _minusIcon = Resources.Load<Texture2D>("Icons/minus-icon-white");
+                }
+                return _minusIcon;
+            }
+        }
+
         private static Texture2D _searchIconwhite;
         public static Texture2D SearchIconWhite
         {
