@@ -475,7 +475,7 @@ namespace Cognitive3D
                 }
             }
 
-            Rect innerScrollSize = new Rect(10, 0, 520, visibleCount * 30);
+            Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
             dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, scrollareaHeight), dynamicScrollPosition, innerScrollSize, false, true);
 
             Rect dynamicrect;
