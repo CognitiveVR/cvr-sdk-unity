@@ -457,10 +457,10 @@ namespace Cognitive3D
 
 
             //make the scroll area slightly shorter to fit onboarding instructions into footer
-            int scrollareaHeight = 380;
+            int scrollareaHeight = 400;
             if (!IsCurrentSceneValid())
             {
-                scrollareaHeight = 350;
+                scrollareaHeight = 365;
             }
 
             if (new Rect(30, 80, 530, scrollareaHeight).Contains(Event.current.mousePosition))
@@ -960,7 +960,7 @@ namespace Cognitive3D
 
             Rect selectedRect = new Rect(rect.x + 0, rect.y, 30, rect.height);
             Rect gameobjectRect = new Rect(rect.x + 30, rect.y, 140, rect.height);
-            Rect mesh = new Rect(rect.x + 180, rect.y, 100, rect.height);
+            Rect mesh = new Rect(rect.x + 180, rect.y, 140, rect.height);
             Rect idRect = new Rect(rect.x + 320, rect.y, 80, rect.height);
             Rect exported = new Rect(rect.x + 420, rect.y, 24, rect.height);
             Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
