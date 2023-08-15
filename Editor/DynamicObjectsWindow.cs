@@ -466,12 +466,23 @@ namespace Cognitive3D
             if (new Rect(30, 80, 530, scrollareaHeight).Contains(Event.current.mousePosition))
             {
                 GameObject draggedObject;
+                DynamicObject createdDynamic;
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
                 {
-                   draggedObject = (GameObject)DragAndDrop.objectReferences[0];
-                   draggedObject.AddComponent<DynamicObject>();
-                   Entries.Add(new Entry (draggedObject.name, false, draggedObject.GetComponent<DynamicObject>(), draggedObject.name, false, false));
+                   for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                   {
+                        draggedObject = (GameObject)DragAndDrop.objectReferences[i];
+                        if (draggedObject.GetComponent<DynamicObject>() == null)
+                        {
+                            createdDynamic = draggedObject.AddComponent<DynamicObject>();
+                        } 
+                        else
+                        {
+                            createdDynamic = draggedObject.GetComponent<DynamicObject>();
+                        }
+                        Entries.Add(new Entry(createdDynamic.MeshName, false, createdDynamic, draggedObject.name, false, false));
+                   }
                 }
             }
 
