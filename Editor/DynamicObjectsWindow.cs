@@ -387,10 +387,10 @@ namespace Cognitive3D
                 SortByMeshName();
             }
 
-            Rect idrect = new Rect(320, 55, 80, 30);
+            Rect idrect = new Rect(350, 55, 80, 30);
             GUI.Label(idrect, "Id", "dynamicheader");
 
-            Rect exported = new Rect(400, 55, 55, 30);
+            Rect exported = new Rect(440, 55, 55, 30);
             string exportedStyle = (SortMethod == SortByMethod.Exported || SortMethod == SortByMethod.ReverseExported) ? "dynamicheaderbold" : "dynamicheader";
             if (GUI.Button(exported, "Exported", exportedStyle))
             {
@@ -401,7 +401,7 @@ namespace Cognitive3D
                 SortByExported();
             }
 
-            Rect uploaded = new Rect(460, 55, 80, 30);
+            Rect uploaded = new Rect(500, 55, 80, 30);
             string uploadedStyle = (SortMethod == SortByMethod.Uploaded || SortMethod == SortByMethod.ReverseUploaded) ? "dynamicheaderbold" : "dynamicheader";
             if (GUI.Button(uploaded,"Uploaded", uploadedStyle))
             {
@@ -463,8 +463,19 @@ namespace Cognitive3D
                 scrollareaHeight = 350;
             }
 
+            if (new Rect(30, 80, 530, scrollareaHeight).Contains(Event.current.mousePosition))
+            {
+                GameObject draggedObject;
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                   draggedObject = (GameObject)DragAndDrop.objectReferences[0];
+                   draggedObject.AddComponent<DynamicObject>();
+                   Entries.Add(new Entry (draggedObject.name, false, draggedObject.GetComponent<DynamicObject>(), draggedObject.name, false, false));
+                }
+            }
 
-            Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
+            Rect innerScrollSize = new Rect(10, 0, 520, visibleCount * 30);
             dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, scrollareaHeight), dynamicScrollPosition, innerScrollSize, false, true);
 
             Rect dynamicrect;
@@ -489,8 +500,6 @@ namespace Cognitive3D
                     selectionCount++;
                 }
             }
-
-            DrawIncrementDecrementButton();
             DrawFooter();
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
@@ -952,10 +961,9 @@ namespace Cognitive3D
             Rect selectedRect = new Rect(rect.x + 0, rect.y, 30, rect.height);
             Rect gameobjectRect = new Rect(rect.x + 30, rect.y, 140, rect.height);
             Rect mesh = new Rect(rect.x + 180, rect.y, 100, rect.height);
-            Rect idRect = new Rect(rect.x + 290, rect.y, 60, rect.height);
-            Rect exported = new Rect(rect.x + 370, rect.y, 24, rect.height);
-            Rect uploaded = new Rect(rect.x + 430, rect.y, 24, rect.height);
-            Rect searchGameObjects = new Rect(rect.x + 495, rect.y + 5, 20, 20);
+            Rect idRect = new Rect(rect.x + 320, rect.y, 80, rect.height);
+            Rect exported = new Rect(rect.x + 420, rect.y, 24, rect.height);
+            Rect uploaded = new Rect(rect.x + 480, rect.y, 24, rect.height);
 
             var toggleIcon = dynamic.selected ? EditorCore.BoxCheckmark : EditorCore.BoxEmpty;
             if (dynamic.isIdPool)
@@ -1044,41 +1052,6 @@ namespace Cognitive3D
             {
                 GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty, "ID does not exist on Dashboard and will not be aggregated across sessions.\nPress 'Upload' to have this object's data aggregated"), image_centered);
             }
-
-            if (GUI.Button(searchGameObjects, EditorCore.SearchIconWhite))
-            {
-                int pickerID = 5689465;
-                GameObject dummyObject = new GameObject();
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    dummyObject, true, "", pickerID);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-
-        }
-
-        void CreateEmptyRow()
-        {
-            Entry dummy = new Entry("dummy", false, null, "dummy name", false, false);
-            Entries.Add(dummy);
-        }
-
-        void DeleteRow()
-        {
-            Entries.Remove(Entries[Entries.Count - 1]);
-        }
-
-        void DrawIncrementDecrementButton()
-        {
-            if (GUI.Button(new Rect(480, 460, 35, 35), EditorCore.PlusIcon))
-            {
-                CreateEmptyRow();
-            } // plus
-
-            if (GUI.Button(new Rect(515, 460, 35, 35), EditorCore.MinusIcon))
-            {
-                DeleteRow();
-            } // minus
         }
 
         int footerHelpPage;
