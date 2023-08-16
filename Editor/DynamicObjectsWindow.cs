@@ -476,12 +476,8 @@ namespace Cognitive3D
                         if (draggedObject.GetComponent<DynamicObject>() == null)
                         {
                             createdDynamic = draggedObject.AddComponent<DynamicObject>();
+                            Entries.Add(new Entry(createdDynamic.MeshName, false, createdDynamic, draggedObject.name, false, false));
                         } 
-                        else
-                        {
-                            createdDynamic = draggedObject.GetComponent<DynamicObject>();
-                        }
-                        Entries.Add(new Entry(createdDynamic.MeshName, false, createdDynamic, draggedObject.name, false, false));
                    }
                 }
             }
