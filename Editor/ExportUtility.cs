@@ -171,6 +171,16 @@ namespace Cognitive3D
                 {
                     UnityEngine.Object.DestroyImmediate(tempgameobject);
                 }
+
+                // Delete the temporary canvases
+                TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
+                foreach (var text in TextMeshPros)
+                {
+                    GameObject temporaryCanvas = text.transform.parent.gameObject;
+                    Debug.Log(temporaryCanvas.name);
+                    text.transform.parent = null;
+                    GameObject.DestroyImmediate(temporaryCanvas);
+                }
             }
         }
 
@@ -723,15 +733,6 @@ namespace Cognitive3D
                 var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height);//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
                 bm.meshFilter.sharedMesh = mesh;
                 meshes.Add(bm);
-            }
-
-            // Delete the temporary canvases
-            foreach (var t in TextMeshPros)
-            {
-                GameObject temporaryCanvas = t.transform.parent.gameObject;
-                Debug.Log(temporaryCanvas.name);
-                t.transform.parent = null;
-                GameObject.DestroyImmediate(temporaryCanvas);
             }
         }
 
@@ -1303,7 +1304,6 @@ namespace Cognitive3D
         public static void ExportDynamicObjects(List<DynamicObject> dynamicObjects, bool displayPopup = false)
         {
             //export as a list. skip dynamics already exported in this collection
-
             HashSet<string> exportedMeshNames = new HashSet<string>();
 
             foreach (var dynamicObject in dynamicObjects)
