@@ -1,5 +1,6 @@
 {
     "name": "Cognitive3DEditor",
+    "rootNamespace": "",
     "references": [
         "Cognitive3D",
         "Unity.XR.OpenVR",
@@ -13,7 +14,8 @@
         "UnityEngine.SpatialTracking",
         "SteamVR_Input_Editor",
         "SteamVR_Actions",
-        "Oculus.VR.Editor"
+        "Oculus.VR.Editor",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

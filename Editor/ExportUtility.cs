@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System;
 using UnityEngine.Networking;
+using TMPro;
 
 //an interface for exporting/decimating and uploading scenes and dynamic objects
 
@@ -443,15 +444,14 @@ namespace Cognitive3D
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
-
             CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
+            TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
             deleteCustomRenders = new List<GameObject>();
 
             if (rootDynamic != null)
             {
                 SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
-                Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
                 foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -628,7 +628,7 @@ namespace Cognitive3D
                 bm.tempGo = new GameObject(v.gameObject.name);
                 bm.tempGo.transform.parent = v.transform;
                 bm.tempGo.transform.localPosition = Vector3.zero;
-                
+
                 //generate mesh from heightmap
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
                 bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
@@ -667,6 +667,16 @@ namespace Cognitive3D
                 }
             }
 
+            // For "just TextMeshPro" - we create a Canvas to ease export
+            // Delete the Canvas later
+            foreach (var t in TextMeshPros)
+            {
+                GameObject tempCanvas = new GameObject("Temporary Canvas");
+                tempCanvas.AddComponent<Canvas>();
+                t.transform.parent = tempCanvas.transform;
+            }
+
+            Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>(); // do that again to get the new canvases
             currentTask = 0;
             foreach (var v in Canvases)
             {
@@ -713,6 +723,15 @@ namespace Cognitive3D
                 var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height);//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
                 bm.meshFilter.sharedMesh = mesh;
                 meshes.Add(bm);
+            }
+
+            // Delete the temporary canvases
+            foreach (var t in TextMeshPros)
+            {
+                GameObject temporaryCanvas = t.transform.parent.gameObject;
+                Debug.Log(temporaryCanvas.name);
+                t.transform.parent = null;
+                GameObject.DestroyImmediate(temporaryCanvas);
             }
         }
 
