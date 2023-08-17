@@ -171,16 +171,6 @@ namespace Cognitive3D
                 {
                     UnityEngine.Object.DestroyImmediate(tempgameobject);
                 }
-
-                // Delete the temporary canvases
-                TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
-                foreach (var text in TextMeshPros)
-                {
-                    GameObject temporaryCanvas = text.transform.parent.gameObject;
-                    Debug.Log(temporaryCanvas.name);
-                    text.transform.parent = null;
-                    GameObject.DestroyImmediate(temporaryCanvas);
-                }
             }
         }
 
@@ -679,14 +669,33 @@ namespace Cognitive3D
 
             // For "just TextMeshPro" - we create a Canvas to ease export
             // Delete the Canvas later
-            foreach (var t in TextMeshPros)
+            foreach (var v in TextMeshPros)
             {
-                GameObject tempCanvas = new GameObject("Temporary Canvas");
-                tempCanvas.AddComponent<Canvas>();
-                t.transform.parent = tempCanvas.transform;
+                BakeableMesh bm = new BakeableMesh();
+                bm.tempGo = new GameObject(v.gameObject.name);
+                bm.tempGo.transform.parent = v.transform;
+                bm.tempGo.transform.localScale = Vector3.one;
+                bm.tempGo.transform.localRotation = Quaternion.identity;
+                bm.tempGo.transform.localPosition = Vector3.zero;
+                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
+
+                //remove transform scale
+                var width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
+                var height = v.GetComponent<RectTransform>().sizeDelta.y;// * v.transform.localScale.y;
+
+                //bake texture from render
+                var screenshot = TMProTextureBake(v.transform);
+                screenshot.name = v.gameObject.name.Replace(' ', '_');
+                bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
+
+                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+                //write simple quad
+                var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height);//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+                bm.meshFilter.sharedMesh = mesh;
+                meshes.Add(bm);
             }
 
-            Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>(); // do that again to get the new canvases
             currentTask = 0;
             foreach (var v in Canvases)
             {
@@ -822,7 +831,7 @@ namespace Cognitive3D
             }
             mesh.vertices = vertices;
             mesh.uv = uv;
-            
+
             int[] triangles = new int[(h - 1) * (w - 1) * 6];
             int index = 0;
             for (int y = 0; y < h - 1; y++)
@@ -940,7 +949,7 @@ namespace Cognitive3D
                     //grid
                     c = white;
                     if (x % 10 == 0 || y % 10 == 0)
-                      c = grey;
+                        c = grey;
 
                     finalTexture.SetPixel(x, y, c);
                 }
@@ -973,7 +982,7 @@ namespace Cognitive3D
                         SetTextureImporterFormat(originalTexture, true);
                     }
                 }
-                catch {}
+                catch { }
             }
 
             Texture2D outTex = new Texture2D((int)data.size.x, (int)data.size.z);
@@ -1022,7 +1031,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        outTex.SetPixel(x,y, Color.red);
+                        outTex.SetPixel(x, y, Color.red);
                     }
                 }
             }
@@ -1040,12 +1049,12 @@ namespace Cognitive3D
                         SetTextureImporterFormat(originalTexture, textureReadable[i]);
                     }
                 }
-                catch {}
+                catch { }
             }
 
             return outTex;
         }
-        
+
         /// <summary>
         /// returns true if texture read/writable
         /// </summary>
@@ -1148,6 +1157,105 @@ namespace Cognitive3D
             }
 
             return m;
+        }
+
+        /// <summary>
+        /// Returns a Texture2D baked from TextMeshPro 3D object
+        /// Inspired by CanvasTextureBake
+        /// Keeping separate for ease of implementation
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="resolution"></param>
+        private static Texture2D TMProTextureBake(Transform target, int resolution = 512)
+        {
+            GameObject cameraGo = new GameObject("Temp_Camera_TNPro");
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //snap camera to canvas position
+            cameraGo.transform.rotation = target.rotation;
+            cameraGo.transform.position = target.position - target.forward * 0.05f;
+
+            var width = target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x;
+            var height = target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y;
+            if (Mathf.Approximately(width, height))
+            {
+                //centered
+            }
+            else if (height > width) //tall
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
+            }
+            else //wide
+            {
+                //half of the difference between width and height
+                cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+            }
+
+            cam.nearClipPlane = 0.04f;
+            cam.farClipPlane = 0.06f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
+            cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
+            cam.backgroundColor = Color.clear;
+
+            //create render texture and assign to camera
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16);
+            RenderTexture.active = rt;
+            cam.targetTexture = rt;
+
+            Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, target);
+
+            //set camera to render unassigned layer
+            int layer = EditorCore.FindUnusedLayer();
+            if (layer == -1) { Debug.LogWarning("TMProTextureBake couldn't find unused layer, texture generation might be incorrect"); }
+
+            if (layer != -1)
+            {
+                cam.cullingMask = 1 << layer;
+            }
+
+            //save all canvas layers. put on unassigned layer then render
+            try
+            {
+                if (layer != -1)
+                {
+                    foreach (var v in children)
+                    {
+                        originallayers.Add(v.gameObject, v.gameObject.layer);
+                        v.gameObject.layer = layer;
+                    }
+                }
+                //render to texture
+                cam.Render();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            //reset dynamic object layers
+            if (layer != -1)
+            {
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+
+            //delete temporary camera
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+
+            return tex;
         }
 
         /// <summary>
