@@ -462,6 +462,7 @@ namespace Cognitive3D
             {
                 SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
+                Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
                 foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
