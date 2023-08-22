@@ -1259,6 +1259,15 @@ namespace Cognitive3D
                 Debug.LogException(e);
             }
 
+            //reset dynamic object layers
+            if (layer != -1)
+            {
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+
             //write rendertexture to png
             Texture2D tex = new Texture2D(resolution, resolution);
             RenderTexture.active = rt;
