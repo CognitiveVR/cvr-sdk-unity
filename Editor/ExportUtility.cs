@@ -1184,7 +1184,7 @@ namespace Cognitive3D
         /// <summary>
         /// returns texture2d baked from canvas target
         /// </summary>
-        private static Texture2D TextureBake(Transform target, ExportQuadType type, float width, float height, int resolution = 1024)
+        private static Texture2D TextureBake(Transform target, ExportQuadType type, float width, float height, int resolution = 512)
         {
             GameObject cameraGo = new GameObject("Temp_Camera " + target.gameObject.name);
             Camera cam = cameraGo.AddComponent<Camera>();
