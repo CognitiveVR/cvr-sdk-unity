@@ -726,8 +726,8 @@ namespace Cognitive3D
             bm.tempGo.transform.position = v.transform.position;
             if (type == ExportQuadType.Canvas)
             {
-                width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
-                height = v.GetComponent<RectTransform>().sizeDelta.y;// * v.transform.localScale.y;
+                width = v.GetComponent<RectTransform>().sizeDelta.x;
+                height = v.GetComponent<RectTransform>().sizeDelta.y;
                 if (Mathf.Approximately(width, height))
                 {
                     //centered
@@ -761,7 +761,7 @@ namespace Cognitive3D
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
 
             //write simple quad
-            var mesh = ExportQuad(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
+            var mesh = ExportQuad(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
             bm.meshFilter.sharedMesh = mesh;
             meshes.Add(bm);
         }
@@ -1256,15 +1256,6 @@ namespace Cognitive3D
             catch (Exception e)
             {
                 Debug.LogException(e);
-            }
-
-            //reset dynamic object layers
-            if (layer != -1)
-            {
-                foreach (var v in originallayers)
-                {
-                    // v.Key.layer = v.Value;
-                }
             }
 
             //write rendertexture to png
