@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System;
 using UnityEngine.Networking;
+#if C3D_TMPRO
 using TMPro;
+#endif
 
 //an interface for exporting/decimating and uploading scenes and dynamic objects
 
@@ -451,7 +453,9 @@ namespace Cognitive3D
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
             CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
+#if C3D_TMPRO
             TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
+#endif
             deleteCustomRenders = new List<GameObject>();
 
             if (rootDynamic != null)
@@ -673,13 +677,14 @@ namespace Cognitive3D
                 }
             }
 
+#if C3D_TMPRO
             // For "just TextMeshPro" - we create a Canvas to ease export
             // Delete the Canvas later
             foreach (var v in TextMeshPros)
             {
                 ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro);
             }
-
+#endif
             currentTask = 0;
             foreach (var v in Canvases)
             {

@@ -31,6 +31,11 @@
             "name": "com.unity.render-pipelines.high-definition",
             "expression": "",
             "define": "C3D_HDRP"
+        },
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "",
+            "define": "C3D_TMPRO"
         }
     ],
     "noEngineReferences": false
