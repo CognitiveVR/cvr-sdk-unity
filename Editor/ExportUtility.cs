@@ -1218,7 +1218,7 @@ namespace Cognitive3D
             cam.nearClipPlane = 0.04f;
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
-            cam.orthographicSize = Mathf.Max(width / 2, height / 2);
+            cam.orthographicSize = Mathf.Max(width, height) / 2;
             cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
 
