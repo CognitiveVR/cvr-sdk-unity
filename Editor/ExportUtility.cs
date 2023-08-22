@@ -718,7 +718,7 @@ namespace Cognitive3D
             //remove transform scale
             float width = 0;
             float height = 0;
-
+            bm.tempGo.transform.position = v.transform.position;
             if (type == ExportQuadType.Canvas)
             {
                 width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
@@ -1270,7 +1270,7 @@ namespace Cognitive3D
             RenderTexture.active = null;
 
             //delete temporary camera
-            // UnityEngine.Object.DestroyImmediate(cameraGo);
+            UnityEngine.Object.DestroyImmediate(cameraGo);
 
             return tex;
         }
