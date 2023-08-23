@@ -685,7 +685,7 @@ namespace Cognitive3D
             {
                 if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObects()`
                 {
-                    ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro, false);
+                    BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.TMPro, false);
                 }
             }
 #endif
@@ -712,15 +712,18 @@ namespace Cognitive3D
                     continue;
                 }
 
-                ExportQuad(v.gameObject, meshes, ExportQuadType.Canvas, false);
+                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.Canvas, false);
             }
         }
 
-        private static GameObject ExportQuad(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
+        private static GameObject BakeQuadGameObject(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
         {
             BakeableMesh bm = new BakeableMesh();
             bm.tempGo = new GameObject(v.gameObject.name);
-            bm.tempGo.transform.parent = v.transform;
+            if (!dyn)
+            {
+                bm.tempGo.transform.parent = v.transform;
+            }
             bm.tempGo.transform.localScale = Vector3.one;
             bm.tempGo.transform.localRotation = Quaternion.identity;
 
@@ -757,15 +760,29 @@ namespace Cognitive3D
 
             bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
             bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
-
+            Texture2D screenshot;
             //bake texture from render
-            var screenshot = TextureBake(v.transform, type, width, height);
+            if (!dyn)
+            {
+                screenshot = TextureBake(v.transform, type, width, height);
+            }
+            else
+            {
+                screenshot = TextureBake(v.transform, type, width * v.transform.localScale.x, height * v.transform.localScale.y);
+            }
             screenshot.name = v.gameObject.name.Replace(' ', '_');
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
-
+            Mesh mesh;
             //write simple quad
-            var mesh = ExportQuad(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            if (!dyn)
+            {
+                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            }
+            else
+            {
+                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            }
             bm.meshFilter.sharedMesh = mesh;
 
             if (dyn)
@@ -773,7 +790,7 @@ namespace Cognitive3D
                 bm.tempGo.AddComponent<DynamicObject>();
             }
 
-            meshes.Add(bm);
+            // meshes.Add(bm);
             return bm.tempGo;
         }
 
@@ -1128,7 +1145,7 @@ namespace Cognitive3D
         /// <param name="meshName"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public static Mesh ExportQuad(string meshName, float width, float height)
+        public static Mesh GenerateQuadMesh(string meshName, float width, float height)
         {
             Vector3 size = new Vector3(width, height, 0);
             Vector3 pivot = size / 2;
@@ -1286,7 +1303,7 @@ namespace Cognitive3D
             RenderTexture.active = null;
 
             //delete temporary camera
-            UnityEngine.Object.DestroyImmediate(cameraGo);
+            // UnityEngine.Object.DestroyImmediate(cameraGo);
 
             return tex;
         }
@@ -1381,7 +1398,7 @@ namespace Cognitive3D
 #if C3D_TMPRO
                 if (!tmproSpecialCase && (dynamicObject.GetComponent<TextMeshPro>() != null))
                 {
-                    GameObject go = ExportQuad(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
+                    GameObject go = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
                     continue;
                 }
 #endif
