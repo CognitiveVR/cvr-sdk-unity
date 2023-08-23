@@ -790,7 +790,7 @@ namespace Cognitive3D
                 bm.tempGo.AddComponent<DynamicObject>();
             }
 
-            // meshes.Add(bm);
+            meshes.Add(bm);
             return bm.tempGo;
         }
 
@@ -1303,7 +1303,7 @@ namespace Cognitive3D
             RenderTexture.active = null;
 
             //delete temporary camera
-            // UnityEngine.Object.DestroyImmediate(cameraGo);
+            UnityEngine.Object.DestroyImmediate(cameraGo);
 
             return tex;
         }
