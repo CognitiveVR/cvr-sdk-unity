@@ -680,11 +680,9 @@ namespace Cognitive3D
             }
 
 #if C3D_TMPRO
-            // For "just TextMeshPro" - we create a Canvas to ease export
-            // Delete the Canvas later
             foreach (var v in TextMeshPros)
             {
-                ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro);
+                ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro, false);
             }
 #endif
             currentTask = 0;
@@ -710,11 +708,11 @@ namespace Cognitive3D
                     continue;
                 }
 
-                ExportQuad(v.gameObject, meshes, ExportQuadType.Canvas);
+                ExportQuad(v.gameObject, meshes, ExportQuadType.Canvas, false);
             }
         }
 
-        private static void ExportQuad(GameObject v, List<BakeableMesh> meshes, ExportQuadType type)
+        private static GameObject ExportQuad(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
         {
             BakeableMesh bm = new BakeableMesh();
             bm.tempGo = new GameObject(v.gameObject.name);
@@ -765,7 +763,14 @@ namespace Cognitive3D
             //write simple quad
             var mesh = ExportQuad(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
             bm.meshFilter.sharedMesh = mesh;
+
+            if (dyn)
+            {
+                bm.tempGo.AddComponent<DynamicObject>();
+            }
+
             meshes.Add(bm);
+            return bm.tempGo;
         }
 
         private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases)
@@ -1340,6 +1345,7 @@ namespace Cognitive3D
         /// </summary>
         public static void ExportDynamicObjects(List<DynamicObject> dynamicObjects, bool displayPopup = false)
         {
+            List <BakeableMesh> temporaryDynamicMeshes = new List <BakeableMesh>();
             //export as a list. skip dynamics already exported in this collection
             HashSet<string> exportedMeshNames = new HashSet<string>();
 
@@ -1350,6 +1356,14 @@ namespace Cognitive3D
                 //setup
                 //if (dynamicObject == null) { return false; }
                 if (dynamicObject == null) { continue; }
+
+                // handle the dynamic objects which are TextMeshPros
+                if (dynamicObject.gameObject.GetComponent<TextMeshPro>() != null)
+                {
+                    GameObject go = ExportQuad(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
+                    dynamicObjects.Add(go.GetComponent<DynamicObject>());
+                    continue;
+                }
 
                 //skip exporting common meshes
                 if (!dynamicObject.UseCustomMesh) { continue; }
