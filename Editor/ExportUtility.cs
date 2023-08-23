@@ -1449,6 +1449,11 @@ namespace Cognitive3D
                 EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
             }
             //return true;
+
+            foreach (BakeableMesh bm in temporaryDynamicMeshes)
+            {
+                GameObject.DestroyImmediate(bm.tempGo);
+            }
         }
 
         /// <summary>
