@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System;
 using UnityEngine.Networking;
+using System.Linq;
 #if C3D_TMPRO
 using TMPro;
 #endif
@@ -1349,7 +1350,7 @@ namespace Cognitive3D
             //export as a list. skip dynamics already exported in this collection
             HashSet<string> exportedMeshNames = new HashSet<string>();
 
-            foreach (var dynamicObject in dynamicObjects)
+            foreach (var dynamicObject in dynamicObjects.ToList())
             {
                 if (exportedMeshNames.Contains(dynamicObject.MeshName)) { continue; }
 
