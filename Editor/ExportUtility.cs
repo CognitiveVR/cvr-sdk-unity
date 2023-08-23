@@ -2,8 +2,8 @@
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System;
+using System.Diagnostics;
 using UnityEngine.Networking;
 using System.Linq;
 #if C3D_TMPRO
@@ -683,7 +683,10 @@ namespace Cognitive3D
 #if C3D_TMPRO
             foreach (var v in TextMeshPros)
             {
-                ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro, false);
+                if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObects()`
+                {
+                    ExportQuad(v.gameObject, meshes, ExportQuadType.TMPro, false);
+                }
             }
 #endif
             currentTask = 0;
@@ -1348,9 +1351,26 @@ namespace Cognitive3D
         {
             List <BakeableMesh> temporaryDynamicMeshes = new List <BakeableMesh>();
             //export as a list. skip dynamics already exported in this collection
-            HashSet<string> exportedMeshNames = new HashSet<string>();
+            HashSet<string> exportedMeshNames = new HashSet<string>();           
+            ExportDynamicObjectList(exportedMeshNames, dynamicObjects, temporaryDynamicMeshes, false);
+            List<DynamicObject> allDynamics = UnityEngine.Object.FindObjectsOfType<DynamicObject>().ToList();
+            ExportDynamicObjectList(exportedMeshNames, allDynamics.Except(dynamicObjects).ToList(), temporaryDynamicMeshes, true); // run it again on objects which are new
+            
+            if (displayPopup)
+            {
+                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
+            }
+            //return true;
 
-            foreach (var dynamicObject in dynamicObjects.ToList())
+            foreach (BakeableMesh bm in temporaryDynamicMeshes)
+            {
+                GameObject.DestroyImmediate(bm.tempGo);
+            }
+        }
+
+        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects, List<BakeableMesh> temporaryDynamicMeshes, bool tmproSpecialCase)
+        {
+            foreach (var dynamicObject in dynamicObjects)
             {
                 if (exportedMeshNames.Contains(dynamicObject.MeshName)) { continue; }
 
@@ -1358,19 +1378,17 @@ namespace Cognitive3D
                 //if (dynamicObject == null) { return false; }
                 if (dynamicObject == null) { continue; }
 
-                // handle the dynamic objects which are TextMeshPros
-                if (dynamicObject.gameObject.GetComponent<TextMeshPro>() != null)
+#if C3D_TMPRO
+                if (!tmproSpecialCase && (dynamicObject.GetComponent<TextMeshPro>() != null))
                 {
                     GameObject go = ExportQuad(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
-                    dynamicObjects.Add(go.GetComponent<DynamicObject>());
                     continue;
                 }
-
+#endif
                 //skip exporting common meshes
                 if (!dynamicObject.UseCustomMesh) { continue; }
                 //skip empty mesh names
                 if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); continue; }
-
                 GameObject prefabInScene = null;
                 DynamicObject temporaryDynamic = dynamicObject;
                 if (!dynamicObject.gameObject.scene.IsValid())
@@ -1395,7 +1413,7 @@ namespace Cognitive3D
                 foreach (var v in list)
                 {
                     v.target.transform.localScale = Vector3.one;
-                }                
+                }
 
                 List<BakeableMesh> temp = new List<BakeableMesh>();
                 customTextureExports = new List<string>();
@@ -1444,16 +1462,6 @@ namespace Cognitive3D
                 {
                     GameObject.DestroyImmediate(prefabInScene);
                 }
-            }
-            if (displayPopup)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
-            }
-            //return true;
-
-            foreach (BakeableMesh bm in temporaryDynamicMeshes)
-            {
-                GameObject.DestroyImmediate(bm.tempGo);
             }
         }
 
@@ -1512,7 +1520,7 @@ namespace Cognitive3D
 
             return true;
         }
-        #endregion
+#endregion
 
         #region Upload Dynamic Objects
 
