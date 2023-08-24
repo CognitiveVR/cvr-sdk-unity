@@ -720,10 +720,10 @@ namespace Cognitive3D
         {
             BakeableMesh bm = new BakeableMesh();
             bm.tempGo = new GameObject(v.gameObject.name);
-            if (!dyn)
+            if (type != ExportQuadType.TMPro)
             {
                 bm.tempGo.transform.parent = v.transform;
-            }
+            }            
             bm.tempGo.transform.localScale = Vector3.one;
             bm.tempGo.transform.localRotation = Quaternion.identity;
 
@@ -775,14 +775,7 @@ namespace Cognitive3D
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
             //write simple quad
-            if (!dyn)
-            {
-                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
-            }
-            else
-            {
-                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
-            }
+            mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
             bm.meshFilter.sharedMesh = mesh;
 
             if (dyn)
