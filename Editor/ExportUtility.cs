@@ -1363,8 +1363,6 @@ namespace Cognitive3D
             //export as a list. skip dynamics already exported in this collection
             HashSet<string> exportedMeshNames = new HashSet<string>();           
             ExportDynamicObjectList(exportedMeshNames, dynamicObjects, temporaryDynamicMeshes, false);
-            List<DynamicObject> allDynamics = UnityEngine.Object.FindObjectsOfType<DynamicObject>().ToList();
-            ExportDynamicObjectList(exportedMeshNames, allDynamics.Except(dynamicObjects).ToList(), temporaryDynamicMeshes, true); // run it again on objects which are new
             
             if (displayPopup)
             {
@@ -1391,8 +1389,7 @@ namespace Cognitive3D
 #if C3D_TMPRO
                 if (!tmproSpecialCase && (dynamicObject.GetComponent<TextMeshPro>() != null))
                 {
-                    GameObject go = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
-                    continue;
+                    BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
                 }
 #endif
                 //skip exporting common meshes
