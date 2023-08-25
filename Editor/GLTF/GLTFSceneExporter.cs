@@ -629,7 +629,10 @@ namespace Cognitive3D.UnityGLTF
 				if (!transform.gameObject.activeInHierarchy) continue;
 				if (transform.GetComponent<Cognitive3D.CustomRenderExporter>()) { continue; }
 #if C3D_TMPRO
-				if (transform.GetComponent<TextMeshPro>()) { continue; }
+				if (Dynamic == null && (transform.GetComponent<TextMeshPro>() != null))
+				{
+					continue;
+				}
 #endif
 				scene.Nodes.Add(ExportNode(transform));
 			}
