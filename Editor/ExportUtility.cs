@@ -1362,7 +1362,7 @@ namespace Cognitive3D
             List <BakeableMesh> temporaryDynamicMeshes = new List <BakeableMesh>();
             //export as a list. skip dynamics already exported in this collection
             HashSet<string> exportedMeshNames = new HashSet<string>();           
-            ExportDynamicObjectList(exportedMeshNames, dynamicObjects, temporaryDynamicMeshes);
+            ExportDynamicObjectList(exportedMeshNames, dynamicObjects, temporaryDynamicMeshes, false);
             
             if (displayPopup)
             {
@@ -1376,7 +1376,7 @@ namespace Cognitive3D
             }
         }
 
-        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects, List<BakeableMesh> temporaryDynamicMeshes)
+        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects, List<BakeableMesh> temporaryDynamicMeshes, bool tmproSpecialCase)
         {
             foreach (var dynamicObject in dynamicObjects)
             {
@@ -1387,8 +1387,8 @@ namespace Cognitive3D
                 if (dynamicObject == null) { continue; }
 
 #if C3D_TMPRO
-                if (dynamicObject.GetComponent<TextMeshPro>() != null)
-                {   
+                if (!tmproSpecialCase && (dynamicObject.GetComponent<TextMeshPro>() != null))
+                {
                     BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
                 }
 #endif
@@ -1493,7 +1493,7 @@ namespace Cognitive3D
 
             //add prefab objects to a list
             foreach (var v in entireSelection)
-            {   
+            {
                 if (!sceneObjects.Contains(v))
                 {
                     prefabsToSpawn.Add(v);
