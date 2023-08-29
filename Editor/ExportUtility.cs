@@ -762,14 +762,7 @@ namespace Cognitive3D
             bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
             Texture2D screenshot;
             //bake texture from render
-            if (!dyn)
-            {
-                screenshot = TextureBake(v.transform, type, width, height);
-            }
-            else
-            {
-                screenshot = TextureBake(v.transform, type, width * v.transform.localScale.x, height * v.transform.localScale.y);
-            }
+            screenshot = TextureBake(v.transform, type, width, height);
             screenshot.name = v.gameObject.name.Replace(' ', '_');
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
