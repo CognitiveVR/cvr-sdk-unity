@@ -1380,6 +1380,7 @@ namespace Cognitive3D
         {
             foreach (var dynamicObject in dynamicObjects)
             {
+                DynamicObject temporaryDynamic = dynamicObject;
                 if (exportedMeshNames.Contains(dynamicObject.MeshName)) { continue; }
 
                 //setup
@@ -1389,7 +1390,8 @@ namespace Cognitive3D
 #if C3D_TMPRO
                 if (dynamicObject.GetComponent<TextMeshPro>() != null)
                 {
-                    BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true);
+                    temporaryDynamic = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true).GetComponent<DynamicObject>();
+                    temporaryDynamic.MeshName = dynamicObject.MeshName;
                 }
 #endif
                 //skip exporting common meshes
@@ -1397,7 +1399,6 @@ namespace Cognitive3D
                 //skip empty mesh names
                 if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); continue; }
                 GameObject prefabInScene = null;
-                DynamicObject temporaryDynamic = dynamicObject;
                 if (!dynamicObject.gameObject.scene.IsValid())
                 {
                     prefabInScene = GameObject.Instantiate(dynamicObject.gameObject);
