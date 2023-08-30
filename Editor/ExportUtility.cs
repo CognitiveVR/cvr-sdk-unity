@@ -141,7 +141,9 @@ namespace Cognitive3D
                 if (v.GetComponent<CustomRenderExporter>() != null) { continue; } //skip mesh that uses custom render
                 if (v.activeInHierarchy) { t.Add(v.transform); }
                 //check for mesh renderers here, before nodes are constructed for invalid objects?
+#if C3D_TMPRO
                 if (v.GetComponent<MeshRenderer>() && v.GetComponent<TextMeshPro>()) { continue; } // skip MeshRenderer that has TMPro; otherwise you get an blank mesh
+#endif
             }
             try
             {

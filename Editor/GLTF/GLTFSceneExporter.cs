@@ -6,7 +6,9 @@ using Cognitive3D.GLTF.Schema;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Cognitive3D.UnityGLTF.Extensions;
+#if C3D_TMPRO
 using TMPro;
+#endif
 
 namespace Cognitive3D.UnityGLTF
 {
