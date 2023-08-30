@@ -1377,7 +1377,7 @@ namespace Cognitive3D
             }
         }
 
-        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects, List<BakeableMesh> temporaryDynamicMeshes)
+        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects)
         {
             foreach (var dynamicObject in dynamicObjects)
             {
