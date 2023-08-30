@@ -6,6 +6,9 @@ using Cognitive3D.GLTF.Schema;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Cognitive3D.UnityGLTF.Extensions;
+#if C3D_TMPRO
+using TMPro;
+#endif
 
 namespace Cognitive3D.UnityGLTF
 {
@@ -627,6 +630,9 @@ namespace Cognitive3D.UnityGLTF
 					|| (Dynamic != null && dyn != Dynamic)) continue; //exporting selected dynamic and found a non-dynamic
 				if (!transform.gameObject.activeInHierarchy) continue;
 				if (transform.GetComponent<Cognitive3D.CustomRenderExporter>()) { continue; }
+#if C3D_TMPRO
+				if (Dynamic == null && transform.GetComponent<TextMeshPro>()) { continue; }
+#endif
 				scene.Nodes.Add(ExportNode(transform));
 			}
 
