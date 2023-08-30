@@ -768,15 +768,21 @@ namespace Cognitive3D
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
             //write simple quad
-            mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            if (dyn)
+            {
+                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
+            } 
+            else
+            {
+                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            }
             bm.meshFilter.sharedMesh = mesh;
-
+            meshes.Add(bm);
             if (dyn)
             {
                 bm.tempGo.AddComponent<DynamicObject>();
             }
 
-            meshes.Add(bm);
             return bm.tempGo;
         }
 
@@ -1451,7 +1457,7 @@ namespace Cognitive3D
                     v.target.transform.localScale = v.localScale;
                 }
 
-                EditorCore.SaveDynamicThumbnailAutomatic(temporaryDynamic.gameObject);
+                EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
 
                 //queue resize texture
                 ResizeQueue.Enqueue(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
