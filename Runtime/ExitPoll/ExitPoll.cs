@@ -454,6 +454,20 @@ namespace Cognitive3D
 
                 // Skip voice response if microphone not detected
                 var currentPanelProperties = panelProperties[currentPanelIndex];
+#if UNITY_WEBGL
+                //skip voice questions on webgl - microphone is not supported
+                if (currentPanelProperties["type"].Equals("VOICE"))
+                {
+                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                                                  // because that is what PanelID gets set to
+                    panelCount++;
+                    new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
+                        .SetProperty("Panel ID", tempPanelID)
+                        .Send();
+                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    return;
+                }
+#else
                 if (currentPanelProperties["type"].Equals("VOICE") && Microphone.devices.Length == 0)
                 {
                     int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
@@ -465,6 +479,7 @@ namespace Cognitive3D
                     OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
                     return;
                 }
+#endif
 
                 var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
                 CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
