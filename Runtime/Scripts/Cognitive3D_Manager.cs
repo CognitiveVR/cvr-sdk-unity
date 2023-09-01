@@ -139,7 +139,11 @@ namespace Cognitive3D
 
             CognitiveStatics.Initialize();
 
+#if UNITY_WEBGL
+            DeviceId = System.Guid.NewGuid().ToString();
+#else
             DeviceId = SystemInfo.deviceUniqueIdentifier;
+#endif
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
