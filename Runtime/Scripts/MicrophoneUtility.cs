@@ -42,11 +42,17 @@ namespace Cognitive3D
             byte[] data;
             byte[] headers;
 
+#if UNITY_WEBGL
+            //microphone not supported on webgl
+            fileBytes = new byte[0];
+            return;
+#else
             if (Microphone.devices.Length == 0)
             {
                 fileBytes = new byte[0];
                 return;
             }
+#endif
 
             //TODO create thread for writing audioclip to byte[]
             //http://stackoverflow.com/questions/19048492/notify-when-thread-is-complete-without-locking-calling-thread
@@ -157,7 +163,11 @@ namespace Cognitive3D
         {
             float levelMax = 0;
             float[] waveData = new float[_sampleWindow];
+#if UNITY_WEBGL
+            int micPosition = 0;
+#else
             int micPosition = Microphone.GetPosition(null) - (_sampleWindow + 1); // null means the first microphone
+#endif
             if (micPosition < 0) { return 0; } //not enough samples
 
             clip.GetData(waveData, micPosition);
