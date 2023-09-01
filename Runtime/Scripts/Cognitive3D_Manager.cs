@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.3.2";
+        public static readonly string SDK_VERSION = "1.3.3";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -139,7 +139,11 @@ namespace Cognitive3D
 
             CognitiveStatics.Initialize();
 
+#if UNITY_WEBGL
+            DeviceId = System.Guid.NewGuid().ToString();
+#else
             DeviceId = SystemInfo.deviceUniqueIdentifier;
+#endif
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 

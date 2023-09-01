@@ -47,6 +47,9 @@ namespace Cognitive3D
             if (GameplayReferences.HMD == null) { return; }
             if (_finishedRecording) { return; }
 
+#if UNITY_WEBGL
+            //microphone not support on webgl
+#else
             if (_recording)
             {
                 _currentRecordTime -= Time.deltaTime;
@@ -65,6 +68,7 @@ namespace Cognitive3D
                     _finishedRecording = true;
                 }
             }
+#endif
         }
 
         //increase the fill amount if this image was focused this frame. calls RecorderActivate if past threshold
@@ -93,7 +97,12 @@ namespace Cognitive3D
 
         void RecorderActivate()
         {
+#if UNITY_WEBGL
+            //microphone not supported on webgl
+            return;
+#else
             clip = Microphone.Start(null, false, RecordTime, outputRate);
+#endif
             fillImage.color = Color.red;
 
             GetComponentInParent<ExitPollPanel>().DisableTimeout();
