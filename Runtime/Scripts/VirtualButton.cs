@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 //SetPointerFocus called from ControllerPointer, or SetGazeFocus from HMDPointer
 //fills an image over time
@@ -14,7 +15,8 @@ namespace Cognitive3D
         Pointer,
         PointerFallbackGaze,
         Gaze,
-        Any
+        Any,
+        TriggerButton
     }
 
     [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
@@ -42,15 +44,31 @@ namespace Cognitive3D
         }
         
         //this is called from update in the ControllerPointer script
-        public virtual void SetPointerFocus()
+        public virtual void SetPointerFocus(bool isRightHand)
         {
+            float triggerValue;
             if (ActivationType == ActivationType.Gaze) { return; }
             if (canActivate == false)
             {
                 return;
             }
+            if (ActivationType == ActivationType.TriggerButton)
+            {
+                if (isRightHand)
+                {
+                    InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+                }
+                else
+                {
+                    InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+                }
 
-            focusThisFrame = true;
+                focusThisFrame = triggerValue > 0.5;
+            }
+            else
+            {
+                focusThisFrame = true;
+            }
         }
 
         //this is called from update in the HMDPointer script
@@ -78,6 +96,12 @@ namespace Cognitive3D
         protected virtual void LateUpdate()
         {
             if (!gameObject.activeInHierarchy) { return; }
+            if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
+            {
+                canActivate = false;
+                StartCoroutine(FilledEvent());
+                OnConfirm.Invoke();
+            }
             if (!canActivate && FillAmount <= 0f)
             {
                 canActivate = true;
@@ -87,16 +111,16 @@ namespace Cognitive3D
                 FillAmount -= Time.deltaTime;
                 FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
             }
-            else if (focusThisFrame && canActivate)
+            else if (focusThisFrame && canActivate && (ActivationType != ActivationType.TriggerButton))
             {
                 FillAmount += Time.deltaTime;
             }
 
-            if (fillImage != null)
+            if (fillImage != null && (ActivationType != ActivationType.TriggerButton))
                 fillImage.fillAmount = FillAmount / FillDuration;
             focusThisFrame = false;
 
-            if (FillAmount > FillDuration && canActivate)
+            if (FillAmount > FillDuration && canActivate && (ActivationType != ActivationType.TriggerButton))
             {
                 canActivate = false;
                 StartCoroutine(FilledEvent());

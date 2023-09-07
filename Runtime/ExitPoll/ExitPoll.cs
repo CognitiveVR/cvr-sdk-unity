@@ -209,6 +209,7 @@ namespace Cognitive3D
                         pointerInstance.transform.localPosition = Vector3.zero;
                         pointerInstance.transform.localRotation = Quaternion.identity;
                         pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
+                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = true;
                     }
                 }
                 else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
@@ -220,6 +221,7 @@ namespace Cognitive3D
                         pointerInstance.transform.localPosition = Vector3.zero;
                         pointerInstance.transform.localRotation = Quaternion.identity;
                         pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
+                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = false;
                     }
                 }
             }

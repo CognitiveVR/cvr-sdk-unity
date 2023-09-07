@@ -19,6 +19,7 @@ namespace Cognitive3D
         Vector3[] pointsArray;
 
         LineRenderer lr;
+        public bool isRightHand;
 
         public LineRenderer ConstructDefaultLineRenderer()
         {
@@ -51,7 +52,7 @@ namespace Cognitive3D
                 button = hit.collider.GetComponent<IPointerFocus>();
                 if (button != null)
                 {
-                    button.SetPointerFocus();
+                    button.SetPointerFocus(isRightHand);
                     lr.material = FocusPointerMat;
                     lr.textureMode = LineTextureMode.Tile;
                     Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, hit.distance) };

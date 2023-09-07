@@ -17,6 +17,9 @@ namespace Cognitive3D
         public Image TimeoutBar;
         //used when scaling and rotating
         public Transform PanelRoot;
+        public GameObject confirmButton;
+        public GameObject skipButton;
+        public GameObject backButton;
 
         [Header("Display")]
         public AnimationCurve XScale;
@@ -285,6 +288,22 @@ namespace Cognitive3D
 
         #region Updates
 
+        IEnumerator CloseAfterWaitForSpecifiedTime(int seconds, int panelID, string key, int value)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
+            Close();
+        }        
+        
+        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, int panelID, string key, string base64)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
+            Close();
+        }
+
         void Update()
         {
             //don't activate anything if the question has already started closing
@@ -399,47 +418,69 @@ namespace Cognitive3D
         #endregion
 
         #region Button Actions
+        private bool lastAnswer;
         //answer from boolean, thumbs up/down, happy/sad buttons
-        public void AnswerBool(bool positive)
+        private void AnswerBool(bool positive)
         {
             if (_isclosing) { return; }
             int responseValue = 0;
             if (positive)
                 responseValue = 1;
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, responseValue);
-            Close();
+            // sprite.GetComponent<Image>().color = Color.yellow;
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, responseValue));
+        }
+
+        // This will be called from the editor
+        // We have separate functions for positive and negative
+        //      because we can only pass in one argument, and we need to know the image to modify
+        public void AnswerBoolPositive(Image buttonImage)
+        {
+            buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
+            lastAnswer = true;
+            confirmButton.SetActive(true);
+        }
+
+        // This will be called from the editor
+        // We have separate functions for positive and negative
+        //      because we can only pass in one argument, and we need to know the image to modify
+        public void AnswerBoolNegative(Image buttonImage)
+        {
+            buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
+            lastAnswer = false;
+            confirmButton.SetActive(true);
+        }
+
+        public void ConfirmBoolAnswer()
+        {
+            AnswerBool(lastAnswer);
         }
 
         //from scale, multiple choice buttons
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
         }
 
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64wav);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, PanelId, "Answer" + PanelId, base64wav));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void CloseButton()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, short.MinValue));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void Timeout()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, short.MinValue));
         }
         #endregion
 
@@ -447,7 +488,7 @@ namespace Cognitive3D
         public void CloseError()
         {
             if (_isclosing) { return; }
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue, "", short.MinValue));
         }
 
         //close the window visually. informing the question set has already been completed
