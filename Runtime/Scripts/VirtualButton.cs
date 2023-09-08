@@ -5,12 +5,12 @@ using UnityEngine.UI;
 using UnityEngine.XR;
 
 //SetPointerFocus called from ControllerPointer, or SetGazeFocus from HMDPointer
-//fills an image over time
+//fills an buttonImage over time
 //activates OnFill action after pointing at this button for a duration
 
 namespace Cognitive3D
 {
-    public enum ActivationType
+    enum ActivationType
     {
         Pointer,
         PointerFallbackGaze,
@@ -23,9 +23,10 @@ namespace Cognitive3D
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
         public Image fillImage;
+        public Image buttonImage;
         public float FillDuration = 1;
         //limits the button to certain types of pointers
-        public ActivationType ActivationType;
+        private ActivationType ActivationType = ActivationType.TriggerButton;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
@@ -33,6 +34,14 @@ namespace Cognitive3D
         protected bool focusThisFrame = false;
         protected bool canActivate = true;
         protected Color fillStartingColor;
+
+        private bool isSelected = false;
+        public Material enabledStateMaterial;
+        public Material disabledStateMaterial;
+
+        private Color optionGreen = new Color(0, 1, 0.05f, 1);
+        private Color optionRed = new Color(1, 0, 0, 1);
+        private Color optionGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
@@ -92,17 +101,17 @@ namespace Cognitive3D
             return transform.position;
         }
 
-        //increase the fill amount if this image was focused this frame. calls OnConfirm if past threshold
+        //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
             if (!gameObject.activeInHierarchy) { return; }
             if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
             {
-                canActivate = false;
+                // canActivate = false;
                 StartCoroutine(FilledEvent());
                 OnConfirm.Invoke();
             }
-            if (!canActivate && FillAmount <= 0f)
+            if (!canActivate && FillAmount <= 0f && ActivationType != ActivationType.TriggerButton)
             {
                 canActivate = true;
             }
@@ -144,6 +153,31 @@ namespace Cognitive3D
             yield return null;
             if (fillImage != null)
                 fillImage.color = fillStartingColor;
+        }
+
+        public void ToggleButtonSelectState(bool on)
+        {
+            isSelected = on;
+            if (on)
+            {
+                buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
+            }
+            else
+            {
+                buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 0.5f);
+            }
+        }
+
+        public void ToggleButtonEnable(bool enabled)
+        {
+            if (enabled)
+            {
+                buttonImage.material = enabledStateMaterial;
+            }
+            else
+            {
+                buttonImage.material = disabledStateMaterial;
+            }
         }
     }
 }

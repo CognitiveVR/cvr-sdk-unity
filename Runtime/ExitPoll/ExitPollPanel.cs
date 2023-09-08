@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using Cognitive3D;
 using Cognitive3D.Json;
+using UnityEngine.EventSystems;
+using Codice.Client.BaseCommands.Merge;
 
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace Cognitive3D
@@ -17,9 +19,10 @@ namespace Cognitive3D
         public Image TimeoutBar;
         //used when scaling and rotating
         public Transform PanelRoot;
-        public GameObject confirmButton;
+        public VirtualButton confirmButton;
         public GameObject skipButton;
-        public GameObject backButton;
+        public GameObject[] multipleChoiceButtons;
+        public VirtualButton[] allOptionButtons;
 
         [Header("Display")]
         public AnimationCurve XScale;
@@ -41,6 +44,9 @@ namespace Cognitive3D
         public float MinimumSpacing = 0.01f;
         public float MaximumSpacing = 0.4f;
 
+        public Image positiveButton;
+        public Image negativeButton;
+
         //delays input so player can understand the popup interface before answering
         float ResponseDelayTime = 0.1f;
         float NextResponseTime;
@@ -50,6 +56,13 @@ namespace Cognitive3D
         float _remainingTime; //before timeout
         bool _isclosing; //has timed out/answered/skipped but still animating?
         bool _allowTimeout; //used by microphone to disable timeout
+
+
+        private Color optionGreen = new Color(0, 1, 0.05f, 1);
+        private Color optionRed = new Color(1, 0, 0, 1);
+        private Color optionGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        Image imageForCurrentAnswer;
+
 
         //used for sticky window - reposition window if player teleports
         Transform _root;
@@ -433,21 +446,24 @@ namespace Cognitive3D
         // This will be called from the editor
         // We have separate functions for positive and negative
         //      because we can only pass in one argument, and we need to know the image to modify
-        public void AnswerBoolPositive(Image buttonImage)
+        public void AnswerBoolPositive(VirtualButton button)
         {
-            buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
+            positiveButton.color = optionGreen;
+            negativeButton.color = optionGrey;
             lastAnswer = true;
-            confirmButton.SetActive(true);
+            confirmButton.ToggleButtonEnable(true);
         }
 
         // This will be called from the editor
         // We have separate functions for positive and negative
         //      because we can only pass in one argument, and we need to know the image to modify
-        public void AnswerBoolNegative(Image buttonImage)
+        public void AnswerBoolNegative(VirtualButton button)
         {
-            buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
+            positiveButton.color = optionGrey;
+            negativeButton.color = optionRed;
+            button.ToggleButtonSelectState(true);
             lastAnswer = false;
-            confirmButton.SetActive(true);
+            confirmButton.ToggleButtonEnable(true);
         }
 
         public void ConfirmBoolAnswer()
@@ -459,7 +475,13 @@ namespace Cognitive3D
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
+            if (imageForCurrentAnswer != null)
+            {
+                ToggleImageOpacity(imageForCurrentAnswer);
+            }
+            imageForCurrentAnswer = multipleChoiceButtons[value].GetComponent<Image>();
+            ToggleImageOpacity(imageForCurrentAnswer);
+            //StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
         }
 
         //called directly from MicrophoneButton when recording is complete
@@ -474,6 +496,18 @@ namespace Cognitive3D
         {
             if (_isclosing) { return; }
             StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, short.MinValue));
+        }
+
+        private void ToggleImageOpacity(Image image)
+        {
+            if (Mathf.Approximately(image.color.a, 0.5f))
+            {
+                image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
+            }
+            else
+            {
+                image.color = new Color(image.color.r, image.color.g, image.color.b, 0.5f);
+            }
         }
 
         //closes the panel with an invalid number that won't be associated with an answer

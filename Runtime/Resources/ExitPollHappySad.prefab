@@ -279,9 +279,12 @@ MonoBehaviour:
   Question: {fileID: 11494452}
   TimeoutBar: {fileID: 11482384}
   PanelRoot: {fileID: 22457698}
-  confirmButton: {fileID: 5002417562289175776}
+  confirmButton: {fileID: 5641074379996554903}
   skipButton: {fileID: 8607351409854273609}
-  backButton: {fileID: 3605976428696511893}
+  multipleChoiceButtons: []
+  allOptionButtons:
+  - {fileID: 114597820449548192}
+  - {fileID: 114876442714899388}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -394,6 +397,8 @@ MonoBehaviour:
   UseDynamicSpacing: 1
   MinimumSpacing: 0.01
   MaximumSpacing: 0.4
+  positiveButton: {fileID: 11409268}
+  negativeButton: {fileID: 11409770}
 --- !u!65 &65816644352658342
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -643,7 +648,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 0.5019608}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -793,8 +798,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 11444944}
+  buttonImage: {fileID: 11409770}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -803,13 +808,16 @@ MonoBehaviour:
         m_MethodName: AnswerBoolNegative
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 11409770}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+          m_ObjectArgument: {fileID: 114876442714899388}
+          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
+    type: 2}
+  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135921825277721504
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1264,8 +1272,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 11408864}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1274,13 +1282,16 @@ MonoBehaviour:
         m_MethodName: AnswerBoolPositive
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 11409268}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+          m_ObjectArgument: {fileID: 114597820449548192}
+          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
+    type: 2}
+  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135092062419887408
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1311,7 +1322,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &22415468
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1347,8 +1358,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 11410216}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1364,6 +1375,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135621819793219674
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1436,7 +1449,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.048275948, a: 0.5019608}
+  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1558,7 +1571,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8715554129689073338
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1593,8 +1606,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1610,6 +1623,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &2411974683405641505
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1729,7 +1744,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4280070395727047007}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.01}
   m_LocalScale: {x: 0.001, y: 0.001, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1819,7 +1834,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.75097656, y: -0.41999817}
+  m_AnchoredPosition: {x: 0.2, y: -0.42}
   m_SizeDelta: {x: 0.4, y: 0.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5641074379996554903
@@ -1835,8 +1850,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 1489248049887109271}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1852,6 +1867,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
+    type: 2}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &2711007200042389342
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1924,24 +1942,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.048275948, a: 1}
+  m_Material: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a, type: 2}
+  m_Color: {r: 0.5254902, g: 1, b: 0, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 1
+  m_Sprite: {fileID: 21300000, guid: 2f6d6a2445e2b964daa215131d1e204c, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 100
 --- !u!1 &6841729239014136187
 GameObject:
   m_ObjectHideFlags: 0
@@ -2212,7 +2230,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.272, y: -0.41999817}
+  m_AnchoredPosition: {x: 0.7, y: -0.42}
   m_SizeDelta: {x: 0.4, y: 0.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6046564037116964816
@@ -2228,8 +2246,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2245,6 +2263,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &7945685034075598595
 BoxCollider:
   m_ObjectHideFlags: 0

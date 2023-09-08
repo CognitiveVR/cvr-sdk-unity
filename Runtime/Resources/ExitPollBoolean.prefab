@@ -285,8 +285,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114000012287888164}
+  buttonImage: {fileID: 114000010833502382}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -295,13 +295,15 @@ MonoBehaviour:
         m_MethodName: AnswerBoolNegative
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 114000010833502382}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+          m_ObjectArgument: {fileID: 114785626664144486}
+          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &65134680373670582
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -455,7 +457,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 0.5019608}
+  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -550,9 +552,12 @@ MonoBehaviour:
   Question: {fileID: 114000012500582168}
   TimeoutBar: {fileID: 114000011126975934}
   PanelRoot: {fileID: 224000013961680296}
-  confirmButton: {fileID: 6777827080978173097}
+  confirmButton: {fileID: 5866738488140056146}
   skipButton: {fileID: 4042607939731206304}
-  backButton: {fileID: 7816249488519182627}
+  multipleChoiceButtons: []
+  allOptionButtons:
+  - {fileID: 114861252589802926}
+  - {fileID: 114785626664144486}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -665,6 +670,8 @@ MonoBehaviour:
   UseDynamicSpacing: 1
   MinimumSpacing: 0.01
   MaximumSpacing: 0.4
+  positiveButton: {fileID: 114000012635378660}
+  negativeButton: {fileID: 114000010833502382}
 --- !u!65 &65679816051228020
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -800,7 +807,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &224000010023893692
 RectTransform:
   m_ObjectHideFlags: 0
@@ -836,8 +843,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114000013981044868}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -853,6 +860,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135761528463446562
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -919,8 +928,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114000010880083668}
+  buttonImage: {fileID: 114000012635378660}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -929,13 +938,15 @@ MonoBehaviour:
         m_MethodName: AnswerBoolPositive
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 114000012635378660}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+          m_ObjectArgument: {fileID: 114861252589802926}
+          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 1
+          m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &65139209241477362
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1009,7 +1020,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.048275948, a: 0.5411765}
+  m_Color: {r: 0, g: 1, b: 0.05, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1886,7 +1897,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3319042060845642927}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.01}
   m_LocalScale: {x: 0.001, y: 0.001, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1896,7 +1907,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0.000019967556}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4263102702438118164
 CanvasRenderer:
@@ -2034,7 +2045,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7174243943929912293
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2053,7 +2064,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.273, y: -0.4199955}
+  m_AnchoredPosition: {x: 0.7, y: -0.42}
   m_SizeDelta: {x: 0.4, y: 0.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6401701263565397483
@@ -2069,8 +2080,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2086,6 +2097,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &5749142342138567632
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2116,7 +2129,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5463062451688344883
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2135,7 +2148,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.752, y: -0.42}
+  m_AnchoredPosition: {x: 0.2, y: -0.42}
   m_SizeDelta: {x: 0.4, y: 0.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5866738488140056146
@@ -2151,8 +2164,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 3851266178644915313}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2168,6 +2181,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
+    type: 2}
+  disabledStateMaterial: {fileID: 2100000, guid: 0e2b450fe9b60144295d21fec5560bfe,
+    type: 2}
 --- !u!65 &1855320991719799693
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2217,8 +2234,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.05, y: 0.05}
   m_AnchorMax: {x: 0.95, y: 0.95}
-  m_AnchoredPosition: {x: -0.012, y: 0.014}
-  m_SizeDelta: {x: -0.0083, y: -0.219}
+  m_AnchoredPosition: {x: -0.012, y: 0.013992}
+  m_SizeDelta: {x: -0.0083, y: -0.21902}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2080228399432518785
 CanvasRenderer:
@@ -2240,24 +2257,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.048275948, a: 1}
+  m_Material: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a, type: 2}
+  m_Color: {r: 0.5254902, g: 1, b: 0, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 1
+  m_Sprite: {fileID: 21300000, guid: 2f6d6a2445e2b964daa215131d1e204c, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 100
 --- !u!1 &7816249488519182627
 GameObject:
   m_ObjectHideFlags: 0
@@ -2310,8 +2327,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 0}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2327,6 +2344,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!65 &6434161925480709668
 BoxCollider:
   m_ObjectHideFlags: 0

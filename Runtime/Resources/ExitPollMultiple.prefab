@@ -785,6 +785,14 @@ MonoBehaviour:
   Question: {fileID: 114000011623234676}
   TimeoutBar: {fileID: 114000013647170636}
   PanelRoot: {fileID: 224000012448786898}
+  confirmButton: {fileID: 0}
+  skipButton: {fileID: 0}
+  backButton: {fileID: 0}
+  multipleChoiceButtons:
+  - {fileID: 1192345858530430}
+  - {fileID: 1560473257437698}
+  - {fileID: 1295778950253756}
+  - {fileID: 1000012928479450}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -951,7 +959,7 @@ GameObject:
   - component: {fileID: 114406848868166910}
   - component: {fileID: 65071754147830174}
   m_Layer: 5
-  m_Name: GazeButtonPositive
+  m_Name: GazeButtonPositive_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1151,7 +1159,7 @@ GameObject:
   - component: {fileID: 222000012957744650}
   - component: {fileID: 114000011164706290}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Image_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1198,7 +1206,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 1}
+  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1929,7 +1937,7 @@ GameObject:
   - component: {fileID: 114970200116021910}
   - component: {fileID: 65236877498775870}
   m_Layer: 5
-  m_Name: GazeButtonPositive
+  m_Name: GazeButtonPositive_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2035,7 +2043,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000000014901161}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222812029392769418
@@ -2164,7 +2172,7 @@ GameObject:
   - component: {fileID: 222808788101893762}
   - component: {fileID: 114663444916271874}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Image_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2211,7 +2219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 1}
+  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2240,7 +2248,7 @@ GameObject:
   - component: {fileID: 114857525899110732}
   - component: {fileID: 65882341115543108}
   m_Layer: 5
-  m_Name: GazeButtonPositive
+  m_Name: GazeButtonPositive_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2491,7 +2499,7 @@ GameObject:
   - component: {fileID: 222893575490789576}
   - component: {fileID: 114189041536690614}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Image_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2538,7 +2546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 1}
+  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3099,7 +3107,7 @@ GameObject:
   - component: {fileID: 222353784475786294}
   - component: {fileID: 114681999107820664}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Image_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3146,7 +3154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 1}
+  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3443,7 +3451,7 @@ GameObject:
   - component: {fileID: 114188846150466176}
   - component: {fileID: 65459048180286170}
   m_Layer: 5
-  m_Name: GazeButtonPositive
+  m_Name: GazeButtonPositive_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
