@@ -23,7 +23,7 @@ namespace Cognitive3D
         public Image buttonImage;
         public float FillDuration = 1;
         //limits the button to certain types of pointers
-        private ActivationType ActivationType = ActivationType.TriggerButton;
+        private ActivationType ActivationType;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
@@ -46,7 +46,18 @@ namespace Cognitive3D
         protected virtual void Start()
         {
             if (fillImage != null)
+            {
                 fillStartingColor = fillImage.color;
+            }
+
+            if (FindObjectOfType<ExitPollHolder>().Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            {
+                ActivationType = ActivationType.PointerFallbackGaze;
+            }
+            else
+            {
+                ActivationType = ActivationType.TriggerButton;
+            }
         }
         
         //this is called from update in the ControllerPointer script
@@ -99,6 +110,8 @@ namespace Cognitive3D
         //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
+
+            Debug.Log("@@ The Activation Type is " + ActivationType);
 
             if (!gameObject.activeInHierarchy) { return; }
             if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
