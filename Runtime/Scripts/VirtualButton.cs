@@ -104,6 +104,7 @@ namespace Cognitive3D
         //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
+
             if (!gameObject.activeInHierarchy) { return; }
             if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
             {
@@ -155,19 +156,6 @@ namespace Cognitive3D
                 fillImage.color = fillStartingColor;
         }
 
-        public void ToggleButtonSelectState(bool on)
-        {
-            isSelected = on;
-            if (on)
-            {
-                buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 1);
-            }
-            else
-            {
-                buttonImage.color = new Color(buttonImage.color.r, buttonImage.color.g, buttonImage.color.b, 0.5f);
-            }
-        }
-
         public void ToggleButtonEnable(bool enabled)
         {
             if (enabled)
@@ -178,6 +166,11 @@ namespace Cognitive3D
             {
                 buttonImage.material = disabledStateMaterial;
             }
+        }
+
+        public void SetColor(Color colorToSet)
+        {
+            buttonImage.color = colorToSet;
         }
     }
 }

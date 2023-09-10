@@ -21,8 +21,6 @@ namespace Cognitive3D
         public Transform PanelRoot;
         public VirtualButton confirmButton;
         public GameObject skipButton;
-        public GameObject[] multipleChoiceButtons;
-        public VirtualButton[] allOptionButtons;
 
         [Header("Display")]
         public AnimationCurve XScale;
@@ -44,8 +42,8 @@ namespace Cognitive3D
         public float MinimumSpacing = 0.01f;
         public float MaximumSpacing = 0.4f;
 
-        public Image positiveButton;
-        public Image negativeButton;
+        public VirtualButton positiveButton;
+        public VirtualButton negativeButton;
 
         //delays input so player can understand the popup interface before answering
         float ResponseDelayTime = 0.1f;
@@ -448,8 +446,7 @@ namespace Cognitive3D
         //      because we can only pass in one argument, and we need to know the image to modify
         public void AnswerBoolPositive(VirtualButton button)
         {
-            positiveButton.color = optionGreen;
-            negativeButton.color = optionGrey;
+            SetPositiveActive();
             lastAnswer = true;
             confirmButton.ToggleButtonEnable(true);
         }
@@ -459,11 +456,21 @@ namespace Cognitive3D
         //      because we can only pass in one argument, and we need to know the image to modify
         public void AnswerBoolNegative(VirtualButton button)
         {
-            positiveButton.color = optionGrey;
-            negativeButton.color = optionRed;
-            button.ToggleButtonSelectState(true);
+            SetNegativeActive();
             lastAnswer = false;
             confirmButton.ToggleButtonEnable(true);
+        }
+
+        public void SetPositiveActive()
+        {
+            positiveButton.SetColor(optionGreen);
+            negativeButton.SetColor(optionGrey);
+        }
+
+        public void SetNegativeActive()
+        {
+            positiveButton.SetColor(optionGrey);
+            negativeButton.SetColor(optionRed);
         }
 
         public void ConfirmBoolAnswer()
@@ -479,7 +486,6 @@ namespace Cognitive3D
             {
                 ToggleImageOpacity(imageForCurrentAnswer);
             }
-            imageForCurrentAnswer = multipleChoiceButtons[value].GetComponent<Image>();
             ToggleImageOpacity(imageForCurrentAnswer);
             //StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
         }
