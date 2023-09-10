@@ -12,10 +12,7 @@ namespace Cognitive3D
 {
     enum ActivationType
     {
-        Pointer,
         PointerFallbackGaze,
-        Gaze,
-        Any,
         TriggerButton
     }
 
@@ -56,7 +53,6 @@ namespace Cognitive3D
         public virtual void SetPointerFocus(bool isRightHand)
         {
             float triggerValue;
-            if (ActivationType == ActivationType.Gaze) { return; }
             if (canActivate == false)
             {
                 return;
@@ -85,7 +81,6 @@ namespace Cognitive3D
         {
             if (ActivationType != ActivationType.PointerFallbackGaze || (ActivationType == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
             {
-                if (ActivationType == ActivationType.Pointer) { return; }
                 if (canActivate == false)
                 {
                     return;
@@ -108,7 +103,6 @@ namespace Cognitive3D
             if (!gameObject.activeInHierarchy) { return; }
             if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
             {
-                // canActivate = false;
                 StartCoroutine(FilledEvent());
                 OnConfirm.Invoke();
             }
