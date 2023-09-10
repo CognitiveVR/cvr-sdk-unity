@@ -5,7 +5,6 @@ using UnityEngine.UI;
 using Cognitive3D;
 using Cognitive3D.Json;
 using UnityEngine.EventSystems;
-using Codice.Client.BaseCommands.Merge;
 
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace Cognitive3D
@@ -17,15 +16,21 @@ namespace Cognitive3D
         public Text Title;
         public Text Question;
         public Image TimeoutBar;
+
         //used when scaling and rotating
         public Transform PanelRoot;
         public VirtualButton confirmButton;
         public GameObject skipButton;
+        public Material confirmButtonMaterial;
 
         [Header("Display")]
         public AnimationCurve XScale;
         public AnimationCurve YScale;
         float PopupTime = 0.2f;
+
+        [Header("Boolean Settings")]
+        public VirtualButton positiveButton;
+        public VirtualButton negativeButton;
 
         [Header("Multiple Choice Settings")]
         public GameObject[] AnswerButtons;
@@ -42,9 +47,6 @@ namespace Cognitive3D
         public float MinimumSpacing = 0.01f;
         public float MaximumSpacing = 0.4f;
 
-        public VirtualButton positiveButton;
-        public VirtualButton negativeButton;
-
         //delays input so player can understand the popup interface before answering
         float ResponseDelayTime = 0.1f;
         float NextResponseTime;
@@ -59,8 +61,6 @@ namespace Cognitive3D
         private Color optionGreen = new Color(0, 1, 0.05f, 1);
         private Color optionRed = new Color(1, 0, 0, 1);
         private Color optionGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        Image imageForCurrentAnswer;
-
 
         //used for sticky window - reposition window if player teleports
         Transform _root;
@@ -437,7 +437,6 @@ namespace Cognitive3D
             int responseValue = 0;
             if (positive)
                 responseValue = 1;
-            // sprite.GetComponent<Image>().color = Color.yellow;
             StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, responseValue));
         }
 
@@ -482,12 +481,7 @@ namespace Cognitive3D
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            if (imageForCurrentAnswer != null)
-            {
-                ToggleImageOpacity(imageForCurrentAnswer);
-            }
-            ToggleImageOpacity(imageForCurrentAnswer);
-            //StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
         }
 
         //called directly from MicrophoneButton when recording is complete

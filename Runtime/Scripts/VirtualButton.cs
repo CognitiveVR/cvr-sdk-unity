@@ -32,14 +32,6 @@ namespace Cognitive3D
         protected bool canActivate = true;
         protected Color fillStartingColor;
 
-        private bool isSelected = false;
-        public Material enabledStateMaterial;
-        public Material disabledStateMaterial;
-
-        private Color optionGreen = new Color(0, 1, 0.05f, 1);
-        private Color optionRed = new Color(1, 0, 0, 1);
-        private Color optionGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
         //save the fill starting color
@@ -165,14 +157,7 @@ namespace Cognitive3D
 
         public void ToggleButtonEnable(bool enabled)
         {
-            if (enabled)
-            {
-                buttonImage.material = enabledStateMaterial;
-            }
-            else
-            {
-                buttonImage.material = disabledStateMaterial;
-            }
+
         }
 
         public void SetColor(Color colorToSet)

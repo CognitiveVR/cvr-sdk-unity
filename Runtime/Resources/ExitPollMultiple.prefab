@@ -410,8 +410,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114000013845412640}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -787,12 +787,8 @@ MonoBehaviour:
   PanelRoot: {fileID: 224000012448786898}
   confirmButton: {fileID: 0}
   skipButton: {fileID: 0}
-  backButton: {fileID: 0}
-  multipleChoiceButtons:
-  - {fileID: 1192345858530430}
-  - {fileID: 1560473257437698}
-  - {fileID: 1295778950253756}
-  - {fileID: 1000012928479450}
+  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
+    type: 2}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -868,6 +864,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  positiveButton: {fileID: 0}
+  negativeButton: {fileID: 0}
   AnswerButtons:
   - {fileID: 1470662302114144}
   - {fileID: 1383502971206574}
@@ -1000,8 +998,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114000010751201080}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1206,7 +1204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1978,8 +1976,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114801943498538850}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2219,7 +2217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2289,8 +2287,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114649372000132110}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2546,7 +2544,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3154,7 +3152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.025519054, g: 0.6585669, b: 0.86764705, a: 0.5019608}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3492,8 +3490,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 114013816073336526}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls:

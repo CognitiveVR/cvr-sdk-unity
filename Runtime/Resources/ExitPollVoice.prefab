@@ -714,8 +714,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 11429486}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -731,6 +731,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135254401396259634
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -955,11 +957,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 11404854}
+  buttonImage: {fileID: 0}
   FillDuration: 1.5
-  ActivationType: 4
   OnConfirm:
     m_PersistentCalls:
       m_Calls: []
+  enabledStateMaterial: {fileID: 0}
+  disabledStateMaterial: {fileID: 0}
   RecordTime: 10
   MicrophoneImage: {fileID: 11451838}
   TipText: {fileID: 114164230644077616}
@@ -1054,6 +1058,8 @@ MonoBehaviour:
   Question: {fileID: 11478808}
   TimeoutBar: {fileID: 11457796}
   PanelRoot: {fileID: 22428700}
+  confirmButton: {fileID: 0}
+  skipButton: {fileID: 0}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -1166,6 +1172,10 @@ MonoBehaviour:
   UseDynamicSpacing: 1
   MinimumSpacing: 0.01
   MaximumSpacing: 0.4
+  positiveButton: {fileID: 0}
+  negativeButton: {fileID: 0}
+  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
+    type: 2}
 --- !u!65 &65652666381091420
 BoxCollider:
   m_ObjectHideFlags: 0
