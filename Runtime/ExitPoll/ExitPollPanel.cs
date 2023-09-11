@@ -426,6 +426,7 @@ namespace Cognitive3D
 
         #region Button Actions
         private bool lastBoolAnswer;
+        private int lastIntAnswer;
         //answer from boolean, thumbs up/down, happy/sad buttons
         private void AnswerBool(bool positive)
         {
@@ -444,7 +445,8 @@ namespace Cognitive3D
             positiveButton.SetSelect(true);
             negativeButton.SetSelect(false);
             lastBoolAnswer = true;
-            confirmButton.ToggleButtonEnable(true);
+            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.enabled = true;
         }
 
         // This will be called from the editor
@@ -455,7 +457,8 @@ namespace Cognitive3D
             negativeButton.SetSelect(true);
             positiveButton.SetSelect(false);
             lastBoolAnswer = false;
-            confirmButton.ToggleButtonEnable(true);
+            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.enabled = true;
         }
 
         public void ConfirmBoolAnswer()
@@ -467,9 +470,16 @@ namespace Cognitive3D
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
+            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.enabled = true;
+            lastIntAnswer = value;
         }
 
+        public void ConfirmIntAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, lastIntAnswer));
+        }
+        
         public void SelectOption(VirtualButton button)
         {
             foreach (GameObject obj in AnswerButtons)
@@ -492,18 +502,6 @@ namespace Cognitive3D
         {
             if (_isclosing) { return; }
             StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, short.MinValue));
-        }
-
-        private void ToggleImageOpacity(Image image)
-        {
-            if (Mathf.Approximately(image.color.a, 0.5f))
-            {
-                image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
-            }
-            else
-            {
-                image.color = new Color(image.color.r, image.color.g, image.color.b, 0.5f);
-            }
         }
 
         //closes the panel with an invalid number that won't be associated with an answer

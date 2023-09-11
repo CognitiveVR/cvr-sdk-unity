@@ -23,6 +23,7 @@ namespace Cognitive3D
         public float FillDuration = 1;
         public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
         public Color selectedColor = new Color(0, 1, 0.05f, 1);
+        public bool enabled;
         //limits the button to certain types of pointers
         private ActivationType ActivationType;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
@@ -102,38 +103,38 @@ namespace Cognitive3D
         //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
+            if (enabled)
+            {
+                if (!gameObject.activeInHierarchy) { return; }
+                if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
+                {
+                    StartCoroutine(FilledEvent());
+                    OnConfirm.Invoke();
+                }
+                if (!canActivate && FillAmount <= 0f && ActivationType != ActivationType.TriggerButton)
+                {
+                    canActivate = true;
+                }
+                if (!focusThisFrame && canActivate)
+                {
+                    FillAmount -= Time.deltaTime;
+                    FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
+                }
+                else if (focusThisFrame && canActivate && (ActivationType != ActivationType.TriggerButton))
+                {
+                    FillAmount += Time.deltaTime;
+                }
 
-            Debug.Log("@@ The Activation Type is " + ActivationType);
+                if (fillImage != null && (ActivationType != ActivationType.TriggerButton))
+                    fillImage.fillAmount = FillAmount / FillDuration;
+                focusThisFrame = false;
 
-            if (!gameObject.activeInHierarchy) { return; }
-            if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
-            {
-                StartCoroutine(FilledEvent());
-                OnConfirm.Invoke();
-            }
-            if (!canActivate && FillAmount <= 0f && ActivationType != ActivationType.TriggerButton)
-            {
-                canActivate = true;
-            }
-            if (!focusThisFrame && canActivate)
-            {
-                FillAmount -= Time.deltaTime;
-                FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
-            }
-            else if (focusThisFrame && canActivate && (ActivationType != ActivationType.TriggerButton))
-            {
-                FillAmount += Time.deltaTime;
-            }
-
-            if (fillImage != null && (ActivationType != ActivationType.TriggerButton))
-                fillImage.fillAmount = FillAmount / FillDuration;
-            focusThisFrame = false;
-
-            if (FillAmount > FillDuration && canActivate && (ActivationType != ActivationType.TriggerButton))
-            {
-                canActivate = false;
-                StartCoroutine(FilledEvent());
-                OnConfirm.Invoke();
+                if (FillAmount > FillDuration && canActivate && (ActivationType != ActivationType.TriggerButton))
+                {
+                    canActivate = false;
+                    StartCoroutine(FilledEvent());
+                    OnConfirm.Invoke();
+                }
             }
         }
 
@@ -158,11 +159,6 @@ namespace Cognitive3D
         public void SetSelect(bool select)
         {
             buttonImage.color = select ? selectedColor : defaultColor;
-        }
-
-        public void ToggleButtonEnable(bool enabled)
-        {
-
         }
     }
 }
