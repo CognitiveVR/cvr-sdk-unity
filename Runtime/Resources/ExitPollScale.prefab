@@ -495,6 +495,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65382676934240712
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1385,6 +1386,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65398270624636696
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1658,6 +1660,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65826568392159164
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2179,6 +2182,8 @@ RectTransform:
   - {fileID: 224000013823091720}
   - {fileID: 224000012005308280}
   - {fileID: 224387135787331154}
+  - {fileID: 5733230781364128291}
+  - {fileID: 5380084416624551603}
   m_Father: {fileID: 224000011135853500}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2373,6 +2378,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65849689894047348
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2805,6 +2811,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65111870606590022
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2924,6 +2931,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65903823759928784
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3264,6 +3272,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65291448246191188
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3666,6 +3675,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!135 &135628885160409230
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -4066,6 +4076,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65970980944856552
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4262,6 +4273,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65945384424822856
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4537,6 +4549,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65008323479996484
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4889,6 +4902,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &65045910813697602
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4935,8 +4949,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 224000012799296144}
-  - {fileID: 5733230781364128291}
-  - {fileID: 5380084416624551603}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5436,8 +5448,8 @@ RectTransform:
   m_Children:
   - {fileID: 3713955829120879611}
   - {fileID: 3659824031925107283}
-  m_Father: {fileID: 224000011135853500}
-  m_RootOrder: 2
+  m_Father: {fileID: 224000012799296144}
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -5461,7 +5473,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
-  enabled: 0
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -5477,6 +5489,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &984576516305237208
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5678,8 +5691,8 @@ RectTransform:
   m_Children:
   - {fileID: 9052665325945875156}
   - {fileID: 4669032920715751875}
-  m_Father: {fileID: 224000011135853500}
-  m_RootOrder: 1
+  m_Father: {fileID: 224000012799296144}
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -5719,6 +5732,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &6216670223522373144
 BoxCollider:
   m_ObjectHideFlags: 0

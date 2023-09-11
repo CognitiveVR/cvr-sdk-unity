@@ -720,6 +720,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -735,6 +736,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!135 &135254401396259634
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -963,9 +965,23 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 198878}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  isSelected: 0
   RecordTime: 10
   MicrophoneImage: {fileID: 11451838}
   TipText: {fileID: 114164230644077616}
@@ -1594,10 +1610,11 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 11444486}
         m_TargetAssemblyTypeName: Cognitive3D.ExitPollPanel, Cognitive3D
         m_MethodName: CloseButton
         m_Mode: 1
@@ -1609,6 +1626,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &1237206402000225261
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1755,6 +1773,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 0
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1770,6 +1789,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &2334366621823120730
 BoxCollider:
   m_ObjectHideFlags: 0

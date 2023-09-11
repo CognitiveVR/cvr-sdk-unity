@@ -29,6 +29,9 @@ namespace Cognitive3D
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
+        [HideInInspector]
+        public bool isSelected = false;
+
         protected float FillAmount;
         protected bool focusThisFrame = false;
         protected bool canActivate = true;
@@ -103,7 +106,7 @@ namespace Cognitive3D
         //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
-            if (enabled)
+            if (enabled && !isSelected)
             {
                 if (!gameObject.activeInHierarchy) { return; }
                 if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
@@ -158,6 +161,7 @@ namespace Cognitive3D
 
         public void SetSelect(bool select)
         {
+            isSelected = select;
             buttonImage.color = select ? selectedColor : defaultColor;
         }
     }

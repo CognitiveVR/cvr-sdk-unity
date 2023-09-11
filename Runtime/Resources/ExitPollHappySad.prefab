@@ -800,6 +800,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   selectedColor: {r: 1, g: 0, b: 0, a: 1}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1273,6 +1274,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1358,6 +1360,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1758,6 +1761,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 0
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2003,6 +2007,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 0
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2399,6 +2404,7 @@ MonoBehaviour:
   FillDuration: 1.5
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
   selectedColor: {r: 0, g: 0, b: 0, a: 0}
+  enabled: 1
   OnConfirm:
     m_PersistentCalls:
       m_Calls:

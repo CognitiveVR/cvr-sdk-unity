@@ -484,7 +484,7 @@ namespace Cognitive3D
         {
             foreach (GameObject obj in AnswerButtons)
             {
-                obj.GetComponent<VirtualButton>().SetSelect(false);
+                obj.GetComponentInChildren<VirtualButton>().SetSelect(false);
             }
             button.SetSelect(true);
         }
