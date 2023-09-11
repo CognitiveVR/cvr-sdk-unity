@@ -287,6 +287,8 @@ MonoBehaviour:
   fillImage: {fileID: 114000012287888164}
   buttonImage: {fileID: 114000010833502382}
   FillDuration: 1.5
+  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
+  selectedColor: {r: 1, g: 0, b: 0, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -302,8 +304,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &65134680373670582
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -554,6 +554,8 @@ MonoBehaviour:
   PanelRoot: {fileID: 224000013961680296}
   confirmButton: {fileID: 5866738488140056146}
   skipButton: {fileID: 4042607939731206304}
+  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
+    type: 2}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -629,6 +631,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  positiveButton: {fileID: 114861252589802926}
+  negativeButton: {fileID: 114785626664144486}
   AnswerButtons: []
   ContentRoot: {fileID: 0}
   IntegerGradient:
@@ -666,11 +670,6 @@ MonoBehaviour:
   UseDynamicSpacing: 1
   MinimumSpacing: 0.01
   MaximumSpacing: 0.4
-  panelType: 2
-  positiveButton: {fileID: 114861252589802926}
-  negativeButton: {fileID: 114785626664144486}
-  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
-    type: 2}
 --- !u!65 &65679816051228020
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -844,6 +843,8 @@ MonoBehaviour:
   fillImage: {fileID: 114000013981044868}
   buttonImage: {fileID: 114000012679677530}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -859,8 +860,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135761528463446562
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -929,6 +928,8 @@ MonoBehaviour:
   fillImage: {fileID: 114000010880083668}
   buttonImage: {fileID: 114000012635378660}
   FillDuration: 1.5
+  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
+  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -944,8 +945,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &65139209241477362
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2082,6 +2081,8 @@ MonoBehaviour:
   fillImage: {fileID: 3506758031836626975}
   buttonImage: {fileID: 2584734413725438152}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2097,8 +2098,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &5749142342138567632
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2243,6 +2242,8 @@ MonoBehaviour:
   fillImage: {fileID: 849307719773014502}
   buttonImage: {fileID: 3851266178644915313}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2258,10 +2259,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
-    type: 2}
-  disabledStateMaterial: {fileID: 2100000, guid: 0e2b450fe9b60144295d21fec5560bfe,
-    type: 2}
 --- !u!65 &1855320991719799693
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2406,6 +2403,8 @@ MonoBehaviour:
   fillImage: {fileID: 0}
   buttonImage: {fileID: 0}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2421,8 +2420,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &6434161925480709668
 BoxCollider:
   m_ObjectHideFlags: 0

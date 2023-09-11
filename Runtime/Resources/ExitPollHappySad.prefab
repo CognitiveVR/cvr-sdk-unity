@@ -281,6 +281,8 @@ MonoBehaviour:
   PanelRoot: {fileID: 22457698}
   confirmButton: {fileID: 5641074379996554903}
   skipButton: {fileID: 8607351409854273609}
+  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
+    type: 2}
   XScale:
     serializedVersion: 2
     m_Curve:
@@ -356,6 +358,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  positiveButton: {fileID: 114597820449548192}
+  negativeButton: {fileID: 114876442714899388}
   AnswerButtons: []
   ContentRoot: {fileID: 0}
   IntegerGradient:
@@ -393,10 +397,6 @@ MonoBehaviour:
   UseDynamicSpacing: 1
   MinimumSpacing: 0.01
   MaximumSpacing: 0.4
-  positiveButton: {fileID: 114597820449548192}
-  negativeButton: {fileID: 114876442714899388}
-  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
-    type: 2}
 --- !u!65 &65816644352658342
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -798,6 +798,8 @@ MonoBehaviour:
   fillImage: {fileID: 11444944}
   buttonImage: {fileID: 11409770}
   FillDuration: 1.5
+  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
+  selectedColor: {r: 1, g: 0, b: 0, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -813,9 +815,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
-    type: 2}
-  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135921825277721504
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1272,6 +1271,8 @@ MonoBehaviour:
   fillImage: {fileID: 11408864}
   buttonImage: {fileID: 11409268}
   FillDuration: 1.5
+  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
+  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1287,9 +1288,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
-    type: 2}
-  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135092062419887408
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1358,6 +1356,8 @@ MonoBehaviour:
   fillImage: {fileID: 11410216}
   buttonImage: {fileID: 11452052}
   FillDuration: 1.5
+  defaultColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1373,8 +1373,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!135 &135621819793219674
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1758,6 +1756,8 @@ MonoBehaviour:
   fillImage: {fileID: 0}
   buttonImage: {fileID: 0}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1773,8 +1773,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &2411974683405641505
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2000,9 +1998,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fillImage: {fileID: 0}
+  fillImage: {fileID: 6237326083688138846}
   buttonImage: {fileID: 1489248049887109271}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2018,9 +2018,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enabledStateMaterial: {fileID: 2100000, guid: 2390fe5b28d821a429d5977ca141175a,
-    type: 2}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &2711007200042389342
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2397,9 +2394,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fillImage: {fileID: 0}
-  buttonImage: {fileID: 0}
+  fillImage: {fileID: 8126173297071728500}
+  buttonImage: {fileID: 6805599115137932678}
   FillDuration: 1.5
+  defaultColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2415,8 +2414,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  enabledStateMaterial: {fileID: 0}
-  disabledStateMaterial: {fileID: 0}
 --- !u!65 &7945685034075598595
 BoxCollider:
   m_ObjectHideFlags: 0

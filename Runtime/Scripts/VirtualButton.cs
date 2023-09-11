@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -22,6 +21,8 @@ namespace Cognitive3D
         public Image fillImage;
         public Image buttonImage;
         public float FillDuration = 1;
+        public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public Color selectedColor = new Color(0, 1, 0.05f, 1);
         //limits the button to certain types of pointers
         private ActivationType ActivationType;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
@@ -88,7 +89,6 @@ namespace Cognitive3D
                 {
                     return;
                 }
-
                 focusThisFrame = true;
             }
         }
@@ -155,14 +155,14 @@ namespace Cognitive3D
                 fillImage.color = fillStartingColor;
         }
 
+        public void SetSelect(bool select)
+        {
+            buttonImage.color = select ? selectedColor : defaultColor;
+        }
+
         public void ToggleButtonEnable(bool enabled)
         {
 
-        }
-
-        public void SetColor(Color colorToSet)
-        {
-            buttonImage.color = colorToSet;
         }
     }
 }

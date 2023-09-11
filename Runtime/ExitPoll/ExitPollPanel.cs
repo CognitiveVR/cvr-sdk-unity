@@ -34,6 +34,7 @@ namespace Cognitive3D
 
         [Header("Multiple Choice Settings")]
         public GameObject[] AnswerButtons;
+
         public Transform ContentRoot;
 
         [Header("Scale Settings")]
@@ -56,11 +57,6 @@ namespace Cognitive3D
         float _remainingTime; //before timeout
         bool _isclosing; //has timed out/answered/skipped but still animating?
         bool _allowTimeout; //used by microphone to disable timeout
-
-
-        private Color optionGreen = new Color(0, 1, 0.05f, 1);
-        private Color optionRed = new Color(1, 0, 0, 1);
-        private Color optionGrey = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
         //used for sticky window - reposition window if player teleports
         Transform _root;
@@ -429,7 +425,7 @@ namespace Cognitive3D
         #endregion
 
         #region Button Actions
-        private bool lastAnswer;
+        private bool lastBoolAnswer;
         //answer from boolean, thumbs up/down, happy/sad buttons
         private void AnswerBool(bool positive)
         {
@@ -445,8 +441,9 @@ namespace Cognitive3D
         //      because we can only pass in one argument, and we need to know the image to modify
         public void AnswerBoolPositive(VirtualButton button)
         {
-            SetPositiveActive();
-            lastAnswer = true;
+            positiveButton.SetSelect(true);
+            negativeButton.SetSelect(false);
+            lastBoolAnswer = true;
             confirmButton.ToggleButtonEnable(true);
         }
 
@@ -455,26 +452,15 @@ namespace Cognitive3D
         //      because we can only pass in one argument, and we need to know the image to modify
         public void AnswerBoolNegative(VirtualButton button)
         {
-            SetNegativeActive();
-            lastAnswer = false;
+            negativeButton.SetSelect(true);
+            positiveButton.SetSelect(false);
+            lastBoolAnswer = false;
             confirmButton.ToggleButtonEnable(true);
-        }
-
-        public void SetPositiveActive()
-        {
-            positiveButton.SetColor(optionGreen);
-            negativeButton.SetColor(optionGrey);
-        }
-
-        public void SetNegativeActive()
-        {
-            positiveButton.SetColor(optionGrey);
-            negativeButton.SetColor(optionRed);
         }
 
         public void ConfirmBoolAnswer()
         {
-            AnswerBool(lastAnswer);
+            AnswerBool(lastBoolAnswer);
         }
 
         //from scale, multiple choice buttons
@@ -483,6 +469,16 @@ namespace Cognitive3D
             if (_isclosing) { return; }
             StartCoroutine(CloseAfterWaitForSpecifiedTime(1, PanelId, "Answer" + PanelId, value));
         }
+
+        public void SelectOption(VirtualButton button)
+        {
+            foreach (GameObject obj in AnswerButtons)
+            {
+                obj.GetComponent<VirtualButton>().SetSelect(false);
+            }
+            button.SetSelect(true);
+        }
+
 
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
