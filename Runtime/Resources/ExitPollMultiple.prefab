@@ -4303,7 +4303,7 @@ MonoBehaviour:
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 114000010869990056}
         m_TargetAssemblyTypeName: Cognitive3D.ExitPollPanel, Cognitive3D
         m_MethodName: CloseButton
         m_Mode: 1
