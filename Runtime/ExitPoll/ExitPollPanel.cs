@@ -16,7 +16,7 @@ namespace Cognitive3D
         [Header("Components")]
         public Text Title;
         public Text Question;
-        public Image TimeoutBar;
+        public Text QuestionNumber;
 
         //used when scaling and rotating
         public Transform PanelRoot;
@@ -93,7 +93,6 @@ namespace Cognitive3D
             if (questionset.myparameters.UseTimeout)
             {
                 _remainingTime = questionset.myparameters.Timeout;
-                UpdateTimeoutBar();
             }
 
             //display question from properties
@@ -110,6 +109,11 @@ namespace Cognitive3D
                 string question = "Question";
                 properties.TryGetValue("question", out question);
                 Question.text = question;
+            }
+
+            if (QuestionNumber != null)
+            {
+                QuestionNumber.text = $"Question {panelId + 1} of {properties.Count}";
             }
 
             if (properties["type"] == "MULTIPLE")
@@ -290,7 +294,6 @@ namespace Cognitive3D
         {
             _allowTimeout = false;
             _remainingTime = QuestionSet.myparameters.Timeout;
-            UpdateTimeoutBar();
         }
 
         #region Updates
@@ -327,7 +330,6 @@ namespace Cognitive3D
                     if (NextResponseTime < Time.time)
                     {
                         _remainingTime -= Time.deltaTime;
-                        UpdateTimeoutBar();
                     }
                 }
                 else
@@ -415,12 +417,6 @@ namespace Cognitive3D
 
                 transform.LookAt(transform.position*2 - GameplayReferences.HMD.position); //look in the direction of the panel (inverse of looking at hmd)
             }
-        }
-
-        void UpdateTimeoutBar()
-        {
-            if (TimeoutBar)
-                TimeoutBar.fillAmount = _remainingTime / QuestionSet.myparameters.Timeout;
         }
         #endregion
 
