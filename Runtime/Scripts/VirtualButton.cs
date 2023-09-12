@@ -36,6 +36,8 @@ namespace Cognitive3D
         protected bool focusThisFrame = false;
         protected bool canActivate = true;
         protected Color fillStartingColor;
+        protected float triggerValue;
+        protected bool isUsingRightHand;
 
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
@@ -60,7 +62,7 @@ namespace Cognitive3D
         //this is called from update in the ControllerPointer script
         public virtual void SetPointerFocus(bool isRightHand)
         {
-            float triggerValue;
+            isUsingRightHand = isRightHand;
             if (canActivate == false)
             {
                 return;

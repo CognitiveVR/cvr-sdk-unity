@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using Cognitive3D;
 using Cognitive3D.Json;
 using UnityEngine.EventSystems;
+using System.Buffers.Text;
 
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace Cognitive3D
@@ -214,7 +215,6 @@ namespace Cognitive3D
                 else //ensure valid buttons are turned on
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(true);
-                    SetIntegerButtonColor(ColorableImages[i], (float)i / totalCount);
                 }
             }
 
@@ -427,6 +427,7 @@ namespace Cognitive3D
         #region Button Actions
         private bool lastBoolAnswer;
         private int lastIntAnswer;
+        private string lastRecordedVoice;
         //answer from boolean, thumbs up/down, happy/sad buttons
         private void AnswerBool(bool positive)
         {
@@ -494,7 +495,14 @@ namespace Cognitive3D
         public void AnswerMicrophone(string base64wav)
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, PanelId, "Answer" + PanelId, base64wav));
+            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.enabled = true;
+            lastRecordedVoice = base64wav;
+        }
+
+        public void ConfirmMicrophoneAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, PanelId, "Answer" + PanelId, lastRecordedVoice));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer

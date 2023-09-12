@@ -945,7 +945,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.016029522, y: 0.012}
+  m_AnchoredPosition: {x: -0.016029522, y: 0.056}
   m_SizeDelta: {x: 0.5, y: 0.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &11482396
@@ -968,23 +968,12 @@ MonoBehaviour:
   enabled: 1
   OnConfirm:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 198878}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   isSelected: 0
   RecordTime: 10
   MicrophoneImage: {fileID: 11451838}
   TipText: {fileID: 114164230644077616}
+  buttonPrompt: {fileID: 114164230644077616}
 --- !u!135 &135005842324935816
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1076,8 +1065,8 @@ MonoBehaviour:
   Question: {fileID: 11478808}
   TimeoutBar: {fileID: 11457796}
   PanelRoot: {fileID: 22428700}
-  confirmButton: {fileID: 0}
-  skipButton: {fileID: 0}
+  confirmButton: {fileID: 6114137342028723336}
+  skipButton: {fileID: 1052164946235127016}
   confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
     type: 2}
   XScale:
@@ -1464,10 +1453,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 128
+    m_FontSize: 80
     m_FontStyle: 1
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 8
     m_MaxSize: 128
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -1777,9 +1766,9 @@ MonoBehaviour:
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 198878}
+      - m_Target: {fileID: 11444486}
         m_TargetAssemblyTypeName: Cognitive3D.ExitPollPanel, Cognitive3D
-        m_MethodName: 
+        m_MethodName: ConfirmMicrophoneAnswer
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

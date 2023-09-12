@@ -816,6 +816,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!135 &135921825277721504
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1290,6 +1291,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  isSelected: 0
 --- !u!135 &135092062419887408
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1376,6 +1378,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!135 &135621819793219674
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1777,6 +1780,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &2411974683405641505
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2023,6 +2027,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &2711007200042389342
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2420,6 +2425,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  isSelected: 0
 --- !u!65 &7945685034075598595
 BoxCollider:
   m_ObjectHideFlags: 0

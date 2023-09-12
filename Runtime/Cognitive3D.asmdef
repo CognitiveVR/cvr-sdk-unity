@@ -16,7 +16,8 @@
         "Microsoft.MixedReality.Toolkit",
         "Unity.XR.Management",
         "Unity.XR.PICO",
-        "Unity.XR.Oculus"
+        "Unity.XR.Oculus",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
