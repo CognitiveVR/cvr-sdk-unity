@@ -73,7 +73,7 @@ Material:
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _Speed: 0
+    - _Speed: 0.03
     - _SpeedX: -0.5
     - _SrcBlend: 1
     - _UVSec: 0
@@ -81,5 +81,5 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _TintColor: {r: 1, g: 0, b: 0, a: 0.166}
+    - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   m_BuildTextureStacks: []

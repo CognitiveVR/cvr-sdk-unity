@@ -49,7 +49,6 @@ namespace Cognitive3D
                 if (button != null)
                 {
                     button.SetPointerFocus(isRightHand);
-                    lr.material = FocusPointerMat;
                     lr.textureMode = LineTextureMode.Tile;
                     Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, hit.distance) };
                     lr.SetPositions(hitPointsArray);
