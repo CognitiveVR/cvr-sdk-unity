@@ -4993,12 +4993,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Title: {fileID: 114000011557668582}
-  Question: {fileID: 3507310813491661903}
-  QuestionNumber: {fileID: 0}
+  Question: {fileID: 114000012743951398}
+  QuestionNumber: {fileID: 3507310813491661903}
   PanelRoot: {fileID: 224000012799296144}
   confirmButton: {fileID: 8159183090349316287}
-  confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
-    type: 2}
   XScale:
     serializedVersion: 2
     m_Curve:

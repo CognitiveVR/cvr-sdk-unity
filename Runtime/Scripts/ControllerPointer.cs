@@ -32,10 +32,6 @@ namespace Cognitive3D
             {
                 DefaultPointerMat = Resources.Load<Material>("ExitPollPointerLine");
             }
-            if (FocusPointerMat == null)
-            {
-                FocusPointerMat = Resources.Load<Material>("ExitPollPointerLine_Focus");
-            }
             lr.material = DefaultPointerMat;
             lr.textureMode = LineTextureMode.Tile;
             return lr;
