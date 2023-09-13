@@ -21,8 +21,6 @@ namespace Cognitive3D
         //used when scaling and rotating
         public Transform PanelRoot;
         public VirtualButton confirmButton;
-        public GameObject skipButton;
-        public Material confirmButtonMaterial;
 
         [Header("Display")]
         public AnimationCurve XScale;
@@ -442,7 +440,7 @@ namespace Cognitive3D
             positiveButton.SetSelect(true);
             negativeButton.SetSelect(false);
             lastBoolAnswer = true;
-            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.SetSelect(true);
             confirmButton.enabled = true;
         }
 
@@ -454,7 +452,7 @@ namespace Cognitive3D
             negativeButton.SetSelect(true);
             positiveButton.SetSelect(false);
             lastBoolAnswer = false;
-            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.SetSelect(true);
             confirmButton.enabled = true;
         }
 
@@ -467,7 +465,7 @@ namespace Cognitive3D
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.SetSelect(true);
             confirmButton.enabled = true;
             lastIntAnswer = value;
         }
@@ -491,7 +489,7 @@ namespace Cognitive3D
         public void AnswerMicrophone(string base64wav)
         {
             if (_isclosing) { return; }
-            confirmButton.buttonImage.material = confirmButtonMaterial;
+            confirmButton.SetSelect(true);
             confirmButton.enabled = true;
             lastRecordedVoice = base64wav;
         }

@@ -281,7 +281,6 @@ MonoBehaviour:
   QuestionNumber: {fileID: 9165392149592576932}
   PanelRoot: {fileID: 22457698}
   confirmButton: {fileID: 5641074379996554903}
-  skipButton: {fileID: 8607351409854273609}
   confirmButtonMaterial: {fileID: 2100000, guid: 16d7b39d113123849935a217f698b772,
     type: 2}
   XScale:
@@ -2183,14 +2182,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5254902, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2f6d6a2445e2b964daa215131d1e204c, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2527,7 +2526,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5413788704811647466
 RectTransform:
   m_ObjectHideFlags: 0
