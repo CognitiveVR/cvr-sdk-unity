@@ -440,8 +440,7 @@ namespace Cognitive3D
             positiveButton.SetSelect(true);
             negativeButton.SetSelect(false);
             lastBoolAnswer = true;
-            confirmButton.SetSelect(true);
-            confirmButton.enabled = true;
+            confirmButton.SetConfirmEnabled();
         }
 
         // This will be called from the editor
@@ -452,8 +451,7 @@ namespace Cognitive3D
             negativeButton.SetSelect(true);
             positiveButton.SetSelect(false);
             lastBoolAnswer = false;
-            confirmButton.SetSelect(true);
-            confirmButton.enabled = true;
+            confirmButton.SetConfirmEnabled();
         }
 
         public void ConfirmBoolAnswer()
@@ -465,8 +463,7 @@ namespace Cognitive3D
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            confirmButton.SetSelect(true);
-            confirmButton.enabled = true;
+            confirmButton.SetConfirmEnabled();
             lastIntAnswer = value;
         }
 
@@ -489,8 +486,7 @@ namespace Cognitive3D
         public void AnswerMicrophone(string base64wav)
         {
             if (_isclosing) { return; }
-            confirmButton.SetSelect(true);
-            confirmButton.enabled = true;
+            confirmButton.SetConfirmEnabled();
             lastRecordedVoice = base64wav;
         }
 

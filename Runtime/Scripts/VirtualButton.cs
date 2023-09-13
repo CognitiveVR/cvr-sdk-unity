@@ -39,6 +39,8 @@ namespace Cognitive3D
         protected float triggerValue;
         protected bool isUsingRightHand;
 
+        private Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
+
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
         //save the fill starting color
@@ -165,6 +167,12 @@ namespace Cognitive3D
         {
             isSelected = select;
             buttonImage.color = select ? selectedColor : defaultColor;
+        }
+
+        public void SetConfirmEnabled()
+        {
+            buttonImage.color = confirmColor;
+            enabled = true;
         }
     }
 }
