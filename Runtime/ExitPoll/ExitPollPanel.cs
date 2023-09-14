@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using Cognitive3D;
 using Cognitive3D.Json;
-using UnityEngine.EventSystems;
-using System.Buffers.Text;
 
 //component for displaying the gui panel and returning the response to the exitpoll question set
 namespace Cognitive3D
