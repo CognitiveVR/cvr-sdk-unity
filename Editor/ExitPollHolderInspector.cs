@@ -129,20 +129,6 @@ namespace Cognitive3D
             EditorGUI.indentLevel++;
             p.ExitpollSpawnType = (ExitPoll.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
             
-            // Setting parent based on pointer type
-            if (p.PointerType == ExitPoll.PointerType.HMDPointer)
-            {
-                p.PointerParent = ExitPoll.PointerSource.HMD;
-            }
-            if (p.PointerType == ExitPoll.PointerType.LeftControllerPointer)
-            {
-                p.PointerParent = ExitPoll.PointerSource.LeftHand;
-            }
-            if (p.PointerType == ExitPoll.PointerType.RightControllerPointer)
-            {
-                p.PointerParent = ExitPoll.PointerSource.RightHand;
-            }
-
             if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 GUILayout.BeginHorizontal();
@@ -226,27 +212,21 @@ namespace Cognitive3D
         private string GetPointerDescription(ExitPollParameters parameters)
         {
             string thingToSpawn = "";
-            if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer || parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            string howToAttach = "";
+            if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
             {
                 thingToSpawn = "Spawn ExitPollControllerPointer";
+                howToAttach = " and attach to Left Controller";
+            }
+            else if (parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            {
+                thingToSpawn = "Spawn ExitPollControllerPointer";
+                howToAttach = " and attach to Right Controller";
             }
             else if(parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 thingToSpawn = "Spawn ExitPollHMDPointer";
-            }
-
-            string howToAttach = "";
-            if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
-            {
                 howToAttach = " and attach to HMD";
-            }
-            if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
-            {
-                howToAttach = " and attach to Left Controller";
-            }
-            if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
-            {
-                howToAttach = " and attach to Right Controller";
             }
 
             string result = "";
