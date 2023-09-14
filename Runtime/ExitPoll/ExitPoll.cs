@@ -251,7 +251,7 @@ namespace Cognitive3D
             }
         }
 
-        private void SetUpHMDAsPointer()
+        public void SetUpHMDAsPointer()
         {
             GameObject prefab = Resources.Load<GameObject>("HMDPointer");
             if (prefab != null)

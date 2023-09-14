@@ -13,6 +13,8 @@ namespace Cognitive3D
     {
         public ExitPollParameters Parameters = new ExitPollParameters();
         public bool ActivateOnEnable;
+        ExitPollParameters poll;
+        ExitPollSet exitPollSet;
 
         private void OnEnable()
         {
@@ -35,13 +37,13 @@ namespace Cognitive3D
             Cognitive3D_Manager.OnSessionBegin -= Core_DelayInitEvent;
             OnEnable();
         }
-        
+
         /// <summary>
         /// Display an ExitPoll using the QuestionSetHook and parameters configured on the component
         /// </summary>
         public void Activate()
         {
-            var poll = ExitPoll.NewExitPoll(Parameters.Hook, Parameters);
+            poll = ExitPoll.NewExitPoll(Parameters.Hook, Parameters);
 
             if (poll.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
@@ -53,7 +55,20 @@ namespace Cognitive3D
                 poll.LockYPosition = false;
             }
 
-            poll.Begin();
+            exitPollSet = poll.Begin();
+        }
+
+        private void Update()
+        {
+            Transform t = null;
+            if (!(poll.PointerType == ExitPoll.PointerType.RightControllerPointer && GameplayReferences.GetControllerTransform(true, out t)))
+            {
+                exitPollSet.SetUpHMDAsPointer();
+            }
+            if (!(poll.PointerType == ExitPoll.PointerType.LeftControllerPointer && GameplayReferences.GetControllerTransform(false, out t)))
+            {
+                exitPollSet.SetUpHMDAsPointer();
+            }
         }
     }
 }
