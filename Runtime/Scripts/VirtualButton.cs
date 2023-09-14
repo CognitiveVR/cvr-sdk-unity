@@ -21,8 +21,8 @@ namespace Cognitive3D
         public Image fillImage;
         public Image buttonImage;
         public float FillDuration = 1;
-        public readonly Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        public readonly Color selectedColor = new Color(0, 1, 0.05f, 1);
+        public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public Color selectedColor = new Color(0, 1, 0.05f, 1);
         public bool enabled;
         //limits the button to certain types of pointers
         private ActivationType ActivationType;
@@ -39,7 +39,7 @@ namespace Cognitive3D
         protected float triggerValue;
         protected bool isUsingRightHand;
 
-        private Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
+        private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
 
         public MonoBehaviour MonoBehaviour { get { return this; } }
 

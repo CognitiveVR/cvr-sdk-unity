@@ -294,7 +294,7 @@ namespace Cognitive3D
 
         #region Updates
 
-        IEnumerator CloseAfterWaitForSpecifiedTime(int seconds, string key, int value)
+        IEnumerator CloseAfterWaitForSpecifiedTime(int seconds, int value)
         {
             PanelRoot.gameObject.SetActive(false);
             yield return new WaitForSeconds(seconds);
@@ -302,7 +302,7 @@ namespace Cognitive3D
             Close();
         }        
         
-        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string key, string base64)
+        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string base64)
         {
             PanelRoot.gameObject.SetActive(false);
             yield return new WaitForSeconds(seconds);
@@ -427,7 +427,7 @@ namespace Cognitive3D
             int responseValue = 0;
             if (positive)
                 responseValue = 1;
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, "Answer" + PanelId, responseValue));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, responseValue));
         }
 
         // This will be called from the editor
@@ -467,7 +467,7 @@ namespace Cognitive3D
 
         public void ConfirmIntAnswer()
         {
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, "Answer" + PanelId, lastIntAnswer));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, lastIntAnswer));
         }
         
         public void SelectOption(VirtualButton button)
@@ -490,21 +490,21 @@ namespace Cognitive3D
 
         public void ConfirmMicrophoneAnswer()
         {
-            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, "Answer" + PanelId, lastRecordedVoice));
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, lastRecordedVoice));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void CloseButton()
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, "Answer" + PanelId, short.MinValue));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void Timeout()
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, "Answer" + PanelId, short.MinValue));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
         #endregion
 
@@ -512,7 +512,7 @@ namespace Cognitive3D
         public void CloseError()
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, "", short.MinValue));
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
 
         //close the window visually. informing the question set has already been completed
