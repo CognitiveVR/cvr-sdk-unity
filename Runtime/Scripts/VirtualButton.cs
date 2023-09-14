@@ -21,8 +21,8 @@ namespace Cognitive3D
         public Image fillImage;
         public Image buttonImage;
         public float FillDuration = 1;
-        public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        public Color selectedColor = new Color(0, 1, 0.05f, 1);
+        public readonly Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public readonly Color selectedColor = new Color(0, 1, 0.05f, 1);
         public bool enabled;
         //limits the button to certain types of pointers
         private ActivationType ActivationType;
@@ -30,7 +30,7 @@ namespace Cognitive3D
         public UnityEngine.Events.UnityEvent OnConfirm;
 
         [HideInInspector]
-        public bool isSelected = false;
+        public bool isSelected;
 
         protected float FillAmount;
         protected bool focusThisFrame = false;
