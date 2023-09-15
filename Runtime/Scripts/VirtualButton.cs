@@ -25,8 +25,12 @@ namespace Cognitive3D
         public Color selectedColor = new Color(0, 1, 0.05f, 1);
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
+        public bool dynamicallyResize;
 
-        [HideInInspector]
+        public BoxCollider boxCollider;
+        public RectTransform rectTransform;
+
+    [HideInInspector]
         public bool isSelected;
 
         protected float FillAmount;
@@ -44,6 +48,8 @@ namespace Cognitive3D
         //save the fill starting color
         protected virtual void Start()
         {
+            if (dynamicallyResize) { }
+
             currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
             activationType = GetCurrentActivationType(currentExitPollHolder);
             if (fillImage != null)
@@ -178,6 +184,12 @@ namespace Cognitive3D
             {
                 return ActivationType.TriggerButton;
             }
+        }
+
+        private void DynamicallyResize()
+        {
+            var rect = rectTransform.rect;
+            boxCollider.size = new Vector3(rect.width, rect.height, 0.1f);
         }
     }
 }

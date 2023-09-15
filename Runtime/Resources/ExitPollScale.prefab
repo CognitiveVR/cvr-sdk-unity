@@ -494,6 +494,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65382676934240712}
+  rectTransform: {fileID: 224000011038478110}
   isSelected: 0
 --- !u!65 &65382676934240712
 BoxCollider:
@@ -1384,6 +1387,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65398270624636696}
+  rectTransform: {fileID: 224000010265046612}
   isSelected: 0
 --- !u!65 &65398270624636696
 BoxCollider:
@@ -1657,6 +1663,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65826568392159164}
+  rectTransform: {fileID: 224000013431976680}
   isSelected: 0
 --- !u!65 &65826568392159164
 BoxCollider:
@@ -2376,6 +2385,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65849689894047348}
+  rectTransform: {fileID: 224000011111227450}
   isSelected: 0
 --- !u!65 &65849689894047348
 BoxCollider:
@@ -2808,6 +2820,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65111870606590022}
+  rectTransform: {fileID: 224000013976092406}
   isSelected: 0
 --- !u!65 &65111870606590022
 BoxCollider:
@@ -2927,6 +2942,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65903823759928784}
+  rectTransform: {fileID: 224000012660314376}
   isSelected: 0
 --- !u!65 &65903823759928784
 BoxCollider:
@@ -3267,6 +3285,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65291448246191188}
+  rectTransform: {fileID: 224000011100148628}
   isSelected: 0
 --- !u!65 &65291448246191188
 BoxCollider:
@@ -3670,6 +3691,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 0
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &6552692340279045518
 BoxCollider:
@@ -4070,6 +4094,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65970980944856552}
+  rectTransform: {fileID: 224000013721680444}
   isSelected: 0
 --- !u!65 &65970980944856552
 BoxCollider:
@@ -4266,6 +4293,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65945384424822856}
+  rectTransform: {fileID: 224000013889921140}
   isSelected: 0
 --- !u!65 &65945384424822856
 BoxCollider:
@@ -4541,6 +4571,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65008323479996484}
+  rectTransform: {fileID: 224000011461179244}
   isSelected: 0
 --- !u!65 &65008323479996484
 BoxCollider:
@@ -4893,6 +4926,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 1
+  boxCollider: {fileID: 65045910813697602}
+  rectTransform: {fileID: 224000011873913366}
   isSelected: 0
 --- !u!65 &65045910813697602
 BoxCollider:
@@ -5633,6 +5669,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  dynamicallyResize: 0
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &984576516305237208
 BoxCollider:
@@ -5875,6 +5914,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 0
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &6216670223522373144
 BoxCollider:
