@@ -24,8 +24,6 @@ namespace Cognitive3D
         public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
         public Color selectedColor = new Color(0, 1, 0.05f, 1);
         public bool enabled;
-        //limits the button to certain types of pointers
-        private ActivationType ActivationType;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
@@ -40,27 +38,20 @@ namespace Cognitive3D
         protected bool isUsingRightHand;
 
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
+        private ExitPollHolder currentExitPollHolder;
 
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
         //save the fill starting color
         protected virtual void Start()
         {
+            currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
             if (fillImage != null)
             {
                 fillStartingColor = fillImage.color;
             }
-
-            if (FindObjectOfType<ExitPollHolder>().Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
-            {
-                ActivationType = ActivationType.PointerFallbackGaze;
-            }
-            else
-            {
-                ActivationType = ActivationType.TriggerButton;
-            }
         }
-        
+
         //this is called from update in the ControllerPointer script
         public virtual void SetPointerFocus(bool isRightHand)
         {
@@ -69,7 +60,7 @@ namespace Cognitive3D
             {
                 return;
             }
-            if (ActivationType == ActivationType.TriggerButton)
+            if (GetCurrentActivationType(currentExitPollHolder) == ActivationType.PointerFallbackGaze)
             {
                 if (isRightHand)
                 {
@@ -91,7 +82,8 @@ namespace Cognitive3D
         //this is called from update in the HMDPointer script
         public virtual void SetGazeFocus()
         {
-            if (ActivationType != ActivationType.PointerFallbackGaze || (ActivationType == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
+            if (GetCurrentActivationType(currentExitPollHolder) != ActivationType.PointerFallbackGaze 
+                || (GetCurrentActivationType(currentExitPollHolder) == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
             {
                 if (canActivate == false)
                 {
@@ -113,12 +105,12 @@ namespace Cognitive3D
             if (enabled && !isSelected)
             {
                 if (!gameObject.activeInHierarchy) { return; }
-                if (canActivate && focusThisFrame && ActivationType == ActivationType.TriggerButton)
+                if (canActivate && focusThisFrame && GetCurrentActivationType(currentExitPollHolder) == ActivationType.TriggerButton)
                 {
                     StartCoroutine(FilledEvent());
                     OnConfirm.Invoke();
                 }
-                if (!canActivate && FillAmount <= 0f && ActivationType != ActivationType.TriggerButton)
+                if (!canActivate && FillAmount <= 0f && GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton)
                 {
                     canActivate = true;
                 }
@@ -127,16 +119,16 @@ namespace Cognitive3D
                     FillAmount -= Time.deltaTime;
                     FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
                 }
-                else if (focusThisFrame && canActivate && (ActivationType != ActivationType.TriggerButton))
+                else if (focusThisFrame && canActivate && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
                 {
                     FillAmount += Time.deltaTime;
                 }
 
-                if (fillImage != null && (ActivationType != ActivationType.TriggerButton))
+                if (fillImage != null && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
                     fillImage.fillAmount = FillAmount / FillDuration;
                 focusThisFrame = false;
 
-                if (FillAmount > FillDuration && canActivate && (ActivationType != ActivationType.TriggerButton))
+                if (FillAmount > FillDuration && canActivate && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
                 {
                     canActivate = false;
                     StartCoroutine(FilledEvent());
@@ -173,6 +165,19 @@ namespace Cognitive3D
         {
             buttonImage.color = confirmColor;
             enabled = true;
+        }
+
+        private ActivationType GetCurrentActivationType(ExitPollHolder exitPollHolder)
+        {
+
+            if (exitPollHolder.Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            {
+                return ActivationType.PointerFallbackGaze;
+            }
+            else
+            {
+                return ActivationType.TriggerButton;
+            }
         }
     }
 }

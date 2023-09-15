@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D;
+using UnityEngine.XR;
 
 //the idea is that you could set up this component with your settings, then just call 'Activate'
 //easier to visualize all the valid options, easier to override stuff
@@ -15,9 +16,13 @@ namespace Cognitive3D
         public bool ActivateOnEnable;
         ExitPollParameters poll;
         ExitPollSet exitPollSet;
+        bool fellBackToHMD;
 
         private void OnEnable()
         {
+            InputTracking.trackingLost += OnTrackingLost;
+            InputTracking.trackingAcquired += OnTrackingRegained;
+            Cognitive3D_Manager.OnPostSessionEnd += Cleanup;
             if (ActivateOnEnable)
             {
                 //will wait for cognitive vr manager to have call initialize before activating
@@ -58,17 +63,33 @@ namespace Cognitive3D
             exitPollSet = poll.Begin();
         }
 
-        private void Update()
+        public void OnTrackingLost(XRNodeState xrNodeState)
         {
-            Transform t = null;
-            if (!(poll.PointerType == ExitPoll.PointerType.RightControllerPointer && GameplayReferences.GetControllerTransform(true, out t)))
+            if (!xrNodeState.tracked)
             {
-                exitPollSet.SetUpHMDAsPointer();
-            }
-            if (!(poll.PointerType == ExitPoll.PointerType.LeftControllerPointer && GameplayReferences.GetControllerTransform(false, out t)))
-            {
-                exitPollSet.SetUpHMDAsPointer();
+                if (xrNodeState.nodeType == XRNode.RightHand && poll.PointerType == ExitPoll.PointerType.RightControllerPointer
+                    || xrNodeState.nodeType == XRNode.LeftHand && poll.PointerType == ExitPoll.PointerType.LeftControllerPointer)
+                {
+                    exitPollSet.SetUpHMDAsPointer();
+
+                }
             }
         }
+
+        public void OnTrackingRegained(XRNodeState xrNodeState)
+        {
+            if (xrNodeState.tracked && fellBackToHMD)
+            {
+                Destroy(FindObjectOfType<HMDPointer>());
+            }
+        }
+        
+        private void Cleanup()
+        {
+            InputTracking.trackingLost -= OnTrackingLost;
+            InputTracking.trackingAcquired -= OnTrackingRegained;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cleanup;
+        }
+
     }
 }
