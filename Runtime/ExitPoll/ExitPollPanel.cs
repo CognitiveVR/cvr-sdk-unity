@@ -513,8 +513,12 @@ namespace Cognitive3D
         public void CloseError(int timeToWait = 1)
         {
             if (_isclosing) { return; }
-            errorMessage.enabled = true;
             StartCoroutine(CloseAfterWaitForSpecifiedTime(timeToWait, short.MinValue));
+        }
+
+        public void DisplayError(bool display)
+        {
+            errorMessage.gameObject.SetActive(display);
         }
 
         //close the window visually. informing the question set has already been completed

@@ -16,10 +16,12 @@ namespace Cognitive3D
         public bool ActivateOnEnable;
         ExitPollParameters poll;
         ExitPollSet exitPollSet;
+        private bool trackingWasLost;
 
         private void OnEnable()
         {
             InputTracking.trackingLost += OnTrackingLost;
+            InputTracking.trackingAcquired += OnTrackingRegained;
             Cognitive3D_Manager.OnPostSessionEnd += Cleanup;
             if (ActivateOnEnable)
             {
@@ -67,15 +69,25 @@ namespace Cognitive3D
                 if (xrNodeState.nodeType == XRNode.RightHand && poll.PointerType == ExitPoll.PointerType.RightControllerPointer
                     || xrNodeState.nodeType == XRNode.LeftHand && poll.PointerType == ExitPoll.PointerType.LeftControllerPointer)
                 {
-                    exitPollSet.EndQuestionSet(5); // Wait for 5 seconds. Default is 1 seconnd.
-                    new CustomEvent("Exit Poll ended due to controller exception").Send();
+                    exitPollSet.DisplayControllerError(true);
+                    trackingWasLost = true;
                 }
+            }
+        }
+
+        public void OnTrackingRegained(XRNodeState xrNodeState)
+        {
+            if (xrNodeState.tracked && trackingWasLost)
+            {
+                exitPollSet.DisplayControllerError(false);
+                trackingWasLost = false;
             }
         }
         
         private void Cleanup()
         {
             InputTracking.trackingLost -= OnTrackingLost;
+            InputTracking.trackingAcquired -= OnTrackingRegained;
             Cognitive3D_Manager.OnPostSessionEnd -= Cleanup;
         }
 

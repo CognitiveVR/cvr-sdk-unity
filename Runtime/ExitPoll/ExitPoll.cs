@@ -284,6 +284,11 @@ namespace Cognitive3D
             OnPanelError();
         }
 
+        public void DisplayControllerError(bool display)
+        {
+            CurrentExitPollPanel.DisplayError(display);
+        }
+
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
 
