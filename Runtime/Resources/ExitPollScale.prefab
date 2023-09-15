@@ -495,6 +495,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65382676934240712}
   rectTransform: {fileID: 224000011038478110}
   isSelected: 0
@@ -1388,6 +1389,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65398270624636696}
   rectTransform: {fileID: 224000010265046612}
   isSelected: 0
@@ -1664,6 +1666,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65826568392159164}
   rectTransform: {fileID: 224000013431976680}
   isSelected: 0
@@ -2386,6 +2389,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65849689894047348}
   rectTransform: {fileID: 224000011111227450}
   isSelected: 0
@@ -2821,6 +2825,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65111870606590022}
   rectTransform: {fileID: 224000013976092406}
   isSelected: 0
@@ -2943,6 +2948,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65903823759928784}
   rectTransform: {fileID: 224000012660314376}
   isSelected: 0
@@ -3286,6 +3292,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65291448246191188}
   rectTransform: {fileID: 224000011100148628}
   isSelected: 0
@@ -3692,6 +3699,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 0
+  isEnabled: 1
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
   isSelected: 0
@@ -4095,6 +4103,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65970980944856552}
   rectTransform: {fileID: 224000013721680444}
   isSelected: 0
@@ -4294,6 +4303,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65945384424822856}
   rectTransform: {fileID: 224000013889921140}
   isSelected: 0
@@ -4572,6 +4582,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65008323479996484}
   rectTransform: {fileID: 224000011461179244}
   isSelected: 0
@@ -4927,6 +4938,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 1
+  isEnabled: 1
   boxCollider: {fileID: 65045910813697602}
   rectTransform: {fileID: 224000011873913366}
   isSelected: 0
@@ -5670,6 +5682,7 @@ MonoBehaviour:
           m_BoolArgument: 1
         m_CallState: 2
   dynamicallyResize: 0
+  isEnabled: 1
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
   isSelected: 0
@@ -5915,6 +5928,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   dynamicallyResize: 0
+  isEnabled: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
   isSelected: 0

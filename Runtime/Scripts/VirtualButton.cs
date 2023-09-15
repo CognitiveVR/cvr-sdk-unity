@@ -26,6 +26,7 @@ namespace Cognitive3D
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
         public bool dynamicallyResize;
+        public bool isEnabled = true;
 
         public BoxCollider boxCollider;
         public RectTransform rectTransform;
@@ -48,13 +49,23 @@ namespace Cognitive3D
         //save the fill starting color
         protected virtual void Start()
         {
-            if (dynamicallyResize) { }
-
             currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
             activationType = GetCurrentActivationType(currentExitPollHolder);
             if (fillImage != null)
             {
                 fillStartingColor = fillImage.color;
+            }
+
+            // Rects Driven by layout don't have a value in Start()
+            StartCoroutine(WaitOneFrame());
+        }
+
+        IEnumerator WaitOneFrame()
+        {
+            yield return new WaitForEndOfFrame();
+            if (dynamicallyResize)
+            {
+                DynamicallyResize();
             }
         }
 
@@ -108,7 +119,7 @@ namespace Cognitive3D
         //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
         protected virtual void LateUpdate()
         {
-            if (enabled && !isSelected)
+            if (isEnabled && !isSelected)
             {
                 if (!gameObject.activeInHierarchy) { return; }
                 if (canActivate && focusThisFrame && activationType == ActivationType.TriggerButton)
@@ -170,7 +181,7 @@ namespace Cognitive3D
         public void SetConfirmEnabled()
         {
             buttonImage.color = confirmColor;
-            enabled = true;
+            isEnabled = true;
         }
 
         private ActivationType GetCurrentActivationType(ExitPollHolder exitPollHolder)
@@ -189,7 +200,7 @@ namespace Cognitive3D
         private void DynamicallyResize()
         {
             var rect = rectTransform.rect;
-            boxCollider.size = new Vector3(rect.width, rect.height, 0.1f);
+            boxCollider.size = rect.size;
         }
     }
 }

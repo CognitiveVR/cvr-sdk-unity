@@ -737,6 +737,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 0
+  isEnabled: 1
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &6797785037757657601
 BoxCollider:
@@ -969,6 +973,10 @@ MonoBehaviour:
   OnConfirm:
     m_PersistentCalls:
       m_Calls: []
+  dynamicallyResize: 0
+  isEnabled: 1
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
   RecordTime: 10
   MicrophoneImage: {fileID: 11451838}
@@ -1613,6 +1621,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+  dynamicallyResize: 0
+  isEnabled: 1
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &1237206402000225261
 BoxCollider:
@@ -1851,6 +1863,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  dynamicallyResize: 0
+  isEnabled: 0
+  boxCollider: {fileID: 0}
+  rectTransform: {fileID: 0}
   isSelected: 0
 --- !u!65 &2334366621823120730
 BoxCollider:
