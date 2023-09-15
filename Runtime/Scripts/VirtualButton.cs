@@ -23,7 +23,6 @@ namespace Cognitive3D
         public float FillDuration = 1;
         public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
         public Color selectedColor = new Color(0, 1, 0.05f, 1);
-        public bool enabled;
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
@@ -36,7 +35,7 @@ namespace Cognitive3D
         protected Color fillStartingColor;
         protected float triggerValue;
         protected bool isUsingRightHand;
-
+        private ActivationType activationType;
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
         private ExitPollHolder currentExitPollHolder;
 
@@ -46,6 +45,7 @@ namespace Cognitive3D
         protected virtual void Start()
         {
             currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
+            activationType = GetCurrentActivationType(currentExitPollHolder);
             if (fillImage != null)
             {
                 fillStartingColor = fillImage.color;
@@ -60,7 +60,7 @@ namespace Cognitive3D
             {
                 return;
             }
-            if (GetCurrentActivationType(currentExitPollHolder) == ActivationType.PointerFallbackGaze)
+            if (activationType == ActivationType.TriggerButton)
             {
                 if (isRightHand)
                 {
@@ -82,8 +82,8 @@ namespace Cognitive3D
         //this is called from update in the HMDPointer script
         public virtual void SetGazeFocus()
         {
-            if (GetCurrentActivationType(currentExitPollHolder) != ActivationType.PointerFallbackGaze 
-                || (GetCurrentActivationType(currentExitPollHolder) == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
+            if (activationType != ActivationType.PointerFallbackGaze 
+                || (activationType == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
             {
                 if (canActivate == false)
                 {
@@ -105,12 +105,12 @@ namespace Cognitive3D
             if (enabled && !isSelected)
             {
                 if (!gameObject.activeInHierarchy) { return; }
-                if (canActivate && focusThisFrame && GetCurrentActivationType(currentExitPollHolder) == ActivationType.TriggerButton)
+                if (canActivate && focusThisFrame && activationType == ActivationType.TriggerButton)
                 {
                     StartCoroutine(FilledEvent());
                     OnConfirm.Invoke();
                 }
-                if (!canActivate && FillAmount <= 0f && GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton)
+                if (!canActivate && FillAmount <= 0f && activationType != ActivationType.TriggerButton)
                 {
                     canActivate = true;
                 }
@@ -119,16 +119,16 @@ namespace Cognitive3D
                     FillAmount -= Time.deltaTime;
                     FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
                 }
-                else if (focusThisFrame && canActivate && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
+                else if (focusThisFrame && canActivate && (activationType != ActivationType.TriggerButton))
                 {
                     FillAmount += Time.deltaTime;
                 }
 
-                if (fillImage != null && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
+                if (fillImage != null && (activationType != ActivationType.TriggerButton))
                     fillImage.fillAmount = FillAmount / FillDuration;
                 focusThisFrame = false;
 
-                if (FillAmount > FillDuration && canActivate && (GetCurrentActivationType(currentExitPollHolder) != ActivationType.TriggerButton))
+                if (FillAmount > FillDuration && canActivate && (activationType != ActivationType.TriggerButton))
                 {
                     canActivate = false;
                     StartCoroutine(FilledEvent());

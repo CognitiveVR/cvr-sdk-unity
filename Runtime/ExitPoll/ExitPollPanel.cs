@@ -15,6 +15,7 @@ namespace Cognitive3D
         public Text Title;
         public Text Question;
         public Text QuestionNumber;
+        public Text errorMessage;
 
         //used when scaling and rotating
         public Transform PanelRoot;
@@ -509,10 +510,11 @@ namespace Cognitive3D
         #endregion
 
         //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
-        public void CloseError()
+        public void CloseError(int timeToWait = 1)
         {
             if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
+            errorMessage.enabled = true;
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(timeToWait, short.MinValue));
         }
 
         //close the window visually. informing the question set has already been completed

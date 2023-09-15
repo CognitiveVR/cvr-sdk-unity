@@ -230,6 +230,7 @@ namespace Cognitive3D
                     }
                     else
                     {
+                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
                     }
                 }
@@ -245,6 +246,7 @@ namespace Cognitive3D
                     }
                     else
                     {
+                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
                     }
                 }
@@ -272,12 +274,12 @@ namespace Cognitive3D
         /// when you manually need to close the Exit Poll question set manually OR
         /// when requesting a new exit poll question set when one is already active
         /// </summary>
-        public void EndQuestionSet()
+        public void EndQuestionSet(int timeToWait)
         {
             panelProperties.Clear();
             if (CurrentExitPollPanel != null)
             {
-                CurrentExitPollPanel.CloseError();
+                CurrentExitPollPanel.CloseError(timeToWait);
             }
             OnPanelError();
         }
