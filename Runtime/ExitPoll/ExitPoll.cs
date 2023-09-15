@@ -232,6 +232,7 @@ namespace Cognitive3D
                     {
                         myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
+                        DisplayControllerError(true);
                     }
                 }
                 else
@@ -248,6 +249,7 @@ namespace Cognitive3D
                     {
                         myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
+                        DisplayControllerError(true);
                     }
                 }
             }
