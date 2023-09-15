@@ -14,7 +14,6 @@ namespace Cognitive3D
         public ExitPoll.SpawnType ExitpollSpawnType = ExitPoll.SpawnType.PlayerRelative;
 
         //parenting pointer
-        public ExitPoll.PointerSource PointerParent;
         public Transform PointerParentOverride;
 
         //spawning or setting pointer
@@ -111,18 +110,6 @@ namespace Cognitive3D
             return this;
         }
         
-        /// <summary>
-        /// set a scene gameobject to calculating pointing at exitpoll buttons
-        /// </summary>
-        /// <param name="visible"></param>
-        /// <returns></returns>
-        public ExitPollParameters SetControllerPointer(GameObject controller)
-        {
-            PointerParent = ExitPoll.PointerSource.RightHand;
-            PointerOverride = controller;
-            return this;
-        }
-
         /// <summary>
         /// Use to HMD Y position instead of spawning the poll directly ahead of the player
         /// </summary>
