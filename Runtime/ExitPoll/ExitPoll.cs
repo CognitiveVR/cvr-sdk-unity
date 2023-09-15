@@ -232,7 +232,7 @@ namespace Cognitive3D
                     {
                         myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
-                        DisplayControllerError(true);
+                        Debug.LogError("Controller not found, falling back to HMD Pointer");
                     }
                 }
                 else
@@ -249,7 +249,7 @@ namespace Cognitive3D
                     {
                         myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
                         SetUpHMDAsPointer();
-                        DisplayControllerError(true);
+                        Debug.LogError("Controller not found, falling back to HMD Pointer");
                     }
                 }
             }
