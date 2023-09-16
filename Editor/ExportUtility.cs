@@ -2,9 +2,13 @@
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System;
+using System.Diagnostics;
 using UnityEngine.Networking;
+using System.Linq;
+#if C3D_TMPRO
+using TMPro;
+#endif
 
 //an interface for exporting/decimating and uploading scenes and dynamic objects
 
@@ -71,6 +75,12 @@ namespace Cognitive3D
 
     public static class ExportUtility
     {
+        private enum ExportQuadType
+        {
+            Canvas = 0,
+            TMPro = 1
+        };
+
         #region Export Scene
 
         /// <summary>
@@ -131,6 +141,9 @@ namespace Cognitive3D
                 if (v.GetComponent<CustomRenderExporter>() != null) { continue; } //skip mesh that uses custom render
                 if (v.activeInHierarchy) { t.Add(v.transform); }
                 //check for mesh renderers here, before nodes are constructed for invalid objects?
+#if C3D_TMPRO
+                if (v.GetComponent<MeshRenderer>() && v.GetComponent<TextMeshPro>()) { continue; } // skip MeshRenderer that has TMPro; otherwise you get an blank mesh
+#endif
             }
             try
             {
@@ -443,8 +456,10 @@ namespace Cognitive3D
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
-
             CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
+#if C3D_TMPRO
+            TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
+#endif
             deleteCustomRenders = new List<GameObject>();
 
             if (rootDynamic != null)
@@ -628,7 +643,7 @@ namespace Cognitive3D
                 bm.tempGo = new GameObject(v.gameObject.name);
                 bm.tempGo.transform.parent = v.transform;
                 bm.tempGo.transform.localPosition = Vector3.zero;
-                
+
                 //generate mesh from heightmap
                 bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
                 bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
@@ -667,6 +682,15 @@ namespace Cognitive3D
                 }
             }
 
+#if C3D_TMPRO
+            foreach (var v in TextMeshPros)
+            {
+                if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObects()`
+                {
+                    BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.TMPro, false);
+                }
+            }
+#endif
             currentTask = 0;
             foreach (var v in Canvases)
             {
@@ -690,30 +714,78 @@ namespace Cognitive3D
                     continue;
                 }
 
-                BakeableMesh bm = new BakeableMesh();
-                bm.tempGo = new GameObject(v.gameObject.name);
-                bm.tempGo.transform.parent = v.transform;
-                bm.tempGo.transform.localScale = Vector3.one;
-                bm.tempGo.transform.localRotation = Quaternion.identity;
-                bm.tempGo.transform.localPosition = Vector3.zero;
-                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
-
-                //remove transform scale
-                var width = v.GetComponent<RectTransform>().sizeDelta.x;// * v.transform.localScale.x;
-                var height = v.GetComponent<RectTransform>().sizeDelta.y;// * v.transform.localScale.y;
-
-                //bake texture from render
-                var screenshot = CanvasTextureBake(v.transform);
-                screenshot.name = v.gameObject.name.Replace(' ', '_');
-                bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
-
-                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
-                //write simple quad
-                var mesh = ExportQuad(v.gameObject.name + "_canvas", width, height);//, v.transform, UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, screenshot);
-                bm.meshFilter.sharedMesh = mesh;
-                meshes.Add(bm);
+                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.Canvas, false);
             }
+        }
+
+        private static GameObject BakeQuadGameObject(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
+        {
+            BakeableMesh bm = new BakeableMesh();
+            bm.tempGo = new GameObject(v.gameObject.name);
+            if (type != ExportQuadType.TMPro)
+            {
+                bm.tempGo.transform.parent = v.transform;
+            }            
+            bm.tempGo.transform.localScale = Vector3.one;
+            bm.tempGo.transform.localRotation = Quaternion.identity;
+
+            //remove transform scale
+            float width = 0;
+            float height = 0;
+            bm.tempGo.transform.position = v.transform.position;
+            if (type == ExportQuadType.Canvas)
+            {
+                width = v.GetComponent<RectTransform>().sizeDelta.x;
+                height = v.GetComponent<RectTransform>().sizeDelta.y;
+                if (Mathf.Approximately(width, height))
+                {
+                    //centered
+                }
+                else if (height > width) //tall
+                {
+                    //half of the difference between width and height
+                    bm.tempGo.transform.position += (bm.tempGo.transform.right) * (height - width) / 2;
+                }
+                else //wide
+                {
+                    //half of the difference between width and height
+                    bm.tempGo.transform.position += (bm.tempGo.transform.up) * (width - height) / 2;
+                }
+            }
+            else if (type == ExportQuadType.TMPro)
+            {
+                MeshRenderer mr = v.GetComponent<MeshRenderer>();
+                width = mr.bounds.size.x;
+                height = mr.bounds.size.y;
+                bm.tempGo.transform.position = v.GetComponent<MeshRenderer>().bounds.center;
+            }
+
+            bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+            bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
+            Texture2D screenshot;
+            //bake texture from render
+            screenshot = TextureBake(v.transform, type, width, height);
+            screenshot.name = v.gameObject.name.Replace(' ', '_');
+            bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
+            bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+            Mesh mesh;
+            //write simple quad
+            if (dyn)
+            {
+                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
+            } 
+            else
+            {
+                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+            }
+            bm.meshFilter.sharedMesh = mesh;
+            meshes.Add(bm);
+            if (dyn)
+            {
+                bm.tempGo.AddComponent<DynamicObject>();
+            }
+
+            return bm.tempGo;
         }
 
         private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases)
@@ -802,7 +874,7 @@ namespace Cognitive3D
             }
             mesh.vertices = vertices;
             mesh.uv = uv;
-            
+
             int[] triangles = new int[(h - 1) * (w - 1) * 6];
             int index = 0;
             for (int y = 0; y < h - 1; y++)
@@ -920,7 +992,7 @@ namespace Cognitive3D
                     //grid
                     c = white;
                     if (x % 10 == 0 || y % 10 == 0)
-                      c = grey;
+                        c = grey;
 
                     finalTexture.SetPixel(x, y, c);
                 }
@@ -953,7 +1025,7 @@ namespace Cognitive3D
                         SetTextureImporterFormat(originalTexture, true);
                     }
                 }
-                catch {}
+                catch { }
             }
 
             Texture2D outTex = new Texture2D((int)data.size.x, (int)data.size.z);
@@ -1002,7 +1074,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        outTex.SetPixel(x,y, Color.red);
+                        outTex.SetPixel(x, y, Color.red);
                     }
                 }
             }
@@ -1020,12 +1092,12 @@ namespace Cognitive3D
                         SetTextureImporterFormat(originalTexture, textureReadable[i]);
                     }
                 }
-                catch {}
+                catch { }
             }
 
             return outTex;
         }
-        
+
         /// <summary>
         /// returns true if texture read/writable
         /// </summary>
@@ -1067,7 +1139,7 @@ namespace Cognitive3D
         /// <param name="meshName"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public static Mesh ExportQuad(string meshName, float width, float height)
+        public static Mesh GenerateQuadMesh(string meshName, float width, float height)
         {
             Vector3 size = new Vector3(width, height, 0);
             Vector3 pivot = size / 2;
@@ -1133,36 +1205,41 @@ namespace Cognitive3D
         /// <summary>
         /// returns texture2d baked from canvas target
         /// </summary>
-        public static Texture2D CanvasTextureBake(Transform target, int resolution = 512)
+        private static Texture2D TextureBake(Transform target, ExportQuadType type, float width, float height, int resolution = 512)
         {
-            GameObject cameraGo = new GameObject("Temp_Camera");
+            GameObject cameraGo = new GameObject("Temp_Camera " + target.gameObject.name);
             Camera cam = cameraGo.AddComponent<Camera>();
 
             //snap camera to canvas position
             cameraGo.transform.rotation = target.rotation;
             cameraGo.transform.position = target.position - target.forward * 0.05f;
 
-            var width = target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x;
-            var height = target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y;
-            if (Mathf.Approximately(width, height))
+            if (type == ExportQuadType.Canvas) // use rect bounds for canvas
             {
-                //centered
+                if (Mathf.Approximately(width, height))
+                {
+                    //centered
+                }
+                else if (height > width) //tall
+                {
+                    //half of the difference between width and height
+                    cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
+                }
+                else //wide
+                {
+                    //half of the difference between width and height
+                    cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+                }
             }
-            else if (height > width) //tall
+            else if (type == ExportQuadType.TMPro)
             {
-                //half of the difference between width and height
-                cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
-            }
-            else //wide
-            {
-                //half of the difference between width and height
-                cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+                cameraGo.transform.position = target.gameObject.GetComponent<MeshRenderer>().bounds.center - target.transform.forward * 0.05f;
             }
 
             cam.nearClipPlane = 0.04f;
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
-            cam.orthographicSize = Mathf.Max(target.GetComponent<RectTransform>().sizeDelta.x * target.localScale.x, target.GetComponent<RectTransform>().sizeDelta.y * target.localScale.y) / 2;
+            cam.orthographicSize = Mathf.Max(width, height) / 2;
             cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
 
@@ -1177,7 +1254,7 @@ namespace Cognitive3D
 
             //set camera to render unassigned layer
             int layer = EditorCore.FindUnusedLayer();
-            if (layer == -1) { Debug.LogWarning("CanvasTextureBake couldn't find unused layer, texture generation might be incorrect"); }
+            if (layer == -1) { Debug.LogWarning("TextureBake couldn't find unused layer, texture generation might be incorrect"); }
 
             if (layer != -1)
             {
@@ -1283,25 +1360,46 @@ namespace Cognitive3D
         /// </summary>
         public static void ExportDynamicObjects(List<DynamicObject> dynamicObjects, bool displayPopup = false)
         {
+            List <BakeableMesh> temporaryDynamicMeshes = new List <BakeableMesh>();
             //export as a list. skip dynamics already exported in this collection
+            HashSet<string> exportedMeshNames = new HashSet<string>();           
+            ExportDynamicObjectList(exportedMeshNames, dynamicObjects, temporaryDynamicMeshes);
+            
+            if (displayPopup)
+            {
+                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
+            }
+            //return true;
 
-            HashSet<string> exportedMeshNames = new HashSet<string>();
+            foreach (BakeableMesh bm in temporaryDynamicMeshes)
+            {
+                GameObject.DestroyImmediate(bm.tempGo);
+            }
+        }
 
+        static void ExportDynamicObjectList(HashSet<string> exportedMeshNames, List<DynamicObject> dynamicObjects, List<BakeableMesh> temporaryDynamicMeshes)
+        {
             foreach (var dynamicObject in dynamicObjects)
             {
+                DynamicObject temporaryDynamic = dynamicObject;
                 if (exportedMeshNames.Contains(dynamicObject.MeshName)) { continue; }
 
                 //setup
                 //if (dynamicObject == null) { return false; }
                 if (dynamicObject == null) { continue; }
 
+#if C3D_TMPRO
+                if (dynamicObject.GetComponent<TextMeshPro>() != null)
+                {
+                    temporaryDynamic = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true).GetComponent<DynamicObject>();
+                    temporaryDynamic.MeshName = dynamicObject.MeshName;
+                }
+#endif
                 //skip exporting common meshes
                 if (!dynamicObject.UseCustomMesh) { continue; }
                 //skip empty mesh names
                 if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); continue; }
-
                 GameObject prefabInScene = null;
-                DynamicObject temporaryDynamic = dynamicObject;
                 if (!dynamicObject.gameObject.scene.IsValid())
                 {
                     prefabInScene = GameObject.Instantiate(dynamicObject.gameObject);
@@ -1324,7 +1422,7 @@ namespace Cognitive3D
                 foreach (var v in list)
                 {
                     v.target.transform.localScale = Vector3.one;
-                }                
+                }
 
                 List<BakeableMesh> temp = new List<BakeableMesh>();
                 customTextureExports = new List<string>();
@@ -1361,7 +1459,7 @@ namespace Cognitive3D
                     v.target.transform.localScale = v.localScale;
                 }
 
-                EditorCore.SaveDynamicThumbnailAutomatic(temporaryDynamic.gameObject);
+                EditorCore.SaveDynamicThumbnailAutomatic(dynamicObject.gameObject);
 
                 //queue resize texture
                 ResizeQueue.Enqueue(path + temporaryDynamic.MeshName + Path.DirectorySeparatorChar);
@@ -1374,11 +1472,6 @@ namespace Cognitive3D
                     GameObject.DestroyImmediate(prefabInScene);
                 }
             }
-            if (displayPopup)
-            {
-                EditorUtility.DisplayDialog("Dynamic Object Export", "Successfully exported 1 Dynamic Object mesh", "Ok");
-            }
-            //return true;
         }
 
         /// <summary>
@@ -1436,7 +1529,7 @@ namespace Cognitive3D
 
             return true;
         }
-        #endregion
+#endregion
 
         #region Upload Dynamic Objects
 

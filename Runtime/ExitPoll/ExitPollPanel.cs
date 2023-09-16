@@ -14,17 +14,25 @@ namespace Cognitive3D
         [Header("Components")]
         public Text Title;
         public Text Question;
-        public Image TimeoutBar;
+        public Text QuestionNumber;
+        public Text errorMessage;
+
         //used when scaling and rotating
         public Transform PanelRoot;
+        public VirtualButton confirmButton;
 
         [Header("Display")]
         public AnimationCurve XScale;
         public AnimationCurve YScale;
         float PopupTime = 0.2f;
 
+        [Header("Boolean Settings")]
+        public VirtualButton positiveButton;
+        public VirtualButton negativeButton;
+
         [Header("Multiple Choice Settings")]
         public GameObject[] AnswerButtons;
+
         public Transform ContentRoot;
 
         [Header("Scale Settings")]
@@ -82,7 +90,6 @@ namespace Cognitive3D
             if (questionset.myparameters.UseTimeout)
             {
                 _remainingTime = questionset.myparameters.Timeout;
-                UpdateTimeoutBar();
             }
 
             //display question from properties
@@ -99,6 +106,11 @@ namespace Cognitive3D
                 string question = "Question";
                 properties.TryGetValue("question", out question);
                 Question.text = question;
+            }
+
+            if (QuestionNumber != null)
+            {
+                QuestionNumber.text = $"Question {panelId + 1} of {properties.Count}";
             }
 
             if (properties["type"] == "MULTIPLE")
@@ -204,7 +216,6 @@ namespace Cognitive3D
                 else //ensure valid buttons are turned on
                 {
                     ContentRoot.GetChild(i).gameObject.SetActive(true);
-                    SetIntegerButtonColor(ColorableImages[i], (float)i / totalCount);
                 }
             }
 
@@ -280,10 +291,25 @@ namespace Cognitive3D
         {
             _allowTimeout = false;
             _remainingTime = QuestionSet.myparameters.Timeout;
-            UpdateTimeoutBar();
         }
 
         #region Updates
+
+        IEnumerator CloseAfterWaitForSpecifiedTime(int seconds, int value)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
+            Close();
+        }        
+        
+        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string base64)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
+            Close();
+        }
 
         void Update()
         {
@@ -301,7 +327,6 @@ namespace Cognitive3D
                     if (NextResponseTime < Time.time)
                     {
                         _remainingTime -= Time.deltaTime;
-                        UpdateTimeoutBar();
                     }
                 }
                 else
@@ -390,64 +415,110 @@ namespace Cognitive3D
                 transform.LookAt(transform.position*2 - GameplayReferences.HMD.position); //look in the direction of the panel (inverse of looking at hmd)
             }
         }
-
-        void UpdateTimeoutBar()
-        {
-            if (TimeoutBar)
-                TimeoutBar.fillAmount = _remainingTime / QuestionSet.myparameters.Timeout;
-        }
         #endregion
 
         #region Button Actions
+        private bool lastBoolAnswer;
+        private int lastIntAnswer;
+        private string lastRecordedVoice;
         //answer from boolean, thumbs up/down, happy/sad buttons
-        public void AnswerBool(bool positive)
+        private void AnswerBool(bool positive)
         {
             if (_isclosing) { return; }
             int responseValue = 0;
             if (positive)
                 responseValue = 1;
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, responseValue);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, responseValue));
+        }
+
+        // This will be called from the editor
+        // We have separate functions for positive and negative
+        //      because we can only pass in one argument, and we need to know the image to modify
+        public void AnswerBoolPositive(VirtualButton button)
+        {
+            positiveButton.SetSelect(true);
+            negativeButton.SetSelect(false);
+            lastBoolAnswer = true;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        // This will be called from the editor
+        // We have separate functions for positive and negative
+        //      because we can only pass in one argument, and we need to know the image to modify
+        public void AnswerBoolNegative(VirtualButton button)
+        {
+            negativeButton.SetSelect(true);
+            positiveButton.SetSelect(false);
+            lastBoolAnswer = false;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        public void ConfirmBoolAnswer()
+        {
+            AnswerBool(lastBoolAnswer);
         }
 
         //from scale, multiple choice buttons
         public void AnswerInt(int value)
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
-            Close();
+            confirmButton.SetConfirmEnabled();
+            lastIntAnswer = value;
         }
+
+        public void ConfirmIntAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, lastIntAnswer));
+        }
+        
+        public void SelectOption(VirtualButton button)
+        {
+            foreach (GameObject obj in AnswerButtons)
+            {
+                obj.GetComponentInChildren<VirtualButton>().SetSelect(false);
+            }
+            button.SetSelect(true);
+        }
+
 
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64wav);
-            Close();
+            confirmButton.SetConfirmEnabled();
+            lastRecordedVoice = base64wav;
+        }
+
+        public void ConfirmMicrophoneAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, lastRecordedVoice));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void CloseButton()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
 
         //closes the panel with an invalid number that won't be associated with an answer
         public void Timeout()
         {
             if (_isclosing) { return; }
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
         #endregion
 
         //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
-        public void CloseError()
+        public void CloseError(int timeToWait = 1)
         {
             if (_isclosing) { return; }
-            Close();
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(timeToWait, short.MinValue));
+        }
+
+        public void DisplayError(bool display)
+        {
+            errorMessage.gameObject.SetActive(display);
         }
 
         //close the window visually. informing the question set has already been completed
