@@ -22,6 +22,10 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            if (appID != null )
+            {
+                Cognitive3D_Manager.SetParticipantProperty("c3d.app.oculus.appid", appID);
+            }
 #if C3D_OCULUS
             if (!Core.IsInitialized())
             {
