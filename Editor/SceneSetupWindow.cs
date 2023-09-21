@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D;
+using Cognitive3D.Components;
 
 #if C3D_STEAMVR2
 using Valve.VR;
@@ -62,7 +63,6 @@ namespace Cognitive3D
             SetupComplete
         };
         Page currentPage;
-
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -575,16 +575,16 @@ namespace Cognitive3D
         {
 #if C3D_OCULUS
 
-            GUI.Label(steptitlerect, "EYETRACKING SETUP", "steptitle");
+            GUI.Label(steptitlerect, "ADDITIONAL OCULUS SETUP", "steptitle");
             var eyeManager = Object.FindObjectOfType<OVRFaceExpressions>();
             bool eyeManagerExists = eyeManager != null;
 
-            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs a OVRFaceExpressions component, which doesn't exist by default." +
+            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs an OVRFaceExpressions component, which doesn't exist by default." +
     "\n\nUse the button below to add a OVRFaceExpression component to the scene if it does not already exist." +
     "\n\nIf you are not using the Eye Tracking feature, you can skip this step.", "normallabel");
 
             //button to create new gameobject with component
-            if (GUI.Button(new Rect(150, 290, 200, 30), "Create OVRFaceExpression"))
+            if (GUI.Button(new Rect(150, 220, 200, 30), "Create OVRFaceExpression"))
             {
                 if (eyeManager == null)
                 {
@@ -599,18 +599,18 @@ namespace Cognitive3D
             if (eyeManagerExists == false)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
+                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleEmpty, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
 
 
             //eye tracking support
-            if (GUI.Button(new Rect(150, 330, 200, 30), "Enable Eye Tracking Support"))
+            if (GUI.Button(new Rect(150, 260, 200, 30), "Enable Eye Tracking Support"))
             {
                 OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
                 var ovrManager = Object.FindObjectOfType<OVRManager>();
@@ -624,17 +624,17 @@ namespace Cognitive3D
             if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleEmpty, "image_centered");
+                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleEmpty, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 330, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
 
             //face tracking support
-            if (GUI.Button(new Rect(150, 370, 200, 30), "Enable Face Tracking Support"))
+            if (GUI.Button(new Rect(150, 300, 200, 30), "Enable Face Tracking Support"))
             {
                 OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
                 var ovrManager = Object.FindObjectOfType<OVRManager>();
@@ -648,15 +648,39 @@ namespace Cognitive3D
             if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
             {
                 //empty checkmark
-                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleEmpty, "image_centered");
+                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleEmpty, "image_centered");
 
             }
             else
             {
                 //full checkmark
-                GUI.Label(new Rect(100, 370, 64, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleCheckmark, "image_centered");
             }
 
+            GUI.Label(new Rect(30, 380, 440, 440), "Toggle additional features", "normallabel");
+            GUI.Label(new Rect(110, 410, 440, 440), "Enable collection of Oculus Social Data", "normallabel");
+            Rect infoRect = new Rect(410, 405, 30, 30);
+
+            if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/");
+            }
+
+            Rect checkboxRect = new Rect(80, 405, 30, 30);
+            if (Cognitive3D_Manager.Instance.GetComponent<OculusSocial>())
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.GetComponent<OculusSocial>());
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
+                }
+            }
 
 #else
             currentPage++;
