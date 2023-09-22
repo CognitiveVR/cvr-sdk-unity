@@ -44,6 +44,10 @@ namespace Cognitive3D.Components
         }
 
 #if C3D_OCULUS
+        /**
+         * Callback for user Entitlement check
+         * @params: Message message: the response message
+         */ 
         private void EntitlementCallback(Message message)
         {
             if (message.IsError) // User failed entitlement check
@@ -58,7 +62,10 @@ namespace Cognitive3D.Components
             }
         }
 #endif
-
+        /**
+         * Callback for getting details on the logged in user
+         * @params: Message <User> message: The User object representing the current logged in user
+         */ 
         private void UserCallback(Message<User> message)
         {
             string id;
@@ -87,6 +94,13 @@ namespace Cognitive3D.Components
             }
         }
 
+        /**
+         * Callback to get the display name (apparently a second request 
+         *          is needed to get display name, 
+         *          as per here: 
+         *          https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
+         *  @params: Message message: the response for the callback
+         */ 
         private void DisplayNameCallback(Message message)
         {
             string displayName = message.GetUser().DisplayName;
@@ -98,6 +112,9 @@ namespace Cognitive3D.Components
             }
         }
 
+        /**
+         * Checks the number of people in the room/part
+         */ 
         void CheckPartySize()
         {
 #if C3D_OCULUS
@@ -127,6 +144,9 @@ namespace Cognitive3D.Components
 #endif
         }
 #endif
+        /**
+         * Description to display in inspector
+         */ 
         public override string GetDescription()
         {
 #if C3D_OCULUS
@@ -135,6 +155,10 @@ namespace Cognitive3D.Components
             return "Oculus Social properties can only be accessed when using the Oculus Platform";
 #endif
         }
+
+        /**
+         * Warning for incompatible platform to display on inspector
+         */ 
         public override bool GetWarning()
         {
 #if C3D_OCULUS
