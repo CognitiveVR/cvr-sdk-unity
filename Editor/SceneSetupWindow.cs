@@ -658,8 +658,9 @@ namespace Cognitive3D
             }
 
             GUI.Label(new Rect(30, 380, 440, 440), "Toggle additional features", "normallabel");
-            GUI.Label(new Rect(110, 410, 440, 440), "Enable collection of Oculus Social Data", "normallabel");
-            Rect infoRect = new Rect(410, 405, 30, 30);
+            GUI.Label(new Rect(110, 410, 440, 440), "Enable collection of Oculus Social Data*", "normallabel");
+            GUI.Label(new Rect(20, 470, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
+            Rect infoRect = new Rect(420, 405, 30, 30);
 
             if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
             {
