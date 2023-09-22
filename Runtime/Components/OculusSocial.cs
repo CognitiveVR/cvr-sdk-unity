@@ -22,10 +22,6 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            if (appID != null )
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
-            }
 #if C3D_OCULUS
             if (!Core.IsInitialized())
             {
@@ -71,12 +67,16 @@ namespace Cognitive3D.Components
             {
                 id = message.Data.ID.ToString();
                 oculusID = message.Data.OculusID;
+                if (appID != null)
+                {
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
+                }
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
                 {
-                    Cognitive3D_Manager.SetParticipantProperty("id", id);
-                    Cognitive3D_Manager.SetParticipantProperty("oculusID", oculusID);
+                    Cognitive3D_Manager.SetParticipantProperty("oculusId", id);
+                    Cognitive3D_Manager.SetParticipantProperty("oculusUsername", oculusID);
                 }
 
                 Users.Get(message.Data.ID).OnComplete(DisplayNameCallback);
@@ -94,7 +94,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
             {
-                Cognitive3D_Manager.SetParticipantProperty("displayName", displayName);
+                Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
             }
         }
 

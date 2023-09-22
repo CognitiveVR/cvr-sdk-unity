@@ -664,7 +664,7 @@ namespace Cognitive3D
 
             if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
             {
-                Application.OpenURL("https://docs.cognitive3d.com/");
+                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
             }
 
             Rect checkboxRect = new Rect(80, 405, 30, 30);
