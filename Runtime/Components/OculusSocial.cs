@@ -15,6 +15,10 @@ namespace Cognitive3D.Components
         [SerializeField]
         private bool AssignOculusProfileToParticipant = true;
 
+        [Tooltip("Used to automatically set user's display name as participant name on the dashboard")]
+        [SerializeField]
+        private bool AssignOculusNameToParticipantName = false;
+
         [Tooltip("Sets a session property with the size of the user's party (skipped if playing alone)")]
         [SerializeField]
         private bool RecordPartySize = true;
@@ -109,6 +113,10 @@ namespace Cognitive3D.Components
 #endif
             {
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
+                if (AssignOculusNameToParticipantName)
+                {
+                    Cognitive3D_Manager.SetParticipantFullName(displayName);
+                }
             }
         }
 
