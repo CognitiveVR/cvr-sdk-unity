@@ -20,7 +20,6 @@ GameObject:
   - component: {fileID: 921151381915925954}
   - component: {fileID: 921151381915925957}
   - component: {fileID: 921151381915925956}
-  - component: {fileID: 2231242781763957769}
   m_Layer: 0
   m_Name: Cognitive3D_Manager
   m_TagString: Untagged
@@ -178,19 +177,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 420335c75c0cad64396868bbc1d5c688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2231242781763957769
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 921151381915925960}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 565efa2ae4a38d44b900fed576c2c0d8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  appID: 
-  AssignOculusProfileToParticipant: 1
-  AssignOculusNameToParticipantName: 0
-  RecordPartySize: 1

@@ -1,19 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
+#endif
 
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
-        public string appID;
 #if C3D_OCULUS
+        public string appID;
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         [SerializeField]
-        private bool AssignOculusProfileToParticipant = true;
+        private bool AssignOculusProfileToParticipant = false;
 
         [Tooltip("Used to automatically set user's display name as participant name on the dashboard")]
         [SerializeField]
@@ -22,7 +25,7 @@ namespace Cognitive3D.Components
         [Tooltip("Sets a session property with the size of the user's party (skipped if playing alone)")]
         [SerializeField]
         private bool RecordPartySize = true;
-
+#endif
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -66,10 +69,11 @@ namespace Cognitive3D.Components
             }
         }
 #endif
-        /**
-         * Callback for getting details on the logged in user
-         * @params: Message <User> message: The User object representing the current logged in user
-         */ 
+/**
+ * Callback for getting details on the logged in user
+ * @params: Message <User> message: The User object representing the current logged in user
+ */
+#if C3D_OCULUS
         private void UserCallback(Message<User> message)
         {
             string id;
@@ -98,13 +102,15 @@ namespace Cognitive3D.Components
             }
         }
 
-        /**
-         * Callback to get the display name (apparently a second request 
-         *          is needed to get display name, 
-         *          as per here: 
-         *          https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
-         *  @params: Message message: the response for the callback
-         */ 
+#endif
+/**
+ * Callback to get the display name (apparently a second request 
+ *          is needed to get display name, 
+ *          as per here: 
+ *          https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
+ *  @params: Message message: the response for the callback
+ */
+#if C3D_OCULUS
         private void DisplayNameCallback(Message message)
         {
             string displayName = message.GetUser().DisplayName;
@@ -119,6 +125,7 @@ namespace Cognitive3D.Components
                 }
             }
         }
+#endif
 
         /**
          * Checks the number of people in the room/part
@@ -151,7 +158,6 @@ namespace Cognitive3D.Components
             });
 #endif
         }
-#endif
         /**
          * Description to display in inspector
          */ 
@@ -176,5 +182,4 @@ namespace Cognitive3D.Components
 #endif
         }
     }
-
 }
