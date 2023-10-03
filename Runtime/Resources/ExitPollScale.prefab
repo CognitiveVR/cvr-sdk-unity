@@ -3291,6 +3291,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 114000012756839268}
+        m_TargetAssemblyTypeName: Cognitive3D.ExitPollPanel, Cognitive3D
+        m_MethodName: SelectOption
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 114294607953348846}
+          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   dynamicallyResize: 1
   isEnabled: 1
   boxCollider: {fileID: 65291448246191188}
