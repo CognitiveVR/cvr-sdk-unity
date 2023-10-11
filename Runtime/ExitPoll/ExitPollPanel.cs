@@ -81,7 +81,7 @@ namespace Cognitive3D
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public void Initialize(Dictionary<string,string> properties,int panelId, ExitPollSet questionset)
+        public void Initialize(Dictionary<string,string> properties,int panelId, ExitPollSet questionset, int numQuestionsInSet)
         {
             QuestionSet = questionset;
             PanelId = panelId;
@@ -110,7 +110,7 @@ namespace Cognitive3D
 
             if (QuestionNumber != null)
             {
-                QuestionNumber.text = $"Question {panelId + 1} of {properties.Count}";
+                QuestionNumber.text = $"Question {panelId + 1} of {numQuestionsInSet}";
             }
 
             if (properties["type"] == "MULTIPLE")
