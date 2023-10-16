@@ -195,11 +195,6 @@ namespace Cognitive3D.Components
             if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
             {
                 new CustomEvent("c3d.user.exited.boundary").Send();
-                exited = true;
-            }
-            else
-            {
-                exited = false;
             }
         }
 #endif
