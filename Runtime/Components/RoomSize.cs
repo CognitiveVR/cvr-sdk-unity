@@ -189,6 +189,22 @@ namespace Cognitive3D.Components
             return !GameplayReferences.SDKSupportsRoomSize;
         }
 
+#if C3D_STEAMVR2
+        private void OnChaperoneChanged(Valve.VR.VREvent_t arg0)
+        {
+            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
+            {
+                new CustomEvent("c3d.user.exited.boundary").Send();
+                exited = true;
+            }
+            else
+            {
+                exited = false;
+            }
+        }
+#endif
+
+
         public override string GetDescription()
         {
             if (GameplayReferences.SDKSupportsRoomSize)
