@@ -13,7 +13,6 @@ namespace Cognitive3D.Components
     public class OculusSocial : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        public string appID;
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         [SerializeField]
         private bool AssignOculusProfileToParticipant = false;
@@ -30,27 +29,47 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
 #if C3D_OCULUS
+            string appID = GetAppIDFromConfig();
             if (!Core.IsInitialized())
             {
                 //Initialize will throw error if appid is invalid/missing
                 try
                 {
                     Core.Initialize(appID);
-                    Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
-                    if (RecordPartySize)
-                    {
-                        CheckPartySize();
-                    }
                 }
                 catch (System.Exception e)
                 {
                     Debug.LogException(e);
                 }
             }
+
+            if (!string.IsNullOrEmpty(appID))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
+            }
+
+            Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
+            if (RecordPartySize)
+            {
+                CheckPartySize();
+            }
 #endif
         }
 
 #if C3D_OCULUS
+
+        private static string GetAppIDFromConfig()
+        {
+            if (UnityEngine.Application.platform == RuntimePlatform.Android)
+            {
+                return PlatformSettings.MobileAppID;
+            }
+            else
+            {
+                return PlatformSettings.AppID;
+            }
+        }
+
         /**
          * Callback for user Entitlement check
          * @params: Message message: the response message
@@ -82,10 +101,6 @@ namespace Cognitive3D.Components
             {
                 id = message.Data.ID.ToString();
                 oculusID = message.Data.OculusID;
-                if (appID != null)
-                {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
-                }
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
