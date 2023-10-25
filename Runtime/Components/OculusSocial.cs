@@ -12,6 +12,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
+
+
 #if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         [SerializeField]
@@ -30,6 +32,7 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
 #if C3D_OCULUS
             string appID = GetAppIDFromConfig();
+
             if (!Core.IsInitialized())
             {
                 //Initialize will throw error if appid is invalid/missing
