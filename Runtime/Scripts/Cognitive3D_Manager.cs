@@ -505,7 +505,10 @@ namespace Cognitive3D
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
-                new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
+                new CustomEvent("c3d.sessionEnd")
+                    .SetProperty("sessionlength", playtime)
+                    .SetProperty("Reason", "Quit from script")
+                    .Send();
                 Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
                 ResetSessionData();
             }
@@ -524,19 +527,6 @@ namespace Cognitive3D
 
         void OnApplicationPause(bool paused)
         {
-#if C3D_OCULUS && UNITY_ANDROID && !UNITY_EDITOR
-            if (paused)
-            {
-                double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
-                // Currently when you quit from oculus menu, you get pause instead of application quit. Mislabeled events will be fixed
-                // on dashboard side
-                new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
-                {
-                    { "Reason", "Quit from Oculus Menu" },
-                    { "sessionlength", playtime }
-                }).Send();
-            }
-#endif
             if (!IsInitialized) { return; }
             CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
 #if XRPF
