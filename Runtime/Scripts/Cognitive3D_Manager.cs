@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.3.7";
+        public static readonly string SDK_VERSION = "1.3.8";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
