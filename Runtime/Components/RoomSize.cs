@@ -2,19 +2,22 @@
 using UnityEngine;
 
 /// <summary>
-/// Adds room size from SteamVR chaperone to device info
+/// Adds room size from VR boundary to the session properties
+/// Records a sensor
+/// On Oculus, also records events when boundary changes (ie, redrawn)
 /// </summary>
+
+
 
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
-    {
-        
+    {        
         //counts up the deltatime to determine when the interval ends
-        private float currentTime;
         Vector3 lastRoomSize = new Vector3();
 #if C3D_OCULUS
+        private float currentTime;
         private readonly float BoundaryTrackingInterval = 1;
         Vector3[] boundaryPointsArray;
         Transform trackingSpace;
@@ -34,16 +37,6 @@ namespace Cognitive3D.Components
             boundaryPointsArray = new Vector3[4];
             trackingSpace = TryGetTrackingSpace();
             boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-#endif
-
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).AddListener(OnChaperoneChanged);
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).AddListener(OnChaperoneChanged);
-
-            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
-            {
-                new CustomEvent("c3d.user.exited.boundary").Send();
-            }
 #endif
             CalculateAndRecordRoomsize(false);
         }
@@ -117,7 +110,6 @@ namespace Cognitive3D.Components
         }
 #endif
 
-        // Online reference
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
             bool result = false;
@@ -178,10 +170,6 @@ namespace Cognitive3D.Components
         void OnDestroy()
         {
             Cognitive3D_Manager_OnPreSessionEnd();
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).RemoveListener(OnChaperoneChanged);
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).RemoveListener(OnChaperoneChanged);
-#endif
         }
 
         public override bool GetWarning()

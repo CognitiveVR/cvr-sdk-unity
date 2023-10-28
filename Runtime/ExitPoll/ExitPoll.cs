@@ -523,7 +523,7 @@ namespace Cognitive3D
                     Cleanup(false);
                     return;
                 }
-                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this);
+                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this, questionSet.questions.Length);
 
                 if (myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World && myparameters.UseAttachTransform)
                 {
