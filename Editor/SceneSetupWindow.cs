@@ -17,6 +17,9 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
+
+        bool isEyeTrackingEnabled = false;
+
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
@@ -576,103 +579,23 @@ namespace Cognitive3D
 #if C3D_OCULUS
 
             GUI.Label(steptitlerect, "ADDITIONAL OCULUS SETUP", "steptitle");
-            var eyeManager = Object.FindObjectOfType<OVRFaceExpressions>();
-            bool eyeManagerExists = eyeManager != null;
+            GUI.Label(new Rect(30, 40, 440, 440), "Please select the additional Oculus features you would like to include", "normallabel");
 
-            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs an OVRFaceExpressions component, which doesn't exist by default." +
-    "\n\nUse the button below to add a OVRFaceExpression component to the scene if it does not already exist." +
-    "\n\nIf you are not using the Eye Tracking feature, you can skip this step.", "normallabel");
-
-            //button to create new gameobject with component
-            if (GUI.Button(new Rect(150, 220, 200, 30), "Create OVRFaceExpression"))
-            {
-                if (eyeManager == null)
-                {
-                    var m_EyeManager = new GameObject("OVRFaceExpressions");
-                    m_EyeManager.AddComponent<OVRFaceExpressions>();
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-                    eyeManagerExists = true;
-                } 
-            }
-
-            //a checkmark if the component already exists
-            if (eyeManagerExists == false)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-
-            //eye tracking support
-            if (GUI.Button(new Rect(150, 260, 200, 30), "Enable Eye Tracking Support"))
-            {
-                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
-                var ovrManager = Object.FindObjectOfType<OVRManager>();
-                if (ovrManager != null)
-                {
-                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                    fi.SetValue(ovrManager, true);
-                    EditorUtility.SetDirty(ovrManager);
-                }
-            }
-            if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-            //face tracking support
-            if (GUI.Button(new Rect(150, 300, 200, 30), "Enable Face Tracking Support"))
-            {
-                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
-                var ovrManager = Object.FindObjectOfType<OVRManager>();
-                if (ovrManager != null)
-                {
-                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                    fi.SetValue(ovrManager,true);
-                    EditorUtility.SetDirty(ovrManager);
-                }
-            }
-            if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-            GUI.Label(new Rect(30, 380, 440, 440), "Toggle additional features", "normallabel");
-            GUI.Label(new Rect(110, 410, 440, 440), "Enable collection of Oculus Social Data*", "normallabel");
-            GUI.Label(new Rect(20, 470, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
-            Rect infoRect = new Rect(420, 405, 30, 30);
-
+            // Social Data
+            GUI.Label(new Rect(140, 120, 440, 440), "Oculus Social Data*", "normallabel");
+            Rect infoRect = new Rect(320, 115, 30, 30);
             if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
             {
                 Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
             }
 
-            Rect checkboxRect = new Rect(80, 405, 30, 30);
+            Rect checkboxRect = new Rect(105, 115, 30, 30);
             if (Cognitive3D_Manager.Instance.GetComponent<OculusSocial>())
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxCheckmark, "image_centered"))
                 {
                     DestroyImmediate(Cognitive3D_Manager.Instance.GetComponent<OculusSocial>());
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 }
             }
             else
@@ -680,14 +603,135 @@ namespace Cognitive3D
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 }
             }
 
+
+            // Mixed Reality
+            GUI.Label(new Rect(140, 175, 440, 440), "Mixed Reality", "normallabel");
+            Rect infoRect2 = new Rect(320, 170, 30, 30);
+            if (GUI.Button(infoRect2, EditorCore.Info, "image_centered"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
+            }
+
+            Rect checkboxRect2 = new Rect(105, 170, 30, 30);
+            if (Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>())
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>());
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusPassthrough>();
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                }
+            }
+
+
+            // Eye Tracking
+            
+            // EyeManager
+            // FaceExpressions
+            // FaceTracking
+
+            GUI.Label(new Rect(140, 230, 440, 440), "Quest Pro Eyetracking", "normallabel");
+            Rect infoRect3 = new Rect(320, 225, 30, 30);
+            if (GUI.Button(infoRect3, EditorCore.Info, "image_centered"))
+            {
+                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
+            }
+
+            Rect checkboxRect3 = new Rect(105, 225, 30, 30);
+
+            if (isEyeTrackingEnabled)
+            {
+                if (GUI.Button(checkboxRect3, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    ToggleEyeTrackingState(false);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect3, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    ToggleEyeTrackingState(true);
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                }
+            }
+
+
+            // Footer
+            GUI.Label(new Rect(20, 460, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
 #else
             currentPage++;
 #endif
         }
 
+
+        void ToggleEyeTrackingState(bool state)
+        {
+            isEyeTrackingEnabled = state;
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+
+            if (state)
+            {
+                // Eye Tracking
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+
+                // Face Expressions
+                var m_EyeManager = new GameObject("OVRFaceExpressions");
+                m_EyeManager.AddComponent<OVRFaceExpressions>();
+
+                // Face Tracking
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            else
+            {
+                // Eye Tracking
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, false);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+
+                // Face Expressions
+                if (GameObject.FindObjectOfType<OVRFaceExpressions>())
+                {
+                    DestroyImmediate(GameObject.FindObjectOfType<OVRFaceExpressions>().gameObject);
+                }
+
+                // Face Tracking
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, false);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+        }
 
         Texture2D isoSceneImage;
 

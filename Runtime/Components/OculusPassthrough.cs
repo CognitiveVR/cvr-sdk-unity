@@ -10,7 +10,9 @@ namespace Cognitive3D.Components
     public class OculusPassthrough : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        private OVRPassthroughLayer passthroughLayerRef; 
+        private OVRPassthroughLayer passthroughLayerRef;
+        private bool isPassthroughEnabled;
+        private float lastEventTime;
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -20,13 +22,30 @@ namespace Cognitive3D.Components
         // Update is called once per frame
         void Update()
         {
-            if (passthroughLayerRef == null)
+            if (passthroughLayerRef != null)
+            {
+                // Sending Sensor Value
+                // Converting the bool to int this way. Can use ternary operator, but this is much clearer
+                SensorRecorder.RecordDataPoint("c3d.app.passthroughEnabled", Convert.ToUInt32(passthroughLayerRef.isActiveAndEnabled));
+
+                // Send event on state change
+                if (isPassthroughEnabled != passthroughLayerRef.isActiveAndEnabled)
+                {
+                    new CustomEvent("Passthrough Layer Changed")
+                        .SetProperties(new Dictionary<string, object>
+                        {
+                            {"New State", passthroughLayerRef.isActiveAndEnabled },
+                            {"Duration",  Time.time - lastEventTime}
+                        }).Send();
+                    lastEventTime = Time.time; 
+                }
+
+                isPassthroughEnabled = passthroughLayerRef.isActiveAndEnabled;
+            }
+            else
             {
                 GetPassthroughLayer(out passthroughLayerRef);
             }
-
-            // Converting the bool to int this way. Can use ternary operator, but this is much clearer
-            SensorRecorder.RecordDataPoint("c3d.app.passthroughEnabled", Convert.ToUInt32(passthroughLayerRef.isActiveAndEnabled));
         }
 
         private bool GetPassthroughLayer(out OVRPassthroughLayer layer)
