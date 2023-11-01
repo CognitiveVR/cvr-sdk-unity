@@ -11,6 +11,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
+
+        public GameObject post;
         
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
@@ -47,6 +49,31 @@ namespace Cognitive3D.Components
             }
 #endif
             CalculateAndRecordRoomsize(false);
+        }
+
+        float time;
+        private void Update()
+        {
+            Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
+            Valve.VR.HmdQuad_t steamVRPoint = new Valve.VR.HmdQuad_t();
+            setup.GetWorkingPlayAreaRect(ref steamVRPoint);
+            time = Time.time;
+
+            if (Time.time > time + 5)
+            {
+                Instantiate(post, SteamToVector(steamVRPoint.vCorners0), new Quaternion());
+                Instantiate(post, SteamToVector(steamVRPoint.vCorners1), new Quaternion());
+                Instantiate(post, SteamToVector(steamVRPoint.vCorners2), new Quaternion());
+                Instantiate(post, SteamToVector(steamVRPoint.vCorners3), new Quaternion());
+                time = Time.time;
+            }
+           
+        }
+
+        private Vector3 SteamToVector(Valve.VR.HmdVector3_t point)
+        {
+            Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
+            return myPoint;
         }
 
 #if C3D_OCULUS
@@ -193,13 +220,13 @@ namespace Cognitive3D.Components
 #if C3D_STEAMVR2
         private void OnChaperoneChanged(Valve.VR.VREvent_t arg0)
         {
-            Valve.VR.HmdQuad_t[] steamVRPointsArray;
+/*            Valve.VR.HmdQuad_t[] steamVRPointsArray;
             Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
 
             if (setup.GetWorkingCollisionBoundsInfo(out steamVRPointsArray))
             {
                 new CustomEvent("c3d.user.exited.boundary").Send();
-            }
+            }*/
         }
 #endif
 
