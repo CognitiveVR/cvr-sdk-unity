@@ -16,11 +16,12 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             GetPassthroughLayer(out passthroughLayerRef);
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             if (passthroughLayerRef != null)
             {
@@ -50,20 +51,26 @@ namespace Cognitive3D.Components
 
         private bool GetPassthroughLayer(out OVRPassthroughLayer layer)
         {
-            if (GameObject.FindObjectOfType<OVRPassthroughLayer>() != null)
+            layer = GameObject.FindObjectOfType<OVRPassthroughLayer>();
+            if (layer != null)
             {
-                layer = GameObject.FindObjectOfType<OVRPassthroughLayer>();
                 return true;
             }
             layer = null;
             return false;
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 #endif
 
         public override string GetDescription()
         {
 #if C3D_OCULUS
-            return "Records a sensor value determining if passthrough is enabled. 0 means no, 1 means yes.";
+            return "Records a sensor value determining if passthrough is enabled.";
 #else
             return "Oculus Passthrough properties can only be accessed when using the Oculus Platform";
 #endif
