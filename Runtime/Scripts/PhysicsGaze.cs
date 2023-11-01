@@ -42,7 +42,7 @@ namespace Cognitive3D
                 var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
                 if (mediacomponent != null)
                 {
-                    var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayer.frame / mediacomponent.VideoPlayer.frameRate) * 1000) : 0;
+                    var mediatime = mediacomponent.IsVideo ? (int)((mediacomponent.VideoPlayerFrame / mediacomponent.VideoPlayerFrameRate) * 1000) : 0;
                     var mediauvs = hitcoord;
                     GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, GameplayReferences.HMD.position, GameplayReferences.HMD.rotation, mediacomponent.MediaId, mediatime, mediauvs);
                 }
@@ -51,13 +51,15 @@ namespace Cognitive3D
                     GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), ObjectId, hitLocal, ray.origin, GameplayReferences.HMD.rotation);
                 }
 
-                Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1, 0, 1, 0.5f), Cognitive3D_Preferences.SnapshotInterval);
+                //debugging
+                //Debug.DrawLine(GameplayReferences.HMD.position, hitWorld, new Color(1, 0, 1, 0.5f), Cognitive3D_Preferences.SnapshotInterval);
                 //Debug.DrawRay(hitWorld, Vector3.right, Color.red, 1);
                 //Debug.DrawRay(hitWorld, Vector3.forward, Color.blue, 1);
                 //Debug.DrawRay(hitWorld, Vector3.up, Color.green, 1);
+                
+                //active session view
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                     DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
-
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = hitWorld;
                 DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = hitLocal;
                 DisplayGazePoints[DisplayGazePoints.Count].Transform = hitDynamic.transform;
@@ -74,14 +76,16 @@ namespace Cognitive3D
 
                 //hit world
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), gazepoint, pos, rot);
-                Debug.DrawLine(pos, gazepoint, Color.red, Cognitive3D_Preferences.SnapshotInterval);
-
+                
+                //debugging
+                //Debug.DrawLine(pos, gazepoint, Color.red, Cognitive3D_Preferences.SnapshotInterval);
                 //Debug.DrawRay(gazepoint, Vector3.right, Color.red, 10);
                 //Debug.DrawRay(gazepoint, Vector3.forward, Color.blue, 10);
                 //Debug.DrawRay(gazepoint, Vector3.up, Color.green, 10);
+                
+                //active session view
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                     DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
-
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = hit.point;
                 DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = Vector3.zero;
                 DisplayGazePoints[DisplayGazePoints.Count].Transform = null;
@@ -94,10 +98,13 @@ namespace Cognitive3D
                 Quaternion rot = GameplayReferences.HMD.rotation;
                 Vector3 displayPosition = GameplayReferences.HMD.forward * GameplayReferences.HMDCameraComponent.farClipPlane;
                 GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), pos, rot);
+
+                //debugging
                 //Debug.DrawRay(pos, displayPosition, Color.cyan, Cognitive3D_Preferences.Instance.SnapshotInterval);
+                
+                //active session view
                 if (DisplayGazePoints[DisplayGazePoints.Count] == null)
                     DisplayGazePoints[DisplayGazePoints.Count] = new ThreadGazePoint();
-
                 DisplayGazePoints[DisplayGazePoints.Count].WorldPoint = displayPosition;
                 DisplayGazePoints[DisplayGazePoints.Count].LocalPoint = Vector3.zero;
                 DisplayGazePoints[DisplayGazePoints.Count].Transform = null;
