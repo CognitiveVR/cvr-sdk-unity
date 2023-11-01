@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using OVR.OpenVR;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -192,7 +193,10 @@ namespace Cognitive3D.Components
 #if C3D_STEAMVR2
         private void OnChaperoneChanged(Valve.VR.VREvent_t arg0)
         {
-            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
+            Valve.VR.HmdQuad_t[] steamVRPointsArray;
+            Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
+
+            if (setup.GetWorkingCollisionBoundsInfo(out steamVRPointsArray))
             {
                 new CustomEvent("c3d.user.exited.boundary").Send();
             }
