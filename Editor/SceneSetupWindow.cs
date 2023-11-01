@@ -584,10 +584,7 @@ namespace Cognitive3D
             // Social Data
             GUI.Label(new Rect(140, 120, 440, 440), "Oculus Social Data*", "normallabel");
             Rect infoRect = new Rect(320, 115, 30, 30);
-            if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
-            }
+            GUI.Button(infoRect, new GUIContent(EditorCore.Info, "Enables collection of users' Oculus ID, username, and party size"), "image_centered");
 
             Rect checkboxRect = new Rect(105, 115, 30, 30);
             if (Cognitive3D_Manager.Instance.GetComponent<OculusSocial>())
@@ -611,11 +608,7 @@ namespace Cognitive3D
             // Mixed Reality
             GUI.Label(new Rect(140, 175, 440, 440), "Mixed Reality", "normallabel");
             Rect infoRect2 = new Rect(320, 170, 30, 30);
-            if (GUI.Button(infoRect2, EditorCore.Info, "image_centered"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
-            }
-
+            GUI.Button(infoRect2, new GUIContent(EditorCore.Info, "Enables collection passthrough related data and events"), "image_centered");
             Rect checkboxRect2 = new Rect(105, 170, 30, 30);
             if (Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>())
             {
@@ -640,13 +633,10 @@ namespace Cognitive3D
             // EyeManager
             // FaceExpressions
             // FaceTracking
-
             GUI.Label(new Rect(140, 230, 440, 440), "Quest Pro Eyetracking", "normallabel");
             Rect infoRect3 = new Rect(320, 225, 30, 30);
-            if (GUI.Button(infoRect3, EditorCore.Info, "image_centered"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
-            }
+            GUI.Button(infoRect3, new GUIContent(EditorCore.Info, "Enables setup and collection of eyetracking, face tracking, and face expressions data"), "image_centered");
+
 
             Rect checkboxRect3 = new Rect(105, 225, 30, 30);
 
