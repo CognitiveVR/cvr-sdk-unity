@@ -1,6 +1,8 @@
 ﻿using OVR.OpenVR;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.XR;
 
 /// <summary>
 /// Adds room size from SteamVR chaperone to device info
@@ -13,7 +15,9 @@ namespace Cognitive3D.Components
     {
 
         public GameObject post;
+        List <Vector3> boundaryPoints = new List<Vector3>();
         
+
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
         Vector3 lastRoomSize = new Vector3();
@@ -23,6 +27,77 @@ namespace Cognitive3D.Components
         Transform trackingSpace;
         bool exited = false;
 #endif
+
+        private List<Vector3> GetBoundaryPoints()
+        {
+
+#if C3D_OCULUS
+        if (OVRManager.boundary == null)
+        {
+            return null;
+        }
+        boundaryPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList<Vector3>();
+        return boundaryPoints;
+#elif C3D_STEAMVR2
+        // Valve.VR/OpenVR Array; we will convert it to list for ease of use. Array of size 1 because we are representing 1 rectangle
+        Valve.VR.HmdQuad_t[] steamVRBoundaryPoints = new Valve.VR.HmdQuad_t[1]; 
+        
+        Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
+        setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
+        boundaryPoints = GetValveArrayAsList(steamVRBoundaryPoints);
+        return boundaryPoints;
+#else
+        // Using Unity's XRInputSubsystem as fallback
+        List <XRInputSubsystem> subsystems = new List <XRInputSubsystem>();
+        SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
+
+        // Handling case of multiple subsystems to find the first one that "works"
+        foreach (XRInputSubsystem subsystem in subsystems)
+        {
+            if (!subsystem.running)
+            {
+                continue;
+            }
+            if (subsystem.TryGetBoundaryPoints(boundaryPoints))
+            {
+                return boundaryPoints;
+            }
+        }
+        // Unable to find boundary points - should we send an event?
+#endif
+            return boundaryPoints;
+        }
+
+#if C3D_STEAMVR2
+        /// <summary>
+        /// Converts Valve's HmdQuad_t array to a List of Vector3. 
+        /// Used for the very specific use-case of boundary points.
+        /// </summary>
+        /// <param name="steamArray"> An array of HmdQuad_t structs</param>
+        /// <returns> A list of 4 Vector3 elements </returns>
+        private List<Vector3> GetValveArrayAsList(Valve.VR.HmdQuad_t[] steamArray)
+        {
+            List<Vector3> steamList = new List<Vector3>();
+            Valve.VR.HmdQuad_t currentQuad = steamArray[0];
+            steamList.Add(SteamQuadtToVector(currentQuad.vCorners0));
+            steamList.Add(SteamQuadtToVector(currentQuad.vCorners1));
+            steamList.Add(SteamQuadtToVector(currentQuad.vCorners2));
+            steamList.Add(SteamQuadtToVector(currentQuad.vCorners3));
+            return steamList;
+        }
+
+        /// <summary>
+        /// Converts a Valve.VR HmdVector3_t struct to a Unity Vector3
+        /// </summary>
+        /// <param name="point">A struct of type Valve.VR.HmdVector3_t</param>
+        /// <returns>A Vector3 representation of the Valve.VR point</returns>
+        private Vector3 SteamQuadtToVector(Valve.VR.HmdVector3_t point)
+        {
+            Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
+            return myPoint;
+        }
+#endif
+
 
         protected override void OnSessionBegin()
         {
@@ -49,31 +124,6 @@ namespace Cognitive3D.Components
             }
 #endif
             CalculateAndRecordRoomsize(false);
-        }
-
-        float time;
-        private void Update()
-        {
-            Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
-            Valve.VR.HmdQuad_t steamVRPoint = new Valve.VR.HmdQuad_t();
-            setup.GetWorkingPlayAreaRect(ref steamVRPoint);
-            time = Time.time;
-
-            if (Time.time > time + 5)
-            {
-                Instantiate(post, SteamToVector(steamVRPoint.vCorners0), new Quaternion());
-                Instantiate(post, SteamToVector(steamVRPoint.vCorners1), new Quaternion());
-                Instantiate(post, SteamToVector(steamVRPoint.vCorners2), new Quaternion());
-                Instantiate(post, SteamToVector(steamVRPoint.vCorners3), new Quaternion());
-                time = Time.time;
-            }
-           
-        }
-
-        private Vector3 SteamToVector(Valve.VR.HmdVector3_t point)
-        {
-            Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
-            return myPoint;
         }
 
 #if C3D_OCULUS
@@ -206,30 +256,12 @@ namespace Cognitive3D.Components
         void OnDestroy()
         {
             Cognitive3D_Manager_OnPreSessionEnd();
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).RemoveListener(OnChaperoneChanged);
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).RemoveListener(OnChaperoneChanged);
-#endif
         }
 
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
         }
-
-#if C3D_STEAMVR2
-        private void OnChaperoneChanged(Valve.VR.VREvent_t arg0)
-        {
-/*            Valve.VR.HmdQuad_t[] steamVRPointsArray;
-            Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
-
-            if (setup.GetWorkingCollisionBoundsInfo(out steamVRPointsArray))
-            {
-                new CustomEvent("c3d.user.exited.boundary").Send();
-            }*/
-        }
-#endif
-
 
         public override string GetDescription()
         {
