@@ -579,12 +579,12 @@ namespace Cognitive3D
 #if C3D_OCULUS
 
             GUI.Label(steptitlerect, "ADDITIONAL OCULUS SETUP", "steptitle");
-            GUI.Label(new Rect(30, 40, 440, 440), "Please select the additional Oculus features you would like to include", "normallabel");
+            GUI.Label(new Rect(30, 40, 440, 440), "Please select the additional Oculus features you would like to include:", "normallabel");
 
             // Social Data
             GUI.Label(new Rect(140, 120, 440, 440), "Oculus Social Data*", "normallabel");
             Rect infoRect = new Rect(320, 115, 30, 30);
-            GUI.Button(infoRect, new GUIContent(EditorCore.Info, "Enables collection of users' Oculus ID, username, and party size"), "image_centered");
+            GUI.Button(infoRect, new GUIContent(EditorCore.Info, "Records user Oculus ID, username, and party size."), "image_centered");
 
             Rect checkboxRect = new Rect(105, 115, 30, 30);
             if (Cognitive3D_Manager.Instance.GetComponent<OculusSocial>())
@@ -608,7 +608,7 @@ namespace Cognitive3D
             // Mixed Reality
             GUI.Label(new Rect(140, 175, 440, 440), "Mixed Reality", "normallabel");
             Rect infoRect2 = new Rect(320, 170, 30, 30);
-            GUI.Button(infoRect2, new GUIContent(EditorCore.Info, "Enables collection passthrough related data and events"), "image_centered");
+            GUI.Button(infoRect2, new GUIContent(EditorCore.Info, "Records if/when passthrough cameras are enabled."), "image_centered");
             Rect checkboxRect2 = new Rect(105, 170, 30, 30);
             if (Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>())
             {
@@ -635,7 +635,7 @@ namespace Cognitive3D
             // FaceTracking
             GUI.Label(new Rect(140, 230, 440, 440), "Quest Pro Eyetracking", "normallabel");
             Rect infoRect3 = new Rect(320, 225, 30, 30);
-            GUI.Button(infoRect3, new GUIContent(EditorCore.Info, "Enables setup and collection of eyetracking, face tracking, and face expressions data"), "image_centered");
+            GUI.Button(infoRect3, new GUIContent(EditorCore.Info, "Enables eyetracking for more accurate understanding of user attention. Currently this requires the OVRFaceExpressions component, which will be added automatically."), "image_centered");
 
 
             Rect checkboxRect3 = new Rect(105, 225, 30, 30);
