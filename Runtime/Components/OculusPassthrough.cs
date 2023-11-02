@@ -35,8 +35,8 @@ namespace Cognitive3D.Components
                     new CustomEvent("Passthrough Layer Changed")
                         .SetProperties(new Dictionary<string, object>
                         {
+                            {"Duration of Previous State",  Time.time - lastEventTime}
                             {"New State", passthroughLayerRef.isActiveAndEnabled },
-                            {"Duration",  Time.time - lastEventTime}
                         }).Send();
                     lastEventTime = Time.time; 
                 }
