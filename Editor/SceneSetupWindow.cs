@@ -672,9 +672,9 @@ namespace Cognitive3D
 #endif
         }
 
+#if C3D_OCULUS
         void ApplyOculusSettings()
         {
-#if C3D_OCULUS
             if (wantEyeTrackingEnabled)
             {
                 SetEyeTrackingState(true);
@@ -716,8 +716,8 @@ namespace Cognitive3D
                     DestroyImmediate(social);
                 }
             }
+        }   
 #endif
-        }
 
 #if C3D_OCULUS
 
@@ -1171,7 +1171,9 @@ namespace Cognitive3D
                     onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.QuestProSetup:
+#if C3D_OCULUS
                     onclick += () => ApplyOculusSettings();
+#endif
                     break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
