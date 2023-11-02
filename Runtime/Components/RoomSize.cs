@@ -1,6 +1,4 @@
-﻿using OVR.OpenVR;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -13,20 +11,16 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
+        // TESTING
+        public Transform trackingSpace;
 
-        public GameObject post;
         List <Vector3> boundaryPoints = new List<Vector3>();
-        
+        float BoundaryTrackingInterval = 1;
+        Vector3 lastRoomSize = new Vector3();
+        bool exited;
 
         //counts up the deltatime to determine when the interval ends
-        private float currentTime;
-        Vector3 lastRoomSize = new Vector3();
-#if C3D_OCULUS
-        private readonly float BoundaryTrackingInterval = 1;
-        Vector3[] boundaryPointsArray;
-        Transform trackingSpace;
-        bool exited = false;
-#endif
+        float currentTime;
 
         private List<Vector3> GetBoundaryPoints()
         {
@@ -38,6 +32,7 @@ namespace Cognitive3D.Components
         }
         boundaryPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList<Vector3>();
         return boundaryPoints;
+
 #elif C3D_STEAMVR2
         // Valve.VR/OpenVR Array; we will convert it to list for ease of use. Array of size 1 because we are representing 1 rectangle
         Valve.VR.HmdQuad_t[] steamVRBoundaryPoints = new Valve.VR.HmdQuad_t[1]; 
@@ -46,6 +41,7 @@ namespace Cognitive3D.Components
         setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
         boundaryPoints = GetValveArrayAsList(steamVRBoundaryPoints);
         return boundaryPoints;
+
 #else
         // Using Unity's XRInputSubsystem as fallback
         List <XRInputSubsystem> subsystems = new List <XRInputSubsystem>();
@@ -67,6 +63,25 @@ namespace Cognitive3D.Components
 #endif
             return boundaryPoints;
         }
+
+        /// <summary>
+        /// Determines if user changed their boundary
+        /// </summary>
+        /// <returns>True if boundary changed, false otherwise</returns>
+        private bool HasBoundaryChanged()
+        {
+            List<Vector3> temporaryList = GetBoundaryPoints();
+            for (int i = 0; i < boundaryPoints.Count; i++)
+            {
+                if (Vector3.SqrMagnitude(boundaryPoints[i] - temporaryList[i]) >= 1)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        #region SteamVR Specific Utils
 
 #if C3D_STEAMVR2
         /// <summary>
@@ -98,35 +113,18 @@ namespace Cognitive3D.Components
         }
 #endif
 
+        #endregion
+
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-#if C3D_OCULUS
-            if (OVRManager.boundary == null)
-            {
-                return;
-            }
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            boundaryPointsArray = new Vector3[4];
-            trackingSpace = TryGetTrackingSpace();
-            boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-#endif
-
-#if C3D_STEAMVR2
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsHidden).AddListener(OnChaperoneChanged);
-            Valve.VR.SteamVR_Events.System(Valve.VR.EVREventType.VREvent_Compositor_ChaperoneBoundsShown).AddListener(OnChaperoneChanged);
-
-            if (Valve.VR.OpenVR.Chaperone.AreBoundsVisible())
-            {
-                new CustomEvent("c3d.user.exited.boundary").Send();
-            }
-#endif
             CalculateAndRecordRoomsize(false);
         }
 
-#if C3D_OCULUS
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             currentTime += deltaTime;
@@ -142,15 +140,13 @@ namespace Cognitive3D.Components
             {
                 if (HasBoundaryChanged())
                 {
-                    boundaryPointsArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
+                    boundaryPoints = GetBoundaryPoints();
                     CalculateAndRecordRoomsize(true);
                 }
             }
-
-            // Unity uses y-up coordinate system - the boundary "up" doesn't matters
             if (trackingSpace != null)
             {
-                if (!IsPointInPolygon4(boundaryPointsArray, trackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if (!IsPointInPolygon4(boundaryPoints.ToArray(), trackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
                     if (!exited)
                     {
@@ -166,36 +162,17 @@ namespace Cognitive3D.Components
             }
             else
             {
-                trackingSpace = TryGetTrackingSpace();
+                // Tracking space unavailable: Maybe send an event or property?
             }
         }
 
-        private bool HasBoundaryChanged()
-        {
-            Vector3[] temporaryArray;
-            temporaryArray = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
-            for (int i = 0; i < boundaryPointsArray.Length; i++)
-            {
-                if (Vector3.SqrMagnitude(boundaryPointsArray[i] - temporaryArray[i]) >= 1)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
-        private Transform TryGetTrackingSpace()
-        {
-            OVRCameraRig cameraRig = GameObject.FindObjectOfType<OVRCameraRig>();
-            if (cameraRig != null)
-            {
-                return cameraRig.trackingSpace;
-            }
-            return null;
-        }
-#endif
-
-        // Online reference
+        /// <summary>
+        /// Determines if a point is within a polygon
+        /// </summary>
+        /// <param name="polygon">An array of Vector3 representing the corners of a polygon</param>
+        /// <param name="testPoint">A Vector3 representing the point to test</param>
+        /// <returns>True if point is in polygon, false otherwise</returns>
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
             bool result = false;
@@ -243,21 +220,13 @@ namespace Cognitive3D.Components
             }
         }
 
-
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
-#if C3D_OCULUS
-
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
-#endif
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
-        void OnDestroy()
-        {
-            Cognitive3D_Manager_OnPreSessionEnd();
-        }
-
+#region Inspector Utils
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
@@ -274,5 +243,7 @@ namespace Cognitive3D.Components
                 return "Current platform does not support this component";
             }
         }
+#endregion
+
     }
 }
