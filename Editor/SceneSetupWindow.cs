@@ -665,7 +665,7 @@ namespace Cognitive3D
 #endif
         }
 
-
+#if C3D_OCULUS
         void ToggleEyeTrackingState(bool state)
         {
             isEyeTrackingEnabled = state;
@@ -722,6 +722,7 @@ namespace Cognitive3D
                 }
             }
         }
+#endif
 
         Texture2D isoSceneImage;
 
