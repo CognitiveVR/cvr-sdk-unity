@@ -11,9 +11,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        // TESTING
-        public Transform trackingSpace;
-
         List <Vector3> boundaryPoints = new List<Vector3>();
         float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
@@ -68,9 +65,9 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            if (trackingSpace != null)
+            if (Cognitive3D_Manager.Instance.TrackingSpace != null)
             {
-                if (!IsPointInPolygon4(boundaryPoints.ToArray(), trackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if (!IsPointInPolygon4(boundaryPoints.ToArray(), Cognitive3D_Manager.Instance.TrackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
                     if (!exited)
                     {
