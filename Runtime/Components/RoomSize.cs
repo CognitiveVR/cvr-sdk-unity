@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using UnityEngine.XR;
 
 /// <summary>
 /// Adds room size from SteamVR chaperone to device info
@@ -127,11 +127,11 @@ namespace Cognitive3D.Components
                 {
                     return boundaryPoints;
                 }
-
-                // Probably will return empty list; need to append with warning or somethings
-                return boundaryPoints;
             }
             // Unable to find boundary points - should we send an event?
+            // Probably will return empty list; need to append with warning or somethings
+            Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
+            return boundaryPoints;
 #endif
         }
 
