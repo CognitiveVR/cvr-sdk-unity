@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
+using TMPro;
 
 /// <summary>
 /// Adds room size from SteamVR chaperone to device info
@@ -22,7 +22,6 @@ namespace Cognitive3D.Components
         //counts up the deltatime to determine when the interval ends
         float currentTime;
 
-
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -33,6 +32,7 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
+
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
@@ -105,12 +105,13 @@ namespace Cognitive3D.Components
         return boundaryPoints;
 
 #elif C3D_STEAMVR2
-        // Valve.VR/OpenVR Array; we will convert it to list for ease of use. Array of size 1 because we are representing 1 rectangle
-        Valve.VR.HmdQuad_t[] steamVRBoundaryPoints = new Valve.VR.HmdQuad_t[1]; 
-        
+        // Valve.VR/OpenVR Array; we will convert it to list for ease of use
+        Valve.VR.HmdQuad_t[] steamVRBoundaryPoints;
         Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
         setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
         boundaryPoints = GetValveArrayAsList(steamVRBoundaryPoints);
+        //  Debug.Log(steamVRBoundaryPoints.Length);
+        // LogTheArray(steamVRBoundaryPoints);
         return boundaryPoints;
 
 #else
@@ -149,6 +150,7 @@ namespace Cognitive3D.Components
             int j = polygon.Length - 1;
             for (int i = 0; i < polygon.Length; i++)
             {
+                // Only using x and z coordinates because Unity is "y-up" and boundary is infinitely high
                 if (polygon[i].z < testPoint.z && polygon[j].z >= testPoint.z || polygon[j].z < testPoint.z && polygon[i].z >= testPoint.z)
                 {
                     if (polygon[i].x + (testPoint.z - polygon[i].z) / (polygon[j].z - polygon[i].z) * (polygon[j].x - polygon[i].x) < testPoint.x)
@@ -207,14 +209,17 @@ namespace Cognitive3D.Components
             private List<Vector3> GetValveArrayAsList(Valve.VR.HmdQuad_t[] steamArray)
             {
                 List<Vector3> steamList = new List<Vector3>();
-                Valve.VR.HmdQuad_t currentQuad = steamArray[0];
-                steamList.Add(SteamQuadtToVector(currentQuad.vCorners0));
-                steamList.Add(SteamQuadtToVector(currentQuad.vCorners1));
-                steamList.Add(SteamQuadtToVector(currentQuad.vCorners2));
-                steamList.Add(SteamQuadtToVector(currentQuad.vCorners3));
+                for (int i = 0; i < steamArray.Length; i++)
+                {
+                    Valve.VR.HmdQuad_t currentQuad = steamArray[i];
+                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners0));
+                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners1));
+                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners2));
+                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners3));
+                }
                 return steamList;
             }
-
+            
             /// <summary>
             /// Converts a Valve.VR HmdVector3_t struct to a Unity Vector3
             /// </summary>

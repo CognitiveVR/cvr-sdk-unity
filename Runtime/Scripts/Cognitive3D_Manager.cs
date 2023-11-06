@@ -60,6 +60,23 @@ namespace Cognitive3D
 
         private readonly List<Scene> sceneList = new List<Scene>();
 
+        #region TrackingSpace
+        private Transform trackingSpace;
+
+        public Transform TrackingSpace
+        {
+            get
+            {
+                return trackingSpace;
+            }
+
+            set
+            {
+                trackingSpace = value;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
