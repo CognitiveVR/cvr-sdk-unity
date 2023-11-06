@@ -99,7 +99,7 @@ namespace Cognitive3D.Components
         {
             return null;
         }
-        boundaryPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList<Vector3>();
+        boundaryPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList();
         return boundaryPoints;
 
 #elif C3D_STEAMVR2
