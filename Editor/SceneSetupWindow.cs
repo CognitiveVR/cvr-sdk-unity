@@ -192,9 +192,10 @@ namespace Cognitive3D
                 }
             }
 
-            if (Cognitive3D_Manager.Instance.TrackingSpace != null)
+            GameObject trackingSpaceObjectInScene = FindAnyObjectByType<RoomTrackingSpace>().gameObject;
+            if (trackingSpaceObjectInScene != null)
             {
-                trackingSpace = Cognitive3D_Manager.Instance.TrackingSpace.gameObject;
+                trackingSpace = trackingSpaceObjectInScene;
             }
 
             if (leftcontroller != null && rightcontroller != null)
@@ -345,7 +346,7 @@ namespace Cognitive3D
             }
             if (trackingSpace != null)
             {
-                Cognitive3D_Manager.Instance.TrackingSpace = trackingSpace.transform;
+                trackingSpace.AddComponent<RoomTrackingSpace>();
             }
 
             //controllers
