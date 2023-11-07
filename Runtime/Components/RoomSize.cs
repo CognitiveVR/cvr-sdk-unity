@@ -181,7 +181,9 @@ namespace Cognitive3D.Components
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
-                        new CustomEvent("User recentered").Send();
+                        new CustomEvent("c3d.User recentered")
+                            .SetProperty("HMD position", GameplayReferences.HMD.position)
+                            .Send();
                     }
                     else
                     {
@@ -190,11 +192,14 @@ namespace Cognitive3D.Components
                         SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
                         if (recordRoomSizeChangeAsEvent)
                         {
-                            new CustomEvent("c3d.User changed boundary").SetProperties(new Dictionary<string, object>
-                            {
-                                {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
-                                {   "New Room Size" , roomsize.x * roomsize.z }
-                            }).Send();
+                            new CustomEvent("c3d.User changed boundary")
+                            .SetProperties(
+                                new Dictionary<string, object>
+                                {
+                                    {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
+                                    {   "New Room Size" , roomsize.x * roomsize.z }
+                                })
+                            .Send();
                         }
                         lastRoomSize = roomsize;
                     }
