@@ -23,6 +23,7 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            boundaryPoints = GetBoundaryPoints();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             CalculateAndRecordRoomsize(false);
