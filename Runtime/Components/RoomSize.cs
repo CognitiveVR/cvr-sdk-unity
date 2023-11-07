@@ -182,9 +182,12 @@ namespace Cognitive3D.Components
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
-                        new CustomEvent("c3d.User recentered")
+                        if (recordRecenterAsEvent)
+                        {
+                            new CustomEvent("c3d.User recentered")
                             .SetProperty("HMD position", GameplayReferences.HMD.position)
                             .Send();
+                        }
                     }
                     else
                     {
