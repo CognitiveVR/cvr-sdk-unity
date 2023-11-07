@@ -26,7 +26,7 @@ namespace Cognitive3D.Components
             boundaryPoints = GetBoundaryPoints();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            CalculateAndRecordRoomsize(false);
+            CalculateAndRecordRoomsize(false, false);
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -37,7 +37,7 @@ namespace Cognitive3D.Components
                 if (HasBoundaryChanged())
                 {
                     boundaryPoints = GetBoundaryPoints();
-                    CalculateAndRecordRoomsize(true);
+                    CalculateAndRecordRoomsize(true, true);
                 }
                 SendEventIfUserExitsBoundary();
                 currentTime = 0;
@@ -166,7 +166,7 @@ namespace Cognitive3D.Components
         /// Sets the new roomsize as a session property and if the bool param is true, records the boundary change as a custom event
         /// </summary>
         /// <param name="recordRoomSizeChangeAsEvent">Flag to enable recording a custom event</param>
-        private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent)
+        private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent, bool recordRecenterAsEvent)
         {
             Vector3 roomsize = new Vector3();
             if (GameplayReferences.GetRoomSize(ref roomsize))
