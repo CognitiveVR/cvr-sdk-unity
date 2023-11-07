@@ -166,6 +166,7 @@ namespace Cognitive3D.Components
         /// Sets the new roomsize as a session property and if the bool param is true, records the boundary change as a custom event
         /// </summary>
         /// <param name="recordRoomSizeChangeAsEvent">Flag to enable recording a custom event</param>
+        /// <param name="recordRecenterAsEvent">Flag to enable recording recenter</param>
         private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent, bool recordRecenterAsEvent)
         {
             Vector3 roomsize = new Vector3();
