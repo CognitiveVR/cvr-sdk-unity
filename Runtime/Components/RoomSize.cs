@@ -53,7 +53,7 @@ namespace Cognitive3D.Components
             List<Vector3> temporaryList = GetBoundaryPoints();
             for (int i = 0; i < boundaryPoints.Count; i++)
             {
-                if (Vector3.SqrMagnitude(boundaryPoints[i] - temporaryList[i]) >= 1)
+                if (Vector3.SqrMagnitude(boundaryPoints[i] - temporaryList[i]) >= 0.1)
                 {
                     return true;
                 }
