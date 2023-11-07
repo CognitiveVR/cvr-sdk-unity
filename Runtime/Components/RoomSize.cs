@@ -31,7 +31,6 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
@@ -94,47 +93,47 @@ namespace Cognitive3D.Components
         /// <returns>A List of Vector3 representing the corners of the user defined boundary</returns>
         private List<Vector3> GetBoundaryPoints()
         {
-
-#if C3D_OCULUS
-        if (OVRManager.boundary == null)
-        {
-            return null;
-        }
-        boundaryPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList();
-        return boundaryPoints;
-
-#elif C3D_STEAMVR2
-        // Valve.VR/OpenVR Array; we will convert it to list for ease of use
-        Valve.VR.HmdQuad_t[] steamVRBoundaryPoints;
-        Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
-        setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
-        boundaryPoints = GetValveArrayAsList(steamVRBoundaryPoints);
-        //  Debug.Log(steamVRBoundaryPoints.Length);
-        // LogTheArray(steamVRBoundaryPoints);
-        return boundaryPoints;
-
-#else
-            // Using Unity's XRInputSubsystem as fallback
-            List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
-            SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
-
-            // Handling case of multiple subsystems to find the first one that "works"
-            foreach (XRInputSubsystem subsystem in subsystems)
+            List <Vector3> retrievedPoints = new List<Vector3>();
+    #if C3D_OCULUS
+            if (OVRManager.boundary == null)
             {
-                if (!subsystem.running)
-                {
-                    continue;
-                }
-                if (subsystem.TryGetBoundaryPoints(boundaryPoints))
-                {
-                    return boundaryPoints;
-                }
+                return null;
             }
-            // Unable to find boundary points - should we send an event?
-            // Probably will return empty list; need to append with warning or somethings
-            Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
-            return boundaryPoints;
-#endif
+            retrievedPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList();
+            return retrievedPoints;
+
+    #elif C3D_STEAMVR2
+            // Valve.VR/OpenVR Array; we will convert it to list for ease of use
+            Valve.VR.HmdQuad_t[] steamVRBoundaryPoints;
+            Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
+            setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
+            retrievedPoints = GetValveArrayAsList(steamVRBoundaryPoints);
+            //  Debug.Log(steamVRBoundaryPoints.Length);
+            // LogTheArray(steamVRBoundaryPoints);
+            return retrievedPoints;
+
+    #else
+                // Using Unity's XRInputSubsystem as fallback
+                List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
+                SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
+
+                // Handling case of multiple subsystems to find the first one that "works"
+                foreach (XRInputSubsystem subsystem in subsystems)
+                {
+                    if (!subsystem.running)
+                    {
+                        continue;
+                    }
+                    if (subsystem.TryGetBoundaryPoints(retrievedPoints))
+                    {
+                        return retrievedPoints;
+                    }
+                }
+                // Unable to find boundary points - should we send an event?
+                // Probably will return empty list; need to append with warning or somethings
+                Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
+                return retrievedPoints;
+    #endif
         }
 
         /// <summary>
