@@ -179,6 +179,7 @@ namespace Cognitive3D
             {
                 mainCameraObject = camera.gameObject;
             }
+
             foreach(var dyn in FindObjectsOfType<DynamicObject>())
             {
                 if (dyn.IsController && dyn.IsRight)
@@ -189,6 +190,11 @@ namespace Cognitive3D
                 {
                     leftcontroller = dyn.gameObject;
                 }
+            }
+
+            if (Cognitive3D_Manager.Instance.TrackingSpace != null)
+            {
+                trackingSpace = Cognitive3D_Manager.Instance.TrackingSpace.gameObject;
             }
 
             if (leftcontroller != null && rightcontroller != null)
