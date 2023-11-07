@@ -192,10 +192,10 @@ namespace Cognitive3D
                 }
             }
 
-            GameObject trackingSpaceObjectInScene = FindAnyObjectByType<RoomTrackingSpace>().gameObject;
-            if (trackingSpaceObjectInScene != null)
+            RoomTrackingSpace trackingSpaceInScene = FindAnyObjectByType<RoomTrackingSpace>();
+            if (trackingSpaceInScene != null)
             {
-                trackingSpace = trackingSpaceObjectInScene;
+                trackingSpace = trackingSpaceInScene.gameObject;
             }
 
             if (leftcontroller != null && rightcontroller != null)
@@ -260,7 +260,7 @@ namespace Cognitive3D
             }
         }
 
-        bool AllControllerSetupComplete;
+        bool AllSetupComplete;
 
         void ControllerUpdate()
         {
@@ -344,10 +344,6 @@ namespace Cognitive3D
                     trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
                 }
             }
-            if (trackingSpace != null)
-            {
-                trackingSpace.AddComponent<RoomTrackingSpace>();
-            }
 
             //controllers
 #if C3D_STEAMVR2
@@ -362,16 +358,17 @@ namespace Cognitive3D
             leftControllerIsValid = leftcontroller != null;
             rightControllerIsValid = rightcontroller != null;
 
-            AllControllerSetupComplete = false;
+            AllSetupComplete = false;
             if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
             {
                 var rdyn = rightcontroller.GetComponent<DynamicObject>();
                 if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
                     var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false)
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false
+                        && (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() != null)) // Make sure tracking space isn't null before accessing its component
                     {
-                        AllControllerSetupComplete = true;
+                        AllSetupComplete = true;
                     }
                 }
             }
@@ -476,14 +473,19 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
+            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
+                if (trackingSpace != null)
+                {
+                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                }
+
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
             }
 
-            if (AllControllerSetupComplete)
+            if (AllSetupComplete)
             {
                 GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
@@ -1112,8 +1114,8 @@ namespace Cognitive3D
                     }
 
 #else
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {

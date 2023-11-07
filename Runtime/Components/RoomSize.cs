@@ -66,9 +66,9 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            if (Cognitive3D_Manager.Instance.TrackingSpace != null)
+            if (Cognitive3D_Manager.Instance.trackingSpace != null)
             {
-                if (!IsPointInPolygon4(boundaryPoints.ToArray(), Cognitive3D_Manager.Instance.TrackingSpace.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if (!IsPointInPolygon4(boundaryPoints.ToArray(), Cognitive3D_Manager.Instance.trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
                     if (!exited)
                     {

@@ -60,6 +60,9 @@ namespace Cognitive3D
 
         private readonly List<Scene> sceneList = new List<Scene>();
 
+        [HideInInspector]
+        public GameObject trackingSpace;
+
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
