@@ -175,18 +175,29 @@ namespace Cognitive3D.Components
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
                 {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
-                    SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
-                    if (recordRoomSizeChangeAsEvent)
+                    float currentArea = roomsize.x * roomsize.z;
+                    float lastArea = lastRoomSize.x * lastRoomSize.z;
+
+                    // We have determined that a recenter causes change in boundary points without chaning the roomsize
+                    if (Mathf.Approximately(currentArea, lastArea))
                     {
-                        new CustomEvent("c3d.User changed boundary").SetProperties(new Dictionary<string, object>
-                        {
-                            {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
-                            {   "New Room Size" , roomsize.x * roomsize.z }
-                        }).Send();
+                        new CustomEvent("User recentered").Send();
                     }
-                    lastRoomSize = roomsize;
+                    else
+                    {
+                        Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
+                        Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
+                        SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
+                        if (recordRoomSizeChangeAsEvent)
+                        {
+                            new CustomEvent("c3d.User changed boundary").SetProperties(new Dictionary<string, object>
+                            {
+                                {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
+                                {   "New Room Size" , roomsize.x * roomsize.z }
+                            }).Send();
+                        }
+                        lastRoomSize = roomsize;
+                    }
                 }
             }
             else
