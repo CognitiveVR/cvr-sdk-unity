@@ -1093,8 +1093,8 @@ namespace Cognitive3D
                     break;
                 case Page.PlayerSetup:
 #if C3D_STEAMVR2
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
