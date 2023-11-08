@@ -54,7 +54,11 @@ namespace Cognitive3D.Components
             List<Vector3> temporaryList = GetBoundaryPoints();
             for (int i = 0; i < boundaryPoints.Count; i++)
             {
-                if (Vector3.SqrMagnitude(boundaryPoints[i] - temporaryList[i]) >= 0.1)
+                // Check whether x or z coordinate changed significantly
+                // Ignore y because y is "up"
+                // We only care about ground plane
+                if (Mathf.Abs(boundaryPoints[i].x - temporaryList[i].x) >= 0.1
+                    || Mathf.Abs(boundaryPoints[i].z - temporaryList[i].z) >= 0.1)
                 {
                     return true;
                 }
@@ -84,7 +88,7 @@ namespace Cognitive3D.Components
             }
             else
             {
-                // Tracking space unavailable: Maybe send an event or property?
+                Debug.LogWarning("Tracking Space not available");
             }
         }
 
