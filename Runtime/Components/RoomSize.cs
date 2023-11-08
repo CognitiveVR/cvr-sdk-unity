@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using OVR.OpenVR;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
@@ -71,9 +72,10 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            if (Cognitive3D_Manager.Instance.trackingSpace != null)
+            Transform trackingSpace = null;
+            if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(ref trackingSpace))
             {
-                if (!IsPointInPolygon4(boundaryPoints.ToArray(), Cognitive3D_Manager.Instance.trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if (!IsPointInPolygon4(boundaryPoints.ToArray(), trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
                     if (!exited)
                     {
@@ -88,7 +90,7 @@ namespace Cognitive3D.Components
             }
             else
             {
-                Debug.LogWarning("Tracking Space not available");
+                Debug.Log("Tracking Space not found");
             }
         }
 
@@ -113,10 +115,7 @@ namespace Cognitive3D.Components
             Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
             setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
             retrievedPoints = GetValveArrayAsList(steamVRBoundaryPoints);
-            //  Debug.Log(steamVRBoundaryPoints.Length);
-            // LogTheArray(steamVRBoundaryPoints);
             return retrievedPoints;
-
     #else
                 // Using Unity's XRInputSubsystem as fallback
                 List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();

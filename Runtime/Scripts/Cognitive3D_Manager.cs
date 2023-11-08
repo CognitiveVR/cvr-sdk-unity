@@ -414,6 +414,29 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
+        public bool TryGetTrackingSpace(ref Transform space)
+        {
+            if (trackingSpace != null)
+            {
+                space = trackingSpace.transform;
+                return true;
+            }
+            else
+            {
+                GameObject trackingSpaceInScene = FindFirstObjectByType<RoomTrackingSpace>().gameObject;
+                if (trackingSpaceInScene != null)
+                {
+                    trackingSpace = trackingSpaceInScene;
+                    space = trackingSpaceInScene.transform;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             if (DoesSceneHaveID(scene))
