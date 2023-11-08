@@ -26,6 +26,7 @@ namespace Cognitive3D.Components
             boundaryPoints = GetBoundaryPoints();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            GameplayReferences.GetRoomSize(ref lastRoomSize);
             CalculateAndRecordRoomsize(false, false);
         }
 
