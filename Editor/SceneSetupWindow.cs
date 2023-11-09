@@ -192,7 +192,7 @@ namespace Cognitive3D
                 }
             }
 
-            RoomTrackingSpace trackingSpaceInScene = FindAnyObjectByType<RoomTrackingSpace>();
+            RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
             if (trackingSpaceInScene != null)
             {
                 trackingSpace = trackingSpaceInScene.gameObject;
