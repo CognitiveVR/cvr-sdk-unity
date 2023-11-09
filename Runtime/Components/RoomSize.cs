@@ -71,7 +71,7 @@ namespace Cognitive3D.Components
         void SendEventIfUserExitsBoundary()
         {
             Transform trackingSpace = null;
-            if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(ref trackingSpace))
+            if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
             {
                 if (!IsPointInPolygon4(boundaryPoints.ToArray(), trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {

@@ -414,7 +414,7 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
-        public bool TryGetTrackingSpace(ref Transform space)
+        public bool TryGetTrackingSpace(out Transform space)
         {
             if (trackingSpace != null)
             {
@@ -432,6 +432,7 @@ namespace Cognitive3D
                 }
                 else
                 {
+                    space = null;
                     return false;
                 }
             }
