@@ -12,7 +12,7 @@ namespace Cognitive3D.Components
     public class RoomSize : AnalyticsComponentBase
     {
         List <Vector3> boundaryPoints = new List<Vector3>();
-        float BoundaryTrackingInterval = 1;
+        readonly float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
         bool exited;
 
