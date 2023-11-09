@@ -1,6 +1,4 @@
-﻿using OVR.OpenVR;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -106,7 +104,13 @@ namespace Cognitive3D.Components
             {
                 return null;
             }
-            retrievedPoints = OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea).ToList();
+            
+            // GetGeometry returns an array but we are using lists
+            // Writing this code ourselves is better than importing a whole library just for one functions
+            foreach (var point in OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
+            {
+                retrievedPoints.Add(point);
+            }
             return retrievedPoints;
 
     #elif C3D_STEAMVR2
@@ -200,13 +204,10 @@ namespace Cognitive3D.Components
                         SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
                         if (recordRoomSizeChangeAsEvent)
                         {
+                            // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
                             new CustomEvent("c3d.User changed boundary")
-                            .SetProperties(
-                                new Dictionary<string, object>
-                                {
-                                    {  "Previous Room Size" , lastRoomSize.x * lastRoomSize.z },
-                                    {   "New Room Size" , roomsize.x * roomsize.z }
-                                })
+                            .SetProperty("Previous Room Size", lastRoomSize.x * lastRoomSize.z)
+                            .SetProperty("New Room Size", roomsize.x * roomsize.z)
                             .Send();
                         }
                         lastRoomSize = roomsize;

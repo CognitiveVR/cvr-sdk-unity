@@ -61,7 +61,7 @@ namespace Cognitive3D
         private readonly List<Scene> sceneList = new List<Scene>();
 
         [HideInInspector]
-        public GameObject trackingSpace;
+        public Transform trackingSpace;
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -423,10 +423,10 @@ namespace Cognitive3D
             }
             else
             {
-                GameObject trackingSpaceInScene = FindFirstObjectByType<RoomTrackingSpace>().gameObject;
+                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
                 if (trackingSpaceInScene != null)
                 {
-                    trackingSpace = trackingSpaceInScene;
+                    trackingSpace = trackingSpaceInScene.transform;
                     space = trackingSpaceInScene.transform;
                     return true;
                 }
