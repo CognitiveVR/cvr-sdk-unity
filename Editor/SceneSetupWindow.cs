@@ -321,10 +321,10 @@ namespace Cognitive3D
 
 
             // tracking space
-            int hmdRectHeight2 = 200;
+            int hmdRectHeight2 = 185;
 
             GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? "Tracking Space" : "Missing Tracking Space", "button_blueoutline"))
+            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? "Tracking Space" : "Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = trackingSpace;
             }
@@ -343,6 +343,10 @@ namespace Cognitive3D
                 {
                     trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
                 }
+            }
+            if (trackingSpace == null)
+            {
+                GUI.Label(new Rect(400, hmdRectHeight2, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
             }
 
             //controllers
@@ -476,7 +480,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
-                if (trackingSpace != null)
+                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
                 {
                     trackingSpace.AddComponent<RoomTrackingSpace>();
                 }

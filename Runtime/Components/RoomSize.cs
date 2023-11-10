@@ -11,10 +11,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        List <Vector3> boundaryPoints = new List<Vector3>();
+        Vector3[] previousBoundaryPoints = new Vector3[0];
         readonly float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
-        bool exited;
+        bool isHMDOutsideBoundary;
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
@@ -22,9 +22,10 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            boundaryPoints = GetBoundaryPoints();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+
+            previousBoundaryPoints = GetCurrentBoundaryPoints();
             GameplayReferences.GetRoomSize(ref lastRoomSize);
             CalculateAndRecordRoomsize(false, false);
         }
@@ -34,30 +35,34 @@ namespace Cognitive3D.Components
             currentTime += deltaTime;
             if (currentTime > BoundaryTrackingInterval)
             {
-                if (HasBoundaryChanged())
+                currentTime = 0;
+
+                var currentBoundaryPoints = GetCurrentBoundaryPoints();
+                if (HasBoundaryChanged(previousBoundaryPoints,currentBoundaryPoints))
                 {
-                    boundaryPoints = GetBoundaryPoints();
+                    previousBoundaryPoints = currentBoundaryPoints;
                     CalculateAndRecordRoomsize(true, true);
                 }
                 SendEventIfUserExitsBoundary();
-                currentTime = 0;
             }
         }
 
         /// <summary>
-        /// Determines if user changed their boundary
+        /// Compares two lists of points to determine if the boundary changed
         /// </summary>
         /// <returns>True if boundary changed, false otherwise</returns>
-        private bool HasBoundaryChanged()
+        private bool HasBoundaryChanged(Vector3[] previousBoundary, Vector3[] currentBoundary)
         {
-            List<Vector3> temporaryList = GetBoundaryPoints();
-            for (int i = 0; i < boundaryPoints.Count; i++)
+            if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
+            if (previousBoundary.Length != currentBoundary.Length) { return true; }
+
+            for (int i = 0; i < previousBoundary.Length; i++)
             {
                 // Check whether x or z coordinate changed significantly
                 // Ignore y because y is "up"
                 // We only care about ground plane
-                if (Mathf.Abs(boundaryPoints[i].x - temporaryList[i].x) >= 0.1
-                    || Mathf.Abs(boundaryPoints[i].z - temporaryList[i].z) >= 0.1)
+                if (Mathf.Abs(previousBoundary[i].x - currentBoundary[i].x) >= 0.1f
+                    || Mathf.Abs(previousBoundary[i].z - currentBoundary[i].z) >= 0.1f)
                 {
                     return true;
                 }
@@ -73,17 +78,17 @@ namespace Cognitive3D.Components
             Transform trackingSpace = null;
             if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
             {
-                if (!IsPointInPolygon4(boundaryPoints.ToArray(), trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                 {
-                    if (!exited)
+                    if (!isHMDOutsideBoundary)
                     {
                         new CustomEvent("c3d.user.exited.boundary").Send();
-                        exited = true;
+                        isHMDOutsideBoundary = true;
                     }
                 }
                 else
                 {
-                    exited = false;
+                    isHMDOutsideBoundary = false;
                 }
             }
             else
@@ -96,52 +101,51 @@ namespace Cognitive3D.Components
         /// Retrieves the coordinates of the corners of a quadrilateral representing the user defined boundary
         /// </summary>
         /// <returns>A List of Vector3 representing the corners of the user defined boundary</returns>
-        private List<Vector3> GetBoundaryPoints()
+        private Vector3[] GetCurrentBoundaryPoints()
         {
-            List <Vector3> retrievedPoints = new List<Vector3>();
-    #if C3D_OCULUS
+#if C3D_OCULUS
             if (OVRManager.boundary == null)
             {
                 return null;
             }
-            
+
             // GetGeometry returns an array but we are using lists
             // Writing this code ourselves is better than importing a whole library just for one functions
-            foreach (var point in OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea))
-            {
-                retrievedPoints.Add(point);
-            }
-            return retrievedPoints;
+            return OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
 
-    #elif C3D_STEAMVR2
+#elif C3D_STEAMVR2
             // Valve.VR/OpenVR Array; we will convert it to list for ease of use
             Valve.VR.HmdQuad_t[] steamVRBoundaryPoints;
             Valve.VR.CVRChaperoneSetup setup = Valve.VR.OpenVR.ChaperoneSetup;
+            if (setup == null)
+            {
+                return null;
+            }
             setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
-            retrievedPoints = GetValveArrayAsList(steamVRBoundaryPoints);
-            return retrievedPoints;
-    #else
-                // Using Unity's XRInputSubsystem as fallback
-                List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
-                SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
+            return ConvertSteamVRToUnityBounds(steamVRBoundaryPoints);
+#else
+            // Using Unity's XRInputSubsystem as fallback
+            List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
+            SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
 
-                // Handling case of multiple subsystems to find the first one that "works"
-                foreach (XRInputSubsystem subsystem in subsystems)
+            // Handling case of multiple subsystems to find the first one that "works"
+            foreach (XRInputSubsystem subsystem in subsystems)
+            {
+                if (!subsystem.running)
                 {
-                    if (!subsystem.running)
-                    {
-                        continue;
-                    }
-                    if (subsystem.TryGetBoundaryPoints(retrievedPoints))
-                    {
-                        return retrievedPoints;
-                    }
+                    continue;
                 }
-                // Unable to find boundary points - should we send an event?
-                // Probably will return empty list; need to append with warning or somethings
-                Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
-                return retrievedPoints;
-    #endif
+                List<Vector3> retrievedPoints = new List<Vector3>();
+                if (subsystem.TryGetBoundaryPoints(retrievedPoints))
+                {
+                    return retrievedPoints.ToArray();
+                }
+            }
+            // Unable to find boundary points - should we send an event?
+            // Probably will return empty list; need to append with warning or somethings
+            Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
+            return null;
+#endif
         }
 
         /// <summary>
@@ -168,6 +172,8 @@ namespace Cognitive3D.Components
             }
             return result;
         }
+
+        //TODO pass in boundary points and record roomsize with that instead of using GameplayReferences method
 
         /// <summary>
         /// Called at session beginning and when boundary changes.
@@ -220,42 +226,52 @@ namespace Cognitive3D.Components
             }
         }
 
-#region SteamVR Specific Utils
+        #region SteamVR Specific Utils
 
-    #if C3D_STEAMVR2
-            /// <summary>
-            /// Converts Valve's HmdQuad_t array to a List of Vector3. 
-            /// Used for the very specific use-case of boundary points.
-            /// </summary>
-            /// <param name="steamArray"> An array of HmdQuad_t structs</param>
-            /// <returns> A list of 4 Vector3 elements </returns>
-            private List<Vector3> GetValveArrayAsList(Valve.VR.HmdQuad_t[] steamArray)
+#if C3D_STEAMVR2
+        /// <summary>
+        /// Converts Valve's HmdQuad_t array to a List of Vector3. 
+        /// Used for the very specific use-case of boundary points.
+        /// </summary>
+        /// <param name="steamArray"> An array of HmdQuad_t structs</param>
+        /// <returns> A list of 4 Vector3 elements </returns>
+        private Vector3[] ConvertSteamVRToUnityBounds(Valve.VR.HmdQuad_t[] steamArray)
+        {
+            Vector3[] returnArray = new Vector3[steamArray.Length * 4];
+            for (int i = 0; i < steamArray.Length; i+=4)
             {
-                List<Vector3> steamList = new List<Vector3>();
-                for (int i = 0; i < steamArray.Length; i++)
-                {
-                    Valve.VR.HmdQuad_t currentQuad = steamArray[i];
-                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners0));
-                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners1));
-                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners2));
-                    steamList.Add(SteamQuadtToVector(currentQuad.vCorners3));
-                }
-                return steamList;
+                returnArray[i] = SteamHMDVector3tToVector(steamArray[i].vCorners0);
+                returnArray[i+1] = SteamHMDVector3tToVector(steamArray[i].vCorners1);
+                returnArray[i+2] = SteamHMDVector3tToVector(steamArray[i].vCorners2);
+                returnArray[i+3] = SteamHMDVector3tToVector(steamArray[i].vCorners3);
             }
+            return returnArray;
+
+            //List<Vector3> steamList = new List<Vector3>();
+            //for (int i = 0; i < steamArray.Length; i++)
+            //{
+            //    Valve.VR.HmdQuad_t currentQuad = steamArray[i];
+            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners0));
+            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners1));
+            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners2));
+            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners3));
+            //}
+            //return steamList;
+        }
             
-            /// <summary>
-            /// Converts a Valve.VR HmdVector3_t struct to a Unity Vector3
-            /// </summary>
-            /// <param name="point">A struct of type Valve.VR.HmdVector3_t</param>
-            /// <returns>A Vector3 representation of the Valve.VR point</returns>
-            private Vector3 SteamQuadtToVector(Valve.VR.HmdVector3_t point)
-            {
-                Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
-                return myPoint;
-            }
-    #endif
+        /// <summary>
+        /// Converts a Valve.VR HmdVector3_t struct to a Unity Vector3
+        /// </summary>
+        /// <param name="point">A struct of type Valve.VR.HmdVector3_t</param>
+        /// <returns>A Vector3 representation of the Valve.VR point</returns>
+        private Vector3 SteamHMDVector3tToVector(Valve.VR.HmdVector3_t point)
+        {
+            Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
+            return myPoint;
+        }
+#endif
 
-#endregion
+        #endregion
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {

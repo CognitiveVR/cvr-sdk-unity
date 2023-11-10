@@ -147,6 +147,7 @@ namespace Cognitive3D
 
         ///x,y,z is width, height, depth
         ///return value is in meters
+        [System.Obsolete()]
         public static bool GetRoomSize(ref Vector3 roomSize)
         {
 #if C3D_STEAMVR2

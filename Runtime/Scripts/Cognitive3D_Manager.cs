@@ -418,7 +418,7 @@ namespace Cognitive3D
         {
             if (trackingSpace != null)
             {
-                space = trackingSpace.transform;
+                space = trackingSpace;
                 return true;
             }
             else
