@@ -54,6 +54,7 @@ namespace Cognitive3D.Components
         private bool HasBoundaryChanged(Vector3[] previousBoundary, Vector3[] currentBoundary)
         {
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
+            if (previousBoundary == null && currentBoundary == null) { return false; }
             if (previousBoundary.Length != currentBoundary.Length) { return true; }
 
             for (int i = 0; i < previousBoundary.Length; i++)
