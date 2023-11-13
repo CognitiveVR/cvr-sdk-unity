@@ -27,7 +27,7 @@ namespace Cognitive3D.Components
             previousBoundaryPoints = GetCurrentBoundaryPoints();
             CalculateAndRecordRoomsize(false, false);
             Vector3 initialRoomsize = new Vector3();
-            GameplayReferences.GetRoomSize(ref initialRoomsize);
+            GetRoomSize(ref initialRoomsize);
             WriteRoomSizeAsSessionProperty(initialRoomsize);
         }
 
@@ -195,7 +195,7 @@ namespace Cognitive3D.Components
         private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent, bool recordRecenterAsEvent)
         {
             Vector3 roomsize = new Vector3();
-            if (GameplayReferences.GetRoomSize(ref roomsize))
+            if (GetRoomSize(ref roomsize))
             {
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
@@ -234,6 +234,76 @@ namespace Cognitive3D.Components
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
             }
+        }
+
+        /// <summary>
+        /// Calculates and writes the value of the roomsize as a Vector3
+        /// </summary>
+        /// <param name="roomSize"> The variable the roomsize value will be written to</param>
+        /// <returns> True if roomsize available, false otherwise</returns>
+        private bool GetRoomSize(ref Vector3 roomSize)
+        {
+#if C3D_STEAMVR2
+            float roomX = 0;
+            float roomY = 0;
+            if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+            {
+                roomSize = new Vector3(roomX, 0, roomY);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif C3D_OCULUS
+            if (OVRManager.boundary == null) { return false; }
+            if (OVRManager.boundary.GetConfigured())
+            {
+                roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
+                return true;
+            }
+            return false;
+#elif C3D_PICOXR
+            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
+            {
+                roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#elif C3D_PICOVR
+            if (Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetEnabled())
+            {
+                //api returns mm
+                roomSize = Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetDimensions(Pvr_UnitySDKAPI.BoundarySystem.BoundaryType.PlayArea);
+                roomSize /= 1000;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+#else
+            UnityEngine.XR.InputDevice inputDevice = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (inputDevice.isValid)
+            {
+                UnityEngine.XR.InputDevice hMDDevice = inputDevice;
+                UnityEngine.XR.XRInputSubsystem XRIS = hMDDevice.subsystem;
+                if (XRIS == null)
+                {
+                    return false;
+                }
+                List<Vector3> boundaryPoints = new List<Vector3>();
+                if (XRIS.TryGetBoundaryPoints(boundaryPoints))
+                {
+                    roomSize = GetArea(boundaryPoints.ToArray());
+                    return true;
+                }
+            }
+            return false;
+#endif
         }
 
         #region SteamVR Specific Utils
