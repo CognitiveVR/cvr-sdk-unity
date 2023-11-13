@@ -24,10 +24,11 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-
             previousBoundaryPoints = GetCurrentBoundaryPoints();
-            GameplayReferences.GetRoomSize(ref lastRoomSize);
             CalculateAndRecordRoomsize(false, false);
+            Vector3 initialRoomsize = new Vector3();
+            GameplayReferences.GetRoomSize(ref initialRoomsize);
+            WriteRoomSizeAsSessionProperty(initialRoomsize);
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -60,7 +61,7 @@ namespace Cognitive3D.Components
             for (int i = 0; i < previousBoundary.Length; i++)
             {
                 // Check whether x or z coordinate changed significantly
-                // Ignore y because y is "up"
+                // Ignore y because y is "up" and boundary is infinitely high
                 // We only care about ground plane
                 if (Mathf.Abs(previousBoundary[i].x - currentBoundary[i].x) >= 0.1f
                     || Mathf.Abs(previousBoundary[i].z - currentBoundary[i].z) >= 0.1f)
@@ -174,6 +175,15 @@ namespace Cognitive3D.Components
             return result;
         }
 
+        /// <summary>
+        /// Writes roomsize as session property
+        /// </summary>
+        private void WriteRoomSizeAsSessionProperty(Vector3 roomsize)
+        {
+            Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
+            Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
+        }
+
         //TODO pass in boundary points and record roomsize with that instead of using GameplayReferences method
 
         /// <summary>
@@ -206,8 +216,7 @@ namespace Cognitive3D.Components
                     }
                     else
                     {
-                        Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
-                        Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
+                        WriteRoomSizeAsSessionProperty(roomsize);
                         SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
                         if (recordRoomSizeChangeAsEvent)
                         {
