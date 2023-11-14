@@ -125,6 +125,15 @@ namespace Cognitive3D.Components
             }
             setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
             return ConvertSteamVRToUnityBounds(steamVRBoundaryPoints);
+#elif C3D_PICOXR
+            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
+            {
+                return Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea);
+            }
+            else
+            {
+                return null;
+            }
 #else
             // Using Unity's XRInputSubsystem as fallback
             List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
@@ -267,6 +276,7 @@ namespace Cognitive3D.Components
             if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
             {
                 roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
+                roomSize /= 1000;
                 return true;
             }
             else
