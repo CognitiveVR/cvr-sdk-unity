@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
                 currentTime = 0;
 
                 var currentBoundaryPoints = GetCurrentBoundaryPoints();
-                if (HasBoundaryChanged(previousBoundaryPoints,currentBoundaryPoints))
+                if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                 {
                     previousBoundaryPoints = currentBoundaryPoints;
                     CalculateAndRecordRoomsize(true, true);
@@ -80,7 +80,7 @@ namespace Cognitive3D.Components
             Transform trackingSpace = null;
             if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
             {
-                if (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
+                if ((previousBoundaryPoints.Length != 0) && (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position))))
                 {
                     if (!isHMDOutsideBoundary)
                     {
@@ -110,9 +110,6 @@ namespace Cognitive3D.Components
             {
                 return null;
             }
-
-            // GetGeometry returns an array but we are using lists
-            // Writing this code ourselves is better than importing a whole library just for one functions
             return OVRManager.boundary.GetGeometry(OVRBoundary.BoundaryType.PlayArea);
 
 #elif C3D_STEAMVR2
