@@ -122,6 +122,15 @@ namespace Cognitive3D.Components
             }
             setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
             return ConvertSteamVRToUnityBounds(steamVRBoundaryPoints);
+#elif C3D_PICOXR
+            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
+            {
+                return Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea);
+            }
+            else
+            {
+                return null;
+            }
 #else
             // Using Unity's XRInputSubsystem as fallback
             List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
@@ -155,6 +164,7 @@ namespace Cognitive3D.Components
         /// <returns>True if point is in polygon, false otherwise</returns>
         private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
         {
+            if (polygon == null || polygon.Length < 3) { return false; }
             bool result = false;
             int j = polygon.Length - 1;
             for (int i = 0; i < polygon.Length; i++)
@@ -264,6 +274,7 @@ namespace Cognitive3D.Components
             if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
             {
                 roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
+                roomSize /= 1000;
                 return true;
             }
             else
@@ -301,6 +312,29 @@ namespace Cognitive3D.Components
             }
             return false;
 #endif
+        }
+
+        //really simple function to a rect from a collection of points
+        //IMPROVEMENT support non-rectangular boundaries
+        //IMPROVEMENT support rotated rectangular boundaries
+        static Vector3 GetArea(Vector3[] points)
+        {
+            float minX = 0;
+            float maxX = 0;
+            float minZ = 0;
+            float maxZ = 0;
+            foreach (var v in points)
+            {
+                if (v.x < minX)
+                    minX = v.x;
+                if (v.x > maxX)
+                    maxX = v.x;
+                if (v.z < minZ)
+                    minZ = v.z;
+                if (v.z > maxZ)
+                    maxZ = v.z;
+            }
+            return new Vector3(maxX - minX, 0, maxZ - minZ);
         }
 
         #region SteamVR Specific Utils
