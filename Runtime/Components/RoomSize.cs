@@ -55,12 +55,17 @@ namespace Cognitive3D.Components
         /// <returns>True if boundary changed, false otherwise</returns>
         private bool HasBoundaryChanged(Vector3[] previousBoundary, Vector3[] currentBoundary)
         {
-            // this is for a very specific case where boundary exit sometimes causes an empty array from GetBoundaryPoints and hence "fake recenter" events
-            // better to have false negative than a false positive
-            if ((previousBoundary.Length > 0) && (currentBoundary.Length == 0)) {  return false; }
-
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
             if (previousBoundary == null && currentBoundary == null) { return false; }
+
+
+            // OCULUS SPECIFIC HACK 
+            // Going far beyond boundary sometimes causes a pause
+            // which causes GetBoundaryPoints() to return empty array and hence fires "fake recenter" events
+            // Better to have false negative than a false positive
+            if ((previousBoundary.Length > 0) && (currentBoundary.Length == 0)) { return false; }
+
+
             if (previousBoundary.Length != currentBoundary.Length) { return true; }
 
             for (int i = 0; i < previousBoundary.Length; i++)
