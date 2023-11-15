@@ -37,7 +37,6 @@ namespace Cognitive3D.Components
             if (currentTime > BoundaryTrackingInterval)
             {
                 currentTime = 0;
-
                 var currentBoundaryPoints = GetCurrentBoundaryPoints();
                 if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                 {
@@ -51,9 +50,15 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Compares two lists of points to determine if the boundary changed
         /// </summary>
+        /// <param name="currentBoundary">The newly retrieved set of boundary points</param>
+        /// <param name="previousBoundary">The cached set of boundary points</param>
         /// <returns>True if boundary changed, false otherwise</returns>
         private bool HasBoundaryChanged(Vector3[] previousBoundary, Vector3[] currentBoundary)
         {
+            // this is for a very specific case where boundary exit sometimes causes an empty array from GetBoundaryPoints and hence "fake recenter" events
+            // better to have false negative than a false positive
+            if ((previousBoundary.Length > 0) && (currentBoundary.Length == 0)) {  return false; }
+
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
             if (previousBoundary == null && currentBoundary == null) { return false; }
             if (previousBoundary.Length != currentBoundary.Length) { return true; }
