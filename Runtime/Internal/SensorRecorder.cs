@@ -62,6 +62,9 @@ namespace Cognitive3D
                 return;
             }
             sensorData.Add(sensorName, new SensorData(sensorName, HzRate));
+
+            CoreInterface.InitializeSensor(sensorName, HzRate);
+
             LastSensorValues.Add(sensorName, initialValue);
             if (OnNewSensorRecorded != null)
                 OnNewSensorRecorded(sensorName, initialValue);
