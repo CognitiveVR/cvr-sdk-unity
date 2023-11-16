@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
-    [AddComponentMenu("Cognitive3D/Active Session View/Event Feed Entry")]
+    [AddComponentMenu("")]
     public class EventFeedEntry : MonoBehaviour
     {
         public Text Title;
