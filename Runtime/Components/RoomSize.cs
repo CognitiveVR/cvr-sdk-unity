@@ -90,7 +90,7 @@ namespace Cognitive3D.Components
             Transform trackingSpace = null;
             if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
             {
-                if (previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
+                if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
                 {
                     if (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                     {
