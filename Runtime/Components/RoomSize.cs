@@ -2,6 +2,13 @@
 using UnityEngine;
 using UnityEngine.XR;
 
+#if C3D_VIVEWAVE
+    using Wave;
+    using Wave.Native;
+    using Wave.Essence;
+    using Wave.Essence.Events;
+#endif
+
 /// <summary>
 /// Adds room size from SteamVR chaperone to device info
 /// </summary>
@@ -14,10 +21,16 @@ namespace Cognitive3D.Components
         Vector3[] previousBoundaryPoints = new Vector3[0];
         readonly float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
+        Vector3 roomSize = new Vector3();
         bool isHMDOutsideBoundary;
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
+
+#if C3D_VIVEWAVE
+        bool didViveArenaChange;
+        bool didRecenter;
+#endif
 
         protected override void OnSessionBegin()
         {
@@ -29,6 +42,12 @@ namespace Cognitive3D.Components
             Vector3 initialRoomsize = new Vector3();
             GetRoomSize(ref initialRoomsize);
             WriteRoomSizeAsSessionProperty(initialRoomsize);
+
+
+#if C3D_VIVEWAVE
+            SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
+            SystemEvent.Listen(WVR_EventType.WVR_EventType_RecenterSuccess, Recenter);
+#endif
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -37,6 +56,22 @@ namespace Cognitive3D.Components
             if (currentTime > BoundaryTrackingInterval)
             {
                 currentTime = 0;
+
+#if C3D_VIVEWAVE
+
+                // reset these variables every BoundaryTrackingInterval
+                didViveArenaChange = false;
+                didRecenter = false;
+
+                if (Interop.WVR_IsOverArenaRange())
+                {
+                    SendExitEvent();
+                }
+                else
+                {
+                    isHMDOutsideBoundary = false;
+                }
+#else
                 var currentBoundaryPoints = GetCurrentBoundaryPoints();
                 if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                 {
@@ -44,6 +79,7 @@ namespace Cognitive3D.Components
                     CalculateAndRecordRoomsize(true, true);
                 }
                 SendEventIfUserExitsBoundary();
+#endif
             }
         }
 
@@ -94,11 +130,7 @@ namespace Cognitive3D.Components
                 {
                     if (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                     {
-                        if (!isHMDOutsideBoundary)
-                        {
-                            new CustomEvent("c3d.user.exited.boundary").Send();
-                            isHMDOutsideBoundary = true;
-                        }
+                        SendExitEvent();
                     }
                     else
                     {
@@ -204,7 +236,32 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
         }
 
-        //TODO pass in boundary points and record roomsize with that instead of using GameplayReferences method
+
+        private void SendRecenterEvent()
+        {
+            new CustomEvent("c3d.User recentered")
+                .SetProperty("HMD position", GameplayReferences.HMD.position)
+                .Send();
+        }
+
+        private void SendBoundaryChangeEvent(Vector3 roomSizeRef)
+        {     
+            // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
+            new CustomEvent("c3d.User changed boundary")
+            .SetProperty("Previous Room Size", lastRoomSize.x * lastRoomSize.z)
+            .SetProperty("New Room Size", roomSizeRef.x * roomSizeRef.z)
+            .Send();
+        }
+
+        void SendExitEvent()
+        {
+            if (!isHMDOutsideBoundary)
+            {
+                new CustomEvent("c3d.user.exited.boundary").Send();
+                isHMDOutsideBoundary = true;
+            }
+        }
+
 
         /// <summary>
         /// Called at session beginning and when boundary changes.
@@ -214,14 +271,13 @@ namespace Cognitive3D.Components
         /// <param name="recordRecenterAsEvent">Flag to enable recording recenter</param>
         private void CalculateAndRecordRoomsize(bool recordRoomSizeChangeAsEvent, bool recordRecenterAsEvent)
         {
-            Vector3 roomsize = new Vector3();
-            if (GetRoomSize(ref roomsize))
+            if (GetRoomSize(ref roomSize))
             {
 #if XRPF
                 if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
                 {
-                    float currentArea = roomsize.x * roomsize.z;
+                    float currentArea = roomSize.x * roomSize.z;
                     float lastArea = lastRoomSize.x * lastRoomSize.z;
 
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
@@ -229,24 +285,18 @@ namespace Cognitive3D.Components
                     {
                         if (recordRecenterAsEvent)
                         {
-                            new CustomEvent("c3d.User recentered")
-                            .SetProperty("HMD position", GameplayReferences.HMD.position)
-                            .Send();
+                            SendRecenterEvent();
                         }
                     }
                     else
                     {
-                        WriteRoomSizeAsSessionProperty(roomsize);
-                        SensorRecorder.RecordDataPoint("RoomSize", roomsize.x * roomsize.z);
+                        WriteRoomSizeAsSessionProperty(roomSize);
+                        SensorRecorder.RecordDataPoint("RoomSize", roomSize.x * roomSize.z);
                         if (recordRoomSizeChangeAsEvent)
                         {
-                            // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
-                            new CustomEvent("c3d.User changed boundary")
-                            .SetProperty("Previous Room Size", lastRoomSize.x * lastRoomSize.z)
-                            .SetProperty("New Room Size", roomsize.x * roomsize.z)
-                            .Send();
+                            SendBoundaryChangeEvent(roomSize);
                         }
-                        lastRoomSize = roomsize;
+                        lastRoomSize = roomSize;
                     }
                 }
             }
@@ -306,6 +356,10 @@ namespace Cognitive3D.Components
             {
                 return false;
             }
+#elif C3D_VIVEWAVE
+            // We consider width to go from left-to-right hence width is x-component
+            roomSize = new Vector3(Interop.WVR_GetArena().area.rectangle.width, 0f, Interop.WVR_GetArena().area.rectangle.length);
+            return true;
 #else
             UnityEngine.XR.InputDevice inputDevice = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             if (inputDevice.isValid)
@@ -396,6 +450,29 @@ namespace Cognitive3D.Components
 #endif
 
         #endregion
+
+#if C3D_VIVEWAVE
+        void ArenaChanged(WVR_Event_t arenaChangeEvent)
+        {
+            if (!didViveArenaChange)
+            {
+                Vector3 roomsizeVive = new Vector3();
+                GetRoomSize(ref roomsizeVive);
+                // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
+                SendBoundaryChangeEvent(roomsizeVive);
+            }
+            didViveArenaChange = true;
+        }
+
+        void Recenter(WVR_Event_t recenterEvent)
+        {
+            if (!didRecenter)
+            {
+                SendRecenterEvent();
+            }
+            didRecenter = true;
+        }
+#endif
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
