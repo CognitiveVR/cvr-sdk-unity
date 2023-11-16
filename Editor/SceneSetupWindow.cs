@@ -324,7 +324,7 @@ namespace Cognitive3D
             int hmdRectHeight2 = 185;
 
             GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? "Tracking Space" : "Missing", "button_blueoutline"))
+            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = trackingSpace;
             }
