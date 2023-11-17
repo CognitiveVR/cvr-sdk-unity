@@ -43,7 +43,6 @@ namespace Cognitive3D.Components
             GetRoomSize(ref initialRoomsize);
             WriteRoomSizeAsSessionProperty(initialRoomsize);
 
-
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
             SystemEvent.Listen(WVR_EventType.WVR_EventType_RecenterSuccess, Recenter);
@@ -478,9 +477,14 @@ namespace Cognitive3D.Components
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+
+#if C3D_VIVEWAVE
+            SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
+            SystemEvent.Remove(WVR_EventType.WVR_EventType_RecenterSuccess, Recenter);
+#endif
         }
 
-#region Inspector Utils
+    #region Inspector Utils
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
