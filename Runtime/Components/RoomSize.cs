@@ -10,8 +10,12 @@ using UnityEngine.XR;
 #endif
 
 /// <summary>
-/// Adds room size from SteamVR chaperone to device info
+/// Adds room size from VR boundary to the session properties
+/// Records a sensor
+/// On Oculus, also records events when boundary changes (ie, redrawn)
 /// </summary>
+
+
 
 namespace Cognitive3D.Components
 {

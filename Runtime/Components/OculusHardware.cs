@@ -38,7 +38,7 @@ namespace Cognitive3D.Components
                 Cognitive3D.SensorRecorder.RecordDataPoint("c3d.gpuLevel", Stats.AdaptivePerformance.GPULevel);
                 Cognitive3D.SensorRecorder.RecordDataPoint("c3d.isPowerSavingMode", (Stats.AdaptivePerformance.PowerSavingMode ? 1 : 0));
             }
-            catch(System.Exception e)
+            catch
             {
             }
         }
