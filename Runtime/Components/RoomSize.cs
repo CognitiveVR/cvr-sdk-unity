@@ -11,12 +11,9 @@ using UnityEngine.XR;
 
 /// <summary>
 /// Adds room size from VR boundary to the session properties
-/// Records a sensor
-/// On Oculus, also records events when boundary changes (ie, redrawn)
+/// Records room size as a sensor
+/// Sends event on boundary exit, redraw, and recenter
 /// </summary>
-
-
-
 namespace Cognitive3D.Components
 {
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
