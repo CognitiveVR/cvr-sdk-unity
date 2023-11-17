@@ -225,13 +225,16 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Writes roomsize as session property
         /// </summary>
+        /// <param name="roomsize">A Vector3 representing the roomsize to write</param> 
         private void WriteRoomSizeAsSessionProperty(Vector3 roomsize)
         {
             Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeMeters", roomsize.x * roomsize.z);
             Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", roomsize.x, roomsize.z));
         }
 
-
+        /// <summary>
+        /// Sends a custom event indicating a recenter
+        /// </summary>
         private void SendRecenterEvent()
         {
             new CustomEvent("c3d.User recentered")
@@ -239,6 +242,10 @@ namespace Cognitive3D.Components
                 .Send();
         }
 
+        /// <summary>
+        /// Sends a custom event indicating change in boundary
+        /// </summary>
+        /// <param name="roomSizeRef">A Vector3 representing new roomsize</param>
         private void SendBoundaryChangeEvent(Vector3 roomSizeRef)
         {     
             // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
@@ -248,6 +255,9 @@ namespace Cognitive3D.Components
             .Send();
         }
 
+        /// <summary>
+        /// Sends a custom event indicating user stepping out of boundary
+        /// </summary>
         void SendExitEvent()
         {
             if (!isHMDOutsideBoundary)
@@ -447,6 +457,10 @@ namespace Cognitive3D.Components
         #endregion
 
 #if C3D_VIVEWAVE
+        /// <summary>
+        /// Vive Wave Specific: The function to execute when user changes their boundary
+        /// </summary>
+        /// <param name="arenaChangeEvent">The event that triggered this</param>
         void ArenaChanged(WVR_Event_t arenaChangeEvent)
         {
             if (!didViveArenaChange)
