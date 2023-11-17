@@ -321,7 +321,7 @@ namespace Cognitive3D.Components
 #if C3D_STEAMVR2
             float roomX = 0;
             float roomY = 0;
-            if (Valve.VR.OpenVR.Chaperone == null || !Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
+            if (Valve.VR.OpenVR.Chaperone != null && Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
                 roomSize = new Vector3(roomX, 0, roomY);
                 return true;
@@ -420,26 +420,12 @@ namespace Cognitive3D.Components
         /// <returns> A list of 4 Vector3 elements </returns>
         private Vector3[] ConvertSteamVRToUnityBounds(Valve.VR.HmdQuad_t[] steamArray)
         {
-            Vector3[] returnArray = new Vector3[steamArray.Length * 4];
-            for (int i = 0; i < steamArray.Length; i+=4)
+            Vector3[] returnArray = new Vector3[steamArray.Length];
+            for (int i = 0; i < steamArray.Length; i++)
             {
                 returnArray[i] = SteamHMDVector3tToVector(steamArray[i].vCorners0);
-                returnArray[i+1] = SteamHMDVector3tToVector(steamArray[i].vCorners1);
-                returnArray[i+2] = SteamHMDVector3tToVector(steamArray[i].vCorners2);
-                returnArray[i+3] = SteamHMDVector3tToVector(steamArray[i].vCorners3);
             }
             return returnArray;
-
-            //List<Vector3> steamList = new List<Vector3>();
-            //for (int i = 0; i < steamArray.Length; i++)
-            //{
-            //    Valve.VR.HmdQuad_t currentQuad = steamArray[i];
-            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners0));
-            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners1));
-            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners2));
-            //    steamList.Add(SteamHMDVector3tToVector(currentQuad.vCorners3));
-            //}
-            //return steamList;
         }
             
         /// <summary>
