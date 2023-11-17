@@ -60,6 +60,9 @@ namespace Cognitive3D
 
         private readonly List<Scene> sceneList = new List<Scene>();
 
+        [HideInInspector]
+        public Transform trackingSpace;
+
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
@@ -409,6 +412,30 @@ namespace Cognitive3D
                 }
             }
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
+        }
+
+        public bool TryGetTrackingSpace(out Transform space)
+        {
+            if (trackingSpace != null)
+            {
+                space = trackingSpace;
+                return true;
+            }
+            else
+            {
+                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
+                if (trackingSpaceInScene != null)
+                {
+                    trackingSpace = trackingSpaceInScene.transform;
+                    space = trackingSpaceInScene.transform;
+                    return true;
+                }
+                else
+                {
+                    space = null;
+                    return false;
+                }
+            }
         }
 
         private void SceneManager_SceneUnloaded(Scene scene)

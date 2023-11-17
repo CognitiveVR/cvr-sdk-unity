@@ -170,6 +170,7 @@ namespace Cognitive3D
         GameObject leftcontroller;
         GameObject rightcontroller;
         GameObject mainCameraObject;
+        GameObject trackingSpace;
 
         [System.NonSerialized]
         bool initialPlayerSetup;
@@ -184,6 +185,7 @@ namespace Cognitive3D
             {
                 mainCameraObject = camera.gameObject;
             }
+
             foreach(var dyn in FindObjectsOfType<DynamicObject>())
             {
                 if (dyn.IsController && dyn.IsRight)
@@ -194,6 +196,12 @@ namespace Cognitive3D
                 {
                     leftcontroller = dyn.gameObject;
                 }
+            }
+
+            RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
+            if (trackingSpaceInScene != null)
+            {
+                trackingSpace = trackingSpaceInScene.gameObject;
             }
 
             if (leftcontroller != null && rightcontroller != null)
@@ -274,7 +282,8 @@ namespace Cognitive3D
             }
         }
 
-        bool AllControllerSetupComplete;
+        bool AllSetupComplete;
+
         void ControllerUpdate()
         {
             PlayerSetupStart();
@@ -285,7 +294,7 @@ namespace Cognitive3D
             int hmdRectHeight = 150;
 
             GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
-            if (GUI.Button(new Rect(130, hmdRectHeight, 310, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
+            if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = mainCameraObject;
             }
@@ -332,11 +341,41 @@ namespace Cognitive3D
                 }
             }
 
+
+            // tracking space
+            int hmdRectHeight2 = 185;
+
+            GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
+            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
+            {
+                Selection.activeGameObject = trackingSpace;
+            }
+
+            int pickerID_HMD2 = 5689467;
+            if (GUI.Button(new Rect(440, hmdRectHeight2, 30, 30), EditorCore.SearchIconWhite))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    trackingSpace, true, "", pickerID_HMD2);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD2)
+                {
+                    trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                }
+            }
+            if (trackingSpace == null)
+            {
+                GUI.Label(new Rect(400, hmdRectHeight2, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
+            }
+
             //controllers
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
             bool leftControllerIsValid = false;
@@ -345,28 +384,29 @@ namespace Cognitive3D
             leftControllerIsValid = leftcontroller != null;
             rightControllerIsValid = rightcontroller != null;
 
-            AllControllerSetupComplete = false;
+            AllSetupComplete = false;
             if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
             {
                 var rdyn = rightcontroller.GetComponent<DynamicObject>();
                 if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
                     var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false)
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false
+                        && (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() != null)) // Make sure tracking space isn't null before accessing its component
                     {
-                        AllControllerSetupComplete = true;
+                        AllSetupComplete = true;
                     }
                 }
             }
-            int handOffset = 240;
+            int handOffset = 290;
 
             //left hand label
-            GUI.Label(new Rect(30, handOffset + 15, 50, 30), "Left", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
 
             string leftname = "Missing";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(130, handOffset + 15, 310, 30), leftname, "button_blueoutline"))
+            if (GUI.Button(new Rect(180, handOffset + 15, 255, 30), leftname, "button_blueoutline"))
             {
                 Selection.activeGameObject = leftcontroller;
             }
@@ -393,13 +433,13 @@ namespace Cognitive3D
             }
 
             //right hand label
-            GUI.Label(new Rect(30, handOffset + 50, 50, 30), "Right", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 50, 150, 30), "Right Controller", "boldlabel");
 
             string rightname = "Missing";
             if (rightcontroller != null)
                 rightname = rightcontroller.gameObject.name;
 
-            if (GUI.Button(new Rect(130, handOffset + 50, 310, 30), rightname, "button_blueoutline"))
+            if (GUI.Button(new Rect(180, handOffset + 50, 255, 30), rightname, "button_blueoutline"))
             {
                 Selection.activeGameObject = rightcontroller;
             }
@@ -426,7 +466,7 @@ namespace Cognitive3D
             }
 
             //drag and drop
-            if (new Rect(30, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
+            if (new Rect(180, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -434,7 +474,7 @@ namespace Cognitive3D
                     rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
+            else if (new Rect(180, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -442,7 +482,7 @@ namespace Cognitive3D
                     leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
+            else if (new Rect(180, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -450,27 +490,40 @@ namespace Cognitive3D
                     mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
+            else if (new Rect(180, hmdRectHeight2, 440, 30).Contains(Event.current.mousePosition)) // trackingSpace
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    trackingSpace = (GameObject)DragAndDrop.objectReferences[0];
+                }
+            }
 
-            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
+            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
+                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
+                {
+                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                }
+
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
             }
 
-            if (AllControllerSetupComplete)
+            if (AllSetupComplete)
             {
-                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(118, 340, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 400, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
             //generate default input file if it doesn't already exist
             bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(150, 380, 200, 30), "Append Input Bindings"))
+            if (GUI.Button(new Rect(160, 450, 200, 30), "Append Input Bindings"))
             {
                 if (SteamVR_Input.actionFile == null)
                 {
@@ -494,11 +547,11 @@ namespace Cognitive3D
             }
             if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 450, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(118, 380, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 450, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
         }
@@ -1138,8 +1191,8 @@ namespace Cognitive3D
                     break;
                 case Page.PlayerSetup:
 #if C3D_STEAMVR2
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
@@ -1159,8 +1212,8 @@ namespace Cognitive3D
                     }
 
 #else
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
