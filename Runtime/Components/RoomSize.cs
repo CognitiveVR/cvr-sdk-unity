@@ -29,7 +29,6 @@ namespace Cognitive3D.Components
 
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
-        bool didRecenter;
 #endif
 
         protected override void OnSessionBegin()
@@ -39,13 +38,11 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             previousBoundaryPoints = GetCurrentBoundaryPoints();
             CalculateAndRecordRoomsize(false, false);
-            Vector3 initialRoomsize = new Vector3();
-            GetRoomSize(ref initialRoomsize);
-            WriteRoomSizeAsSessionProperty(initialRoomsize);
+            GetRoomSize(ref lastRoomSize);
+            WriteRoomSizeAsSessionProperty(lastRoomSize);
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
-            SystemEvent.Listen(WVR_EventType.WVR_EventType_RecenterSuccess, Recenter);
 #endif
         }
 
@@ -60,7 +57,6 @@ namespace Cognitive3D.Components
 
                 // reset these variables every BoundaryTrackingInterval
                 didViveArenaChange = false;
-                didRecenter = false;
 
                 if (Interop.WVR_IsOverArenaRange())
                 {
@@ -457,19 +453,19 @@ namespace Cognitive3D.Components
             {
                 Vector3 roomsizeVive = new Vector3();
                 GetRoomSize(ref roomsizeVive);
-                // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
-                SendBoundaryChangeEvent(roomsizeVive);
+                if (Mathf.Approximately(roomsizeVive.x * roomsizeVive.z, lastRoomSize.x * lastRoomSize.z))
+                {
+                    // If arena changes and size remains same, it is recenter
+                    // For some reason, the recenter event isn't triggering 
+                    SendRecenterEvent();
+                }
+                else
+                {
+                    lastRoomSize = roomsizeVive;
+                    SendBoundaryChangeEvent(roomsizeVive);
+                }
             }
             didViveArenaChange = true;
-        }
-
-        void Recenter(WVR_Event_t recenterEvent)
-        {
-            if (!didRecenter)
-            {
-                SendRecenterEvent();
-            }
-            didRecenter = true;
         }
 #endif
 
@@ -480,7 +476,6 @@ namespace Cognitive3D.Components
 
 #if C3D_VIVEWAVE
             SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
-            SystemEvent.Remove(WVR_EventType.WVR_EventType_RecenterSuccess, Recenter);
 #endif
         }
 
