@@ -1521,9 +1521,21 @@ namespace Cognitive3D.Serialization
         private static int currentSensorSnapshots = 0;
         static StringBuilder sbdatapoint = new StringBuilder(256);
 
+        internal static void InitializeSensor(string sensorName, float HzRate)
+        {
+            if (!IsInitialized) { return; }
+
+             if (sensorData.ContainsKey(sensorName))
+            {
+                return;
+            }
+            sensorData.Add(sensorName, new SensorData(sensorName, HzRate));
+        }
+
         internal static void RecordSensor(string category, float value, double unixTimestamp)
         {
             if (!IsInitialized) { return; }
+            InitializeSensor(category, 10);
             if (!CachedSnapshots.ContainsKey(category))
             {
                 CachedSnapshots.Add(category, new List<string>());
