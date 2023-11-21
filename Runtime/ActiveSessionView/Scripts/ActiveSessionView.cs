@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
-    [AddComponentMenu("Cognitive3D/Active Session View/Active Session View")]
+    [AddComponentMenu("")]
     public class ActiveSessionView : MonoBehaviour
     {
         //sensor materials

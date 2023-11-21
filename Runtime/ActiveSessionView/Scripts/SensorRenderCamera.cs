@@ -8,7 +8,7 @@ using Cognitive3D;
 
 namespace Cognitive3D.ActiveSession
 {
-    [AddComponentMenu("Cognitive3D/Active Session View/Sensor Render Camera")]
+    [AddComponentMenu("")]
     public class SensorRenderCamera : MonoBehaviour
     {
         SensorCanvas sensorCanvas;
