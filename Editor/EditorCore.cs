@@ -1204,10 +1204,6 @@ namespace Cognitive3D
         /// </summary>
         public static List<string> GetExportedDynamicObjectNames()
         {
-            //cached value
-            if (ExportedDynamicObjects != null)
-                return ExportedDynamicObjects;
-
             //read dynamic object mesh names from directory
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             Directory.CreateDirectory(path);
