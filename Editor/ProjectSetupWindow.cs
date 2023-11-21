@@ -52,6 +52,7 @@ namespace Cognitive3D
         Page currentPage;
 
         int lastDevKeyResponseCode;
+        bool isResponseJsonValid = true;
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -170,6 +171,12 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(30, 390, 400, 30), "This Developer Key is invalid or expired. Please ensure the developer key is valid on the dashboard. Developer Keys expire automatically after 90 days.", "miniwarning");
             }
+            else if(isResponseJsonValid == false)
+            {
+                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
+                // developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
+                GUI.Label(new Rect(30, 390, 400, 30), "The response is not a valid JSON response. Please ensure the gateway is configured correctly", "miniwarning");
+            }
         }
 
         string OrganizationName;
@@ -250,6 +257,20 @@ namespace Cognitive3D
                 Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
                 return;
             }
+
+            // Check if response data is valid
+            try
+            {
+                JsonUtility.FromJson<ApplicationKeyResponseData>(text);
+                isResponseJsonValid = true;
+            }
+            catch
+            {
+                isResponseJsonValid = false;
+                Debug.LogError("Invalid JSON response");
+                return;
+            }
+
             ApplicationKeyResponseData responseData = JsonUtility.FromJson<ApplicationKeyResponseData>(text);
 
             //display popup if application key is set but doesn't match the response
@@ -295,6 +316,17 @@ namespace Cognitive3D
             if (responseCode != 200)
             {
                 Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
+                return;
+            }
+
+            // Check if response data is valid
+            try
+            {
+                JsonUtility.FromJson<OrganizationData>(text);
+            }
+            catch
+            {
+                Debug.LogError("Invalid JSON response");
                 return;
             }
 
@@ -830,7 +862,7 @@ namespace Cognitive3D
         void GetDevKeyResponse(int responseCode, string error, string text)
         {
             lastDevKeyResponseCode = responseCode;
-            if (responseCode == 200)
+            if (responseCode == 200 && isResponseJsonValid)
             {
                 //dev key is fine
                 currentPage++;
@@ -856,7 +888,7 @@ namespace Cognitive3D
                     break;
                 case Page.APIKeys:
                     buttonrect = new Rect(410, 510, 80, 30);
-                    if (lastDevKeyResponseCode == 200)
+                    if (lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
                     {
                         //next. use default action
                         onclick += () => SaveDevKey();
@@ -876,12 +908,12 @@ namespace Cognitive3D
                         text = "Key Missing";
                     }
 
-                    if (buttonDisabled == false && lastDevKeyResponseCode != 200)
+                    if (buttonDisabled == false && lastDevKeyResponseCode != 200 && isResponseJsonValid == false)
                     {
                         text = "Validate";
                     }
 
-                    if (buttonDisabled == false && lastDevKeyResponseCode == 200)
+                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
                     {
                         text = "Next";
                     }
