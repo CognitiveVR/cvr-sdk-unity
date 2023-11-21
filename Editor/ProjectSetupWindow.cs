@@ -174,7 +174,6 @@ namespace Cognitive3D
             else if(isResponseJsonValid == false)
             {
                 GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
-                // developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
                 GUI.Label(new Rect(30, 390, 400, 30), "The response is not a valid JSON response. Please ensure the gateway is configured correctly", "miniwarning");
             }
         }
