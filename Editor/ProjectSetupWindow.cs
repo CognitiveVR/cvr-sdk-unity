@@ -908,12 +908,16 @@ namespace Cognitive3D
                         text = "Key Missing";
                     }
 
-                    if (buttonDisabled == false && lastDevKeyResponseCode != 200 && isResponseJsonValid == false)
+                    if (buttonDisabled == false && lastDevKeyResponseCode != 200)
                     {
                         text = "Validate";
                     }
 
-                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
+                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == false)
+                    {
+                        buttonDisabled = true;
+                    } 
+                    else if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
                     {
                         text = "Next";
                     }
