@@ -322,9 +322,11 @@ namespace Cognitive3D
             try
             {
                 JsonUtility.FromJson<OrganizationData>(text);
+                isResponseJsonValid = true;
             }
             catch
             {
+                isResponseJsonValid = false;
                 Debug.LogError("Invalid JSON response");
                 return;
             }
