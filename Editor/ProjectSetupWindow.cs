@@ -145,7 +145,7 @@ namespace Cognitive3D
                 developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
                 GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
             }
-            else if (lastDevKeyResponseCode == 200) //valid key
+            else if (lastDevKeyResponseCode == 200 && isResponseJsonValid) //valid key
             {
                 GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.CircleCheckmark, "Valid key"), "image_centered");
                 string previous = developerkey;
@@ -171,7 +171,7 @@ namespace Cognitive3D
             {
                 GUI.Label(new Rect(30, 390, 400, 30), "This Developer Key is invalid or expired. Please ensure the developer key is valid on the dashboard. Developer Keys expire automatically after 90 days.", "miniwarning");
             }
-            else if(isResponseJsonValid == false)
+            else if(!isResponseJsonValid)
             {
                 GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
                 GUI.Label(new Rect(30, 390, 400, 30), "The response is not a valid JSON response. Please ensure the gateway is configured correctly", "miniwarning");
