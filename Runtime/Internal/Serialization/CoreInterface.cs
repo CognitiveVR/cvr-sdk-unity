@@ -194,6 +194,11 @@ namespace Cognitive3D
         
 
         #region Sensors
+        internal static void InitializeSensor(string name, float rate)
+        {
+            SharedCore.InitializeSensor(name, rate);
+        }
+
         //sensorrecorder still keeps a dictionary of sensor values and some utility functions. these calls are just for serialization
         internal static void RecordSensor(string name, float value, double time)
         {

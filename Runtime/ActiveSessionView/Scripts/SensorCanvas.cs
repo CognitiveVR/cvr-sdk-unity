@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
-    [AddComponentMenu("Cognitive3D/Active Session View/Sensor Canvas")]
+    [AddComponentMenu("")]
     public class SensorCanvas : MonoBehaviour
     {
         public struct SensorDataPoint
