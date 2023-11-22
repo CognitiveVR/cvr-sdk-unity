@@ -905,7 +905,7 @@ namespace Cognitive3D
 
                     buttonDisabled = developerkey == null || developerkey.Length == 0 || !isResponseJsonValid;
 
-                    if(developerkey == null || developerkey.Length == 0)
+                    if (developerkey == null || developerkey.Length == 0)
                     {
                         text = "Key Missing";
                     }
@@ -915,7 +915,7 @@ namespace Cognitive3D
                         text = "Validate";
                     }
 
-                    if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid)
+                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid)
                     {
                         text = "Next";
                     }
