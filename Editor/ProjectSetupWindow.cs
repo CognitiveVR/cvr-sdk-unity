@@ -889,7 +889,7 @@ namespace Cognitive3D
                     break;
                 case Page.APIKeys:
                     buttonrect = new Rect(410, 510, 80, 30);
-                    if (lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
+                    if (lastDevKeyResponseCode == 200 && isResponseJsonValid)
                     {
                         //next. use default action
                         onclick += () => SaveDevKey();
@@ -915,7 +915,7 @@ namespace Cognitive3D
                         text = "Validate";
                     }
 
-                    if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
+                    if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid)
                     {
                         text = "Next";
                     }
