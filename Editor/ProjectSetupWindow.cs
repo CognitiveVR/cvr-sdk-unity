@@ -903,8 +903,9 @@ namespace Cognitive3D
                         onclick += () => EditorCore.CheckSubscription(developerkey, GetSubscriptionResponse);
                     }
 
-                    buttonDisabled = developerkey == null || developerkey.Length == 0;
-                    if (buttonDisabled)
+                    buttonDisabled = developerkey == null || developerkey.Length == 0 || !isResponseJsonValid;
+
+                    if(developerkey == null || developerkey.Length == 0)
                     {
                         text = "Key Missing";
                     }
@@ -914,11 +915,7 @@ namespace Cognitive3D
                         text = "Validate";
                     }
 
-                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == false)
-                    {
-                        buttonDisabled = true;
-                    } 
-                    else if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
+                    if(buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid == true)
                     {
                         text = "Next";
                     }
