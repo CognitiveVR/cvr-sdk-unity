@@ -118,12 +118,15 @@ namespace Cognitive3D
                 return EditorPrefs.HasKey("c3d_developerkey") && !string.IsNullOrEmpty(EditorPrefs.GetString("c3d_developerkey"));
             }
         }
-
         public static string DeveloperKey
         {
             get
             {
                 return EditorPrefs.GetString("c3d_developerkey");
+            }
+            internal set
+            {
+                EditorPrefs.GetString("c3d_developerkey", value);
             }
         }
 
