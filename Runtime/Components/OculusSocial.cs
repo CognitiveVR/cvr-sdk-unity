@@ -36,22 +36,20 @@ namespace Cognitive3D.Components
                 try
                 {
                     Core.Initialize(appID);
+                    Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
+                    if (RecordPartySize)
+                    {
+                        CheckPartySize();
+                    }
                 }
                 catch (System.Exception e)
                 {
                     Debug.LogException(e);
                 }
             }
-
             if (!string.IsNullOrEmpty(appID))
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
-            }
-
-            Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
-            if (RecordPartySize)
-            {
-                CheckPartySize();
             }
 #endif
         }
