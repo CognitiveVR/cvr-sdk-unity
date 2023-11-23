@@ -32,7 +32,8 @@ namespace Cognitive3D.Components
             string appID = GetAppIDFromConfig();
             if (!Core.IsInitialized())
             {
-                //Initialize will throw error if appid is invalid/missing
+                // Initialize will throw error if appid is invalid/missing
+                // IMPORTANT: To prevent exceptions, put all code that depends on successful initialization here
                 try
                 {
                     Core.Initialize(appID);
