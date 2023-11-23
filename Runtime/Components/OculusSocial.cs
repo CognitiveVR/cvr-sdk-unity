@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 #if C3D_OCULUS
 using Oculus.Platform;
@@ -33,21 +31,25 @@ namespace Cognitive3D.Components
             if (!Core.IsInitialized())
             {
                 // Initialize will throw error if appid is invalid/missing
-                // IMPORTANT: To prevent exceptions, put all code that depends on successful initialization here
                 try
                 {
                     Core.Initialize(appID);
-                    Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
-                    if (RecordPartySize)
-                    {
-                        CheckPartySize();
-                    }
                 }
                 catch (System.Exception e)
                 {
                     Debug.LogException(e);
                 }
             }
+
+            if (Core.IsInitialized())
+            {
+                Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
+                if (RecordPartySize)
+                {
+                    CheckPartySize();
+                }
+            }
+
             if (!string.IsNullOrEmpty(appID))
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
@@ -69,10 +71,11 @@ namespace Cognitive3D.Components
             }
         }
 
-        /**
-         * Callback for user Entitlement check
-         * @params: Message message: the response message
-         */ 
+        /// <summary>
+        /// Callback for entitlement check
+        /// Tries to get the logged in user and goes to the next callback
+        /// </summary>
+        /// <param name="message"> The response message </param>
         private void EntitlementCallback(Message message)
         {
             if (message.IsError) // User failed entitlement check
@@ -87,11 +90,12 @@ namespace Cognitive3D.Components
             }
         }
 #endif
-/**
- * Callback for getting details on the logged in user
- * @params: Message <User> message: The User object representing the current logged in user
- */
+
 #if C3D_OCULUS
+        /// <summary>
+        /// Callback for getting details on the logged in user
+        /// </summary>
+        /// <param name="message"> The User object representing the current logged in user </param>
         private void UserCallback(Message<User> message)
         {
             string id;
@@ -117,14 +121,14 @@ namespace Cognitive3D.Components
         }
 
 #endif
-/**
- * Callback to get the display name (apparently a second request 
- *          is needed to get display name, 
- *          as per here: 
- *          https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
- *  @params: Message message: the response for the callback
- */
+
 #if C3D_OCULUS
+        /// <summary>
+        /// Callback to get the display name
+        /// apparently a second request is required
+        /// https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
+        /// </summary>
+        /// <param name="message"> The response for the callback </param>
         private void DisplayNameCallback(Message message)
         {
             string displayName = message.GetUser().DisplayName;
@@ -141,9 +145,9 @@ namespace Cognitive3D.Components
         }
 #endif
 
-        /**
-         * Checks the number of people in the room/part
-         */ 
+        /// <summary>
+        /// Checks the number of people in the room/party
+        /// </summary>
         void CheckPartySize()
         {
 #if C3D_OCULUS
@@ -172,9 +176,11 @@ namespace Cognitive3D.Components
             });
 #endif
         }
-        /**
-         * Description to display in inspector
-         */ 
+
+        /// <summary>
+        /// Description to display in inspector
+        /// </summary>
+        /// <returns> A string representing the description </returns>
         public override string GetDescription()
         {
 #if C3D_OCULUS
@@ -184,9 +190,9 @@ namespace Cognitive3D.Components
 #endif
         }
 
-        /**
-         * Warning for incompatible platform to display on inspector
-         */ 
+        /// <summary>
+        /// Warning for incompatible platform to display on inspector
+        /// </summary>
         public override bool GetWarning()
         {
 #if C3D_OCULUS
