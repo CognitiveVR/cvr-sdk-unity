@@ -33,7 +33,7 @@ namespace Cognitive3D.Components
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                heights[i] = GameplayReferences.HMD.localPosition.y;
+                heights[i] = GameplayReferences.HMD.position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
                 if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
                 {
                     RecordAndSendMedian(heights, i);
