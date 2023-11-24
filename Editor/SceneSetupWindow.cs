@@ -1257,8 +1257,8 @@ namespace Cognitive3D
                         {
                             //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
                             AggregationManifest manifest = new AggregationManifest();
-                            DynamicObjectsWindow.AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                            DynamicObjectsWindow.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+                            EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
                         }
                         else
                         {
