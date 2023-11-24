@@ -40,6 +40,9 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
+            systemMemoryRecorder.Dispose();
+            mainThreadTimeRecorder.Dispose();
+            drawCallsRecorder.Dispose();
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
