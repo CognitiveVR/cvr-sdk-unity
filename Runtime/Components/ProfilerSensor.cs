@@ -9,7 +9,7 @@ namespace Cognitive3D
         private ProfilerRecorder systemMemoryRecorder;
         private ProfilerRecorder mainThreadTimeRecorder;
 
-        protected void OnSessionBegin()
+        protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
             systemMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "Total Used Memory");
