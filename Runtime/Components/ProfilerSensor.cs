@@ -8,17 +8,22 @@ namespace Cognitive3D
         private ProfilerRecorder drawCallsRecorder;
         private ProfilerRecorder systemMemoryRecorder;
         private ProfilerRecorder mainThreadTimeRecorder;
+
         private readonly string TOTAL_USED_MEMORY = "Total Used Memory";
         private readonly string MAIN_THREAD_TIME = "Main Thread";
         private readonly string DRAW_CALLS_COUNT = "Draw Calls Count";
+
         private readonly float NANOSECOND_TO_MILLISECOND_MULTIPLIER = 1e-6f;
         private readonly float BYTES_TO_MEGABYTES_DIVIDER = 1024 * 1024;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+
             systemMemoryRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, TOTAL_USED_MEMORY);
             mainThreadTimeRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Internal, MAIN_THREAD_TIME);
             drawCallsRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, DRAW_CALLS_COUNT);
+
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
         }
@@ -46,6 +51,7 @@ namespace Cognitive3D
             systemMemoryRecorder.Dispose();
             mainThreadTimeRecorder.Dispose();
             drawCallsRecorder.Dispose();
+
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
