@@ -126,7 +126,7 @@ namespace Cognitive3D
             }
             internal set
             {
-                EditorPrefs.GetString("c3d_developerkey", value);
+                EditorPrefs.SetString("c3d_developerkey", value);
             }
         }
 
