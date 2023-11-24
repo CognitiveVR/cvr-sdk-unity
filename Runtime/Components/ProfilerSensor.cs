@@ -11,7 +11,8 @@ namespace Cognitive3D
         private readonly string TOTAL_USED_MEMORY = "Total Used Memory";
         private readonly string MAIN_THREAD_TIME = "Main Thread";
         private readonly string DRAW_CALLS_COUNT = "Draw Calls Count";
-
+        private readonly float NANOSECOND_TO_MILLISECOND_MULTIPLIER = 1e-6f;
+        private readonly float BYTES_TO_MEGABYTES_DIVIDER = 1024 * 1024;
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -28,10 +29,12 @@ namespace Cognitive3D
             long drawCalls = drawCallsRecorder.LastValue;
 
             // memory usage in bytes, we are converting to MB
-            long systemMemory = (systemMemoryRecorder.LastValue / (1024 * 1024));
+            // casting to float to handle decimal places
+            float systemMemory = (float) systemMemoryRecorder.LastValue / BYTES_TO_MEGABYTES_DIVIDER;
 
             // thread time in nanoseconds, we are converting to milliseconds
-            long mainThreadTime = mainThreadTimeRecorder.LastValue * (long) (1e-6);
+            // casting to float to handle decimal places
+            float mainThreadTime = (float) mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
 
             SensorRecorder.RecordDataPoint("c3d.profiler.drawCalls", drawCalls);
             SensorRecorder.RecordDataPoint("c3d.profiler.systemMemory", systemMemory);
