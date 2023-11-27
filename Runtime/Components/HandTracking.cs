@@ -89,7 +89,7 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
             return "Collects and sends data pertaining to Hand Tracking";
 #else
-            return "This component can only be used on the Oculus platform"
+            return "This component can only be used on the Oculus platform";
 #endif
         }
 #endregion
