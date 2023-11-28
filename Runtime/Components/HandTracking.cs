@@ -30,8 +30,9 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            CaptureHandTrackingEvents();
-            SensorRecorder.RecordDataPoint("c3d.input.device", (int)GetCurrentTrackedDevice());
+            var currentTrackedDevice = GetCurrentTrackedDevice();
+            CaptureHandTrackingEvents(currentTrackedDevice);
+            SensorRecorder.RecordDataPoint("c3d.input.tracking", (int) currentTrackedDevice);
         }
 
         /// <summary>
@@ -40,13 +41,14 @@ namespace Cognitive3D.Components
         /// <returns> Enum representing whether user is using hand or controller or neither </returns>
         TrackingType GetCurrentTrackedDevice()
         {
-            if (OVRInput.GetActiveController() == OVRInput.Controller.None)
+            var currentTrackedDevice = OVRInput.GetActiveController();
+            if (currentTrackedDevice == OVRInput.Controller.None)
             {
                 return TrackingType.None;
             }
-            else if (OVRInput.GetActiveController() == OVRInput.Controller.Hands
-                || OVRInput.GetActiveController() == OVRInput.Controller.LHand
-                || OVRInput.GetActiveController() == OVRInput.Controller.RHand)
+            else if (currentTrackedDevice == OVRInput.Controller.Hands
+                || currentTrackedDevice == OVRInput.Controller.LHand
+                || currentTrackedDevice == OVRInput.Controller.RHand)
             {
                 return TrackingType.Hand;
             }
@@ -59,12 +61,15 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Captures any change in input device from hand to controller to none or vice versa
         /// </summary>
-        void CaptureHandTrackingEvents()
+        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
         {
-            if (lastTrackedDevice != GetCurrentTrackedDevice())
+            if (lastTrackedDevice != currentTrackedDevice)
             {
-                new CustomEvent("c3d.input.tracking.device.changed.from." + lastTrackedDevice.ToString() + ".to." + GetCurrentTrackedDevice()).Send();
-                lastTrackedDevice = GetCurrentTrackedDevice();
+                new CustomEvent("c3d.input.tracking.changed")
+                    .SetProperty("Previously Tracking", lastTrackedDevice)
+                    .SetProperty("Now Tracking", currentTrackedDevice)
+                    .Send();
+                lastTrackedDevice = currentTrackedDevice;
             }
         }
 
