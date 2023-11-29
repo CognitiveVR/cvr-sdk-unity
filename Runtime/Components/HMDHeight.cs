@@ -33,12 +33,26 @@ namespace Cognitive3D.Components
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                heights[i] = GameplayReferences.HMD.position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
+                heights[i] = GetHeight();
                 if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
                 {
                     RecordAndSendMedian(heights, i);
                 }
             }
+        }
+
+        /// <summary>
+        /// Calculates HMD height according to device type
+        /// </summary>
+        /// <returns>A float representing the height of the HMD</returns>
+        private float GetHeight()
+        {
+#if C3D_OCULUS
+            // Calculates height according to camera offset relative to Floor level
+            return GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y;
+#else
+            return GameplayReferences.HMD.position.y;
+#endif
         }
 
         private void RecordAndSendMedian(float[] heights, int lastIndex)
