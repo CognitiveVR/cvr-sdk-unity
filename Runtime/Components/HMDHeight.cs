@@ -48,10 +48,10 @@ namespace Cognitive3D.Components
         private float GetHeight()
         {
 #if C3D_OCULUS
-            // Calculates height according to camera offset relative to Floor level
-            return GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y;
+            // Calculates height according to camera offset relative to Floor level and rig customization
+            return GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
 #else
-            return GameplayReferences.HMD.position.y;
+            return GameplayReferences.HMD.position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
 #endif
         }
 
