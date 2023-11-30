@@ -16,11 +16,13 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
+        private Transform trackingSpace = null;
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
             heights = new float[SampleCount];
+            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
             StartCoroutine(Tick());
         }
 
@@ -42,17 +44,41 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Calculates HMD height according to device type
+        /// Checks if tracking space exist and calculates HMD height according to device type
         /// </summary>
         /// <returns>A float representing the height of the HMD</returns>
         private float GetHeight()
         {
+            if (trackingSpace != null)
+            {
 #if C3D_OCULUS
-            // Calculates height according to camera offset relative to Floor level and rig customization
-            return GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
+                // Calculates height according to camera offset relative to Floor level and rig customization
+                return GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
 #else
-            return GameplayReferences.HMD.position.y - Cognitive3D_Manager.Instance.trackingSpace.position.y;
+                return GameplayReferences.HMD.position.y - trackingSpace.position.y;
 #endif
+            }
+            else
+            {
+                Debug.LogWarning("Tracking Space not found. This may cause miscalculation in HMD height.");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Checks if tracking space exist and returns foreheadheight value
+        /// </summary>
+        /// <returns>A float representing the forehead height of the HMD</returns>
+        private float GetForeHeadHeight()
+        {
+            if (trackingSpace != null)
+            {
+                return 0.11f;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private void RecordAndSendMedian(float[] heights, int lastIndex)
@@ -62,7 +88,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed)
 #endif
             {
-                Cognitive3D_Manager.SetParticipantProperty("height", medianHeight * 100 + ForeheadHeight * 100);
+                Cognitive3D_Manager.SetParticipantProperty("height", medianHeight * 100 + GetForeHeadHeight() * 100);
 
             }
         }
