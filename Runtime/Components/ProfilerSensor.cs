@@ -41,9 +41,9 @@ namespace Cognitive3D
             // casting to float to handle decimal places
             float mainThreadTime = (float) mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
 
-            SensorRecorder.RecordDataPoint("c3d.profiler.drawCalls", drawCalls);
-            SensorRecorder.RecordDataPoint("c3d.profiler.systemMemory", systemMemory);
-            SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTime", mainThreadTime);
+            SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
+            SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
+            SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMilliseconds", mainThreadTime);
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
