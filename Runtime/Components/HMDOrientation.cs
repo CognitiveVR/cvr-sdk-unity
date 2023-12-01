@@ -11,10 +11,12 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
+        Transform trackingSpace = null;
         protected override void OnSessionBegin()
         {
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -24,14 +26,22 @@ namespace Cognitive3D.Components
         }
 
         //TODO include cos and tan to figure out if the person is looking more than 90 degrees up or down
-        //TODO handle situations where tracking space isn't along the x/z plane
         private void RecordPitch()
         {
             if (GameplayReferences.HMD == null) { return; }
+            if (trackingSpace == null)
+            {
+                Debug.LogWarning("TrackingSpace not configured. Unable to record HMD Pitch");
+                return;
+            }
             Vector3 forwardPoint = GameplayReferences.HMD.position + GameplayReferences.HMD.forward;
-            float opposite = GameplayReferences.HMD.position.y - forwardPoint.y;
-            float hypotenuse = 1f;
-            float pitch = -Mathf.Asin(opposite / hypotenuse) * Mathf.Rad2Deg;
+            
+            // We are using trackingSpace for situations where user is not standing perpendicular to ground
+            Vector3 opposite = forwardPoint + trackingSpace.up;
+
+            // We need to get the angle between "straight ahead" and "HMD forward"
+            // Sum of angles in triangle = 180; since right angled, the other angle is 90
+            float pitch = 180 - 90 - Vector3.Angle(opposite, forwardPoint);
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
