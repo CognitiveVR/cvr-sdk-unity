@@ -43,7 +43,7 @@ namespace Cognitive3D
 
             SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
             SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
-            SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMilliseconds", mainThreadTime);
+            SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMs", mainThreadTime);
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
