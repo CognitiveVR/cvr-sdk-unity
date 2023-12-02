@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 /// <summary>
 /// Records yaw and orientation of the HMD for internal comfort and immersion calculations
@@ -34,14 +32,14 @@ namespace Cognitive3D.Components
                 Debug.LogWarning("TrackingSpace not configured. Unable to record HMD Pitch");
                 return;
             }
-            Vector3 forwardPoint = GameplayReferences.HMD.position + GameplayReferences.HMD.forward;
-            
-            // We are using trackingSpace for situations where user is not standing perpendicular to ground
-            Vector3 opposite = forwardPoint + trackingSpace.up;
 
-            // We need to get the angle between "straight ahead" and "HMD forward"
-            // Sum of angles in triangle = 180; since right angled, the other angle is 90
-            float pitch = 180 - 90 - Vector3.Angle(opposite, forwardPoint);
+            // We want to calculate pitch in reference to trackingSpace to eliminate any discrepancy from custom rig setup
+            // We calculate only in yz-plane to eliminate the x-component that can brought along by head yaw
+            // Looking down will give us a negative angle, and looking up will give us a positive angle
+            Vector2 trackingSpaceForwardYZ = new Vector2(trackingSpace.forward.y, trackingSpace.forward.z);
+            Vector2 hmdForwardYZ = new Vector2(GameplayReferences.HMD.forward.y, GameplayReferences.HMD.forward.z);
+            float pitch = Vector2.SignedAngle(hmdForwardYZ, trackingSpaceForwardYZ);
+
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
