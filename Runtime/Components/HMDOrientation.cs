@@ -33,14 +33,11 @@ namespace Cognitive3D.Components
                 return;
             }
 
-            // We want to calculate pitch in reference to trackingSpace to eliminate any discrepancy from custom rig setup
-            // We want the angle on yz-plane only, but we need to take x-component into account for when you look to side or corner
-            // Looking down will give us a negative angle, and looking up will give us a positive angle
-            Vector2 trackingSpaceForwardYZ = new Vector2(trackingSpace.forward.y, trackingSpace.forward.z);
-            Vector2 hmdForwardXZ = new Vector2(GameplayReferences.HMD.forward.x, GameplayReferences.HMD.forward.z);
-            float hmdForwardXZMagnitude = Vector2.SqrMagnitude(hmdForwardXZ);
-            Vector2 hmdPitchVector = new Vector2(GameplayReferences.HMD.forward.y, hmdForwardXZMagnitude);
-            float pitch = Vector2.SignedAngle(hmdPitchVector, trackingSpaceForwardYZ);
+            float pitch = trackingSpace.transform.rotation.eulerAngles.x - GameplayReferences.HMD.rotation.eulerAngles.x;
+            if (pitch > 180)
+            {
+                pitch -= 360;
+            }
 
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
