@@ -9,7 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
-        Transform trackingSpace = null;
+        Transform trackingSpace;
 
         protected override void OnSessionBegin()
         {
