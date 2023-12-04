@@ -11,10 +11,13 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
+        Transform trackingSpace = null;
+
         protected override void OnSessionBegin()
         {
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -35,11 +38,29 @@ namespace Cognitive3D.Components
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
-        //records yaw with 0 as the center and 180 as directly behind the player (from the starting position)
+        /// <summary>
+        /// Calculates yaw of hmd/users neck
+        /// Positive means looking right, negative means looking left
+        /// </summary>
         private void RecordYaw()
         {
             if (GameplayReferences.HMD == null) { return; }
-            float yaw = GameplayReferences.HMD.localRotation.eulerAngles.y;
+            if (trackingSpace == null)
+            {
+                Debug.LogWarning("TrackingSpace not configured. Unable to record HMD Yaw");
+                return;
+            }
+
+            // Start with quaternions to calculate rotation
+            Quaternion hmdRotation = GameplayReferences.HMD.rotation;
+            Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
+
+            // Adjust rotations to "isolate" HMD rotation from trackingSpace rotation
+            Quaternion adjustedRotation = Quaternion.Inverse(trackingSpaceRotation) * hmdRotation;
+
+            float yaw = adjustedRotation.eulerAngles.y;
+
+            // Take smaller angle of the explementary angles
             if (yaw > 180)
             {
                 yaw -= 360;
