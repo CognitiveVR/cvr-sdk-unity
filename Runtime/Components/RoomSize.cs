@@ -16,6 +16,7 @@ using UnityEngine.XR;
 /// </summary>
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {

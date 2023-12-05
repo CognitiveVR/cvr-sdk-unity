@@ -6,6 +6,7 @@ using Unity.XR.Oculus;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Oculus Hardware")]
     public class OculusHardware : AnalyticsComponentBase
     {

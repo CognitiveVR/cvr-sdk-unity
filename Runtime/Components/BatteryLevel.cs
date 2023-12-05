@@ -6,6 +6,7 @@
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {

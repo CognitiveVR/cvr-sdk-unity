@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Cognitive3D/Components/Profiler Sensor")]
     public class ProfilerSensor : AnalyticsComponentBase
     {
         private ProfilerRecorder drawCallsRecorder;

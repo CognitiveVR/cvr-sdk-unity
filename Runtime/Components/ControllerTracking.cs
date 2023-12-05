@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {

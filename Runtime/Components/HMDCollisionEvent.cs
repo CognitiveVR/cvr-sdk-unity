@@ -6,6 +6,7 @@
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/HMD Collision Event")]
     public class HMDCollisionEvent : AnalyticsComponentBase
     {

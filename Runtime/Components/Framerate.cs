@@ -11,6 +11,7 @@ using Cognitive3D;
 //TODO research and consider Coefficient of Variation
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : AnalyticsComponentBase
     {

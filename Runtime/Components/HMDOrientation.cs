@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
