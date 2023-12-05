@@ -49,33 +49,39 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            currentTime += deltaTime;
-            if (currentTime > BoundaryTrackingInterval)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
             {
-                currentTime = 0;
+                currentTime += deltaTime;
+                if (currentTime > BoundaryTrackingInterval)
+                {
+                    currentTime = 0;
 
 #if C3D_VIVEWAVE
 
-                // reset these variables every BoundaryTrackingInterval
-                didViveArenaChange = false;
+                    // reset these variables every BoundaryTrackingInterval
+                    didViveArenaChange = false;
 
-                if (Interop.WVR_IsOverArenaRange())
-                {
-                    SendExitEvent();
-                }
-                else
-                {
-                    isHMDOutsideBoundary = false;
-                }
+                    if (Interop.WVR_IsOverArenaRange())
+                    {
+                        SendExitEvent();
+                    }
+                    else
+                    {
+                        isHMDOutsideBoundary = false;
+                    }
 #else
-                var currentBoundaryPoints = GetCurrentBoundaryPoints();
-                if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
-                {
-                    previousBoundaryPoints = currentBoundaryPoints;
-                    CalculateAndRecordRoomsize(true, true);
-                }
-                SendEventIfUserExitsBoundary();
+                    var currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                    {
+                        previousBoundaryPoints = currentBoundaryPoints;
+                        CalculateAndRecordRoomsize(true, true);
+                    }
+                    SendEventIfUserExitsBoundary();
 #endif
+                }
             }
         }
 
