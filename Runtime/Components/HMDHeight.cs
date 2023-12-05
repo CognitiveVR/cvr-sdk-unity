@@ -16,7 +16,7 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
-        private float currentheight = 0;
+        private float currentheight;
         private Transform trackingSpace = null;
 
         protected override void OnSessionBegin()
