@@ -17,7 +17,7 @@ namespace Cognitive3D.Components
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
         private float currentheight;
-        private Transform trackingSpace = null;
+        private Transform trackingSpace;
 
         protected override void OnSessionBegin()
         {
