@@ -20,6 +20,11 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
+            if (GameplayReferences.HMD == null || trackingSpace == null)
+            {
+                Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
+                return;
+            }
             RecordPitch();
             RecordYaw();
         }
@@ -31,13 +36,6 @@ namespace Cognitive3D.Components
         /// </summary>
         private void RecordPitch()
         {
-            if (GameplayReferences.HMD == null) { return; }
-            if (trackingSpace == null)
-            {
-                Debug.LogWarning("TrackingSpace not configured. Unable to record HMD Pitch");
-                return;
-            }
-
             // Start with quaternions to calculate rotation
             Quaternion hmdRotation = GameplayReferences.HMD.rotation;
             Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
@@ -62,7 +60,6 @@ namespace Cognitive3D.Components
         //records yaw with 0 as the center and 180 as directly behind the player (from the starting position)
         private void RecordYaw()
         {
-            if (GameplayReferences.HMD == null) { return; }
             float yaw = GameplayReferences.HMD.localRotation.eulerAngles.y;
             if (yaw > 180)
             {
