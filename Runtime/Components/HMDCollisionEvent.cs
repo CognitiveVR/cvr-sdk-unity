@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /// <summary>
 /// Sends a Custom Event when the HMD collides with something in the game world
@@ -24,19 +23,29 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnTick()
         {
-            if (GameplayReferences.HMD == null) { return; }
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
+            {
+                if (GameplayReferences.HMD == null) { return; }
 
-            bool hit = Physics.CheckSphere(GameplayReferences.HMD.position, 0.25f, CollisionLayerMask);
-            if (hit && !HMDColliding)
-            {
-                Util.logDebug("hmd collision");
-                HMDColliding = true;
-                new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "begin").Send();
+                bool hit = Physics.CheckSphere(GameplayReferences.HMD.position, 0.25f, CollisionLayerMask);
+                if (hit && !HMDColliding)
+                {
+                    Util.logDebug("hmd collision");
+                    HMDColliding = true;
+                    new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "begin").Send();
+                }
+                else if (!hit && HMDColliding)
+                {
+                    new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "end").Send();
+                    HMDColliding = false;
+                }
             }
-            else if (!hit && HMDColliding)
+            else
             {
-                new CustomEvent("cvr.collision").SetProperty("device", "HMD").SetProperty("state", "end").Send();
-                HMDColliding = false;
+                Debug.LogWarning("HMD Collision component is disabled. Please enable in inspector.");
             }
         }
         public override string GetDescription()

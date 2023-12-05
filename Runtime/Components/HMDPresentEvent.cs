@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.XR;
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
@@ -30,16 +29,23 @@ namespace Cognitive3D.Components
                     currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
                 }
                 currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
+                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
 #if C3D_OCULUS
                 OVRManager.HMDMounted += HandleHMDMounted;
                 OVRManager.HMDUnmounted += HandleHMDUnmounted;
-                Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
 #endif
             }
         }
 
-        private void Update()
+
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
+            {
 #if !C3D_OMNICEPT && !C3D_VIVEWAVE && !C3D_OCULUS
             if (!currentHmd.isValid)
             {
@@ -51,6 +57,11 @@ namespace Cognitive3D.Components
                 CheckUserPresence();
             }
 #endif
+            }
+            else
+            {
+                Debug.LogWarning("HMD Present component is disabled. Please enable in inspector.");
+            }
         }
 
         void HandleHMDMounted()
@@ -86,15 +97,15 @@ namespace Cognitive3D.Components
             }
         }
 
-
-#if C3D_OCULUS
-        private void Cognitive3D_Manager_OnPostSessionEnd()
+        private void Cognitive3D_Manager_OnPreSessionEnd()
         {
+#if C3D_OCULUS
             OVRManager.HMDMounted -= HandleHMDMounted;
             OVRManager.HMDUnmounted -= HandleHMDUnmounted;
-            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
-        }
 #endif
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
 
         public override string GetDescription()
         {

@@ -30,9 +30,19 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            var currentTrackedDevice = GetCurrentTrackedDevice();
-            CaptureHandTrackingEvents(currentTrackedDevice);
-            SensorRecorder.RecordDataPoint("c3d.input.tracking", (int) currentTrackedDevice);
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
+            {
+                var currentTrackedDevice = GetCurrentTrackedDevice();
+                CaptureHandTrackingEvents(currentTrackedDevice);
+                SensorRecorder.RecordDataPoint("c3d.input.tracking", (int)currentTrackedDevice);
+            }
+            else
+            {
+                Debug.LogWarning("Hand Tracking component is disabled. Please enable in inspector.");
+            }
         }
 
         /// <summary>

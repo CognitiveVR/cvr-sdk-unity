@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 #if C3D_OCULUS
 using Unity.XR.Oculus;

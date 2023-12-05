@@ -19,8 +19,18 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            RecordPitch();
-            RecordYaw();
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
+            {
+                RecordPitch();
+                RecordYaw();
+            }
+            else
+            {
+                Debug.LogWarning("HMD Orientation component is disabled. Please enable in inspector.");
+            }
         }
 
         //TODO include cos and tan to figure out if the person is looking more than 90 degrees up or down

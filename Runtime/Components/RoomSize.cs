@@ -83,6 +83,10 @@ namespace Cognitive3D.Components
 #endif
                 }
             }
+            else
+            {
+                Debug.LogWarning("Roomsize component is disabled. Please enable in inspector.");
+            }
         }
 
         /// <summary>
