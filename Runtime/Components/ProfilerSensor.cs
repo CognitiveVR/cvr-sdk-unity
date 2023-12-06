@@ -5,6 +5,7 @@ namespace Cognitive3D
 {
     public class ProfilerSensor : AnalyticsComponentBase
     {
+#if UNITY_2020_2_OR_NEWER
         private ProfilerRecorder drawCallsRecorder;
         private ProfilerRecorder systemMemoryRecorder;
         private ProfilerRecorder mainThreadTimeRecorder;
@@ -63,5 +64,6 @@ namespace Cognitive3D
         }
 #endregion
 
+#endif
     }
 }
