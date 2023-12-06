@@ -39,13 +39,9 @@ namespace Cognitive3D
             selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField("Video Clip", selectedClip, typeof(UnityEngine.Video.VideoClip), true);
             userCamera = (UnityEngine.Camera)EditorGUILayout.ObjectField("Main Camera", userCamera, typeof(UnityEngine.Camera), true);
 
-            if (EditorCore.MediaSources.Length == 0)
+            if (GUILayout.Button("Refresh Media Sources"))
             {
-                if (GUILayout.Button("Refresh Media Sources"))
-                {
-                    EditorCore.RefreshMediaSources();
-                }
-                return;
+                EditorCore.RefreshMediaSources();
             }
 
             //media source
