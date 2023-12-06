@@ -57,10 +57,22 @@ namespace Cognitive3D.Components
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
-        //records yaw with 0 as the center and 180 as directly behind the player (from the starting position)
+        /// <summary>
+        /// Calculates yaw of hmd/users neck
+        /// Positive means looking right, negative means looking left
+        /// </summary>
         private void RecordYaw()
         {
-            float yaw = GameplayReferences.HMD.localRotation.eulerAngles.y;
+            // Start with quaternions to calculate rotation
+            Quaternion hmdRotation = GameplayReferences.HMD.rotation;
+            Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
+
+            // Adjust rotations to "isolate" HMD rotation from trackingSpace rotation
+            Quaternion adjustedRotation = Quaternion.Inverse(trackingSpaceRotation) * hmdRotation;
+
+            float yaw = adjustedRotation.eulerAngles.y;
+
+            // Take smaller angle of the explementary angles
             if (yaw > 180)
             {
                 yaw -= 360;
