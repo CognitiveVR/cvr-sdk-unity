@@ -13,6 +13,7 @@ using Valve.VR;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Input Tracker")]
     public class ControllerInputTracker : AnalyticsComponentBase
     {

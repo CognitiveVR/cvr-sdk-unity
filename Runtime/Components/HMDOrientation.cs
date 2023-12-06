@@ -6,6 +6,7 @@
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
@@ -20,13 +21,23 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            if (GameplayReferences.HMD == null || trackingSpace == null)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
             {
-                Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
-                return;
+                if (GameplayReferences.HMD == null || trackingSpace == null)
+                {
+                    Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
+                    return;
+                }
+                RecordPitch();
+                RecordYaw();
             }
-            RecordPitch();
-            RecordYaw();
+            else
+            {
+                Debug.LogWarning("HMD Orientation component is disabled. Please enable in inspector.");
+            }
         }
 
         /// <summary>

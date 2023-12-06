@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
@@ -41,10 +42,20 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            currentTime += deltaTime;
-            if (currentTime > ControllerTrackingInterval)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
             {
-                ControllerTrackingIntervalEnd();
+                currentTime += deltaTime;
+                if (currentTime > ControllerTrackingInterval)
+                {
+                    ControllerTrackingIntervalEnd();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Controller Tracking component is disabled. Please enable in inspector.");
             }
         }
 

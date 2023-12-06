@@ -1,8 +1,11 @@
 using Cognitive3D.Components;
 using Unity.Profiling;
+using UnityEngine;
 
 namespace Cognitive3D
 {
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Cognitive3D/Components/Profiler Sensor")]
     public class ProfilerSensor : AnalyticsComponentBase
     {
         // This API doesn't exist for lower versions
@@ -33,20 +36,30 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            // number of draw calls as count
-            long drawCalls = drawCallsRecorder.LastValue;
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
+            {
+                // number of draw calls as count
+                long drawCalls = drawCallsRecorder.LastValue;
 
-            // memory usage in bytes, we are converting to MB
-            // casting to float to handle decimal places
-            float systemMemory = (float) systemMemoryRecorder.LastValue / BYTES_TO_MEGABYTES_DIVIDER;
+                // memory usage in bytes, we are converting to MB
+                // casting to float to handle decimal places
+                float systemMemory = (float)systemMemoryRecorder.LastValue / BYTES_TO_MEGABYTES_DIVIDER;
 
-            // thread time in nanoseconds, we are converting to milliseconds
-            // casting to float to handle decimal places
-            float mainThreadTime = (float) mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
+                // thread time in nanoseconds, we are converting to milliseconds
+                // casting to float to handle decimal places
+                float mainThreadTime = (float)mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
 
-            SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
-            SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
-            SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMs", mainThreadTime);
+                SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
+                SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
+                SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMs", mainThreadTime);
+            }
+            else
+            {
+                Debug.LogWarning("Profiler Sensor component is disabled. Please enable in inspector.");
+            }
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()

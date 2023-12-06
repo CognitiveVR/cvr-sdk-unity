@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 #if C3D_OCULUS
 using Unity.XR.Oculus;
@@ -7,6 +6,7 @@ using Unity.XR.Oculus;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Oculus Hardware")]
     public class OculusHardware : AnalyticsComponentBase
     {
