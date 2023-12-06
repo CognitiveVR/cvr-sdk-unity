@@ -8,6 +8,9 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Components/Profiler Sensor")]
     public class ProfilerSensor : AnalyticsComponentBase
     {
+        // This API doesn't exist for lower versions
+        // https://docs.unity3d.com/ScriptReference/Unity.Profiling.ProfilerRecorder.html
+#if UNITY_2020_2_OR_NEWER
         private ProfilerRecorder drawCallsRecorder;
         private ProfilerRecorder systemMemoryRecorder;
         private ProfilerRecorder mainThreadTimeRecorder;
@@ -76,5 +79,6 @@ namespace Cognitive3D
         }
 #endregion
 
+#endif
     }
 }
