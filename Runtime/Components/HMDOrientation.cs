@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 /// <summary>
 /// Records yaw and orientation of the HMD for internal comfort and immersion calculations
@@ -22,19 +20,40 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
+            if (GameplayReferences.HMD == null || trackingSpace == null)
+            {
+                Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
+                return;
+            }
             RecordPitch();
             RecordYaw();
         }
 
-        //TODO include cos and tan to figure out if the person is looking more than 90 degrees up or down
-        //TODO handle situations where tracking space isn't along the x/z plane
+        /// <summary>
+        /// Calculates pitch (angle of elevation/depression) of hmd/users neck
+        /// Positive means looking up, negative means looking down
+        /// TODO: include cos and tan to figure out if the person is looking more than 90 degrees up or down
+        /// </summary>
         private void RecordPitch()
         {
-            if (GameplayReferences.HMD == null) { return; }
-            Vector3 forwardPoint = GameplayReferences.HMD.position + GameplayReferences.HMD.forward;
-            float opposite = GameplayReferences.HMD.position.y - forwardPoint.y;
-            float hypotenuse = 1f;
-            float pitch = -Mathf.Asin(opposite / hypotenuse) * Mathf.Rad2Deg;
+            // Start with quaternions to calculate rotation
+            Quaternion hmdRotation = GameplayReferences.HMD.rotation;
+            Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
+
+            // Adjust rotations to "isolate" HMD rotation from trackingSpace rotation
+            Quaternion adjustedRotation = Quaternion.Inverse(trackingSpaceRotation) * hmdRotation;
+
+            float pitch = adjustedRotation.eulerAngles.x;
+            
+            // Take smaller angle of the explementary angles
+            if (pitch > 180)
+            {
+                pitch -= 360;
+            }
+
+            // Adjusting to get positive when user looks up and negative when they look down
+            pitch *= -1;
+
             SensorRecorder.RecordDataPoint("c3d.hmd.pitch", pitch);
         }
 
@@ -44,13 +63,6 @@ namespace Cognitive3D.Components
         /// </summary>
         private void RecordYaw()
         {
-            if (GameplayReferences.HMD == null) { return; }
-            if (trackingSpace == null)
-            {
-                Debug.LogWarning("TrackingSpace not configured. Unable to record HMD Yaw");
-                return;
-            }
-
             // Start with quaternions to calculate rotation
             Quaternion hmdRotation = GameplayReferences.HMD.rotation;
             Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
