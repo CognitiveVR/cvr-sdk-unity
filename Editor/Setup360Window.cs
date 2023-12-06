@@ -55,7 +55,10 @@ namespace Cognitive3D
             GUILayout.BeginHorizontal();
             GUILayout.Label("Description:", GUILayout.Width(100));
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+            if (EditorCore.MediaSources.Length > 0)
+            {
+                EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+            }
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
 
