@@ -55,12 +55,12 @@ namespace Cognitive3D.Components
             if (GameplayReferences.GetControllerTransform(false, out leftController))
             {
                 float leftControllerToHead = leftController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("Left Controller Elevation from Head", leftControllerToHead);
+                SensorRecorder.RecordDataPoint("c3d.controller.left.height.fromHMD", leftControllerToHead);
             }
             if (GameplayReferences.GetControllerTransform(true, out rightController))
             {
                 float rightControllerToHead = rightController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("Right Controller Elevation from Head", rightControllerToHead);
+                SensorRecorder.RecordDataPoint("c3d.controller.right.height.fromHMD", rightControllerToHead);
             }
             currentTime = 0;
         }
