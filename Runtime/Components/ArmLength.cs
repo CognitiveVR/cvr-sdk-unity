@@ -11,6 +11,7 @@ using Valve.VR;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Arm Length")]
     public class ArmLength : AnalyticsComponentBase
     {

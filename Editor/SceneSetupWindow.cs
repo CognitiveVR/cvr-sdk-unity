@@ -21,6 +21,7 @@ namespace Cognitive3D
         bool wantEyeTrackingEnabled;
         bool wantPassthroughEnabled;
         bool wantSocialEnabled;
+        bool wantHandTrackingEnabled;
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
@@ -717,6 +718,26 @@ namespace Cognitive3D
                 }
             }
 
+            // Hand Tracking
+            GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
+            Rect infoRect4 = new Rect(320, 280, 30, 30);
+            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings ."), "image_centered");
+
+            Rect checkboxRect4 = new Rect(105, 280, 30, 30);
+            if (wantHandTrackingEnabled)
+            {
+                if (GUI.Button(checkboxRect4, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantHandTrackingEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantHandTrackingEnabled = true;
+                }
+            }
 
             // Footer
             GUI.Label(new Rect(20, 460, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
@@ -769,6 +790,23 @@ namespace Cognitive3D
                     DestroyImmediate(social);
                 }
             }
+            if (wantHandTrackingEnabled)
+            {
+                var hand = FindObjectOfType<HandTracking>();
+                if (hand == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
+                }
+            }
+            else
+            {
+                var hand = FindObjectOfType<HandTracking>();
+                if (hand != null)
+                {
+                    DestroyImmediate(hand);
+                }
+            }
+
         }   
 #endif
 

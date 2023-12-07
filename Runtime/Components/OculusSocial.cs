@@ -7,6 +7,7 @@ using Oculus.Platform.Models;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
