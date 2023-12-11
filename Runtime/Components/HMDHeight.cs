@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Unity.XR.CoreUtils;
 using System.Collections;
 
 /// <summary>
@@ -64,6 +65,33 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
             height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+#elif C3D_DEFAULT
+            XROrigin xrOrigin = FindObjectOfType<XROrigin>();  
+            if (xrOrigin != null)
+            {
+                if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
+                {
+                    // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
+                    // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
+                    height = xrOrigin.Camera.transform.position.y + xrOrigin.CameraYOffset - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                }
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                {
+                    // Calculates height based on the camera offset relative to Floor level and rig settings
+                    height = xrOrigin.Camera.transform.position.y - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                }
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                {
+                    // Unable to determine height accurately as the tracking origin mode is unspecified.
+                    // Using the camera Y offset, but results may vary and may not reflect the user's actual height reliably.
+                    height = xrOrigin.CameraYOffset;
+                }
+                
+            }
+            else
+            {
+                Debug.LogWarning("XROrigin not found. Unable to record HMD height.");
+            }   
 #else
             height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
 #endif
