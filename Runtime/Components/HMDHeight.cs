@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
-using Unity.XR.CoreUtils;
 using System.Collections;
+
+#if C3D_DEFAULT
+using Unity.XR.CoreUtils;
+#endif
 
 /// <summary>
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
