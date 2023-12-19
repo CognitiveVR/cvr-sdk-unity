@@ -19,6 +19,9 @@ namespace Cognitive3D
         private readonly string MAIN_THREAD_TIME = "Main Thread";
         private readonly string DRAW_CALLS_COUNT = "Draw Calls Count";
 
+        readonly float ProfilerSensorRecordingInterval = 1.0f;
+        float currentTime = 0;
+
         private readonly float NANOSECOND_TO_MILLISECOND_MULTIPLIER = 1e-6f;
         private readonly float BYTES_TO_MEGABYTES_DIVIDER = 1024 * 1024;
 
@@ -36,29 +39,36 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            // We don't want these lines to execute if component disabled
-            // Without this condition, these lines will execute regardless
-            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
-            if (isActiveAndEnabled)
+            currentTime += deltaTime;
+
+            // Send data at 1Hz
+            if (currentTime > ProfilerSensorRecordingInterval)
             {
-                // number of draw calls as count
-                long drawCalls = drawCallsRecorder.LastValue;
+                currentTime = 0;
+                // We don't want these lines to execute if component disabled
+                // Without this condition, these lines will execute regardless
+                //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+                if (isActiveAndEnabled)
+                {
+                    // number of draw calls as count
+                    long drawCalls = drawCallsRecorder.LastValue;
 
-                // memory usage in bytes, we are converting to MB
-                // casting to float to handle decimal places
-                float systemMemory = (float)systemMemoryRecorder.LastValue / BYTES_TO_MEGABYTES_DIVIDER;
+                    // memory usage in bytes, we are converting to MB
+                    // casting to float to handle decimal places
+                    float systemMemory = (float)systemMemoryRecorder.LastValue / BYTES_TO_MEGABYTES_DIVIDER;
 
-                // thread time in nanoseconds, we are converting to milliseconds
-                // casting to float to handle decimal places
-                float mainThreadTime = (float)mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
+                    // thread time in nanoseconds, we are converting to milliseconds
+                    // casting to float to handle decimal places
+                    float mainThreadTime = (float)mainThreadTimeRecorder.LastValue * NANOSECOND_TO_MILLISECOND_MULTIPLIER;
 
-                SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
-                SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
-                SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMs", mainThreadTime);
-            }
-            else
-            {
-                Debug.LogWarning("Profiler Sensor component is disabled. Please enable in inspector.");
+                    SensorRecorder.RecordDataPoint("c3d.profiler.drawCallsCount", drawCalls);
+                    SensorRecorder.RecordDataPoint("c3d.profiler.systemMemoryInMB", systemMemory);
+                    SensorRecorder.RecordDataPoint("c3d.profiler.mainThreadTimeInMs", mainThreadTime);
+                }
+                else
+                {
+                    Debug.LogWarning("Profiler Sensor component is disabled. Please enable in inspector.");
+                }
             }
         }
 
