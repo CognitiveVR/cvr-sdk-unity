@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-
 #if C3D_DEFAULT
 using Unity.XR.CoreUtils;
 #endif
@@ -20,7 +19,6 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
-        private float currentheight;
         private Transform trackingSpace;
 
         protected override void OnSessionBegin()
@@ -40,7 +38,7 @@ namespace Cognitive3D.Components
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                if (TryGetHeight(out currentheight))
+                if (TryGetHeight(out float currentheight))
                 {
                     heights[i] = currentheight;
                     if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
@@ -94,6 +92,7 @@ namespace Cognitive3D.Components
             else
             {
                 Debug.LogWarning("XROrigin not found. Unable to record HMD height.");
+                return false;
             }   
 #else
             height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
