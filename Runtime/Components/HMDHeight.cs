@@ -17,7 +17,6 @@ namespace Cognitive3D.Components
         private readonly float StartDelay = 10;
         private readonly float Interval = 1;
         private readonly float ForeheadHeight = 0.11f; //meters
-        float currentheight;
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
         private Transform trackingSpace;
@@ -39,7 +38,7 @@ namespace Cognitive3D.Components
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                if (TryGetHeight(out currentheight))
+                if (TryGetHeight(out float currentheight))
                 {
                     heights[i] = currentheight;
                     if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
