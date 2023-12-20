@@ -12,31 +12,31 @@ namespace Cognitive3D.Components
     {
         private BatteryStatus batteryStatus;
 #if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
-        private float lastDataTimestamp;
-        private const float sendInterval = 1.0f;
+        private float currentTiime = 0;
+        private readonly float BatteryLevelSendInterval = 10.0f;
 
         protected override void OnSessionBegin()
         {   
             batteryStatus = SystemInfo.batteryStatus;
             SendBatteryLevel();
-            lastDataTimestamp = Time.time;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
+            currentTiime += deltaTime;
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
                 if (!Cognitive3D_Manager.IsInitialized) { return; }
-                if (Time.time >= lastDataTimestamp + sendInterval)
+                if (currentTiime > BatteryLevelSendInterval)
                 {
+                    currentTiime = 0;
                     SendBatteryLevel();
                     SendBatteryStatus();
-                    lastDataTimestamp = Time.time;
                 }
             }
             else
