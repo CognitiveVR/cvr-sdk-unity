@@ -189,35 +189,33 @@ namespace Cognitive3D
                     var dyn = target as DynamicObject;
                     if (dyn.IdPool == null)
                     {
-                        if (GUILayout.Button("New Dynamic Object Id Pool")) //this can overwrite an existing id pool with the same name. should this just find a pool?
-                        {
-                            string poolMeshName = dyn.MeshName;
-                            string assetPath = "Assets/" + poolMeshName + " Id Pool.asset";
+                        //this can overwrite an existing id pool with the same name. should this just find a pool?
+                        string poolMeshName = dyn.MeshName;
+                        string assetPath = "Assets/" + poolMeshName + " Id Pool.asset";
 
-                            //check if asset exists
-                            var foundPool = (DynamicObjectIdPool)AssetDatabase.LoadAssetAtPath(assetPath, typeof(DynamicObjectIdPool));
-                            if (foundPool == null)
+                        //check if asset exists
+                        var foundPool = (DynamicObjectIdPool)AssetDatabase.LoadAssetAtPath(assetPath, typeof(DynamicObjectIdPool));
+                        if (foundPool == null)
+                        {
+                            var pool = GenerateNewIDPoolAsset(assetPath, dyn);
+                            idPool.objectReferenceValue = pool;
+                        }
+                        else
+                        {
+                            //popup - new pool asset, add to existing pool (if matching mesh name), cancel
+                            int result = EditorUtility.DisplayDialogComplex("Found Id Pool", "An existing Id Pool with the same mesh name was found. Do you want to use this Id Pool instead?", "New Asset", "Cancel", "Use Existing");
+
+                            if (result == 0)//new asset with unique name
                             {
-                                var pool = GenerateNewIDPoolAsset(assetPath, dyn);
+                                string finalAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(assetPath);
+                                var pool = GenerateNewIDPoolAsset(finalAssetPath, dyn);
                                 idPool.objectReferenceValue = pool;
                             }
-                            else
+                            if (result == 2) //reference existing pool
                             {
-                                //popup - new pool asset, add to existing pool (if matching mesh name), cancel
-                                int result = EditorUtility.DisplayDialogComplex("Found Id Pool", "An existing Id Pool with the same mesh name was found. Do you want to use this Id Pool instead?", "New Asset", "Cancel", "Use Existing");
-
-                                if (result == 0)//new asset with unique name
-                                {
-                                    string finalAssetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(assetPath);
-                                    var pool = GenerateNewIDPoolAsset(finalAssetPath, dyn);
-                                    idPool.objectReferenceValue = pool;
-                                }
-                                if (result == 2) //reference existing pool
-                                {
-                                    idPool.objectReferenceValue = foundPool;
-                                }
-                                if (result == 1) { }//cancel
+                                idPool.objectReferenceValue = foundPool;
                             }
+                            if (result == 1) { }//cancel
                         }
                     }
                 }
