@@ -17,6 +17,9 @@ namespace Cognitive3D.Components
             Hand = 2
         }
 
+        private readonly float HandTrackingSendInterval = 1;
+        private float currentTime = 0;
+
         private TrackingType lastTrackedDevice = TrackingType.None;
 
         protected override void OnSessionBegin()
@@ -35,9 +38,15 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                var currentTrackedDevice = GetCurrentTrackedDevice();
-                CaptureHandTrackingEvents(currentTrackedDevice);
-                SensorRecorder.RecordDataPoint("c3d.input.tracking", (int)currentTrackedDevice);
+                currentTime += deltaTime;
+
+                if (currentTime > HandTrackingSendInterval)
+                {
+                    currentTime = 0;
+                    var currentTrackedDevice = GetCurrentTrackedDevice();
+                    CaptureHandTrackingEvents(currentTrackedDevice);
+                    SensorRecorder.RecordDataPoint("c3d.input.tracking", (int)currentTrackedDevice);
+                }
             }
             else
             {
