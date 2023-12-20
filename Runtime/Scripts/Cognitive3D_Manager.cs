@@ -55,9 +55,6 @@ namespace Cognitive3D
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 0;
 
-        [Tooltip("Send HMD Battery Level on the Start and End of the application")]
-        public bool SendBatteryLevelOnStartAndEnd;
-
         private readonly List<Scene> sceneList = new List<Scene>();
 
         [HideInInspector]
@@ -215,12 +212,6 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             CustomEvent startEvent = new CustomEvent("c3d.sessionStart");
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-#endif
-            {
-                if (SendBatteryLevelOnStartAndEnd) { startEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
-            }
             startEvent.Send();
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
@@ -556,12 +547,6 @@ namespace Cognitive3D
         {
             if (!IsInitialized) { return; }
             CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-#endif
-            {
-                if (SendBatteryLevelOnStartAndEnd) { pauseEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
-            }
             pauseEvent.Send();
             FlushData();
         }

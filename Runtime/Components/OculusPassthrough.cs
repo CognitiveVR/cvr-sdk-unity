@@ -14,6 +14,10 @@ namespace Cognitive3D.Components
         private OVRPassthroughLayer passthroughLayerRef;
         private bool isPassthroughEnabled;
         private float lastEventTime;
+
+        private readonly float PassthroughSendInterval = 1;
+        private float currentTime;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -29,30 +33,36 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                if (passthroughLayerRef != null)
-                {
-                    // Sending Sensor Value
-                    // Converting the bool to int this way. Can use ternary operator, but this is much clearer
-                    SensorRecorder.RecordDataPoint("c3d.app.passthroughEnabled", Convert.ToUInt32(passthroughLayerRef.isActiveAndEnabled));
+                currentTime += deltaTime;
 
-                    // Send event on state change
-                    if (isPassthroughEnabled != passthroughLayerRef.isActiveAndEnabled)
+                if (currentTime > PassthroughSendInterval)
+                {
+                    currentTime = 0;
+                    if (passthroughLayerRef != null)
                     {
-                        new CustomEvent("Passthrough Layer Changed")
-                            .SetProperties(new Dictionary<string, object>
-                            {
-                                {"Duration of Previous State",  Time.time - lastEventTime},
-                                {"New State", passthroughLayerRef.isActiveAndEnabled }
-                            })
-                            .Send();
-                        lastEventTime = Time.time;
-                    }
+                        // Sending Sensor Value
+                        // Converting the bool to int this way. Can use ternary operator, but this is much clearer
+                        SensorRecorder.RecordDataPoint("c3d.app.passthroughEnabled", Convert.ToUInt32(passthroughLayerRef.isActiveAndEnabled));
 
-                    isPassthroughEnabled = passthroughLayerRef.isActiveAndEnabled;
-                }
-                else
-                {
-                    GetPassthroughLayer(out passthroughLayerRef);
+                        // Send event on state change
+                        if (isPassthroughEnabled != passthroughLayerRef.isActiveAndEnabled)
+                        {
+                            new CustomEvent("Passthrough Layer Changed")
+                                .SetProperties(new Dictionary<string, object>
+                                {
+                                    {"Duration of Previous State",  Time.time - lastEventTime},
+                                    {"New State", passthroughLayerRef.isActiveAndEnabled }
+                                })
+                                .Send();
+                            lastEventTime = Time.time;
+                        }
+
+                        isPassthroughEnabled = passthroughLayerRef.isActiveAndEnabled;
+                    }
+                    else
+                    {
+                        GetPassthroughLayer(out passthroughLayerRef);
+                    }
                 }
             }
             else
