@@ -463,6 +463,24 @@ namespace Cognitive3D
                 scrollareaHeight = 365;
             }
 
+            if (new Rect(30, 80, 530, scrollareaHeight).Contains(Event.current.mousePosition))
+            {
+                GameObject draggedObject;
+                DynamicObject createdDynamic;
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                   for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                   {
+                        draggedObject = (GameObject)DragAndDrop.objectReferences[i];
+                        if (draggedObject.GetComponent<DynamicObject>() == null)
+                        {
+                            createdDynamic = draggedObject.AddComponent<DynamicObject>();
+                            Entries.Add(new Entry(createdDynamic.MeshName, false, createdDynamic, draggedObject.name, false, false));
+                        } 
+                   }
+                }
+            }
 
             Rect innerScrollSize = new Rect(30, 0, 520, visibleCount * 30);
             dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, scrollareaHeight), dynamicScrollPosition, innerScrollSize, false, true);
@@ -481,7 +499,6 @@ namespace Cognitive3D
             GUI.Box(new Rect(30, 80, 525, scrollareaHeight), "", "box_sharp_alpha");
 
             //buttons
-
             int selectionCount = 0;
             foreach (var entry in Entries)
             {
@@ -490,7 +507,6 @@ namespace Cognitive3D
                     selectionCount++;
                 }
             }
-
             DrawFooter();
             Repaint(); //manually repaint gui each frame to make sure it's responsive
         }
@@ -1042,7 +1058,7 @@ namespace Cognitive3D
             else
             {
                 GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty, "ID does not exist on Dashboard and will not be aggregated across sessions.\nPress 'Upload' to have this object's data aggregated"), image_centered);
-            }   
+            }
         }
 
         int footerHelpPage;

@@ -65,8 +65,9 @@ namespace Cognitive3D.Components
         Vector2 lastAxis;
         float sqrMag = 0.05f;
 
-        void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
             //register actions
             if (gripAction != null)
             {
@@ -256,8 +257,9 @@ namespace Cognitive3D.Components
             }
         }
 
-        void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
             //remove actions
             if (gripAction != null)
             {
@@ -302,6 +304,8 @@ namespace Cognitive3D.Components
 
         private void LateUpdate()
         {
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+
             Transform tempTransform;
             if (LeftHand == null && GameplayReferences.GetControllerTransform(false,out tempTransform))
             {
@@ -648,6 +652,8 @@ namespace Cognitive3D.Components
 
         private void Update()
         {
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+
             InputDevice leftHandDevice;
             GameplayReferences.GetControllerInfo(false, out leftHandDevice);
             InputDevice rightHandDevice;

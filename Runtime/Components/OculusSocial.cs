@@ -1,6 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
+#if C3D_OCULUS
+using Oculus.Platform;
+using Oculus.Platform.Models;
+#endif
 
 namespace Cognitive3D.Components
 {
@@ -10,64 +13,141 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
         [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
         [SerializeField]
-        private bool AssignOculusProfileToParticipant = true;
+        private bool AssignOculusProfileToParticipant = false;
+
+        [Tooltip("Used to automatically set user's display name as participant name on the dashboard")]
+        [SerializeField]
+        private bool AssignOculusNameToParticipantName = false;
 
         [Tooltip("Sets a session property with the size of the user's party (skipped if playing alone)")]
         [SerializeField]
         private bool RecordPartySize = true;
-
+#endif
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
 #if C3D_OCULUS
-            if (!Oculus.Platform.Core.IsInitialized())
+            string appID = GetAppIDFromConfig();
+            if (!Core.IsInitialized())
             {
-                //Initialize will throw error if appid is invalid/missing
+                // Initialize will throw error if appid is invalid/missing
                 try
                 {
-                    Oculus.Platform.Core.Initialize();
-                    if (AssignOculusProfileToParticipant)
-                    {
-                        AssignParticipant();
-                    }
-                    if (RecordPartySize)
-                    {
-                        CheckPartySize();
-                    }
+                    Core.Initialize(appID);
                 }
                 catch (System.Exception e)
                 {
                     Debug.LogException(e);
                 }
             }
-#endif
-        }
 
-        void AssignParticipant()
-        {
-#if C3D_OCULUS
-            Oculus.Platform.Users.GetLoggedInUser().OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.User> message)
+            if (Core.IsInitialized())
             {
-                if (message.IsError)
+                Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
+                if (RecordPartySize)
                 {
-                    Util.logDebug(message.GetError().Message);
+                    CheckPartySize();
                 }
-                else
-                {
-                    Oculus.Platform.Users.GetOrgScopedID(message.Data.ID).OnComplete(delegate (Oculus.Platform.Message<Oculus.Platform.Models.OrgScopedID> message2)
-                    {
-#if XRPF
-                        if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
-#endif
-                        {
-                            Cognitive3D_Manager.SetParticipantId(message2.Data.ID.ToString());
-                        }
-                    });
-                }
-            });
+            }
+
+            if (!string.IsNullOrEmpty(appID))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
+            }
 #endif
         }
 
+#if C3D_OCULUS
+
+        private static string GetAppIDFromConfig()
+        {
+            if (UnityEngine.Application.platform == RuntimePlatform.Android)
+            {
+                return PlatformSettings.MobileAppID;
+            }
+            else
+            {
+                return PlatformSettings.AppID;
+            }
+        }
+
+        /// <summary>
+        /// Callback for entitlement check
+        /// Tries to get the logged in user and goes to the next callback
+        /// </summary>
+        /// <param name="message"> The response message </param>
+        private void EntitlementCallback(Message message)
+        {
+            if (message.IsError) // User failed entitlement check
+            {
+                Debug.LogError("You are NOT entitled to use this app.");
+            }
+            else // User passed entitlement check
+            {
+                // Log the succeeded entitlement check for debugging.
+                Debug.Log("You are entitled to use this app.");
+                Users.GetLoggedInUser().OnComplete(UserCallback);
+            }
+        }
+#endif
+
+#if C3D_OCULUS
+        /// <summary>
+        /// Callback for getting details on the logged in user
+        /// </summary>
+        /// <param name="message"> The User object representing the current logged in user </param>
+        private void UserCallback(Message<User> message)
+        {
+            string id;
+            string oculusID;
+            if (!message.IsError)
+            {
+                id = message.Data.ID.ToString();
+                oculusID = message.Data.OculusID;
+#if XRPF
+                if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
+#endif
+                {
+                    Cognitive3D_Manager.SetParticipantProperty("oculusId", id);
+                    Cognitive3D_Manager.SetParticipantProperty("oculusUsername", oculusID);
+                }
+
+                Users.Get(message.Data.ID).OnComplete(DisplayNameCallback);
+                if (AssignOculusProfileToParticipant)
+                {
+                    Cognitive3D_Manager.SetParticipantId(id);
+                }
+            }
+        }
+
+#endif
+
+#if C3D_OCULUS
+        /// <summary>
+        /// Callback to get the display name
+        /// apparently a second request is required
+        /// https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
+        /// </summary>
+        /// <param name="message"> The response for the callback </param>
+        private void DisplayNameCallback(Message message)
+        {
+            string displayName = message.GetUser().DisplayName;
+#if XRPF
+            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
+#endif
+            {
+                Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
+                if (AssignOculusNameToParticipantName)
+                {
+                    Cognitive3D_Manager.SetParticipantFullName(displayName);
+                }
+            }
+        }
+#endif
+
+        /// <summary>
+        /// Checks the number of people in the room/party
+        /// </summary>
         void CheckPartySize()
         {
 #if C3D_OCULUS
@@ -96,15 +176,23 @@ namespace Cognitive3D.Components
             });
 #endif
         }
-#endif
+
+        /// <summary>
+        /// Description to display in inspector
+        /// </summary>
+        /// <returns> A string representing the description </returns>
         public override string GetDescription()
         {
 #if C3D_OCULUS
-            return "Set a property for the user's party size and an Id to associate the user across your organization";
+            return "Set a property for the user's ID, name, and party size.";
 #else
             return "Oculus Social properties can only be accessed when using the Oculus Platform";
 #endif
         }
+
+        /// <summary>
+        /// Warning for incompatible platform to display on inspector
+        /// </summary>
         public override bool GetWarning()
         {
 #if C3D_OCULUS
@@ -114,5 +202,4 @@ namespace Cognitive3D.Components
 #endif
         }
     }
-
 }

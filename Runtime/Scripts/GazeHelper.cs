@@ -101,7 +101,7 @@ namespace Cognitive3D
         {
             if (!Unity.XR.PXR.PXR_Manager.Instance.eyeTracking)
             {
-                //Debug.Log("Cognitive3D::GazeHelper GetLookDirection FAILED MANAGER NO EYE TRACKING");
+                lastDirection = Cognitive3D.GameplayReferences.HMD.rotation * Vector3.forward;
                 return lastDirection;
             }
 

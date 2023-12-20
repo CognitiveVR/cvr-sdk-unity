@@ -176,56 +176,18 @@ namespace Cognitive3D
             myparameters = parameters;
             if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
-                GameObject prefab = Resources.Load<GameObject>("HMDPointer");
-                if (prefab != null)
-                    pointerInstance = GameObject.Instantiate(prefab);
-                else
-                    Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
+                SetUpHMDAsPointer();
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer || parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            else if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
             {
-                GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
-                if (prefab != null)
-                    pointerInstance = GameObject.Instantiate(prefab);
-                else
-                    Debug.LogError("Spawning Exitpoll Controller Pointer, but cannot find prefab \"ControllerPointer\" in Resources!");
+                SetupControllerAsPointer(false);
+            }
+            else if (parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            {
+                SetupControllerAsPointer(true);
             }
             
-            if (pointerInstance != null)
-            {
-                if (parameters.PointerParent == ExitPoll.PointerSource.HMD)
-                {
-                    //parent to hmd and zero position
-                    pointerInstance.transform.SetParent(GameplayReferences.HMD);
-                    pointerInstance.transform.localPosition = Vector3.zero;
-                    pointerInstance.transform.localRotation = Quaternion.identity;
-                }
-                else if (parameters.PointerParent == ExitPoll.PointerSource.RightHand)
-                {
-                    Transform t = null;
-                    if (GameplayReferences.GetControllerTransform(true, out t))
-                    {
-                        pointerInstance.transform.SetParent(t);
-                        pointerInstance.transform.localPosition = Vector3.zero;
-                        pointerInstance.transform.localRotation = Quaternion.identity;
-                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
-                    }
-                }
-                else if (parameters.PointerParent == ExitPoll.PointerSource.LeftHand)
-                {
-                    Transform t = null;
-                    if (GameplayReferences.GetControllerTransform(false, out t))
-                    {
-                        pointerInstance.transform.SetParent(t);
-                        pointerInstance.transform.localPosition = Vector3.zero;
-                        pointerInstance.transform.localRotation = Quaternion.identity;
-                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
-                    }
-                }
-            }
-
             //this should take all previously set variables (from functions) and create an exitpoll parameters object
-
             currentPanelIndex = 0;
             if (string.IsNullOrEmpty(myparameters.Hook))
             {
@@ -245,18 +207,88 @@ namespace Cognitive3D
             }
         }
 
+        private void SetupControllerAsPointer(bool isRight)
+        {
+            GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
+            if (prefab != null)
+                pointerInstance = GameObject.Instantiate(prefab);
+            else
+                Debug.LogError("Spawning Exitpoll Controller Pointer, but cannot find prefab \"ControllerPointer\" in Resources!");
+
+            Transform t = null;
+            if (pointerInstance != null)
+            {
+                if (isRight)
+                {
+                    if (GameplayReferences.GetControllerTransform(true, out t))
+                    {
+                        pointerInstance.transform.SetParent(t);
+                        pointerInstance.transform.localPosition = Vector3.zero;
+                        pointerInstance.transform.localRotation = Quaternion.identity;
+                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
+                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = true;
+                    }
+                    else
+                    {
+                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
+                        SetUpHMDAsPointer();
+                        Debug.LogError("Controller not found, falling back to HMD Pointer");
+                    }
+                }
+                else
+                {
+                    if (GameplayReferences.GetControllerTransform(false, out t))
+                    {
+                        pointerInstance.transform.SetParent(t);
+                        pointerInstance.transform.localPosition = Vector3.zero;
+                        pointerInstance.transform.localRotation = Quaternion.identity;
+                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
+                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = false;
+                    }
+                    else
+                    {
+                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
+                        SetUpHMDAsPointer();
+                        Debug.LogError("Controller not found, falling back to HMD Pointer");
+                    }
+                }
+            }
+        }
+
+        public void SetUpHMDAsPointer()
+        {
+            GameObject prefab = Resources.Load<GameObject>("HMDPointer");
+            if (prefab != null)
+                pointerInstance = GameObject.Instantiate(prefab);
+            else
+                Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
+
+            if (pointerInstance != null)
+            {
+                //parent to hmd and zero position
+                pointerInstance.transform.SetParent(GameplayReferences.HMD);
+                pointerInstance.transform.localPosition = Vector3.zero;
+                pointerInstance.transform.localRotation = Quaternion.identity;
+            }
+        }
+
         /// <summary>
         /// when you manually need to close the Exit Poll question set manually OR
         /// when requesting a new exit poll question set when one is already active
         /// </summary>
-        public void EndQuestionSet()
+        public void EndQuestionSet(int timeToWait)
         {
             panelProperties.Clear();
             if (CurrentExitPollPanel != null)
             {
-                CurrentExitPollPanel.CloseError();
+                CurrentExitPollPanel.CloseError(timeToWait);
             }
             OnPanelError();
+        }
+
+        public void DisplayControllerError(bool display)
+        {
+            CurrentExitPollPanel.DisplayError(display);
         }
 
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
@@ -454,6 +486,20 @@ namespace Cognitive3D
 
                 // Skip voice response if microphone not detected
                 var currentPanelProperties = panelProperties[currentPanelIndex];
+#if UNITY_WEBGL
+                //skip voice questions on webgl - microphone is not supported
+                if (currentPanelProperties["type"].Equals("VOICE"))
+                {
+                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                                                  // because that is what PanelID gets set to
+                    panelCount++;
+                    new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
+                        .SetProperty("Panel ID", tempPanelID)
+                        .Send();
+                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    return;
+                }
+#else
                 if (currentPanelProperties["type"].Equals("VOICE") && Microphone.devices.Length == 0)
                 {
                     int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
@@ -465,6 +511,7 @@ namespace Cognitive3D
                     OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
                     return;
                 }
+#endif
 
                 var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
                 CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
@@ -476,7 +523,7 @@ namespace Cognitive3D
                     Cleanup(false);
                     return;
                 }
-                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this);
+                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this, questionSet.questions.Length);
 
                 if (myparameters.ExitpollSpawnType == ExitPoll.SpawnType.World && myparameters.UseAttachTransform)
                 {

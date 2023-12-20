@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.3.1";
+        public static readonly string SDK_VERSION = "1.4.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -59,6 +59,9 @@ namespace Cognitive3D
         public bool SendBatteryLevelOnStartAndEnd;
 
         private readonly List<Scene> sceneList = new List<Scene>();
+
+        [HideInInspector]
+        public Transform trackingSpace;
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -139,7 +142,11 @@ namespace Cognitive3D
 
             CognitiveStatics.Initialize();
 
+#if UNITY_WEBGL
+            DeviceId = System.Guid.NewGuid().ToString();
+#else
             DeviceId = SystemInfo.deviceUniqueIdentifier;
+#endif
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
 
@@ -407,6 +414,30 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
+        public bool TryGetTrackingSpace(out Transform space)
+        {
+            if (trackingSpace != null)
+            {
+                space = trackingSpace;
+                return true;
+            }
+            else
+            {
+                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
+                if (trackingSpaceInScene != null)
+                {
+                    trackingSpace = trackingSpaceInScene.transform;
+                    space = trackingSpaceInScene.transform;
+                    return true;
+                }
+                else
+                {
+                    space = null;
+                    return false;
+                }
+            }
+        }
+
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             if (DoesSceneHaveID(scene))
@@ -501,7 +532,10 @@ namespace Cognitive3D
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
-                new CustomEvent("c3d.sessionEnd").SetProperty("sessionlength", playtime).Send();
+                new CustomEvent("c3d.sessionEnd")
+                    .SetProperty("sessionlength", playtime)
+                    .SetProperty("Reason", "Quit from script")
+                    .Send();
                 Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
                 ResetSessionData();
             }
@@ -520,19 +554,6 @@ namespace Cognitive3D
 
         void OnApplicationPause(bool paused)
         {
-#if C3D_OCULUS && UNITY_ANDROID && !UNITY_EDITOR
-            if (paused)
-            {
-                double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
-                // Currently when you quit from oculus menu, you get pause instead of application quit. Mislabeled events will be fixed
-                // on dashboard side
-                new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
-                {
-                    { "Reason", "Quit from Oculus Menu" },
-                    { "sessionlength", playtime }
-                }).Send();
-            }
-#endif
             if (!IsInitialized) { return; }
             CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
 #if XRPF

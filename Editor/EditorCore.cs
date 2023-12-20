@@ -953,7 +953,6 @@ namespace Cognitive3D
                 if (!string.IsNullOrEmpty(checkForUpdatesRequest.downloadHandler.text))
                 {
                     var info = JsonUtility.FromJson<ReleaseInfo>(checkForUpdatesRequest.downloadHandler.text);
-
                     var version = info.tag_name;
                     string summary = info.body;
 
@@ -1205,10 +1204,6 @@ namespace Cognitive3D
         /// </summary>
         public static List<string> GetExportedDynamicObjectNames()
         {
-            //cached value
-            if (ExportedDynamicObjects != null)
-                return ExportedDynamicObjects;
-
             //read dynamic object mesh names from directory
             string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic";
             Directory.CreateDirectory(path);
@@ -1492,7 +1487,7 @@ namespace Cognitive3D
             if (layer == -1) { Debug.LogWarning("couldn't find layer, don't set layers"); }
 
             //create camera stuff
-            GameObject go = new GameObject("temp dynamic camera");
+            GameObject go = new GameObject("temp dynamic camera_" + target.name);
             var renderCam = go.AddComponent<Camera>();
             renderCam.clearFlags = CameraClearFlags.Color;
             renderCam.backgroundColor = Color.clear;
@@ -1501,7 +1496,7 @@ namespace Cognitive3D
             {
                 renderCam.cullingMask = 1 << layer;
             }
-            var rt = new RenderTexture(512, 512, 16);
+            RenderTexture rt = RenderTexture.GetTemporary(512, 512, 16);
             renderCam.targetTexture = rt;
             Texture2D tex = new Texture2D(rt.width, rt.height);
 

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace Cognitive3D.ActiveSession
 {
-    [AddComponentMenu("Cognitive3D/Active Session View/Event Canvas")]
+    [AddComponentMenu("")]
     public class EventCanvas : MonoBehaviour
     {
         public RectTransform EventFeedRoot;

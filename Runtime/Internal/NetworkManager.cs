@@ -53,6 +53,14 @@ namespace Cognitive3D
             lastDataResponse = responsecode;
             //check cvr header to make sure not blocked by capture portal
 
+#if UNITY_WEBGL
+            //webgl cors issue doesn't seem to accept this required header
+            if (!headers.ContainsKey("cvr-request-time"))
+            {
+                headers.Add("cvr-request-time", string.Empty);
+            }
+#endif
+
             if (!www.isDone)
                 Util.logWarning("Network::WaitForExitpollResponse timeout");
             if (responsecode != 200)
@@ -166,7 +174,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (responsecode < 500)
+                if (responsecode < 500 && responsecode != 307) //307 is a redirect - likely harmless
                 {
                     switch (responsecode)
                     {

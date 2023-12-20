@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using Cognitive3D;
 using System.IO;
+using UnityEngine.XR;
 
 //used in ExitPoll to record participant's voice
 //on completion, will encode the audio to a wav and pass a base64 string of the data to the ExitPoll
@@ -26,8 +27,11 @@ namespace Cognitive3D
         [Header("Visuals")]
         public Image MicrophoneImage;
         public Text TipText;
-
+        public Text buttonPrompt;
+        private ActivationType activationType;
         ExitPollSet questionSet;
+
+
         public void SetExitPollQuestionSet(ExitPollSet questionSet)
         {
             this.questionSet = questionSet;
@@ -36,6 +40,16 @@ namespace Cognitive3D
         protected virtual void OnEnable()
         {
             if (GameplayReferences.HMD == null) { return; }
+            if (FindObjectOfType<ExitPollHolder>().Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            {
+                activationType = ActivationType.PointerFallbackGaze;
+                buttonPrompt.text = "Hover To Record";
+            }
+            else
+            {
+                activationType = ActivationType.TriggerButton;
+                buttonPrompt.text = "When ready to record click the record button";
+            }
             FillAmount = 0;
             UpdateFillAmount();
         }
@@ -47,6 +61,9 @@ namespace Cognitive3D
             if (GameplayReferences.HMD == null) { return; }
             if (_finishedRecording) { return; }
 
+#if UNITY_WEBGL
+            //microphone not support on webgl
+#else
             if (_recording)
             {
                 _currentRecordTime -= Time.deltaTime;
@@ -65,6 +82,7 @@ namespace Cognitive3D
                     _finishedRecording = true;
                 }
             }
+#endif
         }
 
         //increase the fill amount if this image was focused this frame. calls RecorderActivate if past threshold
@@ -74,13 +92,32 @@ namespace Cognitive3D
             if (_recording) { return; }
             if (_finishedRecording) { return; }
 
+            if (isUsingRightHand)
+            {
+                InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            }
+            else
+            {
+                InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            }
+
             if (focusThisFrame)
             {
-                FillAmount += Time.deltaTime;
-                UpdateFillAmount();
-                if (FillAmount >= FillDuration)
+                if (activationType == ActivationType.PointerFallbackGaze)
                 {
-                    RecorderActivate();
+                    FillAmount += Time.deltaTime;
+                    UpdateFillAmount();
+                    if (FillAmount >= FillDuration)
+                    {
+                        RecorderActivate();
+                    }
+                }
+                else // Controller Trigger
+                {
+                    if (triggerValue > 0.5)
+                    {
+                        RecorderActivate();
+                    }
                 }
             }
             else if (FillAmount > 0)
@@ -93,7 +130,12 @@ namespace Cognitive3D
 
         void RecorderActivate()
         {
+#if UNITY_WEBGL
+            //microphone not supported on webgl
+            return;
+#else
             clip = Microphone.Start(null, false, RecordTime, outputRate);
+#endif
             fillImage.color = Color.red;
 
             GetComponentInParent<ExitPollPanel>().DisableTimeout();
