@@ -18,19 +18,18 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {   
             batteryStatus = SystemInfo.batteryStatus;
-            SendBatteryLevel();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            currentTiime += deltaTime;
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+                currentTiime += deltaTime;
                 if (!Cognitive3D_Manager.IsInitialized) { return; }
                 if (currentTiime > BatteryLevelSendInterval)
                 {
