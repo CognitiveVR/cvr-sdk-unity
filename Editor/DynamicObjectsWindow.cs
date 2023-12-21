@@ -271,7 +271,7 @@ namespace Cognitive3D
                     bool selected = selectedDynamicsOnFocus.Contains(o);
                     var found = dashboardObjects.Find(delegate (DashboardObject obj)
                         {
-                            if (!o.UseCustomId) { return false; }
+                            if (o.idSource != DynamicObject.IdSourceType.CustomID) { return false; }
                             return obj.sdkId == o.GetId();
                         });
                     bool uploaded = found != null;
@@ -734,7 +734,7 @@ namespace Cognitive3D
                     Entry found = Entries.Find(delegate (Entry obj)
                     {
                         if (obj.objectReference == null) { return false; }
-                        if (!obj.objectReference.UseCustomId) { return false; }
+                        if (obj.objectReference.idSource != DynamicObject.IdSourceType.CustomID) { return false; }
                         return obj.objectReference.GetId() == dashboardObject.sdkId;
                     });
                     if (found == null) { continue; }
@@ -1067,7 +1067,7 @@ namespace Cognitive3D
             {
                 GUI.Label(idRect, "ID Pool (" + dynamic.idPoolCount + ")", dynamiclabel);
             }
-            else if (dynamic.objectReference.UseCustomId)
+            else if (dynamic.objectReference.idSource == DynamicObject.IdSourceType.CustomID)
             {
                 GUI.Label(idRect, new GUIContent(dynamic.objectReference.GetId(), dynamic.objectReference.GetId()), dynamiclabel);
             }
@@ -1101,12 +1101,12 @@ namespace Cognitive3D
                 GUI.Label(uploaded, new GUIContent(EditorCore.CircleEmpty, "IDs in this pool have not been uploaded to dashboard"), image_centered);
                 //TODO check if any/all ids have been uploaded from id pool asset
             }
-            else if (dynamic.objectReference.IdPool != null)
+            else if (dynamic.objectReference.idSource == DynamicObject.IdSourceType.PoolID)
             {
                 //dynamic with id pool reference
                 GUI.Label(uploaded, new GUIContent("", "Objects using an ID pool. Check that the Pool asset IDs have been uploaded to aggregate these objects"), image_centered);
             }
-            else if (dynamic.objectReference.UseCustomId == false)
+            else if (dynamic.objectReference.idSource == DynamicObject.IdSourceType.GeneratedID)
             {
                 //generated at runtime
                 GUI.Label(uploaded, new GUIContent("", "Objects with generated IDs are not aggregated between sessions"), image_centered);
@@ -1303,7 +1303,7 @@ namespace Cognitive3D
 
                             if (!entry.isIdPool)
                             {
-                                if (dyn.UseCustomId == true)
+                                if (dyn.idSource == DynamicObject.IdSourceType.CustomID)
                                 {
                                     manifestList.Add(entry.objectReference);
                                 }

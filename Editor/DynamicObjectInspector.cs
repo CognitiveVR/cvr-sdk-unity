@@ -34,7 +34,12 @@ namespace Cognitive3D
             PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
         }
 
-        int idType = -1;
+        /// <summary>
+        /// Must follow this order:
+        ///     CustomID = 0
+        ///     GeneratedID = 1
+        ///     PoolID = 2
+        /// </summary>
         GUIContent[] idTypeNames = new GUIContent[] {
             new GUIContent("Custom Id", "For objects that start in the scene"),
             new GUIContent("Generate Id", "For spawned objects that DO NOT need aggregate data"),
@@ -55,11 +60,9 @@ namespace Cognitive3D
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
             var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
-            var useCustomId = serializedObject.FindProperty("UseCustomId");
             var customId = serializedObject.FindProperty("CustomId");
-            //var commonMeshName = serializedObject.FindProperty("CommonMesh");
+            var idSource = serializedObject.FindProperty("idSource");
             var meshname = serializedObject.FindProperty("MeshName");
-            //var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
             var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
             var idPool = serializedObject.FindProperty("IdPool");
@@ -69,7 +72,7 @@ namespace Cognitive3D
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
-                    if (dynamic.UseCustomId && idType == 0)
+                    if (dynamic.idSource == DynamicObject.IdSourceType.CustomID)
                     {
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
@@ -120,33 +123,20 @@ namespace Cognitive3D
                 }
             }
 
-            int targetIdType = -1;
-            bool allSelectedShareIdType = true;
-
             //dynamic id sources - custom id, generate at runtime, id pool asset
             var primaryDynamic = targets[0] as DynamicObject;
-            if (primaryDynamic.UseCustomId)
-            {
-                targetIdType = 0;
-                idType = 0;
-            }
-            else if (primaryDynamic.IdPool != null)
-            {
-                targetIdType = 2;
-                idType = 2;
-            }
-            else
-            {
-                targetIdType = 1;
-                idType = 1;
-            }
 
-            //check if all selected objects have the same idtype
+            // Support for multi-select
+            int targetIdType = (int)primaryDynamic.idSource;
+            bool allSelectedShareIdType = true;
+
+            // check if all selected objects have the same id type
+            // match each idSource with the targetIdType of the first guy
             foreach (var t in targets)
             {
                 var tdyn = (DynamicObject)t;
-                if (tdyn.UseCustomId) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
-                else if (tdyn.IdPool != null) {if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
+                if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
+                else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) { if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
                 else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
             }
 
@@ -159,32 +149,28 @@ namespace Cognitive3D
             else
             {
                 GUILayout.BeginHorizontal();
-                idType = EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
-
-                if (idType == 0) //custom id
+                idSource.enumValueIndex = EditorGUILayout.Popup(new GUIContent("Id Source"), (int)primaryDynamic.idSource, idTypeNames);
+                if (primaryDynamic.idSource == DynamicObject.IdSourceType.CustomID) //custom id
                 {
                     EditorGUILayout.PropertyField(customId, new GUIContent(""));
-                    useCustomId.boolValue = true;
                     idPool.objectReferenceValue = null;
                 }
-                else if (idType == 1) //generate id
+                else if (primaryDynamic.idSource == DynamicObject.IdSourceType.GeneratedID) //generate id
                 {
                     EditorGUI.BeginDisabledGroup(true);
                     EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
                     EditorGUI.EndDisabledGroup();
                     customId.stringValue = string.Empty;
-                    useCustomId.boolValue = false;
                     idPool.objectReferenceValue = null;
                 }
-                else if (idType == 2) //id pool
+                else if (primaryDynamic.idSource == DynamicObject.IdSourceType.PoolID) //id pool
                 {
                     EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
                     customId.stringValue = string.Empty;
-                    useCustomId.boolValue = false;
                 }
                 GUILayout.EndHorizontal();
 
-                if (idType == 2) //id pool
+                if (primaryDynamic.idSource == DynamicObject.IdSourceType.PoolID) //id pool
                 {
                     var dyn = target as DynamicObject;
                     if (dyn.IdPool == null)
@@ -325,14 +311,13 @@ namespace Cognitive3D
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                 }
             }
-
             serializedObject.ApplyModifiedProperties();
         }
 
         void UploadCustomIdForAggregation()
         {
             var dyn = target as DynamicObject;
-            if (dyn.UseCustomId)
+            if (dyn.idSource == DynamicObject.IdSourceType.CustomID)
             {
                 Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
@@ -383,7 +368,7 @@ namespace Cognitive3D
 
             for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {
-                if (!dynamics[i].UseCustomId) { continue; }
+                if (dynamics[i].idSource != DynamicObject.IdSourceType.CustomID) { continue; }
 
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {

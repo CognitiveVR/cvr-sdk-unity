@@ -39,13 +39,9 @@ namespace Cognitive3D
             selectedClip = (UnityEngine.Video.VideoClip)EditorGUILayout.ObjectField("Video Clip", selectedClip, typeof(UnityEngine.Video.VideoClip), true);
             userCamera = (UnityEngine.Camera)EditorGUILayout.ObjectField("Main Camera", userCamera, typeof(UnityEngine.Camera), true);
 
-            if (EditorCore.MediaSources.Length == 0)
+            if (GUILayout.Button("Refresh Media Sources"))
             {
-                if (GUILayout.Button("Refresh Media Sources"))
-                {
-                    EditorCore.RefreshMediaSources();
-                }
-                return;
+                EditorCore.RefreshMediaSources();
             }
 
             //media source
@@ -59,7 +55,10 @@ namespace Cognitive3D
             GUILayout.BeginHorizontal();
             GUILayout.Label("Description:", GUILayout.Width(100));
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+            if (EditorCore.MediaSources.Length > 0)
+            {
+                EditorGUILayout.TextArea(EditorCore.MediaSources[_choiceIndex].description);
+            }
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
 
