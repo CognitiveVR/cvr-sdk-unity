@@ -35,6 +35,13 @@ namespace Cognitive3D
         }
 
         int idType = -1;
+
+        /// <summary>
+        /// Must follow this order:
+        ///     CustomID = 0
+        ///     GeneratedID = 1
+        ///     PoolID = 2
+        /// </summary>
         GUIContent[] idTypeNames = new GUIContent[] {
             new GUIContent("Custom Id", "For objects that start in the scene"),
             new GUIContent("Generate Id", "For spawned objects that DO NOT need aggregate data"),
@@ -69,7 +76,7 @@ namespace Cognitive3D
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
-                    if (dynamic.UseCustomId && idType == 0)
+                    if ((dynamic.idSource == DynamicObject.IdSourceType.CustomID) && idType == 0)
                     {
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
@@ -320,7 +327,7 @@ namespace Cognitive3D
         void UploadCustomIdForAggregation()
         {
             var dyn = target as DynamicObject;
-            if (dyn.UseCustomId)
+            if (dyn.idSource == DynamicObject.IdSourceType.CustomID)
             {
                 Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
                 EditorCore.RefreshSceneVersion(delegate ()
@@ -371,7 +378,7 @@ namespace Cognitive3D
 
             for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {
-                if (!dynamics[i].UseCustomId) { continue; }
+                if (dynamics[i].idSource != DynamicObject.IdSourceType.CustomID) { continue; }
 
                 if (usedids.Contains(dynamics[i].CustomId) || string.IsNullOrEmpty(dynamics[i].CustomId))
                 {
