@@ -327,7 +327,7 @@ namespace Cognitive3D
                         new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                         new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                         new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                    DynamicObjectsWindow.UploadManifest(manifest, null);
+                    EditorCore.UploadManifest(manifest, null);
                 });
             }
             else if (dyn.IdPool != null)
@@ -343,7 +343,7 @@ namespace Cognitive3D
                             new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                             new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
                     }
-                    DynamicObjectsWindow.UploadManifest(manifest, null);
+                    EditorCore.UploadManifest(manifest, null);
                 });
             }
         }

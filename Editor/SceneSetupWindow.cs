@@ -939,13 +939,12 @@ namespace Cognitive3D
                 }
                 ExportUtility.ExportGLTFScene();
 
-                //TODO move these generated files to ExportUtility script
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = EditorCore.GetSubDirectoryPath(fullName);
-                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+                string path = EditorCore.GetSubDirectoryPath(fullName);
 
-                DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
+                ExportUtility.GenerateSettingsFile(path, fullName);
+
+                DebugInformationWindow.WriteDebugToFile(path + "debug.log");
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 
                 UnityEditor.AssetDatabase.SaveAssets();
@@ -1296,8 +1295,8 @@ namespace Cognitive3D
                         {
                             //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
                             AggregationManifest manifest = new AggregationManifest();
-                            DynamicObjectsWindow.AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                            DynamicObjectsWindow.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+                            EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
                         }
                         else
                         {

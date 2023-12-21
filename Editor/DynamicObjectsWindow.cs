@@ -57,6 +57,66 @@ namespace Cognitive3D
             }
         }
         public List<AggregationManifestEntry> objects = new List<AggregationManifestEntry>();
+
+        /// <summary>
+        /// adds or updates dynamic object ids in a provided manifest for aggregation
+        /// </summary>
+        /// <param name="scenedynamics"></param>
+        public void AddOrReplaceDynamic(List<DynamicObject> scenedynamics, bool silent = false)
+        {
+            bool meshNameMissing = false;
+            List<string> missingMeshGameObjects = new List<string>();
+            foreach (var dynamic in scenedynamics)
+            {
+
+                var replaceEntry = objects.Find(delegate (AggregationManifest.AggregationManifestEntry obj) { return obj.id == dynamic.CustomId.ToString(); });
+                if (replaceEntry == null)
+                {
+                    //don't include meshes with empty mesh names in manifest
+                    if (!string.IsNullOrEmpty(dynamic.MeshName))
+                    {
+                        objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),
+                            new float[] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
+                            new float[] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
+                            new float[] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));
+                    }
+                    else
+                    {
+                        missingMeshGameObjects.Add(dynamic.gameObject.name);
+                        meshNameMissing = true;
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(dynamic.MeshName))
+                    {
+                        replaceEntry.mesh = dynamic.MeshName;
+                        replaceEntry.name = dynamic.gameObject.name;
+                    }
+                    else
+                    {
+                        missingMeshGameObjects.Add(dynamic.gameObject.name);
+                        meshNameMissing = true;
+                    }
+                }
+            }
+
+            if (meshNameMissing)
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append("Dynamic Objects missing mesh name:\n");
+                foreach (var v in missingMeshGameObjects)
+                {
+                    sb.Append(v);
+                    sb.Append("\n");
+                }
+                Debug.LogWarning(sb.ToString());
+                if (silent == false)
+                {
+                    EditorUtility.DisplayDialog("Error", "One or more Dynamic Objects are missing a mesh name and were not uploaded to scene.\n\nSee Console for details", "Ok");
+                }
+            }
+        }
     }
 
     //temporary popup window for mass renaming dynamic object components
@@ -1256,166 +1316,23 @@ namespace Cognitive3D
                                 }
                             }
                         }
-                        AddOrReplaceDynamic(manifest, manifestList);
+                        manifest.AddOrReplaceDynamic(manifestList);
                         System.Action refreshWindowOnManifest = delegate
                         {
                             GetDashboardManifest();
                         };
 
-                        UploadManifest(manifest, refreshWindowOnManifest);
+                        EditorCore.UploadManifest(manifest, refreshWindowOnManifest);
                         this.Focus();
                     }
                 });
             });
         }
 
-        /// <summary>
-        /// generate manifest from scene objects and upload to latest version of scene. should be done only after EditorCore.RefreshSceneVersion
-        /// </summary>
+        [System.Obsolete("Use EditorCore.UploadManifest instead")]
         public static void UploadManifest(AggregationManifest manifest, System.Action callback, System.Action nodynamicscallback = null)
         {
-            if (manifest.objects.Count == 0)
-            {
-                Debug.LogWarning("Aggregation Manifest has nothing in list!");
-                if (nodynamicscallback != null)
-                {
-                    nodynamicscallback.Invoke();
-                }
-                return;
-            }
 
-            int manifestCount = 0;
-            //write up manifets into parts (if needed)
-            int debugBreakManifestLimit = 99;
-            while (true)
-            {
-                debugBreakManifestLimit--;
-                if (debugBreakManifestLimit == 0) { Debug.LogError("dynamic aggregation manifest error"); break; }
-                if (manifest.objects.Count == 0) { break; }
-
-                AggregationManifest am = new AggregationManifest();
-                am.objects.AddRange(manifest.objects.GetRange(0, Mathf.Min(250, manifest.objects.Count)));
-                manifest.objects.RemoveRange(0, Mathf.Min(250, manifest.objects.Count));
-                string json = "";
-                if (ManifestToJson(am, out json))
-                {
-                    manifestCount++;
-                    var currentSettings = Cognitive3D_Preferences.FindCurrentScene();
-                    if (currentSettings != null && currentSettings.VersionNumber > 0)
-                        SendManifest(json, currentSettings.VersionNumber, callback);
-                    else
-                        Util.logError("Could not find scene version for current scene");
-                }
-                else
-                {
-                    Debug.LogWarning("Aggregation Manifest only contains dynamic objects with generated ids");
-                    if (nodynamicscallback != null)
-                    {
-                        nodynamicscallback.Invoke();
-                    }
-                }
-            }
-        }
-
-        static bool ManifestToJson(AggregationManifest manifest, out string json)
-        {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.Append("{\"objects\":[");
-
-            List<string> usedIds = new List<string>();
-            bool containsValidEntry = false;
-            foreach (var entry in manifest.objects)
-            {
-                if (string.IsNullOrEmpty(entry.mesh)) { Debug.LogWarning(entry.name + " missing meshname"); continue; }
-                if (string.IsNullOrEmpty(entry.id)) { Debug.LogWarning(entry.name + " has empty dynamic id. This will not be aggregated"); continue; }
-                if (usedIds.Contains(entry.id)) { Debug.LogWarning(entry.name + " using id (" + entry.id + ") that already exists in the scene. This may not be aggregated correctly"); }
-                usedIds.Add(entry.id);
-                sb.Append("{");
-                sb.Append("\"id\":\"");
-                sb.Append(entry.id);
-                sb.Append("\",");
-
-                sb.Append("\"mesh\":\"");
-                sb.Append(entry.mesh);
-                sb.Append("\",");
-
-                sb.Append("\"name\":\"");
-                sb.Append(entry.name);
-                sb.Append("\",");
-
-                sb.Append("\"scaleCustom\":[");
-                sb.Append(entry.scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append("],");
-
-                sb.Append("\"initialPosition\":[");
-                sb.Append(entry.position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append("],");
-
-                sb.Append("\"initialRotation\":[");
-                sb.Append(entry.rotation[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.rotation[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.rotation[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append(",");
-                sb.Append(entry.rotation[3].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
-                sb.Append("]");
-                sb.Append("},");
-                containsValidEntry = true;
-            }
-            sb.Remove(sb.Length - 1, 1);
-            sb.Append("]}");
-            json = sb.ToString();
-
-            return containsValidEntry;
-        }
-
-        static System.Action PostManifestResponseAction;
-        static void SendManifest(string json, int versionNumber, System.Action callback)
-        {
-            var settings = Cognitive3D_Preferences.FindCurrentScene();
-            if (settings == null)
-            {
-                Debug.LogWarning("Send Manifest settings are null " + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path);
-                string s = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                if (string.IsNullOrEmpty(s))
-                {
-                    s = "Unknown Scene";
-                }
-                EditorUtility.DisplayDialog("Dynamic Object Manifest Upload Failed", "Could not find the Scene Settings for \"" + s + "\". Are you sure you've saved, exported and uploaded this scene to SceneExplorer?", "Ok");
-                return;
-            }
-
-            string url = CognitiveStatics.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
-            Util.logDebug("Send Manifest Contents: " + json);
-
-            //upload manifest
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            if (EditorCore.IsDeveloperKeyValid)
-            {
-                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                headers.Add("Content-Type", "application/json");
-            }
-            PostManifestResponseAction = callback;
-            EditorNetwork.QueuePost(url, json, PostManifestResponse, headers, false);//AUTH
-        }
-
-        static void PostManifestResponse(int responsecode, string error, string text)
-        {
-            Util.logDebug("Manifest upload complete. responseCode: " + responsecode+" text: " + text + (!string.IsNullOrEmpty(error) ? " error: " + error : ""));
-            if (PostManifestResponseAction != null)
-            {
-                PostManifestResponseAction.Invoke();
-                PostManifestResponseAction = null;
-            }
         }
 
         /// <summary>
@@ -1423,6 +1340,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="manifest"></param>
         /// <param name="scenedynamics"></param>
+        [System.Obsolete("Use manifest.AddOrReplaceDynamic instead")]
         public static void AddOrReplaceDynamic(AggregationManifest manifest, List<DynamicObject> scenedynamics)
         {
             bool meshNameMissing = false;
