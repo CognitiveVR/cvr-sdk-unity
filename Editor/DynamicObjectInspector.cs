@@ -34,7 +34,8 @@ namespace Cognitive3D
             PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
         }
 
-        int idType = -1;
+        // Default is CustomID
+        int idType = 0;
 
         /// <summary>
         /// Must follow this order:
