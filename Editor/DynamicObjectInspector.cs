@@ -60,12 +60,9 @@ namespace Cognitive3D
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
             var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
-            //var useCustomId = serializedObject.FindProperty("UseCustomId");
             var customId = serializedObject.FindProperty("CustomId");
             var idSource = serializedObject.FindProperty("idSource");
-            //var commonMeshName = serializedObject.FindProperty("CommonMesh");
             var meshname = serializedObject.FindProperty("MeshName");
-            //var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
             var isController = serializedObject.FindProperty("IsController");
             var syncWithGaze = serializedObject.FindProperty("SyncWithPlayerGazeTick");
             var idPool = serializedObject.FindProperty("IdPool");
