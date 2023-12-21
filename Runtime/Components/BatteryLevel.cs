@@ -12,7 +12,7 @@ namespace Cognitive3D.Components
     {
         private BatteryStatus batteryStatus;
 #if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
-        private float currentTiime = 0;
+        private float currentTime = 0;
         private readonly float BatteryLevelSendInterval = 10.0f;
 
         protected override void OnSessionBegin()
@@ -29,11 +29,11 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
-                currentTiime += deltaTime;
+                currentTime += deltaTime;
                 if (!Cognitive3D_Manager.IsInitialized) { return; }
-                if (currentTiime > BatteryLevelSendInterval)
+                if (currentTime > BatteryLevelSendInterval)
                 {
-                    currentTiime = 0;
+                    currentTime = 0;
                     SendBatteryLevel();
                     SendBatteryStatus();
                 }
