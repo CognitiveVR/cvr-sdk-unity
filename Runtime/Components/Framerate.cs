@@ -11,6 +11,7 @@ using Cognitive3D;
 //TODO research and consider Coefficient of Variation
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Frame Rate")]
     public class Framerate : AnalyticsComponentBase
     {
@@ -35,12 +36,22 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            intervalFrameCount++;
-            currentTime += deltaTime;
-            deltaTimes.Add(Time.unscaledDeltaTime);
-            if (currentTime > FramerateTrackingInterval)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
             {
-                IntervalEnd();
+                intervalFrameCount++;
+                currentTime += deltaTime;
+                deltaTimes.Add(Time.unscaledDeltaTime);
+                if (currentTime > FramerateTrackingInterval)
+                {
+                    IntervalEnd();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Framerate component is disabled. Please enable in inspector.");
             }
         }
 

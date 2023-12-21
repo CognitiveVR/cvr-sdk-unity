@@ -226,7 +226,7 @@ namespace Cognitive3D
 
         private void SaveDevKey()
         {
-            EditorPrefs.SetString("c3d_developerkey", developerkey);
+            EditorCore.DeveloperKey = developerkey;
         }
 
         private void SaveApplicationKey()
@@ -238,7 +238,7 @@ namespace Cognitive3D
 
         private void LoadKeys()
         {
-            developerkey = EditorPrefs.GetString("c3d_developerkey");
+            developerkey = EditorCore.DeveloperKey;
             apikey = EditorCore.GetPreferences().ApplicationKey;
         }
 

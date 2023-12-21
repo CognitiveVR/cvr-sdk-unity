@@ -18,6 +18,23 @@ namespace Cognitive3D
     [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
     public class DynamicObject : MonoBehaviour
     {
+        /// <summary>
+        /// To know the "ID Source Type" set from inspector
+        /// Must follow this order:
+        ///     CustomID = 0
+        ///     GeneratedID = 1
+        ///     PoolID = 2
+        /// </summary>
+        public enum IdSourceType
+        {
+            CustomID = 0,
+            GeneratedID = 1,
+            PoolID = 2
+        }
+
+        // Default idSource
+        public IdSourceType idSource = IdSourceType.CustomID;
+        
         //developer facing high level controller type selection
         public enum ControllerType
         {
@@ -112,9 +129,6 @@ namespace Cognitive3D
 
         //data id is the general way to get the actual id from the dynamic object (generated or custom id). use GetId
         private string DataId;
-        //this is only used for a custom editor to help CustomId be set correctly
-        [SerializeField]
-        internal bool UseCustomId = true;
 
         //custom id is set in editor and will be used when set. internal to be accessed by various editor windows
         /// <summary>
@@ -208,11 +222,10 @@ namespace Cognitive3D
                 UpdateRate = 64;
             }
 
-            string registerid = UseCustomId ? CustomId : "";
+            string registerid = (idSource == IdSourceType.CustomID) ? CustomId : "";
 
-            if (!UseCustomId && IdPool != null)
+            if (idSource == IdSourceType.GeneratedID)
             {
-                UseCustomId = true;
                 CustomId = IdPool.GetId();
                 registerid = CustomId;
             }
@@ -377,7 +390,7 @@ namespace Cognitive3D
             OnDisable();
 
             //update displayed customid
-            this.UseCustomId = true;
+            this.idSource = IdSourceType.CustomID;
             this.CustomId = customId;
 
             //register new dynamic data with dynamic manager
@@ -412,7 +425,7 @@ namespace Cognitive3D
             OnDisable();
 
             //update displayed customid
-            this.UseCustomId = true;
+            this.idSource = IdSourceType.CustomID;
             this.CustomId = customId;
             this.MeshName = meshName;
 

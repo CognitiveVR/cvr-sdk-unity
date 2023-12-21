@@ -10,6 +10,7 @@ using Unity.XR.CoreUtils;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight : AnalyticsComponentBase
     {

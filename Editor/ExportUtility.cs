@@ -113,6 +113,107 @@ namespace Cognitive3D
         static List<string> customTextureExports;
 
         /// <summary>
+        /// Deletes all the temporary files exported in the active scene directory
+        /// </summary>
+        public static void ClearActiveSceneDirectory()
+        {
+            var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + activeScene.name;
+            if (!Directory.Exists(path))
+            {
+                Debug.LogWarning("Directory doesn't exist! " + path);
+                return;
+            }
+            var files = Directory.GetFiles(path);
+            Debug.Log("Delete Files:");
+            foreach (var v in files)
+            {
+                Debug.Log(v);
+            }
+        }
+
+        /// <summary>
+        /// Deletes all the temporary files exported in scene directory
+        /// </summary>
+        /// <param name="sceneName"></param>
+        public static void ClearSceneDirectory(string sceneName)
+        {
+            string path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName;
+            if (!Directory.Exists(path))
+            {
+                Debug.LogWarning("Directory doesn't exist! " + path);
+                return;
+            }
+            var files = Directory.GetFiles(path);
+            Debug.Log("Delete Files:");
+            foreach (var v in files)
+            {
+                Debug.Log(v);
+            }
+        }
+
+        /// <summary>
+        /// Upload temporary geometry from the active scene to the dashboard. This handles new scene versions and entirely new scenes
+        /// </summary>
+        public static void UploadActiveSceneGeometry()
+        {
+            //refresh scene versions post upload
+            System.Action<int> refreshSceneVersion = delegate (int responseCode)
+            {
+                if (responseCode == 200 || responseCode == 201)
+                {
+                    Util.logDebug("scene upload complete, refresh scene version");
+                    EditorCore.RefreshSceneVersion(null); //likely completed in previous step, but just in case
+                }
+                else
+                {
+                    Util.logDebug("scene upload failed - response code " + responseCode);
+                }
+            };
+
+            //upload scene geometry
+            System.Action uploadScene = delegate
+            {
+                Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
+                if (current == null)
+                {
+                    Util.logError("Trying to upload to a scene with no settings! Upload cancelled");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(current.SceneId))
+                {
+                    //new scene
+                    ExportUtility.UploadDecimatedScene(current, refreshSceneVersion, null);
+                }
+                else
+                {
+                    //new version
+                    ExportUtility.UploadDecimatedScene(current, refreshSceneVersion, null);
+                }
+            };
+
+            var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (!activeScene.IsValid())
+            {
+                Util.logError("GetActiveScene returned an invalid scene. Upload cancelled");
+                return;
+            }
+
+            Cognitive3D_Preferences.AddSceneSettings(activeScene);
+
+            //first refresh scene version
+            if (string.IsNullOrEmpty(activeScene.name))
+            {
+                Util.logError("Cannot Upload scenes that have not been saved yet! Upload cancelled");
+            }
+            else
+            {
+                EditorCore.RefreshSceneVersion(uploadScene);
+            }
+        }
+
+        /// <summary>
         /// export all geometry for the active scene. will NOT delete existing files in this directory
         /// </summary>
         public static void ExportGLTFScene()
@@ -186,6 +287,11 @@ namespace Cognitive3D
             }
         }
 
+        internal static void GenerateSettingsFile(string path, string sceneName)
+        {
+            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + sceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+            System.IO.File.WriteAllText(path + "settings.json", jsonSettingsContents);
+        }
 
         /// <summary>
         /// used by scene and dynamics to queue resizing textures

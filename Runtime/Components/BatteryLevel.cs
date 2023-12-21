@@ -6,31 +6,44 @@
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Battery Level")]
     public class BatteryLevel : AnalyticsComponentBase
     {
         private BatteryStatus batteryStatus;
 #if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
-        private float lastDataTimestamp;
-        private const float sendInterval = 1.0f;
+        private float currentTiime = 0;
+        private readonly float BatteryLevelSendInterval = 10.0f;
 
         protected override void OnSessionBegin()
         {   
             batteryStatus = SystemInfo.batteryStatus;
-            SendBatteryLevel();
-            lastDataTimestamp = Time.time;
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
         }
 
-        private void Update()
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            if (!Cognitive3D_Manager.IsInitialized) { return; }
-            if (Time.time >= lastDataTimestamp + sendInterval)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
             {
-                SendBatteryLevel();
-                SendBatteryStatus();
-                lastDataTimestamp = Time.time;
+                currentTiime += deltaTime;
+                if (!Cognitive3D_Manager.IsInitialized) { return; }
+                if (currentTiime > BatteryLevelSendInterval)
+                {
+                    currentTiime = 0;
+                    SendBatteryLevel();
+                    SendBatteryStatus();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Battery Level component is disabled. Please enable in inspector.");
             }
         }
+
 #endif
         void SendBatteryLevel()
         {
@@ -62,7 +75,15 @@ namespace Cognitive3D.Components
                 }
                 Cognitive3D.SensorRecorder.RecordDataPoint("HMD Battery Status", (int)currentStatus);
             }
-        }    
+        }
+
+#if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+#endif
 
         public override bool GetWarning()
         {

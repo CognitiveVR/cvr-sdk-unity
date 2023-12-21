@@ -92,11 +92,11 @@ namespace Cognitive3D
         //min batch size
         //if number of data points reaches this value, send immediately
 
-        public int GazeSnapshotCount = 64;
-        public int SensorSnapshotCount = 128;
-        public int DynamicSnapshotCount = 128;
-        public int EventDataThreshold = 64;
-        public int FixationSnapshotCount = 64;
+        public int GazeSnapshotCount = 256;
+        public int SensorSnapshotCount = 512;
+        public int DynamicSnapshotCount = 512;
+        public int EventDataThreshold = 256;
+        public int FixationSnapshotCount = 256;
 
         public int AutomaticSendTimer = 10;
 

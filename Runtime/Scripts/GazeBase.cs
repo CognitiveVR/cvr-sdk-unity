@@ -14,7 +14,6 @@ namespace Cognitive3D
         internal static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
-        protected Transform cameraRoot;
 
         //called immediately after construction
         internal virtual void Initialize()
@@ -30,7 +29,6 @@ namespace Cognitive3D
                     gb.OnEyeTracking.AddListener(DoEyeTracking);
             }
 #endif
-            cameraRoot = GameplayReferences.HMD.root;
         }
 
 #if C3D_OCULUS
