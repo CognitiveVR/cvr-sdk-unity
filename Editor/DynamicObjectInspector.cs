@@ -132,17 +132,6 @@ namespace Cognitive3D
 
             //dynamic id sources - custom id, generate at runtime, id pool asset
             var primaryDynamic = targets[0] as DynamicObject;
-            idType = (int) primaryDynamic.idSource;
-            targetIdType = (int) primaryDynamic.idSource;
-
-            //check if all selected objects have the same idtype
-            foreach (var t in targets)
-            {
-                var tdyn = (DynamicObject)t;
-                if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
-                else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) {if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
-                else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
-            }
 
             //if all id sources from selected objects are the same, display shared property fields
             //otherwise display 'multiple values'
@@ -213,6 +202,21 @@ namespace Cognitive3D
                         }
                     }
                 }
+
+                // Support for multi-select
+                idType = (int)primaryDynamic.idSource;
+                targetIdType = (int)primaryDynamic.idSource;
+
+                // check if all selected objects have the same id type
+                // match each idSource with the targetIdType of the first guy
+                foreach (var t in targets)
+                {
+                    var tdyn = (DynamicObject)t;
+                    if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
+                    else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) { if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
+                    else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
+                }
+
             }
 
             basicGUIChanged = EditorGUI.EndChangeCheck();
