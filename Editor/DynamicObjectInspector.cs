@@ -159,7 +159,6 @@ namespace Cognitive3D
                 if (idType == 0) //custom id
                 {
                     EditorGUILayout.PropertyField(customId, new GUIContent(""));
-                    useCustomId.boolValue = true;
                     idPool.objectReferenceValue = null;
                 }
                 else if (idType == 1) //generate id
@@ -168,14 +167,12 @@ namespace Cognitive3D
                     EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
                     EditorGUI.EndDisabledGroup();
                     customId.stringValue = string.Empty;
-                    useCustomId.boolValue = false;
                     idPool.objectReferenceValue = null;
                 }
                 else if (idType == 2) //id pool
                 {
                     EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
                     customId.stringValue = string.Empty;
-                    useCustomId.boolValue = false;
                 }
                 GUILayout.EndHorizontal();
 
