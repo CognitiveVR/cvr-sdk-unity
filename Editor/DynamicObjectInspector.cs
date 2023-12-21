@@ -34,9 +34,6 @@ namespace Cognitive3D
             PrefabUtility.prefabInstanceUpdated -= PrefabInstanceUpdated;
         }
 
-        // Default is CustomID
-        int idType = 0;
-
         /// <summary>
         /// Must follow this order:
         ///     CustomID = 0
@@ -63,8 +60,9 @@ namespace Cognitive3D
             var positionThreshold = serializedObject.FindProperty("PositionThreshold");
             var rotationThreshold = serializedObject.FindProperty("RotationThreshold");
             var scaleThreshold = serializedObject.FindProperty("ScaleThreshold");
-            var useCustomId = serializedObject.FindProperty("UseCustomId");
+            //var useCustomId = serializedObject.FindProperty("UseCustomId");
             var customId = serializedObject.FindProperty("CustomId");
+            var idSource = serializedObject.FindProperty("idSource");
             //var commonMeshName = serializedObject.FindProperty("CommonMesh");
             var meshname = serializedObject.FindProperty("MeshName");
             //var useCustomMesh = serializedObject.FindProperty("UseCustomMesh");
@@ -77,7 +75,7 @@ namespace Cognitive3D
                 var dynamic = t as DynamicObject;
                 if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
-                    if ((dynamic.idSource == DynamicObject.IdSourceType.CustomID) && idType == 0)
+                    if (dynamic.idSource == DynamicObject.IdSourceType.CustomID)
                     {
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
@@ -128,11 +126,22 @@ namespace Cognitive3D
                 }
             }
 
-            int targetIdType = -1;
-            bool allSelectedShareIdType = true;
-
             //dynamic id sources - custom id, generate at runtime, id pool asset
             var primaryDynamic = targets[0] as DynamicObject;
+
+            // Support for multi-select
+            int targetIdType = (int)primaryDynamic.idSource;
+            bool allSelectedShareIdType = true;
+
+            // check if all selected objects have the same id type
+            // match each idSource with the targetIdType of the first guy
+            foreach (var t in targets)
+            {
+                var tdyn = (DynamicObject)t;
+                if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
+                else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) { if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
+                else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
+            }
 
             //if all id sources from selected objects are the same, display shared property fields
             //otherwise display 'multiple values'
@@ -143,7 +152,7 @@ namespace Cognitive3D
             else
             {
                 GUILayout.BeginHorizontal();
-                primaryDynamic.idSource = (DynamicObject.IdSourceType) EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
+                idSource.enumValueIndex = EditorGUILayout.Popup(new GUIContent("Id Source"), (int)primaryDynamic.idSource, idTypeNames);
                 if (primaryDynamic.idSource == DynamicObject.IdSourceType.CustomID) //custom id
                 {
                     EditorGUILayout.PropertyField(customId, new GUIContent(""));
@@ -200,20 +209,6 @@ namespace Cognitive3D
                             }
                         }
                     }
-                }
-
-                // Support for multi-select
-                idType = (int)primaryDynamic.idSource;
-                targetIdType = (int)primaryDynamic.idSource;
-
-                // check if all selected objects have the same id type
-                // match each idSource with the targetIdType of the first guy
-                foreach (var t in targets)
-                {
-                    var tdyn = (DynamicObject)t;
-                    if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
-                    else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) { if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
-                    else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
                 }
             }
 
@@ -319,7 +314,6 @@ namespace Cognitive3D
                     UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
                 }
             }
-
             serializedObject.ApplyModifiedProperties();
         }
 
