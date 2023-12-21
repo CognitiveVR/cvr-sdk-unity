@@ -143,15 +143,13 @@ namespace Cognitive3D
             else
             {
                 GUILayout.BeginHorizontal();
-                idType = EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
-                primaryDynamic.idSource = (DynamicObject.IdSourceType) idType;
-
-                if (idType == 0) //custom id
+                primaryDynamic.idSource = (DynamicObject.IdSourceType) EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
+                if (primaryDynamic.idSource == DynamicObject.IdSourceType.CustomID) //custom id
                 {
                     EditorGUILayout.PropertyField(customId, new GUIContent(""));
                     idPool.objectReferenceValue = null;
                 }
-                else if (idType == 1) //generate id
+                else if (primaryDynamic.idSource == DynamicObject.IdSourceType.GeneratedID) //generate id
                 {
                     EditorGUI.BeginDisabledGroup(true);
                     EditorGUILayout.LabelField(new GUIContent("Id will be generated at runtime", "This object will not be included in aggregation metrics on the dashboard"));
@@ -159,14 +157,14 @@ namespace Cognitive3D
                     customId.stringValue = string.Empty;
                     idPool.objectReferenceValue = null;
                 }
-                else if (idType == 2) //id pool
+                else if (primaryDynamic.idSource == DynamicObject.IdSourceType.PoolID) //id pool
                 {
                     EditorGUILayout.ObjectField(idPool, new GUIContent("", "Provides a consistent list of Ids to be used at runtime. Allows aggregated data from objects spawned at runtime"));
                     customId.stringValue = string.Empty;
                 }
                 GUILayout.EndHorizontal();
 
-                if (idType == 2) //id pool
+                if (primaryDynamic.idSource == DynamicObject.IdSourceType.PoolID) //id pool
                 {
                     var dyn = target as DynamicObject;
                     if (dyn.IdPool == null)
@@ -217,7 +215,6 @@ namespace Cognitive3D
                     else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) { if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
                     else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
                 }
-
             }
 
             basicGUIChanged = EditorGUI.EndChangeCheck();
