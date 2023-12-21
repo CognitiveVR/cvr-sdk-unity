@@ -18,6 +18,16 @@ namespace Cognitive3D
     [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
     public class DynamicObject : MonoBehaviour
     {
+        
+        public enum IdSourceType
+        {
+            CustomID = 0,
+            GeneratedID = 1,
+            PoolID = 2
+        }
+
+        public IdSourceType idSource = IdSourceType.CustomID;
+        
         //developer facing high level controller type selection
         public enum ControllerType
         {

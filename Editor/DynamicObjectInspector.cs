@@ -125,28 +125,15 @@ namespace Cognitive3D
 
             //dynamic id sources - custom id, generate at runtime, id pool asset
             var primaryDynamic = targets[0] as DynamicObject;
-            if (primaryDynamic.UseCustomId)
-            {
-                targetIdType = 0;
-                idType = 0;
-            }
-            else if (primaryDynamic.IdPool != null)
-            {
-                targetIdType = 2;
-                idType = 2;
-            }
-            else
-            {
-                targetIdType = 1;
-                idType = 1;
-            }
+            idType = (int) primaryDynamic.idSource;
+            targetIdType = (int) primaryDynamic.idSource;
 
             //check if all selected objects have the same idtype
             foreach (var t in targets)
             {
                 var tdyn = (DynamicObject)t;
-                if (tdyn.UseCustomId) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
-                else if (tdyn.IdPool != null) {if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
+                if (tdyn.idSource == DynamicObject.IdSourceType.CustomID) { if (targetIdType != 0) { allSelectedShareIdType = false; break; } }
+                else if (tdyn.idSource == DynamicObject.IdSourceType.PoolID) {if (targetIdType != 2) { allSelectedShareIdType = false; break; } }
                 else if (targetIdType != 1) { allSelectedShareIdType = false; break; }
             }
 
@@ -160,6 +147,7 @@ namespace Cognitive3D
             {
                 GUILayout.BeginHorizontal();
                 idType = EditorGUILayout.Popup(new GUIContent("Id Source"), idType, idTypeNames);
+                primaryDynamic.idSource = (DynamicObject.IdSourceType) idType;
 
                 if (idType == 0) //custom id
                 {
