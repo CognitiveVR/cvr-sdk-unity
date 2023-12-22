@@ -69,7 +69,7 @@ namespace Cognitive3D
                         }
                     }
 
-                    DynamicObjectsWindow.UploadManifest(manifest, null);
+                    EditorCore.UploadManifest(manifest, null);
                 });
             }
             EditorGUI.EndDisabledGroup();

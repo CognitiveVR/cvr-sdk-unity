@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
@@ -41,10 +42,20 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            currentTime += deltaTime;
-            if (currentTime > ControllerTrackingInterval)
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
+            if (isActiveAndEnabled)
             {
-                ControllerTrackingIntervalEnd();
+                currentTime += deltaTime;
+                if (currentTime > ControllerTrackingInterval)
+                {
+                    ControllerTrackingIntervalEnd();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Controller Tracking component is disabled. Please enable in inspector.");
             }
         }
 
@@ -55,12 +66,12 @@ namespace Cognitive3D.Components
             if (GameplayReferences.GetControllerTransform(false, out leftController))
             {
                 float leftControllerToHead = leftController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("Left Controller Elevation from Head", leftControllerToHead);
+                SensorRecorder.RecordDataPoint("c3d.controller.left.height.fromHMD", leftControllerToHead);
             }
             if (GameplayReferences.GetControllerTransform(true, out rightController))
             {
                 float rightControllerToHead = rightController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("Right Controller Elevation from Head", rightControllerToHead);
+                SensorRecorder.RecordDataPoint("c3d.controller.right.height.fromHMD", rightControllerToHead);
             }
             currentTime = 0;
         }
