@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
 
+
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
@@ -216,6 +217,8 @@ namespace Cognitive3D
 
             if (responsecode == 200)
             {
+                // define a delay to send request
+                StartCoroutine(CACHEDResponseCallbackDelay());
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
@@ -238,6 +241,13 @@ namespace Cognitive3D
                 CacheRequest.Dispose();
                 CacheRequest = null;
             }
+        }
+
+        System.Collections.IEnumerator CACHEDResponseCallbackDelay()
+        {
+            float delayTime = 10;
+
+            yield return new WaitForSeconds(delayTime);
         }
 
         /// <summary>
@@ -396,14 +406,14 @@ namespace Cognitive3D
             activeRequests.Remove(www);
         }
 
-        int prevResponseCode;
-        bool lastRequestFailed;
+        int lastResponseCode;
+        float clockTime;
         
         internal async void Post(string url, string stringcontent)
         {
-            if(lastRequestFailed)
+            if(Time.time < 60 + clockTime)
             {
-                await WriteToCache(url, stringcontent);
+                WriteToCache(url, stringcontent);
                 // Progressive wait times
                 // timeout = GetExponentialBackoff(timeout);
                 time = 0;
@@ -419,16 +429,14 @@ namespace Cognitive3D
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
 
-            prevResponseCode = (int)request.responseCode;
+            lastResponseCode = (int)request.responseCode;
 
-            if(prevResponseCode >= 500)
+            Debug.Log("Response Code is " + lastResponseCode);
+
+            if(lastResponseCode >= 500)
             {
                 Debug.Log("Response Code is 500!");
-                lastRequestFailed = true;
-            }
-            else
-            {
-                lastRequestFailed = false;
+                clockTime = Time.time;
             }
 
             activeRequests.Add(request);
@@ -442,18 +450,11 @@ namespace Cognitive3D
         float timeout = 60;
 
         // Writing to cache when responsecode is 500
-        private async Task WriteToCache(string url, string content)
+        private void WriteToCache(string url, string content)
         {            
-            while (time < timeout)
+            if(runtimeCache.CanWrite(url, content))
             {
-                await Task.Yield();
-                if (runtimeCache.CanWrite(url, content))
-                {
-                    //try to append to local cache file
-                    runtimeCache.WriteContent(url, content);
-                }
-                time += Time.deltaTime;
-                Debug.Log("current time: " + time.ToString());
+                runtimeCache.WriteContent(url, content);
             }
         }
 
