@@ -396,21 +396,71 @@ namespace Cognitive3D
             activeRequests.Remove(www);
         }
 
+        int prevResponseCode;
+        bool lastRequestFailed;
+        
         internal async void Post(string url, string stringcontent)
         {
+            if(lastRequestFailed)
+            {
+                await WriteToCache(url, stringcontent);
+                // Progressive wait times
+                // timeout = GetExponentialBackoff(timeout);
+                time = 0;
+                return;
+            }
+
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
+
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
 
+            prevResponseCode = (int)request.responseCode;
+
+            if(prevResponseCode >= 500)
+            {
+                Debug.Log("Response Code is 500!");
+                lastRequestFailed = true;
+            }
+            else
+            {
+                lastRequestFailed = false;
+            }
+
             activeRequests.Add(request);
             await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
+        }
+
+        float time = 0;
+        float timeout = 60;
+
+        // Writing to cache when responsecode is 500
+        private async Task WriteToCache(string url, string content)
+        {            
+            while (time < timeout)
+            {
+                await Task.Yield();
+                if (runtimeCache.CanWrite(url, content))
+                {
+                    //try to append to local cache file
+                    runtimeCache.WriteContent(url, content);
+                }
+                time += Time.deltaTime;
+                Debug.Log("current time: " + time.ToString());
+            }
+        }
+
+        // Exponential backoff strategy: Increase delay exponentially
+        private float GetExponentialBackoff(float currentDelay)
+        {
+            return currentDelay * 2;
         }
 
         //skip network cleanup if immediately/manually destroyed
