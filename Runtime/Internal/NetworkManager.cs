@@ -31,6 +31,9 @@ namespace Cognitive3D
         internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
 
+        const float cacheUploadInterval = 10;
+        const float retryDelay = 60;
+
         internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
         {
             DontDestroyOnLoad(gameObject);
@@ -164,6 +167,9 @@ namespace Cognitive3D
 
         void POSTResponseCallback(string url, string content, int responsecode, string error, string text)
         {
+            // Retrieving the most recent response code to initiate the cooldown procedure
+            lastResponseCode = responsecode;
+
             if (responsecode == 200)
             {
                 if (runtimeCache == null) { return; }
@@ -175,7 +181,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (responsecode < 500 && responsecode != 307) //307 is a redirect - likely harmless
+                if (responsecode < 500 && responsecode != 307 && responsecode != 0) //307 is a redirect - likely harmless
                 {
                     switch (responsecode)
                     {
@@ -245,9 +251,7 @@ namespace Cognitive3D
 
         System.Collections.IEnumerator CACHEDResponseCallbackDelay()
         {
-            float delayTime = 10;
-
-            yield return new WaitForSeconds(delayTime);
+            yield return new WaitForSeconds(cacheUploadInterval);
         }
 
         /// <summary>
@@ -407,16 +411,17 @@ namespace Cognitive3D
         }
 
         int lastResponseCode;
+        bool lastRequestFailed;
         float clockTime;
         
         internal async void Post(string url, string stringcontent)
         {
-            if(Time.time < 60 + clockTime)
+            // Cooldown procedure
+            if(Time.time < retryDelay + clockTime && lastRequestFailed)
             {
                 WriteToCache(url, stringcontent);
                 // Progressive wait times
                 // timeout = GetExponentialBackoff(timeout);
-                time = 0;
                 return;
             }
 
@@ -429,27 +434,23 @@ namespace Cognitive3D
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
 
-            lastResponseCode = (int)request.responseCode;
-
-            Debug.Log("Response Code is " + lastResponseCode);
-
-            if(lastResponseCode >= 500)
-            {
-                Debug.Log("Response Code is 500!");
-                clockTime = Time.time;
-            }
-
             activeRequests.Add(request);
             await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
+
+            // Triggering cooldown process when the response code is either 500 or 0
+            // Response code 0 indicates a disconnection from the internet
+            if(lastResponseCode >= 500 || lastResponseCode == 0)
+            {
+                Debug.LogWarning("Response Code is " + lastResponseCode + ". Initiated cooldown procedure.");
+                clockTime = Time.time;
+                lastRequestFailed = true;
+            }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
         }
 
-        float time = 0;
-        float timeout = 60;
-
-        // Writing to cache when responsecode is 500
+        // Writing to cache
         private void WriteToCache(string url, string content)
         {            
             if(runtimeCache.CanWrite(url, content))
@@ -458,6 +459,7 @@ namespace Cognitive3D
             }
         }
 
+        // TODO: Calculate the delay according to the data
         // Exponential backoff strategy: Increase delay exponentially
         private float GetExponentialBackoff(float currentDelay)
         {
