@@ -230,7 +230,10 @@ namespace Cognitive3D
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
-                runtimeCache.PopContent();
+                if(runtimeCache != null)
+                {
+                    runtimeCache.PopContent();
+                }
                 isuploadingfromcache = false;
                 LoopUploadFromLocalCache();
             }
@@ -297,32 +300,35 @@ namespace Cognitive3D
 
             string url = "";
             string content = "";
-            if (runtimeCache.PeekContent(ref url, ref content))
+            if(runtimeCache != null)
             {
-                isuploadingfromcache = true;
-                //lc.GetCachedDataPoint(out url, out content);
-                
-                //wait for post response
-                var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
-                CacheRequest = UnityWebRequest.Put(url, bytes);
-                CacheRequest.method = "POST";
-                CacheRequest.SetRequestHeader("Content-Type", "application/json");
-                CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                CacheRequest.SendWebRequest();
+                if (runtimeCache.PeekContent(ref url, ref content))
+                {
+                    isuploadingfromcache = true;
+                    //lc.GetCachedDataPoint(out url, out content);
+                    
+                    //wait for post response
+                    var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                    CacheRequest = UnityWebRequest.Put(url, bytes);
+                    CacheRequest.method = "POST";
+                    CacheRequest.SetRequestHeader("Content-Type", "application/json");
+                    CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                    CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+                    CacheRequest.SendWebRequest();
 
-                if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                    Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+                        Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
 
-                CacheResponseAction = instance.CACHEDResponseCallback;
+                    CacheResponseAction = instance.CACHEDResponseCallback;
 
-                instance.StartCoroutine(instance.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
-            }
-            else if (!runtimeCache.HasContent())
-            {
-                if (cacheCompletedAction != null)
-                    cacheCompletedAction.Invoke();
-                cacheCompletedAction = null;
+                    instance.StartCoroutine(instance.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
+                }
+                else if (!runtimeCache.HasContent())
+                {
+                    if (cacheCompletedAction != null)
+                        cacheCompletedAction.Invoke();
+                    cacheCompletedAction = null;
+                }
             }
         }
         
