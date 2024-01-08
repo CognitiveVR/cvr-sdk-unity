@@ -31,8 +31,9 @@ namespace Cognitive3D
         internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
 
-        const float cacheUploadInterval = 10;
-        const float retryDelay = 60;
+        const float cacheUploadInterval = 2;
+        const float minRetryDelay = 60;
+        const float maxRetryDelay = 240;
 
         internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
         {
@@ -215,16 +216,17 @@ namespace Cognitive3D
             }
         }
 
-        void CACHEDResponseCallback(string url, string content, int responsecode, string error, string text)
+        //Changed to an asynchronous function to include a delay, preventing excessive load on platform upon its reconnection
+        async void CACHEDResponseCallback(string url, string content, int responsecode, string error, string text)
         {
             //before this callback is invoked, if headers does not contain cvr-request-time it sets the response code to 404
 
 
-
             if (responsecode == 200)
-            {
-                // define a delay to send request
-                StartCoroutine(CACHEDResponseCallbackDelay());
+            {  
+                // A delay before sending a web request
+                await Task.Delay((int)cacheUploadInterval * 1000);
+
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
@@ -247,11 +249,6 @@ namespace Cognitive3D
                 CacheRequest.Dispose();
                 CacheRequest = null;
             }
-        }
-
-        System.Collections.IEnumerator CACHEDResponseCallbackDelay()
-        {
-            yield return new WaitForSeconds(cacheUploadInterval);
         }
 
         /// <summary>
@@ -413,16 +410,21 @@ namespace Cognitive3D
         int lastResponseCode;
         bool lastRequestFailed;
         float clockTime;
+        float currentDelay = minRetryDelay;
         
         internal async void Post(string url, string stringcontent)
         {
             // Cooldown procedure
-            if(Time.time < retryDelay + clockTime && lastRequestFailed)
+            if(lastRequestFailed)
             {
-                WriteToCache(url, stringcontent);
+                if(Time.time < currentDelay + clockTime)
+                {
+                    WriteToCache(url, stringcontent);
+                    return;
+                }
+
                 // Progressive wait times
-                // timeout = GetExponentialBackoff(timeout);
-                return;
+                currentDelay = GetExponentialBackoff(currentDelay);
             }
 
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
@@ -441,9 +443,14 @@ namespace Cognitive3D
             // Response code 0 indicates a disconnection from the internet
             if(lastResponseCode >= 500 || lastResponseCode == 0)
             {
-                Debug.LogWarning("Response Code is " + lastResponseCode + ". Initiated cooldown procedure.");
+                Debug.LogWarning("Response Code is " + lastResponseCode + ". Initiating cooldown procedure.");
                 clockTime = Time.time;
                 lastRequestFailed = true;
+            }
+            else if (lastResponseCode == 200)
+            {
+                currentDelay = minRetryDelay;
+                lastRequestFailed = false;
             }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
@@ -461,9 +468,13 @@ namespace Cognitive3D
 
         // TODO: Calculate the delay according to the data
         // Exponential backoff strategy: Increase delay exponentially
-        private float GetExponentialBackoff(float currentDelay)
+        private float GetExponentialBackoff(float retryDelay)
         {
-            return currentDelay * 2;
+            if(retryDelay < maxRetryDelay)
+            {
+                return retryDelay * 2;
+            }
+            return minRetryDelay;
         }
 
         //skip network cleanup if immediately/manually destroyed
