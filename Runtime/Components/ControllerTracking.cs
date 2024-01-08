@@ -25,6 +25,16 @@ namespace Cognitive3D.Components
         float rightAngle;
 
         /// <summary>
+        /// Vector from left controller to HMD
+        /// </summary>
+        Vector3 leftControllerToHMD;
+
+        /// <summary>
+        /// Vector from right controller to HMD
+        /// </summary>
+        Vector3 rightControllerToHMD;
+
+        /// <summary>
         /// How long to wait before sending "left controller tracking lost" events
         /// </summary>
         private const float LEFT_TRACKING_COOLDOWN_TIME_IN_SECONDS = 5;
@@ -75,42 +85,45 @@ namespace Cognitive3D.Components
         /// <param name="xrNodeState">The state of the device</param>
         public void OnTrackingLost(XRNodeState xrNodeState)
         {
-            if (xrNodeState.nodeType == XRNode.RightHand && !inRightCooldown)
-            {
-                new CustomEvent("c3d.Right Controller Lost tracking")
-                    .SetProperty("Angle from HMD", rightAngle)
-                    .Send();
-                inRightCooldown = true;
-                rightCooldownTimer = 0;
-            }
             if (xrNodeState.nodeType == XRNode.LeftHand && !inLeftCooldown)
             {
                 new CustomEvent("c3d.Left Controller Lost tracking")
                     .SetProperty("Angle from HMD", leftAngle)
+                    .SetProperty("Height from HMD", leftControllerToHMD.y)
                     .Send();
                 inLeftCooldown = true;
                 leftCooldownTimer = 0;
+            }
+
+            if (xrNodeState.nodeType == XRNode.RightHand && !inRightCooldown)
+            {
+                new CustomEvent("c3d.Right Controller Lost tracking")
+                    .SetProperty("Angle from HMD", rightAngle)
+                    .SetProperty("Height from HMD", rightControllerToHMD.y)
+                    .Send();
+                inRightCooldown = true;
+                rightCooldownTimer = 0;
             }
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            UpdateCooldownClock(deltaTime);
-
-            Transform rightControllerTransform;
-            Transform leftControllerTransform;
-            bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
-            bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
-            Vector3 leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
-            Vector3 rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
-            leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
-            rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
-
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+                UpdateCooldownClock(deltaTime);
+
+                Transform rightControllerTransform;
+                Transform leftControllerTransform;
+                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
+                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
+                leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
+                rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
+                leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
+                rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
+
                 currentTime += deltaTime;
                 if (currentTime > ControllerTrackingInterval)
                 {
