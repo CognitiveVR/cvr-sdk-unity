@@ -224,9 +224,6 @@ namespace Cognitive3D
 
             if (responsecode == 200)
             {  
-                // A delay before sending a web request
-                await Task.Delay((int)cacheUploadInterval * 1000);
-
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
@@ -235,6 +232,10 @@ namespace Cognitive3D
                     runtimeCache.PopContent();
                 }
                 isuploadingfromcache = false;
+
+                // A delay before sending a web request
+                await Task.Delay((int)cacheUploadInterval * 1000);
+
                 LoopUploadFromLocalCache();
             }
             else
