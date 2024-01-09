@@ -113,18 +113,25 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+                currentTime += deltaTime;
                 UpdateCooldownClock(deltaTime);
-
                 Transform rightControllerTransform;
                 Transform leftControllerTransform;
                 bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
                 bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
-                leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
-                rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
-                leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
-                rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
+                
+                if (wasLeftControllerFound)
+                {
+                    leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
+                    leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
+                }
 
-                currentTime += deltaTime;
+                if (wasRightControllerFound)
+                {
+                    rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
+                    rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
+                }
+
                 if (currentTime > ControllerTrackingInterval)
                 {
                     if (wasLeftControllerFound)
