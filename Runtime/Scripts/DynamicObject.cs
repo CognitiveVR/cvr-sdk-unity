@@ -224,7 +224,7 @@ namespace Cognitive3D
 
             string registerid = (idSource == IdSourceType.CustomID) ? CustomId : "";
 
-            if (idSource == IdSourceType.GeneratedID)
+            if (idSource == IdSourceType.PoolID && IdPool != null)
             {
                 CustomId = IdPool.GetId();
                 registerid = CustomId;
