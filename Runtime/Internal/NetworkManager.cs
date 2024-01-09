@@ -227,7 +227,7 @@ namespace Cognitive3D
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
-                if(runtimeCache != null)
+                if (runtimeCache != null)
                 {
                     runtimeCache.PopContent();
                 }
@@ -301,7 +301,7 @@ namespace Cognitive3D
 
             string url = "";
             string content = "";
-            if(runtimeCache != null)
+            if (runtimeCache != null)
             {
                 if (runtimeCache.PeekContent(ref url, ref content))
                 {
@@ -422,9 +422,9 @@ namespace Cognitive3D
         internal async void Post(string url, string stringcontent)
         {
             // Cooldown procedure
-            if(lastRequestFailed)
+            if (lastRequestFailed)
             {
-                if(Time.time < currentDelay + clockTime)
+                if (Time.time < currentDelay + clockTime)
                 {
                     WriteToCache(url, stringcontent);
                     return;
@@ -448,7 +448,7 @@ namespace Cognitive3D
 
             // Triggering cooldown process when the response code is either 500 or 0
             // Response code 0 indicates a disconnection from the internet
-            if(lastResponseCode >= 500 || lastResponseCode == 0)
+            if (lastResponseCode >= 500 || lastResponseCode == 0)
             {
                 Debug.LogWarning("Response Code is " + lastResponseCode + ". Initiating cooldown procedure.");
                 clockTime = Time.time;
@@ -467,7 +467,7 @@ namespace Cognitive3D
         // Writing to cache
         private void WriteToCache(string url, string content)
         {            
-            if(runtimeCache.CanWrite(url, content))
+            if (runtimeCache.CanWrite(url, content))
             {
                 runtimeCache.WriteContent(url, content);
             }
@@ -477,7 +477,7 @@ namespace Cognitive3D
         // Exponential backoff strategy: Increase delay exponentially
         private float GetExponentialBackoff(float retryDelay)
         {
-            if(retryDelay < maxRetryDelay)
+            if (retryDelay < maxRetryDelay)
             {
                 return retryDelay * 2;
             }
