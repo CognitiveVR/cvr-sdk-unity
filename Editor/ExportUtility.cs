@@ -618,33 +618,34 @@ namespace Cognitive3D
                 EditorUtility.DisplayProgressBar("Export GLTF", "Bake Custom Render Exporters " + currentTask + "/" + CustomRenders.Length, currentProgress);
 
                 if (!customRender.gameObject.activeInHierarchy) { continue; }
-                var data = customRender.RenderMeshCustom();
-                if (data == null) { continue; }
+                var AllData = customRender.RenderMeshCustom();
+                if (AllData == null) { continue; }
 
-                BakeableMesh bm = new BakeableMesh();
-                bm.tempGo = new GameObject(data.name + "BAKEABLE MESH");
-                bm.tempGo.transform.parent = data.transform;
-                bm.tempGo.transform.localRotation = Quaternion.identity;
-                bm.tempGo.transform.localPosition = Vector3.zero;
-                bm.tempGo.transform.localScale = Vector3.one;
+                foreach (var data in AllData)
+                {
+                    BakeableMesh bm = new BakeableMesh();
+                    bm.tempGo = new GameObject(data.name + "BAKEABLE MESH");
+                    bm.tempGo.transform.parent = data.transform;
+                    bm.tempGo.transform.localRotation = Quaternion.identity;
+                    bm.tempGo.transform.localPosition = Vector3.zero;
+                    bm.tempGo.transform.localScale = Vector3.one;
 
-                bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
-                bm.meshRenderer.sharedMaterial = data.material;
-                bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+                    bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+                    bm.meshRenderer.sharedMaterial = data.material;
+                    bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
 
-                bm.meshFilter.sharedMesh = data.meshdata;
-                meshes.Add(bm);
-                //ProceduralMeshFilters.Add(bm.meshFilter);
-                ProceduralMeshFilters.Add(data.tempGameObject.GetComponent<MeshFilter>());
-                deleteCustomRenders.Add(data.tempGameObject);
+                    bm.meshFilter.sharedMesh = data.meshdata;
+                    meshes.Add(bm);
+                    ProceduralMeshFilters.Add(data.tempGameObject.GetComponent<MeshFilter>());
+                    deleteCustomRenders.Add(data.tempGameObject);
 
-                string finalPath = UnityGLTF.GLTFSceneExporter.ConstructImageFilenamePath((Texture2D)data.material.mainTexture, UnityGLTF.GLTFSceneExporter.TextureMapType.Main, path);
+                    string finalPath = UnityGLTF.GLTFSceneExporter.ConstructImageFilenamePath((Texture2D)data.material.mainTexture, UnityGLTF.GLTFSceneExporter.TextureMapType.Main, path);
+                    //put together a list of textures to be skipped based on path
+                    customTextureExports.Add(finalPath);
 
-                //put together a list of textures to be skipped based on path
-                customTextureExports.Add(finalPath);
-
-                //save out the texture here, instead of keeping it in memory
-                System.IO.File.WriteAllBytes(finalPath, ((Texture2D)data.material.mainTexture).EncodeToPNG());
+                    //save out the texture here, instead of keeping it in memory
+                    System.IO.File.WriteAllBytes(finalPath, ((Texture2D)data.material.mainTexture).EncodeToPNG());
+                }
             }
 
             currentTask = 0;

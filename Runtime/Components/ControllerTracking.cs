@@ -8,8 +8,61 @@ namespace Cognitive3D.Components
     public class ControllerTracking : AnalyticsComponentBase
     {
         private readonly float ControllerTrackingInterval = 1;
-        //counts up the deltatime to determine when the interval ends
+
+        /// <summary>
+        /// Counts up the deltatime to determine when the interval ends
+        /// </summary>
         private float currentTime;
+
+        /// <summary>
+        /// Angle between left controller and hmd; used as a property for custom event
+        /// </summary>
+        float leftAngle;
+
+        /// <summary>
+        /// Angle between right controller and hmd; used as a property for custom event
+        /// </summary>
+        float rightAngle;
+
+        /// <summary>
+        /// Vector from left controller to HMD
+        /// </summary>
+        Vector3 leftControllerToHMD;
+
+        /// <summary>
+        /// Vector from right controller to HMD
+        /// </summary>
+        Vector3 rightControllerToHMD;
+
+        /// <summary>
+        /// How long to wait before sending "left controller tracking lost" events
+        /// </summary>
+        private const float LEFT_TRACKING_COOLDOWN_TIME_IN_SECONDS = 5;
+
+        /// <summary>
+        /// How long to wait before sending "right controller tracking lost" events
+        /// </summary>
+        private const float RIGHT_TRACKING_COOLDOWN_TIME_IN_SECONDS = 5;
+
+        /// <summary>
+        /// Whether right controller tracking is in cooldown
+        /// </summary>
+        bool inRightCooldown;
+
+        /// <summary>
+        /// Whether right controller tracking is in cooldown
+        /// </summary>
+        bool inLeftCooldown;
+
+        /// <summary>
+        /// Internal clock to measure how long has elapsed since last left controller lost tracking event
+        /// </summary>
+        float leftCooldownTimer;
+
+        /// <summary>
+        /// Internal clock to measure how long has elapsed since last right controller lost tracking event
+        /// </summary>
+        float rightCooldownTimer;
 
         protected override void OnSessionBegin()
         {
@@ -24,19 +77,32 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnPreSessionEnd += Cleanup;
         }
-
+        
+        /// <summary>
+        /// Fucntion to execute when xrNodeState.nodeType loses tracking
+        /// We have a cooldown timer to prevent multiple back-to-back events from being sent
+        /// </summary>
+        /// <param name="xrNodeState">The state of the device</param>
         public void OnTrackingLost(XRNodeState xrNodeState)
         {
-            if (!xrNodeState.tracked)
+            if (xrNodeState.nodeType == XRNode.LeftHand && !inLeftCooldown)
             {
-                if (xrNodeState.nodeType == XRNode.RightHand)
-                {
-                    new CustomEvent("c3d.Right Controller Lost tracking").Send();
-                }
-                if (xrNodeState.nodeType == XRNode.LeftHand)
-                {
-                    new CustomEvent("c3d.Left Controller Lost tracking").Send();
-                }
+                new CustomEvent("c3d.Left Controller Lost tracking")
+                    .SetProperty("Angle from HMD", leftAngle)
+                    .SetProperty("Height from HMD", leftControllerToHMD.y)
+                    .Send();
+                inLeftCooldown = true;
+                leftCooldownTimer = 0;
+            }
+
+            if (xrNodeState.nodeType == XRNode.RightHand && !inRightCooldown)
+            {
+                new CustomEvent("c3d.Right Controller Lost tracking")
+                    .SetProperty("Angle from HMD", rightAngle)
+                    .SetProperty("Height from HMD", rightControllerToHMD.y)
+                    .Send();
+                inRightCooldown = true;
+                rightCooldownTimer = 0;
             }
         }
 
@@ -48,9 +114,36 @@ namespace Cognitive3D.Components
             if (isActiveAndEnabled)
             {
                 currentTime += deltaTime;
+                UpdateCooldownClock(deltaTime);
+                Transform rightControllerTransform;
+                Transform leftControllerTransform;
+                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
+                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
+                
+                if (wasLeftControllerFound)
+                {
+                    leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
+                    leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
+                }
+
+                if (wasRightControllerFound)
+                {
+                    rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
+                    rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
+                }
+
                 if (currentTime > ControllerTrackingInterval)
                 {
-                    ControllerTrackingIntervalEnd();
+                    if (wasLeftControllerFound)
+                    {
+                        SensorRecorder.RecordDataPoint("c3d.controller.left.height.fromHMD", leftControllerToHMD.y);
+                    }
+
+                    if (wasRightControllerFound)
+                    {
+                        SensorRecorder.RecordDataPoint("c3d.controller.right.height.fromHMD", rightControllerToHMD.y);
+                    }
+                    currentTime = 0;
                 }
             }
             else
@@ -59,21 +152,16 @@ namespace Cognitive3D.Components
             }
         }
 
-        void ControllerTrackingIntervalEnd()
+        /// <summary>
+        /// Increments cooldown timer and checks if cooldown time has elapsed
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last frame</param>
+        private void UpdateCooldownClock(float deltaTime)
         {
-            Transform leftController;
-            Transform rightController;
-            if (GameplayReferences.GetControllerTransform(false, out leftController))
-            {
-                float leftControllerToHead = leftController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("c3d.controller.left.height.fromHMD", leftControllerToHead);
-            }
-            if (GameplayReferences.GetControllerTransform(true, out rightController))
-            {
-                float rightControllerToHead = rightController.position.y - GameplayReferences.HMD.position.y;
-                SensorRecorder.RecordDataPoint("c3d.controller.right.height.fromHMD", rightControllerToHead);
-            }
-            currentTime = 0;
+            if (inRightCooldown) { rightCooldownTimer += deltaTime; }
+            if (rightCooldownTimer >= RIGHT_TRACKING_COOLDOWN_TIME_IN_SECONDS) { inRightCooldown = false; }
+            if (inLeftCooldown) { leftCooldownTimer += deltaTime; }
+            if (leftCooldownTimer >= LEFT_TRACKING_COOLDOWN_TIME_IN_SECONDS) { inLeftCooldown = false; }
         }
 
         private void Cleanup()

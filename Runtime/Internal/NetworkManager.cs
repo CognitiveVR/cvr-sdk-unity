@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
 
+
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
 //stack of line lengths, read/write through single filestream
@@ -29,6 +30,10 @@ namespace Cognitive3D
         internal ICache runtimeCache;
         internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
+
+        const float cacheUploadInterval = 2;
+        const float minRetryDelay = 60;
+        const float maxRetryDelay = 240;
 
         internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
         {
@@ -163,6 +168,9 @@ namespace Cognitive3D
 
         void POSTResponseCallback(string url, string content, int responsecode, string error, string text)
         {
+            // Retrieving the most recent response code to initiate the cooldown procedure
+            lastResponseCode = responsecode;
+
             if (responsecode == 200)
             {
                 if (runtimeCache == null) { return; }
@@ -174,7 +182,7 @@ namespace Cognitive3D
             }
             else
             {
-                if (responsecode < 500 && responsecode != 307) //307 is a redirect - likely harmless
+                if (responsecode < 500 && responsecode != 307 && responsecode != 0) //307 is a redirect - likely harmless
                 {
                     switch (responsecode)
                     {
@@ -208,19 +216,26 @@ namespace Cognitive3D
             }
         }
 
-        void CACHEDResponseCallback(string url, string content, int responsecode, string error, string text)
+        //Changed to an asynchronous function to include a delay, preventing excessive load on platform upon its reconnection
+        async void CACHEDResponseCallback(string url, string content, int responsecode, string error, string text)
         {
             //before this callback is invoked, if headers does not contain cvr-request-time it sets the response code to 404
 
 
-
             if (responsecode == 200)
-            {
+            {  
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
-                runtimeCache.PopContent();
+                if (runtimeCache != null)
+                {
+                    runtimeCache.PopContent();
+                }
                 isuploadingfromcache = false;
+
+                // A delay before sending a web request
+                await Task.Delay((int)cacheUploadInterval * 1000);
+
                 LoopUploadFromLocalCache();
             }
             else
@@ -286,32 +301,35 @@ namespace Cognitive3D
 
             string url = "";
             string content = "";
-            if (runtimeCache.PeekContent(ref url, ref content))
+            if (runtimeCache != null)
             {
-                isuploadingfromcache = true;
-                //lc.GetCachedDataPoint(out url, out content);
-                
-                //wait for post response
-                var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
-                CacheRequest = UnityWebRequest.Put(url, bytes);
-                CacheRequest.method = "POST";
-                CacheRequest.SetRequestHeader("Content-Type", "application/json");
-                CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
-                CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
-                CacheRequest.SendWebRequest();
+                if (runtimeCache.PeekContent(ref url, ref content))
+                {
+                    isuploadingfromcache = true;
+                    //lc.GetCachedDataPoint(out url, out content);
+                    
+                    //wait for post response
+                    var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                    CacheRequest = UnityWebRequest.Put(url, bytes);
+                    CacheRequest.method = "POST";
+                    CacheRequest.SetRequestHeader("Content-Type", "application/json");
+                    CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
+                    CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+                    CacheRequest.SendWebRequest();
 
-                if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                    Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
+                    if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+                        Util.logDevelopment("NETWORK LoopUploadFromLocalCache " + url + " " + content);
 
-                CacheResponseAction = instance.CACHEDResponseCallback;
+                    CacheResponseAction = instance.CACHEDResponseCallback;
 
-                instance.StartCoroutine(instance.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
-            }
-            else if (!runtimeCache.HasContent())
-            {
-                if (cacheCompletedAction != null)
-                    cacheCompletedAction.Invoke();
-                cacheCompletedAction = null;
+                    instance.StartCoroutine(instance.WaitForFullResponse(CacheRequest, content, CacheResponseAction, false));
+                }
+                else if (!runtimeCache.HasContent())
+                {
+                    if (cacheCompletedAction != null)
+                        cacheCompletedAction.Invoke();
+                    cacheCompletedAction = null;
+                }
             }
         }
         
@@ -396,10 +414,29 @@ namespace Cognitive3D
             activeRequests.Remove(www);
         }
 
+        int lastResponseCode;
+        bool lastRequestFailed;
+        float clockTime;
+        float currentDelay = minRetryDelay;
+        
         internal async void Post(string url, string stringcontent)
         {
+            // Cooldown procedure
+            if (lastRequestFailed)
+            {
+                if (Time.time < currentDelay + clockTime)
+                {
+                    WriteToCache(url, stringcontent);
+                    return;
+                }
+
+                // Progressive wait times
+                currentDelay = GetExponentialBackoff(currentDelay);
+            }
+
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
+
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
@@ -409,8 +446,42 @@ namespace Cognitive3D
             activeRequests.Add(request);
             await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
 
+            // Triggering cooldown process when the response code is either 500 or 0
+            // Response code 0 indicates a disconnection from the internet
+            if (lastResponseCode >= 500 || lastResponseCode == 0)
+            {
+                Debug.LogWarning("Response Code is " + lastResponseCode + ". Initiating cooldown procedure.");
+                clockTime = Time.time;
+                lastRequestFailed = true;
+            }
+            else if (lastResponseCode == 200)
+            {
+                currentDelay = minRetryDelay;
+                lastRequestFailed = false;
+            }
+
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
+        }
+
+        // Writing to cache
+        private void WriteToCache(string url, string content)
+        {            
+            if (runtimeCache.CanWrite(url, content))
+            {
+                runtimeCache.WriteContent(url, content);
+            }
+        }
+
+        // TODO: Calculate the delay according to the data
+        // Exponential backoff strategy: Increase delay exponentially
+        private float GetExponentialBackoff(float retryDelay)
+        {
+            if (retryDelay < maxRetryDelay)
+            {
+                return retryDelay * 2;
+            }
+            return minRetryDelay;
         }
 
         //skip network cleanup if immediately/manually destroyed
