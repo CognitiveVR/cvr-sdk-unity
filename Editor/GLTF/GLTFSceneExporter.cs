@@ -596,7 +596,7 @@ namespace Cognitive3D.UnityGLTF
 		{
 			var imagePath = UnityEditor.AssetDatabase.GetAssetPath(texture);
 			string filenamePath;
-			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_'))
+			if (texture.name != Uri.EscapeUriString(texture.name).Replace('#', '_').Replace(':', '_'))
 			{
 				string texturenamehash = Mathf.Abs(texture.name.GetHashCode()).ToString();
 				filenamePath = outputPath + "/" + Mathf.Abs(imagePath.GetHashCode()) + texturenamehash + textureMapType;
