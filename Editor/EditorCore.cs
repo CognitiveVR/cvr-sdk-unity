@@ -55,6 +55,8 @@ namespace Cognitive3D
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
             }
+
+            EditorApplication.playModeStateChanged += UserActivityStatus;
         }
 
         //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that
@@ -64,6 +66,15 @@ namespace Cognitive3D
             if (initDelay > 0) { initDelay--; return; }
             EditorApplication.update -= UpdateInitWizard;
             ProjectSetupWindow.Init();
+        }
+
+        // Checking user activity when entering play mode
+        static void UserActivityStatus(PlayModeStateChange playModeState)
+        {
+            if (playModeState == PlayModeStateChange.EnteredPlayMode && Cognitive3D_Manager.IsInitialized)
+            {
+                EditorUtils.CheckUserActivity();
+            }
         }
 
         static void ModeChanged(PlayModeStateChange playModeState)
