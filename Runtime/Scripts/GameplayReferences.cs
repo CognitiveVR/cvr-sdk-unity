@@ -361,6 +361,32 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Returns whether the left controller is currently tracked.
+        /// Uses InputDevice.TryGetFeatureUsage API
+        /// </summary>
+        /// <returns> True if left controller is tracking; false otherwise </returns>
+        public static bool IsLeftControllerTracking()
+        {
+            InputDevice leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            bool isLeftControllerTrackingRef;
+            leftController.TryGetFeatureValue(CommonUsages.isTracked, out isLeftControllerTrackingRef);
+            return isLeftControllerTrackingRef;
+        }
+
+        /// <summary>
+        /// Returns whether the right controller is currently tracked.
+        /// Uses InputDevice.TryGetFeatureUsage API
+        /// </summary>
+        /// <returns> True if right controller is tracking; false otherwise </returns>
+        public static bool IsRightControllerTracking()
+        {
+            InputDevice rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            bool isRightControllerTrackingRef;
+            rightController.TryGetFeatureValue(CommonUsages.isTracked, out isRightControllerTrackingRef);
+            return isRightControllerTrackingRef;
+        }
+
         public static IControllerPointer ControllerPointerLeft;
         public static IControllerPointer ControllerPointerRight;
 

@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
 
                 bool includedSample = false;
 
-                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand) && GameplayReferences.IsLeftControllerTracking())
                 {
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
@@ -48,7 +48,7 @@ namespace Cognitive3D.Components
                     }
                 }
 
-                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand) && GameplayReferences.IsRightControllerTracking())
                 {
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
