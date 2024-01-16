@@ -12,7 +12,7 @@ namespace Cognitive3D.Components
     public class OculusSocial : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list.")]
+        [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
 #endif
