@@ -26,7 +26,7 @@ namespace Cognitive3D.Components
             var wait = new WaitForSeconds(1);
             yield return wait;
 
-            if (GetActiveDisplaySubsystem().SubsystemDescriptor.id.Contains("Oculus"))
+            if (GetActiveDisplaySubsystem().SubsystemDescriptor.id.Contains("oculus"))
             {
                 while (Cognitive3D.Cognitive3D_Manager.IsInitialized)
                 {
