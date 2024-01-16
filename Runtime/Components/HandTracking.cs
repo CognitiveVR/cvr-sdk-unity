@@ -25,7 +25,7 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            lastTrackedDevice = GetCurrentTrackedDevice();
+            CaptureHandTrackingEvents();
             Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
@@ -43,9 +43,7 @@ namespace Cognitive3D.Components
                 if (currentTime > HandTrackingSendInterval)
                 {
                     currentTime = 0;
-                    var currentTrackedDevice = GetCurrentTrackedDevice();
-                    CaptureHandTrackingEvents(currentTrackedDevice);
-                    SensorRecorder.RecordDataPoint("c3d.input.tracking", (int)currentTrackedDevice);
+                    CaptureHandTrackingEvents();
                 }
             }
             else
@@ -80,8 +78,9 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Captures any change in input device from hand to controller to none or vice versa
         /// </summary>
-        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
+        void CaptureHandTrackingEvents()
         {
+            var currentTrackedDevice = GetCurrentTrackedDevice();
             if (lastTrackedDevice != currentTrackedDevice)
             {
                 new CustomEvent("c3d.input.tracking.changed")
