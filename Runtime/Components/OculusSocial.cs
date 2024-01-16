@@ -12,13 +12,9 @@ namespace Cognitive3D.Components
     public class OculusSocial : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        [Tooltip("Used to automatically associate a profile to a participant. Allows tracking between different sessions")]
+        [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list.")]
         [SerializeField]
-        private bool AssignOculusProfileToParticipant = false;
-
-        [Tooltip("Used to automatically set user's display name as participant name on the dashboard")]
-        [SerializeField]
-        private bool AssignOculusNameToParticipantName = false;
+        private bool RecordOculusUserData = true;
 #endif
 
         protected override void OnSessionBegin()
@@ -107,7 +103,7 @@ namespace Cognitive3D.Components
                 }
 
                 Users.Get(message.Data.ID).OnComplete(DisplayNameCallback);
-                if (AssignOculusProfileToParticipant)
+                if (RecordOculusUserData)
                 {
                     Cognitive3D_Manager.SetParticipantId(id);
                 }
@@ -131,7 +127,7 @@ namespace Cognitive3D.Components
 #endif
             {
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
-                if (AssignOculusNameToParticipantName)
+                if (RecordOculusUserData)
                 {
                     Cognitive3D_Manager.SetParticipantFullName(displayName);
                 }
