@@ -25,15 +25,15 @@ namespace Cognitive3D
             {
                 if (!IsUserPresent())
                 {
-                    await Task.Delay((int)interval * 1000);
+                    await WaitForUser();
 
                     // Check if still in play mode before initializing the window
-                    if (EditorApplication.isPlaying)
+                    if (EditorApplication.isPlaying && !IsUserPresent())
                     {
                         Init();
-                    }
 
-                    await WaitingForUserResponse();
+                        await WaitingForUserResponse();
+                    }
                 }
 
                 CheckUserActivity();
@@ -79,6 +79,21 @@ namespace Cognitive3D
             {
                 CloseWindow();
                 EditorApplication.ExitPlaymode();
+            }
+        }
+
+        // Waiting for user to become active
+        // If user become active and put their headset back, wait time will stop
+        static async Task WaitForUser()
+        {
+            float time = 0;
+
+            // Waiting for 15 minutes
+            // If user is active again during wait time, breaks out of wait loop
+            while(time < interval && !IsUserPresent())
+            {
+                await Task.Yield();
+                time += Time.deltaTime;
             }
         }
 
