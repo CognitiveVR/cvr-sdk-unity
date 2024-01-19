@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.XR;
 #if C3D_STEAMVR || C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -39,7 +40,7 @@ namespace Cognitive3D.Components
 
                 bool includedSample = false;
 
-                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
+                if (GameplayReferences.IsInputDeviceValid(XRNode.LeftHand) && GameplayReferences.IsControllerTracking(XRNode.LeftHand))
                 {
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
@@ -48,7 +49,7 @@ namespace Cognitive3D.Components
                     }
                 }
 
-                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
+                if (GameplayReferences.IsInputDeviceValid(XRNode.RightHand) && GameplayReferences.IsControllerTracking(XRNode.RightHand))
                 {
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {

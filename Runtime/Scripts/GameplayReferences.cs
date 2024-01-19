@@ -361,6 +361,20 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Returns whether the left controller is currently tracked.
+        /// Uses InputDevice.TryGetFeatureUsage API
+        /// </summary>
+        /// <param name="hand"> The XRNode; either left hand or right hand</param>
+        /// <returns>True if left controller is tracking; false otherwise</returns>
+        public static bool IsControllerTracking(XRNode hand)
+        {
+            InputDevice controller = InputDevices.GetDeviceAtXRNode(hand);
+            bool isControllerTrackingRef;
+            controller.TryGetFeatureValue(CommonUsages.isTracked, out isControllerTrackingRef);
+            return isControllerTrackingRef;
+        }
+
         public static IControllerPointer ControllerPointerLeft;
         public static IControllerPointer ControllerPointerRight;
 
