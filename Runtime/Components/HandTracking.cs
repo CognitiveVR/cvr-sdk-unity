@@ -17,9 +17,6 @@ namespace Cognitive3D.Components
             Hand = 2
         }
 
-        private readonly float HandTrackingSendInterval = 1;
-        private float currentTime = 0;
-
         private TrackingType lastTrackedDevice = TrackingType.None;
 
         protected override void OnSessionBegin()
@@ -38,13 +35,7 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                currentTime += deltaTime;
-
-                if (currentTime > HandTrackingSendInterval)
-                {
-                    currentTime = 0;
-                    CaptureHandTrackingEvents();
-                }
+                CaptureHandTrackingEvents();
             }
             else
             {
@@ -58,14 +49,14 @@ namespace Cognitive3D.Components
         /// <returns> Enum representing whether user is using hand or controller or neither </returns>
         TrackingType GetCurrentTrackedDevice()
         {
-            var currentTrackedDevice = OVRInput.GetActiveController();
-            if (currentTrackedDevice == OVRInput.Controller.None)
+            var currentOVRTrackedDevice = OVRInput.GetActiveController();
+            if (currentOVRTrackedDevice == OVRInput.Controller.None)
             {
                 return TrackingType.None;
             }
-            else if (currentTrackedDevice == OVRInput.Controller.Hands
-                || currentTrackedDevice == OVRInput.Controller.LHand
-                || currentTrackedDevice == OVRInput.Controller.RHand)
+            else if (currentOVRTrackedDevice == OVRInput.Controller.Hands
+                || currentOVRTrackedDevice == OVRInput.Controller.LHand
+                || currentOVRTrackedDevice == OVRInput.Controller.RHand)
             {
                 return TrackingType.Hand;
             }
