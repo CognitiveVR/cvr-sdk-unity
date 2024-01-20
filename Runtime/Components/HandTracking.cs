@@ -22,7 +22,6 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            CaptureHandTrackingEvents();
             Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
