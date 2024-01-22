@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.XR;
@@ -108,8 +109,24 @@ namespace Cognitive3D
         {
             bool isPresent;
 
+#if C3D_OCULUS
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
+#elif C3D_DEFAULT
+            Vector3 velocity;
+            InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+
+            currentHmd.TryGetFeatureValue(CommonUsages.deviceVelocity, out velocity);
+
+            if (velocity != Vector3.zero)
+            {
+                isPresent = true;
+            }
+            else
+            {
+                isPresent = false;
+            }
+#endif
 
             return isPresent;
         }
