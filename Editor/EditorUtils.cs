@@ -112,7 +112,7 @@ namespace Cognitive3D
 #if C3D_OCULUS
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
-#elif C3D_DEFAULT
+#else
             Vector3 velocity;
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
 
