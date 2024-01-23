@@ -88,13 +88,13 @@ namespace Cognitive3D
 				if (attemptedUploads > numberOfBatches)
                 {
 					//everything has been attempted to be uploaded
-					Util.logDebug("Editor attempted to upload everything");
+					Util.logDevelopment("Editor attempted to upload everything");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
 				}
 				if (!cacheSource.HasContent())
                 {
-					Util.logDebug("Editor has no more session data to upload");
+					Util.logDevelopment("Editor has no more session data to upload");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
 				}
